@@ -790,9 +790,9 @@ ETB.githubAdd = (function () {
       });
   }
 
-  // Device resolution → agent install. Shared by the normal path and the
-  // local/hosted run-mode picker.
+  // Device resolution → install. Local/normal → agent; hosted → deterministic.
   function _proceedInstall() {
+    if (_state.runMode === 'remote') return _hostedInstall();
     return _getDeviceId().then(function (deviceId) {
       if (!deviceId) {
         _state.step = 'device_id_input';
@@ -800,6 +800,63 @@ ETB.githubAdd = (function () {
         return;
       }
       return _runAgentInstall(_state.repoData, _state.digest, deviceId);
+    });
+  }
+
+  // Deterministic hosted install (no LLM): resolve the model's HuggingFace
+  // Space, then mkt_hf_install introspects its API and builds an adaptive
+  // plugin that calls the shared mkt_hf_call proxy. Reliable for any Space.
+  function _resolveHostedSpace(rd) {
+    var hf = _state.heavyModel && _state.heavyModel.hf;
+    if (hf && hf.kind === 'space' && hf.id) return Promise.resolve(hf.id);
+    var q = (rd && (rd.name || rd.full_name)) || '';
+    return fetch('https://huggingface.co/api/spaces?search=' + encodeURIComponent(q) + '&sort=likes&direction=-1&limit=5')
+      .then(function (r) { return r.ok ? r.json() : []; })
+      .then(function (list) {
+        if (Array.isArray(list) && list.length) return list[0].id;
+        return (hf && hf.id) ? hf.id : null;
+      })
+      .catch(function () { return (hf && hf.id) ? hf.id : null; });
+  }
+
+  function _hostedInstall() {
+    var rd = _state.repoData || {};
+    var pluginId = 'gh_' + _slug(rd.full_name.replace('/', '_')) + '_hf';
+    _state.pluginId = pluginId;
+    _state.step = 'installing';
+    _state.installStartedAt = Date.now();
+    _state.statusMsg = 'Подключаем модель через HuggingFace…';
+    _state.installAgentText = 'Подключаем модель через HuggingFace…';
+    _render();
+    return _resolveHostedSpace(rd).then(function (space) {
+      if (!space) {
+        _state.step = 'analysis_error';
+        _state.errorMsg = 'Не нашли готовый HuggingFace-Space для этой модели. Попробуйте локальную установку (нужна видеокарта NVIDIA) или другую модель.';
+        _render();
+        return;
+      }
+      _state.statusMsg = 'Собираем плагин из ' + space + '…';
+      _render();
+      return ETB.api.runExpert('mkt_hf_install', { space: space, plugin_name: _state.customName || rd.name || space, plugin_id: pluginId }, { timeout: 150 })
+        .then(function (res) {
+          var out = (res && res.result !== undefined) ? res.result : res;
+          if (typeof out === 'string') { try { out = JSON.parse(out); } catch (e) {} }
+          if (out && out.status === 'success') {
+            _state.lastPluginId = out.plugin_id || pluginId;
+            return ETB.registry.syncFromDevice(null, out.plugin_id || pluginId).then(function () {
+              _state.step = 'done';
+              if (ETB.tabs && ETB.tabs.refresh) ETB.tabs.refresh();
+              _render();
+            });
+          }
+          _state.step = 'analysis_error';
+          _state.errorMsg = (out && out.message) || 'Не удалось подключить модель через HuggingFace.';
+          _render();
+        });
+    }).catch(function (e) {
+      _state.step = 'analysis_error';
+      _state.errorMsg = (e && e.message) || 'Ошибка установки.';
+      _render();
     });
   }
 
