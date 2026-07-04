@@ -7,6 +7,42 @@ ETB.api = (function () {
   var BASE = 'https://api.extella.ai';
   var DEFAULT_AGENT = 'agent_extella_default';
 
+  // ── Install agent override ──────────────────────────────────────────────
+  // Which backend agent executes plugin install / repair / auto-provision
+  // runs (/api/agent/run). Unset → the account default agent, unchanged
+  // behavior. Set → batch install work runs on a cheaper stock agent while
+  // interactive chat panels keep their own hardcoded agent.
+  // localStorage survives toolbar re-injection on navigation; the KV mirror
+  // ('_install_agent_id') lets the value be set centrally and synced across
+  // devices at boot via syncInstallAgentFromKV().
+  var INSTALL_AGENT_LS = 'etb_install_agent_id';
+
+  function _getInstallAgent() {
+    try { return localStorage.getItem(INSTALL_AGENT_LS) || ''; } catch (e) { return ''; }
+  }
+
+  function setInstallAgent(id) {
+    id = String(id || '').trim();
+    try {
+      if (id) localStorage.setItem(INSTALL_AGENT_LS, id);
+      else localStorage.removeItem(INSTALL_AGENT_LS);
+    } catch (e) {}
+    // Best-effort cloud mirror; ignore failures (offline, token not ready).
+    try {
+      _post('/api/kv/set', { key: '_install_agent_id', value: id, description: 'Agent that runs plugin installs (toolbar)' })
+        .catch(function () {});
+    } catch (e) {}
+    return id;
+  }
+
+  function syncInstallAgentFromKV() {
+    return _post('/api/kv/get', { key: '_install_agent_id' }).then(function (r) {
+      var id = (r && r.value != null) ? String(r.value).trim() : '';
+      if (id) { try { localStorage.setItem(INSTALL_AGENT_LS, id); } catch (e) {} }
+      return id;
+    }).catch(function () { return ''; });
+  }
+
   function _hdrs() {
     return {
       'Content-Type': 'application/json',
@@ -16,10 +52,10 @@ ETB.api = (function () {
     };
   }
 
-  function _post(path, body) {
+  function _post(path, body, extraHdrs) {
     return fetch(BASE + path, {
       method: 'POST',
-      headers: _hdrs(),
+      headers: extraHdrs ? Object.assign(_hdrs(), extraHdrs) : _hdrs(),
       body: JSON.stringify(body)
     }).then(function (r) {
       if (r.status === 401) {
@@ -158,10 +194,13 @@ ETB.api = (function () {
   }
 
   function _runAgentRequest(body) {
-    return _post('/api/agent/run', Object.assign(
-      { agent_id: DEFAULT_AGENT, run_timeout: 600 },
-      body
-    ));
+    // Explicit caller agent_id wins; otherwise the configured install agent;
+    // otherwise the account default. The backend reads the agent from both
+    // the body and the X-Agent-Id header — keep them in sync.
+    var agent = body.agent_id || _getInstallAgent() || DEFAULT_AGENT;
+    return _post('/api/agent/run',
+      Object.assign({ run_timeout: 600 }, body, { agent_id: agent }),
+      { 'X-Agent-Id': agent });
   }
 
   function runAgent(message, opts) {
@@ -327,6 +366,9 @@ ETB.api = (function () {
     runExpertAsync: runExpertAsync,
     runAgent: runAgent,
     runAgentAsync: runAgentAsync,
+    getInstallAgent: _getInstallAgent,
+    setInstallAgent: setInstallAgent,
+    syncInstallAgentFromKV: syncInstallAgentFromKV,
     extractAgentText: extractAgentText,
     createAgentProgressTracker: createAgentProgressTracker,
     taskCheck: taskCheck,

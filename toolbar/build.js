@@ -188,6 +188,8 @@ function buildToolbar(plugins) {
     `    // would pop the manual token modal). Offline falls back to the cache.`,
     `    try {`,
     `      ETB.auth.onToken(function () {`,
+    `        // Pull the centrally-configured install agent (best-effort, KV mirror).`,
+    `        ETB.api.syncInstallAgentFromKV();`,
     `        ETB.api.kvGet('_device_id')`,
     `          .then(function (r) {`,
     `            if (r && r.value) return r.value;`,
