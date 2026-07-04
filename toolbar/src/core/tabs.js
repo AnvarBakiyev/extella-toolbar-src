@@ -87,6 +87,21 @@ ETB.tabs = (function () {
       navCenter.appendChild(btn);
     });
 
+    // Reload — re-injects the freshly deployed toolbar.js without restarting
+    // Extella (the loader re-runs on every page load). Dev & user convenience.
+    var sep = document.createElement('div');
+    sep.style.cssText = 'width:1px;height:14px;background:var(--etb-bd2);margin:0 3px;flex-shrink:0;';
+    navCenter.appendChild(sep);
+    var reloadBtn = document.createElement('button');
+    reloadBtn.className = '_etbv2_sec';
+    reloadBtn.id = '_etbv2_nav_reload';
+    reloadBtn.title = 'Reload Extella UI (re-applies the toolbar without restarting the app)';
+    reloadBtn.innerHTML = '<span>&#8635;</span>';
+    reloadBtn.addEventListener('click', function () {
+      try { window.location.reload(); } catch (e) {}
+    });
+    navCenter.appendChild(reloadBtn);
+
     bar.appendChild(navCenter);
 
     return bar;

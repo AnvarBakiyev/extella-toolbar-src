@@ -73,10 +73,23 @@ body{font-family:-apple-system,sans-serif;background:var(--bg);color:var(--tx);
 .scr::-webkit-scrollbar-thumb{background:var(--s4);border-radius:2px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
 
+/* ── Header: prominent "install by URL" entry point ──────────────────── */
+.baddurl{background:var(--a);color:#000;border:none;border-radius:8px;
+  font-size:11.5px;font-weight:800;padding:7px 14px;cursor:pointer;
+  white-space:nowrap;transition:opacity .12s,transform .1s}
+.baddurl:hover{opacity:.88}
+.baddurl:active{transform:scale(.97)}
+
 /* ── GitHub repo card ────────────────────────────────────────────────── */
 .rcard{background:var(--s2);border:1px solid var(--bd);border-radius:var(--r);
   padding:14px 16px;display:flex;flex-direction:column;gap:8px;
   transition:border-color .14s,box-shadow .14s;animation:fiu .18s ease both}
+/* Card imagery: GitHub social preview / HF gradient tile, edge-to-edge */
+.rc_thumbw{margin:-14px -16px 0;border-radius:var(--r) var(--r) 0 0;overflow:hidden;
+  aspect-ratio:2/1;background:var(--s3);flex-shrink:0}
+.rc_thumb{width:100%;height:100%;object-fit:cover;display:block}
+.rc_tile{margin:-14px -16px 0;border-radius:var(--r) var(--r) 0 0;flex-shrink:0;
+  aspect-ratio:3/1;display:flex;align-items:center;justify-content:center;font-size:30px}
 .rcard:hover{border-color:var(--bd2);box-shadow:0 8px 28px rgba(0,0,0,.45)}
 [data-lm] .rcard:hover{box-shadow:0 6px 18px rgba(0,0,0,.1)}
 .rcard.inst{border-color:rgba(var(--ar),.3)}
@@ -216,6 +229,7 @@ body{font-family:-apple-system,sans-serif;background:var(--bg);color:var(--tx);
   <div class="ldot"></div>
   <div class="lnm">Extella Plugins</div>
   <div class="sp"></div>
+  <button class="baddurl" onclick="notify('github_add')" title="Paste any GitHub link and install it as a plugin">＋ Add from URL</button>
   <button class="bclose" onclick="notify('close')" title="Close">&#10005;</button>
 </div>
 <div class="tabs" id="tabs"></div>
@@ -1023,6 +1037,11 @@ function renderDiscover() {
 
     html += '<div class="rcard' + (isInst ? ' inst' : '') +
       '" style="animation-delay:' + Math.min(i * 12, 180) + 'ms">' +
+      // GitHub renders a social-preview image for every public repo — free
+      // card art. If the host page blocks external images, hide the block.
+      '<div class="rc_thumbw"><img class="rc_thumb" loading="lazy" alt="" ' +
+        'src="https://opengraph.githubassets.com/HEAD/' + esc(r.full_name) + '" ' +
+        'onerror="this.parentNode.style.display=\'none\'"/></div>' +
       '<div class="rc_top">' +
         '<div class="rc_repo">' +
           '<div class="rc_owner">' + esc(r.full_name.split('/')[0]) + '</div>' +
@@ -1249,6 +1268,22 @@ function renderHFDiscover() {
   syncHFFilterBar();
 }
 
+// HF spaces carry a branded tile (emoji + gradient) in cardData — recreate it.
+// Models usually don't, so derive stable colors from the id hash instead.
+var HF_TILE_COLORS = {red:'#ef4444',orange:'#f97316',yellow:'#eab308',green:'#22c55e',
+  blue:'#3b82f6',indigo:'#6366f1',purple:'#a855f7',pink:'#ec4899',gray:'#6b7280',grey:'#6b7280'};
+function hfTile(item, kind, id) {
+  var cd = item.cardData || {};
+  var names = Object.keys(HF_TILE_COLORS);
+  var h = 0;
+  for (var j = 0; j < id.length; j++) h = (h * 31 + id.charCodeAt(j)) >>> 0;
+  var c1 = HF_TILE_COLORS[String(cd.colorFrom || '').toLowerCase()] || HF_TILE_COLORS[names[h % names.length]];
+  var c2 = HF_TILE_COLORS[String(cd.colorTo || '').toLowerCase()] || HF_TILE_COLORS[names[(h >> 4) % names.length]];
+  var emoji = cd.emoji || (kind === 'space' ? '🚀' : '🧠');
+  return '<div class="rc_tile" style="background:linear-gradient(135deg,' + c1 + '2e,' + c2 + '2e)">' +
+    esc(emoji) + '</div>';
+}
+
 function renderHFCard(item, i) {
   var kind = hfState.kind;
   var id = item.id || item.modelId || '';
@@ -1281,6 +1316,7 @@ function renderHFCard(item, i) {
 
   return '<div class="rcard' + (isInst ? ' inst' : '') +
     '" style="animation-delay:' + Math.min(i * 12, 180) + 'ms">' +
+    hfTile(item, kind, id) +
     '<div class="rc_top">' +
       '<div class="rc_repo">' +
         '<div class="rc_owner">' + esc(author) + '&nbsp;' + kindBadge + '</div>' +
