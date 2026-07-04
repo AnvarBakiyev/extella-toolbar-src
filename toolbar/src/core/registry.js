@@ -113,7 +113,6 @@ ETB.registry = (function () {
     // Best-effort: resolves to the array of synced manifests, never rejects.
     syncFromDevice: function (deviceId, onlyId) {
       var self = this;
-      if (!deviceId) return Promise.resolve([]);
       var fnName = '_etb_registry_read';
       var code = [
         'def ' + fnName + '(only_id: str = "") -> str:',
@@ -134,6 +133,22 @@ ETB.registry = (function () {
         '    return json.dumps(out)'
       ].join('\n');
 
+      function ingest(res) {
+        var raw = (res && (res.result || res.output)) || '[]';
+        var list;
+        try { list = typeof raw === 'string' ? JSON.parse(raw) : raw; }
+        catch (e) { list = []; }
+        if (!Array.isArray(list)) list = [];
+        var added = [];
+        list.forEach(function (m) { if (m && m.id) { self.addCustom(m); added.push(m); } });
+        return added;
+      }
+      function run(useTarget) {
+        var opts = { timeout: 20 };
+        if (useTarget && deviceId) opts.target = deviceId;
+        return ETB.api.runExpert(fnName, { only_id: onlyId || '' }, opts);
+      }
+
       return ETB.api.saveExpert({
         name: fnName,
         description: 'Read local Extella plugin registry files',
@@ -141,19 +156,17 @@ ETB.registry = (function () {
         kwargs: { only_id: '' },
         cspl: 'fython'
       }).then(function () {
-        return ETB.api.runExpert(fnName, { only_id: onlyId || '' }, { target: deviceId, timeout: 20 });
-      }).then(function (res) {
-        var raw = (res && (res.result || res.output)) || '[]';
-        var list;
-        try { list = typeof raw === 'string' ? JSON.parse(raw) : raw; }
-        catch (e) { list = []; }
-        if (!Array.isArray(list)) list = [];
-        var added = [];
-        list.forEach(function (m) {
-          if (m && m.id) { self.addCustom(m); added.push(m); }
-        });
+        return run(true);
+      }).then(ingest).then(function (added) {
+        // A stale/unavailable target id yields nothing — retry on the CURRENT
+        // device (no target). Robust to device re-registration (id changes).
+        if (!added.length && deviceId) {
+          return run(false).then(ingest).catch(function () { return added; });
+        }
         return added;
-      }).catch(function () { return []; });
+      }).catch(function () {
+        return run(false).then(ingest).catch(function () { return []; });
+      });
     }
   };
 })();
