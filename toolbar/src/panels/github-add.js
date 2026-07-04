@@ -335,6 +335,8 @@ ETB.githubAdd = (function () {
     } else {
       var rd = s.repoData || {};
       var working = s.step === 'creating' || s.step === 'analyzing' || s.step === 'installing';
+      var _baseId = rd.full_name ? ('gh_' + _slug(rd.full_name.replace('/', '_'))) : '';
+      var already = !!(_baseId && ETB.registry && ETB.registry.isInstalled && ETB.registry.isInstalled(_baseId));
 
       modalHtml = [
         '<div id="_etbv2_gh_body">',
@@ -361,8 +363,9 @@ ETB.githubAdd = (function () {
         '</div>',
         '<div class="_etbv2_gh_experts" style="margin-top:12px;">',
         '<div class="_etbv2_gh_sub_sm">',
-        'Extella\'s agent will analyze this repository and autonomously install it ',
-        'as a plugin — reusing or generating a working interface on your device.',
+        already
+          ? '&#10003; Этот плагин уже установлен. Откройте его — или переустановите заново.'
+          : 'Extella\'s agent will analyze this repository and autonomously install it as a plugin — reusing or generating a working interface on your device.',
         '</div>',
         '</div>',
         '</div>', // end preview
@@ -376,9 +379,11 @@ ETB.githubAdd = (function () {
         '<button class="_etbv2_gh_btn_cancel" id="_etbv2_gh_cancel">Cancel</button>',
         s.step === 'input' || s.step === 'error'
           ? '<button class="_etbv2_gh_btn_primary" id="_etbv2_gh_fetch">Fetch Repo</button>'
-          : rd.name && s.step === 'preview'
-            ? '<button class="_etbv2_gh_btn_primary" id="_etbv2_gh_create">Install Plugin</button>'
-            : '<button class="_etbv2_gh_btn_primary" disabled>Working...</button>',
+          : (rd.name && s.step === 'preview'
+            ? (already
+              ? '<button class="_etbv2_gh_btn_cancel" id="_etbv2_gh_reinstall">Переустановить</button><button class="_etbv2_gh_btn_primary" id="_etbv2_gh_open_existing">Открыть</button>'
+              : '<button class="_etbv2_gh_btn_primary" id="_etbv2_gh_create">Install Plugin</button>')
+            : '<button class="_etbv2_gh_btn_primary" disabled>Working...</button>'),
         '</div>',
         '</div>'
       ].join('');
@@ -541,6 +546,21 @@ ETB.githubAdd = (function () {
 
     var didSubmitBtn = ov.querySelector('#_etbv2_gh_did_submit');
     if (didSubmitBtn) didSubmitBtn.onclick = _onDeviceIdSubmit;
+
+    // Already-installed repo: open it instead of silently re-installing.
+    var openExisting = ov.querySelector('#_etbv2_gh_open_existing');
+    if (openExisting) openExisting.onclick = function () {
+      var rd = _state.repoData || {};
+      var id = rd.full_name ? ('gh_' + _slug(rd.full_name.replace('/', '_'))) : '';
+      ETB.githubAdd.close();
+      if (id && ETB.router && ETB.router.openById) ETB.router.openById(id);
+    };
+    var reinstallBtn = ov.querySelector('#_etbv2_gh_reinstall');
+    if (reinstallBtn) reinstallBtn.onclick = function () {
+      var nm = ov.querySelector('#_etbv2_gh_name_inp');
+      _state.customName = (nm && nm.value ? nm.value.trim() : '') || (_state.repoData && _state.repoData.name) || '';
+      _startAnalysis();
+    };
 
     // Run-mode picker (heavy models): mode cards + navigation.
     var modeCards = ov.querySelectorAll('._etbv2_gh_mode');
