@@ -169,6 +169,31 @@ ETB.marketplace = (function () {
         : (document.getElementById('_etbv2_root') || document.body);
       mount.appendChild(ov);
 
+      // Agents can drop new manifests into the device registry while Extella
+      // is running (e.g. a chat session installs a plugin). Boot-time sync
+      // alone misses those — refresh on every marketplace open, best-effort,
+      // and tell the iframe to re-render if anything new arrived.
+      try {
+        ETB.api.kvGet('_device_id').then(function (r) {
+          if (r && r.value) return r.value;
+          try {
+            return (window.extellaDesktop && typeof window.extellaDesktop.getDeviceID === 'function')
+              ? window.extellaDesktop.getDeviceID() : null;
+          } catch (e) { return null; }
+        }).then(function (did) {
+          if (!did) return;
+          return ETB.registry.syncFromDevice(did).then(function (added) {
+            if (added && added.length) {
+              var frame = document.getElementById('_etbv2_mkt_frame');
+              if (frame && frame.contentWindow) {
+                try { frame.contentWindow.postMessage({ type: 'etb_reload_plugins' }, '*'); } catch (e) {}
+              }
+              if (ETB.tabs && ETB.tabs.refresh) ETB.tabs.refresh();
+            }
+          });
+        }).catch(function () {});
+      } catch (e) {}
+
       // Do NOT call ETB.nav.syncUI() here — nav.set() already called _paintTabs()
       // before invoking open(). Calling syncUI() now inspects the DOM and can see
       // a library overlay that is still animating closed (150ms), causing it to
