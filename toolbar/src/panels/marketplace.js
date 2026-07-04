@@ -194,6 +194,27 @@ ETB.marketplace = (function () {
         }).catch(function () {});
       } catch (e) {}
 
+      // Merch layer: the hero story (and future collections/promos) comes
+      // from KV '_mkt_merch', so the storefront is re-merchandised from the
+      // cloud without an app release. Sent to the iframe once both the
+      // payload and the document are ready.
+      var _merchPayload = null;
+      function _sendMerch() {
+        if (!_merchPayload) return;
+        var frame = document.getElementById('_etbv2_mkt_frame');
+        if (frame && frame.contentWindow) {
+          try { frame.contentWindow.postMessage({ type: 'etb_merch', data: _merchPayload }, '*'); } catch (e) {}
+        }
+      }
+      try {
+        ETB.api.kvGet('_mkt_merch').then(function (r) {
+          if (!r || r.value == null || r.value === '') return;
+          try { _merchPayload = (typeof r.value === 'string') ? JSON.parse(r.value) : r.value; } catch (e) { return; }
+          _sendMerch();
+        }).catch(function () {});
+      } catch (e) {}
+      iframe.addEventListener('load', _sendMerch);
+
       // Do NOT call ETB.nav.syncUI() here — nav.set() already called _paintTabs()
       // before invoking open(). Calling syncUI() now inspects the DOM and can see
       // a library overlay that is still animating closed (150ms), causing it to

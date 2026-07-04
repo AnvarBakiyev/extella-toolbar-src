@@ -101,6 +101,23 @@ body{font-family:-apple-system,sans-serif;background:var(--bg);color:var(--tx);
 .rc_type{position:absolute;top:11px;right:10px;font:700 8.5px ui-monospace,Menlo,monospace;
   letter-spacing:.1em;text-transform:uppercase;color:var(--a);
   border:1px solid rgba(var(--ar),.4);border-radius:5px;padding:2px 6px}
+
+/* ── Merch hero: the story slot, fed from the cloud (_mkt_merch) ──────── */
+.mhero{grid-column:1/-1;position:relative;overflow:hidden;border:1px solid var(--bd);
+  border-radius:var(--r);background:var(--s2);padding:24px 28px;
+  display:flex;flex-direction:column;gap:9px;animation:fiu .18s ease both}
+.mhero::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--acc,var(--a)),transparent 85%)}
+.mh_promo{align-self:flex-start;font:700 9.5px ui-monospace,Menlo,monospace;letter-spacing:.12em;
+  color:#fff;background:var(--a);border-radius:5px;padding:3px 9px;text-transform:uppercase}
+.mh_src{font:600 10.5px ui-monospace,Menlo,monospace;letter-spacing:.08em;color:var(--tx2);text-transform:uppercase}
+.mh_title{font:600 24px/1.22 ui-serif,Georgia,serif;color:var(--tx);max-width:34ch;letter-spacing:0}
+.mh_title i{font-style:italic;color:var(--a)}
+.mh_facts{list-style:none;display:flex;flex-direction:column;gap:4px;margin:2px 0;padding:0}
+.mh_facts li{font-size:13.5px;font-weight:500;color:var(--tx);opacity:.85;line-height:1.45;
+  padding-left:20px;position:relative}
+.mh_facts li::before{content:"→";position:absolute;left:0;color:var(--a);font-weight:700}
+.mh_row{display:flex;align-items:center;gap:14px;margin-top:4px}
 .rcard:hover{border-color:var(--bd2);box-shadow:0 8px 28px rgba(0,0,0,.45)}
 [data-lm] .rcard:hover{box-shadow:0 6px 18px rgba(0,0,0,.1)}
 .rcard.inst{border-color:rgba(var(--ar),.3)}
@@ -971,6 +988,30 @@ function _toggleOther() {
 }
 
 // ── Discover (Featured on top + GitHub results under "Other") ─────────────
+// ── Merch hero: story-of-the-week slot, re-merchandised from the cloud ──
+// Payload arrives via postMessage {type:'etb_merch'} from the toolbar
+// (which reads KV '_mkt_merch'), so the storefront changes without releases.
+function renderMerchHero() {
+  var m = window._merch;
+  if (!m || !m.hero) return '';
+  var h = m.hero;
+  var facts = (h.facts || []).slice(0, 4).map(function (f) {
+    return '<li>' + esc(f) + '</li>';
+  }).join('');
+  var btn = h.repoUrl
+    ? '<button class="rc_btn" onclick="installRepo(\'' + esc(h.repoUrl) + '\',this)">+ Install</button>'
+    : '';
+  return '<div class="mhero" style="--acc:' + esc(h.acc || '#C67E34') + '">' +
+    '<span class="mh_promo">' + esc(h.label || 'Trending this week') + '</span>' +
+    (h.source ? '<div class="mh_src">' + esc(h.source) + '</div>' : '') +
+    '<div class="mh_title">' + esc(h.title || '') + (h.accent ? ' <i>' + esc(h.accent) + '</i>' : '') + '</div>' +
+    (facts ? '<ul class="mh_facts">' + facts + '</ul>' : '') +
+    '<div class="mh_row">' + btn +
+      (h.stats ? '<span class="rc_info">' + esc(h.stats) + '</span>' : '') +
+    '</div>' +
+  '</div>';
+}
+
 function renderDiscover() {
   // Always rescue filter_bar before any g.innerHTML wipe. The element lives
   // inside #grid when Other is expanded; innerHTML replacement destroys it.
@@ -979,7 +1020,7 @@ function renderDiscover() {
   var g = document.getElementById('grid');
   if (!g) return;
 
-  var featuredHtml = renderFeaturedSection();
+  var featuredHtml = renderMerchHero() + renderFeaturedSection();
   var arrow = _otherCollapsed ? '▶' : '▼';
   var otherHdr = '<div class="sect_hdr">' +
     '<span class="sect_title">Other</span>' +
@@ -1436,7 +1477,10 @@ function esc(s) {
 // ── Listen for parent messages ────────────────────────────────────────────
 window.addEventListener('message', function(e) {
   if (!e.data) return;
-  if (e.data.type === 'etb_reload_plugins') {
+  if (e.data.type === 'etb_merch') {
+    window._merch = e.data.data || null;
+    if (cur === 'all') renderGrid();
+  } else if (e.data.type === 'etb_reload_plugins') {
     renderGrid();
     rtabs();
   } else if (e.data.type === 'etb_install_result') {
