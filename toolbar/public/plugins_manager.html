@@ -118,6 +118,24 @@ body{font-family:-apple-system,sans-serif;background:var(--bg);color:var(--tx);
   padding-left:20px;position:relative}
 .mh_facts li::before{content:"→";position:absolute;left:0;color:var(--a);font-weight:700}
 .mh_row{display:flex;align-items:center;gap:14px;margin-top:4px}
+
+/* ── Merch collections: editorial banner cards, cloud-managed ─────────── */
+.mcoll{position:relative;overflow:hidden;border:1px solid var(--bd);border-radius:var(--r);
+  background:var(--s2);padding:16px;display:flex;flex-direction:column;gap:8px;animation:fiu .18s ease both}
+.mcoll::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--acc,var(--a)),transparent 85%)}
+.mc_eye{font:700 9.5px ui-monospace,Menlo,monospace;letter-spacing:.12em;color:var(--a);text-transform:uppercase}
+.mc_title{font:600 17px/1.25 ui-serif,Georgia,serif;color:var(--tx)}
+.mc_desc{font-size:12.5px;font-weight:500;color:var(--tx);opacity:.75;line-height:1.45}
+.mc_items{display:flex;flex-direction:column;margin-top:2px}
+.mci{display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--bd)}
+.mci_nm{flex:1;font-size:12.5px;font-weight:650;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mci_btn{border:1px solid rgba(var(--ar),.5);border-radius:7px;background:transparent;color:var(--a);
+  font:700 11px -apple-system,sans-serif;padding:4px 12px;cursor:pointer;flex-shrink:0}
+.mci_btn:hover{background:var(--a);color:#fff}
+/* промо-ярлык на карточке каталога (слот из облачной выкладки) */
+.rc_promochip{font:700 8.5px ui-monospace,Menlo,monospace;letter-spacing:.1em;color:#fff;
+  background:var(--a);border-radius:4px;padding:2.5px 7px;text-transform:uppercase;flex-shrink:0}
 .rcard:hover{border-color:var(--bd2);box-shadow:0 8px 28px rgba(0,0,0,.45)}
 [data-lm] .rcard:hover{box-shadow:0 6px 18px rgba(0,0,0,.1)}
 .rcard.inst{border-color:rgba(var(--ar),.3)}
@@ -908,6 +926,15 @@ function renderFeaturedSection() {
   var featured = getFeatured();
   var inst = gi();
 
+  // Cloud-managed promo slots: promoted ids float to the top of the shelf
+  // and carry a chip — the "eye-level shelf" of the store.
+  var promos = (window._merch && window._merch.promos) || [];
+  if (promos.length) {
+    featured = featured.slice().sort(function (a, b) {
+      return (promos.indexOf(b.id) >= 0 ? 1 : 0) - (promos.indexOf(a.id) >= 0 ? 1 : 0);
+    });
+  }
+
   var allFeatured = BUILTIN_PLUGINS_DATA.filter(function(p) { return p.featured; });
   var catCounts = buildCatCounts(allFeatured);
   var tabsHtml = buildCatTabs(catCounts, _featCat, '_setFeatCat');
@@ -956,6 +983,7 @@ function renderFeaturedSection() {
       btn = '<button class="rc_btn" onclick="installFeatured(\'' + esc(p.id) + '\',this)">+ Install</button>';
     }
 
+    var isPromo = promos.indexOf(p.id) >= 0;
     html += '<div class="rcard feat' + (isInst ? ' inst' : '') +
       '" style="--acc:' + accFor(p.category || p.id) + ';animation-delay:' + Math.min(i * 12, 180) + 'ms">' +
       '<div class="rc_top">' +
@@ -963,6 +991,7 @@ function renderFeaturedSection() {
           '<div class="rc_owner">' + esc(owner) + '</div>' +
           '<div class="rc_name">' + esc(p.name) + '</div>' +
         '</div>' +
+        (isPromo ? '<span class="rc_promochip">Promo</span>' : '') +
       '</div>' +
       (p.tagline ? '<div class="rc_desc">' + esc(p.tagline) + '</div>' : '') +
       '<div class="rc_meta">' + pills + '</div>' +
@@ -1012,6 +1041,40 @@ function renderMerchHero() {
   '</div>';
 }
 
+// Collections: banner cards with up to 3 inline items each. Items reference
+// featured plugins by id or external repos by URL — both install in place.
+function renderMerchCollections() {
+  var m = window._merch;
+  if (!m || !m.collections || !m.collections.length) return '';
+  var inst = gi();
+  return m.collections.slice(0, 3).map(function (c, ci) {
+    var items = (c.items || []).slice(0, 3).map(function (it) {
+      var nm = '', act = '';
+      if (it.id) {
+        var p = null;
+        for (var i = 0; i < BUILTIN_PLUGINS_DATA.length; i++) {
+          if (BUILTIN_PLUGINS_DATA[i].id === it.id) { p = BUILTIN_PLUGINS_DATA[i]; break; }
+        }
+        if (!p) return '';
+        nm = p.name;
+        act = inst.indexOf(it.id) >= 0
+          ? '<button class="mci_btn" onclick="notify(\'open\',\'' + esc(it.id) + '\')">Open</button>'
+          : '<button class="mci_btn" onclick="installFeatured(\'' + esc(it.id) + '\',this)">+ Install</button>';
+      } else if (it.repoUrl) {
+        nm = it.name || it.repoUrl.split('/').slice(-1)[0];
+        act = '<button class="mci_btn" onclick="installRepo(\'' + esc(it.repoUrl) + '\',this)">+ Install</button>';
+      } else { return ''; }
+      return '<div class="mci"><span class="mci_nm">' + esc(nm) + '</span>' + act + '</div>';
+    }).join('');
+    return '<div class="mcoll" style="--acc:' + esc(c.acc || '#C67E34') + ';animation-delay:' + (ci * 40) + 'ms">' +
+      (c.eyebrow ? '<div class="mc_eye">' + esc(c.eyebrow) + '</div>' : '') +
+      '<div class="mc_title">' + esc(c.title || '') + '</div>' +
+      (c.desc ? '<div class="mc_desc">' + esc(c.desc) + '</div>' : '') +
+      '<div class="mc_items">' + items + '</div>' +
+    '</div>';
+  }).join('');
+}
+
 function renderDiscover() {
   // Always rescue filter_bar before any g.innerHTML wipe. The element lives
   // inside #grid when Other is expanded; innerHTML replacement destroys it.
@@ -1020,7 +1083,7 @@ function renderDiscover() {
   var g = document.getElementById('grid');
   if (!g) return;
 
-  var featuredHtml = renderMerchHero() + renderFeaturedSection();
+  var featuredHtml = renderMerchHero() + renderMerchCollections() + renderFeaturedSection();
   var arrow = _otherCollapsed ? '▶' : '▼';
   var otherHdr = '<div class="sect_hdr">' +
     '<span class="sect_title">Other</span>' +
