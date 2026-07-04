@@ -467,6 +467,13 @@ ETB.githubAdd = (function () {
 
     if (createBtn) {
       createBtn.onclick = function () {
+        // If the URL was edited after the last fetch, the preview is stale —
+        // fetch the new URL first instead of silently installing the old repo.
+        var cur = (urlInp ? urlInp.value : _state.urlValue || '').trim();
+        if (cur && _state.fetchedUrl && cur !== _state.fetchedUrl) {
+          _fetchRepo(cur);
+          return;
+        }
         var name = nameInp ? nameInp.value.trim() : '';
         _state.customName = name || (_state.repoData && _state.repoData.name) || '';
         _startAnalysis();
@@ -609,6 +616,9 @@ ETB.githubAdd = (function () {
       }
       _state.repoData = data;
       _state.customName = data.name || '';
+      // Remember which URL this preview belongs to — Install must never run
+      // against a stale repo after the user edits the URL field.
+      _state.fetchedUrl = url;
       _state.step = 'preview';
       _render();
     }).catch(function (e) {
