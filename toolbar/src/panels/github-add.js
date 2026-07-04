@@ -121,9 +121,12 @@ ETB.githubAdd = (function () {
 
   // ── State ──────────────────────────────────────────────────────
   var _state = {
-    step: 'input', // input | preview | creating | installing | device_id_input | analysis_error | error | done
+    step: 'input', // input | preview | creating | runmode | hf_token_input | installing | device_id_input | analysis_error | error | done
     repoData: null,
-    customName: ''
+    customName: '',
+    heavyModel: null,   // { heavy, score, signals, hf } from repoAnalyzer.inferHeavyModel
+    deviceCaps: null,   // { can_run_local_heavy, gpu_name, reason } from mkt_device_caps
+    runMode: ''         // '' | 'local' | 'remote' — chosen for a heavy model
   };
 
   // ── Sanitize repo slug for plugin id ───────────────────────────
@@ -313,6 +316,10 @@ ETB.githubAdd = (function () {
       modalHtml = _renderAnalysisError();
     } else if (s.step === 'device_id_input') {
       modalHtml = _renderDeviceIdInput();
+    } else if (s.step === 'runmode') {
+      modalHtml = _renderRunMode();
+    } else if (s.step === 'hf_token_input') {
+      modalHtml = _renderHfToken();
     } else if (s.step === 'installing') {
       modalHtml = [
         '<div id="_etbv2_gh_body">',
@@ -436,6 +443,55 @@ ETB.githubAdd = (function () {
     ].join('');
   }
 
+  // ── Run-mode picker for heavy AI models: local (NVIDIA) vs hosted (HF) ──
+  function _renderRunMode() {
+    var caps = _state.deviceCaps;
+    var canLocal = !!(caps && caps.can_run_local_heavy);
+    var localNote = !caps ? 'Проверяем ваше устройство…'
+      : (canLocal ? ('Видеокарта: ' + _esc(caps.gpu_name || 'NVIDIA')) : _esc(caps.reason || 'Нужна видеокарта NVIDIA.'));
+    var rm = _state.runMode;
+    function card(mode, icon, title, desc, disabled) {
+      var sel = rm === mode;
+      return '<div class="_etbv2_gh_mode" data-mode="' + mode + '" style="' +
+        'flex:1;min-width:0;border:1.5px solid ' + (sel ? '#C67E34' : 'var(--etb-bd2,rgba(0,0,0,.14))') + ';' +
+        'border-radius:12px;padding:15px;cursor:' + (disabled ? 'not-allowed' : 'pointer') + ';' +
+        'background:' + (sel ? 'rgba(198,126,52,.08)' : 'transparent') + ';opacity:' + (disabled ? '.5' : '1') + ';">' +
+        '<div style="font-size:22px;margin-bottom:6px;">' + icon + '</div>' +
+        '<div style="font-weight:700;font-size:13.5px;margin-bottom:3px;color:var(--etb-tx,#111);">' + title + '</div>' +
+        '<div style="font-size:11.5px;color:var(--etb-tx2,#6b6b6b);line-height:1.4;">' + desc + '</div>' +
+      '</div>';
+    }
+    return [
+      '<div id="_etbv2_gh_body">',
+      '<div class="_etbv2_gh_title">Как запустить эту модель?</div>',
+      '<div class="_etbv2_gh_sub" style="margin-bottom:14px;">Это тяжёлая ИИ-модель. Запустите её локально (нужна видеокарта NVIDIA) или через HuggingFace — на любом компьютере.</div>',
+      '<div style="display:flex;gap:10px;">',
+      card('local', '&#128187;', 'Локально', localNote, !canLocal),
+      card('remote', '&#9729;', 'Через HuggingFace', 'Работает везде. Понадобится ваш ключ HuggingFace (своя квота).', false),
+      '</div>',
+      '<div class="_etbv2_gh_actions" style="margin-top:18px;">',
+      '<button class="_etbv2_gh_btn_cancel" id="_etbv2_gh_rm_back">&#8592; Назад</button>',
+      '<button class="_etbv2_gh_btn_primary" id="_etbv2_gh_rm_next"' + (rm ? '' : ' disabled') + '>Установить &#8594;</button>',
+      '</div></div>'
+    ].join('');
+  }
+
+  function _renderHfToken() {
+    return [
+      '<div id="_etbv2_gh_body">',
+      '<div class="_etbv2_gh_title">Ваш ключ HuggingFace</div>',
+      '<div class="_etbv2_gh_sub" style="margin-bottom:12px;">Нужен, чтобы у вас была своя квота GPU. Ключ бесплатный — создайте и вставьте сюда. Он сохранится для будущих установок.</div>',
+      '<div class="_etbv2_gh_field">',
+      '<input class="_etbv2_gh_input" id="_etbv2_gh_hf_inp" type="password" placeholder="hf_..." autocomplete="off" spellcheck="false" />',
+      '</div>',
+      '<a href="https://huggingface.co/settings/tokens" target="_blank" style="font-size:11.5px;color:#C67E34;text-decoration:none;display:inline-block;margin-top:6px;">Открыть страницу токенов HuggingFace &#8594;</a>',
+      '<div class="_etbv2_gh_actions" style="margin-top:18px;">',
+      '<button class="_etbv2_gh_btn_cancel" id="_etbv2_gh_hf_back">&#8592; Назад</button>',
+      '<button class="_etbv2_gh_btn_primary" id="_etbv2_gh_hf_save">Сохранить и установить &#8594;</button>',
+      '</div></div>'
+    ].join('');
+  }
+
   function _bindEvents(ov) {
     var closeBtn = ov.querySelector('#_etbv2_gh_x');
     var cancelBtn = ov.querySelector('#_etbv2_gh_cancel');
@@ -485,6 +541,27 @@ ETB.githubAdd = (function () {
 
     var didSubmitBtn = ov.querySelector('#_etbv2_gh_did_submit');
     if (didSubmitBtn) didSubmitBtn.onclick = _onDeviceIdSubmit;
+
+    // Run-mode picker (heavy models): mode cards + navigation.
+    var modeCards = ov.querySelectorAll('._etbv2_gh_mode');
+    for (var mi = 0; mi < modeCards.length; mi++) {
+      (function (el) {
+        el.onclick = function () {
+          var m = el.getAttribute('data-mode');
+          if (m === 'local' && !(_state.deviceCaps && _state.deviceCaps.can_run_local_heavy)) return;
+          _state.runMode = m;
+          _render();
+        };
+      })(modeCards[mi]);
+    }
+    var rmNext = ov.querySelector('#_etbv2_gh_rm_next');
+    if (rmNext) rmNext.onclick = function () { if (_state.runMode) _onRunModeNext(); };
+    var rmBack = ov.querySelector('#_etbv2_gh_rm_back');
+    if (rmBack) rmBack.onclick = function () { _state.step = 'preview'; _render(); };
+    var hfSave = ov.querySelector('#_etbv2_gh_hf_save');
+    if (hfSave) hfSave.onclick = _onHfTokenSave;
+    var hfBack = ov.querySelector('#_etbv2_gh_hf_back');
+    if (hfBack) hfBack.onclick = function () { _state.step = 'runmode'; _render(); };
 
     var hideBtn = ov.querySelector('#_etbv2_gh_hide');
     if (hideBtn) hideBtn.onclick = function () { ETB.githubAdd.close(); };
@@ -675,21 +752,73 @@ ETB.githubAdd = (function () {
       })
       .then(function (digest) {
         _state.digest = digest;
-        return _getDeviceId();
-      })
-      .then(function (deviceId) {
-        if (!deviceId) {
-          _state.step = 'device_id_input';
+        // Heavy AI model (needs a GPU)? Offer local (NVIDIA) vs hosted (HF) first.
+        var heavy = ETB.repoAnalyzer.inferHeavyModel && ETB.repoAnalyzer.inferHeavyModel(digest);
+        _state.heavyModel = heavy || null;
+        if (heavy && heavy.heavy && !_state.runMode) {
+          _state.step = 'runmode';
+          _fetchDeviceCaps();
           _render();
           return;
         }
-        return _runAgentInstall(rd, _state.digest, deviceId);
+        return _proceedInstall();
       })
       .catch(function (e) {
         _state.step = 'analysis_error';
         _state.errorMsg = (e && e.message) || 'Analysis failed';
         _render();
       });
+  }
+
+  // Device resolution → agent install. Shared by the normal path and the
+  // local/hosted run-mode picker.
+  function _proceedInstall() {
+    return _getDeviceId().then(function (deviceId) {
+      if (!deviceId) {
+        _state.step = 'device_id_input';
+        _render();
+        return;
+      }
+      return _runAgentInstall(_state.repoData, _state.digest, deviceId);
+    });
+  }
+
+  // Load device compute capability (cached in KV) to gate the "Local" option.
+  function _fetchDeviceCaps() {
+    if (_state.deviceCaps) return;
+    ETB.api.kvGet('mkt_device_caps')
+      .then(function (r) { if (r && r.value) { try { return JSON.parse(r.value); } catch (e) {} } return null; })
+      .catch(function () { return null; })
+      .then(function (cached) {
+        if (cached) return cached;
+        return ETB.api.runExpert('mkt_device_caps', {}).then(function (res) {
+          var out = (res && res.result !== undefined) ? res.result : res;
+          if (typeof out === 'string') { try { out = JSON.parse(out); } catch (e) { out = null; } }
+          if (out) { try { ETB.api.kvSet('mkt_device_caps', JSON.stringify(out), 'device compute caps'); } catch (e) {} }
+          return out;
+        }).catch(function () { return null; });
+      })
+      .then(function (caps) {
+        _state.deviceCaps = caps || { can_run_local_heavy: false, reason: 'Не удалось проверить устройство — доступен только HuggingFace.' };
+        if (!_state.runMode && !_state.deviceCaps.can_run_local_heavy) _state.runMode = 'remote';
+        if (_state.step === 'runmode') _render();
+      });
+  }
+
+  function _onRunModeNext() {
+    if (_state.runMode === 'local') { _proceedInstall(); return; }
+    ETB.api.kvGet('huggingface_token').then(function (r) {
+      if (r && r.value) { _proceedInstall(); }
+      else { _state.step = 'hf_token_input'; _render(); }
+    }).catch(function () { _state.step = 'hf_token_input'; _render(); });
+  }
+
+  function _onHfTokenSave() {
+    var inp = document.getElementById('_etbv2_gh_hf_inp');
+    var tok = inp ? inp.value.trim() : '';
+    if (!tok) return;
+    ETB.api.kvSet('huggingface_token', tok, 'HuggingFace access token').catch(function () {});
+    _proceedInstall();
   }
 
   // ── Agent install: smart orchestration.
@@ -710,7 +839,10 @@ ETB.githubAdd = (function () {
   }
 
   function _runAgentInstall(rd, digest, deviceId) {
-    var ctx = ETB.installPrompt.context(rd, digest);
+    var ctx = ETB.installPrompt.context(rd, digest, {
+      runMode: _state.runMode || 'local',
+      hf: _state.heavyModel && _state.heavyModel.hf
+    });
     if (_state.customName) ctx.displayName = _state.customName;
     _state.pluginId = ctx.pluginId;
     _state.deviceId = deviceId;
@@ -774,11 +906,17 @@ ETB.githubAdd = (function () {
     // hint. Phase 2 is unchanged and self-correcting, so a mis-hint costs at most
     // one re-read, never a broken install. Ambiguous/complex repos (web apps,
     // monorepos, services, unknown) still get the full two-phase flow.
-    var fastCat = _fastInstallCategory(digest);
+    // Hosted (remote) mode has its own build recipe — never take the local
+    // fast-path for it.
+    var fastCat = ctx.runMode === 'remote' ? '' : _fastInstallCategory(digest);
     if (fastCat) {
       _state.installAgentText = 'Fast install (simple repo)';
       _render();
       return runMainInstall({ category: fastCat, setup_steps: [], _fastpath: true });
+    }
+    // Remote mode: skip LLM Phase-1 analysis, go straight to the hosted build.
+    if (ctx.runMode === 'remote') {
+      return runMainInstall(null);
     }
 
     var analysisPrompt = ETB.installPrompt.buildAnalysis
@@ -837,7 +975,8 @@ ETB.githubAdd = (function () {
       _state = {
         step: 'input', repoData: null, customName: '', urlValue: prefillUrl || '',
         statusMsg: '', errorMsg: '', lastPluginId: null,
-        digest: null, pluginId: null, ghToken: '', deviceId: null, installAgentText: ''
+        digest: null, pluginId: null, ghToken: '', deviceId: null, installAgentText: '',
+        heavyModel: null, deviceCaps: null, runMode: ''
       };
 
       var ov = document.createElement('div');

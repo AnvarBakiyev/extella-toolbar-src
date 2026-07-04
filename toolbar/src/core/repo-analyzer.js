@@ -294,8 +294,35 @@ ETB.repoAnalyzer = (function () {
     return null; // Anything else — let LLM Phase 1 decide.
   }
 
+  // Detect a "heavy AI model" repo (needs a GPU to run locally) so the install
+  // flow can offer a local-vs-hosted choice. Deterministic, no LLM, no network.
+  var WEIGHT_RE = /\.(safetensors|bin|gguf|ggml|pt|pth|onnx|ckpt|h5|msgpack|npz)(\?|#|$)/i;
+  function inferHeavyModel(digest) {
+    if (!digest) return { heavy: false, score: 0, signals: [], hf: null };
+    var text = String(digest.text || '') + '\n' + String(digest.readme || '');
+    var samples = (digest.code_samples || []).map(function (s) { return (s && s.excerpt) || ''; }).join('\n');
+    var hay = (text + '\n' + samples).toLowerCase();
+    var tp = digest.tree_paths || [];
+    var paths = Array.isArray(tp) ? tp : (tp.shown || []);
+    var score = 0, signals = [];
+    if (paths.some(function (p) { return WEIGHT_RE.test(String(p)); })) { score += 3; signals.push('weights'); }
+    if (/\b(torch|pytorch|transformers|diffusers|accelerate|vllm|sglang|llama[-_.]cpp|sentencepiece|bitsandbytes|safetensors|onnxruntime)\b/.test(hay)) { score += 2; signals.push('ml-deps'); }
+    if (/\.cuda\(|to\(["']cuda|torch_dtype|from_pretrained\(|automodel|pipeline\(|device_map/.test(hay)) { score += 2; signals.push('inference'); }
+    if (/huggingface\.co\/|model card|vram|gpu required|download the weights|checkpoint/.test(hay)) { score += 1; signals.push('readme'); }
+    // Find a hosted counterpart on HuggingFace (Space preferred, else a model id).
+    var hf = null;
+    var ms = text.match(/huggingface\.co\/spaces\/([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)/i);
+    if (ms) hf = { kind: 'space', id: ms[1] };
+    else {
+      var mm = text.match(/huggingface\.co\/([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)/i);
+      if (mm && !/^(datasets|docs|blog|models|spaces)$/i.test(mm[1].split('/')[0])) hf = { kind: 'model', id: mm[1] };
+    }
+    return { heavy: score >= 4, score: score, signals: signals, hf: hf };
+  }
+
   return {
     harvest: harvest,
-    inferInstallAnalysis: inferInstallAnalysis
+    inferInstallAnalysis: inferInstallAnalysis,
+    inferHeavyModel: inferHeavyModel
   };
 })();

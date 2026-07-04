@@ -31,11 +31,15 @@ ETB.installPrompt = (function () {
   // Assemble all deterministic identifiers/paths so the agent and the toolbar
   // agree on names (start expert, pid file, registry path, port). Everything
   // the agent must reuse verbatim is computed here, not invented by the model.
-  function context(rd, digest) {
+  function context(rd, digest, opts) {
+    opts = opts || {};
+    var runMode = opts.runMode === 'remote' ? 'remote' : 'local';
     var fullName = rd.full_name || ((rd.owner && rd.owner.login ? rd.owner.login : 'owner') + '/' + (rd.name || 'repo'));
     var owner = fullName.split('/')[0];
     var repo = (fullName.split('/')[1] || rd.name || 'repo');
-    var pluginId = 'gh_' + _slug(fullName.replace('/', '_'));
+    // Hosted and local installs of the same repo get distinct ids so their
+    // manifests don't collide.
+    var pluginId = 'gh_' + _slug(fullName.replace('/', '_')) + (runMode === 'remote' ? '_hf' : '');
     var safeId = pluginId.replace(/[^a-z0-9]/gi, '_');
     var port = 34000 + (_hashCode(pluginId) % 1000);
     return {
@@ -54,7 +58,9 @@ ETB.installPrompt = (function () {
       registryPath: '~/extella-plugins/_registry/' + safeId + '.json',
       startExpert: '_etb_srv_' + safeId,
       pidFile: '/tmp/etb_srv_' + safeId + '.pid',
-      digest: digest || null
+      digest: digest || null,
+      runMode: runMode,
+      hf: opts.hf || null   // { kind:'space'|'model', id:'owner/name' } when known
     };
   }
 
@@ -111,8 +117,66 @@ ETB.installPrompt = (function () {
   }
 
   // The standard prompt. `ctx` comes from context() above.
+  // Hosted (HuggingFace) install of a heavy model — no local GPU/weights.
+  // The plugin's UI calls a device expert that proxies to the model's HF Space
+  // via gradio_client, using the user's HF token (from KV). Proven pattern.
+  function buildHostedModel(ctx) {
+    var hf = ctx.hf || {};
+    var proxyExpert = ctx.safeId + '_run';
+    return [
+      'You are the Extella Plugin Installer agent, running ON THE USER\'S DEVICE with the',
+      'Extella CSPL/expert toolset. Install this GitHub repo as a HOSTED plugin: the heavy',
+      'model runs on its HuggingFace Space (no local GPU, no weights download). Do it end to',
+      'end, autonomously. Respond ONLY with the final JSON object described at the bottom.',
+      '',
+      '=== TARGET ===',
+      'GitHub repo: ' + ctx.url,
+      'Plugin name: ' + ctx.displayName,
+      'HuggingFace ' + (hf.kind || 'space') + ': ' + (hf.id || '(FIND IT: read the repo README for a huggingface.co/spaces/<owner>/<name> or huggingface.co/<owner>/<model> link; if none, pick the official Space for this model)'),
+      '',
+      '=== FIXED IDENTIFIERS (use verbatim) ===',
+      'plugin_id     = ' + ctx.pluginId,
+      'install_dir   = ' + ctx.rootPath + '   (create it; put index.html here)',
+      'http_port     = ' + ctx.port + '       (serve index.html on this port via python3 -m http.server)',
+      'start_expert  = ' + ctx.startExpert,
+      'proxy_expert  = ' + proxyExpert + '    (the device expert that calls the HF Space)',
+      'registry_file = ' + ctx.registryPath,
+      '',
+      '=== STEP 1: create the proxy expert (fython, global) ===',
+      'First introspect the Space API on the device: GET https://<owner>-<name>.hf.space/gradio_api/info',
+      '(owner/name from the Space id, lowercased, "/"→"-"). Find the primary endpoint (api_name, e.g.',
+      '"/run_ocr" or "/predict") and its inputs. Then save an expert named ' + proxyExpert + ' whose kwargs',
+      'match those inputs, PLUS an optional image_b64 for any file/image input. The expert MUST:',
+      '  - read the HF token from Extella KV key "huggingface_token" (POST https://api.extella.ai/api/kv/get',
+      '    with the device api token from ~/.extella/api_token.txt; header X-Auth-Token); set os.environ["HF_TOKEN"].',
+      '  - if image_b64 is given: base64-decode to a tempfile and pass it via gradio_client handle_file(path).',
+      '  - use gradio_client: try Client("<owner>/<name>", hf_token=tok) except TypeError: Client("<owner>/<name>");',
+      '    call client.predict(..., api_name="<the endpoint>"); return json.dumps({status:"success", <result fields>}).',
+      '  - ensure gradio_client is installed (subprocess pip install if ImportError). NO include(...) — plain imports.',
+      'Verify by running ' + proxyExpert + ' once on a small sample and confirming it returns text/result.',
+      '',
+      '=== STEP 2: create index.html in install_dir ===',
+      'A clean control panel (LIGHT style, gold #C67E34 accent) with inputs matching the model, a file drop',
+      'zone that reads the file as base64 (FileReader.readAsDataURL) — NOT File.path (hidden in Electron) —',
+      'and a Run button. Call the proxy via the toolbar bridge (postMessage {type:"etb_run_expert", reqId,',
+      'name:"' + proxyExpert + '", params}); await {type:"etb_expert_result"}. The UI makes NO direct API calls.',
+      '',
+      '=== STEP 3: serve + manifest ===',
+      'Start python3 -m http.server ' + ctx.port + ' in install_dir (detached; write pid; save start_expert ' + ctx.startExpert + ').',
+      'Write ' + ctx.registryPath + ' with: {id:"' + ctx.pluginId + '", name:"' + ctx.displayName + '", type:"github", mode:"generated_ui",',
+      'hf:{id:"' + (hf.id || '') + '", kind:"' + (hf.kind || 'space') + '", hosted:true}, ui:{type:"local_server", port:' + ctx.port + ', rootPath:"' + ctx.rootPath + '",',
+      'startExpert:"' + ctx.startExpert + '", mainFile:"index.html", openInBrowser:false, expectsHealth:false}, service:{isApp:false, port:' + ctx.port + ', startExpert:"' + ctx.startExpert + '", ready:true},',
+      'experts:["' + proxyExpert + '"], installed:true}.',
+      '',
+      '=== FINAL OUTPUT (only this) ===',
+      'Return: {"ok":true, "plugin_id":"' + ctx.pluginId + '", "mode":"hosted", "hf":"' + (hf.id || '') + '", "notes":"..."}',
+      'If you cannot find a HuggingFace Space for this model, return {"ok":false, "error":"no hosted Space found"}.'
+    ].join('\n');
+  }
+
   // Optional `analysis` from the pre-analysis SubAgent (see buildAnalysis).
   function build(ctx, analysis) {
+    if (ctx && ctx.runMode === 'remote') return buildHostedModel(ctx);
     var lines = [
       'You are the Extella Plugin Installer agent. You run ON THE USER\'S DEVICE and',
       'have full local filesystem access plus the Extella CSPL/expert toolset. Your job',
