@@ -697,6 +697,18 @@ ETB.githubAdd = (function () {
   //    For complex/ambiguous repos: LLM SubAgent-A runs first, then the main agent.
   //    This restores Toolbar-1.2.5 speed for simple plugins while keeping the two-phase
   //    flow only where it genuinely helps (monorepos, docker, apps with start scripts).
+  // Deterministic fast-path classifier (no LLM). Returns a category hint only
+  // when repoAnalyzer is confident the repo is simple; otherwise '' so the
+  // normal LLM Phase-1 analysis runs. Kept conservative on purpose — web apps,
+  // monorepos and services are ambiguous (static vs needs-build) and stay on
+  // the full flow.
+  function _fastInstallCategory(digest) {
+    var cls = digest && digest.repo_class;
+    if (cls === 'library') return '2';   // wrap the library in a generated UI
+    if (cls === 'cli') return '1b';      // runnable CLI tool
+    return '';
+  }
+
   function _runAgentInstall(rd, digest, deviceId) {
     var ctx = ETB.installPrompt.context(rd, digest);
     if (_state.customName) ctx.displayName = _state.customName;
@@ -756,8 +768,19 @@ ETB.githubAdd = (function () {
       });
     }
 
-    // All repos go through LLM SubAgent-A (Phase 1) for consistent, stable classification.
-    // The heuristic fast-path is intentionally removed — the LLM decides category for everyone.
+    // Fast path: when the deterministic repo classifier (repoAnalyzer, no LLM) is
+    // confident the repo is simple — a plain library or a CLI tool — skip the LLM
+    // Phase-1 round trip (~30–180s) and hand the main agent a minimal category
+    // hint. Phase 2 is unchanged and self-correcting, so a mis-hint costs at most
+    // one re-read, never a broken install. Ambiguous/complex repos (web apps,
+    // monorepos, services, unknown) still get the full two-phase flow.
+    var fastCat = _fastInstallCategory(digest);
+    if (fastCat) {
+      _state.installAgentText = 'Fast install (simple repo)';
+      _render();
+      return runMainInstall({ category: fastCat, setup_steps: [], _fastpath: true });
+    }
+
     var analysisPrompt = ETB.installPrompt.buildAnalysis
       ? ETB.installPrompt.buildAnalysis(ctx) : null;
 
