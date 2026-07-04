@@ -1,0 +1,41 @@
+{
+  "id": "ffmpeg-builder",
+  "mode": "llm_driven",
+  "featured": true,
+  "name": "FFmpeg",
+  "tagline": "Build ffmpeg commands",
+  "description": "Inspired by FFmpeg — universal multimedia framework.",
+  "category": "developer",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "github.com/FFmpeg/FFmpeg",
+  "pills": [
+    "GitHub",
+    "AI",
+    "Popular"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://github.com/FFmpeg/FFmpeg",
+  "experts": [],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "chat",
+    "initialPrompt": "You build ffmpeg CLI commands from descriptions with flag explanations.",
+    "quickActions": [
+      {
+        "label": "Try an example",
+        "prompt": "Show me an example using FFmpeg."
+      },
+      {
+        "label": "Explain how it works",
+        "prompt": "Explain how FFmpeg works for a beginner."
+      }
+    ]
+  },
+  "expert_defs": [],
+  "conceptTexts": [
+    "You are a FFmpeg assistant. You build ffmpeg CLI commands from descriptions with flag explanations."
+  ]
+}

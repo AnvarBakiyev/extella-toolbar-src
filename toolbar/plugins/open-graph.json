@@ -1,0 +1,74 @@
+{
+  "id": "open-graph",
+  "mode": "form_driven",
+  "featured": true,
+  "name": "Open Graph Extractor",
+  "tagline": "Extract social preview meta tags from HTML",
+  "description": "Inspired by Open Graph protocol — extract og:title, og:image, og:description and Twitter Card meta tags from any webpage HTML.",
+  "category": "web",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "opengraphprotocol.org",
+  "pills": [
+    "GitHub",
+    "Popular",
+    "Open source"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://github.com/ogp",
+  "experts": [
+    "open_graph_extract"
+  ],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "form"
+  },
+  "capabilities": [
+    {
+      "id": "extract_og",
+      "name": "Open Graph Extractor",
+      "expert_name": "open_graph_extract",
+      "inputs": [
+        {
+          "name": "html",
+          "type": "textarea",
+          "label": "HTML (or URL content)",
+          "required": true,
+          "placeholder": "<html><head><meta property=\"og:title\" content=\"...\">"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "json"
+        }
+      ]
+    }
+  ],
+  "expert_defs": [
+    {
+      "name": "open_graph_extract",
+      "description": "Inspired by Open Graph protocol — extract og:title, og:image, og:description and Twitter Card meta tags from any webpage HTML.",
+      "cspl": "fython",
+      "kwargs": {
+        "html": ""
+      },
+      "code": [
+        "def open_graph_extract(html=''):",
+        "    import re, json",
+        "    try:",
+        "        og = re.findall(r'<meta[^>]+property=[\"\\']og:([^\"\\']+)[\"\\'][^>]+content=[\"\\']([^\"\\']+)[\"\\']', html, re.I)",
+        "        og += re.findall(r'<meta[^>]+content=[\"\\']([^\"\\']+)[\"\\'][^>]+property=[\"\\']og:([^\"\\']+)[\"\\']', html, re.I)",
+        "        tw = re.findall(r'<meta[^>]+name=[\"\\']twitter:([^\"\\']+)[\"\\'][^>]+content=[\"\\']([^\"\\']+)[\"\\']', html, re.I)",
+        "        tags = {('og:'+k if not k.startswith('og:') else k): v for k,v in og}",
+        "        tags.update({'twitter:'+k: v for k,v in tw})",
+        "        return json.dumps({'status':'success','output_type':'json','data':tags})",
+        "    except Exception as e: return json.dumps({'status':'error','message':str(e)})"
+      ]
+    }
+  ],
+  "conceptTexts": [
+    "Plugin: Open Graph Extractor (id: open-graph). Wraps opengraphprotocol.org."
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "id": "github-actions-gen",
+  "mode": "llm_driven",
+  "featured": true,
+  "name": "GitHub Actions Generator",
+  "tagline": "Create CI/CD workflows for any project",
+  "description": "Describe your project and deployment needs and get a complete GitHub Actions workflow: automated testing, linting, Docker builds, deployments to AWS/GCP/Azure/Vercel, release automation, and more.",
+  "category": "developer",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "Extella AI",
+  "pills": [
+    "AI-powered",
+    "CI/CD",
+    "GitHub Actions"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://docs.github.com/en/actions",
+  "experts": [],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "chat",
+    "layout": "split",
+    "initialPrompt": "Describe your project and what you need automated (test, build, deploy), and I'll write the GitHub Actions workflow.",
+    "quickActions": [
+      {
+        "label": "Test + lint on push",
+        "prompt": "Create a GitHub Actions workflow that runs tests and linting on every push and pull request for a Node.js project"
+      },
+      {
+        "label": "Deploy to AWS on merge",
+        "prompt": "Create a GitHub Actions workflow that builds a Docker image and deploys to AWS ECS on merge to main"
+      },
+      {
+        "label": "Publish npm package",
+        "prompt": "Create a GitHub Actions workflow to automatically publish an npm package when a new release tag is created"
+      },
+      {
+        "label": "Deploy to Vercel",
+        "prompt": "Create a GitHub Actions workflow for a Next.js app that deploys preview environments on PRs and production on merge to main"
+      }
+    ]
+  },
+  "expert_defs": [],
+  "conceptTexts": [
+    "You are a GitHub Actions Generator in the Extella toolbar plugin 'GitHub Actions Generator'. You write production-ready GitHub Actions workflows.\n\nWorkflow best practices:\n1. Use specific action versions (actions/checkout@v4, not @master)\n2. Cache dependencies (actions/cache or setup-* built-in caching)\n3. Use secrets from GitHub Secrets, never hardcode\n4. Matrix builds for multi-version/OS testing when relevant\n5. Separate jobs with clear names and appropriate needs: dependencies\n6. Use concurrency groups to cancel outdated runs\n7. Set appropriate permissions (contents: read, packages: write, etc.)\n8. Use environment variables for reusable values\n\nCommon workflow types:\n- CI: checkout → setup runtime → install deps → lint → test → coverage\n- CD: build → push image → deploy → notify\n- Release: tag → changelog → GitHub Release → publish\n- Security: dependency audit → SAST scan → secret scanning\n\nAlways include on: triggers (push, pull_request, workflow_dispatch at minimum) and a top-level workflow name. Add inline comments explaining complex steps."
+  ]
+}

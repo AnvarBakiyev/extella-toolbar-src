@@ -1,0 +1,129 @@
+{
+  "id": "percentage-calculator",
+  "mode": "form_driven",
+  "featured": true,
+  "name": "Percentage Calculator",
+  "tagline": "Calculate percentages, changes, discounts and ratios",
+  "description": "Solve any percentage problem: what is X% of Y, what percentage is X of Y, percentage change between two values, reverse percentage, discount calculator, and markup/margin calculations.",
+  "category": "calculators",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "math (Python stdlib)",
+  "pills": [
+    "No AI needed",
+    "Instant",
+    "Offline"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://en.wikipedia.org/wiki/Percentage",
+  "experts": [
+    "percentage_calculator_compute"
+  ],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "form"
+  },
+  "capabilities": [
+    {
+      "id": "compute_percentage",
+      "name": "Calculate Percentage",
+      "expert_name": "percentage_calculator_compute",
+      "inputs": [
+        {
+          "name": "calculation_type",
+          "type": "select",
+          "label": "Calculation Type",
+          "required": false,
+          "default": "percent_of",
+          "options": [
+            {
+              "value": "percent_of",
+              "label": "What is X% of Y?"
+            },
+            {
+              "value": "what_percent",
+              "label": "X is what % of Y?"
+            },
+            {
+              "value": "percent_change",
+              "label": "% change from X to Y"
+            },
+            {
+              "value": "discount",
+              "label": "Price after X% discount"
+            },
+            {
+              "value": "reverse",
+              "label": "Original value (Y is X% of ?)"
+            }
+          ]
+        },
+        {
+          "name": "value_x",
+          "type": "float",
+          "label": "Value X (percentage or amount)",
+          "required": true,
+          "placeholder": "15"
+        },
+        {
+          "name": "value_y",
+          "type": "float",
+          "label": "Value Y (total or new value)",
+          "required": true,
+          "placeholder": "200"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "json"
+        }
+      ]
+    }
+  ],
+  "expert_defs": [
+    {
+      "name": "percentage_calculator_compute",
+      "description": "Performs percentage calculations: percent_of (X% of Y), what_percent (X is ?% of Y), percent_change (% change from X to Y), discount (price after X% discount from Y), reverse (original from Y being X%). Params: calculation_type, value_x, value_y. Returns JSON with output_type json.",
+      "cspl": "fython",
+      "kwargs": {
+        "calculation_type": "percent_of",
+        "value_x": "15",
+        "value_y": "200"
+      },
+      "code": [
+        "def percentage_calculator_compute(calculation_type='percent_of', value_x='15', value_y='200'):",
+        "    import json",
+        "    try:",
+        "        x, y = float(value_x), float(value_y)",
+        "        if calculation_type == 'percent_of':",
+        "            res = round(x / 100 * y, 4)",
+        "            label = str(x) + '% of ' + str(y) + ' = ' + str(res)",
+        "        elif calculation_type == 'what_percent':",
+        "            if y == 0: return json.dumps({'status': 'error', 'message': 'Y cannot be zero'})",
+        "            res = round(x / y * 100, 4)",
+        "            label = str(x) + ' is ' + str(res) + '% of ' + str(y)",
+        "        elif calculation_type == 'percent_change':",
+        "            if x == 0: return json.dumps({'status': 'error', 'message': 'X (original value) cannot be zero'})",
+        "            res = round((y - x) / abs(x) * 100, 4)",
+        "            direction = 'increase' if res >= 0 else 'decrease'",
+        "            label = str(abs(res)) + '% ' + direction + ' from ' + str(x) + ' to ' + str(y)",
+        "        elif calculation_type == 'discount':",
+        "            discount_amt = round(y * x / 100, 4)",
+        "            res = round(y - discount_amt, 4)",
+        "            label = str(y) + ' after ' + str(x) + '% discount = ' + str(res) + ' (saved: ' + str(discount_amt) + ')'",
+        "        else:",
+        "            if x == 0: return json.dumps({'status': 'error', 'message': 'X (percentage) cannot be zero'})",
+        "            res = round(y / x * 100, 4)",
+        "            label = str(y) + ' is ' + str(x) + '% of ' + str(res)",
+        "        return json.dumps({'status': 'success', 'output_type': 'json', 'data': {'result': res, 'label': label, 'type': calculation_type}})",
+        "    except Exception as e:",
+        "        return json.dumps({'status': 'error', 'message': str(e)})"
+      ]
+    }
+  ],
+  "conceptTexts": [
+    "Plugin: Percentage Calculator (id: percentage-calculator). Expert percentage_calculator_compute solves percentage problems. Types: percent_of (X% of Y), what_percent (X is ?% of Y), percent_change (% change X→Y), discount (Y after X% off), reverse (original when Y is X%). Returns {output_type: 'json', data: {result, label}}."
+  ]
+}

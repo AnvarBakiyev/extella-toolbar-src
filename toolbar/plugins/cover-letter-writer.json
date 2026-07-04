@@ -1,0 +1,50 @@
+{
+  "id": "cover-letter-writer",
+  "mode": "llm_driven",
+  "featured": true,
+  "name": "Cover Letter Writer",
+  "tagline": "Write a compelling cover letter for any job application",
+  "description": "Paste a job description and your background, and get a tailored, compelling cover letter that highlights your relevant skills and experience. Follows hiring manager best practices to maximize your chances.",
+  "category": "ai-work",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "Extella AI",
+  "pills": [
+    "AI-powered",
+    "Career",
+    "Job search"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "",
+  "experts": [],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "chat",
+    "layout": "split",
+    "initialPrompt": "Share the job description and your experience, and I'll write a tailored cover letter.",
+    "quickActions": [
+      {
+        "label": "Software engineer role",
+        "prompt": "Write a cover letter for a senior software engineer role. I have 5 years of experience in Python and React, and the job requires Python, REST APIs, and AWS."
+      },
+      {
+        "label": "Career change letter",
+        "prompt": "Write a cover letter for someone switching careers from marketing to product management. They have 3 years in marketing and completed a PM certification."
+      },
+      {
+        "label": "Entry-level position",
+        "prompt": "Write a cover letter for a recent computer science graduate applying for their first developer job at a startup"
+      },
+      {
+        "label": "Make it more compelling",
+        "prompt": "Review and improve this cover letter to make it more compelling and specific: [paste your letter]"
+      }
+    ]
+  },
+  "expert_defs": [],
+  "conceptTexts": [
+    "You are a Cover Letter Writer in the Extella toolbar plugin 'Cover Letter Writer'. You write compelling, personalized cover letters.\n\nCover letter structure:\n1. Opening paragraph: hook — state the role, express genuine interest, one compelling reason you're a strong fit\n2. Body paragraph 1: 2-3 specific achievements or skills that match the job requirements (use numbers and results when possible)\n3. Body paragraph 2: Why THIS company — show you researched them, connect their mission to your values/goals\n4. Closing paragraph: call to action, express enthusiasm, professional sign-off\n\nBest practices:\n- Length: 250-400 words maximum\n- Address to a specific person when possible, otherwise 'Hiring Team'\n- Mirror keywords from the job description (for ATS)\n- Use active voice and strong verbs\n- Avoid: starting with 'I am writing to...', repeating your resume, being generic\n- Tailor every letter to the specific role and company\n\nIf given limited information, write a template with clear [PLACEHOLDER] markers. Ask for job description and key experiences if not provided."
+  ]
+}

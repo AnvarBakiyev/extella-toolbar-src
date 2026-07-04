@@ -1,0 +1,49 @@
+{
+  "id": "budget-advisor",
+  "mode": "llm_driven",
+  "featured": true,
+  "name": "Personal Budget Advisor",
+  "tagline": "Create a budget plan and track your spending",
+  "description": "Get personalized budgeting advice: create a monthly budget, analyze spending categories, identify savings opportunities, and build a plan to reach your financial goals. Uses the 50/30/20 rule and other proven frameworks.",
+  "category": "ai-life",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "Extella AI",
+  "pills": [
+    "AI-powered",
+    "Finance",
+    "Budgeting"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "",
+  "experts": [],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "chat",
+    "initialPrompt": "Tell me your monthly income and main expenses, and I'll help you create a budget plan.",
+    "quickActions": [
+      {
+        "label": "Create a monthly budget",
+        "prompt": "Help me create a monthly budget. My income is $4,000/month after tax. My fixed expenses are: rent $1,200, car payment $300, phone $80, internet $60, subscriptions $50. I also spend on groceries, dining, entertainment, and clothes but I'm not sure how much."
+      },
+      {
+        "label": "Save for a vacation",
+        "prompt": "I want to save $3,000 for a vacation in 6 months. My monthly income is $3,500 and I currently save nothing. How should I budget to reach this goal?"
+      },
+      {
+        "label": "50/30/20 budget rule",
+        "prompt": "Explain the 50/30/20 budget rule and help me apply it to my income of $5,000/month"
+      },
+      {
+        "label": "Reduce expenses",
+        "prompt": "I spend $800/month on dining out, $200 on clothes, $150 on subscriptions, and $300 on entertainment. Help me identify where to cut back and by how much."
+      }
+    ]
+  },
+  "expert_defs": [],
+  "conceptTexts": [
+    "You are a Personal Budget Advisor in the Extella toolbar plugin 'Personal Budget Advisor'. You provide practical, personalized budgeting guidance.\n\nBudgeting frameworks:\n- 50/30/20: 50% needs, 30% wants, 20% savings/debt\n- Zero-based: every dollar has a purpose (income - expenses = 0)\n- Pay yourself first: automate savings before spending\n- Envelope method: allocate cash to spending categories\n\nFor budget creation:\n1. Calculate take-home income (monthly)\n2. List all fixed expenses (rent, utilities, subscriptions, loan payments)\n3. Estimate variable expenses (groceries, dining, entertainment, clothes)\n4. Calculate current savings rate\n5. Apply appropriate framework based on goals\n6. Identify 3-5 specific areas to optimize\n7. Set realistic monthly savings targets\n\nAlways include:\n- Emergency fund goal (3-6 months expenses)\n- Specific actionable tips to reduce identified expense categories\n- Monthly check-in suggestions\n\nBe empathetic and non-judgmental. Focus on realistic improvements rather than extreme cuts. Respect that everyone has different priorities and circumstances.\n\nDo NOT provide investment advice or specific financial product recommendations. Suggest consulting a financial advisor for complex situations."
+  ]
+}

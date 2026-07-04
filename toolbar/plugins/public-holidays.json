@@ -1,0 +1,87 @@
+{
+  "id": "public-holidays",
+  "mode": "form_driven",
+  "featured": true,
+  "name": "Public Holidays",
+  "tagline": "Official public holidays for any country and year",
+  "description": "Get the list of official public holidays for any country and year. Shows date, English name, local name, and holiday type. Covers 100+ countries. Uses the free Nager.Date API — no API key required.",
+  "category": "web",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "date.nager.at (free, no auth)",
+  "pills": [
+    "Free API",
+    "100+ countries",
+    "No auth"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://date.nager.at",
+  "experts": [
+    "public_holidays_get"
+  ],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "form"
+  },
+  "capabilities": [
+    {
+      "id": "get_holidays",
+      "name": "Get Public Holidays",
+      "expert_name": "public_holidays_get",
+      "inputs": [
+        {
+          "name": "country_code",
+          "type": "text",
+          "label": "Country Code (ISO 3166-1 alpha-2)",
+          "required": true,
+          "placeholder": "US or DE or FR or GB"
+        },
+        {
+          "name": "year",
+          "type": "text",
+          "label": "Year",
+          "required": false,
+          "default": "",
+          "placeholder": "2024"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "json"
+        }
+      ]
+    }
+  ],
+  "expert_defs": [
+    {
+      "name": "public_holidays_get",
+      "description": "Returns official public holidays for a country and year using date.nager.at. Params: country_code (2-letter ISO code like US/DE/FR), year (4-digit year, defaults to current year). Returns JSON with output_type json containing list of holidays.",
+      "cspl": "fython",
+      "kwargs": {
+        "country_code": "US",
+        "year": ""
+      },
+      "code": [
+        "def public_holidays_get(country_code='US', year=''):",
+        "    import urllib.request, json, datetime",
+        "    try:",
+        "        cc = country_code.upper().strip()[:2]",
+        "        yr = year.strip() if year.strip() else str(datetime.date.today().year)",
+        "        url = 'https://date.nager.at/api/v3/PublicHolidays/' + yr + '/' + cc",
+        "        req = urllib.request.Request(url, headers={'User-Agent': 'ExtellaTool/1.0'})",
+        "        with urllib.request.urlopen(req, timeout=10) as r:",
+        "            data = json.loads(r.read().decode())",
+        "        holidays = [{'date': h.get('date'), 'name': h.get('localName', h.get('name', '')), 'name_en': h.get('name', ''), 'type': ', '.join(h.get('types', ['Public']))} for h in data]",
+        "        result = {'country': cc, 'year': yr, 'count': len(holidays), 'holidays': holidays}",
+        "        return json.dumps({'status': 'success', 'output_type': 'json', 'data': result})",
+        "    except Exception as e:",
+        "        return json.dumps({'status': 'error', 'message': str(e)})"
+      ]
+    }
+  ],
+  "conceptTexts": [
+    "Plugin: Public Holidays (id: public-holidays). Expert public_holidays_get returns official public holidays using date.nager.at (free). Params: country_code (2-letter ISO like US/DE/FR), year (defaults to current). Returns {output_type: 'json', data: {country, year, count, holidays: [{date, name, name_en, type}]}}."
+  ]
+}

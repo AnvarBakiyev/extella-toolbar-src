@@ -1,0 +1,58 @@
+{
+  "id": "api-docs-writer",
+  "mode": "llm_driven",
+  "featured": true,
+  "name": "API Documentation Writer",
+  "tagline": "Generate OpenAPI specs and README docs for your API",
+  "description": "Paste your API code, route definitions, or a description of your endpoints and get complete API documentation: OpenAPI 3.0 YAML/JSON spec, Markdown README sections, or endpoint descriptions with request/response examples.",
+  "category": "developer",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "Extella AI",
+  "pills": [
+    "AI-powered",
+    "OpenAPI",
+    "REST"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://spec.openapis.org/oas/v3.0.0",
+  "experts": [],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "chat",
+    "layout": "split",
+    "initialPrompt": "Paste route code, an OpenAPI fragment, or describe your endpoints — I'll generate structured API documentation.",
+    "quickActions": [
+      {
+        "label": "Document a REST endpoint",
+        "prompt": "Write API documentation for a POST /api/users endpoint that creates a user with name, email, and password fields. Returns 201 with the created user or 400 for validation errors."
+      },
+      {
+        "label": "Generate OpenAPI YAML",
+        "prompt": "Generate OpenAPI 3.0 YAML spec for a simple blog API with endpoints: GET /posts, POST /posts, GET /posts/{id}, PUT /posts/{id}, DELETE /posts/{id}"
+      },
+      {
+        "label": "Generate cURL example",
+        "prompt": "Write API documentation for a POST endpoint with a JSON body, including a complete cURL example with headers and sample payload."
+      },
+      {
+        "label": "Generate Python SDK example",
+        "prompt": "Write API documentation for a REST endpoint with a Python requests example showing authentication, request body, and response handling."
+      },
+      {
+        "label": "Gemini image API doc",
+        "prompt": "Write complete API documentation for Google AI Studio image generation via gemini-3-pro-image (Nano Banana Pro): endpoint, auth headers, request body with responseModalities and imageConfig, cURL and Python examples, response format, and error codes."
+      },
+      {
+        "label": "Write error responses doc",
+        "prompt": "Write documentation for standard error responses: 400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found, 429 Too Many Requests, 500 Internal Server Error"
+      }
+    ]
+  },
+  "expert_defs": [],
+  "conceptTexts": [
+    "You are an API Documentation Writer in the Extella toolbar plugin 'API Documentation Writer'. You generate professional API documentation from code or descriptions.\n\nDOCUMENT OUTPUT RULES (mandatory):\n- Output plain Markdown only — write headings, tables, and prose directly in the response body.\n- Never wrap the entire response in a code fence (no ```text, ```markdown, or ```md around the whole answer).\n- Never use :::artifact blocks or any proprietary wrapper syntax.\n- Use # and ## headings, GFM pipe tables, and fenced code blocks only for real code samples (curl, json, yaml, bash, python).\n- Each code sample must be one complete fenced block (opening ``` and closing ```); never split code between a fence and plain text.\n\nDocument structure (follow this order when documenting an endpoint):\n1. Overview — one short paragraph\n2. Authentication — headers or scheme, or \"None required\"\n3. Endpoint — method, path, description\n4. Parameters — GFM table (name, type, required, description, example)\n5. Request body — schema and JSON example in a ```json fence\n6. Examples — cURL and/or SDK snippets in separate fenced blocks\n7. Responses — success table + error codes table\n8. Errors — when each status code occurs\n\nDocumentation formats you produce:\n1. OpenAPI 3.0 YAML/JSON specs when explicitly requested (in a ```yaml or ```json fence only)\n2. Markdown endpoint documentation as above\n3. README-style API sections\n\nBest practices:\n- Consistent naming (snake_case or camelCase as appropriate)\n- Clear descriptions for every field\n- Realistic example values\n- Rate limiting notes when relevant"
+  ]
+}

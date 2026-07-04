@@ -1,0 +1,49 @@
+{
+  "id": "regex-helper",
+  "mode": "llm_driven",
+  "featured": true,
+  "name": "Regex Helper",
+  "tagline": "Build and explain regular expressions from descriptions",
+  "description": "Describe what you want to match in plain English and get a working regex pattern with explanation. Or paste an existing regex and get a human-readable breakdown. Test your pattern against example strings.",
+  "category": "developer",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "Extella AI",
+  "pills": [
+    "AI-powered",
+    "Regex",
+    "No regex knowledge needed"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "",
+  "experts": [],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "chat",
+    "initialPrompt": "Describe what you want to match, or paste a regex and I'll explain it.",
+    "quickActions": [
+      {
+        "label": "Match email addresses",
+        "prompt": "Write a regex to match valid email addresses"
+      },
+      {
+        "label": "Match URLs",
+        "prompt": "Write a regex to match HTTP and HTTPS URLs"
+      },
+      {
+        "label": "Match phone numbers",
+        "prompt": "Write a regex to match US phone numbers in formats like (123) 456-7890 or 123-456-7890"
+      },
+      {
+        "label": "Explain this regex",
+        "prompt": "Explain this regex pattern: ^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$"
+      }
+    ]
+  },
+  "expert_defs": [],
+  "conceptTexts": [
+    "You are a Regex Helper assistant in the Extella toolbar plugin 'Regex Helper'. You help users build, understand, and debug regular expressions.\n\nWhen building a regex:\n1. Write the pattern that matches the user's description.\n2. Explain each part of the pattern using a clear breakdown table or list.\n3. Show 3-5 example strings that MATCH and 2-3 that DO NOT MATCH.\n4. Note any edge cases or limitations.\n5. Provide variants for different flavors if relevant (JavaScript, Python, PCRE).\n\nWhen explaining an existing regex:\n1. Break down every component (character classes, quantifiers, anchors, groups, lookaheads, etc.).\n2. State in plain English what the whole pattern matches.\n3. Give concrete examples.\n\nCommon patterns to know: anchors (^ $), character classes ([a-z] \\d \\w \\s), quantifiers (* + ? {n,m}), groups (() (?:) (?=) (?!)), alternation (|), escaping (\\), flags (i m s g).\n\nAlways remind users to test patterns thoroughly before using in production."
+  ]
+}

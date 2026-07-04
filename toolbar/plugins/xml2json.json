@@ -1,0 +1,85 @@
+{
+  "id": "xml2json",
+  "mode": "form_driven",
+  "featured": true,
+  "name": "XML to JSON",
+  "tagline": "Convert XML documents to JSON",
+  "description": "Inspired by xml2js — the standard Node.js XML-to-JSON converter. Parses XML into a nested JSON structure instantly.",
+  "category": "data",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "github.com/Leonidas-from-XIV/node-xml2js",
+  "pills": [
+    "GitHub",
+    "Popular",
+    "Open source"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://github.com/Leonidas-from-XIV/node-xml2js",
+  "experts": [
+    "xml2json_convert"
+  ],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "form"
+  },
+  "capabilities": [
+    {
+      "id": "convert_xml",
+      "name": "XML to JSON",
+      "expert_name": "xml2json_convert",
+      "inputs": [
+        {
+          "name": "xml_text",
+          "type": "textarea",
+          "label": "XML input",
+          "required": true,
+          "placeholder": "<root><item>value</item></root>"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "json"
+        }
+      ]
+    }
+  ],
+  "expert_defs": [
+    {
+      "name": "xml2json_convert",
+      "description": "Inspired by xml2js — the standard Node.js XML-to-JSON converter. Parses XML into a nested JSON structure instantly.",
+      "cspl": "fython",
+      "kwargs": {
+        "xml_text": ""
+      },
+      "code": [
+        "def xml2json_convert(xml_text=''):",
+        "    import xml.etree.ElementTree as ET, json",
+        "    def elem_to_dict(el):",
+        "        d = dict(el.attrib)",
+        "        children = list(el)",
+        "        if children:",
+        "            for c in children:",
+        "                v = elem_to_dict(c)",
+        "                k = c.tag.split('}')[-1]",
+        "                d.setdefault(k, []).append(v) if isinstance(d.get(k), list) or k in d else d.update({k: v})",
+        "                if k in d and isinstance(d[k], list) is False and not isinstance(d[k], dict):",
+        "                    d[k] = [d[k], v] if not isinstance(d[k], list) else d[k]",
+        "        text = (el.text or '').strip()",
+        "        if text and not children: return text",
+        "        if text: d['_text'] = text",
+        "        return d if d else text or ''",
+        "    try:",
+        "        root = ET.fromstring(xml_text.strip())",
+        "        result = {root.tag.split('}')[-1]: elem_to_dict(root)}",
+        "        return json.dumps({'status':'success','output_type':'text','data':json.dumps(result, indent=2)})",
+        "    except Exception as e: return json.dumps({'status':'error','message':str(e)})"
+      ]
+    }
+  ],
+  "conceptTexts": [
+    "Plugin: XML to JSON (id: xml2json). Wraps github.com/Leonidas-from-XIV/node-xml2js."
+  ]
+}

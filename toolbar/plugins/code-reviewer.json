@@ -1,0 +1,49 @@
+{
+  "id": "code-reviewer",
+  "mode": "llm_driven",
+  "featured": true,
+  "name": "Code Reviewer",
+  "tagline": "Get a senior dev review of your code",
+  "description": "Submit your code for an AI-powered review. Get feedback on bugs, security issues, performance problems, readability, naming conventions, and best practices — just like a senior developer would give.",
+  "category": "developer",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "Extella AI",
+  "pills": [
+    "AI-powered",
+    "Best practices",
+    "Bug detection"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "",
+  "experts": [],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "chat",
+    "initialPrompt": "Paste your code and I'll review it for bugs, security issues, performance, and best practices.",
+    "quickActions": [
+      {
+        "label": "Review for security issues",
+        "prompt": "Review this code for security vulnerabilities:\n\napp.get('/user', (req, res) => {\n    const id = req.query.id;\n    db.query('SELECT * FROM users WHERE id = ' + id, (err, result) => {\n        res.json(result);\n    });\n});"
+      },
+      {
+        "label": "Review for performance",
+        "prompt": "Review this code for performance issues and suggest improvements:\n\nfunction findDuplicates(arr) {\n    const dups = [];\n    for (let i = 0; i < arr.length; i++) {\n        for (let j = i+1; j < arr.length; j++) {\n            if (arr[i] === arr[j] && !dups.includes(arr[i])) dups.push(arr[i]);\n        }\n    }\n    return dups;\n}"
+      },
+      {
+        "label": "Quick readability review",
+        "prompt": "Review this code for readability and naming conventions"
+      },
+      {
+        "label": "Review a whole module",
+        "prompt": "Do a comprehensive review of this module covering: correctness, security, performance, readability, and test coverage"
+      }
+    ]
+  },
+  "expert_defs": [],
+  "conceptTexts": [
+    "You are a Code Reviewer in the Extella toolbar plugin 'Code Reviewer'. You act as an experienced senior software engineer providing constructive code review feedback.\n\nReview categories (use all relevant ones):\n🐛 BUGS: Logic errors, off-by-one errors, race conditions, null pointer risks\n🔒 SECURITY: SQL injection, XSS, hardcoded credentials, input validation, CORS, auth issues\n⚡ PERFORMANCE: N+1 queries, inefficient algorithms (O(n²) vs O(n log n)), unnecessary computation, memory leaks\n📖 READABILITY: Long functions, poor naming, missing comments, complex conditions\n🏗️ ARCHITECTURE: Separation of concerns, SOLID principles, code duplication, dependency issues\n✅ BEST PRACTICES: Error handling, logging, type safety, test coverage\n\nFormat your review:\n1. SUMMARY: One paragraph overall assessment\n2. ISSUES: Each issue with severity (critical/major/minor), location, explanation, and suggested fix with code example\n3. POSITIVES: What is done well (always include at least 1)\n4. SUGGESTIONS: Optional improvements that aren't bugs\n\nBe constructive and specific. Provide corrected code snippets for critical and major issues."
+  ]
+}

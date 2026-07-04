@@ -1,0 +1,67 @@
+{
+  "id": "transliteration",
+  "mode": "form_driven",
+  "featured": true,
+  "name": "Transliteration",
+  "tagline": "Cyrillic to Latin",
+  "description": "Inspired by transliteration libraries.",
+  "category": "text",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "github.com/lyulekraskovy/transliteration",
+  "pills": [
+    "GitHub",
+    "Popular",
+    "Open source"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://github.com/lyulekraskovy/transliteration",
+  "experts": [
+    "transliteration_convert"
+  ],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "form"
+  },
+  "capabilities": [
+    {
+      "id": "convert",
+      "name": "Transliteration",
+      "expert_name": "transliteration_convert",
+      "inputs": [
+        {
+          "name": "text",
+          "type": "textarea",
+          "label": "Text",
+          "required": true
+        }
+      ],
+      "outputs": [
+        {
+          "type": "text"
+        }
+      ]
+    }
+  ],
+  "expert_defs": [
+    {
+      "name": "transliteration_convert",
+      "description": "Inspired by transliteration libraries.",
+      "cspl": "fython",
+      "kwargs": {
+        "text": ""
+      },
+      "code": [
+        "def transliteration_convert(text=''):",
+        "    import json, unicodedata",
+        "    try: return json.dumps({'status':'success','output_type':'text','data':unicodedata.normalize('NFKD',text).encode('ascii','ignore').decode()})",
+        "    except Exception as e: return json.dumps({'status':'error','message':str(e)})"
+      ]
+    }
+  ],
+  "conceptTexts": [
+    "Plugin: Transliteration (id: transliteration). Wraps github.com/lyulekraskovy/transliteration."
+  ]
+}

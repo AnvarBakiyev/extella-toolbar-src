@@ -1,0 +1,119 @@
+{
+  "id": "lorem-ipsum-generator",
+  "mode": "form_driven",
+  "featured": true,
+  "name": "Lorem Ipsum Generator",
+  "tagline": "Generate placeholder text for mockups and designs",
+  "description": "Generate Lorem Ipsum placeholder text for UI mockups, wireframes, and design prototypes. Choose the amount of text by paragraphs, sentences, or words. Classic lorem ipsum text for every designer and developer.",
+  "category": "developer",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "random (Python stdlib)",
+  "pills": [
+    "No AI needed",
+    "Instant",
+    "Offline"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://en.wikipedia.org/wiki/Lorem_ipsum",
+  "experts": [
+    "lorem_ipsum_generator_generate"
+  ],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "form"
+  },
+  "capabilities": [
+    {
+      "id": "generate_lorem",
+      "name": "Generate Lorem Ipsum",
+      "expert_name": "lorem_ipsum_generator_generate",
+      "inputs": [
+        {
+          "name": "unit",
+          "type": "select",
+          "label": "Generate",
+          "required": false,
+          "default": "paragraphs",
+          "options": [
+            {
+              "value": "paragraphs",
+              "label": "Paragraphs"
+            },
+            {
+              "value": "sentences",
+              "label": "Sentences"
+            },
+            {
+              "value": "words",
+              "label": "Words"
+            }
+          ]
+        },
+        {
+          "name": "count",
+          "type": "int",
+          "label": "Count",
+          "required": false,
+          "default": 3,
+          "min": 1,
+          "max": 20
+        },
+        {
+          "name": "start_with_lorem",
+          "type": "bool",
+          "label": "Start with 'Lorem ipsum...'",
+          "required": false,
+          "default": true
+        }
+      ],
+      "outputs": [
+        {
+          "type": "text"
+        }
+      ]
+    }
+  ],
+  "expert_defs": [
+    {
+      "name": "lorem_ipsum_generator_generate",
+      "description": "Generates Lorem Ipsum placeholder text. Params: unit (paragraphs/sentences/words), count (1-20), start_with_lorem (bool). Returns JSON with output_type text.",
+      "cspl": "fython",
+      "kwargs": {
+        "unit": "paragraphs",
+        "count": "3",
+        "start_with_lorem": "true"
+      },
+      "code": [
+        "def lorem_ipsum_generator_generate(unit='paragraphs', count='3', start_with_lorem='true'):",
+        "    import random, json",
+        "    words = ['lorem','ipsum','dolor','sit','amet','consectetur','adipiscing','elit','sed','do','eiusmod','tempor','incididunt','ut','labore','et','dolore','magna','aliqua','enim','ad','minim','veniam','quis','nostrud','exercitation','ullamco','laboris','nisi','aliquip','ex','ea','commodo','consequat','duis','aute','irure','in','reprehenderit','voluptate','velit','esse','cillum','eu','fugiat','nulla','pariatur','excepteur','sint','occaecat','cupidatat','non','proident','sunt','culpa','qui','officia','deserunt','mollit','anim','id','est','laborum','curabitur','pretium','tincidunt','lacus','nunc','pulvinar','sapien','ligula','eget','semper','urna','interdum','libero']",
+        "    def make_sentence(n):",
+        "        w = [random.choice(words) for _ in range(n)]",
+        "        return w[0].capitalize() + ' ' + ' '.join(w[1:]) + '.'",
+        "    def make_paragraph():",
+        "        return ' '.join(make_sentence(random.randint(10, 20)) for _ in range(random.randint(4, 7)))",
+        "    start = str(start_with_lorem).lower() in ('true', '1', 'yes')",
+        "    n = min(max(int(count), 1), 20)",
+        "    if unit == 'words':",
+        "        wlist = [random.choice(words) for _ in range(n)]",
+        "        if start: wlist[0] = 'Lorem'",
+        "        result = ' '.join(wlist)",
+        "    elif unit == 'sentences':",
+        "        sents = [make_sentence(random.randint(8, 18)) for _ in range(n)]",
+        "        if start: sents[0] = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.'",
+        "        result = ' '.join(sents)",
+        "    else:",
+        "        paras = [make_paragraph() for _ in range(n)]",
+        "        if start: paras[0] = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.'",
+        "        result = '\\n\\n'.join(paras)",
+        "    return json.dumps({'status': 'success', 'output_type': 'text', 'data': result})"
+      ]
+    }
+  ],
+  "conceptTexts": [
+    "Plugin: Lorem Ipsum Generator (id: lorem-ipsum-generator). Expert lorem_ipsum_generator_generate creates Lorem Ipsum placeholder text. Params: unit (paragraphs/sentences/words), count (1-20), start_with_lorem (bool). Returns {output_type: 'text', data: '<placeholder text>'}."
+  ]
+}

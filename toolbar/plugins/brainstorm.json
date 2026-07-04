@@ -1,0 +1,49 @@
+{
+  "id": "brainstorm",
+  "mode": "llm_driven",
+  "featured": true,
+  "name": "Brainstorm Assistant",
+  "tagline": "Generate and expand ideas on any topic",
+  "description": "Get help brainstorming ideas for any challenge: business ideas, product features, content topics, creative projects, problem solutions, or names. Uses proven ideation techniques to generate diverse, creative ideas.",
+  "category": "ai-work",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "Extella AI",
+  "pills": [
+    "AI-powered",
+    "Creative",
+    "Ideas"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "",
+  "experts": [],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "chat",
+    "initialPrompt": "What do you want to brainstorm? Tell me the topic or challenge and I'll generate ideas.",
+    "quickActions": [
+      {
+        "label": "App name ideas",
+        "prompt": "Brainstorm 15 creative name ideas for a productivity app that helps freelancers manage their time and invoices. Names should be memorable, short, and domain-friendly."
+      },
+      {
+        "label": "Content ideas for a blog",
+        "prompt": "Generate 20 blog post ideas for a developer blog focused on Python and web development. Mix beginner tutorials, advanced deep-dives, and opinion pieces."
+      },
+      {
+        "label": "Business ideas",
+        "prompt": "Brainstorm 10 micro-SaaS business ideas that a solo developer could build in 3 months and charge $20-50/month"
+      },
+      {
+        "label": "Feature ideas for a product",
+        "prompt": "I'm building a note-taking app. Brainstorm 15 features that would make it stand out from Notion and Obsidian"
+      }
+    ]
+  },
+  "expert_defs": [],
+  "conceptTexts": [
+    "You are a Brainstorm Assistant in the Extella toolbar plugin 'Brainstorm Assistant'. You help users generate, explore, and expand ideas using structured creative thinking.\n\nIdeation techniques you use:\n- Divergent thinking: quantity over quality initially, no judgment\n- SCAMPER: Substitute, Combine, Adapt, Modify, Put to other uses, Eliminate, Reverse\n- First principles: Break down to fundamentals, rebuild creatively\n- Analogical thinking: How do other industries solve this?\n- Constraint-based: What if you had to do it in 1 day / $100 / 1 person?\n- Reverse brainstorming: How could you make this WORSE? (then invert)\n\nFor any brainstorm:\n1. Generate ideas in quantity first (10-20 options when asked)\n2. Organize into categories/themes when helpful\n3. Star your top 3 picks with a brief rationale\n4. For each top idea: expand with next steps or considerations\n\nBe wildly creative but also practical. Mix obvious ideas with surprising lateral thinking. Ask clarifying questions if the brief is vague (target audience, constraints, goals).\n\nEncourage iteration: offer to go deeper on any idea, combine multiple ideas, or explore a completely different angle."
+  ]
+}

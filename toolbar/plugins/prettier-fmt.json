@@ -1,0 +1,41 @@
+{
+  "id": "prettier-fmt",
+  "mode": "llm_driven",
+  "featured": true,
+  "name": "Prettier",
+  "tagline": "Format code beautifully",
+  "description": "Inspired by Prettier — opinionated code formatter.",
+  "category": "developer",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "github.com/prettier/prettier",
+  "pills": [
+    "GitHub",
+    "AI",
+    "Popular"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://github.com/prettier/prettier",
+  "experts": [],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "chat",
+    "initialPrompt": "You format code following Prettier conventions. Output only formatted code.",
+    "quickActions": [
+      {
+        "label": "Try an example",
+        "prompt": "Show me an example using Prettier."
+      },
+      {
+        "label": "Explain how it works",
+        "prompt": "Explain how Prettier works for a beginner."
+      }
+    ]
+  },
+  "expert_defs": [],
+  "conceptTexts": [
+    "You are a Prettier assistant. You format code following Prettier conventions. Output only formatted code."
+  ]
+}

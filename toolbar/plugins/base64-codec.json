@@ -1,0 +1,92 @@
+{
+  "id": "base64-codec",
+  "mode": "form_driven",
+  "featured": true,
+  "name": "Base64 Encoder / Decoder",
+  "tagline": "Encode and decode Base64 strings instantly",
+  "description": "Encode plain text to Base64 or decode a Base64 string back to readable text. Essential for working with APIs, email attachments, data URIs, and tokens.",
+  "category": "text",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "base64 (Python stdlib)",
+  "pills": [
+    "No AI needed",
+    "Instant",
+    "Offline"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://docs.python.org/3/library/base64.html",
+  "experts": [
+    "base64_codec_convert"
+  ],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "form"
+  },
+  "capabilities": [
+    {
+      "id": "convert_base64",
+      "name": "Encode / Decode",
+      "expert_name": "base64_codec_convert",
+      "inputs": [
+        {
+          "name": "text",
+          "type": "textarea",
+          "label": "Input Text",
+          "required": true,
+          "placeholder": "Enter text to encode or Base64 to decode..."
+        },
+        {
+          "name": "operation",
+          "type": "select",
+          "label": "Operation",
+          "required": false,
+          "default": "encode",
+          "options": [
+            {
+              "value": "encode",
+              "label": "Encode → Base64"
+            },
+            {
+              "value": "decode",
+              "label": "Decode ← Base64"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "type": "text"
+        }
+      ]
+    }
+  ],
+  "expert_defs": [
+    {
+      "name": "base64_codec_convert",
+      "description": "Encodes plain text to Base64 or decodes a Base64 string back to text. Params: text (input string, required), operation (encode or decode, default encode). Returns JSON with output_type text.",
+      "cspl": "fython",
+      "kwargs": {
+        "text": "",
+        "operation": "encode"
+      },
+      "code": [
+        "def base64_codec_convert(text='', operation='encode'):",
+        "    import base64, json",
+        "    try:",
+        "        if operation == 'encode':",
+        "            result = base64.b64encode(text.encode('utf-8')).decode('utf-8')",
+        "        else:",
+        "            result = base64.b64decode(text.encode('utf-8')).decode('utf-8')",
+        "        return json.dumps({'status': 'success', 'output_type': 'text', 'data': result})",
+        "    except Exception as e:",
+        "        return json.dumps({'status': 'error', 'message': str(e)})"
+      ]
+    }
+  ],
+  "conceptTexts": [
+    "Plugin: Base64 Encoder/Decoder (id: base64-codec). Expert base64_codec_convert encodes text to Base64 or decodes Base64 back to text using Python stdlib. Params: text (input string), operation (encode or decode). Returns {output_type: 'text', data: '<result>'}."
+  ]
+}

@@ -1,0 +1,100 @@
+{
+  "id": "currency-converter",
+  "mode": "form_driven",
+  "featured": true,
+  "name": "Currency Converter",
+  "tagline": "Live exchange rates from the European Central Bank",
+  "description": "Convert any amount between 30+ world currencies using live exchange rates from the European Central Bank (ECB). Updated daily. Uses the free Frankfurter API — no API key required.",
+  "category": "web",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "frankfurter.app (free, no auth)",
+  "pills": [
+    "Free API",
+    "Live rates",
+    "No auth"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://www.frankfurter.app",
+  "experts": [
+    "currency_converter_convert"
+  ],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "form"
+  },
+  "capabilities": [
+    {
+      "id": "convert_currency",
+      "name": "Convert Currency",
+      "expert_name": "currency_converter_convert",
+      "inputs": [
+        {
+          "name": "amount",
+          "type": "float",
+          "label": "Amount",
+          "required": true,
+          "placeholder": "100"
+        },
+        {
+          "name": "from_currency",
+          "type": "text",
+          "label": "From Currency (e.g. USD)",
+          "required": false,
+          "default": "USD",
+          "placeholder": "USD"
+        },
+        {
+          "name": "to_currency",
+          "type": "text",
+          "label": "To Currency (e.g. EUR)",
+          "required": false,
+          "default": "EUR",
+          "placeholder": "EUR"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "json"
+        }
+      ]
+    }
+  ],
+  "expert_defs": [
+    {
+      "name": "currency_converter_convert",
+      "description": "Converts currency amounts using live ECB rates via frankfurter.app. Params: amount (number), from_currency (3-letter ISO code), to_currency (3-letter ISO code). Returns JSON with output_type json containing converted amount and rate.",
+      "cspl": "fython",
+      "kwargs": {
+        "amount": "100",
+        "from_currency": "USD",
+        "to_currency": "EUR"
+      },
+      "code": [
+        "def currency_converter_convert(amount='100', from_currency='USD', to_currency='EUR'):",
+        "    import urllib.request, json",
+        "    try:",
+        "        frm = from_currency.upper().strip()",
+        "        to = to_currency.upper().strip()",
+        "        amt = float(amount)",
+        "        url = 'https://api.frankfurter.app/latest?amount=' + str(amt) + '&from=' + frm + '&to=' + to",
+        "        req = urllib.request.Request(url, headers={'User-Agent': 'ExtellaTool/1.0'})",
+        "        with urllib.request.urlopen(req, timeout=10) as r:",
+        "            data = json.loads(r.read().decode())",
+        "        converted = data['rates'].get(to)",
+        "        if converted is None:",
+        "            return json.dumps({'status': 'error', 'message': 'Currency ' + to + ' not found. Use 3-letter ISO codes like USD, EUR, GBP.'})",
+        "        rate = round(converted / amt, 6)",
+        "        result = {'amount': amt, 'from': frm, 'to': to, 'converted': converted, 'rate': rate, 'date': data.get('date'), 'source': 'European Central Bank'}",
+        "        return json.dumps({'status': 'success', 'output_type': 'json', 'data': result})",
+        "    except Exception as e:",
+        "        return json.dumps({'status': 'error', 'message': str(e)})"
+      ]
+    }
+  ],
+  "conceptTexts": [
+    "Plugin: Currency Converter (id: currency-converter). Expert currency_converter_convert converts currency using live ECB rates via frankfurter.app. Params: amount (number), from_currency (ISO code), to_currency (ISO code). Returns {output_type: 'json', data: {amount, from, to, converted, rate, date}}."
+  ]
+}

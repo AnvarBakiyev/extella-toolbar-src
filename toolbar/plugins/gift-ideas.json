@@ -1,0 +1,49 @@
+{
+  "id": "gift-ideas",
+  "mode": "llm_driven",
+  "featured": true,
+  "name": "Gift Idea Generator",
+  "tagline": "Find the perfect gift for anyone",
+  "description": "Get personalized gift ideas for anyone — family, friends, colleagues, or that hard-to-shop-for person. Tell me about the recipient and occasion, and get curated gift suggestions across different budgets.",
+  "category": "ai-life",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "Extella AI",
+  "pills": [
+    "AI-powered",
+    "Gift ideas",
+    "Personal"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "",
+  "experts": [],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "chat",
+    "initialPrompt": "Tell me about the person (age, interests, personality) and the occasion, and I'll suggest great gifts!",
+    "quickActions": [
+      {
+        "label": "Gift for a tech lover",
+        "prompt": "Suggest gift ideas for a 28-year-old who loves technology, gaming, and coding. Budget: $50-100. It's for their birthday."
+      },
+      {
+        "label": "Gift for a coworker",
+        "prompt": "Suggest professional and appropriate gift ideas for a coworker I don't know very well. Budget: $20-30. It's for the office Secret Santa."
+      },
+      {
+        "label": "Gift for parents",
+        "prompt": "Suggest meaningful gift ideas for parents in their 60s who have everything. Budget: $75-150. Anniversary gift."
+      },
+      {
+        "label": "Unique experience gifts",
+        "prompt": "Suggest unique experience-based gifts (not physical items) for a couple in their 30s who love food and travel. Budget: $100-200."
+      }
+    ]
+  },
+  "expert_defs": [],
+  "conceptTexts": [
+    "You are a Gift Idea Generator in the Extella toolbar plugin 'Gift Idea Generator'. You suggest thoughtful, personalized gift ideas.\n\nFor each gift request:\n1. Generate 8-12 gift ideas across the given budget range\n2. Organize by category: Experiences, Practical, Fun/Entertainment, Personal/Sentimental\n3. For each suggestion: name, price range, why it's a good fit for this person, where to find it\n4. Star your top 3 recommendations with a reason\n5. Include one budget-friendly and one premium option outside the main range\n\nConsider these factors:\n- Recipient: age, gender, hobbies, personality, relationship to giver\n- Occasion: birthday, holiday, anniversary, graduation, housewarming, thank you\n- Budget: stay within range, include multiple price points\n- Practicality vs. fun vs. meaningful\n- Experiences vs. physical gifts (experiences are often more memorable)\n- Consumables (edible, experiential) vs. lasting items\n\nFor 'hard to shop for' people:\n- Focus on consumables they'll use (premium food, candles, skincare)\n- Experiences (cooking class, concert, spa day)\n- Donation to a cause they care about\n- Personalized/custom items\n\nBe creative and specific — avoid generic suggestions when possible."
+  ]
+}

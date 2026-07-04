@@ -1,0 +1,91 @@
+{
+  "id": "reading-time",
+  "mode": "form_driven",
+  "featured": true,
+  "name": "Reading Time Estimator",
+  "tagline": "Estimate how long it takes to read any text",
+  "description": "Estimate reading time for any text based on average adult reading speed (200 WPM default, adjustable). Shows reading time in minutes, word count, and speaking time. Useful for blog posts, articles, and presentations.",
+  "category": "calculators",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "str (Python stdlib)",
+  "pills": [
+    "No AI needed",
+    "Instant",
+    "Offline"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://en.wikipedia.org/wiki/Words_per_minute",
+  "experts": [
+    "reading_time_estimate"
+  ],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "form"
+  },
+  "capabilities": [
+    {
+      "id": "estimate_time",
+      "name": "Estimate Reading Time",
+      "expert_name": "reading_time_estimate",
+      "inputs": [
+        {
+          "name": "text",
+          "type": "textarea",
+          "label": "Text",
+          "required": true,
+          "placeholder": "Paste your article or text here..."
+        },
+        {
+          "name": "wpm",
+          "type": "int",
+          "label": "Reading Speed (words per minute)",
+          "required": false,
+          "default": 200,
+          "min": 50,
+          "max": 1000
+        }
+      ],
+      "outputs": [
+        {
+          "type": "json"
+        }
+      ]
+    }
+  ],
+  "expert_defs": [
+    {
+      "name": "reading_time_estimate",
+      "description": "Estimates reading and speaking time for a text. Params: text (input text), wpm (reading speed, default 200). Returns JSON with output_type json containing reading_time_min, speaking_time_min, word_count.",
+      "cspl": "fython",
+      "kwargs": {
+        "text": "",
+        "wpm": "200"
+      },
+      "code": [
+        "def reading_time_estimate(text='', wpm='200'):",
+        "    import json",
+        "    try:",
+        "        words = len(text.split())",
+        "        speed = max(1, int(wpm))",
+        "        reading_sec = words / speed * 60",
+        "        reading_min = reading_sec / 60",
+        "        speaking_sec = words / 130 * 60",
+        "        def fmt(seconds):",
+        "            m = int(seconds // 60)",
+        "            s = int(seconds % 60)",
+        "            if m == 0: return str(s) + ' sec'",
+        "            return str(m) + ' min ' + (str(s) + ' sec' if s else '')",
+        "        result = {'word_count': words, 'reading_speed_wpm': speed, 'reading_time': fmt(reading_sec), 'reading_time_seconds': round(reading_sec), 'speaking_time': fmt(speaking_sec), 'speaking_time_seconds': round(speaking_sec), 'pages_approx': round(words / 250, 1)}",
+        "        return json.dumps({'status': 'success', 'output_type': 'json', 'data': result})",
+        "    except Exception as e:",
+        "        return json.dumps({'status': 'error', 'message': str(e)})"
+      ]
+    }
+  ],
+  "conceptTexts": [
+    "Plugin: Reading Time Estimator (id: reading-time). Expert reading_time_estimate estimates reading and speaking time. Params: text, wpm (default 200). Returns {output_type: 'json', data: {word_count, reading_time, speaking_time, pages_approx}}."
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "id": "chartjs-gen",
+  "mode": "llm_driven",
+  "featured": true,
+  "name": "Chart.js",
+  "tagline": "Create chart configs",
+  "description": "Inspired by Chart.js — most popular JS chart library.",
+  "category": "web",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "github.com/chartjs/Chart.js",
+  "pills": [
+    "GitHub",
+    "AI",
+    "Popular"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://github.com/chartjs/Chart.js",
+  "experts": [],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "chat",
+    "initialPrompt": "You generate Chart.js configuration JSON from data descriptions.",
+    "quickActions": [
+      {
+        "label": "Try an example",
+        "prompt": "Show me an example using Chart.js."
+      },
+      {
+        "label": "Explain how it works",
+        "prompt": "Explain how Chart.js works for a beginner."
+      }
+    ]
+  },
+  "expert_defs": [],
+  "conceptTexts": [
+    "You are a Chart.js assistant. You generate Chart.js configuration JSON from data descriptions."
+  ]
+}

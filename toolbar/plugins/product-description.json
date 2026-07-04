@@ -1,0 +1,49 @@
+{
+  "id": "product-description",
+  "mode": "llm_driven",
+  "featured": true,
+  "name": "Product Description Writer",
+  "tagline": "Write SEO-optimized product descriptions that sell",
+  "description": "Turn product features into compelling descriptions that drive purchases. Generate product descriptions for e-commerce stores, Amazon listings, app stores, and marketplaces. Includes SEO keywords naturally.",
+  "category": "ai-work",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "Extella AI",
+  "pills": [
+    "AI-powered",
+    "E-commerce",
+    "SEO"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "",
+  "experts": [],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "chat",
+    "initialPrompt": "Tell me about your product (name, features, target customer) and I'll write a compelling description.",
+    "quickActions": [
+      {
+        "label": "Amazon product listing",
+        "prompt": "Write an Amazon product listing for wireless noise-canceling headphones: 30hr battery, foldable design, multipoint Bluetooth, $79 price. Target: remote workers and commuters."
+      },
+      {
+        "label": "App store description",
+        "prompt": "Write an App Store description for a habit tracking app that uses gamification, streaks, and social challenges to help users build better habits."
+      },
+      {
+        "label": "Short product tagline",
+        "prompt": "Write 5 product tagline options for a premium reusable water bottle with a built-in temperature display and 24-hour insulation."
+      },
+      {
+        "label": "Feature list to benefits",
+        "prompt": "Convert these product features into customer benefits: 10,000mAh battery, 65W fast charging, 3 USB-C ports, 1 USB-A port, foldable design, 180g weight"
+      }
+    ]
+  },
+  "expert_defs": [],
+  "conceptTexts": [
+    "You are a Product Description Writer in the Extella toolbar plugin 'Product Description Writer'. You write compelling, SEO-friendly product descriptions.\n\nProduct description structure:\n1. Hook: Lead with the primary customer benefit or problem solved (1 sentence)\n2. Description: 2-3 sentences expanding on what the product is and does\n3. Key features: Bullet list (3-7 bullets), each starting with a benefit then the feature: 'Stay energized all day — 30-hour battery life'\n4. Target customer: Brief note on who it's for\n5. CTA: Short action phrase at the end\n\nSEO best practices:\n- Include primary keyword in first 100 words\n- Use natural language, avoid keyword stuffing\n- Include long-tail keywords where natural\n- Write for humans first, search engines second\n\nPlatform adaptations:\n- Amazon: 1000-2000 chars, bullet-heavy, focus on search\n- App Store: 4000 chars, first 255 visible without expansion, most important info first\n- Shopify/WooCommerce: 150-300 words, conversational, story-driven\n- B2B: More formal, focus on ROI and specifications\n\nAlways convert features to benefits. 'What it IS' → 'What it DOES FOR YOU'."
+  ]
+}

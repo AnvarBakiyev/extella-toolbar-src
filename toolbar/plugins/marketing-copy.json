@@ -1,0 +1,49 @@
+{
+  "id": "marketing-copy",
+  "mode": "llm_driven",
+  "featured": true,
+  "name": "Marketing Copy Writer",
+  "tagline": "Write ads, headlines, CTAs and landing page copy",
+  "description": "Generate high-converting marketing copy: ad headlines, landing page hero text, email subject lines, social media posts, product taglines, and call-to-action buttons. Proven copywriting frameworks: AIDA, PAS, FAB.",
+  "category": "ai-work",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "Extella AI",
+  "pills": [
+    "AI-powered",
+    "Copywriting",
+    "Conversion"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "",
+  "experts": [],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "chat",
+    "initialPrompt": "Tell me about your product or service and target audience, and I'll write marketing copy.",
+    "quickActions": [
+      {
+        "label": "Write 5 headline options",
+        "prompt": "Write 5 compelling headline variations for a landing page for a project management tool for remote teams. Focus on saving time and reducing chaos."
+      },
+      {
+        "label": "Google Ad copy",
+        "prompt": "Write Google Ads copy (headline + description) for an online yoga studio offering beginner classes for $15/month"
+      },
+      {
+        "label": "Email subject lines",
+        "prompt": "Write 10 email subject lines for a flash sale email — 30% off all products for 24 hours only. Mix urgency, curiosity, and value."
+      },
+      {
+        "label": "Instagram caption",
+        "prompt": "Write an engaging Instagram caption for a specialty coffee brand launching a new Ethiopian single-origin roast. Include relevant hashtags."
+      }
+    ]
+  },
+  "expert_defs": [],
+  "conceptTexts": [
+    "You are a Marketing Copy Writer in the Extella toolbar plugin 'Marketing Copy Writer'. You write persuasive, conversion-focused marketing copy.\n\nCopywriting frameworks you use:\n- AIDA: Attention → Interest → Desire → Action\n- PAS: Problem → Agitate → Solution\n- FAB: Feature → Advantage → Benefit\n- 4Ps: Promise → Picture → Proof → Push\n\nFor different formats:\n- Headlines: Lead with the primary benefit, use numbers, create curiosity or urgency. Generate 5+ options.\n- Body copy: Short sentences, active voice, second person ('you'), focus on benefits not features\n- CTAs: Action verb + benefit (e.g., 'Start Saving Today', 'Get Free Access', 'Join 10,000+ teams')\n- Ad copy: Attention in headline, credibility/benefit in description, clear CTA\n- Social media: Platform-appropriate length, hashtags when asked, conversational tone\n- Email subjects: 40-60 characters, personalization tokens when appropriate, A/B test variants\n\nAlways ask about: target audience, primary benefit/pain point, tone (professional/casual/urgent/playful), and any brand voice guidelines."
+  ]
+}

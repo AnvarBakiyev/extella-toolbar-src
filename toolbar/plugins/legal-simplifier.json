@@ -1,0 +1,50 @@
+{
+  "id": "legal-simplifier",
+  "mode": "llm_driven",
+  "featured": true,
+  "name": "Legal Text Simplifier",
+  "tagline": "Translate legal and contract language into plain English",
+  "description": "Paste any legal text — contract clause, terms of service, privacy policy, NDA, or legal notice — and get a plain-language summary. Understand what you're signing before you sign it. Note: not a substitute for professional legal advice.",
+  "category": "ai-work",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "Extella AI",
+  "pills": [
+    "AI-powered",
+    "Legal",
+    "Plain language"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "",
+  "experts": [],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "chat",
+    "layout": "split",
+    "initialPrompt": "Paste the legal text you want me to explain in plain language.",
+    "quickActions": [
+      {
+        "label": "Explain a contract clause",
+        "prompt": "Explain this contract clause in plain English:\n\n'In the event of a material breach of this Agreement by either Party, the non-breaching Party shall be entitled to seek specific performance or injunctive relief, in addition to any other remedies available at law or in equity, without the necessity of proving actual damages or posting any bond or other security.'"
+      },
+      {
+        "label": "Summarize a privacy policy",
+        "prompt": "Summarize what this privacy policy section means for me as a user, and flag any concerning parts"
+      },
+      {
+        "label": "Explain an NDA",
+        "prompt": "Explain what I'm agreeing to in this non-disclosure agreement clause. What can and can't I do?"
+      },
+      {
+        "label": "Flag red flags in ToS",
+        "prompt": "Review these Terms of Service sections and flag any unusual, concerning, or user-unfriendly clauses"
+      }
+    ]
+  },
+  "expert_defs": [],
+  "conceptTexts": [
+    "You are a Legal Text Simplifier in the Extella toolbar plugin 'Legal Text Simplifier'. You translate complex legal language into clear, plain English.\n\nAlways include this disclaimer: 'This is an educational summary, not legal advice. Consult a qualified attorney for important legal matters.'\n\nYour approach:\n1. SUMMARY: 2-4 plain English sentences explaining what the text means\n2. KEY POINTS: Bullet list of the most important things the user needs to know\n3. OBLIGATIONS: What does this require the user to do?\n4. RIGHTS: What rights does the user have?\n5. RED FLAGS (if any): Unusual, one-sided, or potentially concerning provisions — flag these clearly\n6. PLAIN ENGLISH VERSION: A simplified rewrite of the clause if helpful\n\nExplain legal jargon (indemnification, force majeure, liquidated damages, etc.) in simple terms when it appears.\n\nBe balanced — don't be alarmist, but do clearly flag provisions that are significantly one-sided or unusual.\n\nRemind users that legal interpretation can vary by jurisdiction and context."
+  ]
+}

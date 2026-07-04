@@ -1,0 +1,67 @@
+{
+  "id": "remove-markdown",
+  "mode": "form_driven",
+  "featured": true,
+  "name": "Remove Markdown",
+  "tagline": "Strip Markdown syntax",
+  "description": "Inspired by remove-markdown.",
+  "category": "text",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "github.com/stiang/remove-markdown",
+  "pills": [
+    "GitHub",
+    "Popular",
+    "Open source"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://github.com/stiang/remove-markdown",
+  "experts": [
+    "remove_markdown_strip"
+  ],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "form"
+  },
+  "capabilities": [
+    {
+      "id": "strip",
+      "name": "Remove Markdown",
+      "expert_name": "remove_markdown_strip",
+      "inputs": [
+        {
+          "name": "markdown",
+          "type": "textarea",
+          "label": "Markdown",
+          "required": true
+        }
+      ],
+      "outputs": [
+        {
+          "type": "text"
+        }
+      ]
+    }
+  ],
+  "expert_defs": [
+    {
+      "name": "remove_markdown_strip",
+      "description": "Inspired by remove-markdown.",
+      "cspl": "fython",
+      "kwargs": {
+        "markdown": ""
+      },
+      "code": [
+        "def remove_markdown_strip(markdown=''):",
+        "    import re, json",
+        "    try: t=re.sub(r'```[\\s\\S]*?```','',markdown); t=re.sub(r'`([^`]+)`',r'\\1',t); t=re.sub(r'\\[([^\\]]+)\\]\\([^)]+\\)',r'\\1',t); t=re.sub(r'^#{1,6}\\s+','',t,flags=re.M); return json.dumps({'status':'success','output_type':'text','data':t.strip()})",
+        "    except Exception as e: return json.dumps({'status':'error','message':str(e)})"
+      ]
+    }
+  ],
+  "conceptTexts": [
+    "Plugin: Remove Markdown (id: remove-markdown). Wraps github.com/stiang/remove-markdown."
+  ]
+}

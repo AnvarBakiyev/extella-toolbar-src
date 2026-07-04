@@ -1,0 +1,48 @@
+{
+  "title": "KV Store",
+  "subtitle": "Workspace key-value store · {{count}} entries",
+
+  "actions.newEntry": "New KV",
+  "actions.edit": "Edit",
+  "actions.delete": "Delete",
+
+  "toolbar.searchPlaceholder": "Search key, value, description",
+
+  "columns.key": "Key",
+  "columns.value": "Value",
+  "columns.description": "Description",
+  "columns.date": "Date",
+
+  "table.empty": "No entries found",
+  "table.noDescription": "No description",
+
+  "fields.key": "Key",
+  "fields.keyPlaceholder": "e.g. app.timeout",
+  "fields.value": "Value",
+  "fields.valuePlaceholder": "Enter value…",
+  "fields.description": "Description",
+  "fields.descriptionPlaceholder": "Optional — brief note about this entry",
+
+  "create.title": "New KV entry",
+  "create.save": "Save",
+  "create.saving": "Saving…",
+  "create.directNote": "Saved immediately to the KV store.",
+
+  "edit.title": "Edit KV entry",
+  "edit.saving": "Saving…",
+  "edit.keyReadOnly": "Key is read-only — it serves as the identity.",
+
+  "delete.title": "Delete entry?",
+  "delete.description": "Entry \"{{key}}\" will be deleted permanently. This action cannot be undone.",
+  "delete.confirm": "Delete",
+  "delete.cancel": "Cancel",
+  "delete.deleting": "Deleting…",
+
+  "error.load": "Failed to load KV store.",
+  "error.retry": "Retry",
+
+  "empty.blank": "No KV entries yet",
+  "empty.blankHint": "Create the first entry using the button above.",
+  "empty.search": "No entries match your search",
+  "empty.searchHint": "Try a different query."
+}

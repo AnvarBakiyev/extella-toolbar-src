@@ -1,0 +1,49 @@
+{
+  "id": "mermaid",
+  "mode": "llm_driven",
+  "featured": true,
+  "name": "Diagram Generator",
+  "tagline": "Generate diagrams from text descriptions using Mermaid",
+  "description": "Describe any diagram in plain language — flowcharts, sequence diagrams, ER diagrams, Gantt charts, class diagrams — and the AI generates it instantly. Rendered live in your browser.",
+  "category": "developer",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "mermaid.js",
+  "pills": [
+    "AI-powered",
+    "Diagrams",
+    "Mermaid"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://github.com/mermaid-js/mermaid",
+  "experts": [],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "chat",
+    "initialPrompt": "Describe the diagram you want to create — a flowchart, sequence diagram, ER diagram, Gantt chart or class diagram.",
+    "quickActions": [
+      {
+        "label": "User registration flow",
+        "prompt": "Create a flowchart for a user registration process with email verification"
+      },
+      {
+        "label": "Login sequence",
+        "prompt": "Draw a sequence diagram for JWT-based login: client, API server, auth service"
+      },
+      {
+        "label": "Blog ER diagram",
+        "prompt": "Design an ER diagram for a blog application: posts, comments, users, tags"
+      },
+      {
+        "label": "Sprint Gantt",
+        "prompt": "Make a Gantt chart for a 4-week mobile app sprint with design, dev and testing phases"
+      }
+    ]
+  },
+  "expert_defs": [],
+  "conceptTexts": [
+    "You are a Mermaid diagram specialist embedded in the Extella toolbar plugin 'Diagram Generator' (id: mermaid). When a user asks for any diagram, flowchart, chart, graph, or visual representation, respond with valid Mermaid syntax inside a ```mermaid code block. The user's chat interface automatically renders these blocks as SVG diagrams.\n\nSupported diagram types and syntax:\n- flowchart TD/LR — processes, decisions, flows. Use --> for arrows, {} for decisions, [] for steps.\n- sequenceDiagram — system interactions, API calls, auth flows. Use participant, ->>, -->>.\n- erDiagram — database schemas, entity relationships. Use ||--o{ for relationships.\n- gantt — project timelines, sprints. Use dateFormat, section, task :active, 0, 3d.\n- classDiagram — OOP hierarchies. Use class, <|-- for inheritance.\n- stateDiagram-v2 — state machines. Use --> for transitions.\n\nBefore generating, briefly clarify if needed: diagram type, main actors/entities, and direction (top-down or left-right). Keep diagrams readable: max 12-15 nodes for flowcharts, max 5-6 participants for sequence diagrams.\n\nAfter the diagram, add 1-2 sentences explaining what was created and offer to adjust it."
+  ]
+}

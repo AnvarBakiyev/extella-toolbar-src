@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Extella Plugins</title>
+<style>
+:root{
+  --a:#C67E34;--ar:198,126,52;
+  --bg:#0a0a0a;--s1:#111;--s2:#161616;--s3:#1c1c1c;--s4:#242424;
+  --bd:rgba(255,255,255,.07);--bd2:rgba(255,255,255,.13);
+  --tx:#f0f0f0;--tx2:#8a8a8a;--tx3:#444;--r:12px}
+[data-lm]{
+  --bg:#f2f2f7;--s1:#fff;--s2:#fff;--s3:#f7f7f9;--s4:#ebebed;
+  --bd:rgba(0,0,0,.07);--bd2:rgba(0,0,0,.14);
+  --tx:#111;--tx2:#6b6b6b;--tx3:#c0c0c0}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{font-family:-apple-system,sans-serif;background:var(--bg);color:var(--tx);
+  display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
+
+/* ── Header ─────────────────────────────────────────────────────────── */
+.hdr{display:flex;align-items:center;gap:10px;padding:10px 18px;
+  background:var(--s1);border-bottom:1px solid var(--bd);flex-shrink:0}
+.ldot{width:8px;height:8px;border-radius:50%;background:var(--a);
+  box-shadow:0 0 10px rgba(var(--ar),.5);flex-shrink:0}
+.lnm{font-size:14px;font-weight:700;letter-spacing:-.02em}
+.sp{flex:1}
+.bclose{background:none;border:none;color:var(--tx2);cursor:pointer;
+  font-size:16px;padding:4px 8px;border-radius:6px;transition:all .15s;flex-shrink:0}
+.bclose:hover{color:var(--tx);background:var(--s3)}
+
+/* ── Tabs ────────────────────────────────────────────────────────────── */
+.tabs{display:flex;gap:1px;padding:6px 18px;background:var(--s1);
+  border-bottom:1px solid var(--bd);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:5px 12px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:500;
+  color:var(--tx2);background:transparent;border:none;white-space:nowrap;transition:all .15s;
+  display:flex;align-items:center;gap:4px}
+.tab:hover{color:var(--tx);background:var(--s3)}
+.tab.on{color:var(--a);background:rgba(var(--ar),.1);font-weight:600}
+.tn{font-size:9.5px;opacity:.5}
+
+/* ── Filter bar ──────────────────────────────────────────────────────── */
+#filter_bar{background:var(--s1);border-bottom:1px solid var(--bd);
+  padding:10px 18px 12px;flex-shrink:0;display:flex;flex-direction:column;gap:8px}
+.fb_row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.fb_srch{flex:1;min-width:160px;position:relative}
+.fb_sinp{width:100%;background:var(--s3);border:1px solid var(--bd2);border-radius:9px;
+  color:var(--tx);font-size:12px;padding:7px 32px 7px 11px;outline:none;
+  transition:border-color .15s,box-shadow .15s;font-family:inherit}
+.fb_sinp:focus{border-color:rgba(var(--ar),.4);box-shadow:0 0 0 3px rgba(var(--ar),.1)}
+.fb_sinp::placeholder{color:var(--tx3)}
+.fb_sico{position:absolute;right:10px;top:50%;transform:translateY(-50%);
+  color:var(--tx3);pointer-events:none}
+.fb_sel{background:var(--s3);border:1px solid var(--bd2);border-radius:8px;
+  color:var(--tx);font-size:11.5px;padding:6px 9px;outline:none;cursor:pointer;
+  font-family:inherit;transition:border-color .15s}
+.fb_sel:focus{border-color:rgba(var(--ar),.4)}
+
+/* ── Topic chips ─────────────────────────────────────────────────────── */
+.fb_topics{display:flex;gap:5px;flex-wrap:wrap}
+.tpchip{background:var(--s3);border:1px solid var(--bd2);border-radius:6px;
+  color:var(--tx2);font-size:11px;font-weight:500;padding:4px 10px;cursor:pointer;
+  transition:all .14s;white-space:nowrap}
+.tpchip:hover{color:var(--tx)}
+.tpchip.on{background:rgba(var(--ar),.12);color:var(--a);
+  border-color:rgba(var(--ar),.3)!important;font-weight:600}
+
+/* ── Scroll area ─────────────────────────────────────────────────────── */
+.scr{flex:1;overflow-y:auto;padding:14px 18px 28px;
+  scrollbar-width:thin;scrollbar-color:var(--s4) transparent}
+.scr::-webkit-scrollbar{width:3px}
+.scr::-webkit-scrollbar-thumb{background:var(--s4);border-radius:2px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+
+/* ── GitHub repo card ────────────────────────────────────────────────── */
+.rcard{background:var(--s2);border:1px solid var(--bd);border-radius:var(--r);
+  padding:14px 16px;display:flex;flex-direction:column;gap:8px;
+  transition:border-color .14s,box-shadow .14s;animation:fiu .18s ease both}
+.rcard:hover{border-color:var(--bd2);box-shadow:0 8px 28px rgba(0,0,0,.45)}
+[data-lm] .rcard:hover{box-shadow:0 6px 18px rgba(0,0,0,.1)}
+.rcard.inst{border-color:rgba(var(--ar),.3)}
+.rc_top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.rc_repo{min-width:0}
+.rc_owner{font-size:10.5px;color:var(--tx2);margin-bottom:2px}
+.rc_name{font-size:13px;font-weight:700;color:var(--tx);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.01em}
+.rc_stars{display:flex;align-items:center;gap:3px;flex-shrink:0;
+  font-size:11.5px;font-weight:700;color:#f59e0b;white-space:nowrap}
+.rc_desc{font-size:11.5px;color:var(--tx2);line-height:1.55;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.rc_meta{display:flex;align-items:center;gap:5px;flex-wrap:wrap;min-height:18px}
+.rc_pill{background:rgba(var(--ar),.08);color:var(--a);border:1px solid rgba(var(--ar),.14);
+  border-radius:4px;font-size:9.5px;font-weight:600;padding:2px 7px;white-space:nowrap}
+.rc_dot{color:var(--tx3);font-size:10px}
+.rc_info{font-size:10.5px;color:var(--tx2)}
+.rc_foot{display:flex;align-items:center;justify-content:flex-end;margin-top:2px}
+.rc_btn{background:var(--a);color:#000;border:none;border-radius:8px;
+  font-size:11.5px;font-weight:800;padding:7px 18px;cursor:pointer;
+  transition:opacity .12s,transform .1s;white-space:nowrap}
+.rc_btn:hover{opacity:.85;transform:translateY(-1px)}
+.rc_btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.rc_btn.done{background:rgba(var(--ar),.1);color:var(--a);
+  border:1px solid rgba(var(--ar),.25);cursor:default}
+.rc_btn.done:hover{opacity:1;transform:none}
+
+/* ── Skeleton ────────────────────────────────────────────────────────── */
+.skel{background:var(--s2);border:1px solid var(--bd);border-radius:var(--r);
+  height:140px;overflow:hidden;position:relative}
+.skel::after{content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.04) 50%,transparent 100%);
+  background-size:200% 100%;animation:sh 1.4s linear infinite}
+[data-lm] .skel::after{
+  background:linear-gradient(90deg,transparent 0%,rgba(0,0,0,.04) 50%,transparent 100%);
+  background-size:200% 100%}
+@keyframes sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* ── Banners ─────────────────────────────────────────────────────────── */
+.banner{grid-column:1/-1;padding:14px 18px;border-radius:var(--r);
+  font-size:12px;line-height:1.6;display:flex;align-items:flex-start;gap:10px}
+.banner.warn{background:rgba(251,146,60,.08);border:1px solid rgba(251,146,60,.2);color:#fb923c}
+.banner.err{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);color:#f87171}
+.total_hint{grid-column:1/-1;font-size:11px;color:var(--tx3);padding:2px 0 4px}
+.load_more{grid-column:1/-1;display:flex;justify-content:center;padding:10px 0 4px}
+.load_more_btn{background:var(--s3);border:1px solid var(--bd2);border-radius:9px;
+  color:var(--tx2);font-size:12px;font-weight:600;padding:9px 28px;cursor:pointer;
+  transition:all .14s;font-family:inherit}
+.load_more_btn:hover{color:var(--tx);background:var(--s4)}
+
+/* ── Installed plugin cards ──────────────────────────────────────────── */
+.icard{background:var(--s2);border:1px solid rgba(var(--ar),.2);border-radius:var(--r);
+  padding:13px 16px;display:flex;align-items:center;gap:12px;
+  animation:fiu .18s ease both;transition:border-color .14s}
+.icard:hover{border-color:rgba(var(--ar),.38)}
+.idot{width:8px;height:8px;border-radius:50%;background:var(--a);
+  box-shadow:0 0 6px rgba(var(--ar),.4);flex-shrink:0}
+.iinfo{flex:1;min-width:0}
+.iname{font-size:13px;font-weight:700;color:var(--tx);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.isub{font-size:11px;color:var(--tx2);margin-top:2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iacts{display:flex;gap:6px;flex-shrink:0}
+.ibtn_open{background:rgba(var(--ar),.1);color:var(--a);border:1px solid rgba(var(--ar),.2);
+  border-radius:7px;font-size:11px;font-weight:700;padding:5px 12px;cursor:pointer;
+  transition:background .12s;white-space:nowrap}
+.ibtn_open:hover{background:rgba(var(--ar),.2)}
+.ibtn_rm{background:none;border:1px solid var(--bd2);color:var(--tx2);
+  border-radius:7px;font-size:11px;padding:5px 10px;cursor:pointer;
+  transition:all .12s;white-space:nowrap}
+.ibtn_rm:hover{border-color:#f87171;color:#f87171}
+
+/* ── Section headers (Featured / Other) ──────────────────────────────── */
+.sect_hdr{grid-column:1/-1;display:flex;align-items:center;gap:8px;
+  padding:4px 0 2px;margin-top:4px}
+.sect_hdr:first-child{margin-top:0}
+.sect_title{font-size:11px;font-weight:800;color:var(--tx2);
+  text-transform:uppercase;letter-spacing:.08em}
+.sect_line{flex:1;height:1px;background:var(--bd)}
+.sect_badge{background:rgba(var(--ar),.12);color:var(--a);
+  border:1px solid rgba(var(--ar),.25);border-radius:5px;
+  font-size:9px;font-weight:700;padding:1px 7px;letter-spacing:.04em}
+
+/* ── Featured card accent ────────────────────────────────────────────── */
+.rcard.feat{border-color:rgba(var(--ar),.22);
+  background:linear-gradient(180deg,rgba(var(--ar),.04),var(--s2) 60%)}
+.rcard.feat:hover{border-color:rgba(var(--ar),.4)}
+.rc_btn.installing{opacity:.6;cursor:wait}
+
+/* ── Category filter tabs (Featured section) ────────────────────────── */
+.cat_tabs{grid-column:1/-1;display:flex;gap:5px;flex-wrap:wrap;padding:4px 0 8px}
+.cat_tab{background:var(--s3);border:1px solid var(--bd2);border-radius:7px;
+  color:var(--tx2);font-size:11px;font-weight:500;padding:4px 11px;cursor:pointer;
+  transition:all .14s;white-space:nowrap;font-family:inherit}
+.cat_tab:hover{color:var(--tx);border-color:rgba(var(--ar),.3)}
+.cat_tab.active{background:rgba(var(--ar),.12);color:var(--a);
+  border-color:rgba(var(--ar),.3)!important;font-weight:700}
+
+/* ── Collapsible Other toggle ───────────────────────────────────────── */
+.sect_toggle{background:none;border:none;cursor:pointer;
+  color:var(--tx2);font-size:11px;padding:2px 6px;border-radius:5px;
+  transition:all .14s;display:flex;align-items:center;gap:4px;font-family:inherit}
+.sect_toggle:hover{color:var(--tx);background:var(--s3)}
+.other_body_wrap{grid-column:1/-1;display:contents}
+.other_filters{grid-column:1/-1}
+#filter_stash{display:none}
+
+/* ── Empty states ────────────────────────────────────────────────────── */
+.empty{grid-column:1/-1;text-align:center;padding:56px 20px;color:var(--tx2)}
+.eico{font-size:36px;margin-bottom:12px;opacity:.4}
+.empty p{font-size:13px;margin-top:6px;line-height:1.6}
+
+/* ── HuggingFace kind toggle ─────────────────────────────────────────── */
+.hf_kind_toggle{display:flex;gap:2px;background:var(--s3);border:1px solid var(--bd2);
+  border-radius:9px;padding:2px;flex-shrink:0}
+.hf_kind_btn{background:none;border:none;color:var(--tx2);font-size:11.5px;font-weight:500;
+  padding:4px 11px;border-radius:7px;cursor:pointer;transition:all .14s;white-space:nowrap;
+  font-family:inherit}
+.hf_kind_btn:hover{color:var(--tx)}
+.hf_kind_btn.on{background:var(--s1);color:var(--tx);font-weight:700;
+  box-shadow:0 1px 3px rgba(0,0,0,.12)}
+#hf_filter_stash{display:none}
+.hf_badge{background:rgba(255,176,47,.12);color:#f59e0b;border:1px solid rgba(255,176,47,.25);
+  border-radius:4px;font-size:9px;font-weight:700;padding:1px 6px}
+.hf_tab_icon{opacity:.8;margin-right:1px}
+.hf_res_block{background:var(--s3);border:1px solid var(--bd);border-radius:8px;
+  padding:8px 12px;margin-top:6px;font-size:10.5px;color:var(--tx2);line-height:1.7}
+.hf_res_block b{color:var(--tx);font-weight:600}
+.rc_hf_kind{background:rgba(255,176,47,.1);color:#d97706;border:1px solid rgba(255,176,47,.2);
+  border-radius:4px;font-size:9px;font-weight:700;padding:2px 7px;white-space:nowrap}
+
+@keyframes fiu{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <div class="ldot"></div>
+  <div class="lnm">Extella Plugins</div>
+  <div class="sp"></div>
+  <button class="bclose" onclick="notify('close')" title="Close">&#10005;</button>
+</div>
+<div class="tabs" id="tabs"></div>
+<div class="scr"><div class="grid" id="grid"></div></div>
+
+<div id="filter_stash">
+<div id="filter_bar">
+  <div class="fb_row">
+    <div class="fb_srch">
+      <input class="fb_sinp" id="gh_q" placeholder="Search GitHub repositories..."
+        autocomplete="off" oninput="onFChange()" onkeydown="if(event.key==='Enter'){cancelDebounce();doSearch();}">
+      <span class="fb_sico"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
+    </div>
+    <select class="fb_sel" id="gh_sort" onchange="onFChange(true)">
+      <option value="stars">★ Stars</option>
+      <option value="updated">↑ Updated</option>
+      <option value="forks">⑂ Forks</option>
+    </select>
+  </div>
+  <div class="fb_topics" id="fb_topics"></div>
+  <div class="fb_row">
+    <select class="fb_sel" id="gh_lang" onchange="onFChange(true)">
+      <option value="">Any language</option>
+      <option>Python</option>
+      <option>JavaScript</option>
+      <option>TypeScript</option>
+      <option>Go</option>
+      <option>Rust</option>
+      <option>Java</option>
+      <option value="C++">C++</option>
+      <option value="C#">C#</option>
+      <option>Ruby</option>
+      <option>Swift</option>
+      <option>Kotlin</option>
+      <option>PHP</option>
+      <option>Shell</option>
+    </select>
+    <select class="fb_sel" id="gh_stars" onchange="onFChange(true)">
+      <option value="10">10+ stars</option>
+      <option value="100" selected>100+ stars</option>
+      <option value="500">500+ stars</option>
+      <option value="1000">1k+ stars</option>
+      <option value="5000">5k+ stars</option>
+    </select>
+    <select class="fb_sel" id="gh_updated" onchange="onFChange(true)">
+      <option value="">Any time</option>
+      <option value="1yr">Past year</option>
+      <option value="6mo">Past 6 months</option>
+      <option value="3mo">Past 3 months</option>
+      <option value="1mo">Past month</option>
+    </select>
+    <select class="fb_sel" id="gh_license" onchange="onFChange(true)">
+      <option value="">Any license</option>
+      <option value="mit">MIT</option>
+      <option value="apache-2.0">Apache 2.0</option>
+      <option value="gpl-3.0">GPL 3.0</option>
+      <option value="bsd-2-clause">BSD 2-Clause</option>
+      <option value="bsd-3-clause">BSD 3-Clause</option>
+      <option value="mpl-2.0">MPL 2.0</option>
+      <option value="lgpl-3.0">LGPL 3.0</option>
+    </select>
+  </div>
+</div>
+</div>
+
+<div id="hf_filter_stash">
+<div id="hf_filter_bar">
+  <!-- Row 1: kind toggle + search (mirrors GitHub row 1: search + sort) -->
+  <div class="fb_row">
+    <div class="hf_kind_toggle">
+      <button id="hf_kind_space" class="hf_kind_btn on" onclick="setHFKind('space')">🤗 Spaces</button>
+      <button id="hf_kind_model" class="hf_kind_btn" onclick="setHFKind('model')">🧠 Models</button>
+    </div>
+    <div class="fb_srch">
+      <input class="fb_sinp" id="hf_q" placeholder="Search HuggingFace..."
+        autocomplete="off" oninput="onHFChange()" onkeydown="if(event.key==='Enter'){cancelHFDebounce();searchHF();}">
+      <span class="fb_sico"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
+    </div>
+  </div>
+  <!-- Row 2: sort + SDK/pipeline filter (mirrors GitHub row 2: lang/stars/date/license) -->
+  <div class="fb_row">
+    <select class="fb_sel" id="hf_sort" onchange="onHFChange(true)">
+      <option value="downloads">↓ Downloads</option>
+      <option value="likes">♥ Likes</option>
+      <option value="trendingScore">🔥 Trending</option>
+      <option value="lastModified">↑ Updated</option>
+    </select>
+    <select class="fb_sel" id="hf_sdk" onchange="onHFChange(true)">
+      <option value="">Any SDK</option>
+      <option value="gradio">Gradio</option>
+      <option value="streamlit">Streamlit</option>
+      <option value="docker">Docker</option>
+      <option value="static">Static</option>
+    </select>
+    <select class="fb_sel" id="hf_pipeline" style="display:none" onchange="onHFChange(true)">
+      <option value="">Any task</option>
+      <option value="text-generation">Text Generation</option>
+      <option value="text-classification">Text Classification</option>
+      <option value="token-classification">Token Classification</option>
+      <option value="question-answering">Q&amp;A</option>
+      <option value="summarization">Summarization</option>
+      <option value="translation">Translation</option>
+      <option value="image-classification">Image Classification</option>
+      <option value="image-segmentation">Image Segmentation</option>
+      <option value="object-detection">Object Detection</option>
+      <option value="automatic-speech-recognition">ASR</option>
+      <option value="image-to-text">Image to Text</option>
+      <option value="text-to-image">Text to Image</option>
+      <option value="text-to-audio">Text to Audio</option>
+    </select>
+  </div>
+</div>
+</div>
+
+<script>
+// ── Plugin data injected by build.js ──────────────────────────────────────
+/* __BUILTIN_PLUGINS_DATA__ */
+if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []; }
+
+// ── Constants ─────────────────────────────────────────────────────────────
+var INSTALLED_KEY = 'etb_plugins_installed_v1';
+var CUSTOM_KEY    = 'etb_plugins_custom_v1';
+var CACHE_KEY     = 'etb_gh_cache_v1';
+var CACHE_TTL     = 1800000; // 30 minutes
+var CACHE_MAX     = 50;
+var GH_API        = 'https://api.github.com/search/repositories';
+
+var HF_CACHE_KEY  = 'etb_hf_cache_v1';
+var HF_API_BASE   = 'https://huggingface.co/api';
+var HF_LIMIT      = 24;
+
+var GH_TOPICS = [
+  {id:'machine-learning', l:'AI / ML'},
+  {id:'deep-learning',    l:'Deep Learning'},
+  {id:'web',              l:'Web'},
+  {id:'database',         l:'Database'},
+  {id:'cli',              l:'CLI'},
+  {id:'devops',           l:'DevOps'},
+  {id:'security',         l:'Security'},
+  {id:'data-science',     l:'Data Science'},
+  {id:'mobile',           l:'Mobile'},
+  {id:'api',              l:'API'},
+  {id:'testing',          l:'Testing'},
+  {id:'game',             l:'Games'},
+  {id:'frontend',         l:'Frontend'},
+  {id:'backend',          l:'Backend'}
+];
+
+// ── UI state ──────────────────────────────────────────────────────────────
+var cur = 'all';
+var ghState = {
+  query: '', topic: '', sort: 'stars',
+  language: '', minStars: '100', updatedAfter: '',
+  license: '', page: 1, results: [], total: 0,
+  loading: false, error: null, debTimer: null
+};
+
+var hfState = {
+  kind: 'space', query: '', sort: 'downloads',
+  sdk: '', pipeline: '', page: 0,
+  results: [], total: 0, loading: false,
+  error: null, debTimer: null, inited: false
+};
+
+// ── Featured category filter state ────────────────────────────────────────
+var CAT_TABS = [
+  { id: 'all',         l: 'All' },
+  { id: 'text',        l: 'Text' },
+  { id: 'data',        l: 'Data' },
+  { id: 'developer',   l: 'Developer' },
+  { id: 'web',         l: 'Web & APIs' },
+  { id: 'calculators', l: 'Calculators' },
+  { id: 'ai-work',     l: 'AI Work' },
+  { id: 'ai-life',     l: 'AI Life' }
+];
+var _featCat = 'all';
+var _instCat = 'all';
+var _featSearch = '';
+
+var KNOWN_CATS = {};
+CAT_TABS.forEach(function(ct) { KNOWN_CATS[ct.id] = true; });
+
+// ── Other section collapsed state ─────────────────────────────────────────
+var OTHER_COLLAPSED_KEY = 'etb_other_collapsed';
+var _otherCollapsed = (function() {
+  try {
+    var saved = localStorage.getItem(OTHER_COLLAPSED_KEY);
+    if (saved === null) return true; // collapsed by default on first visit
+    return saved === '1';
+  } catch(_) { return true; }
+})();
+
+// ── Theme ─────────────────────────────────────────────────────────────────
+function _resolveHostTheme() {
+  var t;
+  try { t = localStorage.getItem('color-theme'); } catch (_) {}
+  if (t === 'light' || t === 'dark') return t;
+  try {
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) return 'light';
+  } catch (_) {}
+  return 'dark';
+}
+function ith(forced) {
+  var t = forced || _resolveHostTheme();
+  if (t === 'light') document.documentElement.setAttribute('data-lm','1');
+  else document.documentElement.removeAttribute('data-lm');
+}
+ith();
+window.addEventListener('storage', function(e) {
+  if (e.key === 'color-theme' || e.key === 'ext_theme' || e.key === 'eth6') ith();
+});
+window.addEventListener('message', function(e) {
+  if (e.data && e.data.type === 'etb_theme') ith(e.data.theme);
+});
+
+// ── Cache helpers ─────────────────────────────────────────────────────────
+function mkCacheKey(s) {
+  return [
+    s.query  || '_',
+    s.topic  ? 't:'+s.topic    : '',
+    s.language ? 'l:'+s.language : '',
+    'st:'+s.minStars,
+    s.updatedAfter ? 'u:'+s.updatedAfter : '',
+    s.license ? 'li:'+s.license : '',
+    'so:'+s.sort,
+    'p:'+s.page
+  ].filter(Boolean).join('|');
+}
+
+function getCached(key) {
+  try {
+    var store = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}');
+    var entry = store[key];
+    if (!entry) return null;
+    if (Date.now() - entry.ts > CACHE_TTL) {
+      delete store[key];
+      try { localStorage.setItem(CACHE_KEY, JSON.stringify(store)); } catch(_) {}
+      return null;
+    }
+    return entry;
+  } catch(_) { return null; }
+}
+
+function setCached(key, results, total) {
+  try {
+    var store = {};
+    try { store = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}'); } catch(_) {}
+    store[key] = { ts: Date.now(), results: results, total: total };
+    var keys = Object.keys(store);
+    if (keys.length > CACHE_MAX) {
+      keys.sort(function(a,b){ return (store[a].ts||0) - (store[b].ts||0); });
+      keys.slice(0, keys.length - (CACHE_MAX - 10)).forEach(function(k){ delete store[k]; });
+    }
+    localStorage.setItem(CACHE_KEY, JSON.stringify(store));
+  } catch(_) {}
+}
+
+// ── HF cache helpers ──────────────────────────────────────────────────────
+function mkHFCacheKey(s) {
+  return [
+    s.kind || 'space',
+    s.query || '_',
+    's:' + s.sort,
+    s.sdk ? 'sdk:' + s.sdk : '',
+    s.pipeline ? 'pip:' + s.pipeline : '',
+    'p:' + s.page
+  ].filter(Boolean).join('|');
+}
+
+function getHFCached(key) {
+  try {
+    var store = JSON.parse(localStorage.getItem(HF_CACHE_KEY) || '{}');
+    var entry = store[key];
+    if (!entry) return null;
+    if (Date.now() - entry.ts > CACHE_TTL) {
+      delete store[key];
+      try { localStorage.setItem(HF_CACHE_KEY, JSON.stringify(store)); } catch(_) {}
+      return null;
+    }
+    return entry;
+  } catch(_) { return null; }
+}
+
+function setHFCached(key, results, total) {
+  try {
+    var store = {};
+    try { store = JSON.parse(localStorage.getItem(HF_CACHE_KEY) || '{}'); } catch(_) {}
+    store[key] = { ts: Date.now(), results: results, total: total };
+    var keys = Object.keys(store);
+    if (keys.length > CACHE_MAX) {
+      keys.sort(function(a,b){ return (store[a].ts||0) - (store[b].ts||0); });
+      keys.slice(0, keys.length - (CACHE_MAX - 10)).forEach(function(k){ delete store[k]; });
+    }
+    localStorage.setItem(HF_CACHE_KEY, JSON.stringify(store));
+  } catch(_) {}
+}
+
+// ── Date helpers ──────────────────────────────────────────────────────────
+function updAfterFromKey(key) {
+  if (!key) return '';
+  var d = new Date();
+  switch(key) {
+    case '1mo':  d.setMonth(d.getMonth()-1);          break;
+    case '3mo':  d.setMonth(d.getMonth()-3);          break;
+    case '6mo':  d.setMonth(d.getMonth()-6);          break;
+    case '1yr':  d.setFullYear(d.getFullYear()-1);    break;
+    default:     return '';
+  }
+  return d.toISOString().slice(0,10);
+}
+
+function timeSince(ds) {
+  try {
+    var d = Math.floor((Date.now() - new Date(ds).getTime()) / 86400000);
+    if (d < 1)   return 'today';
+    if (d < 7)   return d+'d ago';
+    if (d < 30)  return Math.floor(d/7)+'w ago';
+    if (d < 365) return Math.floor(d/30)+'mo ago';
+    return Math.floor(d/365)+'yr ago';
+  } catch(_) { return ''; }
+}
+
+function fmtN(n) {
+  n = n || 0;
+  if (n >= 1000) return (n/1000).toFixed(1).replace('.0','')+'k';
+  return String(n);
+}
+
+// ── GitHub search ─────────────────────────────────────────────────────────
+function buildGHQuery(s) {
+  var p = [];
+  if (s.query) p.push(s.query);
+  // Hard quality filters (always applied)
+  p.push('archived:false');
+  p.push('is:public');
+  // User-configurable filters (with hard minimums)
+  p.push('stars:>=' + (parseInt(s.minStars) || 10));
+  p.push('pushed:>' + (s.updatedAfter || '2022-01-01'));
+  if (s.language) p.push('language:' + s.language);
+  if (s.topic)    p.push('topic:' + s.topic);
+  if (s.license)  p.push('license:' + s.license);
+  return p.join(' ');
+}
+
+function cancelDebounce() {
+  if (ghState.debTimer) { clearTimeout(ghState.debTimer); ghState.debTimer = null; }
+}
+
+function doSearch() {
+  ghState.query        = (document.getElementById('gh_q')       || {}).value || '';
+  ghState.sort         = (document.getElementById('gh_sort')    || {}).value || 'stars';
+  ghState.language     = (document.getElementById('gh_lang')    || {}).value || '';
+  ghState.minStars     = (document.getElementById('gh_stars')   || {}).value || '100';
+  ghState.license      = (document.getElementById('gh_license') || {}).value || '';
+  var updKey           = (document.getElementById('gh_updated') || {}).value || '';
+  ghState.updatedAfter = updAfterFromKey(updKey);
+  // Skip API call if user typed only 1 character — too few to be useful and
+  // the immediate re-render causes focus loss before they finish typing.
+  if (ghState.query.length === 1) return;
+  searchGitHub(false);
+}
+
+function onFChange(immediate) {
+  cancelDebounce();
+  ghState.debTimer = setTimeout(doSearch, immediate ? 0 : 800);
+}
+
+function searchGitHub(loadMore) {
+  if (ghState.loading) return;
+  cancelDebounce();
+
+  if (!loadMore) {
+    ghState.page    = 1;
+    ghState.results = [];
+    ghState.total   = 0;
+    ghState.error   = null;
+  }
+
+  // Wrap renderGrid() so that #gh_q retains focus and cursor position after
+  // each DOM rebuild. _rescueFilterBar + syncFilterBar move the filter_bar
+  // element in the DOM which causes browsers to drop focus; we restore it here.
+  function _renderKeepFocus() {
+    var inp = document.getElementById('gh_q');
+    var hadFocus = inp && document.activeElement === inp;
+    var sel0 = hadFocus ? inp.selectionStart : null;
+    var sel1 = hadFocus ? inp.selectionEnd   : null;
+    renderGrid();
+    if (hadFocus) {
+      inp = document.getElementById('gh_q');
+      if (inp) {
+        inp.focus();
+        if (sel0 !== null) { try { inp.setSelectionRange(sel0, sel1); } catch(_) {} }
+      }
+    }
+  }
+
+  var ckey   = mkCacheKey(ghState);
+  var cached = getCached(ckey);
+  if (cached) {
+    if (loadMore) {
+      ghState.results = ghState.results.concat(cached.results);
+    } else {
+      ghState.results = cached.results;
+      ghState.total   = cached.total || 0;
+    }
+    _renderKeepFocus();
+    return;
+  }
+
+  ghState.loading = true;
+  _renderKeepFocus(); // show skeletons
+
+  var q    = buildGHQuery(ghState);
+  var url  = GH_API + '?q=' + encodeURIComponent(q) +
+             '&sort=' + ghState.sort + '&order=desc&per_page=30&page=' + ghState.page;
+  var hdrs = { 'Accept': 'application/vnd.github.v3+json' };
+  try {
+    var tok = localStorage.getItem('etb_github_token');
+    if (tok) hdrs['Authorization'] = 'token ' + tok;
+  } catch(_) {}
+
+  fetch(url, { headers: hdrs })
+    .then(function(r) {
+      if (r.status === 403 || r.status === 429) {
+        ghState.error = 'rate_limit';
+        return null;
+      }
+      if (!r.ok) { ghState.error = 'network'; return null; }
+      return r.json();
+    })
+    .then(function(data) {
+      ghState.loading = false;
+      if (!data) { _renderKeepFocus(); return; }
+      var items = data.items || [];
+      setCached(ckey, items, data.total_count || 0);
+      if (loadMore) {
+        ghState.results = ghState.results.concat(items);
+      } else {
+        ghState.results = items;
+        ghState.total   = data.total_count || 0;
+      }
+      _renderKeepFocus();
+    })
+    .catch(function() {
+      ghState.loading = false;
+      ghState.error   = 'network';
+      _renderKeepFocus();
+    });
+}
+
+// ── Topic chips ───────────────────────────────────────────────────────────
+function renderTopics() {
+  var el = document.getElementById('fb_topics');
+  if (!el) return;
+  el.innerHTML = GH_TOPICS.map(function(t) {
+    return '<button class="tpchip' + (ghState.topic === t.id ? ' on' : '') +
+      '" onclick="selTopic(\'' + t.id + '\')">' + esc(t.l) + '</button>';
+  }).join('');
+}
+
+function selTopic(id) {
+  ghState.topic = (ghState.topic === id) ? '' : id;
+  renderTopics();
+  doSearch();
+}
+
+// ── Registry helpers ──────────────────────────────────────────────────────
+function gi() {
+  try { return JSON.parse(localStorage.getItem(INSTALLED_KEY) || '[]'); } catch(_) { return []; }
+}
+function si(a) {
+  try { localStorage.setItem(INSTALLED_KEY, JSON.stringify(a)); } catch(_) {}
+}
+function getCustom() {
+  try { return JSON.parse(localStorage.getItem(CUSTOM_KEY) || '[]'); } catch(_) { return []; }
+}
+
+// ── Notify parent ─────────────────────────────────────────────────────────
+function notify(action, pluginId, url) {
+  try {
+    window.parent.postMessage({
+      type: 'etb_plugin_action',
+      action: action,
+      pluginId: pluginId || '',
+      url: url || ''
+    }, '*');
+  } catch(_) {}
+}
+
+// ── Tabs ──────────────────────────────────────────────────────────────────
+var CATS = [
+  { id: 'all',  l: 'All' },
+  { id: 'inst', l: 'Installed' },
+  { id: 'hf',   l: '🤗 HuggingFace' }
+];
+
+function rtabs() {
+  var inst = gi();
+  document.getElementById('tabs').innerHTML = CATS.map(function(c) {
+    var n = c.id === 'inst' ? '<span class="tn"> ' + inst.length + '</span>' : '';
+    return '<button class="tab' + (cur === c.id ? ' on' : '') + '" onclick="setc(\'' + c.id + '\')">' +
+      esc(c.l) + n + '</button>';
+  }).join('');
+}
+
+function setc(id) {
+  cur = id;
+  _rescueFilterBar();
+  _rescueHFFilterBar();
+  rtabs();
+  renderGrid();
+  syncFilterBar();
+  syncHFFilterBar();
+  // Lazy-init HF search on first open
+  if (id === 'hf' && !hfState.inited) {
+    hfState.inited = true;
+    searchHF();
+  }
+}
+
+// ── Category helpers (shared by Featured + Installed) ─────────────────────
+function normalizeCategory(p) {
+  var c = p.category || 'other';
+  if (c === 'utilities') return 'developer';
+  if (KNOWN_CATS[c]) return c;
+  return 'other';
+}
+
+function buildCatCounts(plugins) {
+  var counts = {};
+  plugins.forEach(function(p) {
+    var c = normalizeCategory(p);
+    counts[c] = (counts[c] || 0) + 1;
+  });
+  return counts;
+}
+
+function buildCatTabs(countsMap, activeCat, setterName) {
+  return '<div class="cat_tabs">' +
+    CAT_TABS.filter(function(ct) {
+      return ct.id === 'all' || countsMap[ct.id];
+    }).map(function(ct) {
+      return '<button class="cat_tab' + (activeCat === ct.id ? ' active' : '') +
+        '" onclick="' + setterName + '(\'' + ct.id + '\')">' + esc(ct.l) + '</button>';
+    }).join('') +
+  '</div>';
+}
+
+function filterByCategory(plugins, catId) {
+  if (catId === 'all') return plugins;
+  return plugins.filter(function(p) { return normalizeCategory(p) === catId; });
+}
+
+function _rescueFilterBar() {
+  var fb = document.getElementById('filter_bar');
+  var stash = document.getElementById('filter_stash');
+  if (fb && stash && fb.parentNode !== stash) stash.appendChild(fb);
+}
+
+function syncFilterBar() {
+  var fb = document.getElementById('filter_bar');
+  var stash = document.getElementById('filter_stash');
+  var slot = document.getElementById('other_filter_slot');
+  if (!fb || !stash) return;
+  var show = cur === 'all' && !_otherCollapsed;
+  if (show && slot) {
+    slot.appendChild(fb);
+    fb.style.display = '';
+  } else {
+    stash.appendChild(fb);
+    fb.style.display = 'none';
+  }
+}
+
+function _rescueHFFilterBar() {
+  var fb = document.getElementById('hf_filter_bar');
+  var stash = document.getElementById('hf_filter_stash');
+  if (fb && stash && fb.parentNode !== stash) stash.appendChild(fb);
+}
+
+function syncHFFilterBar() {
+  var fb = document.getElementById('hf_filter_bar');
+  var stash = document.getElementById('hf_filter_stash');
+  var slot = document.getElementById('hf_filter_slot');
+  if (!fb || !stash) return;
+  if (cur === 'hf' && slot) {
+    slot.appendChild(fb);
+    fb.style.display = '';
+  } else {
+    stash.appendChild(fb);
+    fb.style.display = 'none';
+  }
+}
+
+// ── Grid dispatcher ───────────────────────────────────────────────────────
+function renderGrid() {
+  if (cur === 'all') renderDiscover();
+  else if (cur === 'hf') renderHFDiscover();
+  else renderInstalled();
+}
+
+// ── Featured (curated, bundled at build time) ─────────────────────────────
+var installingIds = {};  // pluginId -> true while provisioning
+var featuredError = '';  // last install error, shown inline in the section
+
+function getFeatured() {
+  var all = BUILTIN_PLUGINS_DATA.filter(function(p) { return p.featured; });
+  if (_featCat !== 'all') all = all.filter(function(p) { return p.category === _featCat; });
+  var q = _featSearch.trim().toLowerCase();
+  if (q) {
+    all = all.filter(function(p) {
+      return (p.name    || '').toLowerCase().indexOf(q) !== -1 ||
+             (p.tagline || '').toLowerCase().indexOf(q) !== -1 ||
+             (p.description || '').toLowerCase().indexOf(q) !== -1;
+    });
+  }
+  return all;
+}
+
+function _setFeatCat(cat) {
+  _featCat = cat;
+  renderGrid();
+}
+
+function _setFeatSearch(val) {
+  _featSearch = val || '';
+  // Save cursor position before the innerHTML wipe destroys the input element.
+  var inp = document.getElementById('feat_q');
+  var sel0 = inp ? inp.selectionStart : null;
+  var sel1 = inp ? inp.selectionEnd   : null;
+  renderGrid();
+  inp = document.getElementById('feat_q');
+  if (inp) {
+    inp.focus();
+    if (sel0 !== null) { try { inp.setSelectionRange(sel0, sel1); } catch(_) {} }
+  }
+}
+
+function _setInstCat(cat) {
+  _instCat = cat;
+  renderGrid();
+}
+
+function renderFeaturedSection() {
+  var featured = getFeatured();
+  var inst = gi();
+
+  var allFeatured = BUILTIN_PLUGINS_DATA.filter(function(p) { return p.featured; });
+  var catCounts = buildCatCounts(allFeatured);
+  var tabsHtml = buildCatTabs(catCounts, _featCat, '_setFeatCat');
+
+  var html = '<div class="sect_hdr">' +
+    '<span class="sect_title">Featured</span>' +
+    '<span class="sect_badge">Curated</span>' +
+    '<span class="sect_line"></span></div>';
+
+  html += '<div class="feat_search_row" style="grid-column:1/-1;display:flex;gap:8px;padding:2px 0 4px">' +
+    '<div class="fb_srch" style="max-width:320px">' +
+      '<input class="fb_sinp" id="feat_q" placeholder="Search featured plugins…" ' +
+        'autocomplete="off" value="' + esc(_featSearch) + '" ' +
+        'oninput="_setFeatSearch(this.value)">' +
+      '<span class="fb_sico"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>' +
+    '</div>' +
+  '</div>';
+
+  html += tabsHtml;
+
+  if (featuredError) {
+    html += '<div class="banner err">⚠ Install failed: ' + esc(featuredError) +
+      ' — please try again.</div>';
+  }
+
+  if (!featured.length) {
+    html += '<div class="empty" style="grid-column:1/-1;padding:28px 20px">' +
+      '<div class="eico">🔍</div><p>No plugins in this category.</p></div>';
+    return html;
+  }
+
+  featured.forEach(function(p, i) {
+    var isInst = inst.indexOf(p.id) !== -1;
+    var isBusy = !!installingIds[p.id];
+    var pills  = (p.pills || []).slice(0, 3).map(function(t) {
+      return '<span class="rc_pill">' + esc(t) + '</span>';
+    }).join('');
+    var owner  = (p.eye || '').split('/')[0] || '';
+
+    var btn;
+    if (isBusy) {
+      btn = '<button class="rc_btn installing" disabled>Installing…</button>';
+    } else if (isInst) {
+      btn = '<button class="rc_btn done" onclick="notify(\'open\',\'' + esc(p.id) + '\')" style="cursor:pointer">Open</button>';
+    } else {
+      btn = '<button class="rc_btn" onclick="installFeatured(\'' + esc(p.id) + '\',this)">+ Install</button>';
+    }
+
+    html += '<div class="rcard feat' + (isInst ? ' inst' : '') +
+      '" style="animation-delay:' + Math.min(i * 12, 180) + 'ms">' +
+      '<div class="rc_top">' +
+        '<div class="rc_repo">' +
+          '<div class="rc_owner">' + esc(owner) + '</div>' +
+          '<div class="rc_name">' + esc(p.name) + '</div>' +
+        '</div>' +
+      '</div>' +
+      (p.tagline ? '<div class="rc_desc">' + esc(p.tagline) + '</div>' : '') +
+      '<div class="rc_meta">' + pills + '</div>' +
+      '<div class="rc_foot">' + btn + '</div>' +
+    '</div>';
+  });
+  return html;
+}
+
+function installFeatured(id, btn) {
+  if (installingIds[id]) return;
+  installingIds[id] = true;
+  featuredError = '';
+  if (btn) { btn.disabled = true; btn.textContent = 'Installing…'; btn.classList.add('installing'); }
+  notify('install_featured', id);
+}
+
+// ── Other section toggle ──────────────────────────────────────────────────
+function _toggleOther() {
+  _otherCollapsed = !_otherCollapsed;
+  try { localStorage.setItem(OTHER_COLLAPSED_KEY, _otherCollapsed ? '1' : '0'); } catch(_) {}
+  renderGrid();
+}
+
+// ── Discover (Featured on top + GitHub results under "Other") ─────────────
+function renderDiscover() {
+  // Always rescue filter_bar before any g.innerHTML wipe. The element lives
+  // inside #grid when Other is expanded; innerHTML replacement destroys it.
+  _rescueFilterBar();
+
+  var g = document.getElementById('grid');
+  if (!g) return;
+
+  var featuredHtml = renderFeaturedSection();
+  var arrow = _otherCollapsed ? '▶' : '▼';
+  var otherHdr = '<div class="sect_hdr">' +
+    '<span class="sect_title">Other</span>' +
+    '<button class="sect_toggle" onclick="_toggleOther()" title="' + (_otherCollapsed ? 'Expand' : 'Collapse') + ' GitHub results">' +
+      arrow +
+    '</button>' +
+    '<span class="sect_line"></span></div>';
+
+  if (_otherCollapsed) {
+    g.innerHTML = featuredHtml + otherHdr;
+    syncFilterBar();
+    return;
+  }
+
+  var filterSlot = '<div id="other_filter_slot" class="other_filters"></div>';
+
+  if (ghState.loading) {
+    var sk = '';
+    for (var i = 0; i < 6; i++) sk += '<div class="skel"></div>';
+    g.innerHTML = featuredHtml + otherHdr + filterSlot + sk;
+    syncFilterBar();
+    return;
+  }
+
+  if (ghState.error) {
+    var msg = ghState.error === 'rate_limit'
+      ? '⏱ Rate limit reached. Wait a minute and try again.'
+      : '⚡ Could not reach GitHub. Check your connection and try again.';
+    g.innerHTML = featuredHtml + otherHdr + filterSlot +
+      '<div class="banner ' + (ghState.error === 'rate_limit' ? 'warn' : 'err') + '">' +
+      esc(msg) + '</div>';
+    syncFilterBar();
+    return;
+  }
+
+  if (!ghState.results.length) {
+    g.innerHTML = featuredHtml + otherHdr + filterSlot +
+      '<div class="empty"><div class="eico">🔍</div>' +
+      '<p>No repositories found.<br>Try different keywords or filters.</p></div>';
+    syncFilterBar();
+    return;
+  }
+
+  var inst      = gi();
+  var customMap = getCustom().reduce(function(m, p) {
+    if (p.source) m[p.source] = true;
+    return m;
+  }, {});
+
+  var html = featuredHtml + otherHdr + filterSlot;
+  if (ghState.total > 0) {
+    html += '<div class="total_hint">' + fmtN(ghState.total) + ' repositories found</div>';
+  }
+
+  ghState.results.forEach(function(r, i) {
+    var isInst  = !!(customMap[r.html_url] || inst.indexOf('gh_' + r.full_name.replace('/', '_')) !== -1);
+    var topics  = (r.topics || []).slice(0, 3);
+    var pills   = topics.map(function(t){ return '<span class="rc_pill">' + esc(t) + '</span>'; }).join('');
+    var lang    = r.language ? '<span class="rc_info">' + esc(r.language) + '</span>' : '';
+    var lic     = r.license && r.license.spdx_id && r.license.spdx_id !== 'NOASSERTION'
+      ? '<span class="rc_info">' + esc(r.license.spdx_id) + '</span>' : '';
+    var upd     = r.pushed_at ? '<span class="rc_info">' + timeSince(r.pushed_at) + '</span>' : '';
+    var dotSep  = pills ? '<span class="rc_dot">·</span>' : '';
+    var metaFull = [lang, lic, upd].filter(Boolean).join('<span class="rc_dot">·</span>');
+
+    var btn = isInst
+      ? '<button class="rc_btn done" disabled>✓ Installed</button>'
+      : '<button class="rc_btn" onclick="installRepo(\'' + esc(r.html_url) + '\',this)">+ Install</button>';
+
+    html += '<div class="rcard' + (isInst ? ' inst' : '') +
+      '" style="animation-delay:' + Math.min(i * 12, 180) + 'ms">' +
+      '<div class="rc_top">' +
+        '<div class="rc_repo">' +
+          '<div class="rc_owner">' + esc(r.full_name.split('/')[0]) + '</div>' +
+          '<div class="rc_name">' + esc(r.name) + '</div>' +
+        '</div>' +
+        '<div class="rc_stars">★ ' + fmtN(r.stargazers_count) + '</div>' +
+      '</div>' +
+      (r.description ? '<div class="rc_desc">' + esc(r.description) + '</div>' : '') +
+      '<div class="rc_meta">' + pills + (pills && metaFull ? dotSep : '') + metaFull + '</div>' +
+      '<div class="rc_foot">' + btn + '</div>' +
+    '</div>';
+  });
+
+  if (ghState.results.length > 0 && ghState.results.length < ghState.total) {
+    html += '<div class="load_more"><button class="load_more_btn" onclick="loadMore()">Load more</button></div>';
+  }
+
+  g.innerHTML = html;
+  syncFilterBar();
+}
+
+function installRepo(repoUrl, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = 'Opening…'; }
+  notify('github_add_url', '', repoUrl);
+}
+
+function loadMore() {
+  ghState.page++;
+  searchGitHub(true);
+}
+
+// ── HuggingFace search ────────────────────────────────────────────────────
+function onHFChange(immediate) {
+  var qEl = document.getElementById('hf_q');
+  var sortEl = document.getElementById('hf_sort');
+  var sdkEl = document.getElementById('hf_sdk');
+  var pipeEl = document.getElementById('hf_pipeline');
+  if (qEl)    hfState.query    = qEl.value;
+  if (sortEl) hfState.sort     = sortEl.value;
+  if (sdkEl)  hfState.sdk      = sdkEl.style.display !== 'none' ? sdkEl.value : '';
+  if (pipeEl) hfState.pipeline = pipeEl.style.display !== 'none' ? pipeEl.value : '';
+  hfState.page = 0;
+
+  cancelHFDebounce();
+  if (immediate) { searchHF(); return; }
+  if (hfState.query.length === 1) return; // avoid premature renders
+  hfState.debTimer = setTimeout(searchHF, 600);
+}
+
+function cancelHFDebounce() {
+  if (hfState.debTimer) { clearTimeout(hfState.debTimer); hfState.debTimer = null; }
+}
+
+function setHFKind(kind) {
+  hfState.kind = kind;
+  hfState.page = 0;
+  hfState.results = [];
+  // Toggle kind button classes
+  var spBtn = document.getElementById('hf_kind_space');
+  var mdBtn = document.getElementById('hf_kind_model');
+  if (spBtn) spBtn.className = 'hf_kind_btn' + (kind === 'space' ? ' on' : '');
+  if (mdBtn) mdBtn.className = 'hf_kind_btn' + (kind === 'model' ? ' on' : '');
+  // Show/hide SDK vs pipeline selects
+  var sdkSel  = document.getElementById('hf_sdk');
+  var pipeSel = document.getElementById('hf_pipeline');
+  if (sdkSel)  sdkSel.style.display  = kind === 'space' ? '' : 'none';
+  if (pipeSel) pipeSel.style.display = kind === 'model' ? '' : 'none';
+  searchHF();
+}
+
+function buildHFUrl(s) {
+  var kind = s.kind === 'model' ? 'models' : 'spaces';
+  var params = ['limit=' + HF_LIMIT, 'full=true'];
+  if (s.query) params.push('search=' + encodeURIComponent(s.query));
+  params.push('sort=' + encodeURIComponent(s.sort || 'downloads'));
+  params.push('direction=-1');
+  if (s.kind === 'space' && s.sdk) params.push('sdk=' + encodeURIComponent(s.sdk));
+  if (s.kind === 'model' && s.pipeline) params.push('pipeline_tag=' + encodeURIComponent(s.pipeline));
+  if (s.page > 0) params.push('p=' + s.page);
+  return HF_API_BASE + '/' + kind + '?' + params.join('&');
+}
+
+function searchHF(append) {
+  if (!append) hfState.results = [];
+  var cKey = mkHFCacheKey(hfState);
+  var cached = getHFCached(cKey);
+  if (cached) {
+    if (append) hfState.results = hfState.results.concat(cached.results);
+    else hfState.results = cached.results;
+    hfState.total = cached.total;
+    hfState.loading = false;
+    hfState.error = null;
+    if (cur === 'hf') renderHFDiscover();
+    return;
+  }
+
+  hfState.loading = true;
+  hfState.error = null;
+  if (cur === 'hf') renderHFDiscover();
+
+  var url = buildHFUrl(hfState);
+  fetch(url, { headers: { Accept: 'application/json' } })
+    .then(function(r) {
+      if (!r.ok) throw new Error('HF API error ' + r.status);
+      // HF returns count in X-Total-Count header for some endpoints
+      var total = parseInt(r.headers.get('X-Total-Count') || '0', 10) || 0;
+      return r.json().then(function(data) { return { data: data, total: total }; });
+    })
+    .then(function(result) {
+      var items = Array.isArray(result.data) ? result.data : [];
+      hfState.total = result.total || items.length;
+      setHFCached(cKey, items, hfState.total);
+      if (append) hfState.results = hfState.results.concat(items);
+      else hfState.results = items;
+      hfState.loading = false;
+      hfState.error = null;
+    })
+    .catch(function(e) {
+      hfState.loading = false;
+      hfState.error = (e && e.message) || 'error';
+    })
+    .then(function() {
+      if (cur === 'hf') {
+        _renderHFKeepFocus(function() {
+          renderHFDiscover();
+          syncHFFilterBar();
+        });
+      }
+    });
+}
+
+function loadMoreHF() {
+  hfState.page++;
+  searchHF(true);
+}
+
+// Saves focus/cursor of #hf_q, runs cb (which re-renders the DOM), then restores focus.
+function _renderHFKeepFocus(cb) {
+  var inp = document.getElementById('hf_q');
+  var wasFocused = inp && document.activeElement === inp;
+  var ss = inp ? inp.selectionStart : null;
+  var se = inp ? inp.selectionEnd   : null;
+  if (cb) cb();
+  if (wasFocused) {
+    var inp2 = document.getElementById('hf_q');
+    if (inp2) {
+      inp2.focus();
+      try { inp2.setSelectionRange(ss, se); } catch(_) {}
+    }
+  }
+}
+
+function _hfSlug(s) {
+  return String(s).toLowerCase()
+    .replace(/[^a-z0-9_]/g, '_')
+    .replace(/__+/g, '_')
+    .replace(/^_|_$/g, '')
+    .slice(0, 30);
+}
+
+function _hfIsInstalled(item) {
+  var kind = hfState.kind;
+  var id = item.id || item.modelId || '';
+  // Must use same formula as contextHF() in install-prompt.js
+  var slugId = id.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+  var pluginId = 'hf_' + kind + '_' + _hfSlug(slugId);
+  var inst = gi();
+  if (inst.indexOf(pluginId) !== -1) return true;
+  // Also check by source field (set by agent during install)
+  var custom = getCustom();
+  for (var i = 0; i < custom.length; i++) {
+    if (custom[i].source === 'hf:' + kind + ':' + id) return true;
+  }
+  return false;
+}
+
+function renderHFDiscover() {
+  var g = document.getElementById('grid');
+  if (!g) return;
+
+  // Must rescue before any g.innerHTML assignment to prevent destroying the filter bar
+  _rescueHFFilterBar();
+
+  var filterSlot = '<div id="hf_filter_slot"></div>';
+
+  if (hfState.loading && !hfState.results.length) {
+    var skels = '';
+    for (var si = 0; si < 6; si++) skels += '<div class="skel"></div>';
+    g.innerHTML = filterSlot + skels;
+    syncHFFilterBar();
+    return;
+  }
+
+  if (hfState.error) {
+    g.innerHTML = filterSlot +
+      '<div class="banner err">⚡ Could not reach HuggingFace. Check your connection and try again.</div>';
+    syncHFFilterBar();
+    return;
+  }
+
+  if (!hfState.results.length) {
+    g.innerHTML = filterSlot +
+      '<div class="empty"><div class="eico">🤗</div>' +
+      '<p>No results found.<br>Try different keywords or filters.</p></div>';
+    syncHFFilterBar();
+    return;
+  }
+
+  var html = filterSlot;
+  if (hfState.total > 0) {
+    html += '<div class="total_hint">' + fmtN(hfState.total) + ' ' +
+      (hfState.kind === 'model' ? 'models' : 'spaces') + ' found</div>';
+  }
+
+  hfState.results.forEach(function(item, i) {
+    html += renderHFCard(item, i);
+  });
+
+  if (hfState.results.length > 0 && hfState.results.length < hfState.total) {
+    html += '<div class="load_more"><button class="load_more_btn" onclick="loadMoreHF()">Load more</button></div>';
+  }
+
+  g.innerHTML = html;
+  syncHFFilterBar();
+}
+
+function renderHFCard(item, i) {
+  var kind = hfState.kind;
+  var id = item.id || item.modelId || '';
+  var author = id.includes('/') ? id.split('/')[0] : (item.author || '');
+  var name = id.includes('/') ? id.split('/')[1] : id;
+  var desc = item.description || (item.cardData && item.cardData.description) || '';
+  var downloads = fmtN(item.downloads || 0);
+  var likes = fmtN(item.likes || 0);
+  var sdk = item.sdk || (item.cardData && item.cardData.sdk) || '';
+  var pipelineTag = item.pipeline_tag || (item.cardData && item.cardData.pipeline_tag) || '';
+  var isInst = _hfIsInstalled(item);
+  var updStr = item.lastModified ? timeSince(item.lastModified) : '';
+
+  var kindBadge = kind === 'space'
+    ? '<span class="rc_hf_kind">Space</span>'
+    : '<span class="rc_hf_kind">Model</span>';
+  var sdkPill = sdk ? '<span class="rc_pill">' + esc(sdk) + '</span>' : '';
+  var pipePill = pipelineTag ? '<span class="rc_pill">' + esc(pipelineTag) + '</span>' : '';
+  var pills = kind === 'space' ? sdkPill : pipePill;
+
+  var meta = [
+    '<span class="rc_info">♥ ' + likes + '</span>',
+    downloads !== '0' ? '<span class="rc_info">↓ ' + downloads + '</span>' : '',
+    updStr ? '<span class="rc_info">' + updStr + '</span>' : ''
+  ].filter(Boolean).join('<span class="rc_dot">·</span>');
+
+  var btn = isInst
+    ? '<button class="rc_btn done" disabled>✓ Installed</button>'
+    : '<button class="rc_btn" onclick="installHF(\'' + esc(id) + '\',\'' + esc(kind) + '\',this)">+ Install</button>';
+
+  return '<div class="rcard' + (isInst ? ' inst' : '') +
+    '" style="animation-delay:' + Math.min(i * 12, 180) + 'ms">' +
+    '<div class="rc_top">' +
+      '<div class="rc_repo">' +
+        '<div class="rc_owner">' + esc(author) + '&nbsp;' + kindBadge + '</div>' +
+        '<div class="rc_name">' + esc(name) + '</div>' +
+      '</div>' +
+      (likes !== '0' ? '<div class="rc_stars" style="color:#f59e0b">♥ ' + likes + '</div>' : '') +
+    '</div>' +
+    (desc ? '<div class="rc_desc">' + esc(desc.slice(0, 150)) + '</div>' : '') +
+    '<div class="rc_meta">' + pills + (pills && meta ? '<span class="rc_dot">·</span>' : '') + meta + '</div>' +
+    '<div class="rc_foot">' + btn + '</div>' +
+  '</div>';
+}
+
+function installHF(id, kind, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = 'Opening…'; }
+  notify('hf_add_url', '', 'hf:' + kind + ':' + id);
+}
+
+// ── Installed plugins (builtin featured + custom GitHub) ─────────────────
+function renderInstalledCard(p, i) {
+  var name = esc(p.name || p.id);
+  var sub  = esc(p.tagline || p.description || p.source || '');
+  return '<div class="icard" style="animation-delay:' + Math.min(i * 12, 120) + 'ms">' +
+    '<div class="idot"></div>' +
+    '<div class="iinfo">' +
+      '<div class="iname">' + name + '</div>' +
+      (sub ? '<div class="isub">' + sub + '</div>' : '') +
+    '</div>' +
+    '<div class="iacts">' +
+      '<button class="ibtn_open" onclick="notify(\'open\',\'' + esc(p.id) + '\')">Open</button>' +
+      '<button class="ibtn_rm" onclick="uninst(\'' + esc(p.id) + '\')">Remove</button>' +
+    '</div>' +
+  '</div>';
+}
+
+function renderInstalled() {
+  var g = document.getElementById('grid');
+  if (!g) return;
+
+  var instIds = gi();
+  var builtinInstalled = BUILTIN_PLUGINS_DATA.filter(function(p) {
+    return instIds.indexOf(p.id) !== -1;
+  });
+  var all = builtinInstalled.concat(getCustom());
+
+  if (!all.length) {
+    g.innerHTML = '<div class="empty"><div class="eico">📦</div>' +
+      '<p>No plugins installed yet.<br>Browse the All tab to find and install repositories.</p></div>';
+    rtabs();
+    return;
+  }
+
+  var catCounts = buildCatCounts(all);
+  var filtered = filterByCategory(all, _instCat);
+  var html = buildCatTabs(catCounts, _instCat, '_setInstCat');
+
+  if (!filtered.length) {
+    html += '<div class="empty" style="grid-column:1/-1;padding:28px 20px">' +
+      '<div class="eico">🔍</div><p>No plugins in this category.</p></div>';
+  } else {
+    html += filtered.map(function(p, i) { return renderInstalledCard(p, i); }).join('');
+  }
+
+  g.innerHTML = html;
+  rtabs();
+}
+
+function uninst(id) {
+  // Snapshot manifest BEFORE clearing localStorage so parent can do full cleanup.
+  // If we cleared first, ETB.registry.getById() in the parent would return null,
+  // causing CSPL cleanup to be skipped and the device registry file to persist,
+  // which makes the plugin reappear on next boot (syncFromDevice reads it back).
+  var pluginData = (getCustom().filter(function(p) { return p.id === id; })[0]) || null;
+
+  // Remove from installed IDs and custom list
+  si(gi().filter(function(x){ return x !== id; }));
+  var remaining = getCustom().filter(function(p){ return p.id !== id; });
+  try { localStorage.setItem(CUSTOM_KEY, JSON.stringify(remaining)); } catch(_) {}
+
+  // Send manifest snapshot so parent has artifact paths even after localStorage is gone
+  try {
+    window.parent.postMessage({
+      type: 'etb_plugin_action',
+      action: 'uninstall',
+      pluginId: id,
+      url: '',
+      pluginData: pluginData
+    }, '*');
+  } catch(_) {}
+
+  renderGrid();
+  rtabs();
+}
+
+// ── Utils ─────────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s || '').replace(/[&<>"']/g, function(c) {
+    return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+  });
+}
+
+// ── Listen for parent messages ────────────────────────────────────────────
+window.addEventListener('message', function(e) {
+  if (!e.data) return;
+  if (e.data.type === 'etb_reload_plugins') {
+    renderGrid();
+    rtabs();
+  } else if (e.data.type === 'etb_install_result') {
+    delete installingIds[e.data.pluginId];
+    featuredError = e.data.ok ? '' : (e.data.message || 'unknown error');
+    renderGrid();
+    rtabs();
+  }
+});
+
+// ── Boot ──────────────────────────────────────────────────────────────────
+rtabs();
+renderTopics();
+doSearch();
+</script>
+</body>
+</html>

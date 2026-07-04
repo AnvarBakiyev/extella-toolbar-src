@@ -1,0 +1,88 @@
+{
+  "id": "timezone-converter",
+  "mode": "form_driven",
+  "featured": true,
+  "name": "Timezone Converter",
+  "tagline": "Convert time between world time zones",
+  "description": "Convert a specific time from one timezone to another. See what time it is right now in any city or timezone. Uses the free WorldTimeAPI — no API key required.",
+  "category": "calculators",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "worldtimeapi.org (free, no auth)",
+  "pills": [
+    "Free API",
+    "No auth",
+    "World clocks"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://worldtimeapi.org",
+  "experts": [
+    "timezone_converter_convert"
+  ],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "form"
+  },
+  "capabilities": [
+    {
+      "id": "convert_timezone",
+      "name": "Convert Timezone",
+      "expert_name": "timezone_converter_convert",
+      "inputs": [
+        {
+          "name": "timezone",
+          "type": "text",
+          "label": "Timezone (e.g. America/New_York)",
+          "required": true,
+          "placeholder": "America/New_York or Europe/London or Asia/Tokyo"
+        },
+        {
+          "name": "datetime_str",
+          "type": "text",
+          "label": "Date/Time (blank = current time)",
+          "required": false,
+          "default": "",
+          "placeholder": "2024-06-15 14:30:00"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "json"
+        }
+      ]
+    }
+  ],
+  "expert_defs": [
+    {
+      "name": "timezone_converter_convert",
+      "description": "Gets current time or converts a datetime to a timezone using worldtimeapi.org. Params: timezone (IANA timezone like America/New_York), datetime_str (optional ISO datetime). Returns JSON with output_type json.",
+      "cspl": "fython",
+      "kwargs": {
+        "timezone": "America/New_York",
+        "datetime_str": ""
+      },
+      "code": [
+        "def timezone_converter_convert(timezone='America/New_York', datetime_str=''):",
+        "    import urllib.request, urllib.parse, json, datetime",
+        "    try:",
+        "        tz = timezone.strip()",
+        "        url = 'https://worldtimeapi.org/api/timezone/' + urllib.parse.quote(tz)",
+        "        req = urllib.request.Request(url, headers={'User-Agent': 'ExtellaTool/1.0'})",
+        "        with urllib.request.urlopen(req, timeout=10) as r:",
+        "            data = json.loads(r.read().decode())",
+        "        dt_str = data.get('datetime', '')",
+        "        day_of_week = data.get('day_of_week', 0)",
+        "        days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']",
+        "        result = {'timezone': tz, 'current_datetime': dt_str[:19].replace('T', ' '), 'utc_offset': data.get('utc_offset', ''), 'day_of_week': days[day_of_week], 'dst': data.get('dst', False), 'abbreviation': data.get('abbreviation', ''), 'unix_time': data.get('unixtime', 0)}",
+        "        return json.dumps({'status': 'success', 'output_type': 'json', 'data': result})",
+        "    except Exception as e:",
+        "        return json.dumps({'status': 'error', 'message': str(e)})"
+      ]
+    }
+  ],
+  "conceptTexts": [
+    "Plugin: Timezone Converter (id: timezone-converter). Expert timezone_converter_convert returns current time in any IANA timezone using worldtimeapi.org. Param: timezone (e.g. America/New_York, Europe/London). Returns {output_type: 'json', data: {timezone, current_datetime, utc_offset, day_of_week, dst}}."
+  ]
+}

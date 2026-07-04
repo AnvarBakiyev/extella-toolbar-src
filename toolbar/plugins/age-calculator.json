@@ -1,0 +1,92 @@
+{
+  "id": "age-calculator",
+  "mode": "form_driven",
+  "featured": true,
+  "name": "Age Calculator",
+  "tagline": "Calculate exact age in years, months, days and more",
+  "description": "Calculate the exact age from a birth date: years, months, days, total weeks, total days, and next birthday countdown. Works for any date in history.",
+  "category": "calculators",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "datetime (Python stdlib)",
+  "pills": [
+    "No AI needed",
+    "Instant",
+    "Offline"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://docs.python.org/3/library/datetime.html",
+  "experts": [
+    "age_calculator_compute"
+  ],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "form"
+  },
+  "capabilities": [
+    {
+      "id": "compute_age",
+      "name": "Calculate Age",
+      "expert_name": "age_calculator_compute",
+      "inputs": [
+        {
+          "name": "birth_date",
+          "type": "text",
+          "label": "Birth Date (YYYY-MM-DD)",
+          "required": true,
+          "placeholder": "1990-06-15"
+        },
+        {
+          "name": "as_of_date",
+          "type": "text",
+          "label": "As of Date (blank = today)",
+          "required": false,
+          "default": "",
+          "placeholder": "2024-01-01"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "json"
+        }
+      ]
+    }
+  ],
+  "expert_defs": [
+    {
+      "name": "age_calculator_compute",
+      "description": "Calculates exact age from a birth date. Params: birth_date (YYYY-MM-DD), as_of_date (YYYY-MM-DD or blank for today). Returns JSON with output_type json containing years, months, days, total_days, and next_birthday.",
+      "cspl": "fython",
+      "kwargs": {
+        "birth_date": "1990-01-01",
+        "as_of_date": ""
+      },
+      "code": [
+        "def age_calculator_compute(birth_date='1990-01-01', as_of_date=''):",
+        "    import datetime, json",
+        "    try:",
+        "        bd = datetime.date.fromisoformat(birth_date.strip())",
+        "        today = datetime.date.fromisoformat(as_of_date.strip()) if as_of_date.strip() else datetime.date.today()",
+        "        years = today.year - bd.year - ((today.month, today.day) < (bd.month, bd.day))",
+        "        months_total = (today.year - bd.year) * 12 + today.month - bd.month",
+        "        if today.day < bd.day: months_total -= 1",
+        "        total_days = (today - bd).days",
+        "        try:",
+        "            next_bd = bd.replace(year=today.year)",
+        "            if next_bd < today: next_bd = bd.replace(year=today.year + 1)",
+        "        except ValueError:",
+        "            next_bd = datetime.date(today.year + (1 if (today.month, today.day) >= (bd.month, bd.day) else 0), bd.month, 28)",
+        "        days_to_bd = (next_bd - today).days",
+        "        result = {'years': years, 'months': months_total, 'days': total_days, 'weeks': total_days // 7, 'next_birthday': next_bd.strftime('%B %d, %Y'), 'days_to_birthday': days_to_bd}",
+        "        return json.dumps({'status': 'success', 'output_type': 'json', 'data': result})",
+        "    except Exception as e:",
+        "        return json.dumps({'status': 'error', 'message': str(e)})"
+      ]
+    }
+  ],
+  "conceptTexts": [
+    "Plugin: Age Calculator (id: age-calculator). Expert age_calculator_compute calculates exact age from birth date. Params: birth_date (YYYY-MM-DD), as_of_date (optional). Returns {output_type: 'json', data: {years, months, days, weeks, next_birthday, days_to_birthday}}."
+  ]
+}

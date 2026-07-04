@@ -1,0 +1,91 @@
+{
+  "id": "validator-js",
+  "mode": "form_driven",
+  "featured": true,
+  "name": "Validator.js",
+  "tagline": "Validate emails, URLs, phones",
+  "description": "Inspired by validator.js — the most popular string validation library on GitHub.",
+  "category": "text",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "github.com/validatorjs/validator.js",
+  "pills": [
+    "GitHub",
+    "Popular",
+    "Open source"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://github.com/validatorjs/validator.js",
+  "experts": [
+    "validator_js_validate"
+  ],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "form"
+  },
+  "capabilities": [
+    {
+      "id": "validate",
+      "name": "Validator.js",
+      "expert_name": "validator_js_validate",
+      "inputs": [
+        {
+          "name": "value",
+          "type": "text",
+          "label": "Value",
+          "required": true
+        },
+        {
+          "name": "rule",
+          "type": "select",
+          "label": "Rule",
+          "default": "email",
+          "options": [
+            {
+              "value": "email",
+              "label": "Email"
+            },
+            {
+              "value": "url",
+              "label": "URL"
+            },
+            {
+              "value": "ipv4",
+              "label": "IPv4"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "type": "json"
+        }
+      ]
+    }
+  ],
+  "expert_defs": [
+    {
+      "name": "validator_js_validate",
+      "description": "Inspired by validator.js — the most popular string validation library on GitHub.",
+      "cspl": "fython",
+      "kwargs": {
+        "value": "",
+        "rule": "email"
+      },
+      "code": [
+        "def validator_js_validate(value='', rule='email'):",
+        "    import re, json",
+        "    p = {'email': r'^[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}$', 'url': r'^https?://[^\\s]+$', 'ipv4': r'^(?:(?:25[0-5]|2[0-4]\\d|[01]?\\d\\d?)\\.){3}(?:25[0-5]|2[0-4]\\d|[01]?\\d\\d?)$'}",
+        "    try:",
+        "        valid = bool(re.match(p.get(rule,''), value.strip())) if rule in p else False",
+        "        return json.dumps({'status':'success','output_type':'json','data':{'valid':valid}})",
+        "    except Exception as e: return json.dumps({'status':'error','message':str(e)})"
+      ]
+    }
+  ],
+  "conceptTexts": [
+    "Plugin: Validator.js (id: validator-js). Wraps github.com/validatorjs/validator.js."
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "id": "meeting-notes",
+  "mode": "llm_driven",
+  "featured": true,
+  "name": "Meeting Notes Summarizer",
+  "tagline": "Turn raw meeting notes into structured action items",
+  "description": "Paste raw meeting notes, transcripts, or bullet points and get a clean, structured summary: key decisions, action items with owners, open questions, and next steps. Share-ready in seconds.",
+  "category": "ai-work",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "Extella AI",
+  "pills": [
+    "AI-powered",
+    "Productivity",
+    "Team"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "",
+  "experts": [],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "chat",
+    "layout": "split",
+    "initialPrompt": "Paste your meeting notes or transcript and I'll turn them into a structured summary with action items.",
+    "quickActions": [
+      {
+        "label": "Summarize a weekly standup",
+        "prompt": "Summarize these standup notes into: what was completed, what's in progress, and any blockers:\n\nJohn: finished login page, working on dashboard, no blockers\nSarah: fixed the payment bug, starting on the analytics module, need design specs\nMike: completed API docs, waiting on backend endpoint from John"
+      },
+      {
+        "label": "Extract action items",
+        "prompt": "Extract all action items from these meeting notes. Format as: [Owner] - [Task] - [Due date if mentioned]"
+      },
+      {
+        "label": "Format for Slack/email",
+        "prompt": "Format these meeting notes as a clean Slack message with emoji headers for easy scanning"
+      },
+      {
+        "label": "Create meeting agenda",
+        "prompt": "Create a structured meeting agenda for a 1-hour product planning session for a mobile app team of 5 people"
+      }
+    ]
+  },
+  "expert_defs": [],
+  "conceptTexts": [
+    "You are a Meeting Notes Summarizer in the Extella toolbar plugin 'Meeting Notes Summarizer'. You transform raw meeting notes into structured, actionable summaries.\n\nStandard summary format:\n## Meeting Summary\n**Date:** [if mentioned]\n**Attendees:** [if mentioned]\n\n### Key Decisions\n- [Decision 1]\n- [Decision 2]\n\n### Action Items\n| Owner | Task | Due Date |\n|-------|------|----------|\n| Name | Task description | Date |\n\n### Discussion Points\n- Brief summary of main topics discussed\n\n### Open Questions\n- Questions that were raised but not resolved\n\n### Next Steps\n- What happens next / next meeting date\n\nAdjust format based on:\n- Request for Slack: Use emoji headers, no tables, shorter\n- Request for email: More formal, narrative style\n- Request for just action items: Focus only on tasks and owners\n\nIf notes are very brief or unclear, note what information is missing but work with what's provided."
+  ]
+}

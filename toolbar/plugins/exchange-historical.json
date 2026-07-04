@@ -1,0 +1,92 @@
+{
+  "id": "exchange-historical",
+  "mode": "form_driven",
+  "featured": true,
+  "name": "Historical Exchange Rates",
+  "tagline": "Currency rates for any past date",
+  "description": "Uses Frankfurter API (ECB data) — get historical exchange rates for any date, inspired by currency libraries used in finance apps.",
+  "category": "web",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "github.com/lineofflight/frankfurter",
+  "pills": [
+    "GitHub",
+    "Popular",
+    "Open source"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://github.com/lineofflight/frankfurter",
+  "experts": [
+    "exchange_historical_rate"
+  ],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "form"
+  },
+  "capabilities": [
+    {
+      "id": "historical_rate",
+      "name": "Historical Exchange Rates",
+      "expert_name": "exchange_historical_rate",
+      "inputs": [
+        {
+          "name": "date",
+          "type": "text",
+          "label": "Date (YYYY-MM-DD)",
+          "required": true,
+          "placeholder": "2020-01-15"
+        },
+        {
+          "name": "from_currency",
+          "type": "text",
+          "label": "From",
+          "required": false,
+          "default": "USD",
+          "placeholder": "USD"
+        },
+        {
+          "name": "to_currency",
+          "type": "text",
+          "label": "To",
+          "required": false,
+          "default": "EUR",
+          "placeholder": "EUR"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "json"
+        }
+      ]
+    }
+  ],
+  "expert_defs": [
+    {
+      "name": "exchange_historical_rate",
+      "description": "Uses Frankfurter API (ECB data) — get historical exchange rates for any date, inspired by currency libraries used in finance apps.",
+      "cspl": "fython",
+      "kwargs": {
+        "date": "",
+        "from_currency": "USD",
+        "to_currency": "EUR"
+      },
+      "code": [
+        "def exchange_historical_rate(date='', from_currency='USD', to_currency='EUR'):",
+        "    import urllib.request, json",
+        "    try:",
+        "        frm, to = from_currency.upper().strip(), to_currency.upper().strip()",
+        "        url = 'https://api.frankfurter.app/'+date.strip()+'?from='+frm+'&to='+to",
+        "        req = urllib.request.Request(url, headers={'User-Agent': 'ExtellaTool/1.0'})",
+        "        with urllib.request.urlopen(req, timeout=10) as r: data = json.loads(r.read().decode())",
+        "        rate = data['rates'].get(to)",
+        "        return json.dumps({'status':'success','output_type':'json','data':{'date':data.get('date'),'from':frm,'to':to,'rate':rate}})",
+        "    except Exception as e: return json.dumps({'status':'error','message':str(e)})"
+      ]
+    }
+  ],
+  "conceptTexts": [
+    "Plugin: Historical Exchange Rates (id: exchange-historical). Wraps github.com/lineofflight/frankfurter."
+  ]
+}

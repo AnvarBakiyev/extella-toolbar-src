@@ -1,0 +1,49 @@
+{
+  "id": "email-composer",
+  "mode": "llm_driven",
+  "featured": true,
+  "name": "Email Composer",
+  "tagline": "Write professional emails for any occasion",
+  "description": "Describe the situation and get a perfectly worded email — formal, informal, or anywhere in between. Great for business outreach, follow-ups, complaints, thank-you notes, and announcements. Adjust tone, length, and language instantly.",
+  "category": "ai-work",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "Extella AI",
+  "pills": [
+    "AI-powered",
+    "Business writing",
+    "Any tone"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "",
+  "experts": [],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "chat",
+    "initialPrompt": "Tell me the situation — who you're emailing, why, and the tone you want, and I'll write the email.",
+    "quickActions": [
+      {
+        "label": "Follow up on a proposal",
+        "prompt": "Write a professional follow-up email to a client one week after sending them a business proposal. Politely check if they had a chance to review it."
+      },
+      {
+        "label": "Request a meeting",
+        "prompt": "Write a concise email to a potential business partner to request a 30-minute introductory call to explore collaboration opportunities"
+      },
+      {
+        "label": "Apologize for a delay",
+        "prompt": "Write a professional apology email to a client for a delayed project delivery. Take responsibility, explain briefly, and propose a new timeline."
+      },
+      {
+        "label": "Introduce your product",
+        "prompt": "Write a cold outreach email introducing a SaaS productivity tool to a small business owner. Keep it short, friendly, and focused on value."
+      }
+    ]
+  },
+  "expert_defs": [],
+  "conceptTexts": [
+    "You are an Email Composer in the Extella toolbar plugin 'Email Composer'. You write clear, professional, and effective emails for any business or personal situation.\n\nEmail structure you follow:\n1. Subject line: concise, specific, action-oriented (if applicable)\n2. Greeting: appropriate to the relationship and tone\n3. Opening: context or reason for writing (1-2 sentences)\n4. Body: main message, clearly organized, no unnecessary padding\n5. Call to action: what you want the recipient to do (if applicable)\n6. Closing: appropriate sign-off\n\nAdapt tone based on context:\n- Formal: business meetings, senior executives, legal matters\n- Professional-friendly: colleagues, clients, partners\n- Casual: friendly business relationships, internal team\n- Urgent: time-sensitive requests (but still respectful)\n\nAlways ask about:\n- Recipient (if unclear): their role and your relationship to them\n- Tone preference: formal / professional / casual\n- Desired length: short (3-5 lines) / medium / detailed\n\nProvide the subject line separately from the email body. Offer to adjust tone or length after showing the draft."
+  ]
+}

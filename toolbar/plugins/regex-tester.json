@@ -1,0 +1,94 @@
+{
+  "id": "regex-tester",
+  "mode": "form_driven",
+  "featured": true,
+  "name": "Regex Tester",
+  "tagline": "Test regular expressions against any text",
+  "description": "Test and debug regular expressions live. See all matches, match count, and character spans highlighted. Supports flags: case-insensitive (i), multiline (m), dotall (s). No external tools needed.",
+  "category": "text",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "re (Python stdlib)",
+  "pills": [
+    "No AI needed",
+    "Instant",
+    "Offline"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://docs.python.org/3/library/re.html",
+  "experts": [
+    "regex_tester_test"
+  ],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "form"
+  },
+  "capabilities": [
+    {
+      "id": "test_regex",
+      "name": "Test Pattern",
+      "expert_name": "regex_tester_test",
+      "inputs": [
+        {
+          "name": "pattern",
+          "type": "text",
+          "label": "Regex Pattern",
+          "required": true,
+          "placeholder": "\\d{3}-\\d{4}"
+        },
+        {
+          "name": "text",
+          "type": "textarea",
+          "label": "Test Text",
+          "required": true,
+          "placeholder": "Paste the text to test against..."
+        },
+        {
+          "name": "flags",
+          "type": "text",
+          "label": "Flags (optional: i, m, s)",
+          "required": false,
+          "default": "",
+          "placeholder": "i"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "json"
+        }
+      ]
+    }
+  ],
+  "expert_defs": [
+    {
+      "name": "regex_tester_test",
+      "description": "Tests a regex pattern against text and returns all matches with their positions. Params: pattern (regex string), text (test string), flags (combination of i=ignorecase, m=multiline, s=dotall). Returns JSON with output_type json.",
+      "cspl": "fython",
+      "kwargs": {
+        "pattern": "",
+        "text": "",
+        "flags": ""
+      },
+      "code": [
+        "def regex_tester_test(pattern='', text='', flags=''):",
+        "    import re, json",
+        "    try:",
+        "        f = 0",
+        "        if 'i' in flags.lower(): f |= re.IGNORECASE",
+        "        if 'm' in flags.lower(): f |= re.MULTILINE",
+        "        if 's' in flags.lower(): f |= re.DOTALL",
+        "        matches = re.findall(pattern, text, f)",
+        "        spans = [{'start': m.start(), 'end': m.end(), 'match': m.group()} for m in re.finditer(pattern, text, f)]",
+        "        result = {'is_match': bool(matches), 'count': len(matches), 'matches': matches[:50], 'spans': spans[:50]}",
+        "        return json.dumps({'status': 'success', 'output_type': 'json', 'data': result})",
+        "    except Exception as e:",
+        "        return json.dumps({'status': 'error', 'message': str(e)})"
+      ]
+    }
+  ],
+  "conceptTexts": [
+    "Plugin: Regex Tester (id: regex-tester). Expert regex_tester_test tests regex patterns against text. Params: pattern (regex), text (test input), flags (i/m/s). Returns {output_type: 'json', data: {is_match, count, matches, spans}}."
+  ]
+}

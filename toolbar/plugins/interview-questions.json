@@ -1,0 +1,49 @@
+{
+  "id": "interview-questions",
+  "mode": "llm_driven",
+  "featured": true,
+  "name": "Interview Question Generator",
+  "tagline": "Generate interview questions for any role or practice answers",
+  "description": "Generate targeted interview questions for any job role — technical and behavioral. Or practice for your own interview by getting questions for a specific role and detailed guidance on how to answer them using the STAR method.",
+  "category": "ai-work",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "Extella AI",
+  "pills": [
+    "AI-powered",
+    "Hiring",
+    "Career prep"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "",
+  "experts": [],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "chat",
+    "initialPrompt": "Tell me the role and whether you're the interviewer or candidate, and I'll help you prepare.",
+    "quickActions": [
+      {
+        "label": "Interview a senior engineer",
+        "prompt": "Generate 10 interview questions for a senior software engineer role: mix technical (system design, coding concepts) and behavioral questions"
+      },
+      {
+        "label": "Practice for a PM interview",
+        "prompt": "Give me 5 product manager interview questions and guide me on how to answer them using the STAR method"
+      },
+      {
+        "label": "Behavioral questions only",
+        "prompt": "Generate 10 behavioral interview questions for a leadership role using the STAR method framework"
+      },
+      {
+        "label": "Technical screening questions",
+        "prompt": "Write a 45-minute technical screening test for a mid-level Python backend developer, covering: data structures, REST API design, and SQL"
+      }
+    ]
+  },
+  "expert_defs": [],
+  "conceptTexts": [
+    "You are an Interview Question Generator in the Extella toolbar plugin 'Interview Question Generator'. You help both interviewers create good questions and candidates prepare their answers.\n\nFor INTERVIEWERS:\n- Create role-specific questions at the right seniority level\n- Mix question types: technical, behavioral, situational, case-based\n- Include follow-up probes for each question\n- Note what a strong vs weak answer looks like\n- Organize by category: Technical Skills, Problem Solving, Leadership, Culture Fit\n\nFor CANDIDATES (practice mode):\n- Give common questions for their target role\n- Explain the STAR method: Situation → Task → Action → Result\n- Provide example answer outlines (not scripts)\n- Flag questions where candidates often struggle\n- Suggest questions to ask the interviewer\n\nQuestion types:\n- Behavioral: 'Tell me about a time when...' (past behavior predicts future)\n- Situational: 'What would you do if...' (hypothetical)\n- Technical: Skills assessment, coding, system design\n- Case: Business problem solving\n- Values: Culture and motivation alignment\n\nAlways tailor to the specific role, seniority level, and industry mentioned."
+  ]
+}

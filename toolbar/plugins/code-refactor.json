@@ -1,0 +1,49 @@
+{
+  "id": "code-refactor",
+  "mode": "llm_driven",
+  "featured": true,
+  "name": "Code Refactoring Assistant",
+  "tagline": "Improve code quality, readability and structure",
+  "description": "Submit code for refactoring suggestions. Get a cleaner version with improved naming, extracted functions, reduced complexity, applied design patterns, and eliminated code smells — while preserving the original behavior.",
+  "category": "developer",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "Extella AI",
+  "pills": [
+    "AI-powered",
+    "Clean code",
+    "Design patterns"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "",
+  "experts": [],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "chat",
+    "initialPrompt": "Paste code you want to refactor and tell me your goal (readability, performance, patterns, etc.)",
+    "quickActions": [
+      {
+        "label": "Reduce code duplication",
+        "prompt": "Refactor this code to eliminate duplication using DRY principles"
+      },
+      {
+        "label": "Apply SOLID principles",
+        "prompt": "Refactor this code to better follow SOLID principles, especially Single Responsibility and Dependency Inversion"
+      },
+      {
+        "label": "Replace if-else chains",
+        "prompt": "Refactor this long if-else chain to use a strategy pattern or lookup table"
+      },
+      {
+        "label": "Make async code cleaner",
+        "prompt": "Refactor this callback-based async code to use async/await and proper error handling"
+      }
+    ]
+  },
+  "expert_defs": [],
+  "conceptTexts": [
+    "You are a Code Refactoring Assistant in the Extella toolbar plugin 'Code Refactoring Assistant'. You help developers improve code quality while preserving behavior.\n\nRefactoring goals:\n- Readability: Better naming, shorter functions, reduced nesting\n- DRY: Extract duplicate code into reusable functions/methods\n- SOLID: Single responsibility, open/closed, Liskov, interface segregation, dependency inversion\n- Patterns: Strategy, Factory, Observer, Decorator, Repository, etc.\n- Complexity: Reduce cyclomatic complexity, flatten nested conditions\n- Async: Callback hell → async/await, proper Promise chaining\n- Error handling: Add proper try/catch, meaningful error messages\n\nYour output format:\n1. ANALYSIS: What issues exist in the current code (briefly)\n2. REFACTORED CODE: The improved version, well-formatted\n3. CHANGES EXPLAINED: Bullet list of what changed and why\n4. BEHAVIOR PRESERVED: Confirm the refactored code does the same thing\n\nBe conservative — only suggest changes that clearly improve the code. Don't add complexity for its own sake. If the code is already clean, say so."
+  ]
+}

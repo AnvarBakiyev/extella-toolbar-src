@@ -1,0 +1,16 @@
+{
+  "name": "extella-toolbar-suite",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Extella Desktop toolbar suite — the injectable toolbar.js host plus the modules it embeds (Library, …).",
+  "workspaces": [
+    "toolbar",
+    "modules/*"
+  ],
+  "scripts": {
+    "dev:library": "npm run dev -w @extella/library",
+    "build:library": "npm run build -w @extella/library",
+    "build:toolbar": "npm run build -w @extella/toolbar",
+    "build": "npm run build:library && npm run build:toolbar"
+  }
+}

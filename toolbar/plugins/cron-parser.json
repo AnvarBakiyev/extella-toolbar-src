@@ -1,0 +1,77 @@
+{
+  "id": "cron-parser",
+  "mode": "form_driven",
+  "featured": true,
+  "name": "Cron Expression Parser",
+  "tagline": "Explain and validate cron schedules",
+  "description": "Inspired by node-cron and crontab.guru — parse, validate, and explain cron expressions used in schedulers, GitHub Actions, and Linux crontab.",
+  "category": "developer",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "github.com/kelektiv/node-cron",
+  "pills": [
+    "GitHub",
+    "Popular",
+    "Open source"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://github.com/kelektiv/node-cron",
+  "experts": [
+    "cron_parser_explain"
+  ],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "form"
+  },
+  "capabilities": [
+    {
+      "id": "explain_cron",
+      "name": "Cron Expression Parser",
+      "expert_name": "cron_parser_explain",
+      "inputs": [
+        {
+          "name": "expression",
+          "type": "text",
+          "label": "Cron expression",
+          "required": true,
+          "placeholder": "0 9 * * 1-5"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "json"
+        }
+      ]
+    }
+  ],
+  "expert_defs": [
+    {
+      "name": "cron_parser_explain",
+      "description": "Inspired by node-cron and crontab.guru — parse, validate, and explain cron expressions used in schedulers, GitHub Actions, and Linux crontab.",
+      "cspl": "fython",
+      "kwargs": {
+        "expression": ""
+      },
+      "code": [
+        "def cron_parser_explain(expression=''):",
+        "    import json",
+        "    parts = {'minute':'0-59','hour':'0-23','day':'1-31','month':'1-12','weekday':'0-6 (Sun=0)'}",
+        "    labels = ['Minute','Hour','Day of month','Month','Day of week']",
+        "    try:",
+        "        fields = expression.strip().split()",
+        "        if len(fields) != 5: return json.dumps({'status':'error','message':'Cron needs 5 fields: min hour dom month dow'})",
+        "        desc = []",
+        "        for i, (f, lbl) in enumerate(zip(fields, labels)):",
+        "            desc.append({'field': lbl, 'value': f, 'range': list(parts.values())[i]})",
+        "        human = 'At minute '+fields[0]+' of hour '+fields[1]+', day '+fields[2]+', month '+fields[3]+', weekday '+fields[4]",
+        "        return json.dumps({'status':'success','output_type':'json','data':{'expression':expression,'human':human,'fields':desc}})",
+        "    except Exception as e: return json.dumps({'status':'error','message':str(e)})"
+      ]
+    }
+  ],
+  "conceptTexts": [
+    "Plugin: Cron Expression Parser (id: cron-parser). Wraps github.com/kelektiv/node-cron."
+  ]
+}

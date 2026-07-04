@@ -1,0 +1,95 @@
+{
+  "id": "diff-checker",
+  "mode": "form_driven",
+  "featured": true,
+  "name": "Diff Checker",
+  "tagline": "Find differences between two texts line by line",
+  "description": "Compare two texts and see exactly what changed: added lines, removed lines, and unchanged context. Uses unified diff format. Perfect for comparing code versions, document revisions, or configuration files.",
+  "category": "developer",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "difflib (Python stdlib)",
+  "pills": [
+    "No AI needed",
+    "Instant",
+    "Offline"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://docs.python.org/3/library/difflib.html",
+  "experts": [
+    "diff_checker_compare"
+  ],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "form"
+  },
+  "capabilities": [
+    {
+      "id": "compare_texts",
+      "name": "Compare Texts",
+      "expert_name": "diff_checker_compare",
+      "inputs": [
+        {
+          "name": "text_a",
+          "type": "textarea",
+          "label": "Original Text (A)",
+          "required": true,
+          "placeholder": "Original version..."
+        },
+        {
+          "name": "text_b",
+          "type": "textarea",
+          "label": "Modified Text (B)",
+          "required": true,
+          "placeholder": "Modified version..."
+        },
+        {
+          "name": "context_lines",
+          "type": "int",
+          "label": "Context Lines",
+          "required": false,
+          "default": 3,
+          "min": 0,
+          "max": 10
+        }
+      ],
+      "outputs": [
+        {
+          "type": "text"
+        }
+      ]
+    }
+  ],
+  "expert_defs": [
+    {
+      "name": "diff_checker_compare",
+      "description": "Computes unified diff between two text inputs. Params: text_a (original text), text_b (modified text), context_lines (lines of context around changes, default 3). Returns JSON with output_type text containing the unified diff.",
+      "cspl": "fython",
+      "kwargs": {
+        "text_a": "",
+        "text_b": "",
+        "context_lines": "3"
+      },
+      "code": [
+        "def diff_checker_compare(text_a='', text_b='', context_lines='3'):",
+        "    import difflib, json",
+        "    try:",
+        "        lines_a = text_a.splitlines(keepends=True)",
+        "        lines_b = text_b.splitlines(keepends=True)",
+        "        diff = list(difflib.unified_diff(lines_a, lines_b, fromfile='Original (A)', tofile='Modified (B)', n=int(context_lines)))",
+        "        if not diff:",
+        "            result = '(no differences found — texts are identical)'",
+        "        else:",
+        "            result = ''.join(diff)",
+        "        return json.dumps({'status': 'success', 'output_type': 'text', 'data': result})",
+        "    except Exception as e:",
+        "        return json.dumps({'status': 'error', 'message': str(e)})"
+      ]
+    }
+  ],
+  "conceptTexts": [
+    "Plugin: Diff Checker (id: diff-checker). Expert diff_checker_compare computes unified diff between two texts. Params: text_a (original), text_b (modified), context_lines (0-10, default 3). Returns {output_type: 'text', data: '<unified diff or no differences message>'}."
+  ]
+}

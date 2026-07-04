@@ -1,0 +1,75 @@
+@import './tokens.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Apply the .ap-theme token scope at the root so utility classes that depend on
+   the CSS variables resolve even on plain HTML elements outside .ap-theme. We
+   set the class on <html> via ThemeRoot. */
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-family: var(--ap-font);
+  font-size: var(--ap-fs-base);
+  color: var(--ap-text);
+  background: var(--ap-bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background: var(--ap-bg);
+  color: var(--ap-text);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+button {
+  font-family: inherit;
+}
+
+/* Theme transition — only colors, never every property */
+html {
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+/* Scrollbar (matches design tokens.css .ap-scroll) */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--ap-border-strong);
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Focus ring used by primitives */
+.ap-focus-ring {
+  outline: 2px solid color-mix(in oklab, var(--ap-accent) 60%, transparent);
+  outline-offset: 2px;
+}
+
+@layer base {
+  :focus-visible {
+    outline: 2px solid color-mix(in oklab, var(--ap-accent) 60%, transparent);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}

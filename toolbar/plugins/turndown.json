@@ -1,0 +1,41 @@
+{
+  "id": "turndown",
+  "mode": "llm_driven",
+  "featured": true,
+  "name": "Turndown",
+  "tagline": "HTML to Markdown",
+  "description": "Inspired by Turndown — standard HTML-to-Markdown converter.",
+  "category": "data",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "github.com/mixmark-io/turndown",
+  "pills": [
+    "GitHub",
+    "AI",
+    "Popular"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://github.com/mixmark-io/turndown",
+  "experts": [],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "chat",
+    "initialPrompt": "You convert HTML to clean Markdown following Turndown rules. Output only Markdown.",
+    "quickActions": [
+      {
+        "label": "Try an example",
+        "prompt": "Show me an example using Turndown."
+      },
+      {
+        "label": "Explain how it works",
+        "prompt": "Explain how Turndown works for a beginner."
+      }
+    ]
+  },
+  "expert_defs": [],
+  "conceptTexts": [
+    "You are a Turndown assistant. You convert HTML to clean Markdown following Turndown rules. Output only Markdown."
+  ]
+}

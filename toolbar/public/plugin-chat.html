@@ -1,0 +1,1592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plugin Chat</title>
+<style>
+:root {
+  --a:#C67E34;--ar:198,126,52;
+  --bg:#0a0a0a;--s1:#111;--s2:#161616;--s3:#1c1c1c;--s4:#242424;
+  --bd:rgba(255,255,255,.07);--bd2:rgba(255,255,255,.13);
+  --tx:#f0f0f0;--tx2:#888;--tx3:#3a3a3a;--r:12px;--err:#e74c3c
+}
+[data-lm] {
+  --bg:#f2f2f7;--s1:#fff;--s2:#fff;--s3:#f7f7f9;--s4:#ebebed;
+  --bd:rgba(0,0,0,.07);--bd2:rgba(0,0,0,.14);
+  --tx:#111;--tx2:#6b6b6b;--tx3:#ccc
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--tx);
+  font-family:-apple-system,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+#app{display:flex;flex-direction:column;height:100%}
+#hdr{display:flex;align-items:center;gap:10px;padding:11px 16px;
+  background:var(--s1);border-bottom:1px solid var(--bd);flex-shrink:0}
+#hdr_dot{width:9px;height:9px;border-radius:50%;background:var(--a);
+  box-shadow:0 0 8px rgba(var(--ar),.5);flex-shrink:0}
+#hdr_name{font-size:14px;font-weight:700;color:var(--tx)}
+#hdr_sub{font-size:11px;color:var(--tx2);margin-top:1px}
+#hdr_sp{flex:1}
+.hdr_btn{background:none;border:1px solid var(--bd2);color:var(--tx2);
+  border-radius:7px;padding:5px 11px;font-size:11px;cursor:pointer;transition:all .12s}
+.hdr_btn:hover{border-color:rgba(var(--ar),.3);color:var(--a)}
+#ctx_bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  padding:7px 16px;background:var(--s2);border-bottom:1px solid var(--bd);flex-shrink:0}
+.ctx_pill{background:rgba(var(--ar),.08);color:var(--a);border:1px solid rgba(var(--ar),.18);
+  border-radius:5px;font-size:10px;font-weight:600;padding:2px 8px;white-space:nowrap}
+#body_row{display:flex;flex:1;min-height:0;flex-direction:column}
+#chat_col{display:flex;flex-direction:column;flex:1;min-height:0;min-width:0}
+#msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;
+  scrollbar-width:thin;scrollbar-color:var(--s4) transparent}
+#msgs::-webkit-scrollbar{width:3px}
+#msgs::-webkit-scrollbar-thumb{background:var(--s4);border-radius:2px}
+#doc_col{display:none;flex-direction:column;min-height:0;border-left:1px solid var(--bd);
+  background:var(--s1);min-width:0}
+#doc_toolbar{display:flex;align-items:center;gap:8px;padding:10px 14px;
+  border-bottom:1px solid var(--bd);flex-shrink:0}
+#doc_toolbar span{flex:1;font-size:12px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em}
+#doc_preview{flex:1;overflow-y:auto;padding:16px 20px;scrollbar-width:thin}
+#mobile_tab_bar{display:none;gap:0;background:var(--s2);border-bottom:1px solid var(--bd);flex-shrink:0}
+.mobile_tab{flex:1;padding:10px;font-size:12px;font-weight:600;color:var(--tx2);
+  background:none;border:none;border-bottom:2px solid transparent;cursor:pointer}
+.mobile_tab.on{color:var(--a);border-bottom-color:var(--a)}
+#app[data-layout="split"] #body_row{flex-direction:row}
+#app[data-layout="split"] #chat_col{flex:0 0 35%;max-width:35%;border-right:1px solid var(--bd)}
+#app[data-layout="split"] #doc_col{display:flex;flex:1}
+#app[data-layout="split"] .msg{max-width:95%}
+#app[data-layout="split"] .msg.assistant .msg_bubble.msg_compact{font-size:12px;color:var(--tx2);
+  font-style:italic;padding:8px 12px}
+@media(max-width:640px){
+  #app[data-layout="split"] #body_row{flex-direction:column}
+  #app[data-layout="split"] #chat_col{flex:1;max-width:100%;border-right:none}
+  #app[data-layout="split"] #doc_col{border-left:none;border-top:1px solid var(--bd)}
+  #app[data-layout="split"] #mobile_tab_bar{display:flex}
+  #app[data-layout="split"][data-mobile-tab="chat"] #doc_col{display:none}
+  #app[data-layout="split"][data-mobile-tab="chat"] #chat_col{display:flex}
+  #app[data-layout="split"][data-mobile-tab="doc"] #chat_col{display:none}
+  #app[data-layout="split"][data-mobile-tab="doc"] #doc_col{display:flex;flex:1}
+}
+.msg{display:flex;flex-direction:column;gap:4px;max-width:85%}
+.msg.user{align-self:flex-end;align-items:flex-end}
+.msg.assistant{align-self:flex-start;align-items:flex-start}
+.msg_bubble{padding:10px 14px;border-radius:var(--r);font-size:13px;line-height:1.6;word-break:break-word}
+.msg.user .msg_bubble{background:rgba(var(--ar),.15);color:var(--tx);
+  border:1px solid rgba(var(--ar),.25);border-bottom-right-radius:4px}
+.msg.assistant .msg_bubble{background:var(--s2);color:var(--tx);
+  border:1px solid var(--bd);border-bottom-left-radius:4px}
+.msg_meta{font-size:10px;color:var(--tx2)}
+.msg_log{font-size:10.5px;color:var(--tx2);background:var(--s3);
+  border:1px solid var(--bd);border-radius:8px;padding:8px 12px;
+  margin-top:4px;font-family:monospace;white-space:pre-wrap;word-break:break-all}
+.typing{display:flex;gap:4px;align-items:center;padding:10px 14px;
+  background:var(--s2);border:1px solid var(--bd);border-radius:var(--r);border-bottom-left-radius:4px}
+.typing span{width:6px;height:6px;border-radius:50%;background:var(--tx2);animation:tp .9s ease infinite}
+.typing span:nth-child(2){animation-delay:.18s}
+.typing span:nth-child(3){animation-delay:.36s}
+@keyframes tp{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+#qa_bar{display:flex;gap:6px;align-items:center;padding:8px 16px 0;
+  background:var(--s1);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+#qa_bar::-webkit-scrollbar{display:none}
+.qa_chip{background:rgba(var(--ar),.08);border:1px solid rgba(var(--ar),.2);
+  color:var(--a);border-radius:8px;font-size:11px;font-weight:600;
+  padding:5px 12px;cursor:pointer;transition:all .12s;white-space:nowrap;flex-shrink:0}
+.qa_chip:hover{background:rgba(var(--ar),.16);border-color:rgba(var(--ar),.35)}
+.qa_chip:disabled{opacity:.5;cursor:not-allowed}
+#inp_area{padding:12px 16px 16px;flex-shrink:0;background:var(--s1);border-top:1px solid var(--bd)}
+#inp_row{display:flex;gap:8px;align-items:flex-end}
+#inp{flex:1;background:var(--s2);border:1px solid var(--bd2);border-radius:10px;
+  color:var(--tx);font-size:13px;padding:10px 14px;resize:none;outline:none;
+  min-height:42px;max-height:140px;line-height:1.5;transition:border-color .15s;
+  font-family:-apple-system,system-ui,sans-serif}
+#inp:focus{border-color:rgba(var(--ar),.4)}
+#inp::placeholder{color:var(--tx3)}
+#send_btn{background:var(--a);border:none;color:#000;font-weight:700;
+  border-radius:9px;padding:10px 18px;cursor:pointer;font-size:12px;
+  flex-shrink:0;transition:opacity .12s;align-self:flex-end}
+#send_btn:hover{opacity:.85}
+#send_btn:disabled{opacity:.4;cursor:not-allowed}
+#empty{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  flex:1;text-align:center;padding:32px}
+#empty_icon{font-size:40px;margin-bottom:12px;opacity:.3}
+#empty_title{font-size:16px;font-weight:600;color:var(--tx);margin-bottom:6px}
+#empty_sub{font-size:12px;color:var(--tx2);line-height:1.6;max-width:320px}
+#suggestions{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin-top:16px;max-width:480px}
+.sugg{background:var(--s2);border:1px solid var(--bd2);border-radius:8px;
+  color:var(--tx2);font-size:11px;padding:7px 14px;cursor:pointer;transition:all .12s}
+.sugg:hover{border-color:rgba(var(--ar),.3);color:var(--a)}
+.err_msg{color:var(--err);font-size:12px;padding:8px 0}
+/* Markdown content */
+.md-content{font-size:13px;line-height:1.65;color:var(--tx)}
+.md-content h1,.md-content h2,.md-content h3,.md-content h4{
+  font-weight:700;margin:14px 0 8px;color:var(--tx);line-height:1.3}
+.md-content h1{font-size:18px}.md-content h2{font-size:16px;border-bottom:1px solid var(--bd);padding-bottom:6px}
+.md-content h3{font-size:14px}.md-content h4{font-size:13px;color:var(--tx2)}
+.md-content p{margin:8px 0}
+.md-content ul,.md-content ol{margin:8px 0 8px 20px}
+.md-content li{margin:4px 0}
+.md-content blockquote{border-left:3px solid rgba(var(--ar),.5);padding:6px 12px;margin:10px 0;
+  color:var(--tx2);background:rgba(var(--ar),.04);border-radius:0 6px 6px 0}
+.md-content hr{border:none;border-top:1px solid var(--bd);margin:14px 0}
+.md-content a{color:var(--a);text-decoration:none}
+.md-content a:hover{text-decoration:underline}
+.md-content code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;
+  background:var(--s3);padding:1px 5px;border-radius:4px}
+.md-table-wrap{overflow-x:auto;margin:10px 0;border:1px solid var(--bd);border-radius:8px}
+.md-table{width:100%;border-collapse:collapse;font-size:12px}
+.md-table th,.md-table td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--bd)}
+.md-table th{background:var(--s3);font-weight:600;color:var(--tx)}
+.md-table tr:last-child td{border-bottom:none}
+.md-artifact{border:1px solid rgba(var(--ar),.25);border-radius:10px;margin:12px 0;overflow:hidden}
+.md-artifact-hdr{display:flex;align-items:center;gap:8px;padding:8px 12px;
+  background:rgba(var(--ar),.08);border-bottom:1px solid rgba(var(--ar),.15);
+  font-size:11px;font-weight:700;color:var(--a)}
+.md-artifact-hdr span{flex:1}
+.md-artifact-body{padding:12px 14px}
+.md-code{margin:10px 0;border:1px solid var(--bd);border-radius:8px;overflow:hidden;background:var(--s3)}
+.md-code-hdr{display:flex;align-items:center;gap:8px;padding:6px 10px;
+  background:var(--s4);border-bottom:1px solid var(--bd);font-size:10px;color:var(--tx2)}
+.md-code-lang{flex:1;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.md-code-copy{background:none;border:1px solid var(--bd2);color:var(--tx2);border-radius:5px;
+  padding:2px 8px;font-size:10px;cursor:pointer}
+.md-code-copy:hover{color:var(--a);border-color:rgba(var(--ar),.3)}
+.md-code pre{margin:0;padding:12px;overflow-x:auto;font-size:12px;line-height:1.5;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;word-break:break-word}
+.msg_bubble .md-code pre,.md-artifact-body .md-code pre{white-space:pre;word-break:normal}
+.md-code pre code{background:none;padding:0;font-size:inherit}
+.mermaid-wrap{margin:10px 0;border:1px solid var(--bd);border-radius:8px;overflow:hidden;background:var(--s3)}
+.mermaid-wrap .mmd-diagram-hdr{display:flex;align-items:center;padding:6px 10px;
+  background:var(--s4);border-bottom:1px solid var(--bd);font-size:10px;color:var(--tx2)}
+.mermaid-wrap .mmd-diagram{padding:8px;overflow-x:auto}
+.mermaid-wrap .md-img-actions{padding:0 10px 10px}
+.md-img-wrap{margin:10px 0}
+.md-img-wrap img{max-width:100%;border-radius:8px;border:1px solid var(--bd);display:block}
+.md-img-actions{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.md-img-btn{background:none;border:1px solid var(--bd2);color:var(--tx2);border-radius:6px;
+  padding:4px 12px;font-size:11px;font-weight:600;cursor:pointer;transition:all .12s}
+.md-img-btn:hover{color:var(--a);border-color:rgba(var(--ar),.3)}
+.msg_img_hint{margin-top:8px;font-size:11px;color:var(--tx2);font-style:italic}
+/* Document panel typography (split-view) */
+#doc_preview{max-width:720px;margin:0 auto;font-size:14px;line-height:1.7}
+#doc_preview h1{font-size:22px;margin:28px 0 14px;padding-bottom:10px;border-bottom:2px solid var(--bd)}
+#doc_preview h2{font-size:18px;margin:24px 0 12px;padding-left:12px;border-left:3px solid var(--a);border-bottom:none;padding-bottom:0}
+#doc_preview h3{font-size:15px;margin:18px 0 8px;color:var(--tx)}
+#doc_preview h4{font-size:13px;margin:14px 0 6px}
+#doc_preview p{margin:10px 0 12px}
+#doc_preview ul,#doc_preview ol{margin:10px 0 14px 22px}
+#doc_preview li{margin:5px 0}
+#doc_preview blockquote{margin:14px 0;padding:8px 14px}
+#doc_preview hr{margin:20px 0}
+#doc_preview code{padding:2px 7px;border-radius:5px;font-size:12px}
+#doc_preview .md-table-wrap{margin:14px 0;border-radius:10px;max-height:none}
+#doc_preview .md-table{font-size:13px}
+#doc_preview .md-table thead th{position:sticky;top:0;z-index:1;background:var(--s3);box-shadow:0 1px 0 var(--bd)}
+#doc_preview .md-table th,#doc_preview .md-table td{padding:10px 14px}
+#doc_preview .md-table tbody tr:nth-child(even){background:rgba(var(--ar),.04)}
+[data-lm] #doc_preview .md-table tbody tr:nth-child(even){background:rgba(0,0,0,.025)}
+#doc_preview .md-table tbody tr:hover{background:rgba(var(--ar),.08)}
+#doc_preview .md-code{margin:14px 0}
+#doc_preview .md-code pre{white-space:pre;tab-size:2;line-height:1.55}
+#doc_preview .md-code pre code{white-space:pre}
+#doc_preview .md-img-wrap{margin:16px 0}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="hdr">
+    <div id="hdr_dot"></div>
+    <div>
+      <div id="hdr_name">Loading...</div>
+      <div id="hdr_sub"></div>
+    </div>
+    <div id="hdr_sp"></div>
+    <button id="hdr_copy" class="hdr_btn" style="display:none" title="Copy document">Copy</button>
+    <button id="hdr_download" class="hdr_btn" style="display:none" title="Download document">Download</button>
+    <button id="hdr_clr" class="hdr_btn" title="Clear conversation">Clear</button>
+  </div>
+  <div id="ctx_bar"></div>
+  <div id="mobile_tab_bar">
+    <button class="mobile_tab on" data-tab="chat">Chat</button>
+    <button class="mobile_tab" data-tab="doc">Document</button>
+  </div>
+  <div id="body_row">
+    <div id="chat_col">
+      <div id="msgs"></div>
+      <div id="qa_bar" style="display:none"></div>
+      <div id="inp_area">
+        <div id="inp_row">
+          <textarea id="inp" placeholder="Ask anything..." rows="1"></textarea>
+          <button id="send_btn">Send</button>
+        </div>
+      </div>
+    </div>
+    <div id="doc_col">
+      <div id="doc_toolbar">
+        <span>Document</span>
+        <button id="doc_copy" class="hdr_btn">Copy</button>
+        <button id="doc_download" class="hdr_btn">Download</button>
+      </div>
+      <div id="doc_preview" class="md-content"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* __BUILTIN_PLUGINS_DATA__ */
+if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []; }
+
+(function () {
+  'use strict';
+
+  var API_BASE = 'https://api.extella.ai';
+  var plugin = null;
+  var messages = [];
+  var isTyping = false;
+  var pluginId = null;
+  var apiToken = '';
+  var _mmdSeq = 0;
+  var _mmdQueue = [];
+  var _mmdReady = false;
+  var _codeSeq = 0;
+  var _hlQueue = [];
+  var _hlReady = false;
+  var _imgSeq = 0;
+
+  function resolveHostTheme(forced) {
+    if (forced === 'light' || forced === 'dark') return forced;
+    var t;
+    try { t = localStorage.getItem('color-theme'); } catch (e) {}
+    if (t === 'light' || t === 'dark') return t;
+    try {
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) return 'light';
+    } catch (e) {}
+    return 'dark';
+  }
+
+  function init() {
+    applyTheme();
+    bindEvents();
+    window.addEventListener('storage', function (e) {
+      if (e.key === 'ext_theme' || e.key === 'color-theme') applyTheme();
+    });
+    window.addEventListener('message', function (e) {
+      if (e.data && e.data.type === 'etb_theme') applyTheme(e.data.theme);
+    });
+  }
+
+  function startWithPlugin(id) {
+    pluginId = id;
+    loadPlugin(id);
+  }
+
+  (function bootstrap() {
+    var params = new URLSearchParams(window.location.search);
+    var urlId = params.get('id');
+    if (urlId) startWithPlugin(urlId);
+    else {
+      window.addEventListener('message', function handler(e) {
+        if (e.data && e.data.type === 'etb_init' && e.data.pluginId) {
+          window.removeEventListener('message', handler);
+          if (e.data.token) apiToken = e.data.token;
+          if (e.data.theme) applyTheme(e.data.theme);
+          startWithPlugin(e.data.pluginId);
+        }
+      });
+    }
+  })();
+
+  function applyTheme(forced) {
+    var t = resolveHostTheme(forced);
+    if (t === 'light') document.documentElement.setAttribute('data-lm', '1');
+    else document.documentElement.removeAttribute('data-lm');
+    if (_mmdReady && window.mermaid) {
+      try {
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: document.documentElement.hasAttribute('data-lm') ? 'default' : 'dark',
+          securityLevel: 'loose'
+        });
+      } catch (e) {}
+    }
+  }
+
+  function isSplitLayout() {
+    return plugin && plugin.ui && plugin.ui.layout === 'split';
+  }
+
+  function applyLayout() {
+    var app = document.getElementById('app');
+    if (isSplitLayout()) {
+      app.setAttribute('data-layout', 'split');
+      app.setAttribute('data-mobile-tab', 'chat');
+      document.getElementById('hdr_copy').style.display = '';
+      document.getElementById('hdr_download').style.display = '';
+    } else {
+      app.removeAttribute('data-layout');
+      app.removeAttribute('data-mobile-tab');
+      document.getElementById('hdr_copy').style.display = 'none';
+      document.getElementById('hdr_download').style.display = 'none';
+    }
+  }
+
+  function loadPlugin(id) {
+    try {
+      var custom = JSON.parse(localStorage.getItem('etb_plugins_custom_v1') || '[]');
+      var found = custom.filter(function (p) { return p.id === id; })[0];
+      if (!found) found = BUILTIN_PLUGINS_DATA.filter(function (p) { return p.id === id; })[0];
+      if (!found) found = { id: id, name: id, tagline: 'Plugin', description: '', experts: [], pills: [] };
+      plugin = found;
+    } catch (e) {
+      plugin = { id: id || 'unknown', name: id || 'Plugin', experts: [], pills: [], description: '' };
+    }
+    applyLayout();
+    try { console.log('[ETB:chat] UI split-markdown v2'); } catch (e) {}
+    renderHeader();
+    renderContext();
+    renderQuickActions();
+    renderEmpty();
+    restoreHistory();
+  }
+
+  function getQuickActions() {
+    return (plugin && plugin.ui && plugin.ui.quickActions) || [];
+  }
+
+  function runQuickAction(qa) {
+    if (!qa || isTyping) return;
+    sendMessage(qa.prompt || qa.label, qa);
+  }
+
+  function renderQuickActions() {
+    var actions = getQuickActions();
+    var bar = document.getElementById('qa_bar');
+    if (!actions.length) { bar.style.display = 'none'; return; }
+    bar.style.display = 'flex';
+    bar.innerHTML = actions.map(function (qa, i) {
+      return '<button class="qa_chip" data-qa="' + i + '">' + esc(qa.label) + '</button>';
+    }).join('');
+    bar.querySelectorAll('.qa_chip').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        runQuickAction(actions[parseInt(btn.dataset.qa, 10)]);
+      });
+    });
+  }
+
+  function renderHeader() {
+    document.getElementById('hdr_name').textContent = plugin.name || plugin.id || 'Plugin';
+    document.getElementById('hdr_sub').textContent = plugin.tagline || plugin.description || '';
+    document.title = (plugin.name || 'Plugin') + ' — Extella';
+  }
+
+  function renderContext() {
+    var bar = document.getElementById('ctx_bar');
+    var pills = plugin.pills || [];
+    if (plugin.type) pills = [plugin.type].concat(pills);
+    if (!pills.length) { bar.style.display = 'none'; return; }
+    bar.style.display = 'flex';
+    bar.innerHTML = pills.slice(0, 5).map(function (p) {
+      return '<span class="ctx_pill">' + esc(p) + '</span>';
+    }).join('');
+  }
+
+  function renderEmpty() {
+    var msgs = document.getElementById('msgs');
+    if (messages.length > 0) { msgs.innerHTML = ''; updateDocPreview(); return; }
+    var initialPrompt = (plugin.ui && plugin.ui.initialPrompt) || ('Ask anything about ' + (plugin.name || 'this plugin'));
+    var actions = getQuickActions();
+    var suggestions = actions.length ? actions.map(function (qa) { return qa.label; }) : buildSuggestions();
+    msgs.innerHTML = [
+      '<div id="empty">',
+      '<div id="empty_icon">&#128268;</div>',
+      '<div id="empty_title">' + esc(plugin.name || 'Plugin') + '</div>',
+      '<div id="empty_sub">' + esc(initialPrompt) + '</div>',
+      suggestions.length ? '<div id="suggestions">' + suggestions.map(function (s, i) {
+        return '<button class="sugg" data-i="' + i + '" data-q="' + esc(s) + '">' + esc(s) + '</button>';
+      }).join('') + '</div>' : '',
+      '</div>'
+    ].join('');
+    document.getElementById('doc_preview').innerHTML = '';
+    msgs.querySelectorAll('.sugg').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (actions.length) runQuickAction(actions[parseInt(btn.dataset.i, 10)]);
+        else sendMessage(btn.dataset.q);
+      });
+    });
+  }
+
+  function buildSuggestions() {
+    var t = plugin.type || '';
+    if (t === 'github') return ['List files in the root directory', 'Read the README', 'Search for TODO comments', 'Create a new issue'];
+    if (t === 'mcp') return ['What can you do?', 'Show me a summary', 'Get recent activity'];
+    if (t === 'knowledge') return ['What are the key concepts?', 'Give me a summary', 'Best practices'];
+    return ['What can you help me with?'];
+  }
+
+  function lastAssistantContent() {
+    for (var i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].role === 'assistant' && messages[i].content) return messages[i].content;
+    }
+    return '';
+  }
+
+  function lastAssistantIndex() {
+    for (var i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].role === 'assistant') return i;
+    }
+    return -1;
+  }
+
+  function updateDocPreview() {
+    if (!isSplitLayout()) return;
+    var content = lastAssistantContent();
+    var preview = document.getElementById('doc_preview');
+    if (!content) {
+      preview.innerHTML = '<p style="color:var(--tx2);font-size:13px">Send a message to generate a document.</p>';
+      return;
+    }
+    preview.innerHTML = formatContent(content);
+    _flushHighlight();
+    if (_mmdReady && _mmdQueue.length) _flushMermaid();
+  }
+
+  function renderMessages() {
+    var msgs = document.getElementById('msgs');
+    if (!messages.length) { renderEmpty(); return; }
+    var lastAsst = lastAssistantIndex();
+    msgs.innerHTML = messages.map(function (m, i) {
+      return renderMsg(m, i, lastAsst);
+    }).join('');
+    if (isTyping) {
+      msgs.insertAdjacentHTML('beforeend', [
+        '<div class="msg assistant">',
+        '<div class="typing"><span></span><span></span><span></span></div>',
+        '<div class="msg_meta">Thinking&hellip; this can take up to a minute</div>',
+        '</div>'
+      ].join(''));
+    }
+    msgs.scrollTop = msgs.scrollHeight;
+    if (!isSplitLayout()) {
+      _flushHighlight();
+      if (_mmdReady && _mmdQueue.length) _flushMermaid();
+    } else {
+      updateDocPreview();
+    }
+  }
+
+  function renderMsg(m, idx, lastAsst) {
+    var logHtml = m.log && m.log.length ? '<div class="msg_log">' + esc(m.log.join('\n')) + '</div>' : '';
+    var expertHtml = m.expert ? '<div class="msg_meta">' + esc(m.expert) + '</div>' : '';
+    var bubble;
+    if (isSplitLayout() && m.role === 'assistant') {
+      if (_contentHasImage(m.content)) {
+        var imgHtml = _renderImagesFromContent(m.content);
+        bubble = '<div class="msg_bubble">' + imgHtml +
+          (idx === lastAsst ? '<div class="msg_img_hint">Full document in panel &rarr;</div>' : '') +
+          '</div>';
+      } else if (idx === lastAsst) {
+        bubble = '<div class="msg_bubble msg_compact">Document updated — see panel &rarr;</div>';
+      } else {
+        var preview = String(m.content || '').replace(/\s+/g, ' ').trim();
+        if (preview.length > 100) preview = preview.slice(0, 100) + '…';
+        bubble = '<div class="msg_bubble msg_compact">' + esc(preview || '(empty)') + '</div>';
+      }
+    } else {
+      bubble = '<div class="msg_bubble">' + formatContent(m.content) + '</div>';
+    }
+    return ['<div class="msg ' + m.role + '">', bubble, logHtml, expertHtml, '</div>'].join('');
+  }
+
+  // ── Markdown pipeline ───────────────────────────────────────────
+
+  function _preprocessArtifacts(src) {
+    src = String(src || '');
+    // Flatten :::artifact wrappers — render body as normal markdown (no title bar + Copy)
+    src = src.replace(/:::artifact\{[^}]*\}\s*\n?([\s\S]*?):::/g, function (_, body) {
+      return '\n' + body.trim() + '\n';
+    });
+    src = src.replace(/:::artifact\{[^}]*\}\s*\n([\s\S]+)$/g, function (_, body) {
+      return '\n' + body.trim() + '\n';
+    });
+    return src;
+  }
+
+  function _mimeFromFilename(fn) {
+    var ext = String(fn || '').split('.').pop().toLowerCase();
+    return { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp' }[ext] || 'image/png';
+  }
+
+  function _preprocessImages(src) {
+    src = String(src || '');
+    src = src.replace(/\{[^{}]*"output_type"\s*:\s*"image_base64"[^{}]*"data"\s*:\s*"([A-Za-z0-9+/=\s]+)"[^{}]*\}/g, function (match, b64) {
+      b64 = b64.replace(/\s/g, '');
+      if (b64.length < 16) return match;
+      var fnMatch = match.match(/"filename"\s*:\s*"([^"]+)"/);
+      var fname = fnMatch ? fnMatch[1] : 'image.png';
+      return '\n<!--ETB_IMG:' + fname.replace(/:/g, '-') + ':' + b64 + '-->\n';
+    });
+    src = src.replace(/!\[([^\]]*)\]\((data:image\/[^;]+;base64,[A-Za-z0-9+/=]+)\)/gi, function (_, alt, dataUrl) {
+      var b64 = dataUrl.split(',')[1] || '';
+      var ext = /jpeg/i.test(dataUrl) ? 'jpg' : 'png';
+      var fname = (alt || 'image').replace(/[^\w.-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'image';
+      if (fname.indexOf('.') === -1) fname += '.' + ext;
+      return '\n<!--ETB_IMG:' + fname + ':' + b64 + '-->\n';
+    });
+    src = src.replace(/!\[([^\]]*)\]\((https?:\/\/[^)\s]+)\)/gi, function (_, alt, url) {
+      var label = (alt || 'image').replace(/[|:]/g, '-').slice(0, 60);
+      return '\n<!--ETB_IMGURL:' + label + '|' + encodeURIComponent(url) + '-->\n';
+    });
+    return src;
+  }
+
+  function _contentHasImage(text) {
+    var s = String(text || '');
+    return /"output_type"\s*:\s*"image_base64"/.test(s) ||
+      /!\[[^\]]*\]\((data:image\/|https?:\/\/)/i.test(s) ||
+      /<!--ETB_IMG/i.test(s);
+  }
+
+  function _renderImageBlock(href, alt, filename) {
+    var id = 'img_' + (++_imgSeq);
+    var fname = filename || alt || 'image.png';
+    var src = href;
+    if (href && href.indexOf('data:') !== 0 && href.indexOf('http') !== 0 && !/^[A-Za-z0-9+/=]{40,}$/.test(href)) {
+      src = href;
+    } else if (href && /^[A-Za-z0-9+/=]{40,}$/.test(href)) {
+      src = 'data:' + _mimeFromFilename(fname) + ';base64,' + href;
+    }
+    var safeSrc = String(src).replace(/"/g, '&quot;');
+    return [
+      '<div class="md-img-wrap" id="' + id + '">',
+      '<img src="' + safeSrc + '" alt="' + esc(alt || fname) + '">',
+      '<div class="md-img-actions">',
+      '<button type="button" class="md-img-btn md-img-copy" data-img-id="' + id + '">Copy</button>',
+      '<button type="button" class="md-img-btn md-img-download" data-img-id="' + id + '" data-filename="' + esc(fname) + '">Download</button>',
+      '</div></div>'
+    ].join('');
+  }
+
+  function _renderImageLine(line) {
+    var m = line.match(/^<!--ETB_IMG:([^:]+):([A-Za-z0-9+/=]+)-->$/);
+    if (m) return _renderImageBlock('data:' + _mimeFromFilename(m[1]) + ';base64,' + m[2], '', m[1]);
+    var mu = line.match(/^<!--ETB_IMGURL:([^|]*)\|(.+)-->$/);
+    if (mu) {
+      var url = decodeURIComponent(mu[2]);
+      var fn = mu[1] ? mu[1].replace(/\s+/g, '-') + '.png' : 'image.png';
+      return _renderImageBlock(url, mu[1], fn);
+    }
+    var md = line.match(/^!\[([^\]]*)\]\((.+)\)\s*$/);
+    if (md) return _renderImageBlock(md[2], md[1], md[1] || 'image.png');
+    return '';
+  }
+
+  function _renderImagesFromContent(content) {
+    var src = _preprocessImages(_preprocessArtifacts(String(content || '')));
+    var lines = src.split('\n');
+    var html = '';
+    for (var i = 0; i < lines.length; i++) {
+      html += _renderImageLine(lines[i]);
+    }
+    return html;
+  }
+
+  function _isTableStart(lines, idx) {
+    return /^\|.+\|$/.test(lines[idx].trim()) &&
+      idx + 1 < lines.length &&
+      /^\|[\s\-:|]+\|$/.test(lines[idx + 1].trim());
+  }
+
+  function _braceBalance(text) {
+    var n = 0;
+    for (var i = 0; i < text.length; i++) {
+      if (text.charAt(i) === '{') n++;
+      else if (text.charAt(i) === '}') n--;
+    }
+    return n;
+  }
+
+  function _shouldContinueShellBlock(line, codeLines) {
+    var prev = codeLines[codeLines.length - 1] || '';
+    if (prev.trim().endsWith('\\')) return true;
+    var t = line.trim();
+    if (/^[-\+][A-Za-z]/.test(t) || /^--/.test(t)) return true;
+    if (/^["'{[\(]/.test(t) || /^[\}\]"',]/.test(t)) return true;
+    if (/^"[^"]+"\s*:/.test(t)) return true;
+    if (/^\s/.test(line) && codeLines.length) return true;
+    if (_braceBalance(codeLines.join('\n')) > 0) return true;
+    if (_shellPayloadQuoteOpen(codeLines.join('\n'))) return true;
+    return false;
+  }
+
+  function _shellPayloadQuoteOpen(text) {
+    var idx = text.lastIndexOf('-d');
+    if (idx === -1) return false;
+    var tail = text.slice(idx);
+    var sq = 0;
+    for (var i = 0; i < tail.length; i++) {
+      if (tail.charAt(i) === "'" && tail.charAt(i - 1) !== '\\') sq++;
+    }
+    return sq % 2 === 1;
+  }
+
+  function _shellCommandComplete(text) {
+    if (String(text).trim().endsWith('\\')) return false;
+    if (_braceBalance(text) > 0) return false;
+    if (_shellPayloadQuoteOpen(text)) return false;
+    return true;
+  }
+
+  function _parenBalance(text) {
+    var bal = 0;
+    var inStr = false;
+    var strCh = '';
+    for (var i = 0; i < text.length; i++) {
+      var c = text.charAt(i);
+      if (inStr) {
+        if (c === strCh && text.charAt(i - 1) !== '\\') inStr = false;
+        continue;
+      }
+      if (c === '"' || c === "'") { inStr = true; strCh = c; continue; }
+      if (c === '(' || c === '[' || c === '{') bal++;
+      else if (c === ')' || c === ']' || c === '}') bal--;
+    }
+    return bal;
+  }
+
+  function _looksLikeCodeStart(line) {
+    var t = String(line || '').trim();
+    if (!t) return false;
+    if (/^curl\s/i.test(t) || /^\$\s+curl\s/i.test(t)) return true;
+    if (/^(import|from)\s/.test(t)) return true;
+    if (/^(def|class|async def|@)\s/.test(t)) return true;
+    if (/^(if|for|while|with|try|except|elif|else|return|raise|pass|break|continue|async|await)\b/.test(t)) return true;
+    if (/^(const|let|var|function|export|import \{)/.test(t)) return true;
+    if (/^(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\s+\S/i.test(t)) return true;
+    if (t.charAt(0) === '{' || t.charAt(0) === '[') return true;
+    if (_looksLikeYamlStart(t)) return true;
+    if (/^[a-zA-Z_][\w.]*\s*=/.test(t)) return true;
+    if (/^[a-zA-Z_][\w.]*\s*\(/.test(t)) return true;
+    return false;
+  }
+
+  function _looksLikeCodeLine(line, codeLines) {
+    var t = String(line || '').trim();
+    if (!t) return true;
+    if (/^#{1,4}\s+/.test(line)) return false;
+    if (/^\|.+\|$/.test(t)) return false;
+    if (/^[-*]\s+[A-Za-z\u0400-\u04FF]/.test(t) && !/^-\s*['"\[{]/.test(t)) return false;
+    if (codeLines.length && /^\s/.test(line)) return true;
+    if (/^(import|from|def|class|async def|if|for|while|with|try|except|elif|else|return|print|raise|pass|async|await|@)\b/.test(t)) return true;
+    if (/^(const|let|var|function|export)\b/.test(t)) return true;
+    if (/^[a-zA-Z_][\w.]*\s*[=(.]/.test(t)) return true;
+    if (/^[\)\]\},]/.test(t)) return true;
+    if (/^['"]/.test(t)) return true;
+    if (_parenBalance(codeLines.join('\n') + '\n' + line) > 0) return true;
+    if (codeLines.length && t.length > 60 && !/[=(){}\[\];:,\\|.#@]/.test(t) &&
+        /[\u0400-\u04FFa-zA-Z]{4,}/.test(t) && !/^print\s*\(/i.test(t) && !/^#/.test(t)) return false;
+    return codeLines.length > 0;
+  }
+
+  function _guessCodeLang(lines, startIdx) {
+    var t = lines[startIdx].trim();
+    if (/^curl\s/i.test(t) || /^\$\s+curl\s/i.test(t)) return 'bash';
+    if (_looksLikeYamlStart(t)) return 'yaml';
+    if (t.charAt(0) === '{' || t.charAt(0) === '[') return 'json';
+    if (/^(const|let|var|function|export|import \{)/.test(t)) return 'javascript';
+    if (/^(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\s/i.test(t)) return 'http';
+    return 'python';
+  }
+
+  function _isCodeFenceLine(line) {
+    return /^```/.test(String(line || '').trim());
+  }
+
+  function _normalizeCodeLang(lang) {
+    var l = String(lang || '').toLowerCase().trim();
+    if (!l || l === 'text') return 'text';
+    if (l === 'py' || l === 'python3') return 'python';
+    if (l === 'js' || l === 'node' || l === 'nodejs') return 'javascript';
+    if (l === 'ts' || l === 'typescript') return 'typescript';
+    if (l === 'sh' || l === 'shell' || l === 'zsh') return 'bash';
+    if (l === 'yml') return 'yaml';
+    if (l === 'curl') return 'bash';
+    return l;
+  }
+
+  function _collectCodeBlock(lines, startIdx) {
+    if (!_looksLikeCodeStart(lines[startIdx])) return null;
+    var lang = _guessCodeLang(lines, startIdx);
+    if (lang === 'bash') return _collectShellBlock(lines, startIdx);
+    if (lang === 'json') return _collectJsonBlock(lines, startIdx);
+    if (lang === 'yaml') return _collectYamlBlock(lines, startIdx);
+
+    var codeLines = [];
+    var i = startIdx;
+    while (i < lines.length) {
+      var line = lines[i];
+      var t = line.trim();
+      if (i > startIdx) {
+        if (_isCodeFenceLine(line)) break;
+        if (/^#{1,4}\s+/.test(line)) break;
+        if (_isTableStart(lines, i)) break;
+        if (t === '') {
+          var peek = i + 1;
+          while (peek < lines.length && lines[peek].trim() === '') peek++;
+          if (peek >= lines.length || !_looksLikeCodeLine(lines[peek], codeLines)) break;
+          codeLines.push('');
+          i++;
+          continue;
+        }
+        if (!_looksLikeCodeLine(line, codeLines)) break;
+      }
+      codeLines.push(line);
+      i++;
+    }
+    while (codeLines.length && codeLines[codeLines.length - 1].trim() === '') codeLines.pop();
+    if (!codeLines.length) return null;
+    return { lang: lang, content: codeLines.join('\n'), nextIdx: i };
+  }
+
+  function _collectShellBlock(lines, startIdx) {
+    var codeLines = [];
+    var i = startIdx;
+    while (i < lines.length) {
+      var line = lines[i];
+      if (i > startIdx && line.trim() === '') break;
+      if (i > startIdx && /^#{1,4}\s+/.test(line)) break;
+      if (i > startIdx && _isTableStart(lines, i)) break;
+      if (i > startIdx && !_shouldContinueShellBlock(line, codeLines)) break;
+      codeLines.push(line.replace(/\s+$/, ''));
+      i++;
+      if (i > startIdx && _shellCommandComplete(codeLines.join('\n'))) break;
+    }
+    if (!codeLines.length) return null;
+    return { lang: 'bash', content: codeLines.join('\n'), nextIdx: i };
+  }
+
+  function _collectJsonBlock(lines, startIdx) {
+    var codeLines = [];
+    var i = startIdx;
+    var depth = 0;
+    while (i < lines.length) {
+      var line = lines[i];
+      var t = line.trim();
+      if (i > startIdx && t === '') break;
+      if (i > startIdx && /^#{1,4}\s+/.test(line)) break;
+      codeLines.push(line);
+      for (var c = 0; c < t.length; c++) {
+        if (t.charAt(c) === '{' || t.charAt(c) === '[') depth++;
+        else if (t.charAt(c) === '}' || t.charAt(c) === ']') depth--;
+      }
+      i++;
+      if (depth <= 0 && (t.endsWith('}') || t.endsWith(']'))) break;
+    }
+    if (!codeLines.length || depth > 0) return null;
+    return { lang: 'json', content: codeLines.join('\n'), nextIdx: i };
+  }
+
+  function _looksLikeYamlStart(trimmed) {
+    if (trimmed === '---') return true;
+    return /^(openapi|swagger|services|version|on|jobs|steps|env|kind|apiVersion|metadata|spec):(\s|$)/.test(trimmed);
+  }
+
+  function _isYamlContinuation(line) {
+    var t = line.trim();
+    if (!t) return false;
+    if (/^-\s+\S/.test(t)) return true;
+    if (/^[a-zA-Z0-9_.-]+:\s*(\S.*)?$/.test(t)) return true;
+    if (/^\s/.test(line)) return true;
+    return false;
+  }
+
+  function _collectYamlBlock(lines, startIdx) {
+    var first = lines[startIdx].trim();
+    if (!_looksLikeYamlStart(first)) return null;
+    var codeLines = [];
+    var i = startIdx;
+    while (i < lines.length) {
+      var line = lines[i];
+      if (i > startIdx && line.trim() === '') break;
+      if (i > startIdx && /^#{1,4}\s+/.test(line)) break;
+      if (i > startIdx && _isTableStart(lines, i)) break;
+      if (i > startIdx && !_isYamlContinuation(line)) break;
+      codeLines.push(line);
+      i++;
+    }
+    if (!codeLines.length) return null;
+    if (codeLines.length === 1 && !/^(openapi|swagger|services|on|jobs):/.test(first)) return null;
+    return { lang: 'yaml', content: codeLines.join('\n'), nextIdx: i };
+  }
+
+  function _detectUnfencedCode(lines, idx) {
+    return _collectCodeBlock(lines, idx);
+  }
+
+  // Diagram languages have their own parsers — never merge orphaned text into them.
+  var _DIAGRAM_LANGS = { mermaid: 1, plantuml: 1, graphviz: 1, dot: 1, d2: 1 };
+  function _isDiagramLang(lang) { return !!_DIAGRAM_LANGS[String(lang || '').toLowerCase()]; }
+
+  function _mergeOrphanCodeAfterFence(src) {
+    var lines = String(src || '').split('\n');
+    var out = [];
+    var i = 0;
+    while (i < lines.length) {
+      var openM = lines[i].match(/^```([a-zA-Z0-9_-]*)\s*$/);
+      if (openM && !_isMarkdownFenceLang(openM[1]) && !_isDiagramLang(openM[1])) {
+        var lang = openM[1].toLowerCase();
+        var body = [];
+        i++;
+        while (i < lines.length && !_isCodeFenceLine(lines[i])) {
+          body.push(lines[i]);
+          i++;
+        }
+        var hadClose = i < lines.length && _isCodeFenceLine(lines[i]);
+        if (hadClose) i++;
+
+        var orphan = [];
+        var j = i;
+        var combined = body.slice();
+        while (j < lines.length) {
+          if (_isCodeFenceLine(lines[j])) break;
+          if (/^#{1,4}\s+/.test(lines[j])) break;
+          if (_isTableStart(lines, j)) break;
+          if (lines[j].trim() === '') {
+            var peek = j + 1;
+            while (peek < lines.length && lines[peek].trim() === '') peek++;
+            if (peek >= lines.length || !_looksLikeCodeLine(lines[peek], combined.concat(orphan))) break;
+            orphan.push('');
+            j++;
+            continue;
+          }
+          if (!_looksLikeCodeLine(lines[j], combined.concat(orphan))) break;
+          orphan.push(lines[j]);
+          j++;
+        }
+
+        if (orphan.length) {
+          out.push('```' + _normalizeCodeLang(lang));
+          body.forEach(function (l) { out.push(l); });
+          orphan.forEach(function (l) { out.push(l); });
+          out.push('```');
+          i = j;
+          continue;
+        }
+
+        out.push('```' + _normalizeCodeLang(openM[1]));
+        body.forEach(function (l) { out.push(l); });
+        if (hadClose) out.push('```');
+        continue;
+      }
+      out.push(lines[i]);
+      i++;
+    }
+    return out.join('\n');
+  }
+
+  function _wrapUnfencedCodeBlocks(src) {
+    var lines = String(src || '').split('\n');
+    var out = [];
+    var i = 0;
+    var inFence = false;
+    while (i < lines.length) {
+      var trimmed = lines[i].trim();
+      if (/^```([a-zA-Z0-9_-]*)\s*$/.test(trimmed)) {
+        inFence = !inFence;
+        out.push(lines[i]);
+        i++;
+        continue;
+      }
+      if (inFence) {
+        out.push(lines[i]);
+        i++;
+        continue;
+      }
+      var block = _collectCodeBlock(lines, i);
+      if (block && block.content.trim()) {
+        out.push('```' + _normalizeCodeLang(block.lang));
+        block.content.split('\n').forEach(function (l) { out.push(l); });
+        out.push('```');
+        i = block.nextIdx;
+        continue;
+      }
+      out.push(lines[i]);
+      i++;
+    }
+    return out.join('\n');
+  }
+
+  function _renderCodeBlock(lang, content) {
+    var id = 'code_' + (++_codeSeq);
+    var label = _normalizeCodeLang(lang);
+    var raw = content.replace(/\n$/, '');
+    _hlQueue.push(id);
+    _scheduleHighlight();
+    return [
+      '<div class="md-code" id="' + id + '">',
+      '<div class="md-code-hdr">',
+      '<span class="md-code-lang">' + esc(label) + '</span>',
+      '<button type="button" class="md-code-copy" data-copy-target="' + id + '">Copy</button>',
+      '</div>',
+      '<pre><code class="language-' + esc(label) + '">' + esc(raw) + '</code></pre>',
+      '</div>'
+    ].join('');
+  }
+
+  function _isMarkdownFenceLang(lang) {
+    var l = String(lang || '').toLowerCase();
+    return !l || l === 'markdown' || l === 'md' || l === 'text';
+  }
+
+  function formatContent(text) {
+    var src = _preprocessArtifacts(String(text || ''));
+    src = _preprocessImages(src);
+    src = _mergeOrphanCodeAfterFence(src);
+    src = _wrapUnfencedCodeBlocks(src);
+    return _renderMarkdownSource(src, true);
+  }
+
+  function _renderMarkdownSource(src, wrap) {
+    var parts = String(src || '').split(/(```[a-zA-Z0-9_-]*\n?)/);
+    var html = wrap ? '<div class="md-content">' : '';
+    var insideBlock = false;
+    var blockLang = '';
+    var blockContent = '';
+
+    for (var i = 0; i < parts.length; i++) {
+      var part = parts[i];
+      if (/^```[a-zA-Z0-9_-]*\n?$/.test(part)) {
+        if (!insideBlock) {
+          insideBlock = true;
+          blockLang = part.replace(/^```/, '').replace(/\n$/, '').toLowerCase();
+          blockContent = '';
+        } else {
+          insideBlock = false;
+          if (blockLang === 'mermaid') {
+            var divId = 'mmd_' + (++_mmdSeq);
+            html += '<div class="mermaid-wrap" id="' + divId + '">' +
+              '<div class="mmd-src" style="display:none">' + esc(blockContent.replace(/\n$/, '')) + '</div>' +
+              '<div class="mmd-spinner" style="color:var(--tx2);font-size:11px;padding:8px 0">Rendering diagram…</div></div>';
+            _scheduleMermaidRender(divId);
+          } else if (_isMarkdownFenceLang(blockLang)) {
+            html += _renderMarkdownSource(blockContent.replace(/\n$/, ''), false);
+          } else {
+            html += _renderCodeBlock(blockLang, blockContent);
+          }
+          blockContent = '';
+          blockLang = '';
+        }
+      } else if (insideBlock) {
+        blockContent += part;
+      } else {
+        html += _renderBlockText(part);
+      }
+    }
+    if (insideBlock) {
+      var tail = blockContent.replace(/\n$/, '');
+      if (blockLang === 'mermaid') {
+        var openId = 'mmd_' + (++_mmdSeq);
+        html += '<div class="mermaid-wrap" id="' + openId + '">' +
+          '<div class="mmd-src" style="display:none">' + esc(tail) + '</div>' +
+          '<div class="mmd-spinner" style="color:var(--tx2);font-size:11px;padding:8px 0">Rendering diagram…</div></div>';
+        _scheduleMermaidRender(openId);
+      } else if (_isMarkdownFenceLang(blockLang)) {
+        html += _renderMarkdownSource(tail, false);
+      } else {
+        html += _renderCodeBlock(blockLang, tail);
+      }
+    }
+    if (wrap) html += '</div>';
+    return html;
+  }
+
+  function _renderBlockText(part) {
+    return _renderLines(part);
+  }
+
+  function _renderLines(text) {
+    var lines = String(text || '').split('\n');
+    var html = '';
+    var i = 0;
+
+    while (i < lines.length) {
+      var line = lines[i];
+
+      var artOpen = line.match(/^<!--ETB_ARTIFACT:(.*)-->$/);
+      if (artOpen) {
+        var bodyLines = [];
+        i++;
+        while (i < lines.length && lines[i] !== '<!--/ETB_ARTIFACT-->') {
+          bodyLines.push(lines[i]);
+          i++;
+        }
+        if (i < lines.length) i++;
+        html += _renderMarkdownSource(bodyLines.join('\n'), false);
+        continue;
+      }
+
+      var imgHtml = _renderImageLine(line);
+      if (imgHtml) {
+        html += imgHtml;
+        i++;
+        continue;
+      }
+
+      if (/^\|.+\|$/.test(line.trim()) && i + 1 < lines.length && /^\|[\s\-:|]+\|$/.test(lines[i + 1].trim())) {
+        html += _renderTable(lines, i);
+        while (i < lines.length && /^\|.+\|$/.test(lines[i].trim())) i++;
+        continue;
+      }
+
+      if (/^#{1,4}\s+/.test(line)) {
+        var level = line.match(/^(#+)/)[1].length;
+        html += '<h' + level + '>' + _renderInline(line.replace(/^#+\s+/, '')) + '</h' + level + '>';
+        i++;
+        continue;
+      }
+
+      if (/^>\s?/.test(line)) {
+        var bq = [];
+        while (i < lines.length && /^>\s?/.test(lines[i])) {
+          bq.push(lines[i].replace(/^>\s?/, ''));
+          i++;
+        }
+        html += '<blockquote>' + _renderInline(bq.join('\n')).replace(/\n/g, '<br>') + '</blockquote>';
+        continue;
+      }
+
+      if (/^(\-{3,}|\*{3,}|_{3,})\s*$/.test(line.trim())) {
+        html += '<hr>';
+        i++;
+        continue;
+      }
+
+      if (/^\d+\.\s+/.test(line)) {
+        html += '<ol>';
+        while (i < lines.length && /^\d+\.\s+/.test(lines[i])) {
+          html += '<li>' + _renderInline(lines[i].replace(/^\d+\.\s+/, '')) + '</li>';
+          i++;
+        }
+        html += '</ol>';
+        continue;
+      }
+
+      if (/^[-*]\s+/.test(line)) {
+        html += '<ul>';
+        while (i < lines.length && /^[-*]\s+/.test(lines[i])) {
+          html += '<li>' + _renderInline(lines[i].replace(/^[-*]\s+/, '')) + '</li>';
+          i++;
+        }
+        html += '</ul>';
+        continue;
+      }
+
+      if (line.trim() === '') {
+        i++;
+        continue;
+      }
+
+      var unfenced = _detectUnfencedCode(lines, i);
+      if (unfenced) {
+        html += _renderCodeBlock(unfenced.lang, unfenced.content);
+        i = unfenced.nextIdx;
+        continue;
+      }
+
+      html += '<p>' + _renderInline(line) + '</p>';
+      i++;
+    }
+    return html;
+  }
+
+  function _renderTable(lines, startIdx) {
+    function parseRow(row) {
+      return row.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(function (c) { return c.trim(); });
+    }
+    var headers = parseRow(lines[startIdx]);
+    var rows = [];
+    for (var r = startIdx + 2; r < lines.length && /^\|.+\|$/.test(lines[r].trim()); r++) {
+      rows.push(parseRow(lines[r]));
+    }
+    var out = '<div class="md-table-wrap"><table class="md-table"><thead><tr>';
+    headers.forEach(function (h) { out += '<th>' + _renderInline(h) + '</th>'; });
+    out += '</tr></thead><tbody>';
+    rows.forEach(function (row) {
+      out += '<tr>';
+      row.forEach(function (c) { out += '<td>' + _renderInline(c) + '</td>'; });
+      out += '</tr>';
+    });
+    return out + '</tbody></table></div>';
+  }
+
+  function _renderInline(t) {
+    var s = String(t || '').trim();
+    var wrap = s.match(/^<\s*(p|div)\s*>([\s\S]*)<\s*\/\s*\1\s*>$/i);
+    if (wrap) s = wrap[2].trim();
+    s = s.replace(/&nbsp;/gi, '\u00A0');
+    s = esc(s)
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      .replace(/`([^`]+)`/g, '<code>$1</code>')
+      .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+    // Models often emit HTML tags — restore a safe inline subset after esc()
+    s = s.replace(/&lt;br\s*\/?&gt;/gi, '<br>');
+    s = s.replace(/&lt;(strong|b|em|i|code|sub|sup)&gt;/gi, '<$1>');
+    s = s.replace(/&lt;\/(strong|b|em|i|code|sub|sup)&gt;/gi, '</$1>');
+    return s;
+  }
+
+  // ── Mermaid ─────────────────────────────────────────────────────
+
+  function _scheduleMermaidRender(divId) {
+    _mmdQueue.push(divId);
+    if (!window._mmdLoading) {
+      window._mmdLoading = true;
+      var s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js';
+      s.onload = function () {
+        try {
+          mermaid.initialize({
+            startOnLoad: false,
+            theme: document.documentElement.hasAttribute('data-lm') ? 'default' : 'dark',
+            securityLevel: 'loose'
+          });
+        } catch (e) {}
+        _mmdReady = true;
+        _flushMermaid();
+      };
+      s.onerror = function () {
+        _mmdQueue.splice(0).forEach(function (id) {
+          var w = document.getElementById(id);
+          if (w) w.innerHTML = '<div style="color:var(--tx2);font-size:11px">Mermaid CDN unavailable.</div>';
+        });
+      };
+      document.head.appendChild(s);
+    }
+  }
+
+  function _flushMermaid() {
+    var pending = _mmdQueue.splice(0);
+    pending.forEach(function (divId) {
+      var wrap = document.getElementById(divId);
+      if (!wrap) return;
+      var srcEl = wrap.querySelector('.mmd-src');
+      if (!srcEl) return;
+      var code = srcEl.textContent;
+      var svgId = 'svg_mmd_' + divId;
+      try {
+        mermaid.render(svgId, code).then(function (r) {
+          wrap.innerHTML = [
+            '<div class="mmd-diagram-hdr"><span class="md-code-lang">Diagram</span></div>',
+            '<div class="mmd-diagram">' + r.svg + '</div>',
+            '<div class="md-img-actions">',
+            '<button type="button" class="md-img-btn mmd-copy" data-mmd-id="' + divId + '">Copy PNG</button>',
+            '<button type="button" class="md-img-btn mmd-download" data-mmd-id="' + divId + '">Download PNG</button>',
+            '<button type="button" class="md-img-btn mmd-copy-code" data-mmd-id="' + divId + '">Copy code</button>',
+            '</div>',
+            '<div class="mmd-src-store" style="display:none">' + esc(code) + '</div>'
+          ].join('');
+        }).catch(function (e) {
+          wrap.innerHTML = '<pre style="color:var(--err);font-size:11px;white-space:pre-wrap">Diagram error: ' +
+            esc(String(e)) + '</pre>';
+        });
+      } catch (e) {
+        wrap.innerHTML = '<pre style="color:var(--err);font-size:11px">' + esc(String(e)) + '</pre>';
+      }
+    });
+  }
+
+  function _mermaidSvgToPng(svg, cb) {
+    if (!svg) { cb(null); return; }
+    var rect = svg.getBoundingClientRect();
+    var w = Math.ceil(rect.width || parseFloat(svg.getAttribute('width')) || 800);
+    var h = Math.ceil(rect.height || parseFloat(svg.getAttribute('height')) || 600);
+    var clone = svg.cloneNode(true);
+    clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    if (!clone.getAttribute('viewBox') && w && h) clone.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+    clone.setAttribute('width', String(w));
+    clone.setAttribute('height', String(h));
+    var svgData = new XMLSerializer().serializeToString(clone);
+    var img = new Image();
+    var url = URL.createObjectURL(new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' }));
+    img.onload = function () {
+      var canvas = document.createElement('canvas');
+      canvas.width = Math.max(w, 1);
+      canvas.height = Math.max(h, 1);
+      var ctx = canvas.getContext('2d');
+      ctx.fillStyle = document.documentElement.hasAttribute('data-lm') ? '#ffffff' : '#111111';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+      canvas.toBlob(cb, 'image/png');
+    };
+    img.onerror = function () { URL.revokeObjectURL(url); cb(null); };
+    img.src = url;
+  }
+
+  function copyMermaidBlock(mmdId, btn) {
+    var wrap = document.getElementById(mmdId);
+    var svg = wrap && wrap.querySelector('.mmd-diagram svg');
+    if (!svg) return;
+    _mermaidSvgToPng(svg, function (blob) {
+      if (!blob) return;
+      navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]).then(function () {
+        if (btn) { var o = btn.textContent; btn.textContent = 'Copied!'; setTimeout(function () { btn.textContent = o; }, 1500); }
+      }).catch(function () {});
+    });
+  }
+
+  function downloadMermaidBlock(mmdId) {
+    var wrap = document.getElementById(mmdId);
+    var svg = wrap && wrap.querySelector('.mmd-diagram svg');
+    if (!svg) return;
+    _mermaidSvgToPng(svg, function (blob) {
+      if (!blob) return;
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = (plugin && plugin.id ? plugin.id : 'diagram') + '.png';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(a.href);
+    });
+  }
+
+  function copyMermaidSource(mmdId, btn) {
+    var wrap = document.getElementById(mmdId);
+    var store = wrap && wrap.querySelector('.mmd-src-store');
+    if (!store) return;
+    navigator.clipboard.writeText(store.textContent).then(function () {
+      if (btn) { var o = btn.textContent; btn.textContent = 'Copied!'; setTimeout(function () { btn.textContent = o; }, 1500); }
+    }).catch(function () {});
+  }
+
+  // ── Highlight.js ────────────────────────────────────────────────
+
+  function _scheduleHighlight() {
+    if (_hlReady) { _flushHighlight(); return; }
+    if (window._hlLoading) return;
+    window._hlLoading = true;
+    var isLight = document.documentElement.hasAttribute('data-lm');
+    var link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = isLight
+      ? 'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11/build/styles/github.min.css'
+      : 'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11/build/styles/github-dark.min.css';
+    document.head.appendChild(link);
+    var s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11/build/highlight.min.js';
+    s.onload = function () {
+      _hlReady = true;
+      _flushHighlight();
+    };
+    document.head.appendChild(s);
+  }
+
+  function _flushHighlight() {
+    if (!_hlReady || !window.hljs) return;
+    _hlQueue.splice(0).forEach(function (id) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      var codeEl = el.querySelector('code');
+      if (codeEl) try { hljs.highlightElement(codeEl); } catch (e) {}
+    });
+    document.querySelectorAll('.md-code:not([data-hl])').forEach(function (block) {
+      block.setAttribute('data-hl', '1');
+      var codeEl = block.querySelector('code');
+      if (codeEl && !codeEl.dataset.highlighted) {
+        try { hljs.highlightElement(codeEl); } catch (e) {}
+      }
+    });
+  }
+
+  // ── Copy / Download ─────────────────────────────────────────────
+
+  function getDocumentRawText() {
+    return lastAssistantContent();
+  }
+
+  function guessDownloadExt(text) {
+    if (/```ya?ml/i.test(text) || /openapi/i.test(text)) return 'yaml';
+    return 'md';
+  }
+
+  function copyDocument(btn) {
+    var text = getDocumentRawText();
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(function () {
+      if (btn) { var o = btn.textContent; btn.textContent = 'Copied!'; setTimeout(function () { btn.textContent = o; }, 1500); }
+    }).catch(function () {});
+  }
+
+  function downloadDocument() {
+    var text = getDocumentRawText();
+    if (!text) return;
+    var ext = guessDownloadExt(text);
+    var blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = (plugin.id || 'document') + '.' + ext;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  function copyCodeBlock(blockId, btn) {
+    var el = document.getElementById(blockId);
+    if (!el) return;
+    var code = el.querySelector('code');
+    if (!code) return;
+    navigator.clipboard.writeText(code.textContent).then(function () {
+      if (btn) { var o = btn.textContent; btn.textContent = 'Copied!'; setTimeout(function () { btn.textContent = o; }, 1500); }
+    }).catch(function () {});
+  }
+
+  function copyImageBlock(imgId, btn) {
+    var wrap = document.getElementById(imgId);
+    var img = wrap && wrap.querySelector('img');
+    if (!img || !img.src) return;
+    function onCopied() {
+      if (btn) { var o = btn.textContent; btn.textContent = 'Copied!'; setTimeout(function () { btn.textContent = o; }, 1500); }
+    }
+    fetch(img.src).then(function (r) { return r.blob(); }).then(function (blob) {
+      var type = blob.type && blob.type.indexOf('image/') === 0 ? blob.type : 'image/png';
+      var item = {}; item[type] = blob;
+      return navigator.clipboard.write([new ClipboardItem(item)]);
+    }).then(onCopied).catch(function () {
+      try {
+        var canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth || img.width || 1;
+        canvas.height = img.naturalHeight || img.height || 1;
+        canvas.getContext('2d').drawImage(img, 0, 0);
+        canvas.toBlob(function (blob) {
+          if (!blob) return;
+          var item = {}; item[blob.type || 'image/png'] = blob;
+          navigator.clipboard.write([new ClipboardItem(item)]).then(onCopied).catch(function () {});
+        }, 'image/png');
+      } catch (e) {}
+    });
+  }
+
+  function downloadImageBlock(imgId, filename) {
+    var wrap = document.getElementById(imgId);
+    var img = wrap && wrap.querySelector('img');
+    if (!img || !img.src) return;
+    var a = document.createElement('a');
+    a.href = img.src;
+    a.download = filename || 'image.png';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  function copyArtifact(btn) {
+    var artifact = btn.closest('.md-artifact');
+    if (!artifact) return;
+    var body = artifact.querySelector('.md-artifact-body');
+    if (!body) return;
+    navigator.clipboard.writeText(body.textContent).then(function () {
+      var o = btn.textContent; btn.textContent = 'Copied!'; setTimeout(function () { btn.textContent = o; }, 1500);
+    }).catch(function () {});
+  }
+
+  function handlePreviewClick(e) {
+    var mmdCopy = e.target.closest('.mmd-copy');
+    if (mmdCopy) { copyMermaidBlock(mmdCopy.dataset.mmdId, mmdCopy); return; }
+    var mmdDl = e.target.closest('.mmd-download');
+    if (mmdDl) { downloadMermaidBlock(mmdDl.dataset.mmdId); return; }
+    var mmdCode = e.target.closest('.mmd-copy-code');
+    if (mmdCode) { copyMermaidSource(mmdCode.dataset.mmdId, mmdCode); return; }
+    var imgCopy = e.target.closest('.md-img-copy');
+    if (imgCopy) { copyImageBlock(imgCopy.dataset.imgId, imgCopy); return; }
+    var imgDl = e.target.closest('.md-img-download');
+    if (imgDl) { downloadImageBlock(imgDl.dataset.imgId, imgDl.dataset.filename); return; }
+    var copyBtn = e.target.closest('.md-code-copy');
+    if (!copyBtn) return;
+    if (copyBtn.dataset.copyArtifact) copyArtifact(copyBtn);
+    else if (copyBtn.dataset.copyTarget) copyCodeBlock(copyBtn.dataset.copyTarget, copyBtn);
+  }
+
+  // ── Agent API ───────────────────────────────────────────────────
+
+  function sendMessage(text, qa) {
+    text = (text || '').trim();
+    if (!text || isTyping) return;
+    var emptyEl = document.getElementById('empty');
+    if (emptyEl) emptyEl.parentNode.removeChild(emptyEl);
+    messages.push({ role: 'user', content: text });
+    isTyping = true;
+    renderMessages();
+    document.getElementById('inp').value = '';
+    resizeInp();
+    if (!apiToken) {
+      isTyping = false;
+      messages.push({ role: 'assistant', content: 'Could not connect to your Extella account. Please reopen the plugin from the toolbar.' });
+      renderMessages();
+      saveHistory();
+      return;
+    }
+    fetch(API_BASE + '/api/agent/run', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Auth-Token': apiToken,
+        'X-Profile-Id': 'default',
+        'X-Agent-Id': 'agent_extella_default'
+      },
+      body: JSON.stringify({
+        agent_id: 'agent_extella_default',
+        input: buildAgentInput(text, qa),
+        run_timeout: 240
+      })
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      isTyping = false;
+      var out = extractAgentText(data);
+      messages.push({ role: 'assistant', content: out || 'Sorry, I could not get an answer this time. Please try again.' });
+      renderMessages();
+      saveHistory();
+      if (isSplitLayout()) {
+        document.getElementById('app').setAttribute('data-mobile-tab', 'doc');
+        document.querySelectorAll('.mobile_tab').forEach(function (t) {
+          t.classList.toggle('on', t.dataset.tab === 'doc');
+        });
+      }
+    })
+    .catch(function (e) {
+      isTyping = false;
+      messages.push({ role: 'assistant', content: 'Network error: ' + e.message + '. Please try again.' });
+      renderMessages();
+      saveHistory();
+    });
+  }
+
+  function buildAgentInput(text, qa) {
+    var lines = [];
+    lines.push('[Plugin context — not written by the user]');
+    lines.push('You are the assistant of the "' + (plugin.name || plugin.id) + '" plugin inside Extella.');
+    if (plugin.source) {
+      lines.push('The plugin wraps the GitHub repository ' + plugin.source +
+        (plugin.tagline ? ' (' + plugin.tagline + ')' : '') + '.');
+    } else if (plugin.description) lines.push('Plugin description: ' + plugin.description);
+    var experts = (plugin.experts || []).map(function (e) {
+      if (typeof e === 'string') return e;
+      var s = e.name || '';
+      if (e.description) s += ' — ' + e.description;
+      if (e.params && Object.keys(e.params).length) s += ' (params: ' + Object.keys(e.params).join(', ') + ')';
+      return s;
+    }).filter(Boolean);
+    if (experts.length) {
+      lines.push('Experts available via run_expert: ' + experts.join('; ') + '.');
+      lines.push('If an expert fails, answer from your own knowledge instead and do not show raw error text to the user.');
+    }
+    if (qa && qa.expert) {
+      lines.push('Hint: expert "' + qa.expert + '" with params ' + JSON.stringify(qa.params || {}) + '.');
+    }
+    lines.push('Answer concisely in plain language, in the language the user writes in. Do not mention internal tool or expert names unless asked.');
+    lines.push('DOCUMENT OUTPUT RULES (mandatory):');
+    lines.push('- Output plain Markdown only — write headings, tables, and prose directly in the response body.');
+    lines.push('- Never wrap the entire response in a code fence (no ```text, ```markdown, or ```md around the whole answer).');
+    lines.push('- Never use :::artifact blocks or any proprietary wrapper syntax.');
+    lines.push('- Use # and ## headings, GFM pipe tables, and fenced code blocks only for real code samples (curl, json, yaml, bash, python).');
+    lines.push('- Each code sample must be one complete fenced block (opening ``` and closing ```); never split code between a fence and plain text.');
+    if (isSplitLayout()) {
+      lines.push('- This plugin uses split-view: the full response renders as a document panel — structure it as a readable doc with clear sections.');
+    }
+    var prior = messages.slice(0, -1).slice(-6);
+    if (prior.length) {
+      lines.push('', '[Recent conversation]');
+      prior.forEach(function (m) {
+        var c = String(m.content || '');
+        if (c.length > 600) c = c.slice(0, 600) + '…';
+        lines.push((m.role === 'user' ? 'User: ' : 'Assistant: ') + c);
+      });
+    }
+    lines.push('', '[User message]', text);
+    return lines.join('\n');
+  }
+
+  function extractAgentText(data) {
+    var out = '';
+    try {
+      (data.output || []).forEach(function (o) {
+        if (o.type === 'message') {
+          (o.content || []).forEach(function (c) {
+            if (c.type === 'output_text' && c.text) out += c.text;
+          });
+        }
+      });
+    } catch (e) {}
+    if (!out && data && data.status === 'error') {
+      out = 'The assistant is temporarily unavailable. Please try again in a moment.';
+    }
+    return out.trim();
+  }
+
+  function historyKey() { return 'etb_chat_v2_' + pluginId; }
+
+  function saveHistory() {
+    if (!pluginId) return;
+    try { localStorage.setItem(historyKey(), JSON.stringify(messages.slice(-50))); } catch (e) {}
+  }
+
+  function restoreHistory() {
+    if (!pluginId) return;
+    try {
+      localStorage.removeItem('etb_chat_' + pluginId);
+      var saved = JSON.parse(localStorage.getItem(historyKey()) || '[]');
+      if (saved.length) { messages = saved; renderMessages(); }
+    } catch (e) {}
+  }
+
+  function bindEvents() {
+    var inp = document.getElementById('inp');
+    var sendBtn = document.getElementById('send_btn');
+    var clearBtn = document.getElementById('hdr_clr');
+
+    sendBtn.addEventListener('click', function () { sendMessage(inp.value); });
+    inp.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(inp.value); }
+    });
+    inp.addEventListener('input', resizeInp);
+
+    clearBtn.addEventListener('click', function () {
+      messages = [];
+      if (pluginId) try { localStorage.removeItem(historyKey()); } catch (e) {}
+      renderEmpty();
+    });
+
+    ['hdr_copy', 'doc_copy'].forEach(function (id) {
+      document.getElementById(id).addEventListener('click', function () { copyDocument(this); });
+    });
+    ['hdr_download', 'doc_download'].forEach(function (id) {
+      document.getElementById(id).addEventListener('click', downloadDocument);
+    });
+
+    document.getElementById('msgs').addEventListener('click', handlePreviewClick);
+    document.getElementById('doc_preview').addEventListener('click', handlePreviewClick);
+
+    document.querySelectorAll('.mobile_tab').forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        document.getElementById('app').setAttribute('data-mobile-tab', tab.dataset.tab);
+        document.querySelectorAll('.mobile_tab').forEach(function (t) {
+          t.classList.toggle('on', t === tab);
+        });
+      });
+    });
+  }
+
+  function resizeInp() {
+    var inp = document.getElementById('inp');
+    inp.style.height = 'auto';
+    inp.style.height = Math.min(inp.scrollHeight, 140) + 'px';
+  }
+
+  function esc(s) {
+    return String(s || '').replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>

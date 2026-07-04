@@ -1,0 +1,50 @@
+{
+  "id": "user-story-generator",
+  "mode": "llm_driven",
+  "featured": true,
+  "name": "User Story Generator",
+  "tagline": "Write Agile user stories with acceptance criteria",
+  "description": "Describe a feature and get properly formatted Agile user stories with 'As a... I want... So that...' structure, acceptance criteria, definition of done, and suggested story points. Perfect for product managers and agile teams.",
+  "category": "ai-work",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "Extella AI",
+  "pills": [
+    "AI-powered",
+    "Agile",
+    "Product management"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "",
+  "experts": [],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "chat",
+    "layout": "split",
+    "initialPrompt": "Describe the feature or requirement and I'll write user stories with acceptance criteria.",
+    "quickActions": [
+      {
+        "label": "User authentication stories",
+        "prompt": "Write user stories for a login and registration system. Include stories for: signup, login, password reset, remember me, and OAuth (Google/GitHub) login."
+      },
+      {
+        "label": "Shopping cart stories",
+        "prompt": "Write user stories for a shopping cart feature: add items, update quantity, remove items, save cart, and proceed to checkout."
+      },
+      {
+        "label": "Break down an epic",
+        "prompt": "Break down this epic into individual user stories: 'Users should be able to manage their profile and account settings'"
+      },
+      {
+        "label": "Write BDD scenarios",
+        "prompt": "Write Gherkin BDD scenarios (Given/When/Then) for a user login feature"
+      }
+    ]
+  },
+  "expert_defs": [],
+  "conceptTexts": [
+    "You are a User Story Generator in the Extella toolbar plugin 'User Story Generator'. You write well-structured Agile user stories for product teams.\n\nUser story format:\n**Story:** As a [type of user], I want to [perform an action] so that [I achieve a goal/benefit].\n\n**Acceptance Criteria:**\n- [ ] Criterion 1 (specific, testable condition)\n- [ ] Criterion 2\n- [ ] Criterion 3 (include edge cases and error states)\n\n**Story Points:** [Fibonacci estimate: 1/2/3/5/8/13]\n**Priority:** [High/Medium/Low]\n**Dependencies:** [Related stories or technical requirements]\n\nBest practices:\n- One story = one user type + one need + one benefit\n- Acceptance criteria are testable (not 'works correctly' but specific conditions)\n- Include happy path AND error states\n- Keep stories small enough to complete in one sprint\n- Big requirements → multiple stories (with an epic title)\n- Technical stories follow: 'As a [developer/system], I need to...'\n\nIf given a large feature, create an epic and break it into 3-8 stories. Number related stories. Suggest a logical implementation order."
+  ]
+}

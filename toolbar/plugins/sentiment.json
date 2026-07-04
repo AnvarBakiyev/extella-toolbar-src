@@ -1,0 +1,68 @@
+{
+  "id": "sentiment",
+  "mode": "form_driven",
+  "featured": true,
+  "name": "Sentiment",
+  "tagline": "Detect tone in text",
+  "description": "Inspired by Sentiment NLP library.",
+  "category": "text",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "github.com/thisandagain/sentiment",
+  "pills": [
+    "GitHub",
+    "Popular",
+    "Open source"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://github.com/thisandagain/sentiment",
+  "experts": [
+    "sentiment_analyze"
+  ],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "form"
+  },
+  "capabilities": [
+    {
+      "id": "analyze",
+      "name": "Sentiment",
+      "expert_name": "sentiment_analyze",
+      "inputs": [
+        {
+          "name": "text",
+          "type": "textarea",
+          "label": "Text",
+          "required": true
+        }
+      ],
+      "outputs": [
+        {
+          "type": "json"
+        }
+      ]
+    }
+  ],
+  "expert_defs": [
+    {
+      "name": "sentiment_analyze",
+      "description": "Inspired by Sentiment NLP library.",
+      "cspl": "fython",
+      "kwargs": {
+        "text": ""
+      },
+      "code": [
+        "def sentiment_analyze(text=''):",
+        "    import re, json",
+        "    pos={'good','great','love','happy','best','amazing'}; neg={'bad','terrible','hate','worst','awful','sad'}",
+        "    try: w=set(re.findall(r'[a-zA-Z]+',text.lower())); s=len(w&pos)-len(w&neg); return json.dumps({'status':'success','output_type':'json','data':{'score':s,'label':'positive' if s>0 else 'negative' if s<0 else 'neutral'}})",
+        "    except Exception as e: return json.dumps({'status':'error','message':str(e)})"
+      ]
+    }
+  ],
+  "conceptTexts": [
+    "Plugin: Sentiment (id: sentiment). Wraps github.com/thisandagain/sentiment."
+  ]
+}

@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Plugin — Extella</title>
+<style>
+:root{--bg:#0a0a0a;--s1:#111;--s2:#161616;--s3:#1e1e1e;--bd:rgba(255,255,255,.07);--bd2:rgba(255,255,255,.12);--tx:#f0f0f0;--tx2:#888;--a:#C67E34;--ar:198,126,52;--err:#f66;--ok:#4caf50}
+[data-lm="1"]{--bg:#f5f5f5;--s1:#fff;--s2:#f0f0f0;--s3:#e8e8e8;--bd:rgba(0,0,0,.08);--bd2:rgba(0,0,0,.14);--tx:#111;--tx2:#666}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--tx);font-size:13px;overflow:hidden}
+#wrap{display:flex;flex-direction:column;height:100%}
+
+/* Header */
+#hdr{display:flex;align-items:center;gap:10px;padding:12px 18px;background:var(--s1);border-bottom:1px solid var(--bd);flex-shrink:0}
+#hdr_dot{width:8px;height:8px;border-radius:50%;background:#C67E34;box-shadow:0 0 8px rgba(198,126,52,.4);flex-shrink:0}
+#hdr_name{font-size:14px;font-weight:700;color:var(--tx)}
+#hdr_sub{font-size:11px;color:var(--tx2);flex:1}
+
+/* Tabs (for multiple capabilities) */
+#tabs{display:none;gap:0;background:var(--s1);border-bottom:1px solid var(--bd);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+#tabs::-webkit-scrollbar{display:none}
+.tab{padding:10px 18px;font-size:12px;font-weight:600;color:var(--tx2);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .12s}
+.tab:hover{color:var(--tx)}
+.tab.on{color:var(--a);border-bottom-color:var(--a)}
+
+/* Body */
+#body{flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:20px}
+
+/* Form */
+.form-section{display:flex;flex-direction:column;gap:14px}
+.form-title{font-size:12px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.06em}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:11px;font-weight:600;color:var(--tx2);user-select:none}
+.field label .req{color:var(--err);margin-left:2px}
+input[type=text],input[type=number],textarea,select{
+  width:100%;background:var(--s2);border:1px solid var(--bd2);border-radius:8px;
+  color:var(--tx);font-size:13px;padding:9px 12px;outline:none;
+  font-family:inherit;transition:border-color .15s;
+}
+input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{border-color:rgba(var(--ar),.5)}
+input[type=text]::placeholder,textarea::placeholder{color:var(--tx2)}
+textarea{resize:vertical;min-height:80px;line-height:1.5}
+select option{background:var(--s2)}
+.color-row{display:flex;align-items:center;gap:10px}
+input[type=color]{width:42px;height:34px;padding:2px;background:var(--s2);border:1px solid var(--bd2);border-radius:8px;cursor:pointer}
+.color-hex{flex:1;font-family:monospace}
+.bool-row{display:flex;align-items:center;gap:8px}
+input[type=checkbox]{width:16px;height:16px;accent-color:var(--a);cursor:pointer}
+.bool-label{font-size:13px;color:var(--tx);cursor:pointer}
+
+/* Run button */
+#run_btn{
+  align-self:flex-start;background:var(--a);border:none;color:#000;font-weight:700;
+  font-size:13px;border-radius:9px;padding:10px 28px;cursor:pointer;
+  transition:opacity .12s;font-family:inherit;
+}
+#run_btn:hover{opacity:.88}
+#run_btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* Result */
+#result_area{display:none;flex-direction:column;gap:12px}
+#result_area.show{display:flex}
+.result-title{font-size:11px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.06em}
+.result-img-wrap{display:flex;flex-direction:column;align-items:flex-start;gap:10px}
+.result-img-wrap img{max-width:100%;border-radius:10px;border:1px solid var(--bd);display:block}
+.dl-btn{
+  background:var(--s3);border:1px solid var(--bd2);color:var(--tx);font-size:12px;
+  font-weight:600;border-radius:7px;padding:7px 16px;cursor:pointer;
+  text-decoration:none;display:inline-block;
+}
+.result-text{background:var(--s2);border:1px solid var(--bd);border-radius:9px;padding:14px;
+  font-size:12px;line-height:1.6;white-space:pre-wrap;word-break:break-word;max-height:400px;overflow-y:auto}
+.result-json{background:var(--s2);border:1px solid var(--bd);border-radius:9px;padding:14px;
+  font-family:monospace;font-size:11.5px;line-height:1.55;white-space:pre-wrap;word-break:break-all;
+  max-height:400px;overflow-y:auto}
+.banner{border-radius:9px;padding:12px 16px;font-size:12px;line-height:1.5}
+.banner.err{background:rgba(255,80,80,.08);border:1px solid rgba(255,80,80,.18);color:var(--err)}
+.banner.ok{background:rgba(76,175,80,.08);border:1px solid rgba(76,175,80,.18);color:var(--ok)}
+
+/* Spinner */
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:16px;height:16px;border:2px solid var(--bd2);border-top-color:var(--a);
+  border-radius:50%;animation:spin .7s linear infinite;display:inline-block;flex-shrink:0}
+.running-row{display:flex;align-items:center;gap:10px;color:var(--tx2);font-size:12px}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="hdr">
+    <div id="hdr_dot"></div>
+    <div id="hdr_name">Plugin</div>
+    <div id="hdr_sub"></div>
+  </div>
+  <div id="tabs"></div>
+  <div id="body">
+    <div class="form-section" id="form_section"></div>
+    <div id="result_area"></div>
+  </div>
+</div>
+
+<script>
+/* __BUILTIN_PLUGINS_DATA__ */
+if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []; }
+
+(function () {
+  'use strict';
+
+  var API_BASE = 'https://api.extella.ai';
+  var plugin = null;
+  var apiToken = '';
+  var activeCap = null;
+
+  // ── Init ────────────────────────────────────────────────────────
+  function resolveHostTheme(forced) {
+    if (forced === 'light' || forced === 'dark') return forced;
+    var t;
+    try { t = localStorage.getItem('color-theme'); } catch (e) {}
+    if (t === 'light' || t === 'dark') return t;
+    try {
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) return 'light';
+    } catch (e) {}
+    return 'dark';
+  }
+
+  function init() {
+    applyTheme();
+    window.addEventListener('storage', function (e) {
+      if (e.key === 'ext_theme' || e.key === 'color-theme') applyTheme();
+    });
+    window.addEventListener('message', function (e) {
+      if (e.data && e.data.type === 'etb_theme') applyTheme(e.data.theme);
+    });
+  }
+
+  (function bootstrap() {
+    var params = new URLSearchParams(window.location.search);
+    var urlId = params.get('id');
+    if (urlId) {
+      startWithPlugin(urlId);
+    } else {
+      window.addEventListener('message', function handler(e) {
+        if (e.data && e.data.type === 'etb_init' && e.data.pluginId) {
+          window.removeEventListener('message', handler);
+          if (e.data.token) apiToken = e.data.token;
+          if (e.data.theme) applyTheme(e.data.theme);
+          startWithPlugin(e.data.pluginId);
+        }
+      });
+    }
+  })();
+
+  function applyTheme(forced) {
+    var t = resolveHostTheme(forced);
+    if (t === 'light') document.documentElement.setAttribute('data-lm', '1');
+    else document.documentElement.removeAttribute('data-lm');
+  }
+
+  function startWithPlugin(id) {
+    var custom = [];
+    try { custom = JSON.parse(localStorage.getItem('etb_plugins_custom_v1') || '[]'); } catch (e) {}
+    var found = custom.filter(function (p) { return p.id === id; })[0];
+    if (!found) found = BUILTIN_PLUGINS_DATA.filter(function (p) { return p.id === id; })[0];
+    if (!found) found = { id: id, name: id, tagline: '', capabilities: [] };
+    plugin = found;
+
+    document.title = (plugin.name || 'Plugin') + ' — Extella';
+    document.getElementById('hdr_name').textContent = plugin.name || id;
+    document.getElementById('hdr_sub').textContent = plugin.tagline || '';
+
+    var caps = plugin.capabilities || [];
+    if (!caps.length) {
+      document.getElementById('form_section').innerHTML =
+        '<div class="banner err">This plugin has no form capabilities configured.</div>';
+      return;
+    }
+
+    if (caps.length > 1) renderTabs(caps);
+    activateCap(caps[0]);
+  }
+
+  // ── Tabs ────────────────────────────────────────────────────────
+  function renderTabs(caps) {
+    var tabsEl = document.getElementById('tabs');
+    tabsEl.style.display = 'flex';
+    tabsEl.innerHTML = caps.map(function (c, i) {
+      return '<div class="tab' + (i === 0 ? ' on' : '') + '" data-idx="' + i + '">' +
+        esc(c.name || c.id) + '</div>';
+    }).join('');
+    tabsEl.querySelectorAll('.tab').forEach(function (t) {
+      t.addEventListener('click', function () {
+        tabsEl.querySelectorAll('.tab').forEach(function (x) { x.classList.remove('on'); });
+        t.classList.add('on');
+        activateCap((plugin.capabilities || [])[parseInt(t.dataset.idx, 10)]);
+      });
+    });
+  }
+
+  // ── Form rendering ───────────────────────────────────────────────
+  function activateCap(cap) {
+    activeCap = cap;
+    clearResult();
+    var sec = document.getElementById('form_section');
+    sec.innerHTML = '';
+
+    if (cap.name) {
+      var title = document.createElement('div');
+      title.className = 'form-title';
+      title.textContent = cap.name;
+      sec.appendChild(title);
+    }
+
+    (cap.inputs || []).forEach(function (inp) {
+      sec.appendChild(buildField(inp));
+    });
+
+    var btn = document.createElement('button');
+    btn.id = 'run_btn';
+    btn.textContent = 'Run';
+    btn.addEventListener('click', function () { runCapability(cap, btn); });
+    sec.appendChild(btn);
+  }
+
+  function buildField(inp) {
+    var wrap = document.createElement('div');
+    wrap.className = 'field';
+
+    var label = document.createElement('label');
+    label.setAttribute('for', 'f_' + inp.name);
+    label.innerHTML = esc(inp.label || inp.name) +
+      (inp.required ? '<span class="req">*</span>' : '');
+    wrap.appendChild(label);
+
+    var ctrl;
+
+    if (inp.type === 'select') {
+      ctrl = document.createElement('select');
+      ctrl.id = 'f_' + inp.name;
+      (inp.options || []).forEach(function (opt) {
+        var o = document.createElement('option');
+        var val = (typeof opt === 'object') ? opt.value : opt;
+        var lbl = (typeof opt === 'object') ? opt.label : opt;
+        o.value = val;
+        o.textContent = lbl;
+        if (val === String(inp.default)) o.selected = true;
+        ctrl.appendChild(o);
+      });
+      wrap.appendChild(ctrl);
+
+    } else if (inp.type === 'bool') {
+      var row = document.createElement('div');
+      row.className = 'bool-row';
+      ctrl = document.createElement('input');
+      ctrl.type = 'checkbox';
+      ctrl.id = 'f_' + inp.name;
+      ctrl.checked = !!inp.default;
+      var boolLbl = document.createElement('label');
+      boolLbl.className = 'bool-label';
+      boolLbl.setAttribute('for', 'f_' + inp.name);
+      boolLbl.textContent = inp.label || inp.name;
+      row.appendChild(ctrl); row.appendChild(boolLbl);
+      wrap.appendChild(row);
+
+    } else if (inp.type === 'color') {
+      var row = document.createElement('div');
+      row.className = 'color-row';
+      ctrl = document.createElement('input');
+      ctrl.type = 'color';
+      ctrl.id = 'f_' + inp.name;
+      // default may be "000000" (no #) or "#000000"
+      var defHex = String(inp.default || '000000').replace(/^#/, '');
+      ctrl.value = '#' + defHex;
+      var hexInp = document.createElement('input');
+      hexInp.type = 'text';
+      hexInp.className = 'color-hex';
+      hexInp.id = 'f_' + inp.name + '_hex';
+      hexInp.value = defHex.toUpperCase();
+      hexInp.maxLength = 6;
+      hexInp.placeholder = 'RRGGBB';
+      ctrl.addEventListener('input', function () {
+        hexInp.value = ctrl.value.replace('#', '').toUpperCase();
+      });
+      hexInp.addEventListener('input', function () {
+        var v = hexInp.value.replace(/[^0-9a-fA-F]/g, '').slice(0, 6);
+        hexInp.value = v.toUpperCase();
+        if (v.length === 6) ctrl.value = '#' + v;
+      });
+      row.appendChild(ctrl); row.appendChild(hexInp);
+      wrap.appendChild(row);
+
+    } else if (inp.type === 'textarea') {
+      ctrl = document.createElement('textarea');
+      ctrl.id = 'f_' + inp.name;
+      ctrl.placeholder = inp.placeholder || '';
+      ctrl.value = String(inp.default || '');
+      wrap.appendChild(ctrl);
+
+    } else if (inp.type === 'int' || inp.type === 'float') {
+      ctrl = document.createElement('input');
+      ctrl.type = 'number';
+      ctrl.id = 'f_' + inp.name;
+      ctrl.value = inp.default !== undefined ? String(inp.default) : '';
+      if (inp.min !== undefined) ctrl.min = inp.min;
+      if (inp.max !== undefined) ctrl.max = inp.max;
+      if (inp.type === 'float') ctrl.step = 'any';
+      wrap.appendChild(ctrl);
+
+    } else {
+      // text (default)
+      ctrl = document.createElement('input');
+      ctrl.type = 'text';
+      ctrl.id = 'f_' + inp.name;
+      ctrl.placeholder = inp.placeholder || '';
+      ctrl.value = String(inp.default || '');
+      if (inp.required) ctrl.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          var btn = document.getElementById('run_btn');
+          if (btn) btn.click();
+        }
+      });
+      wrap.appendChild(ctrl);
+    }
+
+    return wrap;
+  }
+
+  // ── Collect form values ──────────────────────────────────────────
+  function collectParams(cap) {
+    var params = {};
+    (cap.inputs || []).forEach(function (inp) {
+      var el = document.getElementById('f_' + inp.name);
+      if (!el) return;
+      if (inp.type === 'bool') {
+        params[inp.name] = el.checked ? '1' : '0';
+      } else if (inp.type === 'color') {
+        // Pass hex without # (as expected by expert kwargs)
+        var hexEl = document.getElementById('f_' + inp.name + '_hex');
+        params[inp.name] = (hexEl ? hexEl.value : el.value.replace('#', '')).toUpperCase();
+      } else if (inp.type === 'int') {
+        params[inp.name] = String(Math.round(parseFloat(el.value) || 0));
+      } else if (inp.type === 'float') {
+        params[inp.name] = String(parseFloat(el.value) || 0);
+      } else {
+        params[inp.name] = el.value;
+      }
+    });
+    return params;
+  }
+
+  function validate(cap, params) {
+    var missing = (cap.inputs || []).filter(function (inp) {
+      return inp.required && !String(params[inp.name] || '').trim();
+    }).map(function (inp) { return inp.label || inp.name; });
+    return missing;
+  }
+
+  // ── Run ─────────────────────────────────────────────────────────
+  function runCapability(cap, btn) {
+    var params = collectParams(cap);
+    var missing = validate(cap, params);
+    if (missing.length) {
+      showResult({ status: 'error', message: 'Required fields missing: ' + missing.join(', ') });
+      return;
+    }
+
+    if (!apiToken) {
+      showResult({ status: 'error', message: 'Could not connect to your Extella account. Please reopen the plugin from the toolbar.' });
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Running…';
+    clearResult();
+
+    var ra = document.getElementById('result_area');
+    ra.classList.add('show');
+    ra.innerHTML = '<div class="running-row"><span class="spinner"></span><span>Running expert — this may take a few seconds…</span></div>';
+
+    var expertName = cap.expert_name || cap.id;
+
+    fetch(API_BASE + '/api/expert/run', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Auth-Token': apiToken,
+        'X-Profile-Id': 'default',
+        'X-Agent-Id': 'agent_extella_default'
+      },
+      body: JSON.stringify({ expert_name: expertName, params: params })
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      btn.disabled = false;
+      btn.textContent = 'Run';
+      // data.result can be:
+      //   - a parsed JSON object (ideal)
+      //   - a JSON string that needs parsing
+      //   - a Python repr string like "{'status':'success',...}"
+      var result = data.result || data;
+      if (typeof result === 'string') {
+        // Try JSON first, then Python repr → JSON conversion
+        try {
+          result = JSON.parse(result);
+        } catch (e) {
+          try {
+            result = JSON.parse(
+              result
+                .replace(/'/g, '"')
+                .replace(/\bTrue\b/g, 'true')
+                .replace(/\bFalse\b/g, 'false')
+                .replace(/\bNone\b/g, 'null')
+            );
+          } catch (e2) {
+            result = { status: 'error', message: 'Could not parse expert result: ' + String(result).slice(0, 200) };
+          }
+        }
+      }
+      showResult(result);
+    })
+    .catch(function (e) {
+      btn.disabled = false;
+      btn.textContent = 'Run';
+      showResult({ status: 'error', message: 'Network error: ' + e.message });
+    });
+  }
+
+  // ── Result rendering ─────────────────────────────────────────────
+  function clearResult() {
+    var ra = document.getElementById('result_area');
+    ra.classList.remove('show');
+    ra.innerHTML = '';
+  }
+
+  function showResult(result) {
+    var ra = document.getElementById('result_area');
+    ra.classList.add('show');
+    ra.innerHTML = '';
+
+    var title = document.createElement('div');
+    title.className = 'result-title';
+    title.textContent = 'Result';
+    ra.appendChild(title);
+
+    if (!result || result.status === 'error') {
+      var banner = document.createElement('div');
+      banner.className = 'banner err';
+      banner.textContent = (result && result.message) || 'Unknown error';
+      ra.appendChild(banner);
+      return;
+    }
+
+    var otype = result.output_type || '';
+
+    if (otype === 'image_base64' && result.data) {
+      var imgWrap = document.createElement('div');
+      imgWrap.className = 'result-img-wrap';
+      var img = document.createElement('img');
+      img.src = 'data:image/png;base64,' + result.data;
+      img.alt = result.filename || 'result';
+      imgWrap.appendChild(img);
+
+      if (result.filename) {
+        var dlBtn = document.createElement('a');
+        dlBtn.className = 'dl-btn';
+        dlBtn.download = result.filename;
+        dlBtn.href = img.src;
+        dlBtn.textContent = 'Download ' + result.filename;
+        imgWrap.appendChild(dlBtn);
+      }
+      ra.appendChild(imgWrap);
+
+    } else if (otype === 'text' || (otype === '' && typeof result.data === 'string')) {
+      var pre = document.createElement('div');
+      pre.className = 'result-text';
+      pre.textContent = result.data || JSON.stringify(result, null, 2);
+      ra.appendChild(pre);
+
+    } else if (otype === 'file_base64' && result.data && result.filename) {
+      var ext = result.filename.split('.').pop().toLowerCase();
+      var mime = { png: 'image/png', jpg: 'image/jpeg', gif: 'image/gif',
+                   pdf: 'application/pdf', zip: 'application/zip' }[ext] || 'application/octet-stream';
+      var dlBtn2 = document.createElement('a');
+      dlBtn2.className = 'dl-btn';
+      dlBtn2.download = result.filename;
+      dlBtn2.href = 'data:' + mime + ';base64,' + result.data;
+      dlBtn2.textContent = 'Download ' + result.filename;
+      ra.appendChild(dlBtn2);
+
+    } else {
+      // JSON fallback
+      var jsonDiv = document.createElement('pre');
+      jsonDiv.className = 'result-json';
+      var display = result.data !== undefined ? result.data : result;
+      jsonDiv.textContent = typeof display === 'object'
+        ? JSON.stringify(display, null, 2) : String(display);
+      ra.appendChild(jsonDiv);
+    }
+  }
+
+  // ── Utils ────────────────────────────────────────────────────────
+  function esc(s) {
+    return String(s || '').replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>

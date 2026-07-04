@@ -1,0 +1,41 @@
+{
+  "id": "highlight-js",
+  "mode": "llm_driven",
+  "featured": true,
+  "name": "Highlight.js",
+  "tagline": "Syntax-highlight code",
+  "description": "Inspired by Highlight.js — 190+ languages.",
+  "category": "developer",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "github.com/highlightjs/highlight.js",
+  "pills": [
+    "GitHub",
+    "AI",
+    "Popular"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://github.com/highlightjs/highlight.js",
+  "experts": [],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "chat",
+    "initialPrompt": "You identify code language and explain syntax with highlighted annotations.",
+    "quickActions": [
+      {
+        "label": "Try an example",
+        "prompt": "Show me an example using Highlight.js."
+      },
+      {
+        "label": "Explain how it works",
+        "prompt": "Explain how Highlight.js works for a beginner."
+      }
+    ]
+  },
+  "expert_defs": [],
+  "conceptTexts": [
+    "You are a Highlight.js assistant. You identify code language and explain syntax with highlighted annotations."
+  ]
+}

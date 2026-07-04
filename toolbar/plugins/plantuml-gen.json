@@ -1,0 +1,41 @@
+{
+  "id": "plantuml-gen",
+  "mode": "llm_driven",
+  "featured": true,
+  "name": "PlantUML",
+  "tagline": "Generate UML diagrams",
+  "description": "Inspired by PlantUML — text-based UML diagrams.",
+  "category": "developer",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "github.com/plantuml/plantuml",
+  "pills": [
+    "GitHub",
+    "AI",
+    "Popular"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://github.com/plantuml/plantuml",
+  "experts": [],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "chat",
+    "initialPrompt": "You generate PlantUML code in @startuml/@enduml blocks for sequence, class, activity diagrams.",
+    "quickActions": [
+      {
+        "label": "Try an example",
+        "prompt": "Show me an example using PlantUML."
+      },
+      {
+        "label": "Explain how it works",
+        "prompt": "Explain how PlantUML works for a beginner."
+      }
+    ]
+  },
+  "expert_defs": [],
+  "conceptTexts": [
+    "You are a PlantUML assistant. You generate PlantUML code in @startuml/@enduml blocks for sequence, class, activity diagrams."
+  ]
+}

@@ -1,0 +1,105 @@
+{
+  "id": "json-formatter",
+  "mode": "form_driven",
+  "featured": true,
+  "name": "JSON Formatter",
+  "tagline": "Format, validate and minify JSON instantly",
+  "description": "Prettify minified JSON with proper indentation, or minify formatted JSON for transport. Validates JSON syntax and shows a clear error message if invalid. Useful for API responses, config files, and debugging.",
+  "category": "data",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "json (Python stdlib)",
+  "pills": [
+    "No AI needed",
+    "Instant",
+    "Offline"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://docs.python.org/3/library/json.html",
+  "experts": [
+    "json_formatter_format"
+  ],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "form"
+  },
+  "capabilities": [
+    {
+      "id": "format_json",
+      "name": "Format JSON",
+      "expert_name": "json_formatter_format",
+      "inputs": [
+        {
+          "name": "json_text",
+          "type": "textarea",
+          "label": "JSON Input",
+          "required": true,
+          "placeholder": "{\"name\":\"John\",\"age\":30}"
+        },
+        {
+          "name": "operation",
+          "type": "select",
+          "label": "Operation",
+          "required": false,
+          "default": "prettify",
+          "options": [
+            {
+              "value": "prettify",
+              "label": "Prettify (format with indentation)"
+            },
+            {
+              "value": "minify",
+              "label": "Minify (compress to one line)"
+            }
+          ]
+        },
+        {
+          "name": "indent",
+          "type": "int",
+          "label": "Indent size (spaces)",
+          "required": false,
+          "default": 2,
+          "min": 1,
+          "max": 8
+        }
+      ],
+      "outputs": [
+        {
+          "type": "text"
+        }
+      ]
+    }
+  ],
+  "expert_defs": [
+    {
+      "name": "json_formatter_format",
+      "description": "Formats or minifies JSON text. Params: json_text (raw JSON string), operation (prettify/minify), indent (indent spaces, default 2). Returns JSON with output_type text containing formatted/minified JSON.",
+      "cspl": "fython",
+      "kwargs": {
+        "json_text": "{}",
+        "operation": "prettify",
+        "indent": "2"
+      },
+      "code": [
+        "def json_formatter_format(json_text='{}', operation='prettify', indent='2'):",
+        "    import json",
+        "    try:",
+        "        parsed = json.loads(json_text)",
+        "        if operation == 'minify':",
+        "            result = json.dumps(parsed, separators=(',', ':'), ensure_ascii=False)",
+        "        else:",
+        "            result = json.dumps(parsed, indent=int(indent), ensure_ascii=False)",
+        "        return json.dumps({'status': 'success', 'output_type': 'text', 'data': result})",
+        "    except json.JSONDecodeError as e:",
+        "        return json.dumps({'status': 'error', 'message': 'Invalid JSON: ' + str(e)})",
+        "    except Exception as e:",
+        "        return json.dumps({'status': 'error', 'message': str(e)})"
+      ]
+    }
+  ],
+  "conceptTexts": [
+    "Plugin: JSON Formatter (id: json-formatter). Expert json_formatter_format prettifies or minifies JSON. Params: json_text, operation (prettify/minify), indent (1-8). Returns {output_type: 'text', data: '<formatted JSON>'}."
+  ]
+}

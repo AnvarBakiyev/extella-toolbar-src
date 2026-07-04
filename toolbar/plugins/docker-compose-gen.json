@@ -1,0 +1,50 @@
+{
+  "id": "docker-compose-gen",
+  "mode": "llm_driven",
+  "featured": true,
+  "name": "Docker Compose Generator",
+  "tagline": "Generate docker-compose.yml for any tech stack",
+  "description": "Describe your application stack and get a ready-to-use docker-compose.yml file. Includes proper networking, volumes, environment variables, health checks, and port mappings. Supports common stacks: Node.js, Python, React, PostgreSQL, Redis, nginx, and more.",
+  "category": "developer",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "Extella AI",
+  "pills": [
+    "AI-powered",
+    "Docker",
+    "DevOps"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://docs.docker.com/compose/",
+  "experts": [],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "chat",
+    "layout": "split",
+    "initialPrompt": "Describe your application stack and I'll generate a docker-compose.yml file.",
+    "quickActions": [
+      {
+        "label": "Node.js + PostgreSQL + Redis",
+        "prompt": "Generate docker-compose.yml for a Node.js Express API with PostgreSQL database and Redis cache"
+      },
+      {
+        "label": "Django + PostgreSQL + nginx",
+        "prompt": "Generate docker-compose.yml for a Django app with PostgreSQL, nginx reverse proxy, and Celery worker"
+      },
+      {
+        "label": "React + Node + MongoDB",
+        "prompt": "Generate docker-compose.yml for a full-stack app: React frontend, Node.js backend API, and MongoDB database"
+      },
+      {
+        "label": "Microservices setup",
+        "prompt": "Generate docker-compose.yml for a microservices architecture with API gateway, auth service, user service, and shared PostgreSQL"
+      }
+    ]
+  },
+  "expert_defs": [],
+  "conceptTexts": [
+    "You are a Docker Compose Generator in the Extella toolbar plugin 'Docker Compose Generator'. You generate production-quality docker-compose.yml files.\n\nFor every docker-compose.yml:\n1. Use appropriate Docker images (official images with specific version tags, not 'latest')\n2. Configure all services with: image, container_name, environment variables (use .env file refs), ports, volumes, networks, restart policy, depends_on\n3. Add health checks for databases and critical services\n4. Create named volumes for persistent data\n5. Define a custom network for service isolation\n6. Include a companion .env.example file showing required variables\n7. Add comments explaining non-obvious configuration choices\n\nCompose version: Use compose spec (no version key, requires Docker Compose v2)\n\nCommon patterns:\n- Database: always use health checks + depends_on condition: service_healthy\n- Secrets: never hardcode passwords, always use ${ENV_VAR} references\n- Dev mode: include volume mounts for hot reload when applicable\n- Nginx: include a basic nginx.conf snippet if used as reverse proxy"
+  ]
+}

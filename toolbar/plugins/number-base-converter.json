@@ -1,0 +1,103 @@
+{
+  "id": "number-base-converter",
+  "mode": "form_driven",
+  "featured": true,
+  "name": "Number Base Converter",
+  "tagline": "Convert numbers between decimal, binary, hex and octal",
+  "description": "Convert any integer between decimal (base 10), binary (base 2), hexadecimal (base 16), and octal (base 8). Instantly see the same value across all bases. Essential for programming, networking, and low-level debugging.",
+  "category": "text",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "int/bin/hex/oct (Python stdlib)",
+  "pills": [
+    "No AI needed",
+    "Instant",
+    "Offline"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://docs.python.org/3/library/functions.html",
+  "experts": [
+    "number_base_converter_convert"
+  ],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "form"
+  },
+  "capabilities": [
+    {
+      "id": "convert_base",
+      "name": "Convert Number Base",
+      "expert_name": "number_base_converter_convert",
+      "inputs": [
+        {
+          "name": "number",
+          "type": "text",
+          "label": "Input Number",
+          "required": true,
+          "placeholder": "255"
+        },
+        {
+          "name": "from_base",
+          "type": "select",
+          "label": "From Base",
+          "required": false,
+          "default": "10",
+          "options": [
+            {
+              "value": "2",
+              "label": "Binary (base 2)"
+            },
+            {
+              "value": "8",
+              "label": "Octal (base 8)"
+            },
+            {
+              "value": "10",
+              "label": "Decimal (base 10)"
+            },
+            {
+              "value": "16",
+              "label": "Hexadecimal (base 16)"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "type": "json"
+        }
+      ]
+    }
+  ],
+  "expert_defs": [
+    {
+      "name": "number_base_converter_convert",
+      "description": "Converts an integer from one base to all other bases. Params: number (string representation of number), from_base (2/8/10/16, default 10). Returns JSON with output_type json showing decimal, binary, octal and hex values.",
+      "cspl": "fython",
+      "kwargs": {
+        "number": "0",
+        "from_base": "10"
+      },
+      "code": [
+        "def number_base_converter_convert(number='0', from_base='10'):",
+        "    import json",
+        "    try:",
+        "        n = int(number.strip(), int(from_base))",
+        "        result = {",
+        "            'decimal':     str(n),",
+        "            'binary':      bin(n)[2:],",
+        "            'octal':       oct(n)[2:],",
+        "            'hexadecimal': hex(n)[2:].upper()",
+        "        }",
+        "        return json.dumps({'status': 'success', 'output_type': 'json', 'data': result})",
+        "    except Exception as e:",
+        "        return json.dumps({'status': 'error', 'message': str(e)})"
+      ]
+    }
+  ],
+  "conceptTexts": [
+    "Plugin: Number Base Converter (id: number-base-converter). Expert number_base_converter_convert converts integers between decimal, binary, octal, and hexadecimal. Params: number (string), from_base (2/8/10/16). Returns {output_type: 'json', data: {decimal, binary, octal, hexadecimal}}."
+  ]
+}

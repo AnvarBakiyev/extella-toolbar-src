@@ -1,0 +1,82 @@
+{
+  "id": "lodash-get",
+  "mode": "form_driven",
+  "featured": true,
+  "name": "Lodash Get",
+  "tagline": "Safely get nested object properties",
+  "description": "Inspired by lodash.get — safely access deeply nested properties without TypeError on undefined paths.",
+  "category": "data",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "github.com/lodash/lodash",
+  "pills": [
+    "GitHub",
+    "Popular",
+    "Open source"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://github.com/lodash/lodash",
+  "experts": [
+    "lodash_get_value"
+  ],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "form"
+  },
+  "capabilities": [
+    {
+      "id": "get_nested",
+      "name": "Lodash Get",
+      "expert_name": "lodash_get_value",
+      "inputs": [
+        {
+          "name": "json_text",
+          "type": "textarea",
+          "label": "JSON object",
+          "required": true
+        },
+        {
+          "name": "path",
+          "type": "text",
+          "label": "Property path",
+          "required": true,
+          "placeholder": "a.b[0].c"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "json"
+        }
+      ]
+    }
+  ],
+  "expert_defs": [
+    {
+      "name": "lodash_get_value",
+      "description": "Inspired by lodash.get — safely access deeply nested properties without TypeError on undefined paths.",
+      "cspl": "fython",
+      "kwargs": {
+        "json_text": "",
+        "path": ""
+      },
+      "code": [
+        "def lodash_get_value(json_text='', path=''):",
+        "    import json",
+        "    try:",
+        "        data = json.loads(json_text); cur = data",
+        "        for part in path.replace('[', '.').replace(']', '').split('.'):",
+        "            if not part: continue",
+        "            if isinstance(cur, dict): cur = cur.get(part)",
+        "            elif isinstance(cur, list) and part.isdigit(): cur = cur[int(part)]",
+        "            else: cur = None; break",
+        "        return json.dumps({'status':'success','output_type':'json','data':{'path':path,'value':cur}})",
+        "    except Exception as e: return json.dumps({'status':'error','message':str(e)})"
+      ]
+    }
+  ],
+  "conceptTexts": [
+    "Plugin: Lodash Get (id: lodash-get). Wraps github.com/lodash/lodash."
+  ]
+}

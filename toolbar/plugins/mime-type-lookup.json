@@ -1,0 +1,101 @@
+{
+  "id": "mime-type-lookup",
+  "mode": "form_driven",
+  "featured": true,
+  "name": "MIME Type Lookup",
+  "tagline": "Find MIME types for any file extension",
+  "description": "Look up the MIME type (Content-Type) for any file extension, or reverse-lookup file extensions for a given MIME type. Essential for HTTP headers, file uploads, and API integrations.",
+  "category": "developer",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "mimetypes (Python stdlib)",
+  "pills": [
+    "No AI needed",
+    "Instant",
+    "Offline"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://docs.python.org/3/library/mimetypes.html",
+  "experts": [
+    "mime_type_lookup_find"
+  ],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "form"
+  },
+  "capabilities": [
+    {
+      "id": "find_mime",
+      "name": "Find MIME Type",
+      "expert_name": "mime_type_lookup_find",
+      "inputs": [
+        {
+          "name": "query",
+          "type": "text",
+          "label": "File Extension or MIME Type",
+          "required": true,
+          "placeholder": ".pdf or image/png or video/mp4"
+        },
+        {
+          "name": "direction",
+          "type": "select",
+          "label": "Lookup Direction",
+          "required": false,
+          "default": "ext_to_mime",
+          "options": [
+            {
+              "value": "ext_to_mime",
+              "label": "Extension → MIME type (.pdf → application/pdf)"
+            },
+            {
+              "value": "mime_to_ext",
+              "label": "MIME type → Extensions (image/png → .png)"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "type": "json"
+        }
+      ]
+    }
+  ],
+  "expert_defs": [
+    {
+      "name": "mime_type_lookup_find",
+      "description": "Looks up MIME type for a file extension, or extensions for a MIME type. Params: query (extension like .pdf or MIME type like image/png), direction (ext_to_mime or mime_to_ext). Returns JSON with output_type json.",
+      "cspl": "fython",
+      "kwargs": {
+        "query": ".pdf",
+        "direction": "ext_to_mime"
+      },
+      "code": [
+        "def mime_type_lookup_find(query='.pdf', direction='ext_to_mime'):",
+        "    import mimetypes, json",
+        "    try:",
+        "        mimetypes.init()",
+        "        query = query.strip()",
+        "        if direction == 'ext_to_mime':",
+        "            if not query.startswith('.'): query = '.' + query",
+        "            mime_type, encoding = mimetypes.guess_type('file' + query)",
+        "            if mime_type:",
+        "                category = mime_type.split('/')[0]",
+        "                result = {'extension': query, 'mime_type': mime_type, 'encoding': encoding or 'none', 'category': category}",
+        "            else:",
+        "                result = {'extension': query, 'mime_type': 'unknown', 'note': 'No MIME type found for this extension'}",
+        "        else:",
+        "            exts = mimetypes.guess_all_extensions(query)",
+        "            result = {'mime_type': query, 'extensions': exts if exts else [], 'note': '' if exts else 'No extensions found for this MIME type'}",
+        "        return json.dumps({'status': 'success', 'output_type': 'json', 'data': result})",
+        "    except Exception as e:",
+        "        return json.dumps({'status': 'error', 'message': str(e)})"
+      ]
+    }
+  ],
+  "conceptTexts": [
+    "Plugin: MIME Type Lookup (id: mime-type-lookup). Expert mime_type_lookup_find looks up MIME types by extension or extensions by MIME type. Params: query (extension or MIME string), direction (ext_to_mime/mime_to_ext). Returns {output_type: 'json', data: {mime_type, extension(s), category}}."
+  ]
+}

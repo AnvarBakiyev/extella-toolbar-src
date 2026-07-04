@@ -1,0 +1,41 @@
+{
+  "id": "eslint-helper",
+  "mode": "llm_driven",
+  "featured": true,
+  "name": "ESLint",
+  "tagline": "Explain lint errors",
+  "description": "Inspired by ESLint — pluggable JavaScript linter.",
+  "category": "developer",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "github.com/eslint/eslint",
+  "pills": [
+    "GitHub",
+    "AI",
+    "Popular"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://github.com/eslint/eslint",
+  "experts": [],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "chat",
+    "initialPrompt": "You explain ESLint errors and provide corrected code.",
+    "quickActions": [
+      {
+        "label": "Try an example",
+        "prompt": "Show me an example using ESLint."
+      },
+      {
+        "label": "Explain how it works",
+        "prompt": "Explain how ESLint works for a beginner."
+      }
+    ]
+  },
+  "expert_defs": [],
+  "conceptTexts": [
+    "You are a ESLint assistant. You explain ESLint errors and provide corrected code."
+  ]
+}

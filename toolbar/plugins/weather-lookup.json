@@ -1,0 +1,108 @@
+{
+  "id": "weather-lookup",
+  "mode": "form_driven",
+  "featured": true,
+  "name": "Weather Lookup",
+  "tagline": "Current weather and 3-day forecast for any city",
+  "description": "Get current weather conditions and a 3-day forecast for any city in the world. Shows temperature (°C/°F), feels like, humidity, wind speed, and conditions. Uses the free wttr.in service — no API key required.",
+  "category": "web",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "wttr.in (free, no auth)",
+  "pills": [
+    "Free API",
+    "No auth",
+    "Instant"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://wttr.in",
+  "experts": [
+    "weather_lookup_get"
+  ],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "form"
+  },
+  "capabilities": [
+    {
+      "id": "get_weather",
+      "name": "Get Weather",
+      "expert_name": "weather_lookup_get",
+      "inputs": [
+        {
+          "name": "city",
+          "type": "text",
+          "label": "City",
+          "required": true,
+          "placeholder": "London or New York or Tokyo"
+        },
+        {
+          "name": "units",
+          "type": "select",
+          "label": "Temperature Units",
+          "required": false,
+          "default": "metric",
+          "options": [
+            {
+              "value": "metric",
+              "label": "Metric (°C)"
+            },
+            {
+              "value": "imperial",
+              "label": "Imperial (°F)"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "type": "json"
+        }
+      ]
+    }
+  ],
+  "expert_defs": [
+    {
+      "name": "weather_lookup_get",
+      "description": "Fetches current weather and 3-day forecast for a city using wttr.in. Params: city (city name), units (metric/imperial). Returns JSON with output_type json containing current conditions and forecast.",
+      "cspl": "fython",
+      "kwargs": {
+        "city": "London",
+        "units": "metric"
+      },
+      "code": [
+        "def weather_lookup_get(city='London', units='metric'):",
+        "    import urllib.request, urllib.parse, json",
+        "    try:",
+        "        city_enc = urllib.parse.quote(city.strip())",
+        "        url = 'https://wttr.in/' + city_enc + '?format=j1'",
+        "        req = urllib.request.Request(url, headers={'User-Agent': 'ExtellaTool/1.0'})",
+        "        with urllib.request.urlopen(req, timeout=10) as r:",
+        "            data = json.loads(r.read().decode())",
+        "        cur = data['current_condition'][0]",
+        "        area = data.get('nearest_area', [{}])[0]",
+        "        area_name = area.get('areaName', [{}])[0].get('value', city)",
+        "        country = area.get('country', [{}])[0].get('value', '')",
+        "        if units == 'imperial':",
+        "            temp = cur['temp_F'] + '°F'",
+        "            feels = cur['FeelsLikeF'] + '°F'",
+        "        else:",
+        "            temp = cur['temp_C'] + '°C'",
+        "            feels = cur['FeelsLikeC'] + '°C'",
+        "        desc = cur.get('weatherDesc', [{}])[0].get('value', '')",
+        "        forecast = []",
+        "        for day in data.get('weather', [])[:3]:",
+        "            forecast.append({'date': day.get('date'), 'max': (day.get('maxtempC') + '°C') if units == 'metric' else (day.get('maxtempF') + '°F'), 'min': (day.get('mintempC') + '°C') if units == 'metric' else (day.get('mintempF') + '°F'), 'description': day.get('hourly', [{}])[4].get('weatherDesc', [{}])[0].get('value', '')})",
+        "        result = {'location': area_name + (', ' + country if country else ''), 'temperature': temp, 'feels_like': feels, 'description': desc, 'humidity': cur.get('humidity') + '%', 'wind_kmph': cur.get('windspeedKmph') + ' km/h', 'visibility_km': cur.get('visibility') + ' km', 'forecast': forecast}",
+        "        return json.dumps({'status': 'success', 'output_type': 'json', 'data': result})",
+        "    except Exception as e:",
+        "        return json.dumps({'status': 'error', 'message': str(e)})"
+      ]
+    }
+  ],
+  "conceptTexts": [
+    "Plugin: Weather Lookup (id: weather-lookup). Expert weather_lookup_get fetches current weather and 3-day forecast using wttr.in (free). Params: city (city name), units (metric/imperial). Returns {output_type: 'json', data: {location, temperature, feels_like, description, humidity, wind, forecast}}."
+  ]
+}

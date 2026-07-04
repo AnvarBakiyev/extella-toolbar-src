@@ -1,0 +1,82 @@
+{
+  "id": "semver-compare",
+  "mode": "form_driven",
+  "featured": true,
+  "name": "SemVer Compare",
+  "tagline": "Compare semantic version numbers",
+  "description": "Inspired by node-semver — the npm semver library used by every package manager. Compare, sort, and validate semantic version strings.",
+  "category": "developer",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "github.com/npm/node-semver",
+  "pills": [
+    "GitHub",
+    "Popular",
+    "Open source"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://github.com/npm/node-semver",
+  "experts": [
+    "semver_compare_versions"
+  ],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "form"
+  },
+  "capabilities": [
+    {
+      "id": "compare",
+      "name": "SemVer Compare",
+      "expert_name": "semver_compare_versions",
+      "inputs": [
+        {
+          "name": "v1",
+          "type": "text",
+          "label": "Version A",
+          "required": true,
+          "placeholder": "1.2.3"
+        },
+        {
+          "name": "v2",
+          "type": "text",
+          "label": "Version B",
+          "required": true,
+          "placeholder": "1.10.0"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "json"
+        }
+      ]
+    }
+  ],
+  "expert_defs": [
+    {
+      "name": "semver_compare_versions",
+      "description": "Inspired by node-semver — the npm semver library used by every package manager. Compare, sort, and validate semantic version strings.",
+      "cspl": "fython",
+      "kwargs": {
+        "v1": "",
+        "v2": ""
+      },
+      "code": [
+        "def semver_compare_versions(v1='', v2=''):",
+        "    import json, re",
+        "    def parse(v):",
+        "        m = re.match(r'(\\d+)\\.(\\d+)\\.(\\d+)', v.strip())",
+        "        return tuple(int(x) for x in m.groups()) if m else (0,0,0)",
+        "    try:",
+        "        a, b = parse(v1), parse(v2)",
+        "        cmp = 'equal' if a==b else ('greater' if a>b else 'less')",
+        "        return json.dumps({'status':'success','output_type':'json','data':{'v1':v1,'v2':v2,'comparison':cmp}})",
+        "    except Exception as e: return json.dumps({'status':'error','message':str(e)})"
+      ]
+    }
+  ],
+  "conceptTexts": [
+    "Plugin: SemVer Compare (id: semver-compare). Wraps github.com/npm/node-semver."
+  ]
+}

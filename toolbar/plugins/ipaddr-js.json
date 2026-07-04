@@ -1,0 +1,70 @@
+{
+  "id": "ipaddr-js",
+  "mode": "form_driven",
+  "featured": true,
+  "name": "IP Address Parser",
+  "tagline": "Parse and analyze IP addresses",
+  "description": "Inspired by ipaddr.js — a JavaScript library for parsing, validating, and manipulating IPv4 and IPv6 addresses.",
+  "category": "web",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "github.com/whitequark/ipaddr.js",
+  "pills": [
+    "GitHub",
+    "Popular",
+    "Open source"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://github.com/whitequark/ipaddr.js",
+  "experts": [
+    "ipaddr_js_parse"
+  ],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "form"
+  },
+  "capabilities": [
+    {
+      "id": "parse_ip",
+      "name": "IP Address Parser",
+      "expert_name": "ipaddr_js_parse",
+      "inputs": [
+        {
+          "name": "ip",
+          "type": "text",
+          "label": "IP address",
+          "required": true,
+          "placeholder": "192.168.1.1 or 2001:db8::1"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "json"
+        }
+      ]
+    }
+  ],
+  "expert_defs": [
+    {
+      "name": "ipaddr_js_parse",
+      "description": "Inspired by ipaddr.js — a JavaScript library for parsing, validating, and manipulating IPv4 and IPv6 addresses.",
+      "cspl": "fython",
+      "kwargs": {
+        "ip": ""
+      },
+      "code": [
+        "def ipaddr_js_parse(ip=''):",
+        "    import json, ipaddress",
+        "    try:",
+        "        addr = ipaddress.ip_address(ip.strip())",
+        "        return json.dumps({'status':'success','output_type':'json','data':{'ip':str(addr),'version':addr.version,'is_private':addr.is_private,'is_global':addr.is_global,'is_loopback':addr.is_loopback}})",
+        "    except Exception as e: return json.dumps({'status':'error','message':str(e)})"
+      ]
+    }
+  ],
+  "conceptTexts": [
+    "Plugin: IP Address Parser (id: ipaddr-js). Wraps github.com/whitequark/ipaddr.js."
+  ]
+}

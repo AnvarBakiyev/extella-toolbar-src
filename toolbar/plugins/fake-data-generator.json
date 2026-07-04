@@ -1,0 +1,156 @@
+{
+  "id": "fake-data-generator",
+  "mode": "form_driven",
+  "featured": true,
+  "name": "Fake Data Generator",
+  "tagline": "Generate realistic test user profiles",
+  "description": "Generate realistic fake user profiles for testing and development: name, email, phone, address, avatar, nationality and more. Uses the free RandomUser.me API — no account or API key required.",
+  "category": "web",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "randomuser.me (free, no auth)",
+  "pills": [
+    "Free API",
+    "No auth",
+    "Test data"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://randomuser.me",
+  "experts": [
+    "fake_data_generator_generate"
+  ],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "form"
+  },
+  "capabilities": [
+    {
+      "id": "generate_users",
+      "name": "Generate Fake Users",
+      "expert_name": "fake_data_generator_generate",
+      "inputs": [
+        {
+          "name": "count",
+          "type": "int",
+          "label": "Number of Users",
+          "required": false,
+          "default": 3,
+          "min": 1,
+          "max": 10
+        },
+        {
+          "name": "nationality",
+          "type": "select",
+          "label": "Nationality",
+          "required": false,
+          "default": "",
+          "options": [
+            {
+              "value": "",
+              "label": "Random"
+            },
+            {
+              "value": "us",
+              "label": "American"
+            },
+            {
+              "value": "gb",
+              "label": "British"
+            },
+            {
+              "value": "de",
+              "label": "German"
+            },
+            {
+              "value": "fr",
+              "label": "French"
+            },
+            {
+              "value": "au",
+              "label": "Australian"
+            },
+            {
+              "value": "ca",
+              "label": "Canadian"
+            },
+            {
+              "value": "es",
+              "label": "Spanish"
+            },
+            {
+              "value": "fi",
+              "label": "Finnish"
+            },
+            {
+              "value": "dk",
+              "label": "Danish"
+            }
+          ]
+        },
+        {
+          "name": "gender",
+          "type": "select",
+          "label": "Gender",
+          "required": false,
+          "default": "",
+          "options": [
+            {
+              "value": "",
+              "label": "Any"
+            },
+            {
+              "value": "male",
+              "label": "Male"
+            },
+            {
+              "value": "female",
+              "label": "Female"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "type": "json"
+        }
+      ]
+    }
+  ],
+  "expert_defs": [
+    {
+      "name": "fake_data_generator_generate",
+      "description": "Generates realistic fake user profiles using randomuser.me. Params: count (1-10), nationality (optional 2-letter code), gender (male/female/any). Returns JSON with output_type json containing user profiles.",
+      "cspl": "fython",
+      "kwargs": {
+        "count": "3",
+        "nationality": "",
+        "gender": ""
+      },
+      "code": [
+        "def fake_data_generator_generate(count='3', nationality='', gender=''):",
+        "    import urllib.request, urllib.parse, json",
+        "    try:",
+        "        params = {'results': min(max(int(count), 1), 10)}",
+        "        if nationality.strip(): params['nat'] = nationality.strip()",
+        "        if gender.strip(): params['gender'] = gender.strip()",
+        "        url = 'https://randomuser.me/api/?' + urllib.parse.urlencode(params)",
+        "        req = urllib.request.Request(url, headers={'User-Agent': 'ExtellaTool/1.0'})",
+        "        with urllib.request.urlopen(req, timeout=10) as r:",
+        "            data = json.loads(r.read().decode())",
+        "        users = []",
+        "        for u in data.get('results', []):",
+        "            name = u['name']",
+        "            loc = u['location']",
+        "            users.append({'name': name['first'] + ' ' + name['last'], 'gender': u['gender'], 'email': u['email'], 'phone': u['phone'], 'nationality': u.get('nat', ''), 'username': u['login']['username'], 'age': u['dob']['age'], 'address': loc['street']['number'].__str__() + ' ' + loc['street']['name'] + ', ' + loc['city'] + ', ' + loc['country'], 'avatar': u['picture']['large']})",
+        "        return json.dumps({'status': 'success', 'output_type': 'json', 'data': {'users': users, 'count': len(users)}})",
+        "    except Exception as e:",
+        "        return json.dumps({'status': 'error', 'message': str(e)})"
+      ]
+    }
+  ],
+  "conceptTexts": [
+    "Plugin: Fake Data Generator (id: fake-data-generator). Expert fake_data_generator_generate creates realistic test user profiles using randomuser.me (free). Params: count (1-10), nationality (optional), gender (optional). Returns {output_type: 'json', data: {users: [{name, email, phone, address, age, avatar}]}}."
+  ]
+}

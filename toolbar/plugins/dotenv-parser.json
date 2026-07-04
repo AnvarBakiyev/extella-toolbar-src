@@ -1,0 +1,76 @@
+{
+  "id": "dotenv-parser",
+  "mode": "form_driven",
+  "featured": true,
+  "name": "Dotenv Parser",
+  "tagline": "Parse .env files into key-value pairs",
+  "description": "Inspired by dotenv — the most popular environment variable loader with 18k+ GitHub stars. Parses .env file contents into structured variables.",
+  "category": "developer",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "github.com/motdotla/dotenv",
+  "pills": [
+    "GitHub",
+    "Popular",
+    "Open source"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://github.com/motdotla/dotenv",
+  "experts": [
+    "dotenv_parser_parse"
+  ],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "form"
+  },
+  "capabilities": [
+    {
+      "id": "parse_env",
+      "name": "Dotenv Parser",
+      "expert_name": "dotenv_parser_parse",
+      "inputs": [
+        {
+          "name": "env_text",
+          "type": "textarea",
+          "label": ".env file content",
+          "required": true,
+          "placeholder": "API_KEY=abc123\nDEBUG=true"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "json"
+        }
+      ]
+    }
+  ],
+  "expert_defs": [
+    {
+      "name": "dotenv_parser_parse",
+      "description": "Inspired by dotenv — the most popular environment variable loader with 18k+ GitHub stars. Parses .env file contents into structured variables.",
+      "cspl": "fython",
+      "kwargs": {
+        "env_text": ""
+      },
+      "code": [
+        "def dotenv_parser_parse(env_text=''):",
+        "    import json, re",
+        "    try:",
+        "        result = {}",
+        "        for line in env_text.splitlines():",
+        "            line = line.strip()",
+        "            if not line or line.startswith('#'): continue",
+        "            if '=' in line:",
+        "                k, v = line.split('=', 1); v = v.strip().strip('\"').strip(\"'\")",
+        "                result[k.strip()] = v",
+        "        return json.dumps({'status':'success','output_type':'json','data':result})",
+        "    except Exception as e: return json.dumps({'status':'error','message':str(e)})"
+      ]
+    }
+  ],
+  "conceptTexts": [
+    "Plugin: Dotenv Parser (id: dotenv-parser). Wraps github.com/motdotla/dotenv."
+  ]
+}

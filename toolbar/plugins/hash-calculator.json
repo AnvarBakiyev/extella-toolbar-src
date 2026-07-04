@@ -1,0 +1,98 @@
+{
+  "id": "hash-calculator",
+  "mode": "form_driven",
+  "featured": true,
+  "name": "Hash Calculator",
+  "tagline": "MD5, SHA-1, SHA-256, SHA-512 from any text",
+  "description": "Instantly compute cryptographic hashes from any text or string. Supports MD5, SHA-1, SHA-256 and SHA-512 algorithms. Useful for verifying data integrity, storing passwords, and fingerprinting content.",
+  "category": "text",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "hashlib (Python stdlib)",
+  "pills": [
+    "No AI needed",
+    "Instant",
+    "Offline"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://docs.python.org/3/library/hashlib.html",
+  "experts": [
+    "hash_calculator_compute"
+  ],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "form"
+  },
+  "capabilities": [
+    {
+      "id": "compute_hash",
+      "name": "Compute Hash",
+      "expert_name": "hash_calculator_compute",
+      "inputs": [
+        {
+          "name": "text",
+          "type": "textarea",
+          "label": "Input Text",
+          "required": true,
+          "placeholder": "Enter text to hash..."
+        },
+        {
+          "name": "algorithm",
+          "type": "select",
+          "label": "Algorithm",
+          "required": false,
+          "default": "sha256",
+          "options": [
+            {
+              "value": "md5",
+              "label": "MD5"
+            },
+            {
+              "value": "sha1",
+              "label": "SHA-1"
+            },
+            {
+              "value": "sha256",
+              "label": "SHA-256"
+            },
+            {
+              "value": "sha512",
+              "label": "SHA-512"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "type": "text"
+        }
+      ]
+    }
+  ],
+  "expert_defs": [
+    {
+      "name": "hash_calculator_compute",
+      "description": "Computes a cryptographic hash of the given text using the specified algorithm. Params: text (string to hash), algorithm (md5/sha1/sha256/sha512, default sha256). Returns JSON with output_type text and the hex digest.",
+      "cspl": "fython",
+      "kwargs": {
+        "text": "",
+        "algorithm": "sha256"
+      },
+      "code": [
+        "def hash_calculator_compute(text='', algorithm='sha256'):",
+        "    import hashlib, json",
+        "    try:",
+        "        h = hashlib.new(algorithm)",
+        "        h.update(text.encode('utf-8'))",
+        "        return json.dumps({'status': 'success', 'output_type': 'text', 'data': h.hexdigest(), 'label': algorithm.upper() + ' Hash'})",
+        "    except Exception as e:",
+        "        return json.dumps({'status': 'error', 'message': str(e)})"
+      ]
+    }
+  ],
+  "conceptTexts": [
+    "Plugin: Hash Calculator (id: hash-calculator). Expert hash_calculator_compute computes MD5, SHA-1, SHA-256 or SHA-512 hash of any text string using Python stdlib hashlib. Params: text (string to hash, required), algorithm (md5/sha1/sha256/sha512, default sha256). Returns {output_type: 'text', data: '<hex digest>', label: '<ALGO> Hash'}. Use run_expert('hash_calculator_compute', {text: '...', algorithm: 'sha256'}) to compute a hash."
+  ]
+}

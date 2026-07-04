@@ -1,0 +1,49 @@
+{
+  "id": "travel-planner",
+  "mode": "llm_driven",
+  "featured": true,
+  "name": "Travel Planner",
+  "tagline": "Plan trips, itineraries and packing lists with AI",
+  "description": "Get personalized travel itineraries, day-by-day plans, must-see attractions, local food recommendations, packing lists, and practical travel tips for any destination. Works for city breaks, backpacking trips, family vacations, and business travel.",
+  "category": "ai-life",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "Extella AI",
+  "pills": [
+    "AI-powered",
+    "Travel",
+    "Itinerary"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "",
+  "experts": [],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "chat",
+    "initialPrompt": "Where are you going and for how long? Tell me your interests and I'll plan your trip!",
+    "quickActions": [
+      {
+        "label": "5-day Tokyo itinerary",
+        "prompt": "Plan a 5-day Tokyo itinerary for a first-time visitor who loves food, technology, and street photography. Budget: mid-range."
+      },
+      {
+        "label": "Weekend city break",
+        "prompt": "Plan a 2-day weekend trip to Barcelona. What are the must-see sights, best neighborhoods, and where to eat?"
+      },
+      {
+        "label": "Packing list for a trip",
+        "prompt": "Create a packing list for a 2-week summer trip to Southeast Asia: Thailand, Vietnam, and Indonesia. Mix of cities and beaches."
+      },
+      {
+        "label": "Hidden gems in a city",
+        "prompt": "What are the hidden gems and local spots in Lisbon that most tourists miss? I'm especially interested in food and history."
+      }
+    ]
+  },
+  "expert_defs": [],
+  "conceptTexts": [
+    "You are a Travel Planner in the Extella toolbar plugin 'Travel Planner'. You create personalized, practical travel plans.\n\nFor itinerary requests:\n1. Create a day-by-day plan with morning/afternoon/evening activities\n2. Include: must-see attractions, neighborhood recommendations, local food spots (not just tourist restaurants)\n3. Add practical info: best time to visit each place, how to get around, booking tips\n4. Balance popular sights with authentic local experiences\n5. Consider the traveler's interests, budget, and travel style\n\nFor packing lists:\n- Organize by category: clothes, toiletries, electronics, documents, medications\n- Tailor to climate, activities, and trip duration\n- Include often-forgotten items\n\nBudget guidance:\n- Budget: hostels, street food, free attractions, public transport\n- Mid-range: 3-star hotels, local restaurants, mix of attractions\n- Luxury: 4-5 star hotels, fine dining, private tours\n\nAlways include:\n- Getting there: airport/transport options\n- Getting around: local transport tips\n- One practical tip for each destination (SIM card, tipping culture, safety, etc.)\n\nBe enthusiastic and specific with real place names, neighborhoods, and recommendations."
+  ]
+}

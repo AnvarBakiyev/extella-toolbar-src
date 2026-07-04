@@ -1,0 +1,80 @@
+{
+  "id": "net-pay",
+  "mode": "form_driven",
+  "featured": true,
+  "name": "Net Pay Calculator",
+  "tagline": "Estimate take-home pay after taxes",
+  "description": "Salary net pay estimator — calculate approximate take-home pay after income tax and social contributions. Useful for job offers and budgeting.",
+  "category": "calculators",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "Net pay",
+  "pills": [
+    "GitHub",
+    "Popular",
+    "Open source"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://github.com/topics/salary-calculator",
+  "experts": [
+    "net_pay_calc"
+  ],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "form"
+  },
+  "capabilities": [
+    {
+      "id": "calc_net",
+      "name": "Net Pay Calculator",
+      "expert_name": "net_pay_calc",
+      "inputs": [
+        {
+          "name": "gross_annual",
+          "type": "float",
+          "label": "Gross annual salary",
+          "required": true,
+          "placeholder": "60000"
+        },
+        {
+          "name": "tax_rate",
+          "type": "float",
+          "label": "Effective tax rate (%)",
+          "required": false,
+          "default": 25,
+          "placeholder": "25"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "json"
+        }
+      ]
+    }
+  ],
+  "expert_defs": [
+    {
+      "name": "net_pay_calc",
+      "description": "Salary net pay estimator — calculate approximate take-home pay after income tax and social contributions. Useful for job offers and budgeting.",
+      "cspl": "fython",
+      "kwargs": {
+        "gross_annual": "",
+        "tax_rate": 25
+      },
+      "code": [
+        "def net_pay_calc(gross_annual='60000', tax_rate='25'):",
+        "    import json",
+        "    try:",
+        "        g, r = float(gross_annual), float(tax_rate)/100",
+        "        tax = round(g*r,2); net = round(g-tax,2)",
+        "        return json.dumps({'status':'success','output_type':'json','data':{'gross_annual':g,'tax':tax,'net_annual':net,'net_monthly':round(net/12,2)}})",
+        "    except Exception as e: return json.dumps({'status':'error','message':str(e)})"
+      ]
+    }
+  ],
+  "conceptTexts": [
+    "Plugin: Net Pay Calculator (id: net-pay). Wraps Net pay."
+  ]
+}

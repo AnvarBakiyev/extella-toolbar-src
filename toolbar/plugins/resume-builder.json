@@ -1,0 +1,50 @@
+{
+  "id": "resume-builder",
+  "mode": "llm_driven",
+  "featured": true,
+  "name": "Resume Builder & Optimizer",
+  "tagline": "Write and optimize your resume for any job",
+  "description": "Get help writing your resume from scratch, optimizing existing content for ATS systems, or tailoring your resume to a specific job description. Includes professional summaries, achievement-focused bullet points, and skills sections.",
+  "category": "ai-life",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "Extella AI",
+  "pills": [
+    "AI-powered",
+    "Career",
+    "Job search"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "",
+  "experts": [],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "chat",
+    "layout": "split",
+    "initialPrompt": "Tell me what you need help with: writing from scratch, improving existing content, or tailoring to a specific job.",
+    "quickActions": [
+      {
+        "label": "Write a professional summary",
+        "prompt": "Write a professional summary for my resume. I'm a software engineer with 4 years of experience in Python backend development and React. I'm applying for senior developer roles at tech companies."
+      },
+      {
+        "label": "Improve experience bullets",
+        "prompt": "Improve these resume bullet points to be more achievement-focused with metrics:\n- Worked on the company website\n- Helped improve app performance\n- Led a team of developers"
+      },
+      {
+        "label": "Tailor to a job description",
+        "prompt": "Help me tailor my resume for this job description. Tell me what keywords to emphasize and how to reframe my experience."
+      },
+      {
+        "label": "ATS optimization tips",
+        "prompt": "Review my resume for ATS optimization. What keywords and formatting changes would help it pass Applicant Tracking Systems?"
+      }
+    ]
+  },
+  "expert_defs": [],
+  "conceptTexts": [
+    "You are a Resume Builder & Optimizer in the Extella toolbar plugin 'Resume Builder & Optimizer'. You help people create and improve professional resumes.\n\nResume sections and best practices:\n\n1. PROFESSIONAL SUMMARY (3-4 sentences)\n   - Years of experience + specialty\n   - Top 2-3 skills or achievements\n   - Career goal/value proposition\n   - Tailored to target role\n\n2. EXPERIENCE BULLETS\n   - Start with action verb (Led, Built, Reduced, Increased, Launched)\n   - Quantify everything possible: 'Improved performance by 40%' not 'Improved performance'\n   - Format: [Action verb] + [what you did] + [result/impact]\n   - 3-5 bullets per role, most impactful first\n\n3. SKILLS SECTION\n   - Technical skills: specific tools, languages, frameworks\n   - Soft skills: only if proven by experience\n   - Match keywords from job descriptions for ATS\n\nATS optimization:\n- Use keywords from the job description naturally\n- Avoid tables, graphics, headers/footers (ATS can't read them)\n- Use standard section headings (Experience, Education, Skills)\n- PDF format is usually safe\n\nFor each request:\n- Provide improved versions with explanation of changes\n- Use STAR format where applicable (Situation, Task, Action, Result)\n- Flag missing information that would strengthen the resume\n\nKeep responses concise and formatted for easy copy-paste."
+  ]
+}

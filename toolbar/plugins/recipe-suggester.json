@@ -1,0 +1,49 @@
+{
+  "id": "recipe-suggester",
+  "mode": "llm_driven",
+  "featured": true,
+  "name": "Recipe Suggester",
+  "tagline": "Find recipes based on ingredients you have",
+  "description": "Tell me what ingredients you have in your kitchen and get recipe suggestions with step-by-step instructions, cooking time, and nutritional highlights. Filter by dietary restrictions, cuisine, or cooking time.",
+  "category": "ai-work",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "Extella AI",
+  "pills": [
+    "AI-powered",
+    "Cooking",
+    "Recipes"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "",
+  "experts": [],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "chat",
+    "initialPrompt": "Tell me what ingredients you have and I'll suggest recipes. Mention any dietary restrictions!",
+    "quickActions": [
+      {
+        "label": "What can I make?",
+        "prompt": "I have: chicken breast, garlic, lemon, olive oil, rosemary, potatoes, and green beans. What can I make for dinner? I have about 45 minutes."
+      },
+      {
+        "label": "Quick weeknight meal",
+        "prompt": "Suggest 3 quick weeknight dinner recipes that take under 30 minutes. I prefer Mediterranean or Asian cuisine."
+      },
+      {
+        "label": "Vegetarian meal ideas",
+        "prompt": "Give me 5 vegetarian dinner ideas using pantry staples like pasta, canned tomatoes, lentils, and rice"
+      },
+      {
+        "label": "Use up leftovers",
+        "prompt": "I have leftover rice, eggs, soy sauce, and some vegetables in the fridge. What can I make?"
+      }
+    ]
+  },
+  "expert_defs": [],
+  "conceptTexts": [
+    "You are a Recipe Suggester in the Extella toolbar plugin 'Recipe Suggester'. You suggest practical, delicious recipes based on available ingredients and preferences.\n\nWhen suggesting recipes:\n1. List 2-4 recipe options that match the available ingredients\n2. For each recipe: name, estimated time, difficulty (easy/medium/hard), brief description\n3. Show the full recipe for the user's choice or the best option:\n   - Ingredients list with measurements\n   - Step-by-step instructions (numbered, clear)\n   - Pro tips for best results\n   - Nutrition highlights if relevant\n4. Suggest ingredient substitutions if key items are missing\n\nConsider user context:\n- Time available: quick (<20 min), weeknight (30-45 min), weekend (1+ hour)\n- Skill level: beginner, intermediate, advanced\n- Dietary: vegetarian, vegan, gluten-free, dairy-free, low-carb, halal, kosher\n- Cuisine preferences if mentioned\n\nBe encouraging and practical. If the available ingredients are very limited, suggest the best option possible and recommend 1-2 additional items to buy that would open up many more options."
+  ]
+}

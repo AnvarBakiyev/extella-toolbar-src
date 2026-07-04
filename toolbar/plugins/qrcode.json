@@ -1,0 +1,128 @@
+{
+  "id": "qrcode",
+  "mode": "form_driven",
+  "featured": true,
+  "name": "QR Code Generator",
+  "tagline": "Generate QR codes from any text or URL",
+  "description": "Create customizable QR codes instantly from any text, URL, or data. Choose colors, size and error correction level, then download the result as PNG.",
+  "category": "web",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "qrserver.com API",
+  "pills": [
+    "No AI needed",
+    "Instant",
+    "Free"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://goqr.me/api/",
+  "experts": [
+    "qrcode_generate_qr"
+  ],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "form"
+  },
+  "capabilities": [
+    {
+      "id": "generate_qr",
+      "name": "Generate QR Code",
+      "expert_name": "qrcode_generate_qr",
+      "inputs": [
+        {
+          "name": "data",
+          "type": "text",
+          "label": "Text or URL",
+          "required": true,
+          "placeholder": "https://example.com"
+        },
+        {
+          "name": "size",
+          "type": "int",
+          "label": "Size (px)",
+          "required": false,
+          "default": 300,
+          "min": 100,
+          "max": 1000
+        },
+        {
+          "name": "fill_hex",
+          "type": "color",
+          "label": "QR Color",
+          "required": false,
+          "default": "000000"
+        },
+        {
+          "name": "back_hex",
+          "type": "color",
+          "label": "Background",
+          "required": false,
+          "default": "FFFFFF"
+        },
+        {
+          "name": "ecl",
+          "type": "select",
+          "label": "Error Correction",
+          "required": false,
+          "default": "M",
+          "options": [
+            {
+              "value": "L",
+              "label": "L — 7%"
+            },
+            {
+              "value": "M",
+              "label": "M — 15%"
+            },
+            {
+              "value": "Q",
+              "label": "Q — 25%"
+            },
+            {
+              "value": "H",
+              "label": "H — 30%"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "type": "image",
+          "downloadable": true,
+          "filename": "qrcode.png"
+        }
+      ]
+    }
+  ],
+  "expert_defs": [
+    {
+      "name": "qrcode_generate_qr",
+      "description": "Generates a QR code PNG image from text or URL using the qrserver.com API. Params: data — text or URL to encode; size — image width/height in pixels (default 300); fill_hex — QR module color as hex without # (default 000000); back_hex — background color as hex without # (default FFFFFF); ecl — error correction level L/M/Q/H (default M). Returns JSON string with output_type image_base64 and PNG encoded as base64.",
+      "cspl": "fython",
+      "kwargs": {
+        "data": "",
+        "size": "300",
+        "fill_hex": "000000",
+        "back_hex": "FFFFFF",
+        "ecl": "M"
+      },
+      "code": [
+        "def qrcode_generate_qr(data=\"\",size=\"300\",fill_hex=\"000000\",back_hex=\"FFFFFF\",ecl=\"M\"):",
+        "    import urllib.request, urllib.parse, base64, json",
+        "    try:",
+        "        params = urllib.parse.urlencode({\"size\":size+\"x\"+size,\"data\":data,\"color\":fill_hex,\"bgcolor\":back_hex,\"ecc\":ecl})",
+        "        url = \"https://api.qrserver.com/v1/create-qr-code/?\"+params",
+        "        r = urllib.request.urlopen(url,timeout=15)",
+        "        b64 = base64.b64encode(r.read()).decode()",
+        "        return json.dumps({\"status\":\"success\",\"output_type\":\"image_base64\",\"data\":b64,\"filename\":\"qrcode.png\"})",
+        "    except Exception as e:",
+        "        return json.dumps({\"status\":\"error\",\"message\":str(e)})"
+      ]
+    }
+  ],
+  "conceptTexts": [
+    "Plugin: QR Code Generator (id: qrcode). Expert qrcode_generate_qr creates QR code PNG images via the qrserver.com REST API (no authentication required). Params: data (string — text or URL to encode, required), size (integer — image size in pixels, default 300, range 100-1000), fill_hex (hex color without # for QR modules, default 000000), back_hex (hex color without # for background, default FFFFFF), ecl (error correction level: L=7%, M=15%, Q=25%, H=30%, default M). The expert returns {output_type: 'image_base64', data: '<base64 PNG string>', filename: 'qrcode.png'}. Use run_expert('qrcode_generate_qr', {data: '...', size: '300', fill_hex: '000000', back_hex: 'FFFFFF', ecl: 'M'}) to generate a QR code."
+  ]
+}

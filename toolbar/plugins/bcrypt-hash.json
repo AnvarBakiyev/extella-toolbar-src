@@ -1,0 +1,69 @@
+{
+  "id": "bcrypt-hash",
+  "mode": "form_driven",
+  "featured": true,
+  "name": "Bcrypt Hash",
+  "tagline": "Secure password hashing",
+  "description": "Inspired by bcrypt.js.",
+  "category": "text",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "github.com/kelektiv/node.bcrypt.js",
+  "pills": [
+    "GitHub",
+    "Popular",
+    "Open source"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://github.com/kelektiv/node.bcrypt.js",
+  "experts": [
+    "bcrypt_hash_compute"
+  ],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "form"
+  },
+  "capabilities": [
+    {
+      "id": "hash",
+      "name": "Bcrypt Hash",
+      "expert_name": "bcrypt_hash_compute",
+      "inputs": [
+        {
+          "name": "password",
+          "type": "text",
+          "label": "Password",
+          "required": true
+        }
+      ],
+      "outputs": [
+        {
+          "type": "json"
+        }
+      ]
+    }
+  ],
+  "expert_defs": [
+    {
+      "name": "bcrypt_hash_compute",
+      "description": "Inspired by bcrypt.js.",
+      "cspl": "fython",
+      "kwargs": {
+        "password": ""
+      },
+      "code": [
+        "def bcrypt_hash_compute(password='', algorithm='scrypt'):",
+        "    import hashlib, json, secrets",
+        "    try:",
+        "        if algorithm=='scrypt': salt=secrets.token_hex(16); h=hashlib.scrypt(password.encode(),salt=salt.encode(),n=16384,r=8,p=1,dklen=64); return json.dumps({'status':'success','output_type':'json','data':{'hash':h.hex(),'salt':salt}})",
+        "        return json.dumps({'status':'success','output_type':'json','data':{'hash':hashlib.sha256(password.encode()).hexdigest()}})",
+        "    except Exception as e: return json.dumps({'status':'error','message':str(e)})"
+      ]
+    }
+  ],
+  "conceptTexts": [
+    "Plugin: Bcrypt Hash (id: bcrypt-hash). Wraps github.com/kelektiv/node.bcrypt.js."
+  ]
+}

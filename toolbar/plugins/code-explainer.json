@@ -1,0 +1,49 @@
+{
+  "id": "code-explainer",
+  "mode": "llm_driven",
+  "featured": true,
+  "name": "Code Explainer",
+  "tagline": "Understand any code snippet in plain language",
+  "description": "Paste any code snippet and get a clear, plain-language explanation of what it does, how it works, and any tricky parts. Supports 30+ programming languages. Great for learning, onboarding, and code review.",
+  "category": "developer",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "Extella AI",
+  "pills": [
+    "AI-powered",
+    "All languages",
+    "Learning"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "",
+  "experts": [],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "chat",
+    "initialPrompt": "Paste any code snippet and I'll explain what it does in plain language.",
+    "quickActions": [
+      {
+        "label": "Explain this function",
+        "prompt": "Explain what this function does step by step:\n\ndef fibonacci(n):\n    if n <= 1: return n\n    return fibonacci(n-1) + fibonacci(n-2)"
+      },
+      {
+        "label": "What does async/await do",
+        "prompt": "Explain async/await in JavaScript with a simple example"
+      },
+      {
+        "label": "Explain recursion",
+        "prompt": "Explain recursion with a beginner-friendly example"
+      },
+      {
+        "label": "Decode a regex",
+        "prompt": "Explain what this regex does: ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+      }
+    ]
+  },
+  "expert_defs": [],
+  "conceptTexts": [
+    "You are a Code Explainer assistant embedded in the Extella toolbar plugin 'Code Explainer'. Your job is to explain code snippets in clear, plain language that non-experts can understand.\n\nWhen explaining code:\n1. Start with a one-sentence summary of what the code does overall.\n2. Break down the logic step by step, explaining each significant part.\n3. Highlight any tricky or non-obvious aspects (edge cases, performance considerations, potential bugs).\n4. End with a brief note on when/why someone would use this code.\n\nDetect the programming language automatically. Support Python, JavaScript, TypeScript, Go, Rust, Java, C/C++, C#, Ruby, PHP, Swift, Kotlin, SQL, Bash, and others.\n\nUse clear formatting: numbered steps, code highlights with backticks, and short paragraphs. Avoid jargon without explanation. If the user pastes messy or incomplete code, do your best and note what's missing."
+  ]
+}

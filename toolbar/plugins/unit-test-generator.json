@@ -1,0 +1,49 @@
+{
+  "id": "unit-test-generator",
+  "mode": "llm_driven",
+  "featured": true,
+  "name": "Unit Test Generator",
+  "tagline": "Generate unit tests for any function or class",
+  "description": "Paste any function or class and get comprehensive unit tests including happy path, edge cases, and error conditions. Supports Jest (JS/TS), pytest (Python), JUnit (Java), and other popular test frameworks.",
+  "category": "developer",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "Extella AI",
+  "pills": [
+    "AI-powered",
+    "All languages",
+    "TDD"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "",
+  "experts": [],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "chat",
+    "initialPrompt": "Paste a function or class and tell me which test framework to use, and I'll write unit tests.",
+    "quickActions": [
+      {
+        "label": "Test a Python function",
+        "prompt": "Write pytest tests for this function:\ndef divide(a, b):\n    if b == 0: raise ValueError('Division by zero')\n    return a / b"
+      },
+      {
+        "label": "Test a JS utility",
+        "prompt": "Write Jest tests for this JavaScript function:\nfunction capitalize(str) {\n    if (!str) return '';\n    return str.charAt(0).toUpperCase() + str.slice(1);\n}"
+      },
+      {
+        "label": "Test an API endpoint",
+        "prompt": "Write Jest/Supertest tests for a POST /api/users endpoint that creates a user with name and email"
+      },
+      {
+        "label": "Test edge cases",
+        "prompt": "What edge cases should I test for a function that validates email addresses?"
+      }
+    ]
+  },
+  "expert_defs": [],
+  "conceptTexts": [
+    "You are a Unit Test Generator in the Extella toolbar plugin 'Unit Test Generator'. Your job is to write comprehensive, production-quality unit tests.\n\nWhen generating tests:\n1. Identify the test framework from context (Jest, Mocha, pytest, JUnit, Go test, etc.) or ask if unclear.\n2. Cover: happy path (normal inputs), edge cases (empty, null, boundary values), error conditions (invalid input, exceptions), and type correctness.\n3. Use descriptive test names following the pattern: 'should [expected behavior] when [condition]'.\n4. Mock external dependencies (databases, APIs, file system) appropriately.\n5. Group related tests in describe/class blocks.\n6. Include setup (beforeEach/setUp) and teardown where needed.\n7. Aim for high coverage but prioritize meaningful tests over quantity.\n\nFor each test file, include the imports, describe blocks, test cases with assertions, and any mocks needed. Briefly note which scenarios you're testing and why."
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "id": "dictionary-lookup",
+  "mode": "form_driven",
+  "featured": true,
+  "name": "English Dictionary",
+  "tagline": "Definitions, phonetics and examples for any English word",
+  "description": "Look up any English word to get its definitions, phonetic pronunciation, part of speech, example sentences, and synonyms. Uses the free Dictionary API — no account or API key needed.",
+  "category": "web",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "dictionaryapi.dev (free, no auth)",
+  "pills": [
+    "Free API",
+    "No auth",
+    "English"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://dictionaryapi.dev",
+  "experts": [
+    "dictionary_lookup_define"
+  ],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "form"
+  },
+  "capabilities": [
+    {
+      "id": "define_word",
+      "name": "Define Word",
+      "expert_name": "dictionary_lookup_define",
+      "inputs": [
+        {
+          "name": "word",
+          "type": "text",
+          "label": "Word",
+          "required": true,
+          "placeholder": "ephemeral"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "json"
+        }
+      ]
+    }
+  ],
+  "expert_defs": [
+    {
+      "name": "dictionary_lookup_define",
+      "description": "Looks up an English word definition using dictionaryapi.dev. Param: word (English word to define). Returns JSON with output_type json containing definitions, phonetics and examples.",
+      "cspl": "fython",
+      "kwargs": {
+        "word": "hello"
+      },
+      "code": [
+        "def dictionary_lookup_define(word='hello'):",
+        "    import urllib.request, urllib.parse, json",
+        "    try:",
+        "        url = 'https://api.dictionaryapi.dev/api/v2/entries/en/' + urllib.parse.quote(word.strip().lower())",
+        "        req = urllib.request.Request(url, headers={'User-Agent': 'ExtellaTool/1.0'})",
+        "        with urllib.request.urlopen(req, timeout=10) as r:",
+        "            data = json.loads(r.read().decode())",
+        "        if isinstance(data, dict) and 'message' in data:",
+        "            return json.dumps({'status': 'error', 'message': 'Word not found: ' + word})",
+        "        entry = data[0]",
+        "        phonetic = entry.get('phonetic', '')",
+        "        if not phonetic:",
+        "            for p in entry.get('phonetics', []):",
+        "                if p.get('text'): phonetic = p['text']; break",
+        "        meanings = []",
+        "        for m in entry.get('meanings', [])[:4]:",
+        "            defs = []",
+        "            for d in m.get('definitions', [])[:3]:",
+        "                defs.append({'definition': d.get('definition', ''), 'example': d.get('example', '')})",
+        "            meanings.append({'part_of_speech': m.get('partOfSpeech', ''), 'definitions': defs, 'synonyms': m.get('synonyms', [])[:5]})",
+        "        result = {'word': entry.get('word', word), 'phonetic': phonetic, 'meanings': meanings}",
+        "        return json.dumps({'status': 'success', 'output_type': 'json', 'data': result})",
+        "    except Exception as e:",
+        "        return json.dumps({'status': 'error', 'message': str(e)})"
+      ]
+    }
+  ],
+  "conceptTexts": [
+    "Plugin: English Dictionary (id: dictionary-lookup). Expert dictionary_lookup_define returns definitions, phonetics, examples and synonyms for English words using dictionaryapi.dev (free). Param: word (English word). Returns {output_type: 'json', data: {word, phonetic, meanings: [{part_of_speech, definitions, synonyms}]}}."
+  ]
+}

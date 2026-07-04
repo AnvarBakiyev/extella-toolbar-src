@@ -1,0 +1,83 @@
+{
+  "id": "jsonpath-get",
+  "mode": "form_driven",
+  "featured": true,
+  "name": "JSONPath Getter",
+  "tagline": "Extract values from JSON by path",
+  "description": "Inspired by JSONPath — query JSON documents with dot-notation paths like $.store.book[0].title.",
+  "category": "data",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "github.com/json-path/JsonPath",
+  "pills": [
+    "GitHub",
+    "Popular",
+    "Open source"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://github.com/json-path/JsonPath",
+  "experts": [
+    "jsonpath_get_value"
+  ],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "form"
+  },
+  "capabilities": [
+    {
+      "id": "get_path",
+      "name": "JSONPath Getter",
+      "expert_name": "jsonpath_get_value",
+      "inputs": [
+        {
+          "name": "json_text",
+          "type": "textarea",
+          "label": "JSON",
+          "required": true
+        },
+        {
+          "name": "path",
+          "type": "text",
+          "label": "Path (dot notation)",
+          "required": true,
+          "placeholder": "user.address.city"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "json"
+        }
+      ]
+    }
+  ],
+  "expert_defs": [
+    {
+      "name": "jsonpath_get_value",
+      "description": "Inspired by JSONPath — query JSON documents with dot-notation paths like $.store.book[0].title.",
+      "cspl": "fython",
+      "kwargs": {
+        "json_text": "",
+        "path": ""
+      },
+      "code": [
+        "def jsonpath_get_value(json_text='', path=''):",
+        "    import json",
+        "    try:",
+        "        data = json.loads(json_text)",
+        "        cur = data",
+        "        for part in path.replace('[', '.').replace(']', '').split('.'):",
+        "            if not part: continue",
+        "            if isinstance(cur, dict): cur = cur.get(part)",
+        "            elif isinstance(cur, list): cur = cur[int(part)]",
+        "            else: cur = None",
+        "        return json.dumps({'status':'success','output_type':'json','data':{'path':path,'value':cur}})",
+        "    except Exception as e: return json.dumps({'status':'error','message':str(e)})"
+      ]
+    }
+  ],
+  "conceptTexts": [
+    "Plugin: JSONPath Getter (id: jsonpath-get). Wraps github.com/json-path/JsonPath."
+  ]
+}

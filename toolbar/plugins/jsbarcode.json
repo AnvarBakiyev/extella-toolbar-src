@@ -1,0 +1,67 @@
+{
+  "id": "jsbarcode",
+  "mode": "form_driven",
+  "featured": true,
+  "name": "JsBarcode",
+  "tagline": "Generate barcodes",
+  "description": "Inspired by JsBarcode.",
+  "category": "web",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "github.com/lindell/JsBarcode",
+  "pills": [
+    "GitHub",
+    "Popular",
+    "Open source"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://github.com/lindell/JsBarcode",
+  "experts": [
+    "jsbarcode_generate"
+  ],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "form"
+  },
+  "capabilities": [
+    {
+      "id": "generate",
+      "name": "JsBarcode",
+      "expert_name": "jsbarcode_generate",
+      "inputs": [
+        {
+          "name": "text",
+          "type": "text",
+          "label": "Barcode data",
+          "required": true
+        }
+      ],
+      "outputs": [
+        {
+          "type": "text"
+        }
+      ]
+    }
+  ],
+  "expert_defs": [
+    {
+      "name": "jsbarcode_generate",
+      "description": "Inspired by JsBarcode.",
+      "cspl": "fython",
+      "kwargs": {
+        "text": ""
+      },
+      "code": [
+        "def jsbarcode_generate(text='', format='code128'):",
+        "    import urllib.parse, json",
+        "    try: bc='ean13' if format=='ean13' else 'code128'; url='https://bwipjs-api.metafloor.com/?bcid='+bc+'&text='+urllib.parse.quote(text); return json.dumps({'status':'success','output_type':'text','data':url})",
+        "    except Exception as e: return json.dumps({'status':'error','message':str(e)})"
+      ]
+    }
+  ],
+  "conceptTexts": [
+    "Plugin: JsBarcode (id: jsbarcode). Wraps github.com/lindell/JsBarcode."
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "id": "zod-schema",
+  "mode": "llm_driven",
+  "featured": true,
+  "name": "Zod",
+  "tagline": "Generate validation schemas",
+  "description": "Inspired by Zod — TypeScript schema validation.",
+  "category": "data",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "github.com/colinhacks/zod",
+  "pills": [
+    "GitHub",
+    "AI",
+    "Popular"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://github.com/colinhacks/zod",
+  "experts": [],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "chat",
+    "initialPrompt": "You generate Zod schemas from descriptions or example JSON.",
+    "quickActions": [
+      {
+        "label": "Try an example",
+        "prompt": "Show me an example using Zod."
+      },
+      {
+        "label": "Explain how it works",
+        "prompt": "Explain how Zod works for a beginner."
+      }
+    ]
+  },
+  "expert_defs": [],
+  "conceptTexts": [
+    "You are a Zod assistant. You generate Zod schemas from descriptions or example JSON."
+  ]
+}

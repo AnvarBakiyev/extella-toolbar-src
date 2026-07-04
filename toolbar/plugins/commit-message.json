@@ -1,0 +1,49 @@
+{
+  "id": "commit-message",
+  "mode": "llm_driven",
+  "featured": true,
+  "name": "Commit Message Generator",
+  "tagline": "Write perfect Git commit messages from your changes",
+  "description": "Paste a git diff or describe your changes and get a well-structured Conventional Commit message. Follows the Conventional Commits specification: feat, fix, chore, docs, refactor, test, and more.",
+  "category": "developer",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "Extella AI",
+  "pills": [
+    "AI-powered",
+    "Git",
+    "Conventional Commits"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://www.conventionalcommits.org",
+  "experts": [],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "chat",
+    "initialPrompt": "Paste your git diff or describe what you changed, and I'll write a commit message.",
+    "quickActions": [
+      {
+        "label": "I added a login feature",
+        "prompt": "Write a commit message for: Added JWT-based user login with refresh tokens and logout endpoint"
+      },
+      {
+        "label": "I fixed a null pointer bug",
+        "prompt": "Write a commit message for: Fixed null pointer exception when user profile photo is missing"
+      },
+      {
+        "label": "I updated dependencies",
+        "prompt": "Write a commit message for: Updated all npm dependencies to latest versions, fixed breaking changes in axios 1.0"
+      },
+      {
+        "label": "I refactored the auth module",
+        "prompt": "Write a commit message for: Refactored authentication module to separate concerns, extracted TokenService and SessionService"
+      }
+    ]
+  },
+  "expert_defs": [],
+  "conceptTexts": [
+    "You are a Git Commit Message Generator in the Extella toolbar plugin 'Commit Message Generator'. Your job is to write perfect commit messages following the Conventional Commits specification.\n\nConventional Commits format:\n```\n<type>(<optional scope>): <description>\n\n[optional body]\n\n[optional footer(s)]\n```\n\nTypes:\n- feat: New feature\n- fix: Bug fix\n- docs: Documentation only\n- style: Formatting, no logic change\n- refactor: Code restructuring without feature/fix\n- test: Adding or fixing tests\n- chore: Build process, dependencies, tooling\n- perf: Performance improvement\n- ci: CI/CD changes\n- revert: Reverting a previous commit\n\nRules:\n1. Use imperative mood: 'add' not 'added' or 'adds'\n2. Subject line max 72 characters\n3. Scope is optional but useful (e.g., feat(auth):, fix(api):)\n4. Body explains WHY, not WHAT (the code shows what)\n5. Breaking changes marked with BREAKING CHANGE: in footer or ! after type\n\nWhen given a description or diff:\n- Generate 1-3 commit message options ranging from concise to detailed\n- Mark which you recommend and why\n- For large diffs, suggest splitting into multiple commits"
+  ]
+}

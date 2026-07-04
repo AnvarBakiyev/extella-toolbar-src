@@ -1,0 +1,98 @@
+{
+  "id": "dayjs-dates",
+  "mode": "form_driven",
+  "featured": true,
+  "name": "Day.js Dates",
+  "tagline": "Format and parse dates easily",
+  "description": "Inspired by Day.js — a 2KB immutable date library used in millions of JavaScript projects. Format dates, parse strings, and compute relative time.",
+  "category": "data",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "github.com/iamkun/dayjs",
+  "pills": [
+    "GitHub",
+    "Popular",
+    "Open source"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "https://github.com/iamkun/dayjs",
+  "experts": [
+    "dayjs_dates_format"
+  ],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "form"
+  },
+  "capabilities": [
+    {
+      "id": "format_date",
+      "name": "Day.js Dates",
+      "expert_name": "dayjs_dates_format",
+      "inputs": [
+        {
+          "name": "date_str",
+          "type": "text",
+          "label": "Date (YYYY-MM-DD or now)",
+          "required": false,
+          "default": "",
+          "placeholder": "2024-06-15"
+        },
+        {
+          "name": "format",
+          "type": "select",
+          "label": "Output format",
+          "required": false,
+          "default": "full",
+          "options": [
+            {
+              "value": "full",
+              "label": "Full (Mon, Jun 15 2024)"
+            },
+            {
+              "value": "iso",
+              "label": "ISO 8601"
+            },
+            {
+              "value": "us",
+              "label": "US (06/15/2024)"
+            },
+            {
+              "value": "eu",
+              "label": "EU (15/06/2024)"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "type": "json"
+        }
+      ]
+    }
+  ],
+  "expert_defs": [
+    {
+      "name": "dayjs_dates_format",
+      "description": "Inspired by Day.js — a 2KB immutable date library used in millions of JavaScript projects. Format dates, parse strings, and compute relative time.",
+      "cspl": "fython",
+      "kwargs": {
+        "date_str": "",
+        "format": "full"
+      },
+      "code": [
+        "def dayjs_dates_format(date_str='', format='full'):",
+        "    import datetime, json",
+        "    try:",
+        "        dt = datetime.date.fromisoformat(date_str.strip()) if date_str.strip() else datetime.date.today()",
+        "        fmts = {'full': dt.strftime('%a, %b %d %Y'), 'iso': dt.isoformat(), 'us': dt.strftime('%m/%d/%Y'), 'eu': dt.strftime('%d/%m/%Y')}",
+        "        return json.dumps({'status':'success','output_type':'json','data':{'formatted':fmts.get(format,fmts['full']),'iso':dt.isoformat()}})",
+        "    except Exception as e: return json.dumps({'status':'error','message':str(e)})"
+      ]
+    }
+  ],
+  "conceptTexts": [
+    "Plugin: Day.js Dates (id: dayjs-dates). Wraps github.com/iamkun/dayjs."
+  ]
+}

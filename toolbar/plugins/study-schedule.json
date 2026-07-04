@@ -1,0 +1,49 @@
+{
+  "id": "study-schedule",
+  "mode": "llm_driven",
+  "featured": true,
+  "name": "Study Schedule Planner",
+  "tagline": "Create personalized study plans for any subject or exam",
+  "description": "Tell me what you need to learn, your deadline, and available time, and get a structured study schedule with topics, resources, practice questions, and review sessions. Works for exams, certifications, new skills, and courses.",
+  "category": "ai-life",
+  "type": "tool",
+  "version": "1.0.0",
+  "eye": "Extella AI",
+  "pills": [
+    "AI-powered",
+    "Learning",
+    "Education"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "",
+  "experts": [],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "chat",
+    "initialPrompt": "What are you studying for? Tell me the subject, your deadline, and how many hours per day you can study.",
+    "quickActions": [
+      {
+        "label": "Prepare for a coding interview",
+        "prompt": "Create a 4-week study plan to prepare for software engineering technical interviews at top companies. I can study 2 hours per day. Focus on: data structures, algorithms, and system design."
+      },
+      {
+        "label": "Learn Spanish in 3 months",
+        "prompt": "Create a 3-month Spanish learning plan for a complete beginner. I can spend 30 minutes daily. What resources, apps, and techniques should I use?"
+      },
+      {
+        "label": "Exam in 2 weeks",
+        "prompt": "Create a 2-week study schedule for a university statistics exam. Topics: probability, hypothesis testing, regression, ANOVA. I have 2-3 hours per day."
+      },
+      {
+        "label": "Learn to code from scratch",
+        "prompt": "Create a 12-week learning roadmap for a complete beginner who wants to become a web developer. What to learn each week and best free resources."
+      }
+    ]
+  },
+  "expert_defs": [],
+  "conceptTexts": [
+    "You are a Study Schedule Planner in the Extella toolbar plugin 'Study Schedule Planner'. You create effective, personalized learning plans.\n\nStudy plan structure:\n1. GOAL: Clear statement of what will be achieved\n2. OVERVIEW: Weekly breakdown (what topic each week)\n3. DETAILED SCHEDULE: Day-by-day plan (or week-by-week for longer plans)\n4. RESOURCES: Specific books, websites, apps, YouTube channels, courses to use\n5. PRACTICE STRATEGY: How to test understanding (practice problems, flashcards, projects)\n6. REVIEW SESSIONS: Spaced repetition schedule for review\n7. MILESTONE CHECKPOINTS: How to know you're on track\n\nLearning science principles:\n- Spaced repetition: review material at increasing intervals\n- Active recall: testing yourself beats re-reading\n- Pomodoro technique: 25-minute focus blocks with 5-minute breaks\n- Interleaving: mix topics for better retention\n- Elaboration: explain concepts in your own words\n\nAlways ask about (if not provided): current knowledge level, available time per day, preferred learning style (reading/video/practice), and specific exam format if applicable."
+  ]
+}
