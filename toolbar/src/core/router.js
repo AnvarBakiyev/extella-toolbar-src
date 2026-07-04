@@ -544,19 +544,34 @@ ETB.router = (function () {
     _injectRepairOverlay(content, plugin.id);
 
     // postMessage listeners scoped to this panel's iframe(s).
+    function _srcIframe(e) {
+      var iframes = content.querySelectorAll('iframe');
+      for (var i = 0; i < iframes.length; i++) {
+        try { if (iframes[i].contentWindow === e.source) return iframes[i]; } catch (_) {}
+      }
+      return iframes.length === 1 ? iframes[0] : null;
+    }
     var _pmHandler = function (e) {
       if (!e.data || typeof e.data.type !== 'string') return;
       if (e.data.type === 'etb_repair_request') {
         _showRepairModal(plugin.id, e.data.description || '');
       } else if (e.data.type === 'etb_config_request') {
-        var srcIframe = null;
-        var iframes = content.querySelectorAll('iframe');
-        for (var i = 0; i < iframes.length; i++) {
-          try { if (iframes[i].contentWindow === e.source) { srcIframe = iframes[i]; break; } }
-          catch (_) {}
+        _showCredentialsModal(_srcIframe(e), e.data.fields, e.data.title);
+      } else if (e.data.type === 'etb_run_expert') {
+        // Expert bridge: the plugin iframe (localhost origin) cannot call
+        // api.extella.ai directly (cross-origin → "Failed to fetch"). Run the
+        // expert here in the toolbar context, which has API access, and post
+        // the result back. The iframe never holds the token or hits the API.
+        var src = _srcIframe(e);
+        var reqId = e.data.reqId;
+        function reply(msg) { if (src && src.contentWindow) { try { src.contentWindow.postMessage(msg, '*'); } catch (_) {} } }
+        try {
+          ETB.api.runExpert(e.data.name, e.data.params || {}, { global: true })
+            .then(function (res) { reply({ type: 'etb_expert_result', reqId: reqId, ok: true, res: res }); })
+            .catch(function (err) { reply({ type: 'etb_expert_result', reqId: reqId, ok: false, error: (err && err.message) || 'expert failed' }); });
+        } catch (err) {
+          reply({ type: 'etb_expert_result', reqId: reqId, ok: false, error: (err && err.message) || 'expert failed' });
         }
-        if (!srcIframe && iframes.length === 1) srcIframe = iframes[0];
-        _showCredentialsModal(srcIframe, e.data.fields, e.data.title);
       }
     };
     window.addEventListener('message', _pmHandler);
