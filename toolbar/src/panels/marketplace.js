@@ -248,6 +248,50 @@ ETB.marketplace = (function () {
         // the merch payload. Guarantees delivery regardless of who was ready
         // first (payload vs document).
         if (e.data.type === 'etb_ready') { _sendMerch(); return; }
+
+        // ── Storefront service bridges (KV / rules / agents) ────────────────
+        // Let the store manage Skills in-place (as a category) rather than in a
+        // separate plugin window. Mirrors the router bridges; KV is scoped to
+        // '_mkt_' keys so a page can never touch secrets.
+        if (e.data.type === 'etb_kv_get' || e.data.type === 'etb_kv_set' ||
+            e.data.type === 'etb_rule_add' || e.data.type === 'etb_rule_remove' ||
+            e.data.type === 'etb_agents_list') {
+          var _mf = document.getElementById('_etbv2_mkt_frame');
+          var _rid = e.data.reqId, _t = e.data.type;
+          var _back = function (msg) { if (_mf && _mf.contentWindow) { try { _mf.contentWindow.postMessage(msg, '*'); } catch (_) {} } };
+          var _kerr = function (m) { _back({ type: 'etb_kv_result', reqId: _rid, ok: false, error: m }); };
+          try {
+            if (_t === 'etb_kv_get' || _t === 'etb_kv_set') {
+              var _key = String(e.data.key || '');
+              if (_key.indexOf('_mkt_') !== 0) { _kerr('key not allowed'); return; }
+              if (_t === 'etb_kv_get') {
+                ETB.api.kvGet(_key, { global: true })
+                  .then(function (r) { _back({ type: 'etb_kv_result', reqId: _rid, ok: true, value: (r && r.value != null) ? r.value : null }); })
+                  .catch(function (er) { _kerr((er && er.message) || 'kv get failed'); });
+              } else {
+                ETB.api.kvSet(_key, e.data.value, e.data.description || 'Marketplace (storefront)', { global: true })
+                  .then(function () { _back({ type: 'etb_kv_result', reqId: _rid, ok: true }); })
+                  .catch(function (er) { _kerr((er && er.message) || 'kv set failed'); });
+              }
+            } else if (_t === 'etb_rule_add') {
+              ETB.api.rulesAdd(String(e.data.rule || ''), e.data.agents)
+                .then(function (refs) { _back({ type: 'etb_rule_result', reqId: _rid, ok: !!(refs && refs.length), refs: refs || [] }); })
+                .catch(function (er) { _back({ type: 'etb_rule_result', reqId: _rid, ok: false, error: (er && er.message) || 'rule add failed' }); });
+            } else if (_t === 'etb_rule_remove') {
+              ETB.api.rulesRemove(e.data.refs || e.data.ruleId)
+                .then(function () { _back({ type: 'etb_rule_result', reqId: _rid, ok: true }); })
+                .catch(function (er) { _back({ type: 'etb_rule_result', reqId: _rid, ok: false, error: (er && er.message) || 'rule remove failed' }); });
+            } else {
+              ETB.api.agentsList()
+                .then(function (r) { var list = (r && r.agents) || []; _back({ type: 'etb_agents_result', reqId: _rid, ok: true, agents: list.map(function (a) { return { id: a.id, name: a.name, model: a.model }; }) }); })
+                .catch(function (er) { _back({ type: 'etb_agents_result', reqId: _rid, ok: false, error: (er && er.message) || 'agents failed' }); });
+            }
+          } catch (er) {
+            var rt = _t.indexOf('rule') >= 0 ? 'etb_rule_result' : (_t.indexOf('agents') >= 0 ? 'etb_agents_result' : 'etb_kv_result');
+            _back({ type: rt, reqId: _rid, ok: false, error: (er && er.message) || 'bridge failed' });
+          }
+          return;
+        }
         if (e.data.type !== 'etb_plugin_action') return;
         var action = e.data.action;
         var pluginId = e.data.pluginId;

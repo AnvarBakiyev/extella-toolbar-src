@@ -214,6 +214,30 @@ body[data-mode="all"] .cmdbar,body[data-mode="all"] .cmdnote{display:none}
 .mini_foot{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:8px}
 @media(max-width:900px){.bento{grid-template-columns:1fr 1fr}.chero{grid-column:span 2}}
 
+/* ── Skills shelf (Навыки as an in-store category) ─────────────────────── */
+.sk_lead{grid-column:1/-1;font-size:13px;color:var(--tx2);line-height:1.5;margin:-2px 0 8px}
+.sk_howto{font-size:11.5px;color:var(--tx);opacity:.9;background:rgba(var(--ar),.07);
+  border:1px solid rgba(var(--ar),.15);border-radius:8px;padding:8px 10px;line-height:1.4}
+.sk_howto b{color:var(--a)}
+.sk_active{font:700 10px ui-monospace,Menlo,monospace;color:#2f9e56;letter-spacing:.04em}
+.sk_del{background:transparent;color:var(--tx2);border:1px solid var(--bd2);border-radius:7px;
+  font-size:11px;font-weight:700;padding:6px 12px;cursor:pointer}
+.sk_del:hover{color:#e0533d;border-color:#e0533d}
+/* agent picker modal */
+.apick{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:500;padding:20px}
+.apick.on{display:flex}
+.apick_box{background:var(--s1);border:1px solid var(--bd);border-radius:16px;width:100%;max-width:460px;max-height:82vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.apick_h{padding:18px 20px 14px;font-size:16px;font-weight:700;border-bottom:1px solid var(--bd)}
+.apick_h b{color:var(--a)}
+.apick_list{padding:8px;overflow-y:auto}
+.apick_row{padding:11px 13px;border-radius:10px;cursor:pointer;transition:background .12s}
+.apick_row:hover{background:var(--s3)}
+.ap_nm{font-size:14px;font-weight:600;color:var(--tx)}
+.ap_sub{font-size:12px;color:var(--tx3);margin-top:2px}
+.ap_sec{font:700 10px ui-monospace,Menlo,monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);padding:14px 13px 6px}
+.ap_load{padding:14px 13px;font-size:13px;color:var(--tx3)}
+.apick_foot{padding:10px 16px 14px;display:flex;justify-content:flex-end;border-top:1px solid var(--bd)}
+
 /* ── Merch collections: editorial banner cards, cloud-managed ─────────── */
 .mcoll{position:relative;overflow:hidden;border:1px solid var(--bd);border-radius:var(--r);
   background:var(--s2);padding:16px;display:flex;flex-direction:column;gap:8px;animation:fiu .18s ease both}
@@ -384,6 +408,13 @@ body[data-mode="all"] .cmdbar,body[data-mode="all"] .cmdnote{display:none}
 <div class="cmdnote" id="cmdnote">Об этом гремят соцсети. Здесь оно ставится в один клик — и работает у вас.</div>
 <div class="tabs" id="tabs"></div>
 <div class="scr"><div class="grid" id="grid"></div></div>
+<div class="apick" id="apick">
+  <div class="apick_box">
+    <div class="apick_h">Куда установить <b id="apick_name"></b>?</div>
+    <div class="apick_list" id="apick_list"></div>
+    <div class="apick_foot"><button class="cget" onclick="closeSkPick()">Отмена</button></div>
+  </div>
+</div>
 
 <div id="filter_stash">
 <div id="filter_bar">
@@ -883,13 +914,10 @@ function rtabs() {
     return '<button class="tab' + (cur === c.id ? ' on' : '') + '" onclick="setc(\'' + c.id + '\')">' +
       esc(c.l) + n + '</button>';
   }).join('') +
-  // Skills are a different kind of good (abilities for the agent, not apps),
-  // so surface them as their own accented entry that opens the Skills shelf.
-  '<button class="tab tab_skills" onclick="openSkills()">🧠 Навыки</button>';
+  // Skills are a different kind of good (abilities for the agent, not apps) —
+  // their own accented aisle inside the same store, switched in place.
+  '<button class="tab tab_skills' + (cur === 'skills' ? ' on' : '') + '" onclick="setc(\'skills\')">🧠 Навыки</button>';
 }
-
-// Open the Skills shelf (the mkt_skills plugin) via the standard open bridge.
-function openSkills() { notify('open', 'mkt_skills'); }
 
 function setc(id) {
   cur = id;
@@ -984,6 +1012,7 @@ function syncHFFilterBar() {
 function renderGrid() {
   if (cur === 'all') renderDiscover();
   else if (cur === 'hf') renderHFDiscover();
+  else if (cur === 'skills') renderSkillsShelf();
   else renderInstalled();
 }
 
@@ -1741,6 +1770,103 @@ if (!window._heroTimer) {
     if ((+(car.dataset.n || 0)) < 2) return;
     setHeroSlide((+(car.dataset.idx || 0)) + 1);
   }, 6500);
+}
+
+// ══ Skills category — the Навыки aisle, rendered inside the same store ════
+var SKILLS_CATALOG=[
+  {id:'skill_terse',cat:'Стиль и общение',emoji:'✂️',name:'Лаконичный режим',desc:'Отвечает коротко и по делу — без воды, вступлений и повторения вопроса.',rule:'[skill:Лаконичный режим] ОТВЕЧАЙ ПРЕДЕЛЬНО КРАТКО, всегда. Максимум 2–3 коротких предложения. ЗАПРЕЩЕНО: таблицы, заголовки, списки, разделители, эмодзи, разделы. НЕ предлагай продолжение и не задавай встречных вопросов. Даже на «расскажи/опиши» — дай только суть в 2–3 предложениях. Краткость важнее полноты.',howto:'Задай агенту любой вопрос — ответ будет в 2–3 предложения, без таблиц и воды.'},
+  {id:'skill_biztone',cat:'Стиль и общение',emoji:'💼',name:'Деловой тон',desc:'Пишет вежливо и по-деловому — без сленга и лишних эмодзи.',rule:'[skill:Деловой тон] Пиши в деловом, вежливом и уверенном тоне. Без сленга, без лишних эмодзи, без фамильярности. Чётко, уважительно, профессионально — как деловая переписка.',howto:'Просто общайся — формулировки станут деловыми и вежливыми.'},
+  {id:'skill_simple',cat:'Стиль и общение',emoji:'🎯',name:'Простыми словами',desc:'Объясняет сложное просто — аналогиями, без жаргона.',rule:'[skill:Простыми словами] Объясняй любую сложную тему простым языком, как умному не-специалисту: короткие предложения, житейские аналогии, без жаргона. Если термин необходим — сразу поясни его в скобках.',howto:'Спроси про что-то сложное — получишь понятное объяснение с аналогиями.'},
+  {id:'skill_translate',cat:'Стиль и общение',emoji:'🌍',name:'Живой перевод',desc:'Переводит естественно и с сохранением тона, а не дословно.',rule:'[skill:Живой перевод] При переводе передавай смысл и тон естественно на языке-цели, а не дословно; сохраняй регистр (деловой/разговорный) оригинала.',howto:'Скажи «переведи на английский: …» — получишь живой перевод, а не подстрочник.'},
+  {id:'skill_plan',cat:'Работа и продуктивность',emoji:'🗺️',name:'Сначала план',desc:'На любую задачу сперва даёт короткий план, потом выполняет.',rule:'[skill:Сначала план] На любую содержательную задачу сначала дай короткий план из 2–4 шагов, затем выполняй по нему.',howto:'Дай агенту любую задачу — он начнёт с плана из нескольких шагов.'},
+  {id:'skill_options',cat:'Работа и продуктивность',emoji:'⚖️',name:'Всегда варианты',desc:'Предлагает 2–3 варианта решения с плюсами и минусами.',rule:'[skill:Всегда варианты] Когда задача допускает разные решения — предложи 2–3 варианта, у каждого кратко плюсы и минусы, и в конце дай рекомендацию с обоснованием.',howto:'Спроси «как лучше сделать X» — получишь несколько вариантов с плюсами/минусами.'},
+  {id:'skill_honest',cat:'Работа и продуктивность',emoji:'🔍',name:'Проверяй факты',desc:'Не выдумывает: помечает предположения, честно говорит о неуверенности.',rule:'[skill:Проверяй факты] Никогда не выдумывай факты, цифры и цитаты. Если не уверен — скажи прямо «не уверен». Явно помечай предположения словом «предположительно». Лучше честное «не знаю», чем правдоподобная выдумка.',howto:'Задавай фактические вопросы — агент отметит, где не уверен, и не выдумает.'},
+  {id:'skill_legal',cat:'Бизнес',emoji:'📜',name:'Юрист-упроститель',desc:'Присылаешь договор — получаешь простое объяснение и список рисков.',rule:'[skill:Юрист-упроститель] Когда пользователь присылает договор, оферту, условия или юридический текст — объясни простым языком: что подписывают, ключевые риски и подводные камни, на что обратить внимание. Без юридического жаргона.',howto:'Вставь текст договора и скажи «разбери» — получишь простое объяснение и риски.'},
+  {id:'skill_numbers',cat:'Бизнес',emoji:'📊',name:'Разбор цифр',desc:'Присылаешь таблицу/отчёт — выделяет ключевые цифры, тренды и аномалии.',rule:'[skill:Разбор цифр] Когда пользователь присылает таблицу, отчёт или набор чисел — выдели ключевые показатели, тренды и аномалии простыми словами. Начни с 3–5 главных выводов, потом детали. Без воды.',howto:'Вставь таблицу или цифры и скажи «разбери» — получишь ключевые выводы и аномалии.'},
+  {id:'skill_email',cat:'Бизнес',emoji:'✉️',name:'Редактор писем',desc:'Пишет короткие, вежливые письма с чёткой темой и запросом.',rule:'[skill:Редактор писем] Когда просят написать письмо — сделай короткое и вежливое: тема, приветствие, суть в 2–4 предложениях, чёткий запрос/призыв к действию, подпись. Без воды и канцелярита.',howto:'Скажи «напиши письмо …» — получишь готовое короткое деловое письмо.'},
+  {id:'skill_debug',cat:'Разработка',emoji:'🐞',name:'Метод отладки',desc:'Отлаживает системно: воспроизвести → изолировать → гипотеза → проверка.',rule:'[skill:Метод отладки] При отладке ошибок не гадай. Действуй по шагам: 1) воспроизведи и опиши симптом; 2) изолируй — где ломается; 3) сформулируй гипотезу о причине; 4) предложи минимальную проверку. Только потом — исправление.',howto:'Скинь ошибку или баг — агент разберёт её системно, а не наугад.'},
+  {id:'skill_review',cat:'Разработка',emoji:'👀',name:'Ревью кода',desc:'Ищет баги, дыры безопасности и читаемость — с конкретными правками.',rule:'[skill:Ревью кода] При ревью кода ищи по приоритету: 1) баги и логические ошибки; 2) уязвимости безопасности; 3) читаемость. Давай КОНКРЕТНЫЕ правки с примером, а не общие советы. Фокус — на проблемах.',howto:'Вставь код и скажи «сделай ревью» — получишь конкретные замечания и правки.'}
+];
+var SK_ACC={'Стиль и общение':'#C67E34','Работа и продуктивность':'#3A6EA5','Бизнес':'#2E7D5B','Разработка':'#8E4AA8'};
+var _skReg={v:1,items:[]}, _skLoaded=false, _skAgents=null, _skPick=null;
+
+function skBridge(sendType,resultType,payload){
+  return new Promise(function(res,rej){
+    var reqId=sendType+'_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+    function onMsg(ev){ if(!ev.data||ev.data.type!==resultType||ev.data.reqId!==reqId)return;
+      window.removeEventListener('message',onMsg); if(ev.data.ok)res(ev.data);else rej(new Error(ev.data.error||'error')); }
+    window.addEventListener('message',onMsg);
+    window.parent.postMessage(Object.assign({type:sendType,reqId:reqId},payload),'*');
+    setTimeout(function(){window.removeEventListener('message',onMsg);rej(new Error('нет ответа от Extella'));},20000);
+  });
+}
+function skKvGet(k){return skBridge('etb_kv_get','etb_kv_result',{key:k}).then(function(r){var v=r.value;if(!v)return null;try{return typeof v==='string'?JSON.parse(v):v;}catch(e){return null;}});}
+function skKvSet(k,o){return skBridge('etb_kv_set','etb_kv_result',{key:k,value:JSON.stringify(o)});}
+function skRuleAdd(rule,agents){return skBridge('etb_rule_add','etb_rule_result',{rule:rule,agents:agents});}
+function skRuleRemove(refs){return skBridge('etb_rule_remove','etb_rule_result',{refs:refs});}
+function skAgentsFetch(){return skBridge('etb_agents_list','etb_agents_result',{}).then(function(r){return r.agents||[];});}
+function skInstalled(id){return (_skReg.items||[]).some(function(x){return x.id===id;});}
+function skGet(id){return SKILLS_CATALOG.filter(function(s){return s.id===id;})[0];}
+function skItem(id){return (_skReg.items||[]).filter(function(x){return x.id===id;})[0];}
+
+function renderSkillsShelf(){
+  var g=document.getElementById('grid'); if(!g)return;
+  if(!_skLoaded){
+    g.innerHTML='<div class="sk_lead">Загружаю навыки…</div>';
+    skKvGet('_mkt_skills').then(function(r){_skReg=(r&&r.items)?r:{v:1,items:[]};if(!_skReg.items)_skReg.items=[];_skLoaded=true;if(cur==='skills')renderSkillsShelf();})
+      .catch(function(){_skReg={v:1,items:[]};_skLoaded=true;if(cur==='skills')renderSkillsShelf();});
+    return;
+  }
+  var cats=[]; SKILLS_CATALOG.forEach(function(s){if(cats.indexOf(s.cat)<0)cats.push(s.cat);});
+  var html='<div class="sk_lead">Навыки — способности для твоего ассистента. Поставил — просто пишешь ему в чате, и он умеет. При установке спросим, на какого агента.</div>';
+  cats.forEach(function(cn){
+    html+='<div class="sect_hdr"><span class="sect_title">'+esc(cn)+'</span><span class="sect_line"></span></div>';
+    html+='<div class="mshelf">'+SKILLS_CATALOG.filter(function(s){return s.cat===cn;}).map(skCard).join('')+'</div>';
+  });
+  g.innerHTML=html;
+  [].forEach.call(g.querySelectorAll('[data-skinst]'),function(b){b.onclick=function(){openSkPick(b.getAttribute('data-skinst'));};});
+  [].forEach.call(g.querySelectorAll('[data-skdel]'),function(b){b.onclick=function(){skUninstall(b.getAttribute('data-skdel'));};});
+}
+function skCard(s){
+  var on=skInstalled(s.id), it=skItem(s.id);
+  var foot=on
+    ? '<span class="sk_active">● активен'+(it&&it.target?' · '+esc(it.target):'')+'</span><button class="sk_del" data-skdel="'+esc(s.id)+'">Удалить</button>'
+    : '<button class="st_btn" data-skinst="'+esc(s.id)+'">+ Установить</button>';
+  return '<div class="stile" style="--acc:'+esc(SK_ACC[s.cat]||'#C67E34')+'">'+
+    '<span class="st_chip">'+esc(s.emoji)+' '+esc(s.cat)+'</span>'+
+    '<div class="st_title">'+esc(s.name)+'</div>'+
+    '<div class="st_fact">'+esc(s.desc)+'</div>'+
+    '<div class="sk_howto"><b>Как запустить:</b> '+esc(s.howto)+'</div>'+
+    '<div class="st_foot" style="justify-content:space-between;align-items:center;gap:8px">'+foot+'</div></div>';
+}
+function openSkPick(id){
+  var s=skGet(id); if(!s)return; _skPick=s;
+  document.getElementById('apick_name').textContent='«'+s.name+'»';
+  document.getElementById('apick').classList.add('on');
+  var box=document.getElementById('apick_list');
+  box.innerHTML='<div class="apick_row" data-mine="1"><div class="ap_nm">⭐ Мой ассистент</div><div class="ap_sub">по умолчанию — тот, с кем ты общаешься в чате</div></div><div class="ap_load" id="ap_load">Загружаю агентов…</div>';
+  wireSkPick();
+  (_skAgents?Promise.resolve(_skAgents):skAgentsFetch().then(function(a){_skAgents=a;return a;}))
+    .then(function(agents){var f=(agents||[]).filter(function(a){return !/\[Архив\]|\[Служебный\]/.test(a.name||'');});
+      var ld=document.getElementById('ap_load'); if(!ld)return;
+      ld.outerHTML='<div class="ap_sec">Или на конкретного агента:</div>'+f.map(function(a){return '<div class="apick_row" data-aid="'+esc(a.id)+'" data-anm="'+esc(a.name)+'"><div class="ap_nm">'+esc(a.name)+'</div><div class="ap_sub">'+esc(a.model||'')+'</div></div>';}).join('');
+      wireSkPick();
+    }).catch(function(){var ld=document.getElementById('ap_load');if(ld)ld.textContent='Не удалось загрузить агентов — можно поставить на основного.';});
+}
+function wireSkPick(){[].forEach.call(document.getElementById('apick_list').querySelectorAll('.apick_row'),function(r){r.onclick=function(){if(r.dataset.mine)skDoInstall(null,'Мой ассистент');else skDoInstall([r.dataset.aid],r.dataset.anm);};});}
+function closeSkPick(){document.getElementById('apick').classList.remove('on');_skPick=null;}
+function skDoInstall(agents,label){
+  var s=_skPick; if(!s)return; closeSkPick();
+  skRuleAdd(s.rule,agents).then(function(r){
+    _skReg.items=(_skReg.items||[]).filter(function(x){return x.id!==s.id;});
+    _skReg.items.push({id:s.id,emoji:s.emoji,name:s.name,howto:s.howto,cat:s.cat,refs:r.refs||[],target:label});
+    return skKvSet('_mkt_skills',_skReg);
+  }).then(function(){renderSkillsShelf();}).catch(function(){renderSkillsShelf();});
+}
+function skUninstall(id){
+  var it=skItem(id); if(!it)return;
+  var done=function(){_skReg.items=(_skReg.items||[]).filter(function(x){return x.id!==id;});return skKvSet('_mkt_skills',_skReg).then(function(){renderSkillsShelf();});};
+  ((it.refs&&it.refs.length)?skRuleRemove(it.refs).then(done,done):done()).catch(function(){renderSkillsShelf();});
 }
 
 // ── Storefront modes: «Для всех» (curated) vs «Для профи» (full/dev) ──────
