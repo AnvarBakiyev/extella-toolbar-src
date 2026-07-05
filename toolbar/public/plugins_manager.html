@@ -1050,18 +1050,10 @@ var MODELS_CURATED = [
 function renderModels() {
   var g = document.getElementById('grid'); if (!g) return;
   if (document.body.getAttribute('data-mode') === 'pro') { renderHFDiscover(); return; }
-  var cards = MODELS_CURATED.map(function (m, i) {
-    return '<div class="stile" style="--acc:' + esc(m.acc) + ';animation-delay:' + Math.min(i * 30, 240) + 'ms">' +
-      '<span class="st_chip">HuggingFace</span>' +
-      '<div class="st_title">' + esc(m.name) + '</div>' +
-      '<div class="st_fact">' + esc(m.desc) + '</div>' +
-      '<div class="st_src">запуск через HuggingFace</div>' +
-      '<div class="st_foot"><button class="st_btn" onclick="installHF(\'' + esc(m.id) + '\',\'space\',this)">+ Установить</button></div>' +
-    '</div>';
-  }).join('');
-  g.innerHTML = '<div class="sect"><span class="eyebrow">Модели</span><h2>ИИ-модели <i>в один клик</i></h2></div>' +
-    '<div class="sk_lead">Тяжёлые ИИ-модели — запускаются через HuggingFace, без своей видеокарты. Больше моделей и поиск — в режиме «Для профи».</div>' +
-    '<div class="mshelf">' + cards + '</div>';
+  // «Для всех» — same editorial schema as Витрина: model hero + свежак models.
+  g.innerHTML = _bentoHTML(TYPE_ED.models.heroes) +
+    _shelfHTML(TYPE_ED.models.shelf, 'Модели', 'ИИ-модели <i>в один клик</i>') +
+    '<div class="sk_lead" style="grid-column:1/-1">Тяжёлые ИИ-модели — запускаются через HuggingFace, без своей видеокарты. Больше моделей и поиск — в режиме «Для профи».</div>';
 }
 
 // Витрина — editorial cross-type front (bento hero + свежак + подборки).
@@ -1228,11 +1220,110 @@ function _heroInner(h) {
   '</div>';
 }
 
+// One install button for any editorial card — routes by kind: skill → agent
+// picker, HF model → HF installer, else a repo URL.
+function _cardBtn(h, cls) {
+  cls = cls || 'cbtn';
+  if (h.skillId) return '<button class="' + cls + '" onclick="openSkPick(\'' + esc(h.skillId) + '\')">Установить</button>';
+  if (h.hfId)    return '<button class="' + cls + '" onclick="installHF(\'' + esc(h.hfId) + '\',\'space\',this)">Установить</button>';
+  if (h.repoUrl) return '<button class="' + cls + '" onclick="installRepo(\'' + esc(h.repoUrl) + '\',this)">Установить</button>';
+  return '';
+}
+
+// Per-type editorial layer — every aisle (Программы/Модели/Навыки) gets the
+// same schema as Витрина: a bento hero + a «Свежее и крутое» tile row. Hand-
+// curated for now (moves to KV / harvester later; «по красоте доиграем позже»).
+var TYPE_ED = {
+  programs: {
+    heroes: [
+      { label:'Гремит на этой неделе', acc:'#B5423E', source:'github.com/openclaw · open source · ★ 381k', repoUrl:'https://github.com/openclaw/openclaw',
+        title:'Личный ИИ-ассистент —', accent:'любая ОС, любая платформа',
+        facts:['Свой ассистент на вашем компьютере, не в чужом облаке','381 000 звёзд — один из самых громких релизов','Открытый код, ставится куда угодно'] },
+      { label:'Для дизайнеров', acc:'#3A6EA5', source:'github.com/nexu-io · ★ 75k', repoUrl:'https://github.com/nexu-io/open-design',
+        title:'Открытая альтернатива Claude Design —', accent:'локально, на вашем железе',
+        facts:['Vibe-дизайн прямо на десктопе, без облака'] },
+      { label:'Свежак', acc:'#8E4AA8', source:'github.com/Graphify-Labs · ★ 77k', repoUrl:'https://github.com/Graphify-Labs/graphify',
+        title:'Превращает код в граф знаний —', accent:'агент понимает связи',
+        facts:['graphRAG по вашему проекту за минуты'] }
+    ],
+    shelf: [
+      { label:'Экономит деньги', acc:'#C67E34', source:'github.com/JuliusBrussee · ★ 84k', repoUrl:'https://github.com/JuliusBrussee/caveman',
+        title:'Режет 65% токенов', facts:['Меньше токенов — меньше счёт за ИИ при той же работе'] },
+      { label:'Сетап CEO', acc:'#3A6EA5', source:'github.com/garrytan · ★ 119k', repoUrl:'https://github.com/garrytan/gstack',
+        title:'Рабочий стол Гэрри Тана', facts:['23 инструмента как у главы Y Combinator'] }
+    ]
+  },
+  models: {
+    heroes: [
+      { label:'Крутяк', acc:'#2E7D5B', source:'huggingface.co/black-forest-labs · ♥ 9k', hfId:'black-forest-labs/FLUX.1-dev', stats:'запуск через HuggingFace',
+        title:'Рисует по тексту как студия —', accent:'уровень, за который платили дизайнерам',
+        facts:['Опишите картинку словами — студийное качество','От авторов оригинального Stable Diffusion','Через HuggingFace, без своей видеокарты'] },
+      { label:'Гремит', acc:'#B5423E', source:'huggingface.co/Kwai-Kolors · ♥ 10k', hfId:'Kwai-Kolors/Kolors-Virtual-Try-On', stats:'через HuggingFace',
+        title:'Примеряет одежду на фото —', accent:'не выходя из браузера',
+        facts:['Загрузили фото и вещь — видите, как она на вас сидит'] },
+      { label:'Речь → текст', acc:'#C67E34', source:'huggingface.co/openai', hfId:'openai/whisper', stats:'через HuggingFace',
+        title:'Расшифровывает аудио —', accent:'любой язык',
+        facts:['Аудио в текст за секунды, без установки'] }
+    ],
+    shelf: [
+      { label:'Крутяк', acc:'#8E4AA8', source:'huggingface.co/jbilcke-hf · ♥ 11k', hfId:'jbilcke-hf/ai-comic-factory',
+        title:'Фабрика комиксов', facts:['Сюжет словами → готовые страницы комикса'] },
+      { label:'Свежак', acc:'#3A6EA5', source:'huggingface.co/enzostvs · ♥ 16k', hfId:'enzostvs/deepsite',
+        title:'DeepSite — сайт по описанию', facts:['Собирает рабочий сайт из текста, без кода'] },
+      { label:'Документы', acc:'#C67E34', source:'huggingface.co/baidu · ★ 13k', hfId:'baidu/Unlimited-OCR',
+        title:'OCR — распознаёт документы', facts:['Достаёт текст из PDF, фото и сканов'] }
+    ]
+  },
+  skills: {
+    heroes: [
+      { label:'Для бизнеса', acc:'#2E7D5B', source:'Навык · Бизнес', skillId:'skill_legal',
+        title:'Ваш ассистент теперь юрист —', accent:'простым языком про риски',
+        facts:['Вставляете договор — получаете риски и подводные камни','Без юридического жаргона, за секунды','Ставится на выбранного агента'] },
+      { label:'Экономит время', acc:'#C67E34', source:'Навык · Стиль', skillId:'skill_terse',
+        title:'Отвечает в 3 предложения —', accent:'вместо эссе на страницу',
+        facts:['Проверено: 855 → 294 символа, только суть'] },
+      { label:'Для бизнеса', acc:'#3A6EA5', source:'Навык · Бизнес', skillId:'skill_numbers',
+        title:'Читает ваши таблицы —', accent:'выводы и аномалии сразу',
+        facts:['3–5 ключевых выводов из отчёта простыми словами'] }
+    ],
+    shelf: [
+      { label:'Стиль', acc:'#C67E34', source:'Навык', skillId:'skill_biztone', title:'Деловой тон', facts:['Вежливо и по-деловому, без сленга'] },
+      { label:'Стиль', acc:'#C67E34', source:'Навык', skillId:'skill_simple', title:'Простыми словами', facts:['Объясняет сложное аналогиями, без жаргона'] },
+      { label:'Разработка', acc:'#8E4AA8', source:'Навык', skillId:'skill_debug', title:'Метод отладки', facts:['Разбирает баг системно, а не наугад'] }
+    ]
+  }
+};
+
+function _bentoHTML(heroes) {
+  if (!heroes || !heroes.length) return '';
+  var html = '<div class="bento">' + _heroBig(heroes[0]);
+  heroes.slice(1, 3).forEach(function (h) { html += _heroMini(h); });
+  return html + '</div>';
+}
+function _shelfHTML(shelf, eyebrow, title) {
+  if (!shelf || !shelf.length) return '';
+  var tiles = shelf.map(function (h, i) {
+    var fact = (h.facts && h.facts[0]) ? '<div class="st_fact">' + esc(h.facts[0]) + '</div>' : '';
+    return '<div class="stile" style="--acc:' + esc(h.acc || '#C67E34') + ';animation-delay:' + Math.min(i * 30, 240) + 'ms">' +
+      '<span class="st_chip">' + esc(h.label || 'Свежак') + '</span>' +
+      '<div class="st_title">' + esc(h.title || '') + (h.accent ? ' <i>' + esc(h.accent) + '</i>' : '') + '</div>' +
+      fact + (h.source ? '<div class="st_src">' + esc(h.source) + '</div>' : '') +
+      '<div class="st_foot">' + _cardBtn(h, 'st_btn') + '</div>' +
+    '</div>';
+  }).join('');
+  return '<div class="sect"><span class="eyebrow">' + esc(eyebrow) + '</span><h2>' + title + '</h2></div>' +
+    '<div class="mshelf">' + tiles + '</div>';
+}
+function renderTypeEd(type) {
+  var ed = TYPE_ED[type]; if (!ed) return '';
+  return _bentoHTML(ed.heroes) + _shelfHTML(ed.shelf, 'Свежак', 'Свежее и <i>крутое</i>');
+}
+
 // Bento hero (approved concept): one big story card + two side mini-cards.
 // Typography sells the story — no random pictures, just the accent spine + dots.
 function _heroBig(h) {
   var facts = (h.facts || []).slice(0, 3).map(function (f) { return '<li>' + esc(f) + '</li>'; }).join('');
-  var btn = h.repoUrl ? '<button class="cbtn" onclick="installRepo(\'' + esc(h.repoUrl) + '\',this)">Установить</button>' : '';
+  var btn = _cardBtn(h, 'cbtn');
   return '<div class="ccard chero" style="--acc:' + esc(h.acc || '#4E8FDB') + '">' +
     '<div class="cpromo">' + esc(h.label || 'Гремит на этой неделе') + '</div>' +
     '<div class="splats" aria-hidden="true"></div>' +
@@ -1245,7 +1336,7 @@ function _heroBig(h) {
 }
 function _heroMini(h) {
   var desc = (h.facts && h.facts[0]) || '';
-  var btn = h.repoUrl ? '<button class="cget" onclick="installRepo(\'' + esc(h.repoUrl) + '\',this)">Установить</button>' : '';
+  var btn = _cardBtn(h, 'cget');
   return '<div class="ccard" style="--acc:' + esc(h.acc || '#C67E34') + '">' +
     '<div class="mini_body">' +
       (h.label ? '<div class="hsrc">' + esc(h.label) + '</div>' : '') +
@@ -1347,7 +1438,7 @@ function renderPrograms() {
   var g = document.getElementById('grid');
   if (!g) return;
 
-  var featuredHtml = renderFeaturedSection();
+  var featuredHtml = renderTypeEd('programs') + renderFeaturedSection();
 
   // «Для всех» — curated only: no raw GitHub firehose.
   if (document.body.getAttribute('data-mode') !== 'pro') {
@@ -1884,8 +1975,10 @@ function renderSkillsShelf(){
     return;
   }
   var cats=[]; SKILLS_CATALOG.forEach(function(s){if(cats.indexOf(s.cat)<0)cats.push(s.cat);});
-  var html='<div class="sect"><span class="eyebrow">Навыки</span><h2>Способности <i>для ассистента</i></h2></div>'+
-    '<div class="sk_lead">Поставил навык — просто пишешь ассистенту в чате, и он умеет. При установке спросим, на какого агента.</div>';
+  var html=_bentoHTML(TYPE_ED.skills.heroes)+
+    _shelfHTML(TYPE_ED.skills.shelf,'Свежак','Свежее и <i>крутое</i>')+
+    '<div class="sect"><span class="eyebrow">Все навыки</span><h2>Способности <i>для ассистента</i></h2></div>'+
+    '<div class="sk_lead" style="grid-column:1/-1">Поставил навык — просто пишешь ассистенту в чате, и он умеет. При установке спросим, на какого агента.</div>';
   cats.forEach(function(cn){
     html+='<div class="sect_hdr"><span class="sect_title">'+esc(cn)+'</span><span class="sect_line"></span></div>';
     html+='<div class="mshelf">'+SKILLS_CATALOG.filter(function(s){return s.cat===cn;}).map(skCard).join('')+'</div>';
