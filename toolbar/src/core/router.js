@@ -572,6 +572,34 @@ ETB.router = (function () {
         } catch (err) {
           reply({ type: 'etb_expert_result', reqId: reqId, ok: false, error: (err && err.message) || 'expert failed' });
         }
+      } else if (e.data.type === 'etb_kv_get' || e.data.type === 'etb_kv_set') {
+        // Scoped KV bridge: like the expert bridge, the iframe cannot reach
+        // api.extella.ai directly. The toolbar performs the KV op with its own
+        // session token — the SAME namespace the storefront reads — so a merch
+        // edit is guaranteed visible. SECURITY: only keys prefixed '_mkt_' are
+        // allowed, so a plugin can never read secrets (huggingface_token, …)
+        // or write outside the merch surface.
+        var src2 = _srcIframe(e);
+        var reqId2 = e.data.reqId;
+        var key = String(e.data.key || '');
+        function reply2(msg) { if (src2 && src2.contentWindow) { try { src2.contentWindow.postMessage(msg, '*'); } catch (_) {} } }
+        if (key.indexOf('_mkt_') !== 0) {
+          reply2({ type: 'etb_kv_result', reqId: reqId2, ok: false, error: 'key not allowed' });
+          return;
+        }
+        try {
+          if (e.data.type === 'etb_kv_get') {
+            ETB.api.kvGet(key, { global: true })
+              .then(function (r) { reply2({ type: 'etb_kv_result', reqId: reqId2, ok: true, value: (r && r.value != null) ? r.value : null }); })
+              .catch(function (err) { reply2({ type: 'etb_kv_result', reqId: reqId2, ok: false, error: (err && err.message) || 'kv get failed' }); });
+          } else {
+            ETB.api.kvSet(key, e.data.value, e.data.description || 'Marketplace merch (toolbar editor)', { global: true })
+              .then(function () { reply2({ type: 'etb_kv_result', reqId: reqId2, ok: true }); })
+              .catch(function (err) { reply2({ type: 'etb_kv_result', reqId: reqId2, ok: false, error: (err && err.message) || 'kv set failed' }); });
+          }
+        } catch (err) {
+          reply2({ type: 'etb_kv_result', reqId: reqId2, ok: false, error: (err && err.message) || 'kv failed' });
+        }
       }
     };
     window.addEventListener('message', _pmHandler);

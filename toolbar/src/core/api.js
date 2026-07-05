@@ -394,12 +394,16 @@ ETB.api = (function () {
       return _post('/api/concept/search', { query: query, limit: limit || 5 });
     },
 
-    kvGet: function (key) {
-      return _post('/api/kv/get', { key: key });
+    kvGet: function (key, opts) {
+      var body = { key: key };
+      if (opts && opts.global) body.global = true;
+      return _post('/api/kv/get', body);
     },
 
-    kvSet: function (key, value, desc) {
-      return _post('/api/kv/set', { key: key, value: value, description: desc || '' });
+    kvSet: function (key, value, desc, opts) {
+      var body = { key: key, value: value, description: desc || '' };
+      if (opts && opts.global) body.global = true;
+      return _post('/api/kv/set', body);
     },
 
     health: function () {
