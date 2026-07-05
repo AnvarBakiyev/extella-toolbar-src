@@ -403,11 +403,18 @@ ETB.api = (function () {
     // Rules = always-on behavioral instructions injected into every agent turn.
     // This is the reliable vehicle for Skills (concepts are only search-retrieved,
     // so they don't fire on their own). Verified: a rule changes agent output.
-    // Add a rule to every chat-agent candidate. Resolves to an array of
-    // { agent, ruleId } refs (skip the ones that failed) so uninstall can
-    // remove exactly what was added.
-    rulesAdd: function (rule) {
-      return Promise.all(CHAT_AGENTS.map(function (ag) {
+    // List the user's agents. NOTE: the working path is singular /api/agent/list
+    // (plural /api/agents/list is 404 — the known "agents/list пуст" bug).
+    agentsList: function () {
+      return _post('/api/agent/list', {});
+    },
+
+    // Add a rule. `agents` (array of ids) targets specific agents; omit to fall
+    // back to the chat-agent candidates. Resolves to an array of { agent, ruleId }
+    // refs (skipping failures) so uninstall can remove exactly what was added.
+    rulesAdd: function (rule, agents) {
+      var targets = (agents && agents.length) ? agents : CHAT_AGENTS;
+      return Promise.all(targets.map(function (ag) {
         return _post('/api/rules/add', { rule: rule }, { 'X-Agent-Id': ag })
           .then(function (r) {
             var id = r && r.rule_id;

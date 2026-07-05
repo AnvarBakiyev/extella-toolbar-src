@@ -610,7 +610,7 @@ ETB.router = (function () {
         function reply3(msg) { if (src3 && src3.contentWindow) { try { src3.contentWindow.postMessage(msg, '*'); } catch (_) {} } }
         try {
           if (e.data.type === 'etb_rule_add') {
-            ETB.api.rulesAdd(String(e.data.rule || ''))
+            ETB.api.rulesAdd(String(e.data.rule || ''), e.data.agents)
               .then(function (refs) { reply3({ type: 'etb_rule_result', reqId: reqId3, ok: !!(refs && refs.length), refs: refs || [] }); })
               .catch(function (err) { reply3({ type: 'etb_rule_result', reqId: reqId3, ok: false, error: (err && err.message) || 'rule add failed' }); });
           } else {
@@ -620,6 +620,22 @@ ETB.router = (function () {
           }
         } catch (err) {
           reply3({ type: 'etb_rule_result', reqId: reqId3, ok: false, error: (err && err.message) || 'rule failed' });
+        }
+      } else if (e.data.type === 'etb_agents_list') {
+        // Agents bridge: let the Skills UI ask which agent to install a skill on.
+        var src4 = _srcIframe(e);
+        var reqId4 = e.data.reqId;
+        function reply4(msg) { if (src4 && src4.contentWindow) { try { src4.contentWindow.postMessage(msg, '*'); } catch (_) {} } }
+        try {
+          ETB.api.agentsList()
+            .then(function (r) {
+              var list = (r && r.agents) || [];
+              var slim = list.map(function (a) { return { id: a.id, name: a.name, model: a.model }; });
+              reply4({ type: 'etb_agents_result', reqId: reqId4, ok: true, agents: slim });
+            })
+            .catch(function (err) { reply4({ type: 'etb_agents_result', reqId: reqId4, ok: false, error: (err && err.message) || 'agents list failed' }); });
+        } catch (err) {
+          reply4({ type: 'etb_agents_result', reqId: reqId4, ok: false, error: (err && err.message) || 'agents failed' });
         }
       }
     };
