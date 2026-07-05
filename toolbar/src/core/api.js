@@ -6,12 +6,12 @@
 ETB.api = (function () {
   var BASE = 'https://api.extella.ai';
   var DEFAULT_AGENT = 'agent_extella_default';
-  // The agent the user actually chats with (platform default Qwen). Skills
-  // install as rules on THIS agent so they fire in the user's chat — not on the
-  // toolbar's service agent (agent_extella_default), which the user never talks
-  // to. Rules are scoped per (account, agent); writing under the user's token
-  // only affects that user's own chat.
-  var CHAT_AGENT = 'agent_XwZBKvd8dD70jKvW4WrZm';
+  // Agents the user actually chats with. Rules are scoped per (account, agent),
+  // and the desktop chat resolves to a default Qwen agent whose exact id varies
+  // (alibaba default vs the Qwen id). We can't reliably detect which at runtime,
+  // so a Skill installs its rule on BOTH — whichever the chat uses, it's there.
+  // Writing under the user's own token only affects that user's chat.
+  var CHAT_AGENTS = ['agent_extella_alibaba_default', 'agent_XwZBKvd8dD70jKvW4WrZm'];
 
   // ── Install agent override ──────────────────────────────────────────────
   // Which backend agent executes plugin install / repair / auto-provision
@@ -403,14 +403,31 @@ ETB.api = (function () {
     // Rules = always-on behavioral instructions injected into every agent turn.
     // This is the reliable vehicle for Skills (concepts are only search-retrieved,
     // so they don't fire on their own). Verified: a rule changes agent output.
+    // Add a rule to every chat-agent candidate. Resolves to an array of
+    // { agent, ruleId } refs (skip the ones that failed) so uninstall can
+    // remove exactly what was added.
     rulesAdd: function (rule) {
-      return _post('/api/rules/add', { rule: rule }, { 'X-Agent-Id': CHAT_AGENT });
+      return Promise.all(CHAT_AGENTS.map(function (ag) {
+        return _post('/api/rules/add', { rule: rule }, { 'X-Agent-Id': ag })
+          .then(function (r) {
+            var id = r && r.rule_id;
+            return (id != null) ? { agent: ag, ruleId: id } : null;
+          })
+          .catch(function () { return null; });
+      })).then(function (refs) { return refs.filter(Boolean); });
     },
-    rulesRemove: function (ruleId) {
-      return _post('/api/rules/remove', { rule_id: ruleId }, { 'X-Agent-Id': CHAT_AGENT });
+    // Remove by the refs returned from rulesAdd (array of {agent, ruleId}).
+    // Back-compat: a bare ruleId removes from the first candidate.
+    rulesRemove: function (refs) {
+      if (!Array.isArray(refs)) refs = [{ agent: CHAT_AGENTS[0], ruleId: refs }];
+      return Promise.all(refs.map(function (ref) {
+        if (!ref || ref.ruleId == null) return Promise.resolve();
+        return _post('/api/rules/remove', { rule_id: ref.ruleId }, { 'X-Agent-Id': ref.agent })
+          .catch(function () {});
+      }));
     },
     rulesList: function () {
-      return _post('/api/rules/list', {}, { 'X-Agent-Id': CHAT_AGENT });
+      return _post('/api/rules/list', {}, { 'X-Agent-Id': CHAT_AGENTS[0] });
     },
 
     kvGet: function (key, opts) {

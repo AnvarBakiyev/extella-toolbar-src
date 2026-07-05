@@ -611,11 +611,11 @@ ETB.router = (function () {
         try {
           if (e.data.type === 'etb_rule_add') {
             ETB.api.rulesAdd(String(e.data.rule || ''))
-              .then(function (r) { reply3({ type: 'etb_rule_result', reqId: reqId3, ok: (r && (r.status === 'success' || r.rule_id != null)), ruleId: r && r.rule_id, raw: r }); })
+              .then(function (refs) { reply3({ type: 'etb_rule_result', reqId: reqId3, ok: !!(refs && refs.length), refs: refs || [] }); })
               .catch(function (err) { reply3({ type: 'etb_rule_result', reqId: reqId3, ok: false, error: (err && err.message) || 'rule add failed' }); });
           } else {
-            ETB.api.rulesRemove(e.data.ruleId)
-              .then(function (r) { reply3({ type: 'etb_rule_result', reqId: reqId3, ok: (r && r.status === 'success') }); })
+            ETB.api.rulesRemove(e.data.refs || e.data.ruleId)
+              .then(function () { reply3({ type: 'etb_rule_result', reqId: reqId3, ok: true }); })
               .catch(function (err) { reply3({ type: 'etb_rule_result', reqId: reqId3, ok: false, error: (err && err.message) || 'rule remove failed' }); });
           }
         } catch (err) {
