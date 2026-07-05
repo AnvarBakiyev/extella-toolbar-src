@@ -5,17 +5,23 @@
 <title>Extella Plugins</title>
 <style>
 :root{
-  --a:#C67E34;--ar:198,126,52;
-  --bg:#0a0a0a;--s1:#111;--s2:#161616;--s3:#1c1c1c;--s4:#242424;
-  --bd:rgba(255,255,255,.07);--bd2:rgba(255,255,255,.13);
-  --tx:#f0f0f0;--tx2:#8a8a8a;--tx3:#444;--r:12px}
+  --a:#C67E34;--ar:198,126,52;--amber:#E8A85C;
+  --bg:#0A0A0B;--s1:#161618;--s2:#161618;--s3:#1E1E21;--s4:#26262a;
+  --bd:rgba(243,238,229,.09);--bd2:rgba(243,238,229,.18);
+  --tx:#F3EEE5;--tx2:#C9C3B8;--tx3:#98938A;--r:14px;
+  --shadow:0 10px 34px rgba(0,0,0,.5);
+  --serif:"New York",ui-serif,Georgia,serif;
+  --sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,monospace}
 [data-lm]{
-  --bg:#f2f2f7;--s1:#fff;--s2:#fff;--s3:#f7f7f9;--s4:#ebebed;
-  --bd:rgba(0,0,0,.07);--bd2:rgba(0,0,0,.14);
-  --tx:#111;--tx2:#6b6b6b;--tx3:#c0c0c0}
+  --amber:#A96617;
+  --bg:#F2F2F7;--s1:#FFFFFF;--s2:#FFFFFF;--s3:#F5F4F1;--s4:#ebeae6;
+  --bd:rgba(20,20,18,.09);--bd2:rgba(20,20,18,.2);
+  --tx:#141412;--tx2:#3E3B35;--tx3:#7A756B;
+  --shadow:0 10px 30px rgba(20,20,18,.10)}
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{height:100%;overflow:hidden}
-body{font-family:-apple-system,sans-serif;background:var(--bg);color:var(--tx);
+body{font-family:var(--sans);background:var(--bg);color:var(--tx);
   display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
 
 /* ── Header ─────────────────────────────────────────────────────────── */
@@ -76,13 +82,23 @@ body{font-family:-apple-system,sans-serif;background:var(--bg);color:var(--tx);
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
 
 /* ── Command bar: the store's main entry — paste a link, get a plugin ── */
-.cmdbar{display:flex;gap:10px;padding:14px 18px;background:var(--s1);border-bottom:1px solid var(--bd);flex-shrink:0}
-.cmdbar input{flex:1;background:var(--s2);border:1px solid var(--bd2);border-radius:12px;
-  padding:12px 16px;font:500 13.5px -apple-system,sans-serif;color:var(--tx);outline:none;min-width:0}
-.cmdbar input::placeholder{color:var(--tx2)}
+/* segmented toggle + theme button (from the storefront concept) */
+.seg{display:flex;gap:2px;background:var(--s2);border:1px solid var(--bd);border-radius:20px;padding:3px}
+.seg button{border:none;background:transparent;color:var(--tx3);font:600 12.5px var(--sans);padding:6px 15px;border-radius:16px;cursor:pointer}
+.seg button.on{background:rgba(var(--ar),.16);color:var(--amber)}
+.iconbtn{border:1px solid var(--bd);background:var(--s2);color:var(--tx);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:14px;line-height:1;flex-shrink:0}
+.iconbtn:hover{border-color:var(--bd2)}
+
+.cmdbar{display:flex;gap:10px;padding:18px 18px 6px;background:var(--s1);flex-shrink:0}
+.cmdbar input{flex:1;background:var(--s2);border:1px solid var(--bd2);border-radius:14px;
+  padding:16px 18px;font:500 14.5px var(--sans);color:var(--tx);outline:none;min-width:0;box-shadow:var(--shadow)}
+.cmdbar input::placeholder{color:var(--tx3)}
 .cmdbar input:focus{border-color:rgba(var(--ar),.55)}
-.cmdgo{border:none;border-radius:12px;background:var(--a);color:#fff;font:800 13px -apple-system,sans-serif;padding:0 22px;cursor:pointer;flex-shrink:0}
+.cmdgo{border:none;border-radius:14px;background:var(--a);color:#fff;font:800 14px var(--sans);padding:0 26px;cursor:pointer;flex-shrink:0}
 .cmdgo:hover{filter:brightness(1.1)}
+.cmdnote{padding:0 18px 12px;background:var(--s1);font:11px var(--mono);color:var(--tx3);letter-spacing:.05em;text-transform:uppercase;flex-shrink:0;border-bottom:1px solid var(--bd)}
+/* «Для всех» — курируемый вид: прячем сырую GitHub-строку установки */
+body[data-mode="all"] .cmdbar,body[data-mode="all"] .cmdnote{display:none}
 
 /* ── Card: accent-tinted gradient fill + accent top spine ─────────────── */
 .rcard{position:relative;border:1px solid var(--bd);border-radius:var(--r);
@@ -318,12 +334,18 @@ body{font-family:-apple-system,sans-serif;background:var(--bg);color:var(--tx);
   <div class="ldot"></div>
   <div class="lnm">Extella Plugins</div>
   <div class="sp"></div>
+  <div class="seg" role="tablist">
+    <button id="mAll" class="on" onclick="setMode('all')">Для всех</button>
+    <button id="mPro" onclick="setMode('pro')">Для профи</button>
+  </div>
+  <button class="iconbtn" id="themeBtn" onclick="toggleTheme()" title="Светлая / тёмная тема">☾</button>
   <button class="bclose" onclick="notify('close')" title="Close">&#10005;</button>
 </div>
 <div class="cmdbar">
-  <input id="cmd_url" placeholder="🔗  Paste a GitHub link — we'll install it in one click" spellcheck="false" autocomplete="off" onkeydown="if(event.key==='Enter')cmdInstall()"/>
-  <button class="cmdgo" onclick="cmdInstall()">Install</button>
+  <input id="cmd_url" placeholder="🔗  Вставьте ссылку на GitHub — установим в один клик" spellcheck="false" autocomplete="off" onkeydown="if(event.key==='Enter')cmdInstall()"/>
+  <button class="cmdgo" onclick="cmdInstall()">Установить</button>
 </div>
+<div class="cmdnote" id="cmdnote">Об этом гремят соцсети. Здесь оно ставится в один клик — и работает у вас.</div>
 <div class="tabs" id="tabs"></div>
 <div class="scr"><div class="grid" id="grid"></div></div>
 
@@ -1667,7 +1689,17 @@ if (!window._heroTimer) {
   }, 6500);
 }
 
+// ── Storefront modes: «Для всех» (curated) vs «Для профи» (full/dev) ──────
+function setMode(m){
+  document.body.setAttribute('data-mode', m);
+  var a=document.getElementById('mAll'), p=document.getElementById('mPro');
+  if(a) a.classList.toggle('on', m==='all');
+  if(p) p.classList.toggle('on', m==='pro');
+}
+function toggleTheme(){ document.documentElement.toggleAttribute('data-lm'); }
+
 // ── Boot ──────────────────────────────────────────────────────────────────
+setMode('all');
 rtabs();
 renderTopics();
 doSearch();
