@@ -568,7 +568,7 @@ var GH_TOPICS = [
 ];
 
 // ── UI state ──────────────────────────────────────────────────────────────
-var cur = 'all';
+var cur = 'home';
 var ghState = {
   query: '', topic: '', sort: 'stars',
   language: '', minStars: '100', updatedAfter: '',
@@ -592,7 +592,6 @@ var CAT_TABS = [
   { id: 'sales',      l: 'Продажи и клиенты' },
   { id: 'content',    l: 'Контент' },
   { id: 'data',       l: 'Данные и отчёты' },
-  { id: 'ai-models',  l: 'ИИ-модели' },
   { id: 'automation', l: 'Автоматизация' }
 ];
 var _featCat = 'all';
@@ -910,22 +909,23 @@ function notify(action, pluginId, url) {
 }
 
 // ── Tabs ──────────────────────────────────────────────────────────────────
+// Store aisles by TYPE of good (Anvar's clean IA): an editorial home + the
+// three kinds Extella sells + the user's own. No mixing of «view» and «type».
 var CATS = [
-  { id: 'all',  l: 'All' },
-  { id: 'inst', l: 'Installed' },
-  { id: 'hf',   l: '🤗 HuggingFace' }
+  { id: 'home',     l: 'Витрина' },
+  { id: 'programs', l: 'Программы' },
+  { id: 'models',   l: 'Модели' },
+  { id: 'skills',   l: 'Навыки' },
+  { id: 'mine',     l: 'Мои' }
 ];
 
 function rtabs() {
   var inst = gi();
   document.getElementById('tabs').innerHTML = CATS.map(function(c) {
-    var n = c.id === 'inst' ? '<span class="tn"> ' + inst.length + '</span>' : '';
+    var n = c.id === 'mine' ? '<span class="tn"> ' + inst.length + '</span>' : '';
     return '<button class="tab' + (cur === c.id ? ' on' : '') + '" onclick="setc(\'' + c.id + '\')">' +
       esc(c.l) + n + '</button>';
-  }).join('') +
-  // Skills are a different kind of good (abilities for the agent, not apps) —
-  // their own accented aisle inside the same store, switched in place.
-  '<button class="tab tab_skills' + (cur === 'skills' ? ' on' : '') + '" onclick="setc(\'skills\')">🧠 Навыки</button>';
+  }).join('');
 }
 
 function setc(id) {
@@ -937,7 +937,7 @@ function setc(id) {
   syncFilterBar();
   syncHFFilterBar();
   // Lazy-init HF search on first open
-  if (id === 'hf' && !hfState.inited) {
+  if (id === 'models' && !hfState.inited) {
     hfState.inited = true;
     searchHF();
   }
@@ -952,15 +952,13 @@ function normalizeCategory(p) {
     ' ' + ((p.pills || []).join(' ')) + ' ' + (p.category || '')).toLowerCase();
   if (/\bpdf\b|docx|\bdoc\b|word|excel|xlsx|\bocr\b|\bfile\b|документ|скан|расшифров|транскрип/.test(hay)) return 'docs';
   if (/\bcrm\b|sales|lead|proposal|invoice|\bclient|customer|продаж|клиент|счёт-фактур|коммерческ|заявк/.test(hay)) return 'sales';
-  if (/\bmodel\b|whisper|diffusion|\bllm\b|inference|gpu|hugging|нейросет|модел|генерац.{0,12}(картин|изображ|фото|голос|видео)/.test(hay)) return 'ai-models';
   if (/chart|\bdata\b|analytic|report|dashboard|\btable\b|график|отчёт|данн|аналит|метрик|калькул|расчёт/.test(hay)) return 'data';
   if (/writ|content|blog|social|\bpost\b|caption|\bseo\b|design|\bimage\b|контент|текст|соцсет|дизайн|перевод|письм|рассылк/.test(hay)) return 'content';
   if (/\bapi\b|webhook|automat|workflow|script|integrat|\bcli\b|devops|автоматиз|интеграц|скрипт|пайплайн/.test(hay)) return 'automation';
   var t = (p.category || 'other');
   if (t === 'utilities' || t === 'developer' || t === 'web') return 'automation';
   if (t === 'data' || t === 'calculators') return 'data';
-  if (t === 'ai-work') return 'ai-models';
-  if (t === 'text' || t === 'ai-life') return 'content';
+  if (t === 'text' || t === 'ai-life' || t === 'ai-work') return 'content';
   return 'automation';
 }
 
@@ -1000,7 +998,7 @@ function syncFilterBar() {
   var stash = document.getElementById('filter_stash');
   var slot = document.getElementById('other_filter_slot');
   if (!fb || !stash) return;
-  var show = cur === 'all' && !_otherCollapsed;
+  var show = cur === 'programs' && !_otherCollapsed;
   if (show && slot) {
     slot.appendChild(fb);
     fb.style.display = '';
@@ -1021,7 +1019,7 @@ function syncHFFilterBar() {
   var stash = document.getElementById('hf_filter_stash');
   var slot = document.getElementById('hf_filter_slot');
   if (!fb || !stash) return;
-  if (cur === 'hf' && slot) {
+  if (cur === 'models' && slot) {
     slot.appendChild(fb);
     fb.style.display = '';
   } else {
@@ -1032,10 +1030,46 @@ function syncHFFilterBar() {
 
 // ── Grid dispatcher ───────────────────────────────────────────────────────
 function renderGrid() {
-  if (cur === 'all') renderDiscover();
-  else if (cur === 'hf') renderHFDiscover();
+  if (cur === 'home') renderHome();
+  else if (cur === 'programs') renderPrograms();
+  else if (cur === 'models') renderModels();
   else if (cur === 'skills') renderSkillsShelf();
-  else renderInstalled();
+  else if (cur === 'mine') renderInstalled();
+  else renderHome();
+}
+
+// Модели — curated AI-model demos in «Для всех»; full HuggingFace search in «Для профи».
+var MODELS_CURATED = [
+  { id:'black-forest-labs/FLUX.1-dev', name:'FLUX.1 — картинки по тексту', desc:'Рисует изображение студийного качества по описанию.', acc:'#2E7D5B' },
+  { id:'Kwai-Kolors/Kolors-Virtual-Try-On', name:'Kolors — примерочная', desc:'Примеряет одежду на ваше фото, не выходя из браузера.', acc:'#B5423E' },
+  { id:'enzostvs/deepsite', name:'DeepSite — сайт по описанию', desc:'Собирает рабочий сайт из текста — без кода.', acc:'#3A6EA5' },
+  { id:'openai/whisper', name:'Whisper — расшифровка речи', desc:'Переводит аудио в текст, любой язык.', acc:'#C67E34' },
+  { id:'jbilcke-hf/ai-comic-factory', name:'Фабрика комиксов', desc:'Сюжет словами → готовые страницы комикса.', acc:'#8E4AA8' },
+  { id:'baidu/Unlimited-OCR', name:'OCR — распознавание документов', desc:'Достаёт текст из PDF, фото и сканов.', acc:'#C67E34' }
+];
+function renderModels() {
+  var g = document.getElementById('grid'); if (!g) return;
+  if (document.body.getAttribute('data-mode') === 'pro') { renderHFDiscover(); return; }
+  var cards = MODELS_CURATED.map(function (m, i) {
+    return '<div class="stile" style="--acc:' + esc(m.acc) + ';animation-delay:' + Math.min(i * 30, 240) + 'ms">' +
+      '<span class="st_chip">HuggingFace</span>' +
+      '<div class="st_title">' + esc(m.name) + '</div>' +
+      '<div class="st_fact">' + esc(m.desc) + '</div>' +
+      '<div class="st_src">запуск через HuggingFace</div>' +
+      '<div class="st_foot"><button class="st_btn" onclick="installHF(\'' + esc(m.id) + '\',\'space\',this)">+ Установить</button></div>' +
+    '</div>';
+  }).join('');
+  g.innerHTML = '<div class="sect"><span class="eyebrow">Модели</span><h2>ИИ-модели <i>в один клик</i></h2></div>' +
+    '<div class="sk_lead">Тяжёлые ИИ-модели — запускаются через HuggingFace, без своей видеокарты. Больше моделей и поиск — в режиме «Для профи».</div>' +
+    '<div class="mshelf">' + cards + '</div>';
+}
+
+// Витрина — editorial cross-type front (bento hero + свежак + подборки).
+function renderHome() {
+  var g = document.getElementById('grid'); if (!g) return;
+  var html = renderMerchHero() + renderMerchShelf() + renderMerchCollections();
+  if (!html) html = '<div class="sk_lead" style="padding:34px 0">Витрина наполняется. Загляни на «Программы», «Модели» или «Навыки».</div>';
+  g.innerHTML = html;
 }
 
 // ── Featured (curated, bundled at build time) ─────────────────────────────
@@ -1303,7 +1337,9 @@ function renderMerchCollections() {
   }).join('');
 }
 
-function renderDiscover() {
+// Программы — the plugin catalogue (business aisles + grid). The raw GitHub
+// search lives here too, but only in «Для профи»; «Для всех» stays curated.
+function renderPrograms() {
   // Always rescue filter_bar before any g.innerHTML wipe. The element lives
   // inside #grid when Other is expanded; innerHTML replacement destroys it.
   _rescueFilterBar();
@@ -1311,7 +1347,15 @@ function renderDiscover() {
   var g = document.getElementById('grid');
   if (!g) return;
 
-  var featuredHtml = renderMerchHero() + renderMerchShelf() + renderMerchCollections() + renderFeaturedSection();
+  var featuredHtml = renderFeaturedSection();
+
+  // «Для всех» — curated only: no raw GitHub firehose.
+  if (document.body.getAttribute('data-mode') !== 'pro') {
+    g.innerHTML = featuredHtml;
+    syncFilterBar();
+    return;
+  }
+
   var arrow = _otherCollapsed ? '▶' : '▼';
   var otherHdr = '<div class="sect_hdr">' +
     '<span class="sect_title">Other</span>' +
@@ -1481,13 +1525,13 @@ function searchHF(append) {
     hfState.total = cached.total;
     hfState.loading = false;
     hfState.error = null;
-    if (cur === 'hf') renderHFDiscover();
+    if (cur === 'models') renderHFDiscover();
     return;
   }
 
   hfState.loading = true;
   hfState.error = null;
-  if (cur === 'hf') renderHFDiscover();
+  if (cur === 'models') renderHFDiscover();
 
   var url = buildHFUrl(hfState);
   fetch(url, { headers: { Accept: 'application/json' } })
@@ -1511,7 +1555,7 @@ function searchHF(append) {
       hfState.error = (e && e.message) || 'error';
     })
     .then(function() {
-      if (cur === 'hf') {
+      if (cur === 'models') {
         _renderHFKeepFocus(function() {
           renderHFDiscover();
           syncHFFilterBar();
@@ -1770,7 +1814,7 @@ window.addEventListener('message', function(e) {
   if (!e.data) return;
   if (e.data.type === 'etb_merch') {
     window._merch = e.data.data || null;
-    if (cur === 'all') renderGrid();
+    if (cur === 'home') renderGrid();
   } else if (e.data.type === 'etb_reload_plugins') {
     renderGrid();
     rtabs();
@@ -1898,6 +1942,7 @@ function setMode(m){
   var a=document.getElementById('mAll'), p=document.getElementById('mPro');
   if(a) a.classList.toggle('on', m==='all');
   if(p) p.classList.toggle('on', m==='pro');
+  renderGrid();
 }
 function toggleTheme(){ document.documentElement.toggleAttribute('data-lm'); }
 
