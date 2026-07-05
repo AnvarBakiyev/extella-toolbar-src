@@ -82,15 +82,21 @@ body{font-family:-apple-system,sans-serif;background:var(--bg);color:var(--tx);
 .cmdgo{border:none;border-radius:12px;background:var(--a);color:#fff;font:800 13px -apple-system,sans-serif;padding:0 22px;cursor:pointer;flex-shrink:0}
 .cmdgo:hover{filter:brightness(1.1)}
 
-/* ── Card: quiet surface, accent as a thin top spine (approved design) ── */
-.rcard{position:relative;background:var(--s2);border:1px solid var(--bd);border-radius:var(--r);
+/* ── Card: accent-tinted gradient fill + accent top spine ─────────────── */
+.rcard{position:relative;border:1px solid var(--bd);border-radius:var(--r);
+  background:linear-gradient(157deg,
+    color-mix(in srgb, var(--acc,var(--a)) 14%, var(--s2)) 0%,
+    var(--s2) 58%);
   padding:14px 16px;display:flex;flex-direction:column;gap:8px;overflow:hidden;
-  transition:border-color .14s,box-shadow .14s;animation:fiu .18s ease both}
+  transition:border-color .14s,box-shadow .14s,transform .14s;animation:fiu .18s ease both}
 .rcard::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;z-index:2;
   background:linear-gradient(90deg,var(--acc,var(--a)),transparent 85%)}
 /* composed cover: avatar + owner + name set in type — never raw social images */
 .rcv{display:flex;align-items:center;gap:11px;margin:-14px -16px 0;padding:14px 16px 12px;
-  background:var(--s3);border-bottom:1px solid var(--bd);position:relative}
+  background:linear-gradient(157deg,
+    color-mix(in srgb, var(--acc,var(--a)) 20%, var(--s3)) 0%,
+    color-mix(in srgb, var(--acc,var(--a)) 7%, var(--s3)) 100%);
+  border-bottom:1px solid var(--bd);position:relative}
 .rcv_av{width:40px;height:40px;border-radius:10px;object-fit:cover;flex-shrink:0;
   box-shadow:0 2px 8px rgba(0,0,0,.25)}
 .rcv_t{min-width:0}
@@ -104,7 +110,10 @@ body{font-family:-apple-system,sans-serif;background:var(--bg);color:var(--tx);
 
 /* ── Merch hero: the story slot, fed from the cloud (_mkt_merch) ──────── */
 .mhero{grid-column:1/-1;position:relative;overflow:hidden;border:1px solid var(--bd);
-  border-radius:var(--r);background:var(--s2);padding:24px 28px;
+  border-radius:var(--r);padding:24px 28px;
+  background:linear-gradient(157deg,
+    color-mix(in srgb, var(--acc,var(--a)) 12%, var(--s2)) 0%,
+    var(--s2) 62%);
   display:flex;flex-direction:column;gap:9px;animation:fiu .18s ease both}
 .mhero::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;
   background:linear-gradient(90deg,var(--acc,var(--a)),transparent 85%)}
@@ -136,8 +145,8 @@ body{font-family:-apple-system,sans-serif;background:var(--bg);color:var(--tx);
 /* промо-ярлык на карточке каталога (слот из облачной выкладки) */
 .rc_promochip{font:700 8.5px ui-monospace,Menlo,monospace;letter-spacing:.1em;color:#fff;
   background:var(--a);border-radius:4px;padding:2.5px 7px;text-transform:uppercase;flex-shrink:0}
-.rcard:hover{border-color:var(--bd2);box-shadow:0 8px 28px rgba(0,0,0,.45)}
-[data-lm] .rcard:hover{box-shadow:0 6px 18px rgba(0,0,0,.1)}
+.rcard:hover{border-color:var(--bd2);box-shadow:0 10px 30px rgba(0,0,0,.45);transform:translateY(-2px)}
+[data-lm] .rcard:hover{box-shadow:0 8px 22px rgba(0,0,0,.12)}
 .rcard.inst{border-color:rgba(var(--ar),.3)}
 .rc_top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
 .rc_repo{min-width:0}
