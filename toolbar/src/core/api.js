@@ -394,6 +394,19 @@ ETB.api = (function () {
       return _post('/api/concept/search', { query: query, limit: limit || 5 });
     },
 
+    // Rules = always-on behavioral instructions injected into every agent turn.
+    // This is the reliable vehicle for Skills (concepts are only search-retrieved,
+    // so they don't fire on their own). Verified: a rule changes agent output.
+    rulesAdd: function (rule) {
+      return _post('/api/rules/add', { rule: rule });
+    },
+    rulesRemove: function (ruleId) {
+      return _post('/api/rules/remove', { rule_id: ruleId });
+    },
+    rulesList: function () {
+      return _post('/api/rules/list', {});
+    },
+
     kvGet: function (key, opts) {
       var body = { key: key };
       if (opts && opts.global) body.global = true;

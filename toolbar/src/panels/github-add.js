@@ -593,6 +593,11 @@ ETB.githubAdd = (function () {
     // Honest-routing screens (skill / not-an-app).
     var skillClose = ov.querySelector('#_etbv2_gh_skill_close');
     if (skillClose) skillClose.onclick = function () { ETB.githubAdd.close(); };
+    var skillOpen = ov.querySelector('#_etbv2_gh_skill_open');
+    if (skillOpen) skillOpen.onclick = function () {
+      ETB.githubAdd.close();
+      if (ETB.router && ETB.router.openById) ETB.router.openById('mkt_skills');
+    };
     var notappCancel = ov.querySelector('#_etbv2_gh_notapp_cancel');
     if (notappCancel) notappCancel.onclick = function () { ETB.githubAdd.close(); };
     var notappForce = ov.querySelector('#_etbv2_gh_notapp_force');
@@ -777,12 +782,13 @@ ETB.githubAdd = (function () {
       'Такое не открывают — оно <b>учит ассистента</b> новому умению.</div>',
       '<div style="background:rgba(198,126,52,.09);border:1px solid rgba(198,126,52,.28);',
       'border-radius:10px;padding:12px 14px;font-size:13px;line-height:1.5;margin-bottom:16px;">',
-      'Скоро Extella будет ставить навыки прямо на твоего агента: пишешь ему по-человечески — ',
-      'а он уже умеет то, чему научил навык. Мы как раз строим эту полку — «Навыки». ',
-      'Поэтому вместо сломанной установки — честно: это навык, приложение из него не собрать.',
+      'Навыки ставятся прямо на твоего агента: пишешь ему по-человечески — а он уже умеет то, ',
+      'чему научил навык. Открой полку «Навыки» — там готовые навыки можно установить, посмотреть, ',
+      'как их запускать, и удалить. (Импорт навыков прямо с GitHub — на подходе.)',
       '</div>',
       '<div class="_etbv2_gh_actions" style="justify-content:flex-end;">',
-      '<button class="_etbv2_gh_btn_primary" id="_etbv2_gh_skill_close">Понятно</button>',
+      '<button class="_etbv2_gh_btn_cancel" id="_etbv2_gh_skill_close">Понятно</button>',
+      '<button class="_etbv2_gh_btn_primary" id="_etbv2_gh_skill_open">Открыть Навыки</button>',
       '</div></div>'
     ].join('');
   }

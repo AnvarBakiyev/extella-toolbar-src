@@ -600,6 +600,27 @@ ETB.router = (function () {
         } catch (err) {
           reply2({ type: 'etb_kv_result', reqId: reqId2, ok: false, error: (err && err.message) || 'kv failed' });
         }
+      } else if (e.data.type === 'etb_rule_add' || e.data.type === 'etb_rule_remove') {
+        // Rules bridge: Skills install/uninstall as always-on agent rules. The
+        // iframe can't reach the API directly; the toolbar performs the op with
+        // the user's own credential. Skill rules carry a marker prefix so they
+        // are identifiable; the plugin manages only what it added.
+        var src3 = _srcIframe(e);
+        var reqId3 = e.data.reqId;
+        function reply3(msg) { if (src3 && src3.contentWindow) { try { src3.contentWindow.postMessage(msg, '*'); } catch (_) {} } }
+        try {
+          if (e.data.type === 'etb_rule_add') {
+            ETB.api.rulesAdd(String(e.data.rule || ''))
+              .then(function (r) { reply3({ type: 'etb_rule_result', reqId: reqId3, ok: (r && (r.status === 'success' || r.rule_id != null)), ruleId: r && r.rule_id, raw: r }); })
+              .catch(function (err) { reply3({ type: 'etb_rule_result', reqId: reqId3, ok: false, error: (err && err.message) || 'rule add failed' }); });
+          } else {
+            ETB.api.rulesRemove(e.data.ruleId)
+              .then(function (r) { reply3({ type: 'etb_rule_result', reqId: reqId3, ok: (r && r.status === 'success') }); })
+              .catch(function (err) { reply3({ type: 'etb_rule_result', reqId: reqId3, ok: false, error: (err && err.message) || 'rule remove failed' }); });
+          }
+        } catch (err) {
+          reply3({ type: 'etb_rule_result', reqId: reqId3, ok: false, error: (err && err.message) || 'rule failed' });
+        }
       }
     };
     window.addEventListener('message', _pmHandler);
