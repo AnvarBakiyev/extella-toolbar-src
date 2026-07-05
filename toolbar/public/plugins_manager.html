@@ -344,14 +344,22 @@ body[data-mode="all"] .cmdbar,body[data-mode="all"] .cmdnote{display:none}
 .rcard.feat:hover{border-color:rgba(var(--ar),.4)}
 .rc_btn.installing{opacity:.6;cursor:wait}
 
-/* ── Category filter tabs (Featured section) ────────────────────────── */
-.cat_tabs{grid-column:1/-1;display:flex;gap:5px;flex-wrap:wrap;padding:4px 0 8px}
-.cat_tab{background:var(--s3);border:1px solid var(--bd2);border-radius:7px;
-  color:var(--tx2);font-size:11px;font-weight:500;padding:4px 11px;cursor:pointer;
-  transition:all .14s;white-space:nowrap;font-family:inherit}
-.cat_tab:hover{color:var(--tx);border-color:rgba(var(--ar),.3)}
-.cat_tab.active{background:rgba(var(--ar),.12);color:var(--a);
-  border-color:rgba(var(--ar),.3)!important;font-weight:700}
+/* ── Category chips (business aisles, concept .tchip pill) ───────────── */
+.cat_tabs{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;padding:6px 0 10px}
+.cat_tab{background:transparent;border:1px solid var(--bd2);border-radius:20px;
+  color:var(--tx2);font:600 12.5px var(--sans);padding:8px 16px;cursor:pointer;
+  transition:all .14s;white-space:nowrap}
+.cat_tab:hover{color:var(--amber);border-color:var(--amber)}
+.cat_tab.active{background:var(--a);color:#fff;border-color:var(--a)!important}
+
+/* ── Section headers: eyebrow + serif title (concept .sect) ─────────── */
+.sect{grid-column:1/-1;display:flex;align-items:baseline;gap:12px;margin:40px 0 16px;flex-wrap:wrap}
+.sect .eyebrow{font:700 10.5px ui-monospace,Menlo,monospace;letter-spacing:.14em;color:var(--amber);text-transform:uppercase;white-space:nowrap}
+.sect h2{font:600 22px/1.2 var(--serif);color:var(--tx);letter-spacing:0;margin:0}
+.sect h2 i{font-style:italic;color:var(--amber)}
+.sect .sp{flex:1}
+.sect a{font:600 12.5px var(--sans);color:var(--tx3);text-decoration:none;white-space:nowrap}
+.sect a:hover{color:var(--amber)}
 
 /* ── Collapsible Other toggle ───────────────────────────────────────── */
 .sect_toggle{background:none;border:none;cursor:pointer;
@@ -576,15 +584,16 @@ var hfState = {
 };
 
 // ── Featured category filter state ────────────────────────────────────────
+// Business aisles (from the storefront concept) — the shelves a non-technical
+// buyer thinks in. Plugins are mapped onto them heuristically by bizCategory().
 var CAT_TABS = [
-  { id: 'all',         l: 'All' },
-  { id: 'text',        l: 'Text' },
-  { id: 'data',        l: 'Data' },
-  { id: 'developer',   l: 'Developer' },
-  { id: 'web',         l: 'Web & APIs' },
-  { id: 'calculators', l: 'Calculators' },
-  { id: 'ai-work',     l: 'AI Work' },
-  { id: 'ai-life',     l: 'AI Life' }
+  { id: 'all',        l: 'Всё' },
+  { id: 'docs',       l: 'Документы' },
+  { id: 'sales',      l: 'Продажи и клиенты' },
+  { id: 'content',    l: 'Контент' },
+  { id: 'data',       l: 'Данные и отчёты' },
+  { id: 'ai-models',  l: 'ИИ-модели' },
+  { id: 'automation', l: 'Автоматизация' }
 ];
 var _featCat = 'all';
 var _instCat = 'all';
@@ -935,11 +944,24 @@ function setc(id) {
 }
 
 // ── Category helpers (shared by Featured + Installed) ─────────────────────
+// Map a plugin onto a business aisle. Keyword-first (name/tagline/description/
+// pills/category), then a fallback from the old tech category. Fuzzy on purpose
+// — the goal is a shop a non-technical buyer can browse, not perfect taxonomy.
 function normalizeCategory(p) {
-  var c = p.category || 'other';
-  if (c === 'utilities') return 'developer';
-  if (KNOWN_CATS[c]) return c;
-  return 'other';
+  var hay = ((p.name || '') + ' ' + (p.tagline || '') + ' ' + (p.description || '') +
+    ' ' + ((p.pills || []).join(' ')) + ' ' + (p.category || '')).toLowerCase();
+  if (/\bpdf\b|docx|\bdoc\b|word|excel|xlsx|\bocr\b|\bfile\b|документ|скан|расшифров|транскрип/.test(hay)) return 'docs';
+  if (/\bcrm\b|sales|lead|proposal|invoice|\bclient|customer|продаж|клиент|счёт-фактур|коммерческ|заявк/.test(hay)) return 'sales';
+  if (/\bmodel\b|whisper|diffusion|\bllm\b|inference|gpu|hugging|нейросет|модел|генерац.{0,12}(картин|изображ|фото|голос|видео)/.test(hay)) return 'ai-models';
+  if (/chart|\bdata\b|analytic|report|dashboard|\btable\b|график|отчёт|данн|аналит|метрик|калькул|расчёт/.test(hay)) return 'data';
+  if (/writ|content|blog|social|\bpost\b|caption|\bseo\b|design|\bimage\b|контент|текст|соцсет|дизайн|перевод|письм|рассылк/.test(hay)) return 'content';
+  if (/\bapi\b|webhook|automat|workflow|script|integrat|\bcli\b|devops|автоматиз|интеграц|скрипт|пайплайн/.test(hay)) return 'automation';
+  var t = (p.category || 'other');
+  if (t === 'utilities' || t === 'developer' || t === 'web') return 'automation';
+  if (t === 'data' || t === 'calculators') return 'data';
+  if (t === 'ai-work') return 'ai-models';
+  if (t === 'text' || t === 'ai-life') return 'content';
+  return 'automation';
 }
 
 function buildCatCounts(plugins) {
@@ -1022,7 +1044,7 @@ var featuredError = '';  // last install error, shown inline in the section
 
 function getFeatured() {
   var all = BUILTIN_PLUGINS_DATA.filter(function(p) { return p.featured; });
-  if (_featCat !== 'all') all = all.filter(function(p) { return p.category === _featCat; });
+  if (_featCat !== 'all') all = all.filter(function(p) { return normalizeCategory(p) === _featCat; });
   var q = _featSearch.trim().toLowerCase();
   if (q) {
     all = all.filter(function(p) {
@@ -1075,10 +1097,8 @@ function renderFeaturedSection() {
   var catCounts = buildCatCounts(allFeatured);
   var tabsHtml = buildCatTabs(catCounts, _featCat, '_setFeatCat');
 
-  var html = '<div class="sect_hdr">' +
-    '<span class="sect_title">Featured</span>' +
-    '<span class="sect_badge">Curated</span>' +
-    '<span class="sect_line"></span></div>';
+  var html = '<div class="sect"><span class="eyebrow">Каталог</span>' +
+    '<h2>Собрано <i>для вас</i></h2></div>';
 
   html += '<div class="feat_search_row" style="grid-column:1/-1;display:flex;gap:8px;padding:2px 0 4px">' +
     '<div class="fb_srch" style="max-width:320px">' +
@@ -1205,7 +1225,9 @@ function renderMerchHero() {
   if (!m) return '';
   var heroes = (m.heroes && m.heroes.length) ? m.heroes : (m.hero ? [m.hero] : []);
   if (!heroes.length) return '';
-  var html = '<div class="bento">' + _heroBig(heroes[0]);
+  var html = '<div class="sect"><span class="eyebrow">Гремит на этой неделе</span>' +
+    '<h2>Об этом пишут — <i>у нас это ставится</i></h2></div>' +
+    '<div class="bento">' + _heroBig(heroes[0]);
   heroes.slice(1, 3).forEach(function (h) { html += _heroMini(h); });
   html += '</div>';
   return html;
@@ -1243,7 +1265,7 @@ function renderMerchShelf() {
       '<div class="st_foot">' + btn + '</div>' +
     '</div>';
   }).join('');
-  return '<div class="sect_hdr"><span class="sect_title">Свежее и крутое</span><span class="sect_line"></span></div>' +
+  return '<div class="sect"><span class="eyebrow">Свежак</span><h2>Свежее и <i>крутое</i></h2></div>' +
     '<div class="mshelf">' + tiles + '</div>';
 }
 
@@ -1818,7 +1840,8 @@ function renderSkillsShelf(){
     return;
   }
   var cats=[]; SKILLS_CATALOG.forEach(function(s){if(cats.indexOf(s.cat)<0)cats.push(s.cat);});
-  var html='<div class="sk_lead">Навыки — способности для твоего ассистента. Поставил — просто пишешь ему в чате, и он умеет. При установке спросим, на какого агента.</div>';
+  var html='<div class="sect"><span class="eyebrow">Навыки</span><h2>Способности <i>для ассистента</i></h2></div>'+
+    '<div class="sk_lead">Поставил навык — просто пишешь ассистенту в чате, и он умеет. При установке спросим, на какого агента.</div>';
   cats.forEach(function(cn){
     html+='<div class="sect_hdr"><span class="sect_title">'+esc(cn)+'</span><span class="sect_line"></span></div>';
     html+='<div class="mshelf">'+SKILLS_CATALOG.filter(function(s){return s.cat===cn;}).map(skCard).join('')+'</div>';
