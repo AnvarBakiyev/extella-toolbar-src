@@ -1558,6 +1558,11 @@ window.addEventListener('message', function(e) {
 rtabs();
 renderTopics();
 doSearch();
+
+// Tell the toolbar we're booted and listening — it (re)sends the cloud merch
+// hero/collections. This pull handshake removes the open()-time push race where
+// the payload could arrive before this document attached its message listener.
+try { window.parent.postMessage({ type: 'etb_ready' }, '*'); } catch (e) {}
 </script>
 </body>
 </html>

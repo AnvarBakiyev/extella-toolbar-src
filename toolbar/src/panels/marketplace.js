@@ -206,13 +206,33 @@ ETB.marketplace = (function () {
           try { frame.contentWindow.postMessage({ type: 'etb_merch', data: _merchPayload }, '*'); } catch (e) {}
         }
       }
-      try {
+      // Fetch cloud merch only once the session token is ready. getToken() is
+      // empty until the async auth flow resolves, so a one-shot kvGet fired at
+      // open() would send an empty X-Auth-Token → 401 → silently no hero (a
+      // race: the hero showed only when the token happened to be ready in time).
+      // onToken() fires now if the token is present, else when it arrives; then
+      // retry a few times to ride out a slow first response. Delivery to the
+      // iframe is belt-and-suspenders: this push + the iframe's etb_ready pull.
+      function _fetchMerch(tries) {
+        tries = tries || 0;
         ETB.api.kvGet('_mkt_merch').then(function (r) {
-          if (!r || r.value == null || r.value === '') return;
-          try { _merchPayload = (typeof r.value === 'string') ? JSON.parse(r.value) : r.value; } catch (e) { return; }
-          _sendMerch();
-        }).catch(function () {});
-      } catch (e) {}
+          var ok = r && r.value != null && r.value !== '' &&
+                   r.status !== 'error' && r.status !== 'not_found';
+          if (ok) {
+            try { _merchPayload = (typeof r.value === 'string') ? JSON.parse(r.value) : r.value; }
+            catch (e) { return; }
+            _sendMerch();
+            return;
+          }
+          if (tries < 4) setTimeout(function () { _fetchMerch(tries + 1); }, 1200);
+        }).catch(function () {
+          if (tries < 4) setTimeout(function () { _fetchMerch(tries + 1); }, 1200);
+        });
+      }
+      try {
+        if (ETB.auth && ETB.auth.onToken) ETB.auth.onToken(function () { _fetchMerch(0); });
+        else _fetchMerch(0);
+      } catch (e) { _fetchMerch(0); }
       iframe.addEventListener('load', _sendMerch);
 
       // Do NOT call ETB.nav.syncUI() here — nav.set() already called _paintTabs()
@@ -223,7 +243,12 @@ ETB.marketplace = (function () {
       // Listen for install/open/close events from marketplace iframe.
       // Store reference so it can be removed on close.
       _msgHandler = function (e) {
-        if (!e.data || e.data.type !== 'etb_plugin_action') return;
+        if (!e.data) return;
+        // Iframe finished booting and attached its message listener → (re)push
+        // the merch payload. Guarantees delivery regardless of who was ready
+        // first (payload vs document).
+        if (e.data.type === 'etb_ready') { _sendMerch(); return; }
+        if (e.data.type !== 'etb_plugin_action') return;
         var action = e.data.action;
         var pluginId = e.data.pluginId;
         if (action === 'install' && pluginId) {
