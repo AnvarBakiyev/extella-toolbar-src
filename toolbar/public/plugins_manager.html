@@ -97,8 +97,6 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);
 .cmdgo{border:none;border-radius:14px;background:var(--a);color:#fff;font:800 14px var(--sans);padding:0 26px;cursor:pointer;flex-shrink:0}
 .cmdgo:hover{filter:brightness(1.1)}
 .cmdnote{padding:0 18px 12px;background:var(--s1);font:11px var(--mono);color:var(--tx3);letter-spacing:.05em;text-transform:uppercase;flex-shrink:0;border-bottom:1px solid var(--bd)}
-/* «Для всех» — курируемый вид: прячем сырую GitHub-строку установки */
-body[data-mode="all"] .cmdbar,body[data-mode="all"] .cmdnote{display:none}
 
 /* ── Card: accent-tinted gradient fill + accent top spine ─────────────── */
 .rcard{position:relative;border:1px solid var(--bd);border-radius:var(--r);
@@ -153,7 +151,7 @@ body[data-mode="all"] .cmdbar,body[data-mode="all"] .cmdnote{display:none}
 .mhdot.on{background:var(--a);width:18px;border-radius:4px}
 
 /* ── "Свежее и крутое": the living tile shelf (shelf[]) ───────────────── */
-.mshelf{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:14px}
+.mshelf{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(232px,1fr));gap:14px}
 .stile{position:relative;overflow:hidden;border:1px solid var(--bd);border-radius:var(--r);
   padding:15px 16px 14px;display:flex;flex-direction:column;gap:7px;
   background:linear-gradient(157deg,color-mix(in srgb,var(--acc,var(--a)) 6%,var(--s2)) 0%,var(--s2) 42%);
@@ -410,10 +408,10 @@ body[data-mode="all"] .cmdbar,body[data-mode="all"] .cmdnote{display:none}
   <button class="bclose" onclick="notify('close')" title="Close">&#10005;</button>
 </div>
 <div class="cmdbar">
-  <input id="cmd_url" placeholder="🔗  Вставьте ссылку на GitHub — установим в один клик" spellcheck="false" autocomplete="off" onkeydown="if(event.key==='Enter')cmdInstall()"/>
+  <input id="cmd_url" placeholder="🔗  Вставьте ссылку — установим в один клик: программа, модель, навык, CLI" spellcheck="false" autocomplete="off" onkeydown="if(event.key==='Enter')cmdInstall()"/>
   <button class="cmdgo" onclick="cmdInstall()">Установить</button>
 </div>
-<div class="cmdnote" id="cmdnote">Об этом гремят соцсети. Здесь оно ставится в один клик — и работает у вас.</div>
+<div class="cmdnote" id="cmdnote">Увидели крутой инструмент в соцсетях — вставьте ссылку. Здесь ставится в один клик и работает у вас.</div>
 <div class="tabs" id="tabs"></div>
 <div class="scr"><div class="grid" id="grid"></div></div>
 <div class="apick" id="apick">
@@ -1106,79 +1104,57 @@ function _setInstCat(cat) {
   renderGrid();
 }
 
+// Business aisle colours + labels (cards grouped by aisle, coloured — like Навыки).
+var BIZ_ACC   = { docs:'#DC3E3E', sales:'#C67E34', content:'#8E4AA8', data:'#3A6EA5', automation:'#57A773' };
+var BIZ_LABEL = { docs:'Документы', sales:'Продажи и клиенты', content:'Контент', data:'Данные и отчёты', automation:'Автоматизация' };
+var BIZ_ORDER = ['docs','sales','content','data','automation'];
+
+function programCard(p) {
+  var inst   = gi();
+  var isInst = inst.indexOf(p.id) !== -1;
+  var isBusy = !!installingIds[p.id];
+  var cat    = normalizeCategory(p);
+  var acc    = BIZ_ACC[cat] || '#C67E34';
+  var owner  = (p.eye || '').split('/')[0] || '';
+  var btn = isBusy
+    ? '<button class="st_btn" disabled>Ставлю…</button>'
+    : isInst
+      ? '<button class="st_btn ghost" onclick="notify(\'open\',\'' + esc(p.id) + '\')">Открыть</button>'
+      : '<button class="st_btn" onclick="installFeatured(\'' + esc(p.id) + '\',this)">+ Установить</button>';
+  return '<div class="stile" style="--acc:' + acc + '">' +
+    '<span class="st_chip">' + esc(BIZ_LABEL[cat] || 'Программа') + '</span>' +
+    '<div class="st_title">' + esc(p.name) + '</div>' +
+    (p.tagline ? '<div class="st_fact">' + esc(p.tagline) + '</div>' : '') +
+    (owner ? '<div class="st_src">' + esc(owner) + '</div>' : '') +
+    '<div class="st_foot">' + btn + '</div>' +
+  '</div>';
+}
+
+// Catalogue — grouped by business aisle into coloured sections (same schema as
+// Навыки). No filter chips: the aisles ARE the sections you scroll.
 function renderFeaturedSection() {
   var featured = getFeatured();
-  var inst = gi();
-
-  // Cloud-managed promo slots: promoted ids float to the top of the shelf
-  // and carry a chip — the "eye-level shelf" of the store.
   var promos = (window._merch && window._merch.promos) || [];
   if (promos.length) {
     featured = featured.slice().sort(function (a, b) {
       return (promos.indexOf(b.id) >= 0 ? 1 : 0) - (promos.indexOf(a.id) >= 0 ? 1 : 0);
     });
   }
-
-  var allFeatured = BUILTIN_PLUGINS_DATA.filter(function(p) { return p.featured; });
-  var catCounts = buildCatCounts(allFeatured);
-  var tabsHtml = buildCatTabs(catCounts, _featCat, '_setFeatCat');
-
-  var html = '<div class="sect"><span class="eyebrow">Каталог</span>' +
-    '<h2>Собрано <i>для вас</i></h2></div>';
-
-  html += '<div class="feat_search_row" style="grid-column:1/-1;display:flex;gap:8px;padding:2px 0 4px">' +
-    '<div class="fb_srch" style="max-width:320px">' +
-      '<input class="fb_sinp" id="feat_q" placeholder="Search featured plugins…" ' +
-        'autocomplete="off" value="' + esc(_featSearch) + '" ' +
-        'oninput="_setFeatSearch(this.value)">' +
-      '<span class="fb_sico"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>' +
-    '</div>' +
-  '</div>';
-
-  html += tabsHtml;
-
-  if (featuredError) {
-    html += '<div class="banner err">⚠ Install failed: ' + esc(featuredError) +
-      ' — please try again.</div>';
-  }
-
+  var html = '<div class="sect"><span class="eyebrow">Каталог</span><h2>Программы <i>по полкам</i></h2></div>';
+  html += '<div style="grid-column:1/-1;padding:0 0 4px"><div class="fb_srch" style="max-width:380px">' +
+    '<input class="fb_sinp" id="feat_q" placeholder="Поиск по программам…" autocomplete="off" value="' +
+      esc(_featSearch) + '" oninput="_setFeatSearch(this.value)">' +
+    '<span class="fb_sico">&#128269;</span></div></div>';
+  if (featuredError) html += '<div class="banner err">⚠ Установка не удалась: ' + esc(featuredError) + '</div>';
   if (!featured.length) {
-    html += '<div class="empty" style="grid-column:1/-1;padding:28px 20px">' +
-      '<div class="eico">🔍</div><p>No plugins in this category.</p></div>';
+    html += '<div class="empty" style="grid-column:1/-1;padding:28px 20px"><div class="eico">🔍</div><p>Ничего не найдено.</p></div>';
     return html;
   }
-
-  featured.forEach(function(p, i) {
-    var isInst = inst.indexOf(p.id) !== -1;
-    var isBusy = !!installingIds[p.id];
-    var pills  = (p.pills || []).slice(0, 3).map(function(t) {
-      return '<span class="rc_pill">' + esc(t) + '</span>';
-    }).join('');
-    var owner  = (p.eye || '').split('/')[0] || '';
-
-    var btn;
-    if (isBusy) {
-      btn = '<button class="rc_btn installing" disabled>Installing…</button>';
-    } else if (isInst) {
-      btn = '<button class="rc_btn done" onclick="notify(\'open\',\'' + esc(p.id) + '\')" style="cursor:pointer">Open</button>';
-    } else {
-      btn = '<button class="rc_btn" onclick="installFeatured(\'' + esc(p.id) + '\',this)">+ Install</button>';
-    }
-
-    var isPromo = promos.indexOf(p.id) >= 0;
-    html += '<div class="rcard feat' + (isInst ? ' inst' : '') +
-      '" style="--acc:' + accFor(p.category || p.id) + ';animation-delay:' + Math.min(i * 12, 180) + 'ms">' +
-      '<div class="rc_top">' +
-        '<div class="rc_repo">' +
-          '<div class="rc_owner">' + esc(owner) + '</div>' +
-          '<div class="rc_name">' + esc(p.name) + '</div>' +
-        '</div>' +
-        (isPromo ? '<span class="rc_promochip">Promo</span>' : '') +
-      '</div>' +
-      (p.tagline ? '<div class="rc_desc">' + esc(p.tagline) + '</div>' : '') +
-      '<div class="rc_meta">' + pills + '</div>' +
-      '<div class="rc_foot">' + btn + '</div>' +
-    '</div>';
+  BIZ_ORDER.forEach(function (cat) {
+    var items = featured.filter(function (p) { return normalizeCategory(p) === cat; });
+    if (!items.length) return;
+    html += '<div class="sect_hdr"><span class="sect_title">' + esc(BIZ_LABEL[cat]) + '</span><span class="sect_line"></span></div>' +
+      '<div class="mshelf">' + items.map(programCard).join('') + '</div>';
   });
   return html;
 }
@@ -1250,7 +1226,11 @@ var TYPE_ED = {
       { label:'Экономит деньги', acc:'#C67E34', source:'github.com/JuliusBrussee · ★ 84k', repoUrl:'https://github.com/JuliusBrussee/caveman',
         title:'Режет 65% токенов', facts:['Меньше токенов — меньше счёт за ИИ при той же работе'] },
       { label:'Сетап CEO', acc:'#3A6EA5', source:'github.com/garrytan · ★ 119k', repoUrl:'https://github.com/garrytan/gstack',
-        title:'Рабочий стол Гэрри Тана', facts:['23 инструмента как у главы Y Combinator'] }
+        title:'Рабочий стол Гэрри Тана', facts:['23 инструмента как у главы Y Combinator'] },
+      { label:'Гремит', acc:'#8E4AA8', source:'github.com/obra · ★ 246k', repoUrl:'https://github.com/obra/superpowers',
+        title:'Суперсилы для агента', facts:['14 методик: мозгоштурм, TDD, отладка'] },
+      { label:'Свежак', acc:'#57A773', source:'github.com/HKUDS', repoUrl:'https://github.com/HKUDS/CLI-Anything',
+        title:'CLI для чего угодно', facts:['Любой инструмент — через командную строку'] }
     ]
   },
   models: {
@@ -1271,7 +1251,10 @@ var TYPE_ED = {
       { label:'Свежак', acc:'#3A6EA5', source:'huggingface.co/enzostvs · ♥ 16k', hfId:'enzostvs/deepsite',
         title:'DeepSite — сайт по описанию', facts:['Собирает рабочий сайт из текста, без кода'] },
       { label:'Документы', acc:'#C67E34', source:'huggingface.co/baidu · ★ 13k', hfId:'baidu/Unlimited-OCR',
-        title:'OCR — распознаёт документы', facts:['Достаёт текст из PDF, фото и сканов'] }
+        title:'OCR — распознаёт документы', facts:['Достаёт текст из PDF, фото и сканов'] },
+      { label:'Быстро', acc:'#2E7D5B', source:'huggingface.co/black-forest-labs', hfId:'black-forest-labs/FLUX.1-schnell',
+        title:'FLUX Schnell — картинки мгновенно', facts:['Генерация изображения за пару секунд'] },
+      { label:'Голос', acc:'#B5423E', source:'huggingface.co/suno', hfId:'suno/bark', title:'Bark — синтез речи', facts:['Текст в естественную речь, разные голоса'] }
     ]
   },
   skills: {
@@ -1289,7 +1272,9 @@ var TYPE_ED = {
     shelf: [
       { label:'Стиль', acc:'#C67E34', source:'Навык', skillId:'skill_biztone', title:'Деловой тон', facts:['Вежливо и по-деловому, без сленга'] },
       { label:'Стиль', acc:'#C67E34', source:'Навык', skillId:'skill_simple', title:'Простыми словами', facts:['Объясняет сложное аналогиями, без жаргона'] },
-      { label:'Разработка', acc:'#8E4AA8', source:'Навык', skillId:'skill_debug', title:'Метод отладки', facts:['Разбирает баг системно, а не наугад'] }
+      { label:'Разработка', acc:'#8E4AA8', source:'Навык', skillId:'skill_debug', title:'Метод отладки', facts:['Разбирает баг системно, а не наугад'] },
+      { label:'Работа', acc:'#3A6EA5', source:'Навык', skillId:'skill_plan', title:'Сначала план', facts:['Любую задачу начинает с плана из шагов'] },
+      { label:'Разработка', acc:'#8E4AA8', source:'Навык', skillId:'skill_review', title:'Ревью кода', facts:['Конкретные правки: баги, безопасность'] }
     ]
   }
 };
