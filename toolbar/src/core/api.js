@@ -6,6 +6,12 @@
 ETB.api = (function () {
   var BASE = 'https://api.extella.ai';
   var DEFAULT_AGENT = 'agent_extella_default';
+  // The agent the user actually chats with (platform default Qwen). Skills
+  // install as rules on THIS agent so they fire in the user's chat — not on the
+  // toolbar's service agent (agent_extella_default), which the user never talks
+  // to. Rules are scoped per (account, agent); writing under the user's token
+  // only affects that user's own chat.
+  var CHAT_AGENT = 'agent_XwZBKvd8dD70jKvW4WrZm';
 
   // ── Install agent override ──────────────────────────────────────────────
   // Which backend agent executes plugin install / repair / auto-provision
@@ -398,13 +404,13 @@ ETB.api = (function () {
     // This is the reliable vehicle for Skills (concepts are only search-retrieved,
     // so they don't fire on their own). Verified: a rule changes agent output.
     rulesAdd: function (rule) {
-      return _post('/api/rules/add', { rule: rule });
+      return _post('/api/rules/add', { rule: rule }, { 'X-Agent-Id': CHAT_AGENT });
     },
     rulesRemove: function (ruleId) {
-      return _post('/api/rules/remove', { rule_id: ruleId });
+      return _post('/api/rules/remove', { rule_id: ruleId }, { 'X-Agent-Id': CHAT_AGENT });
     },
     rulesList: function () {
-      return _post('/api/rules/list', {});
+      return _post('/api/rules/list', {}, { 'X-Agent-Id': CHAT_AGENT });
     },
 
     kvGet: function (key, opts) {
