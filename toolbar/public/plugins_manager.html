@@ -38,6 +38,8 @@ body{font-family:-apple-system,sans-serif;background:var(--bg);color:var(--tx);
   display:flex;align-items:center;gap:4px}
 .tab:hover{color:var(--tx);background:var(--s3)}
 .tab.on{color:var(--a);background:rgba(var(--ar),.1);font-weight:600}
+.tab_skills{margin-left:6px;color:#fff;background:var(--a);font-weight:600}
+.tab_skills:hover{color:#fff;background:var(--a);opacity:.9}
 .tn{font-size:9.5px;opacity:.5}
 
 /* ── Filter bar ──────────────────────────────────────────────────────── */
@@ -822,8 +824,14 @@ function rtabs() {
     var n = c.id === 'inst' ? '<span class="tn"> ' + inst.length + '</span>' : '';
     return '<button class="tab' + (cur === c.id ? ' on' : '') + '" onclick="setc(\'' + c.id + '\')">' +
       esc(c.l) + n + '</button>';
-  }).join('');
+  }).join('') +
+  // Skills are a different kind of good (abilities for the agent, not apps),
+  // so surface them as their own accented entry that opens the Skills shelf.
+  '<button class="tab tab_skills" onclick="openSkills()">🧠 Навыки</button>';
 }
+
+// Open the Skills shelf (the mkt_skills plugin) via the standard open bridge.
+function openSkills() { notify('open', 'mkt_skills'); }
 
 function setc(id) {
   cur = id;
