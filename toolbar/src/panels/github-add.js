@@ -332,6 +332,10 @@ ETB.githubAdd = (function () {
         '</div>',
         '</div>'
       ].join('');
+    } else if (s.step === 'skill') {
+      modalHtml = _renderSkill();
+    } else if (s.step === 'notapp') {
+      modalHtml = _renderNotApp();
     } else {
       var rd = s.repoData || {};
       var working = s.step === 'creating' || s.step === 'analyzing' || s.step === 'installing';
@@ -586,6 +590,14 @@ ETB.githubAdd = (function () {
     var hideBtn = ov.querySelector('#_etbv2_gh_hide');
     if (hideBtn) hideBtn.onclick = function () { ETB.githubAdd.close(); };
 
+    // Honest-routing screens (skill / not-an-app).
+    var skillClose = ov.querySelector('#_etbv2_gh_skill_close');
+    if (skillClose) skillClose.onclick = function () { ETB.githubAdd.close(); };
+    var notappCancel = ov.querySelector('#_etbv2_gh_notapp_cancel');
+    if (notappCancel) notappCancel.onclick = function () { ETB.githubAdd.close(); };
+    var notappForce = ov.querySelector('#_etbv2_gh_notapp_force');
+    if (notappForce) notappForce.onclick = function () { _state.forceInstall = true; _proceedInstall(); };
+
     if (openNowBtn && _state.lastPluginId) {
       openNowBtn.onclick = function () {
         ETB.githubAdd.close();
@@ -753,6 +765,47 @@ ETB.githubAdd = (function () {
   }
 
   // ── Analysis pipeline: harvest → device → agent install ────────
+  // Honest screen for a Skill pack — abilities for the agent, not an app.
+  function _renderSkill() {
+    var rd = _state.repoData || {};
+    var nm = _esc(_state.customName || rd.name || 'Этот репозиторий');
+    return [
+      '<div id="_etbv2_gh_body" style="padding:6px 4px;">',
+      '<div class="_etbv2_gh_title">&#129504; Это Навык, а не приложение</div>',
+      '<div class="_etbv2_gh_sub" style="margin-bottom:14px;">',
+      '<b>' + nm + '</b> — это набор навыков (Skill) для ИИ-агента, а не программа с окном. ',
+      'Такое не открывают — оно <b>учит ассистента</b> новому умению.</div>',
+      '<div style="background:rgba(198,126,52,.09);border:1px solid rgba(198,126,52,.28);',
+      'border-radius:10px;padding:12px 14px;font-size:13px;line-height:1.5;margin-bottom:16px;">',
+      'Скоро Extella будет ставить навыки прямо на твоего агента: пишешь ему по-человечески — ',
+      'а он уже умеет то, чему научил навык. Мы как раз строим эту полку — «Навыки». ',
+      'Поэтому вместо сломанной установки — честно: это навык, приложение из него не собрать.',
+      '</div>',
+      '<div class="_etbv2_gh_actions" style="justify-content:flex-end;">',
+      '<button class="_etbv2_gh_btn_primary" id="_etbv2_gh_skill_close">Понятно</button>',
+      '</div></div>'
+    ].join('');
+  }
+
+  // Honest warning for a library / CLI — likely no runnable UI. User may force it.
+  function _renderNotApp() {
+    var rd = _state.repoData || {};
+    var nm = _esc(_state.customName || rd.name || 'Этот репозиторий');
+    var kind = (_state.classify && _state.classify.kind) === 'cli' ? 'инструмент командной строки (CLI)' : 'библиотека / фреймворк';
+    return [
+      '<div id="_etbv2_gh_body" style="padding:6px 4px;">',
+      '<div class="_etbv2_gh_title">&#9888;&#65039; Похоже, это не приложение</div>',
+      '<div class="_etbv2_gh_sub" style="margin-bottom:16px;">',
+      '<b>' + nm + '</b> выглядит как <b>' + kind + '</b> — собственного окна у неё нет, ',
+      'и как плагин магазина она, скорее всего, не запустится (пустой экран или ошибки). ',
+      'Можно попробовать всё равно — но, вероятно, толку не будет.</div>',
+      '<div class="_etbv2_gh_actions">',
+      '<button class="_etbv2_gh_btn_cancel" id="_etbv2_gh_notapp_cancel">Отмена</button>',
+      '<button class="_etbv2_gh_btn_primary" id="_etbv2_gh_notapp_force">Всё равно установить</button>',
+      '</div></div>'
+    ].join('');
+  }
+
   function _startAnalysis() {
     var rd = _state.repoData;
     if (!rd) return;
@@ -781,6 +834,15 @@ ETB.githubAdd = (function () {
           _render();
           return;
         }
+        // Honest routing (the gstack lesson): don't fabricate a plugin around a
+        // skill pack, library or CLI. Skills get their own screen; libraries/
+        // CLIs warn before the user can force it through.
+        var cls = (ETB.repoAnalyzer.classifyRepo && ETB.repoAnalyzer.classifyRepo(digest, rd)) || { kind: 'unknown' };
+        _state.classify = cls;
+        // Only the high-precision 'skill' signal diverts today (SKILL.md/.claude).
+        // library/cli detection is too broad to hard-gate — left for a later,
+        // signal-tightened pass so we never block a real app.
+        if (cls.kind === 'skill') { _state.step = 'skill'; _render(); return; }
         return _proceedInstall();
       })
       .catch(function (e) {

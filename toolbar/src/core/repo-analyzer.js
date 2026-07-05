@@ -320,9 +320,57 @@ ETB.repoAnalyzer = (function () {
     return { heavy: score >= 4, score: score, signals: signals, hf: hf };
   }
 
+  // Store-facing classification: WHAT KIND of thing is this repo, so the shop
+  // can route it honestly instead of fabricating a plugin around everything.
+  // Returns { kind, label, reason }. kind ∈ skill | app | cli | library | unknown.
+  // (Hosted heavy models are detected separately by inferHeavyModel.)
+  function classifyRepo(digest, rd) {
+    digest = digest || {}; rd = rd || {};
+    var tp = digest.tree_paths || [];
+    var paths = Array.isArray(tp) ? tp : (tp.shown || []);
+    var ui = digest.uiSignals || {};
+    var topics = ((rd.topics || [])).map(function (t) { return String(t).toLowerCase(); });
+    var hay = (String(digest.readme || '') + ' ' + String(rd.description || '')).toLowerCase();
+
+    function hasPath(re) { return paths.some(function (p) { return re.test(String(p)); }); }
+    function topic(t) { return topics.indexOf(t) !== -1; }
+
+    // ── Skill: a Claude-Code / agent skill pack (know-how, not an app) ──
+    // High-precision file markers only — SKILL.md is the Anthropic skill marker;
+    // .claude/{skills,commands,agents} is definitive. Avoid loose matches so a
+    // real web app never gets mislabelled a skill.
+    var skillFiles =
+      hasPath(/(^|\/)SKILL\.md$/i) ||
+      hasPath(/^\.claude\/(skills|commands|agents)\//i) ||
+      hasPath(/(^|\/)skills\/[^/]+\/SKILL\.md$/i);
+    var skillTopic =
+      topic('claude-code-skill') || topic('agent-skills') || topic('agent-skill') || topic('claude-skill');
+    // Explicit skill topic counts only when there is no real app UI.
+    if (skillFiles || (skillTopic && !ui.hasIndexHtml)) {
+      return { kind: 'skill', label: 'Навык (Skill)',
+        reason: skillFiles ? 'SKILL.md / .claude/skills' : 'skill topic' };
+    }
+
+    // ── App: something with a runnable web UI ──
+    if (ui.hasIndexHtml || (ui.homepage && ui.hasPages) || digest.repo_class === 'web_app' ||
+        digest.repo_class === 'desktop_app' || digest.repo_class === 'api_service') {
+      return { kind: 'app', label: 'Приложение', reason: 'web/desktop UI signals' };
+    }
+
+    // ── CLI ──
+    if (digest.repo_class === 'cli') return { kind: 'cli', label: 'CLI-инструмент', reason: 'cli entrypoint' };
+
+    // ── Library / framework / monorepo — not directly runnable as a plugin ──
+    if (digest.repo_class === 'library' || digest.repo_class === 'monorepo') {
+      return { kind: 'library', label: 'Библиотека / фреймворк', reason: digest.repo_class };
+    }
+    return { kind: 'unknown', label: '', reason: 'no strong signal' };
+  }
+
   return {
     harvest: harvest,
     inferInstallAnalysis: inferInstallAnalysis,
-    inferHeavyModel: inferHeavyModel
+    inferHeavyModel: inferHeavyModel,
+    classifyRepo: classifyRepo
   };
 })();
