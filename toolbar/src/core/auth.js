@@ -319,6 +319,20 @@ ETB.auth = (function () {
         });
       });
 
+      // Storefront blob: iframe can't resolve a session token on its own (no
+      // cookies / DOM user-id). Ask the parent host for the live token so direct
+      // api.js calls (GitHub install) don't 401, and accept it when it arrives.
+      window.addEventListener('message', function (e) {
+        if (!e.data || e.data.type !== 'extella-token' || !e.data.token) return;
+        if (!window.ETB || !window.ETB.auth) return;
+        if (String(e.data.token).length < 10) return;
+        console.log('[ETB:auth] got session token from parent host');
+        window.ETB.auth.setToken(String(e.data.token));
+      });
+      if (window.parent && window.parent !== window) {
+        try { window.parent.postMessage({ type: 'etb_request_token' }, '*'); } catch (e) {}
+      }
+
       window.addEventListener('tokenUpdated', function () {
         if (!window.ETB || !window.ETB.auth) return;
         window.ETB.auth.refreshSession('tokenUpdated').then(function () {

@@ -54,7 +54,7 @@ ETB.marketplace = (function () {
     var fnName = '_etb_cleanup_' + safeId;
     var code = [
       'def ' + fnName + '() -> str:',
-      '    import os, signal, shutil, json',
+      '    import os, signal, shutil, json, glob',
       '    removed = []',
       '    for pid_file in ' + pidListPy + ':',
       '        if os.path.exists(pid_file):',
@@ -70,6 +70,14 @@ ETB.marketplace = (function () {
       '        try:',
       '            if os.path.exists(f): os.remove(f); removed.append(f)',
       '        except Exception: pass',
+      '    reg_dir = os.path.expanduser("~/extella-plugins/_registry")',
+      '    if os.path.isdir(reg_dir):',
+      '        for rf in glob.glob(os.path.join(reg_dir, "*.json")):',
+      '            try:',
+      '                with open(rf, "r", encoding="utf-8") as _fh: _m = json.load(_fh)',
+      '                if isinstance(_m, dict) and _m.get("id") == ' + JSON.stringify(pluginId) + ':',
+      '                    os.remove(rf); removed.append(rf)',
+      '            except Exception: pass',
       '    return json.dumps({"status": "ok", "removed": removed})'
     ].join('\n');
 
@@ -77,7 +85,9 @@ ETB.marketplace = (function () {
       .then(function (res) { return (res && res.value) || null; })
       .catch(function () { return null; })
       .then(function (deviceId) {
-        if (!deviceId) return;
+        // Без deviceId чистку НЕ пропускаем: гоним на текущем устройстве без target —
+        // зеркало фолбэка syncFromDevice. Иначе файл реестра выживал и синк
+        // возвращал карточку (баг «Remove не держится»).
         return ETB.api.saveExpert({
           name: fnName,
           description: 'Cleanup plugin ' + pluginId,
@@ -85,7 +95,12 @@ ETB.marketplace = (function () {
           kwargs: {},
           cspl: 'fython'
         }).then(function () {
-          return ETB.api.runExpert(fnName, {}, { target: deviceId, timeout: 20 });
+          var opts = { timeout: 20 };
+          if (deviceId) opts.target = deviceId;
+          return ETB.api.runExpert(fnName, {}, opts).catch(function () {
+            // stale/недоступный target → ретрай на текущем устройстве
+            if (deviceId) return ETB.api.runExpert(fnName, {}, { timeout: 20 });
+          });
         }).then(function () {
           // Remove the throwaway cleanup expert itself.
           return ETB.api.deleteExpert(fnName).catch(function () {});
@@ -251,11 +266,27 @@ ETB.marketplace = (function () {
 
         // ── Storefront service bridges (KV / rules / agents) ────────────────
         // Let the store manage Skills in-place (as a category) rather than in a
+        // The storefront iframe (blob: origin) can't resolve the session token
+        // itself (no cookies, no DOM user-id). It asks the parent for the live
+        // token so direct api.js calls (e.g. GitHub install) don't 401. Same-app
+        // trust boundary; the token is the user's own and never logged.
+        if (e.data.type === 'etb_request_token') {
+          try {
+            var _tf = document.getElementById('_etbv2_mkt_frame');
+            var _tok = (window.ETB && ETB.auth && ETB.auth.getToken) ? ETB.auth.getToken() : '';
+            if (_tf && _tf.contentWindow && _tok) {
+              _tf.contentWindow.postMessage({ type: 'extella-token', token: _tok }, '*');
+            }
+          } catch (_) {}
+          return;
+        }
+
         // separate plugin window. Mirrors the router bridges; KV is scoped to
         // '_mkt_' keys so a page can never touch secrets.
         if (e.data.type === 'etb_kv_get' || e.data.type === 'etb_kv_set' ||
             e.data.type === 'etb_rule_add' || e.data.type === 'etb_rule_remove' ||
-            e.data.type === 'etb_agents_list') {
+            e.data.type === 'etb_agents_list' ||
+            e.data.type === 'etb_run_expert' || e.data.type === 'etb_run_agent') {
           var _mf = document.getElementById('_etbv2_mkt_frame');
           var _rid = e.data.reqId, _t = e.data.type;
           var _back = function (msg) { if (_mf && _mf.contentWindow) { try { _mf.contentWindow.postMessage(msg, '*'); } catch (_) {} } };
@@ -281,13 +312,35 @@ ETB.marketplace = (function () {
               ETB.api.rulesRemove(e.data.refs || e.data.ruleId)
                 .then(function () { _back({ type: 'etb_rule_result', reqId: _rid, ok: true }); })
                 .catch(function (er) { _back({ type: 'etb_rule_result', reqId: _rid, ok: false, error: (er && er.message) || 'rule remove failed' }); });
-            } else {
+            } else if (_t === 'etb_agents_list') {
               ETB.api.agentsList()
                 .then(function (r) { var list = (r && r.agents) || []; _back({ type: 'etb_agents_result', reqId: _rid, ok: true, agents: list.map(function (a) { return { id: a.id, name: a.name, model: a.model }; }) }); })
                 .catch(function (er) { _back({ type: 'etb_agents_result', reqId: _rid, ok: false, error: (er && er.message) || 'agents failed' }); });
+            } else if (_t === 'etb_run_expert') {
+              // Expert bridge for the storefront (install a CLI capability, etc.).
+              // Runs in toolbar context (has API access); idempotent resolvers make
+              // a double-run harmless if router's per-plugin handler also fires.
+              // runExpertAsync: если сервер откладывает длинный прогон (kp_ingest, синтез,
+              // большие пачки) в задачу — поллит её до готовности (иначе прилетает
+              // «deferred, use task_id as reference» вместо результата).
+              ETB.api.runExpertAsync(e.data.name, e.data.params || {}, { global: true, maxWait: 900000, interval: 2500 })
+                .then(function (res) { _back({ type: 'etb_expert_result', reqId: _rid, ok: true, res: res }); })
+                .catch(function (er) { _back({ type: 'etb_expert_result', reqId: _rid, ok: false, error: (er && er.message) || 'expert failed' }); });
+            } else if (_t === 'etb_run_agent') {
+              // «+ Добавить инструмент»: ask the Builder to compose a spec and call
+              // the factory. Agent runs take minutes → ack immediately (fire-and-
+              // forget) and let the storefront refresh its catalog once it lands.
+              try {
+                ETB.api.runAgentAsync(String(e.data.message || ''), { agent_id: e.data.agent_id, run_timeout: 600 })
+                  .catch(function () {});
+              } catch (_ea) {}
+              _back({ type: 'etb_agent_result', reqId: _rid, ok: true, started: true });
             }
           } catch (er) {
-            var rt = _t.indexOf('rule') >= 0 ? 'etb_rule_result' : (_t.indexOf('agents') >= 0 ? 'etb_agents_result' : 'etb_kv_result');
+            var rt = _t === 'etb_run_agent' ? 'etb_agent_result'
+                   : (_t === 'etb_run_expert' ? 'etb_expert_result'
+                   : (_t.indexOf('rule') >= 0 ? 'etb_rule_result'
+                   : (_t.indexOf('agents') >= 0 ? 'etb_agents_result' : 'etb_kv_result')));
             _back({ type: rt, reqId: _rid, ok: false, error: (er && er.message) || 'bridge failed' });
           }
           return;
@@ -326,9 +379,13 @@ ETB.marketplace = (function () {
           // was cleared) so CSPL cleanup has the correct artifact paths and pid files.
           var unPlugin = e.data.pluginData || ETB.registry.getById(pluginId);
           var hasArtifacts = !!(unPlugin && unPlugin.artifacts);
-          if (/^(?:gh_|hf_)/.test(pluginId) || hasArtifacts) {
-            // Agent-installed / GitHub / HuggingFace plugin: full cleanup of every artifact +
-            // remove the custom registry entry + evict cached panel.
+          // Любая запись из custom-реестра синхронизирована с устройства (syncFromDevice),
+          // поэтому её надо чистить ПОЛНОСТЬЮ — иначе файл реестра на устройстве остаётся
+          // и модель/плагин возвращается на следующем syncFromDevice (баг «Remove не держится»).
+          var isCustom = !!(ETB.registry.getCustom && ETB.registry.getCustom().some(function (p) { return p && p.id === pluginId; }));
+          if (/^(?:gh_|hf_)/.test(pluginId) || hasArtifacts || isCustom) {
+            // Agent-installed / GitHub / HuggingFace / device-synced plugin: full cleanup of every
+            // artifact + on-device registry file + custom entry + evict cached panel.
             _removeAgentPlugin(pluginId, unPlugin);
           } else {
             // Built-in / curated plugin: just mark uninstalled and evict.

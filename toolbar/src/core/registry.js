@@ -8,6 +8,7 @@
 ETB.registry = (function () {
   var INSTALLED_KEY = 'etb_plugins_installed_v1';
   var CUSTOM_KEY    = 'etb_plugins_custom_v1';
+  var REMOVED_KEY   = 'etb_plugins_removed_v1';   // надгробия: удалённые id, которые sync не должен воскрешать
 
   // ── Persistence helpers ───────────────────────────────────────
   function _loadInstalled() {
@@ -26,6 +27,25 @@ ETB.registry = (function () {
 
   function _saveCustom(arr) {
     try { localStorage.setItem(CUSTOM_KEY, JSON.stringify(arr)); } catch (e) {}
+  }
+
+  function _loadRemoved() {
+    try { return JSON.parse(localStorage.getItem(REMOVED_KEY) || '[]'); }
+    catch (e) { return []; }
+  }
+
+  function _saveRemoved(arr) {
+    try { localStorage.setItem(REMOVED_KEY, JSON.stringify(arr.slice(-100))); } catch (e) {}
+  }
+
+  function _tombstone(id) {
+    var a = _loadRemoved();
+    if (a.indexOf(id) === -1) { a.push(id); _saveRemoved(a); }
+  }
+
+  function _untombstone(id) {
+    var a = _loadRemoved();
+    if (a.indexOf(id) !== -1) _saveRemoved(a.filter(function (x) { return x !== id; }));
   }
 
   // ── Bootstrap: auto-install plugins with init:true ────────────
@@ -91,6 +111,7 @@ ETB.registry = (function () {
 
     // Adds a user-created plugin (e.g. from GitHub URL) and installs it
     addCustom: function (plugin) {
+      _untombstone(plugin.id);   // явная установка снимает надгробие — переустановка снова видна
       var custom = _loadCustom();
       // Remove existing with same id before re-adding
       var filtered = custom.filter(function (p) { return p.id !== plugin.id; });
@@ -100,8 +121,13 @@ ETB.registry = (function () {
     },
 
     removeCustom: function (id) {
+      _tombstone(id);   // sync больше не воскресит, даже если файл реестра на устройстве ещё жив (гонка/сбой чистки)
       _saveCustom(_loadCustom().filter(function (p) { return p.id !== id; }));
       this.uninstall(id);
+    },
+
+    isRemoved: function (id) {
+      return _loadRemoved().indexOf(id) !== -1;
     },
 
     // ── Local file registry sync ──────────────────────────────────
@@ -140,7 +166,14 @@ ETB.registry = (function () {
         catch (e) { list = []; }
         if (!Array.isArray(list)) list = [];
         var added = [];
-        list.forEach(function (m) { if (m && m.id) { self.addCustom(m); added.push(m); } });
+        list.forEach(function (m) {
+          if (!m || !m.id) return;
+          // Надгробие: удалённый плагин не воскрешаем фоновым синком — файл реестра на
+          // устройстве мог пережить чистку (гонка/нет device_id). Прицельный синк по
+          // onlyId = намеренная (пере)установка — проходит и снимает надгробие в addCustom.
+          if (self.isRemoved(m.id) && m.id !== onlyId) return;
+          self.addCustom(m); added.push(m);
+        });
         return added;
       }
       function run(useTarget) {

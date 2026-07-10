@@ -58,15 +58,30 @@ ETB.api = (function () {
     };
   }
 
-  function _post(path, body, extraHdrs) {
+  function _post(path, body, extraHdrs, _retried) {
     return fetch(BASE + path, {
       method: 'POST',
       headers: extraHdrs ? Object.assign(_hdrs(), extraHdrs) : _hdrs(),
       body: JSON.stringify(body)
     }).then(function (r) {
       if (r.status === 401) {
-        ETB.auth.refreshSession('401-retry').catch(function () {});
-        return { status: 'error', message: 'Unauthorized — token required' };
+        // Absent/stale iframe session token (blob: origin has no cookies). Ask the
+        // parent host for the live token AND try a session refresh, wait briefly for
+        // the token postMessage to land, then retry the request ONCE (guarded).
+        // Fixes GitHub install → "Unauthorized — token required" from the storefront.
+        if (_retried) {
+          return { status: 'error', message: 'Unauthorized — token required' };
+        }
+        try {
+          if (window.parent && window.parent !== window) {
+            window.parent.postMessage({ type: 'etb_request_token' }, '*');
+          }
+        } catch (e) {}
+        return new Promise(function (resolve) {
+          Promise.resolve(ETB.auth.refreshSession('401-retry')).catch(function () {}).then(function () {
+            setTimeout(function () { resolve(_post(path, body, extraHdrs, true)); }, 500);
+          });
+        });
       }
       if (r.status === 404) {
         return { status: 'not_found', httpStatus: 404, message: 'Endpoint not found' };
@@ -133,7 +148,7 @@ ETB.api = (function () {
   }
 
   function taskCheck(taskId) {
-    return _post('/api/task/check', { task_id: taskId });
+    return _post('/api/tasks/check', { task_id: taskId });
   }
 
   function pollTask(taskId, opts) {
