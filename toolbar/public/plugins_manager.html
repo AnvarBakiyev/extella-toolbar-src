@@ -691,7 +691,7 @@ var GH_TOPICS = [
 ];
 
 // ── UI state ──────────────────────────────────────────────────────────────
-var cur = 'home';
+var cur = 'desktop';
 var ghState = {
   query: '', topic: '', sort: 'stars',
   language: '', minStars: '100', updatedAfter: '',
@@ -1133,6 +1133,7 @@ function notify(action, pluginId, url) {
 // Store aisles by TYPE of good (Anvar's clean IA): an editorial home + the
 // three kinds Extella sells + the user's own. No mixing of «view» and «type».
 var CATS = [
+  { id: 'desktop',  l: 'Рабочий стол' },
   { id: 'home',     l: 'Витрина' },
   { id: 'programs', l: 'Программы' },
   { id: 'models',   l: 'Модели' },
@@ -1273,8 +1274,9 @@ function syncHFFilterBar() {
 // ── Grid dispatcher ───────────────────────────────────────────────────────
 function renderGrid() {
   var _cb = document.querySelector('.cmdbar');
-  if (_cb) _cb.style.display = (cur === 'home') ? 'none' : 'flex';
-  if (cur === 'home') renderHome();
+  if (_cb) _cb.style.display = (cur === 'home' || cur === 'desktop') ? 'none' : 'flex';
+  if (cur === 'desktop') renderDesktop();
+  else if (cur === 'home') renderHome();
   else if (cur === 'programs') renderPrograms();
   else if (cur === 'models') renderModels();
   else if (cur === 'skills') renderSkillsShelf();
@@ -2088,8 +2090,7 @@ function renderPrograms() {
 
   if (!ghState.results.length) {
     g.innerHTML = featuredHtml + otherHdr + filterSlot +
-      '<div class="empty"><div class="eico">🔍</div>' +
-      '<p>No repositories found.<br>Try different keywords or filters.</p></div>';
+      _emptyHTML('🔍', 'Ничего не нашлось.<br>Попробуй другие слова или фильтры.');
     syncFilterBar();
     return;
   }
@@ -2329,9 +2330,7 @@ function renderHFDiscover() {
   }
 
   if (!hfState.results.length) {
-    g.innerHTML = filterSlot +
-      '<div class="empty"><div class="eico">🤗</div>' +
-      '<p>Ничего не нашлось.<br>Попробуй другие слова или сними фильтры.</p></div>';
+    g.innerHTML = filterSlot + _emptyHTML('🤗', 'Ничего не нашлось.<br>Попробуй другие слова или сними фильтры.');
     syncHFFilterBar();
     return;
   }
@@ -2444,8 +2443,8 @@ var CAPINST_KIND = {model:'модель', mcp:'MCP-сервер', cli:'CLI', ski
 var CAPINST_KIND_EN = {model:'model', mcp:'MCP server', cli:'CLI', skill:'skill', service:'service', api:'API'};
 function _ensureCapInst() {
   if (_capInstFetched) return; _capInstFetched = true;
-  skKvGet('_mkt_installed').then(function(r){ _capInstReg = (r && r.items) ? r.items : []; rtabs(); if (cur === 'mine') renderInstalled(); })
-    .catch(function(){ _capInstReg = _capInstReg || []; if (cur === 'mine') renderInstalled(); });
+  skKvGet('_mkt_installed').then(function(r){ _capInstReg = (r && r.items) ? r.items : []; rtabs(); if (cur === 'mine') renderInstalled(); else if (cur === 'desktop') renderDesktop(); })
+    .catch(function(){ _capInstReg = _capInstReg || []; if (cur === 'mine') renderInstalled(); else if (cur === 'desktop') renderDesktop(); });
 }
 function capInstCount(){ return (_capInstReg && _capInstReg.length) || 0; }
 function capInstRefresh(){ _capInstReg = null; _capInstFetched = false; _ensureCapInst(); }
@@ -2482,6 +2481,112 @@ function capInstRemove(kind, id, method){
     });
 }
 
+// ══════════════════════════════════════════════════════════════════════════
+//  РАБОЧИЙ СТОЛ (ИИ-ОС): Визард = «Мой компьютер», всё установленное = ярлыки.
+//  Одна метафора — операционная система: рабочий стол, на нём программы, а
+//  Визард объединяет их в процессы и запускает.
+// ══════════════════════════════════════════════════════════════════════════
+// ── Единые состояния для всех вкладок (стандарт витрины) ──────────────────
+// Раньше загрузка была то «sk_lead», то «empty+⏳», пустота — по-своему у каждой.
+// Теперь один вид: центрированная иконка + текст.
+function _loadingHTML(text){ return '<div class="empty"><div class="eico">⏳</div><p>'+esc(text||'Загружаю…')+'</p></div>'; }
+function _emptyHTML(icon, html){ return '<div class="empty"><div class="eico">'+(icon||'📦')+'</div><p>'+html+'</p></div>'; }
+
+function _dtEsc(s){ return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+function _dtCss(){
+  return '<style>'+
+    '.dt_wrap{grid-column:1/-1;padding:6px 2px 24px}'+
+    '.dt_hero{display:flex;align-items:center;gap:18px;cursor:pointer;border-radius:16px;padding:20px 22px;margin-bottom:22px;'+
+      'background:linear-gradient(135deg,var(--a,#2F6B66) 0%,#24544F 100%);box-shadow:0 8px 26px rgba(36,84,79,.28);'+
+      'transition:transform .14s,box-shadow .14s;position:relative;overflow:hidden}'+
+    '.dt_hero:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(36,84,79,.36)}'+
+    '.dt_hero::after{content:"";position:absolute;right:-30px;top:-30px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.06)}'+
+    '.dt_hero_ic{flex-shrink:0;width:60px;height:60px;border-radius:16px;background:rgba(255,255,255,.14);'+
+      'border:1px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center}'+
+    '.dt_hero_ic .lico{width:32px;height:32px;color:#fff;stroke-width:1.6}'+
+    '.dt_hero_tx{flex:1;min-width:0;position:relative}'+
+    '.dt_hero_ttl{font:750 19px/1.2 var(--sans);letter-spacing:-.01em;color:#fff;text-shadow:0 1px 5px rgba(0,0,0,.25)}'+
+    '.dt_hero_sub{font-size:13px;line-height:1.5;color:rgba(255,255,255,.9);margin-top:5px;max-width:520px}'+
+    '.dt_hero_go{flex-shrink:0;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.4);color:#fff;'+
+      'border-radius:10px;padding:9px 16px;font:650 13px var(--sans);position:relative}'+
+    '.dt_sect{font:700 12px var(--sans);text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin:2px 0 14px}'+
+    '.dt_grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(94px,1fr));gap:10px}'+
+    '.dt_ico{display:flex;flex-direction:column;align-items:center;gap:8px;background:transparent;border:1px solid transparent;'+
+      'border-radius:12px;padding:12px 6px 10px;cursor:pointer;transition:background .12s,border-color .12s,transform .1s;animation:fiu .22s ease both}'+
+    '.dt_ico:hover{background:var(--s2);border-color:var(--bd)}'+
+    '.dt_ico:active{transform:scale(.95)}'+
+    '.dt_ic_badge{width:56px;height:56px;border-radius:15px;display:flex;align-items:center;justify-content:center;'+
+      'border:1px solid;box-shadow:0 2px 8px rgba(0,0,0,.06)}'+
+    '.dt_ic_badge .lico{width:27px;height:27px;stroke-width:1.5}'+
+    '.dt_ic_lbl{font:550 12px/1.3 var(--sans);color:var(--tx);text-align:center;max-width:90px;'+
+      'display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}'+
+    '.dt_empty{text-align:center;padding:40px 20px;color:var(--tx3)}'+
+    '.dt_empty_ic{font-size:44px;margin-bottom:10px}'+
+    '.dt_empty p{font-size:14px;line-height:1.6;max-width:440px;margin:0 auto}'+
+  '</style>';
+}
+function renderDesktop(){
+  var g=document.getElementById('grid'); if(!g) return;
+  _ensureAuto(); _ensureCapInst();
+  if (cliGi().length && !_cliLoaded) {
+    skKvGet('_mkt_cli_catalog').then(function(r){ _cliReg=(r&&r.items)?r.items:[]; _cliLoaded=true; if(cur==='desktop')renderDesktop(); })
+      .catch(function(){ _cliReg=_cliReg||[]; _cliLoaded=true; if(cur==='desktop')renderDesktop(); });
+  }
+  // Единый набор контурных значков (как в чипах/карточках Эллы): категория → #ic-*.
+  // acc берём из палитры категорий (BIZ_ACC), чтобы цвета совпадали с витриной.
+  function _dtAcc(cat){ return (typeof BIZ_ACC!=='undefined'&&BIZ_ACC[cat])||'#2F6B66'; }
+  var icons=[];
+  // 1) Агенты, собранные Визардом → открыть кабинет
+  (_autoReg||[]).filter(function(p){ var st=_agState[_agId(p)]; return !(st&&st.hidden); }).forEach(function(p){
+    var cat=p._biz||'work';
+    icons.push({cat:cat,lbl:_agCleanName(p),acc:_dtAcc(cat),
+      go:"openAgentCabinet('"+_dtEsc(_agId(p))+"')"});
+  });
+  // 2) Установленные программы (встроенные + добавленные) → открыть окно
+  var instIds=gi();
+  BUILTIN_PLUGINS_DATA.filter(function(p){return instIds.indexOf(p.id)!==-1;}).concat(getCustom()).forEach(function(p){
+    var cu=(typeof CURATED_PROGRAMS!=='undefined'&&CURATED_PROGRAMS[p.id])||{};
+    var cat=cu.biz||(typeof catOf==='function'?catOf(p):'')||'box';
+    icons.push({cat:cat,lbl:cu.name||p.name||p.id,acc:_dtAcc(cat),
+      go:"notify('open','"+_dtEsc(p.id)+"')"});
+  });
+  // 3) CLI-инструменты → запустить
+  var catMap={}; (typeof cliCatalog==='function'?cliCatalog():[]).forEach(function(c){catMap[c.id]=c;});
+  cliGi().forEach(function(id){ var c=catMap[id]||{id:id,name:id};
+    var cat=c.cat||'docs';
+    icons.push({cat:cat,lbl:c.name||c.id,acc:_dtAcc(cat),
+      go:"cliRun('"+_dtEsc(id)+"')"});
+  });
+  // 4) Способности из интернета (Композитор) → источник или раздел «Мои»
+  (_capInstReg||[]).forEach(function(it){
+    icons.push({cat:'tech',lbl:it.title||it.id,acc:_dtAcc('tech'),
+      go: it.url?"window.open('"+_dtEsc(it.url)+"','_blank')":"setc('mine')"});
+  });
+
+  var iconHtml=icons.map(function(ic,i){
+    return '<button class="dt_ico" style="animation-delay:'+Math.min(i*14,180)+'ms" title="Запустить: '+esc(ic.lbl)+'" onclick="'+ic.go+'">'+
+      '<span class="dt_ic_badge" style="background:'+esc(ic.acc)+'14;border-color:'+esc(ic.acc)+'40;color:'+esc(ic.acc)+'">'+_ico(ic.cat)+'</span>'+
+      '<span class="dt_ic_lbl">'+esc(ic.lbl)+'</span></button>';
+  }).join('');
+
+  g.innerHTML = _dtCss() +
+    '<div class="dt_wrap">'+
+      '<div class="dt_hero" onclick="notify(\'open\',\'extella_adoption_wizard\')">'+
+        '<div class="dt_hero_ic">'+_ico('tech')+'</div>'+
+        '<div class="dt_hero_tx">'+
+          '<div class="dt_hero_ttl">Мой компьютер · Визард</div>'+
+          '<div class="dt_hero_sub">Твой ИИ-компьютер: собирает установленные программы в единые процессы, запускает их и следит за результатом.</div>'+
+        '</div>'+
+        '<div class="dt_hero_go">Открыть →</div>'+
+      '</div>'+
+      '<div class="dt_sect">Программы на рабочем столе'+(icons.length?' · '+icons.length:'')+'</div>'+
+      (icons.length
+        ? '<div class="dt_grid">'+iconHtml+'</div>'
+        : _emptyHTML('🗂️', 'Пока пусто. Установи программы в «Витрине» или собери агента в Визарде — они появятся здесь ярлыками, как на рабочем столе.'))+
+    '</div>';
+  rtabs();
+}
+
 function renderInstalled() {
   var g = document.getElementById('grid');
   if (!g) return;
@@ -2507,8 +2612,7 @@ function renderInstalled() {
   var capItems = _capInstReg || [];
 
   if (!all.length && !cliItems.length && !capItems.length) {
-    g.innerHTML = '<div class="empty"><div class="eico">📦</div>' +
-      '<p>Пока ничего не установлено.<br>Загляни в «Программы», «Модели», «Навыки» или «Инструменты».</p></div>';
+    g.innerHTML = _emptyHTML('📦', 'Пока ничего не установлено.<br>Загляни в «Программы», «Модели», «Навыки» или «Инструменты».');
     rtabs();
     return;
   }
@@ -2549,8 +2653,7 @@ function renderInstalled() {
     var filtered = filterByCategory(all, _instCat);
     html += buildCatTabs(catCounts, _instCat, '_setInstCat');
     if (!filtered.length) {
-      html += '<div class="empty" style="grid-column:1/-1;padding:28px 20px">' +
-        '<div class="eico">🔍</div><p>No plugins in this category.</p></div>';
+      html += _emptyHTML('🔍', 'В этой категории пока пусто.');
     } else {
       html += filtered.map(function(p, i) { return renderInstalledCard(p, i); }).join('');
     }
@@ -2568,7 +2671,8 @@ function _ensureAuto() {
   skKvGet('_mkt_automations').then(function(r) {
     _autoReg = (r && r.items) ? r.items : [];
     if (cur === 'automations') renderAutomations();
-  }).catch(function() { _autoReg = _autoReg || []; if (cur === 'automations') renderAutomations(); });
+    else if (cur === 'desktop') renderDesktop();
+  }).catch(function() { _autoReg = _autoReg || []; if (cur === 'automations') renderAutomations(); else if (cur === 'desktop') renderDesktop(); });
 }
 function autoRefresh() { _autoReg = null; _autoFetched = false; _ensureAuto(); }
 // ══════════════════════════════════════════════════════════════════════════
@@ -2692,23 +2796,23 @@ function renderAutomations() {
   var g = document.getElementById('grid'); if (!g) return;
   if (_autoReg === null) {
     _ensureAuto();
-    g.innerHTML = '<div class="empty"><div class="eico">⏳</div><p>' + _t('autoLoad') + '</p></div>';
+    g.innerHTML = _loadingHTML(_t('autoLoad'));
     rtabs(); return;
   }
   if (!_autoReg.length) {
-    g.innerHTML = '<div class="empty"><div class="eico">⚙️</div><p>' + _t('autoEmpty') + '</p></div>';
+    g.innerHTML = _emptyHTML('⚙️', _t('autoEmpty'));
     rtabs(); return;
   }
   // Подтягиваем клиентское состояние всех агентов один раз, потом рисуем.
   var need = _autoReg.filter(function(p){ return !(_agId(p) in _agState); });
   if (need.length) {
     Promise.all(need.map(function(p){ return _agLoadState(_agId(p)); })).then(function(){ renderAutomations(); });
-    g.innerHTML = '<div class="empty"><div class="eico">⏳</div><p>' + _t('autoLoad') + '</p></div>';
+    g.innerHTML = _loadingHTML(_t('autoLoad'));
     rtabs(); return;
   }
   var visible = _autoReg.filter(function(p){ var st=_agState[_agId(p)]; return !(st && st.hidden); });
   if (!visible.length) {
-    g.innerHTML = '<div class="empty"><div class="eico">⚙️</div><p>' + _t('autoEmpty') + '</p></div>';
+    g.innerHTML = _emptyHTML('⚙️', _t('autoEmpty'));
     rtabs(); return;
   }
   var html = '<div class="sect_hdr" style="grid-column:1/-1"><span class="sect_title">Мои агенты · собраны Визардом</span><span class="sect_line"></span></div>'+
@@ -2983,7 +3087,7 @@ function skItem(id){return (_skReg.items||[]).filter(function(x){return x.id===i
 function renderSkillsShelf(){
   var g=document.getElementById('grid'); if(!g)return;
   if(!_skLoaded){
-    g.innerHTML='<div class="sk_lead">Загружаю навыки…</div>';
+    g.innerHTML=_loadingHTML('Загружаю навыки…');
     Promise.all([
       skKvGet('_mkt_skills').then(function(r){_skReg=(r&&r.items)?r:{v:1,items:[]};if(!_skReg.items)_skReg.items=[];}).catch(function(){_skReg={v:1,items:[]};}),
       _loadSharded('_mkt_skills_catalog','items').then(function(r){_skCatReg=(r&&r.items&&r.items.length)?r:null;}).catch(function(){_skCatReg=null;})
@@ -3097,7 +3201,7 @@ function cliCatalog(){
 function renderCLI(){
   var g=document.getElementById('grid'); if(!g)return;
   if(!_cliLoaded){
-    g.innerHTML='<div class="sk_lead">Загружаю инструменты…</div>';
+    g.innerHTML=_loadingHTML('Загружаю инструменты…');
     skKvGet('_mkt_cli_catalog').then(function(r){_cliReg=(r&&r.items)?r.items:[];_cliLoaded=true;if(cur==='cli')renderCLI();})
       .catch(function(){_cliReg=[];_cliLoaded=true;if(cur==='cli')renderCLI();});
     return;
