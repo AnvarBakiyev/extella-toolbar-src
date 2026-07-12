@@ -2633,7 +2633,7 @@ function renderDesktop(){
     [/travel|турагент|поездк|лиды|агентств/i, 'Турагентство'],
     [/юрист|договор|контракт/i, 'Юрист по договорам'],
     [/визард|wizard|внедрен/i, 'Визард внедрения'],
-    [/забыт.{0,6}подписк|forgotten.{0,4}sub/i, 'Забытые подписки']
+    [/подпис|subscription/i, 'Забытые подписки']
   ];
   function _dtName(n){ n=String(n||'').trim();
     for(var i=0;i<_DT_NAME.length;i++){ if(_DT_NAME[i][0].test(n)) return _DT_NAME[i][1]; }
