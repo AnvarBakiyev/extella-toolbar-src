@@ -3477,7 +3477,11 @@ function agInstalled(id){ return !!agGi()[id]; }
 function agCount(){ try{return Object.keys(agGi()).length;}catch(_){return 0;} }
 function renderAgents(){
   var g=document.getElementById('grid'); if(!g)return;
-  var html='<div class="sect"><h2>Роли агентов</h2></div>'+
+  var html=_bentoHTML([{label:'Роли · Qwen', acc:'#C57E33', source:'Агенты',
+      title:'Роли для базового агента', accent:'Больше пользы без смены модели',
+      facts:['Выбери роль и вставь ID копии базового агента','Модель остаётся Qwen — честный тест','Готовые роли: продажи, поддержка, аналитика и другие']}])+
+    '<div class="sect"><h2>Роли агентов</h2></div>'+
+    '<div class="sk_lead" style="grid-column:1/-1">Три шага: копия базового агента → её ID → выбери роль ниже.</div>'+
     '<div class="steps">' +
       '<div class="step"><span class="step_n">1</span><div>Создай в Extella <b>копию базового агента</b>, это два клика</div></div>' +
       '<div class="step"><span class="step_n">2</span><div>Скопируй её <b>ID</b>, он начинается с <code>agent_</code></div></div>' +
@@ -3890,12 +3894,12 @@ function renderKnowledge(){
       facts:['Загружаешь регламенты, инструкции, договоры, ответы строго по ним','База собирается прямо на устройстве, за пару минут','Отвечает по фактам из документов, без выдумок']}]);
   html+='<div class="sect"><h2>Знания</h2></div>'+
     '<div class="sk_lead" style="grid-column:1/-1">Готовая база в один клик, или своя из папки документов.</div>'+
-    kpCatalogHTML()+
     '<div class="sect_hdr"><span class="sect_title">Своя база из документов</span><span class="sect_line"></span></div>'+
     '<div class="mshelf"><div class="stile" style="--acc:var(--a);border-style:dashed;cursor:pointer" onclick="kpCreate()">'+
       '<span class="st_chip">✦ Новая база</span><div class="st_title">+ Создать базу знаний</div>'+
       '<div class="st_fact">Выбери папку с документами, соберу базу за пару минут.</div>'+
-      '<div class="st_foot"><span style="font-size:11px;color:var(--tx3)">локально · приватно</span></div></div></div>';
+      '<div class="st_foot"><span style="font-size:11px;color:var(--tx3)">локально · приватно</span></div></div></div>'+
+    kpCatalogHTML();
   if(packs.length){
     html+='<div class="sect_hdr"><span class="sect_title">Мои базы знаний</span><span class="sect_line"></span></div><div class="mshelf">'+
       packs.map(function(p,i){ return '<div class="stile" style="--acc:#2F6B66">'+
@@ -4142,6 +4146,13 @@ _ensureCapInst();   // прогрев «Из интернета · Композ�
 try { _ensureProg(); } catch (e) {}
 try { _ensureMod(); } catch (e) {}
 try { _ensureAuto(); } catch (e) {}
+// Навыки и Инструменты грузили каталог только по клику (мелькали «песочные часы»,
+// которых нет на других вкладках) — теперь тоже прогреваем на старте, для единообразия.
+try { if(!_cliLoaded){ skKvGet('_mkt_cli_catalog').then(function(r){ _cliReg=(r&&r.items)?r.items:[]; _cliLoaded=true; if(cur==='cli')renderCLI(); }).catch(function(){ _cliReg=[]; _cliLoaded=true; }); } } catch (e) {}
+try { if(!_skLoaded){ Promise.all([
+    skKvGet('_mkt_skills').then(function(r){_skReg=(r&&r.items)?r:{v:1,items:[]};if(!_skReg.items)_skReg.items=[];}).catch(function(){_skReg={v:1,items:[]};}),
+    _loadSharded('_mkt_skills_catalog','items').then(function(r){_skCatReg=(r&&r.items&&r.items.length)?r:null;}).catch(function(){_skCatReg=null;})
+  ]).then(function(){_skLoaded=true;if(cur==='skills')renderSkillsShelf();}); } } catch (e) {}
 
 // Tell the toolbar we're booted and listening, it (re)sends the cloud merch
 // hero/collections. This pull handshake removes the open()-time push race where
