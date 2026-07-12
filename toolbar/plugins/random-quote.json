@@ -16,7 +16,7 @@
   ],
   "stars": "5.0",
   "installs": 0,
-  "source": "https://github.com/lukePeavey/quotable",
+  "source": "https://dummyjson.com/docs/quotes",
   "experts": [
     "random_quote_get"
   ],
@@ -102,22 +102,7 @@
         "tag": "",
         "count": "1"
       },
-      "code": [
-        "def random_quote_get(tag='', count='1'):",
-        "    import urllib.request, urllib.parse, json",
-        "    try:",
-        "        n = min(max(int(count), 1), 5)",
-        "        params = {'limit': n}",
-        "        if tag.strip(): params['tags'] = tag.strip()",
-        "        url = 'https://api.quotable.io/quotes/random?' + urllib.parse.urlencode(params)",
-        "        req = urllib.request.Request(url, headers={'User-Agent': 'ExtellaTool/1.0'})",
-        "        with urllib.request.urlopen(req, timeout=10) as r:",
-        "            data = json.loads(r.read().decode())",
-        "        quotes = [{'text': q.get('content', ''), 'author': q.get('author', ''), 'tags': q.get('tags', []), 'length': q.get('length', 0)} for q in data]",
-        "        return json.dumps({'status': 'success', 'output_type': 'json', 'data': {'quotes': quotes, 'count': len(quotes)}})",
-        "    except Exception as e:",
-        "        return json.dumps({'status': 'error', 'message': str(e)})"
-      ]
+      "code": "def random_quote_get(tag='', count='1'):\n    import urllib.request, json\n    try:\n        n = min(max(int(count), 1), 5)\n        quotes = []\n        for _ in range(n):\n            req = urllib.request.Request('https://dummyjson.com/quotes/random', headers={'User-Agent': 'ExtellaTool/1.0'})\n            with urllib.request.urlopen(req, timeout=10) as r:\n                q = json.loads(r.read().decode())\n            quotes.append({'text': q.get('quote', ''), 'author': q.get('author', ''), 'tags': [], 'length': len(q.get('quote', ''))})\n        return json.dumps({'status': 'success', 'output_type': 'json', 'data': {'quotes': quotes, 'count': len(quotes)}})\n    except Exception as e:\n        return json.dumps({'status': 'error', 'message': str(e)})"
     }
   ],
   "conceptTexts": [
