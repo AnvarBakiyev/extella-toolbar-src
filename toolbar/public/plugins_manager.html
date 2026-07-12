@@ -2624,8 +2624,22 @@ function renderDesktop(){
     return (typeof ICO_SYM!=='undefined'&&ICO_SYM[cat])||'box';
   }
   // Короткая подпись: рвём по границе слова, «…» только между словами (без обрезки посреди слова).
-  function _dtShort(s){ s=String(s||'').trim(); if(s.length<=30) return s;
-    var cut=s.slice(0,28), sp=cut.lastIndexOf(' '); if(sp>14) cut=cut.slice(0,sp); return cut+'…'; }
+  function _dtShort(s){ s=String(s||'').trim(); if(s.length<=24) return s;
+    var cut=s.slice(0,23), sp=cut.lastIndexOf(' '); if(sp>10) cut=cut.slice(0,sp); return cut+'…'; }
+  // «Десктопное» имя: длинные названия агентов → короткое, читаемое (как имя программы на столе).
+  var _DT_NAME=[
+    [/кадров|подготовк[аи].{0,20}документ|тк\s*рк/i, 'Кадровые документы'],
+    [/competitor|конкурент|intelligence/i, 'Конкуренты'],
+    [/travel|турагент|поездк|лиды|агентств/i, 'Турагентство'],
+    [/юрист|договор|контракт/i, 'Юрист по договорам'],
+    [/визард|wizard|внедрен/i, 'Визард внедрения'],
+    [/забыт.{0,6}подписк|forgotten.{0,4}sub/i, 'Забытые подписки']
+  ];
+  function _dtName(n){ n=String(n||'').trim();
+    for(var i=0;i<_DT_NAME.length;i++){ if(_DT_NAME[i][0].test(n)) return _DT_NAME[i][1]; }
+    // общий фолбэк: берём часть до первого разделителя, затем режем по границе слова
+    var seg=n.split(/\s+[—·|]\s+|,|\s+по\s+|\s+для\s+/i)[0].trim();
+    return _dtShort(seg||n); }
 
   var icons=[];
   // 1) Агенты, собранные Визардом → открыть кабинет
@@ -2655,15 +2669,17 @@ function renderDesktop(){
       id:it.id,url:it.url||'',method:it.method||'',rmKind:it.kind||'',
       go: it.url?"window.open('"+_dtEsc(it.url)+"','_blank')":"setc('mine')"});
   });
-  // Дедуп по имени — одинаковые ярлыки (напр. Competitor Intelligence ×3) схлопываем в один.
+  // Короткое «десктопное» имя (значок и тултип считаем от исходного — там больше ключевых слов).
+  icons.forEach(function(ic){ ic.raw=ic.lbl; ic.lbl=_dtName(ic.lbl); });
+  // Дедуп по короткому имени — одинаковые ярлыки (Competitor Intelligence ×3, две «Кадровые документы») схлопываем.
   var _seen={}; icons=icons.filter(function(ic){ var k=String(ic.lbl||'').toLowerCase().trim(); if(_seen[k])return false; _seen[k]=1; return true; });
   _dtReg=icons;  // реестр для правого клика (открыть/кабинет/удалить)
 
   var iconHtml=icons.map(function(ic,i){
-    var sym=_dtIco(ic.lbl, ic.cat, ic.kind);
-    return '<button class="dt_ico" style="animation-delay:'+Math.min(i*14,180)+'ms" title="'+esc(ic.lbl)+' — клик открыть, правый клик меню" onclick="'+ic.go+'" oncontextmenu="return _dtCtx(event,'+i+')">'+
+    var sym=_dtIco(ic.raw, ic.cat, ic.kind);
+    return '<button class="dt_ico" style="animation-delay:'+Math.min(i*14,180)+'ms" title="'+esc(ic.raw)+' — клик открыть, правый клик меню" onclick="'+ic.go+'" oncontextmenu="return _dtCtx(event,'+i+')">'+
       '<span class="dt_ic_badge" style="background:'+esc(ic.acc)+'14;border-color:'+esc(ic.acc)+'40;color:'+esc(ic.acc)+'">'+_icoSym(sym)+'</span>'+
-      '<span class="dt_ic_lbl">'+esc(_dtShort(ic.lbl))+'</span></button>';
+      '<span class="dt_ic_lbl">'+esc(ic.lbl)+'</span></button>';
   }).join('');
 
   g.innerHTML = _dtCss() +
