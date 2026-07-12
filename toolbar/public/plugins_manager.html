@@ -3902,6 +3902,11 @@ rtabs();
 renderTopics();
 doSearch();
 _ensureCapInst();   // прогрев «Из интернета · Композитор» (KV _mkt_installed) — счётчик «Мои» честный сразу
+// Префетч живых каталогов на старте (параллельно, идемпотентно) → вкладки открываются
+// мгновенно из кэша, без задержки KV-round-trip при первом клике.
+try { _ensureProg(); } catch (e) {}
+try { _ensureMod(); } catch (e) {}
+try { _ensureAuto(); } catch (e) {}
 
 // Tell the toolbar we're booted and listening, it (re)sends the cloud merch
 // hero/collections. This pull handshake removes the open()-time push race where
