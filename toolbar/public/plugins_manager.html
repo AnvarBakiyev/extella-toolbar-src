@@ -1406,6 +1406,7 @@ function renderModels() {
   }
   g.innerHTML = modelsSpotlight();
   [].forEach.call(g.querySelectorAll('[data-lminst]'),function(b){b.onclick=function(){installLocalModel(b.getAttribute('data-lminst'),b);};});
+  _mountTabFilter('Поиск модели…');
 }
 
 // Витрина, editorial cross-type front (bento hero + свежак + подборки).
@@ -1797,6 +1798,45 @@ var TYPE_ED = {
         title:'Распознавание сканов (OCR)', accent:'Сканы становятся документами с поиском',
         facts:['10 лет сканов договоров станут искомыми','Русский и английский, локально'] }
     ]
+  },
+  knowledge: {
+    heroes: [
+      { label:'Приватно · локально', acc:'#2F6B66', source:'База знаний',
+        title:'База знаний компании', accent:'Агент отвечает по твоим документам',
+        facts:['Регламенты, инструкции, договоры — ответы строго по ним','Собирается на устройстве за пару минут','Отвечает по фактам, без выдумок'] },
+      { label:'В один клик', acc:'#C57E33', source:'База · готовая',
+        title:'Готовые базы знаний', accent:'Кодексы и справочники сразу в дело',
+        facts:['Юр-базы РК и другие — ставятся одним кликом'] },
+      { label:'Своя папка', acc:'#3D8078', source:'База · своя',
+        title:'База из своих документов', accent:'Укажи папку — соберу базу',
+        facts:['PDF, Word, тексты — всё станет искомым'] }
+    ]
+  },
+  services: {
+    heroes: [
+      { label:'Живые данные · API', acc:'#2E8B57', source:'Сервисы',
+        title:'Внешние сервисы', accent:'Курсы валют, погода и новости для агента',
+        facts:['Курсы валют, погода, справки, переводы, новости — вживую','Агент дёргает реальные API вместо выдумок','Подключил, проверил, дальше пользуется агент'] },
+      { label:'Финансы', acc:'#2F6B66', source:'Сервис · Деньги',
+        title:'Курсы и котировки', accent:'Валюты и крипто в реальном времени',
+        facts:['USD, EUR, KZT, биткоин — свежие цифры'] },
+      { label:'Справки', acc:'#C57E33', source:'Сервис · Данные',
+        title:'Погода, переводы, вики', accent:'Факты по запросу агента',
+        facts:['Погода, перевод текста, статьи — на лету'] }
+    ]
+  },
+  agents: {
+    heroes: [
+      { label:'Роли · Qwen', acc:'#C57E33', source:'Агенты',
+        title:'Роли для базового агента', accent:'Больше пользы без смены модели',
+        facts:['Выбери роль и вставь ID копии базового агента','Модель остаётся Qwen — честный тест','Готовые роли: продажи, поддержка, аналитика и другие'] },
+      { label:'Продажи', acc:'#2F6B66', source:'Роль · Продажи',
+        title:'Агент продаж', accent:'Квалифицирует лиды и пишет ответы',
+        facts:['SDR-роль: работа с входящими за тебя'] },
+      { label:'Поддержка', acc:'#3D8078', source:'Роль · Поддержка',
+        title:'Агент поддержки', accent:'Отвечает клиентам по базе знаний',
+        facts:['Быстрые ответы на частые вопросы'] }
+    ]
   }
 };
 
@@ -1806,6 +1846,68 @@ function _bentoHTML(heroes) {
   heroes.slice(1, 3).forEach(function (h) { html += _heroMini(h); });
   return html + '</div>';
 }
+// ── Универсальный поиск + чипы-категории (единый для всех каталожных вкладок) ──
+// Работает поверх уже отрисованных полок (.mshelf с заголовком .sect/.sect_hdr):
+// не требует переписывать данные вкладок, фильтрует плитки по тексту и категории.
+function _tfCss(){
+  return '<style>'+
+    '.tabfilter{grid-column:1/-1;display:flex;flex-direction:column;gap:10px;margin:2px 0 16px}'+
+    '.tf_search{display:flex;align-items:center;gap:8px;background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:9px 12px;max-width:440px}'+
+    '.tf_search .lico{width:16px;height:16px;color:var(--tx3)}'+
+    '.tf_inp{border:none;background:none;outline:none;font:400 14px var(--sans);color:var(--tx);width:100%}'+
+    '.tf_chips{display:flex;flex-wrap:wrap;gap:8px}'+
+    '.tf_chip{border:1px solid var(--bd2);background:var(--s1);color:var(--tx2);border-radius:20px;padding:6px 14px;font:500 13px var(--sans);cursor:pointer;transition:background .12s,border-color .12s,color .12s}'+
+    '.tf_chip:hover{border-color:var(--a);color:var(--tx)}'+
+    '.tf_chip.on{background:var(--a);border-color:var(--a);color:#fff}'+
+  '</style>';
+}
+function _tfShelfHead(shelf){
+  var p=shelf.previousElementSibling;
+  if(p&&(p.classList.contains('sect')||p.classList.contains('sect_hdr'))) return p;
+  return null;
+}
+function _tfShelfCat(shelf){
+  var h=_tfShelfHead(shelf); if(!h) return '';
+  var t=h.querySelector('.sect_title')||h.querySelector('h2');
+  return t?t.textContent.trim():'';
+}
+function _mountTabFilter(placeholder){
+  var g=document.getElementById('grid'); if(!g) return;
+  var shelves=[].slice.call(g.querySelectorAll('.mshelf'));
+  if(shelves.length<2) return;  // нечего фильтровать
+  var cats=[]; shelves.forEach(function(s){ var c=_tfShelfCat(s); if(c&&cats.indexOf(c)<0)cats.push(c); });
+  var bar=document.createElement('div'); bar.className='tabfilter';
+  bar.innerHTML=_tfCss()+
+    '<div class="tf_search"><span><svg class="lico"><use href="#ic-search"/></svg></span>'+
+    '<input class="tf_inp" placeholder="'+esc(placeholder||'Поиск…')+'" oninput="_tabFilterApply()"></div>'+
+    (cats.length>1?'<div class="tf_chips"><button class="tf_chip on" data-cat="__all" onclick="_tabFilterCat(this)">Все</button>'+
+      cats.map(function(c){return '<button class="tf_chip" data-cat="'+esc(c)+'" onclick="_tabFilterCat(this)">'+esc(c)+'</button>';}).join('')+'</div>':'');
+  var anchor=g.querySelector('.sect, .sect_hdr');
+  if(anchor) g.insertBefore(bar, anchor); else g.appendChild(bar);
+}
+function _tabFilterCat(btn){
+  var bar=btn.closest('.tabfilter'); if(!bar) return;
+  [].forEach.call(bar.querySelectorAll('.tf_chip'),function(b){ b.classList.toggle('on', b===btn); });
+  _tabFilterApply();
+}
+function _tabFilterApply(){
+  var g=document.getElementById('grid'); if(!g) return;
+  var bar=g.querySelector('.tabfilter'); if(!bar) return;
+  var inp=bar.querySelector('.tf_inp'); var q=(inp&&inp.value||'').trim().toLowerCase();
+  var chip=bar.querySelector('.tf_chip.on'); var cat=chip?chip.getAttribute('data-cat'):'__all';
+  [].slice.call(g.querySelectorAll('.mshelf')).forEach(function(shelf){
+    var scat=_tfShelfCat(shelf);
+    var catOk=(cat==='__all'||cat===scat);
+    var anyVisible=false;
+    [].forEach.call(shelf.querySelectorAll('.stile'),function(t){
+      var show=catOk && (!q || t.textContent.toLowerCase().indexOf(q)>=0);
+      t.style.display=show?'':'none'; if(show)anyVisible=true;
+    });
+    shelf.style.display=(catOk&&anyVisible)?'':'none';
+    var head=_tfShelfHead(shelf); if(head) head.style.display=(catOk&&anyVisible)?'':'none';
+  });
+}
+
 function _tileHTML(h, i, label) {
   var fact = (h.facts && h.facts[0]) ? '<div class="st_fact">' + esc(h.facts[0]) + '</div>' : '';
   var ico2 = h.icon || (h.pluginId && (CURATED_PROGRAMS[h.pluginId] || {}).icon) || '';
@@ -3241,6 +3343,7 @@ function renderSkillsShelf(){
   g.innerHTML=html;
   [].forEach.call(g.querySelectorAll('[data-skinst]'),function(b){b.onclick=function(){openSkPick(b.getAttribute('data-skinst'));};});
   [].forEach.call(g.querySelectorAll('[data-skdel]'),function(b){b.onclick=function(){skUninstall(b.getAttribute('data-skdel'));};});
+  _mountTabFilter('Поиск навыка…');
 }
 function skCard(s){
   var on=skInstalled(s.id), it=skItem(s.id);
@@ -3477,9 +3580,7 @@ function agInstalled(id){ return !!agGi()[id]; }
 function agCount(){ try{return Object.keys(agGi()).length;}catch(_){return 0;} }
 function renderAgents(){
   var g=document.getElementById('grid'); if(!g)return;
-  var html=_bentoHTML([{label:'Роли · Qwen', acc:'#C57E33', source:'Агенты',
-      title:'Роли для базового агента', accent:'Больше пользы без смены модели',
-      facts:['Выбери роль и вставь ID копии базового агента','Модель остаётся Qwen — честный тест','Готовые роли: продажи, поддержка, аналитика и другие']}])+
+  var html=_bentoHTML(TYPE_ED.agents.heroes)+
     '<div class="sect"><h2>Роли агентов</h2></div>'+
     '<div class="sk_lead" style="grid-column:1/-1">Три шага: копия базового агента → её ID → выбери роль ниже.</div>'+
     '<div class="steps">' +
@@ -3495,6 +3596,7 @@ function renderAgents(){
   g.innerHTML=html;
   [].forEach.call(g.querySelectorAll('[data-aginst]'),function(b){b.onclick=function(){agentInstallModal(b.getAttribute('data-aginst'));};});
   [].forEach.call(g.querySelectorAll('[data-agdel]'),function(b){b.onclick=function(){agUninstall(b.getAttribute('data-agdel'));};});
+  _mountTabFilter('Поиск роли…');
 }
 function agCard(a){
   var on=agInstalled(a.id), it=agGi()[a.id];
@@ -3573,9 +3675,7 @@ function svConnect(id){ var a=svGi(); if(a.indexOf(id)<0){a.push(id);svSi(a);} i
 function svDisc(id){ var a=svGi(); var i=a.indexOf(id); if(i>=0){a.splice(i,1);svSi(a);} if(cur==='services')renderServices(); }
 function renderServices(){
   var g=document.getElementById('grid'); if(!g)return;
-  var html=_bentoHTML([{label:'Живые данные · API', acc:'#2E8B57', source:'Сервисы',
-     title:'Внешние сервисы', accent:'Курсы валют, погода и новости для агента',
-     facts:['Курсы валют, погода, справки, переводы, новости, вживую','Агент дёргает реальные API вместо выдумок','Подключил, проверил на месте, дальше пользуется агент']}]);
+  var html=_bentoHTML(TYPE_ED.services.heroes);
   html+='<div class="sect"><h2>Сервисы</h2></div>'+
     '<div class="sk_lead" style="grid-column:1/-1">Живые данные для агента. Проверить можно прямо здесь.</div>';
   var cats=[]; CATALOG_SERVICES.forEach(function(s){if(cats.indexOf(s.cat)<0)cats.push(s.cat);});
@@ -3589,6 +3689,7 @@ function renderServices(){
   [].forEach.call(g.querySelectorAll('[data-svrun]'),function(b){b.onclick=function(){svcRunModal(b.getAttribute('data-svrun'));};});
   [].forEach.call(g.querySelectorAll('[data-svdisc]'),function(b){b.onclick=function(){svDisc(b.getAttribute('data-svdisc'));};});
   renderMcpCatalog();
+  _mountTabFilter('Поиск сервиса…');
 }
 // ── Живой каталог MCP-серверов (харвест офиц. реестра → KV _mkt_mcp, шарды) ──
 var _mcpReg=null;
@@ -3889,9 +3990,7 @@ var _KPBTN='border:1px solid var(--bd2);background:transparent;color:var(--tx);b
 function renderKnowledge(){
   var g=document.getElementById('grid'); if(!g)return;
   var packs=kpGi();
-  var html=_bentoHTML([{label:'Приватно · локально', acc:'#2F6B66', source:'База знаний',
-      title:'База знаний компании', accent:'Агент отвечает по твоим документам',
-      facts:['Загружаешь регламенты, инструкции, договоры, ответы строго по ним','База собирается прямо на устройстве, за пару минут','Отвечает по фактам из документов, без выдумок']}]);
+  var html=_bentoHTML(TYPE_ED.knowledge.heroes);
   html+='<div class="sect"><h2>Знания</h2></div>'+
     '<div class="sk_lead" style="grid-column:1/-1">Готовая база в один клик, или своя из папки документов.</div>'+
     '<div class="sect_hdr"><span class="sect_title">Своя база из документов</span><span class="sect_line"></span></div>'+
@@ -3909,6 +4008,7 @@ function renderKnowledge(){
   }
   g.innerHTML=html;
   [].forEach.call(g.querySelectorAll('[data-kpinst]'),function(b){b.onclick=function(){var v=b.getAttribute('data-kpinst').split('|');kpInstallReady(v[0],v[1]);};});
+  _mountTabFilter('Поиск базы знаний…');
 }
 function kpCreate(){
   var old=document.getElementById('kp_ov'); if(old)old.remove();
