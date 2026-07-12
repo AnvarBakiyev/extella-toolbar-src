@@ -2714,6 +2714,17 @@ function renderDesktop(){
   // acc берём из палитры категорий (BIZ_ACC), чтобы цвета совпадали с витриной.
   function _dtAcc(cat){ return (typeof BIZ_ACC!=='undefined'&&BIZ_ACC[cat])||'#2F6B66'; }
   function _icoSym(id){ return '<svg class="lico"><use href="#ic-'+id+'"/></svg>'; }
+  // Человеческий ярлык категории агента (из идентичности Визарда) → biz-ключ для значка.
+  function _catRuToBiz(label){
+    if(!label) return '';
+    var n=String(label).toLowerCase();
+    var M=[['документ','docs'],['юрид','docs'],['кадр','work'],['автоматиз','tech'],['продаж','money'],
+      ['маркетинг','marketing'],['финанс','money'],['деньг','money'],['данн','data'],['аналит','data'],
+      ['работ','work'],['поддержк','chat'],['клиент','chat'],['путешеств','travel'],['тур','travel'],
+      ['здоров','health'],['учеб','study'],['учёб','study'],['знани','study']];
+    for(var i=0;i<M.length;i++){ if(n.indexOf(M[i][0])>=0) return M[i][1]; }
+    return '';
+  }
   // Осмысленный значок по названию (варьирует и «читается»), потом по типу, потом по категории.
   var _DT_KW=[
     [/competitor|конкурент|intelligence|разведк|мониторинг/, 'target'],
@@ -2734,10 +2745,12 @@ function renderDesktop(){
   function _dtIco(name, cat, kind){
     var n=String(name||'').toLowerCase();
     for(var i=0;i<_DT_KW.length;i++){ if(_DT_KW[i][0].test(n)) return _DT_KW[i][1]; }
-    if(kind==='agent') return 'bot';
     if(kind==='cli')   return 'terminal';
     if(kind==='cap')   return 'globe';
-    return (typeof ICO_SYM!=='undefined'&&ICO_SYM[cat])||'box';
+    var catSym=(typeof ICO_SYM!=='undefined')&&ICO_SYM[cat];
+    if(catSym) return catSym;       // агент/программа с осмысленной категорией
+    if(kind==='agent') return 'bot';
+    return 'box';
   }
   // Короткая подпись: рвём по границе слова, «…» только между словами (без обрезки посреди слова).
   function _dtShort(s){ s=String(s||'').trim(); if(s.length<=24) return s;
@@ -2760,8 +2773,9 @@ function renderDesktop(){
   var icons=[];
   // 1) Агенты, собранные Визардом → открыть кабинет
   (_autoReg||[]).filter(function(p){ var st=_agState[_agId(p)]; return !(st&&st.hidden); }).forEach(function(p){
-    var cat=p._biz||'work', nm=_agCleanName(p);
-    icons.push({kind:'agent',cat:cat,lbl:nm,acc:_dtAcc(cat),id:_agId(p),
+    var cat=_catRuToBiz(p.category)||p._biz||'work', nm=_agCleanName(p);
+    icons.push({kind:'agent',cat:cat,lbl:nm,acc:(p.accent||_dtAcc(cat)),id:_agId(p),
+      ident:!!(p.accent||p.emoji||p.category),
       go:"openAgentCabinet('"+_dtEsc(_agId(p))+"')"});
   });
   // 2) Установленные программы (встроенные + добавленные) → открыть окно
@@ -2787,8 +2801,13 @@ function renderDesktop(){
   });
   // Короткое «десктопное» имя (значок и тултип считаем от исходного — там больше ключевых слов).
   icons.forEach(function(ic){ ic.raw=ic.lbl; ic.lbl=_dtName(ic.lbl); });
-  // Дедуп по короткому имени — одинаковые ярлыки (Competitor Intelligence ×3, две «Кадровые документы») схлопываем.
-  var _seen={}; icons=icons.filter(function(ic){ var k=String(ic.lbl||'').toLowerCase().trim(); if(_seen[k])return false; _seen[k]=1; return true; });
+  // Дедуп по короткому имени (Competitor Intelligence ×3, две «Кадровые документы»).
+  // Предпочитаем карточку С идентичностью (свой цвет/эмодзи), а не пустую старую.
+  icons.forEach(function(ic){ ic._k=String(ic.lbl||'').toLowerCase().trim(); });
+  var _best={}; icons.forEach(function(ic){ if(!(ic._k in _best) || (ic.ident && !_best[ic._k].ident)) _best[ic._k]=ic; });
+  var _done={}, _out=[];
+  icons.forEach(function(ic){ if(_done[ic._k]) return; if(_best[ic._k]===ic){ _out.push(ic); _done[ic._k]=1; } });
+  icons=_out;
   _dtReg=icons;  // реестр для правого клика (открыть/кабинет/удалить)
 
   var iconHtml=icons.map(function(ic,i){
