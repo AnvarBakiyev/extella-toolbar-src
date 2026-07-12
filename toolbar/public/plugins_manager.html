@@ -1323,6 +1323,23 @@ function _ensureMod(){
 // Локальные модели, приватные доменные помощники, что качаются и работают на
 // устройстве через Ollama. Данные не уходят в облако. Только вет-проверенные
 // СВЕЖИЕ модели; честная рамка (помощник/черновик, не замена специалиста).
+// i18n-хелперы: были объявлены как используемые, но НИГДЕ не определены — из-за этого
+// падали «Модели» (localModelCard → _lm) и запуск агента (_t). Полноценной смены языка в
+// тулбаре нет, дефолт — русский; en-подписи применяются там, где заданы (m.en).
+if (typeof LANG === 'undefined') { var LANG = 'ru'; }
+var _T_DICT = {
+  lmFrame:      {ru:'Особенность:', en:'Note:'},
+  lmLocal:      {ru:'локально · ',  en:'local · '},
+  lmInstall:    {ru:'Установить',   en:'Install'},
+  lmInstalling: {ru:'Ставится…',    en:'Installing…'},
+  runStarted:   {ru:'Запускаю…',    en:'Starting…'},
+  runOk:        {ru:'Готово ✓',     en:'Done ✓'},
+  autoLoad:     {ru:'Загружаю…',    en:'Loading…'},
+  autoEmpty:    {ru:'Пока пусто.',  en:'Nothing yet.'}
+};
+function _t(k){ var e=_T_DICT[k]; if(!e) return k; return (LANG==='en' && e.en!=null) ? e.en : e.ru; }
+function _lm(m, field){ if(LANG==='en' && m && m.en && m.en[field]!=null) return m.en[field]; return m ? m[field] : ''; }
+
 var LOCAL_MODELS = [
   {id:'llama32', domain:'Приватный ИИ · компакт', emoji:'⚡', model:'llama3.2:1b', size:'~1.3 ГБ',
    name:'Llama 3.2 (компактная)', desc:'Быстрая модель Meta целиком на устройстве — скачивается за пару минут, работает без интернета, данные не уходят.', frame:'приватность — данные не покидают устройство',
