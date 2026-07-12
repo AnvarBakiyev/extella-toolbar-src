@@ -513,6 +513,11 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);
 <symbol id="ic-docs" viewBox="0 0 24 24"><path d="M12 11H14.5H17"/> <path d="M12 7H14.5H17"/> <path d="M8 15V3.6C8 3.26863 8.26863 3 8.6 3H20.4C20.7314 3 21 3.26863 21 3.6V17C21 19.2091 19.2091 21 17 21V21"/> <path d="M5 15H8H12.4C12.7314 15 13.0031 15.2668 13.0298 15.5971C13.1526 17.1147 13.7812 21 17 21H8H6C4.34315 21 3 19.6569 3 18V17C3 15.8954 3.89543 15 5 15Z"/></symbol>
 <symbol id="ic-data" viewBox="0 0 24 24"><path d="M20 20H4V4"/> <path d="M4 16.5L12 9L15 12L19.5 7.5"/></symbol>
 <symbol id="ic-tech" viewBox="0 0 24 24"><path d="M13.5 6L10 18.5"/> <path d="M6.5 8.5L3 12L6.5 15.5"/> <path d="M17.5 8.5L21 12L17.5 15.5"/></symbol>
+<!-- Lucide (MIT) — монитор для героя «Мой компьютер» + бот/терминал/глобус для типов ярлыков -->
+<symbol id="ic-monitor" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></symbol>
+<symbol id="ic-bot" viewBox="0 0 24 24"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></symbol>
+<symbol id="ic-terminal" viewBox="0 0 24 24"><path d="m4 17 6-6-6-6"/><path d="M12 19h8"/></symbol>
+<symbol id="ic-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></symbol>
 <symbol id="ic-chat" viewBox="0 0 24 24"><path d="M17 12.5C17.2761 12.5 17.5 12.2761 17.5 12C17.5 11.7239 17.2761 11.5 17 11.5C16.7239 11.5 16.5 11.7239 16.5 12C16.5 12.2761 16.7239 12.5 17 12.5Z"/> <path d="M12 12.5C12.2761 12.5 12.5 12.2761 12.5 12C12.5 11.7239 12.2761 11.5 12 11.5C11.7239 11.5 11.5 11.7239 11.5 12C11.5 12.2761 11.7239 12.5 12 12.5Z"/> <path d="M7 12.5C7.27614 12.5 7.5 12.2761 7.5 12C7.5 11.7239 7.27614 11.5 7 11.5C6.72386 11.5 6.5 11.7239 6.5 12C6.5 12.2761 6.72386 12.5 7 12.5Z"/> <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 13.8214 2.48697 15.5291 3.33782 17L2.5 21.5L7 20.6622C8.47087 21.513 10.1786 22 12 22Z"/></symbol>
 <symbol id="ic-box" viewBox="0 0 24 24"><path d="M2.6954 7.18536L11.6954 11.1854L12.3046 9.81464L3.3046 5.81464L2.6954 7.18536ZM12.75 21.5V10.5H11.25V21.5H12.75ZM12.3046 11.1854L21.3046 7.18536L20.6954 5.81464L11.6954 9.81464L12.3046 11.1854Z"/> <path d="M3 17.1101V6.88992C3 6.65281 3.13964 6.43794 3.35632 6.34164L11.7563 2.6083C11.9115 2.53935 12.0885 2.53935 12.2437 2.6083L20.6437 6.34164C20.8604 6.43794 21 6.65281 21 6.88992V17.1101C21 17.3472 20.8604 17.5621 20.6437 17.6584L12.2437 21.3917C12.0885 21.4606 11.9115 21.4606 11.7563 21.3917L3.35632 17.6584C3.13964 17.5621 3 17.3472 3 17.1101Z"/> <path d="M7.5 4.5L16.1437 8.34164C16.3604 8.43794 16.5 8.65281 16.5 8.88992V12.5"/></symbol>
 </defs></svg>
@@ -2535,44 +2540,45 @@ function renderDesktop(){
   // Единый набор контурных значков (как в чипах/карточках Эллы): категория → #ic-*.
   // acc берём из палитры категорий (BIZ_ACC), чтобы цвета совпадали с витриной.
   function _dtAcc(cat){ return (typeof BIZ_ACC!=='undefined'&&BIZ_ACC[cat])||'#2F6B66'; }
+  function _icoSym(id){ return '<svg class="lico"><use href="#ic-'+id+'"/></svg>'; }
   var icons=[];
-  // 1) Агенты, собранные Визардом → открыть кабинет
+  // 1) Агенты, собранные Визардом → открыть кабинет (значок «бот»)
   (_autoReg||[]).filter(function(p){ var st=_agState[_agId(p)]; return !(st&&st.hidden); }).forEach(function(p){
     var cat=p._biz||'work';
-    icons.push({cat:cat,lbl:_agCleanName(p),acc:_dtAcc(cat),
+    icons.push({ico:_icoSym('bot'),lbl:_agCleanName(p),acc:_dtAcc(cat),
       go:"openAgentCabinet('"+_dtEsc(_agId(p))+"')"});
   });
-  // 2) Установленные программы (встроенные + добавленные) → открыть окно
+  // 2) Установленные программы (встроенные + добавленные) → открыть окно (значок по категории)
   var instIds=gi();
   BUILTIN_PLUGINS_DATA.filter(function(p){return instIds.indexOf(p.id)!==-1;}).concat(getCustom()).forEach(function(p){
     var cu=(typeof CURATED_PROGRAMS!=='undefined'&&CURATED_PROGRAMS[p.id])||{};
     var cat=cu.biz||(typeof catOf==='function'?catOf(p):'')||'box';
-    icons.push({cat:cat,lbl:cu.name||p.name||p.id,acc:_dtAcc(cat),
+    icons.push({ico:_ico(cat),lbl:cu.name||p.name||p.id,acc:_dtAcc(cat),
       go:"notify('open','"+_dtEsc(p.id)+"')"});
   });
-  // 3) CLI-инструменты → запустить
+  // 3) CLI-инструменты → запустить (значок «терминал»)
   var catMap={}; (typeof cliCatalog==='function'?cliCatalog():[]).forEach(function(c){catMap[c.id]=c;});
   cliGi().forEach(function(id){ var c=catMap[id]||{id:id,name:id};
     var cat=c.cat||'docs';
-    icons.push({cat:cat,lbl:c.name||c.id,acc:_dtAcc(cat),
+    icons.push({ico:_icoSym('terminal'),lbl:c.name||c.id,acc:_dtAcc(cat),
       go:"cliRun('"+_dtEsc(id)+"')"});
   });
-  // 4) Способности из интернета (Композитор) → источник или раздел «Мои»
+  // 4) Способности из интернета (Композитор) → источник или раздел «Мои» (значок «глобус»)
   (_capInstReg||[]).forEach(function(it){
-    icons.push({cat:'tech',lbl:it.title||it.id,acc:_dtAcc('tech'),
+    icons.push({ico:_icoSym('globe'),lbl:it.title||it.id,acc:_dtAcc('tech'),
       go: it.url?"window.open('"+_dtEsc(it.url)+"','_blank')":"setc('mine')"});
   });
 
   var iconHtml=icons.map(function(ic,i){
     return '<button class="dt_ico" style="animation-delay:'+Math.min(i*14,180)+'ms" title="Запустить: '+esc(ic.lbl)+'" onclick="'+ic.go+'">'+
-      '<span class="dt_ic_badge" style="background:'+esc(ic.acc)+'14;border-color:'+esc(ic.acc)+'40;color:'+esc(ic.acc)+'">'+_ico(ic.cat)+'</span>'+
+      '<span class="dt_ic_badge" style="background:'+esc(ic.acc)+'14;border-color:'+esc(ic.acc)+'40;color:'+esc(ic.acc)+'">'+ic.ico+'</span>'+
       '<span class="dt_ic_lbl">'+esc(ic.lbl)+'</span></button>';
   }).join('');
 
   g.innerHTML = _dtCss() +
     '<div class="dt_wrap">'+
       '<div class="dt_hero" onclick="notify(\'open\',\'extella_adoption_wizard\')">'+
-        '<div class="dt_hero_ic">'+_ico('tech')+'</div>'+
+        '<div class="dt_hero_ic">'+_icoSym('monitor')+'</div>'+
         '<div class="dt_hero_tx">'+
           '<div class="dt_hero_ttl">Мой компьютер · Визард</div>'+
           '<div class="dt_hero_sub">Твой ИИ-компьютер: собирает установленные программы в единые процессы, запускает их и следит за результатом.</div>'+
