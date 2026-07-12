@@ -87,5 +87,7 @@
   ],
   "conceptTexts": [
     "Plugin: Validator.js (id: validator-js). Wraps github.com/validatorjs/validator.js."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

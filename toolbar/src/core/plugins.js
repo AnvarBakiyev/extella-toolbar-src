@@ -84,14 +84,21 @@ ETB.plugins = (function () {
       var chain = Promise.resolve();
 
       if (defs.length === 0) {
-        // No pre-authored experts — ask the Extella agent to generate them.
-        // Best-effort: a failed agent call must not block the install itself.
-        chain = chain
-          .then(function () { return _autoProvision(manifest); })
-          .catch(function (err) {
-            console.warn('[ETB.plugins] auto-provision failed for ' +
-              (manifest.id || '?') + ':', err && err.message || err);
-          });
+        if ((manifest.mode || '') === 'llm_driven') {
+          // Разговорная карточка: работает через чат напрямую (plugin-chat →
+          // agent/run), эксперты ей не нужны. Раньше здесь гонялся агент-
+          // «архитектор» — лишний чат, лишние кредиты и минуты ожидания,
+          // а установка по сути локальная. Ставим мгновенно.
+        } else {
+          // No pre-authored experts — ask the Extella agent to generate them.
+          // Best-effort: a failed agent call must not block the install itself.
+          chain = chain
+            .then(function () { return _autoProvision(manifest); })
+            .catch(function (err) {
+              console.warn('[ETB.plugins] auto-provision failed for ' +
+                (manifest.id || '?') + ':', err && err.message || err);
+            });
+        }
       } else {
         // 1. Save all pre-authored expert definitions
         defs.forEach(function (def) {

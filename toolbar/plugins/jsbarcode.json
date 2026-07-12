@@ -63,5 +63,7 @@
   ],
   "conceptTexts": [
     "Plugin: JsBarcode (id: jsbarcode). Wraps github.com/lindell/JsBarcode."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

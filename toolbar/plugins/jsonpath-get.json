@@ -79,5 +79,7 @@
   ],
   "conceptTexts": [
     "Plugin: JSONPath Getter (id: jsonpath-get). Wraps github.com/json-path/JsonPath."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

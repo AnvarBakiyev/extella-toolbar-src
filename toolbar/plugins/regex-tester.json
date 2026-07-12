@@ -90,5 +90,7 @@
   ],
   "conceptTexts": [
     "Plugin: Regex Tester (id: regex-tester). Expert regex_tester_test tests regex patterns against text. Params: pattern (regex), text (test input), flags (i/m/s). Returns {output_type: 'json', data: {is_match, count, matches, spans}}."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

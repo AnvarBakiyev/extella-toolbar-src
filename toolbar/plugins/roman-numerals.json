@@ -96,5 +96,7 @@
   ],
   "conceptTexts": [
     "Plugin: Roman Numerals (id: roman-numerals). Wraps github.com/rodrigobran/roman."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

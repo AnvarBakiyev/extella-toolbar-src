@@ -77,5 +77,7 @@
   ],
   "conceptTexts": [
     "Plugin: Word Count & Text Stats (id: word-count). Expert word_count_analyze returns text statistics: words, characters, sentences, paragraphs, unique words, reading time, top words. Returns {output_type: 'json', data: {words, characters, sentences, ...}}."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

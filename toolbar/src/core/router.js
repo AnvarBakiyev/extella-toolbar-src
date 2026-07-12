@@ -12,6 +12,9 @@ ETB.router = (function () {
   // cache entry: { panel, blobUrl, lastUsed (ms timestamp) }
   var _cache = {};
   var _activeId = null; // pluginId of currently visible panel
+  // Bounded auto-start attempts per plugin — hard stop against any restart loop
+  // (a start expert is a deferred task; re-triggering it in a cycle would spam it).
+  var _autoTries = {};
 
   if (!window.__etbRouterSessionHook) {
     window.__etbRouterSessionHook = true;
@@ -68,6 +71,7 @@ ETB.router = (function () {
     }
     if (entry.blobUrl) { try { URL.revokeObjectURL(entry.blobUrl); } catch (_) {} }
     delete _cache[pluginId];
+    delete _autoTries[pluginId];
   }
 
   // Evict the least-recently-used entry when cache is full.
@@ -198,32 +202,40 @@ ETB.router = (function () {
   }
 
   // ── Server fallback card ────────────────────────────────────────
+  // Shown only after an auto-start attempt did not bring the server up — so the
+  // copy is human ("needs a hand"), leads with one clear action (let the agent
+  // install what's missing and run it), and tucks the technical bits behind a
+  // details toggle instead of greeting the user with "port … / dependencies".
   function _renderServerFallback(content, plugin) {
     var ui = plugin.ui || {};
     var pid = plugin.id ? plugin.id.replace(/'/g, '') : '';
     content.innerHTML = [
       '<div style="display:flex;align-items:center;justify-content:center;height:100%;',
       'padding:32px;font-family:-apple-system,system-ui,sans-serif;">',
-      '<div style="max-width:400px;text-align:center;">',
-      '<div style="font-size:40px;margin-bottom:16px;">&#9681;</div>',
+      '<div style="max-width:380px;text-align:center;">',
+      '<div style="font-size:38px;margin-bottom:14px;">&#128736;</div>',
       '<div style="font-size:16px;font-weight:700;color:var(--etb-tx,#f0f0f0);margin-bottom:8px;">',
-      _esc(plugin.name), ' is not running</div>',
-      '<div style="font-size:13px;color:var(--etb-tx2,#888);line-height:1.6;margin-bottom:24px;">',
-      'Local server is offline (port ', String(ui.port || ''), '). ',
-      'Start it, or let the agent install dependencies and run it for you.</div>',
+      _esc(plugin.name), ' needs a moment to set up</div>',
+      '<div style="font-size:13px;color:var(--etb-tx2,#888);line-height:1.6;margin-bottom:22px;">',
+      'It didn\'t start on its own. Let the assistant finish setting it up and open it &#8212; ',
+      'usually a one-time step.</div>',
       '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">',
       '<button onclick="ETB.router._repairWithAgent(\'' + _esc(pid) + '\')" style="' +
       'background:#C67E34;border:none;color:#000;font-weight:700;border-radius:9px;' +
-      'padding:10px 22px;cursor:pointer;font-size:12px;">&#10024; Run with agent</button>',
-      ui.startExpert
-        ? '<button onclick="ETB.router._startServer(\'' + _esc(pid) + '\')" style="' +
-          'background:var(--etb-s3,#1a1a1a);border:1px solid var(--etb-bd2,#333);color:var(--etb-tx,#f0f0f0);border-radius:9px;' +
-          'padding:10px 22px;cursor:pointer;font-size:12px;">&#9654; Start server</button>'
-        : '',
+      'padding:11px 24px;cursor:pointer;font-size:12.5px;">&#10024; Set up &amp; open</button>',
       '<button onclick="ETB.router._retryServer(\'' + _esc(pid) + '\')" style="' +
       'background:var(--etb-s3,#1a1a1a);border:1px solid var(--etb-bd2,#333);color:var(--etb-tx,#f0f0f0);border-radius:9px;' +
-      'padding:10px 22px;cursor:pointer;font-size:12px;">&#8635; Retry</button>',
+      'padding:11px 20px;cursor:pointer;font-size:12.5px;">&#8635; Try again</button>',
       '</div>',
+      // Technical detail, collapsed — for power users, not in the user's face.
+      '<details style="margin-top:18px;text-align:left;">',
+      '<summary style="font-size:11px;color:var(--etb-tx3,#666);cursor:pointer;text-align:center;list-style:none;">Details</summary>',
+      '<div style="font-size:11px;color:var(--etb-tx3,#666);line-height:1.5;margin-top:8px;">',
+      'Local server offline on port ', String(ui.port || '&#8212;'), '.',
+      ui.startExpert
+        ? ' <a href="#" onclick="ETB.router._startServer(\'' + _esc(pid) + '\');return false;" style="color:#C67E34;">Start server only</a>.'
+        : '',
+      '</div></details>',
       '</div></div>'
     ].join('');
   }
@@ -304,6 +316,7 @@ ETB.router = (function () {
     fetch(serverUrl, fetchOpts)
       .then(function () {
         if (timer) clearTimeout(timer);
+        _autoTries[plugin.id] = 0;   // server is up — reset auto-start budget for next time
         // Hand the locally-served UI the same bridge html-type plugins get, so
         // its buttons can call /api/expert/run directly (token + apiBase).
         // For HuggingFace remote-model plugins, also pass the hf_token so the
@@ -338,8 +351,76 @@ ETB.router = (function () {
       .catch(function () {
         if (timer) clearTimeout(timer);
         if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
-        _renderServerFallback(content, plugin);
+        var lui = plugin.ui || {};
+        // Offline: silently start the server for the user and poll for it, showing
+        // a friendly "starting…" state — no technical card unless it genuinely
+        // doesn't come up. We poll on our OWN bounded timer (not the start expert's
+        // promise, which may be a long/deferred task that never resolves) so the
+        // spinner can never hang forever, and escalate to a friendly card on timeout.
+        if (lui.startExpert && (_autoTries[plugin.id] || 0) < 2) {
+          _autoTries[plugin.id] = (_autoTries[plugin.id] || 0) + 1;
+          _autoStartAndWatch(content, plugin, serverUrl);
+        } else {
+          _renderServerFallback(content, plugin);
+        }
       });
+  }
+
+  // Auto-start a local server and poll until it answers (load it) or a bounded
+  // number of tries pass (show the friendly card). Renders into THIS content, so
+  // it is robust even if another panel/container exists for the same plugin.
+  function _autoStartAndWatch(content, plugin, serverUrl) {
+    _renderStarting(content, plugin);
+    // noRetry: we do our OWN polling below. _startServer's built-in retry would
+    // re-enter this catch when its deferred task resolves → restart loop.
+    try { ETB.router._startServer(plugin.id, { noRetry: true }); } catch (e) {}
+    var tries = 0, maxTries = 6;   // ~18s at 3s spacing
+    var iv = setInterval(function () {
+      // Stop if this panel was torn down while we were waiting.
+      if (!content.isConnected) { clearInterval(iv); return; }
+      tries++;
+      var c = typeof AbortController !== 'undefined' ? new AbortController() : null;
+      var t = c ? setTimeout(function () { c.abort(); }, 2500) : null;
+      var opts = { method: 'HEAD', mode: 'no-cors' };
+      if (c) opts.signal = c.signal;
+      fetch(serverUrl, opts)
+        .then(function () {
+          if (t) clearTimeout(t);
+          clearInterval(iv);
+          // Server is up — load it into THIS content.
+          content.innerHTML = '';
+          var f = document.createElement('iframe');
+          f.style.cssText = 'width:100%;height:100%;border:none;display:none;';
+          f.setAttribute('allow', 'clipboard-read;clipboard-write');
+          content.appendChild(f);
+          _checkAndLoadServer(f, serverUrl, content, plugin);
+        })
+        .catch(function () {
+          if (t) clearTimeout(t);
+          if (tries >= maxTries) {
+            clearInterval(iv);
+            _renderServerFallback(content, plugin);   // escalate — no infinite spinner
+          }
+        });
+    }, 3000);
+  }
+
+  // Friendly "the tool is starting" state — shown while we auto-start the local
+  // server, so the user never meets a raw "server offline / port …" screen.
+  function _renderStarting(content, plugin) {
+    content.innerHTML = [
+      '<div style="display:flex;align-items:center;justify-content:center;height:100%;',
+      'padding:32px;font-family:-apple-system,system-ui,sans-serif;">',
+      '<div style="max-width:360px;text-align:center;">',
+      '<div class="_etb_spin" style="width:30px;height:30px;margin:0 auto 18px;border-radius:50%;',
+      'border:3px solid var(--etb-bd2,#333);border-top-color:#C67E34;animation:_etb_spin 0.8s linear infinite;"></div>',
+      '<div style="font-size:15px;font-weight:700;color:var(--etb-tx,#f0f0f0);margin-bottom:6px;">',
+      'Starting ', _esc(plugin.name), '&#8230;</div>',
+      '<div style="font-size:12.5px;color:var(--etb-tx2,#888);line-height:1.55;">',
+      'This takes a few seconds the first time.</div>',
+      '</div></div>',
+      '<style>@keyframes _etb_spin{to{transform:rotate(360deg)}}</style>'
+    ].join('');
   }
 
   function _buildPanel(plugin) {
@@ -1104,9 +1185,10 @@ ETB.router = (function () {
   return {
     // Start a local_server plugin's HTTP server via its saved expert.
     // Must run with target: deviceId so the server starts on the user's device.
-    _startServer: function (pluginId) {
+    _startServer: function (pluginId, opts) {
       var plugin = ETB.registry.getById(pluginId);
       if (!plugin || !plugin.ui || !plugin.ui.startExpert) return;
+      var _noRetry = !!(opts && opts.noRetry);
       var startExpert = plugin.ui.startExpert;
       var port = plugin.ui.port;
       var rootPath = plugin.ui.rootPath;
@@ -1117,7 +1199,7 @@ ETB.router = (function () {
           var runOpts = deviceId ? { target: deviceId } : {};
           return ETB.api.runExpert(startExpert, { port: String(port || ''), root_path: rootPath || '' }, runOpts);
         })
-        .then(function () { ETB.router._retryServer(pluginId); })
+        .then(function () { if (!_noRetry) ETB.router._retryServer(pluginId); })
         .catch(function (e) { console.warn('[ETB.router] Failed to start server:', e && e.message); });
     },
 

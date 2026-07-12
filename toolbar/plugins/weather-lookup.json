@@ -28,30 +28,30 @@
   "capabilities": [
     {
       "id": "get_weather",
-      "name": "Get Weather",
+      "name": "Погода и прогноз",
       "expert_name": "weather_lookup_get",
       "inputs": [
         {
           "name": "city",
           "type": "text",
-          "label": "City",
+          "label": "Город",
           "required": true,
           "placeholder": "London or New York or Tokyo"
         },
         {
           "name": "units",
           "type": "select",
-          "label": "Temperature Units",
+          "label": "Единицы",
           "required": false,
           "default": "metric",
           "options": [
             {
               "value": "metric",
-              "label": "Metric (°C)"
+              "label": "Цельсий (°C)"
             },
             {
               "value": "imperial",
-              "label": "Imperial (°F)"
+              "label": "Фаренгейт (°F)"
             }
           ]
         }
@@ -104,5 +104,7 @@
   ],
   "conceptTexts": [
     "Plugin: Weather Lookup (id: weather-lookup). Expert weather_lookup_get fetches current weather and 3-day forecast using wttr.in (free). Params: city (city name), units (metric/imperial). Returns {output_type: 'json', data: {location, temperature, feels_like, description, humidity, wind, forecast}}."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "verified"
 }

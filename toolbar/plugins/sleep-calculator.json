@@ -99,5 +99,7 @@
   ],
   "conceptTexts": [
     "Plugin: Sleep Cycle Calculator (id: sleep-calculator). Expert sleep_calculator_compute calculates optimal wake-up or bedtimes based on 90-minute sleep cycles. Params: mode (bedtime_to_wakeup/wakeup_to_bedtime), time (HH:MM). Returns {output_type: 'json', data: {recommendations: [{cycles, sleep_hours, time, quality}]}}."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

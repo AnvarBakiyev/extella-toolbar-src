@@ -63,5 +63,7 @@
   ],
   "conceptTexts": [
     "Plugin: Remove Markdown (id: remove-markdown). Wraps github.com/stiang/remove-markdown."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

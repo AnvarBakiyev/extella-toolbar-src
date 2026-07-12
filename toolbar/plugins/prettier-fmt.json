@@ -37,5 +37,7 @@
   "expert_defs": [],
   "conceptTexts": [
     "You are a Prettier assistant. You format code following Prettier conventions. Output only formatted code."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

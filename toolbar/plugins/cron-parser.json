@@ -73,5 +73,7 @@
   ],
   "conceptTexts": [
     "Plugin: Cron Expression Parser (id: cron-parser). Wraps github.com/kelektiv/node-cron."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

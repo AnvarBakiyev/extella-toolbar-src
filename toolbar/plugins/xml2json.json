@@ -81,5 +81,7 @@
   ],
   "conceptTexts": [
     "Plugin: XML to JSON (id: xml2json). Wraps github.com/Leonidas-from-XIV/node-xml2js."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

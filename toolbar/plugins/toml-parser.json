@@ -81,5 +81,7 @@
   ],
   "conceptTexts": [
     "Plugin: TOML Parser (id: toml-parser). Wraps github.com/toml-lang/toml."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

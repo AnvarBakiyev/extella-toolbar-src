@@ -94,5 +94,7 @@
   ],
   "conceptTexts": [
     "Plugin: Day.js Dates (id: dayjs-dates). Wraps github.com/iamkun/dayjs."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

@@ -94,5 +94,7 @@
   ],
   "conceptTexts": [
     "Plugin: Running Pace Calculator (id: pace-calculator). Wraps Pace calculator."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

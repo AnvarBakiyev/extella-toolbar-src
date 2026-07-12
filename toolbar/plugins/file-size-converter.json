@@ -125,5 +125,7 @@
   ],
   "conceptTexts": [
     "Plugin: File Size Converter (id: file-size-converter). Expert file_size_converter_convert converts file sizes between B, KB, MB, GB, TB, PB, KiB, MiB, GiB. Params: value (number), unit. Returns {output_type: 'json', data: {bytes, kilobytes, megabytes, gigabytes, terabytes, kibibytes, mebibytes, gibibytes}}."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

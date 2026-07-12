@@ -74,5 +74,7 @@
   ],
   "conceptTexts": [
     "Plugin: IP Geolocation (id: ip-geolocation). Expert ip_geolocation_lookup looks up country, city, ISP, timezone and coordinates for any IP using ip-api.com (free). Param: ip (IPv4/IPv6, or blank for caller's IP). Returns {output_type: 'json', data: {ip, country, region, city, timezone, isp, coordinates}}."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

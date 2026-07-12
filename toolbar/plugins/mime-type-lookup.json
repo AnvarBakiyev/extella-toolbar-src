@@ -97,5 +97,7 @@
   ],
   "conceptTexts": [
     "Plugin: MIME Type Lookup (id: mime-type-lookup). Expert mime_type_lookup_find looks up MIME types by extension or extensions by MIME type. Params: query (extension or MIME string), direction (ext_to_mime/mime_to_ext). Returns {output_type: 'json', data: {mime_type, extension(s), category}}."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

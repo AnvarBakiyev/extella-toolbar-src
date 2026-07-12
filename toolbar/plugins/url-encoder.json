@@ -109,5 +109,7 @@
   ],
   "conceptTexts": [
     "Plugin: URL Encoder/Decoder (id: url-encoder). Expert url_encoder_convert percent-encodes or decodes URLs. Params: text, operation (encode/decode), mode (component/full). Returns {output_type: 'text', data: '<result>'}."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

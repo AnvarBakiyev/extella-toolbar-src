@@ -101,5 +101,7 @@
   ],
   "conceptTexts": [
     "Plugin: JSON Formatter (id: json-formatter). Expert json_formatter_format prettifies or minifies JSON. Params: json_text, operation (prettify/minify), indent (1-8). Returns {output_type: 'text', data: '<formatted JSON>'}."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

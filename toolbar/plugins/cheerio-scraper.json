@@ -96,5 +96,7 @@
   ],
   "conceptTexts": [
     "Plugin: Cheerio HTML Parser (id: cheerio-scraper). Wraps github.com/cheeriojs/cheerio."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

@@ -88,5 +88,7 @@
   ],
   "conceptTexts": [
     "Plugin: Base64 Encoder/Decoder (id: base64-codec). Expert base64_codec_convert encodes text to Base64 or decodes Base64 back to text using Python stdlib. Params: text (input string), operation (encode or decode). Returns {output_type: 'text', data: '<result>'}."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

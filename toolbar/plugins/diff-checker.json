@@ -91,5 +91,7 @@
   ],
   "conceptTexts": [
     "Plugin: Diff Checker (id: diff-checker). Expert diff_checker_compare computes unified diff between two texts. Params: text_a (original), text_b (modified), context_lines (0-10, default 3). Returns {output_type: 'text', data: '<unified diff or no differences message>'}."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

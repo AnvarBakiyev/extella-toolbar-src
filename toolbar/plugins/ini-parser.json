@@ -72,5 +72,7 @@
   ],
   "conceptTexts": [
     "Plugin: INI Parser (id: ini-parser). Wraps github.com/npm/ini."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

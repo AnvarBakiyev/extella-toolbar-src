@@ -79,5 +79,7 @@
   ],
   "conceptTexts": [
     "Plugin: Country Info (id: country-info). Expert country_info_lookup returns facts about any country using restcountries.com (free). Param: query (country name or ISO code). Returns {output_type: 'json', data: {name, official_name, capital, population, area_km2, region, languages, currencies, flag, calling_code}}."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

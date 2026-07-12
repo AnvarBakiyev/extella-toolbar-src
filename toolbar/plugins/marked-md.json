@@ -77,5 +77,7 @@
   ],
   "conceptTexts": [
     "Plugin: Marked (Markdown) (id: marked-md). Wraps github.com/markedjs/marked."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

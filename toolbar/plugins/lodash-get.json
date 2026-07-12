@@ -78,5 +78,7 @@
   ],
   "conceptTexts": [
     "Plugin: Lodash Get (id: lodash-get). Wraps github.com/lodash/lodash."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

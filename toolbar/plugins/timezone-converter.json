@@ -84,5 +84,7 @@
   ],
   "conceptTexts": [
     "Plugin: Timezone Converter (id: timezone-converter). Expert timezone_converter_convert returns current time in any IANA timezone using worldtimeapi.org. Param: timezone (e.g. America/New_York, Europe/London). Returns {output_type: 'json', data: {timezone, current_datetime, utc_offset, day_of_week, dst}}."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

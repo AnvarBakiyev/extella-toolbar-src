@@ -199,14 +199,14 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--tx);
       <div id="hdr_sub"></div>
     </div>
     <div id="hdr_sp"></div>
-    <button id="hdr_copy" class="hdr_btn" style="display:none" title="Copy document">Copy</button>
-    <button id="hdr_download" class="hdr_btn" style="display:none" title="Download document">Download</button>
-    <button id="hdr_clr" class="hdr_btn" title="Clear conversation">Clear</button>
+    <button id="hdr_copy" class="hdr_btn" style="display:none" title="Скопировать документ">Копировать</button>
+    <button id="hdr_download" class="hdr_btn" style="display:none" title="Скачать документ">Скачать</button>
+    <button id="hdr_clr" class="hdr_btn" title="Очистить переписку">Очистить</button>
   </div>
   <div id="ctx_bar"></div>
   <div id="mobile_tab_bar">
-    <button class="mobile_tab on" data-tab="chat">Chat</button>
-    <button class="mobile_tab" data-tab="doc">Document</button>
+    <button class="mobile_tab on" data-tab="chat">Чат</button>
+    <button class="mobile_tab" data-tab="doc">Документ</button>
   </div>
   <div id="body_row">
     <div id="chat_col">
@@ -214,14 +214,14 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--tx);
       <div id="qa_bar" style="display:none"></div>
       <div id="inp_area">
         <div id="inp_row">
-          <textarea id="inp" placeholder="Ask anything..." rows="1"></textarea>
-          <button id="send_btn">Send</button>
+          <textarea id="inp" placeholder="Напиши агенту…" rows="1"></textarea>
+          <button id="send_btn">Отправить</button>
         </div>
       </div>
     </div>
     <div id="doc_col">
       <div id="doc_toolbar">
-        <span>Document</span>
+        <span>Документ</span>
         <button id="doc_copy" class="hdr_btn">Copy</button>
         <button id="doc_download" class="hdr_btn">Download</button>
       </div>
@@ -240,9 +240,32 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
   var API_BASE = 'https://api.extella.ai';
   var plugin = null;
   var messages = [];
+  // Русские инструкции для курированных карточек (Фаза 4).
+  // hint — что написать агенту; sugg — кликабельные примеры-старты.
+  var CHAT_RU = {
+    'legal-simplifier': { name:'Договор простым языком', hint:'Вставь договор, объясню без юридического тумана: что подписываешь и где риски.', sugg:['Объясни этот договор','Какие риски в этом пункте?'] },
+    'meeting-notes': { name:'Итоги встречи', hint:'Кидай заметки или расшифровку созвона, соберу решения, задачи и сроки.', sugg:['Собери итоги встречи'] },
+    'email-composer': { name:'Деловые письма', hint:'Скажи, кому и о чём написать, соберу вежливое письмо без «доброго времени суток».', sugg:['Письмо клиенту о переносе сроков'] },
+    'resume-builder': { name:'Резюме под вакансию', hint:'Вставь резюме и вакансию, усилю так, что дочитают до конца.', sugg:['Усиль моё резюме под вакансию'] },
+    'cover-letter-writer': { name:'Сопроводительное письмо', hint:'Вставь вакансию и пару фактов о себе, соберу письмо без «я командный игрок».', sugg:['Сопроводительное к этой вакансии'] },
+    'interview-questions': { name:'Вопросы к собеседованию', hint:'Скажи, на какую роль собеседование, подготовлю вопросы и погоняю по ответам.', sugg:['Готовлюсь на продакт-менеджера'] },
+    'marketing-copy': { name:'Тексты для рекламы', hint:'Опиши продукт и аудиторию, напишу заголовки и текст, которые не стыдно показать клиенту.', sugg:['Заголовки для лендинга'] },
+    'product-description': { name:'Описание товара', hint:'Расскажи о товаре своими словами, сделаю текст, который продаёт.', sugg:['Опиши товар для маркетплейса'] },
+    'brainstorm': { name:'Мозговой штурм', hint:'Назови тему, накидаю идей, пока кофе не остыл.', sugg:['Идеи для запуска продукта'] },
+    'study-schedule': { name:'План подготовки', hint:'Скажи, какой экзамен и сколько времени осталось, разложу подготовку по дням.', sugg:['Экзамен через три недели'] },
+    'budget-advisor': { name:'Личный бюджет', hint:'Опиши доходы и траты, покажу, куда уходят деньги, спокойно и без укоров.', sugg:['Разбери мой месячный бюджет'] },
+    'recipe-suggester': { name:'Что приготовить', hint:'Перечисли, что есть дома, предложу варианты с пошаговым приготовлением.', sugg:['Что приготовить из курицы, риса и сметаны?'] },
+    'travel-planner': { name:'План поездки', hint:'Скажи, куда и на сколько едешь, соберу маршрут и список вещей.', sugg:['Три дня в Алматы, что посмотреть?'] },
+    'fitness-coach': { name:'Фитнес-план', hint:'Расскажи про уровень и цель, соберу план тренировок без фанатизма.', sugg:['План на три тренировки в неделю'] }
+  };
+
   var isTyping = false;
   var pluginId = null;
   var apiToken = '';
+  var _pendingSend = null; // сообщение, ждущее токена: уйдёт само при подключении
+  // Личный агент вошедшего пользователя; приходит от тулбара вместе с токеном.
+  // Фолбэк — общий платформенный агент (есть у всех аккаунтов).
+  var agentId = 'agent_extella_default';
   var _mmdSeq = 0;
   var _mmdQueue = [];
   var _mmdReady = false;
@@ -270,6 +293,19 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
     });
     window.addEventListener('message', function (e) {
       if (e.data && e.data.type === 'etb_theme') applyTheme(e.data.theme);
+      if (e.data && e.data.type === 'etb_session') {
+        if (e.data.token) apiToken = e.data.token;
+        if (e.data.agentId) agentId = e.data.agentId;
+        if (apiToken && _pendingSend) {
+          var p = _pendingSend; _pendingSend = null;
+          // убрать заметку «Подключаюсь…» и своё же сообщение из очереди,
+          // sendMessage добавит их заново — без дублей
+          if (messages.length && messages[messages.length - 1].role === 'assistant') messages.pop();
+          if (messages.length && messages[messages.length - 1].role === 'user') messages.pop();
+          isTyping = false;
+          sendMessage(p.text, p.qa);
+        }
+      }
     });
   }
 
@@ -287,6 +323,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
         if (e.data && e.data.type === 'etb_init' && e.data.pluginId) {
           window.removeEventListener('message', handler);
           if (e.data.token) apiToken = e.data.token;
+          if (e.data.agentId) agentId = e.data.agentId;
           if (e.data.theme) applyTheme(e.data.theme);
           startWithPlugin(e.data.pluginId);
         }
@@ -348,6 +385,8 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
   }
 
   function getQuickActions() {
+    var ru = plugin && CHAT_RU[plugin.id];
+    if (ru && ru.sugg) return ru.sugg.map(function (t) { return { label: t, prompt: t }; });
     return (plugin && plugin.ui && plugin.ui.quickActions) || [];
   }
 
@@ -372,13 +411,16 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
   }
 
   function renderHeader() {
-    document.getElementById('hdr_name').textContent = plugin.name || plugin.id || 'Plugin';
-    document.getElementById('hdr_sub').textContent = plugin.tagline || plugin.description || '';
-    document.title = (plugin.name || 'Plugin') + ' — Extella';
+    var ru = CHAT_RU[plugin.id] || null;
+    var nm = (ru && ru.name) || plugin.name || plugin.id || 'Плагин';
+    document.getElementById('hdr_name').textContent = nm;
+    document.getElementById('hdr_sub').textContent = (ru && ru.hint) || plugin.tagline || plugin.description || '';
+    document.title = nm + ' — Extella';
   }
 
   function renderContext() {
     var bar = document.getElementById('ctx_bar');
+    if (CHAT_RU[plugin.id]) { bar.style.display = 'none'; return; } // русские карточки: без англ. плашек
     var pills = plugin.pills || [];
     if (plugin.type) pills = [plugin.type].concat(pills);
     if (!pills.length) { bar.style.display = 'none'; return; }
@@ -391,13 +433,14 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
   function renderEmpty() {
     var msgs = document.getElementById('msgs');
     if (messages.length > 0) { msgs.innerHTML = ''; updateDocPreview(); return; }
-    var initialPrompt = (plugin.ui && plugin.ui.initialPrompt) || ('Ask anything about ' + (plugin.name || 'this plugin'));
+    var ru = CHAT_RU[pluginId] || CHAT_RU[plugin.id] || null;
+    var initialPrompt = (ru && ru.hint) || (plugin.ui && plugin.ui.initialPrompt) || ('Напиши агенту, что нужно сделать: «' + (plugin.name || 'плагин') + '» подхватит.');
     var actions = getQuickActions();
-    var suggestions = actions.length ? actions.map(function (qa) { return qa.label; }) : buildSuggestions();
+    var suggestions = (ru && ru.sugg) || (actions.length ? actions.map(function (qa) { return qa.label; }) : buildSuggestions());
     msgs.innerHTML = [
       '<div id="empty">',
       '<div id="empty_icon">&#128268;</div>',
-      '<div id="empty_title">' + esc(plugin.name || 'Plugin') + '</div>',
+      '<div id="empty_title">' + esc((ru && ru.name) || plugin.name || 'Плагин') + '</div>',
       '<div id="empty_sub">' + esc(initialPrompt) + '</div>',
       suggestions.length ? '<div id="suggestions">' + suggestions.map(function (s, i) {
         return '<button class="sugg" data-i="' + i + '" data-q="' + esc(s) + '">' + esc(s) + '</button>';
@@ -459,7 +502,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
       msgs.insertAdjacentHTML('beforeend', [
         '<div class="msg assistant">',
         '<div class="typing"><span></span><span></span><span></span></div>',
-        '<div class="msg_meta">Thinking&hellip; this can take up to a minute</div>',
+        '<div class="msg_meta">Думаю… это может занять до минуты</div>',
         '</div>'
       ].join(''));
     }
@@ -476,14 +519,18 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
     var logHtml = m.log && m.log.length ? '<div class="msg_log">' + esc(m.log.join('\n')) + '</div>' : '';
     var expertHtml = m.expert ? '<div class="msg_meta">' + esc(m.expert) + '</div>' : '';
     var bubble;
+    if (m.note) {
+      // служебная заметка (подключение и т.п.) — обычным текстом, не «документом»
+      return '<div class="msg assistant"><div class="msg_bubble msg_compact">' + esc(m.content) + '</div></div>';
+    }
     if (isSplitLayout() && m.role === 'assistant') {
       if (_contentHasImage(m.content)) {
         var imgHtml = _renderImagesFromContent(m.content);
         bubble = '<div class="msg_bubble">' + imgHtml +
-          (idx === lastAsst ? '<div class="msg_img_hint">Full document in panel &rarr;</div>' : '') +
+          (idx === lastAsst ? '<div class="msg_img_hint">Документ целиком в панели &rarr;</div>' : '') +
           '</div>';
       } else if (idx === lastAsst) {
-        bubble = '<div class="msg_bubble msg_compact">Document updated — see panel &rarr;</div>';
+        bubble = '<div class="msg_bubble msg_compact">Документ обновлён, открой панель &rarr;</div>';
       } else {
         var preview = String(m.content || '').replace(/\s+/g, ' ').trim();
         if (preview.length > 100) preview = preview.slice(0, 100) + '…';
@@ -1417,7 +1464,8 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
     resizeInp();
     if (!apiToken) {
       isTyping = false;
-      messages.push({ role: 'assistant', content: 'Could not connect to your Extella account. Please reopen the plugin from the toolbar.' });
+      _pendingSend = { text: text, qa: qa };
+      messages.push({ role: 'assistant', note: true, content: 'Подключаюсь к аккаунту Extella… Сообщение отправится само через пару секунд.' });
       renderMessages();
       saveHistory();
       return;
@@ -1428,19 +1476,34 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
         'Content-Type': 'application/json',
         'X-Auth-Token': apiToken,
         'X-Profile-Id': 'default',
-        'X-Agent-Id': 'agent_extella_default'
+        'X-Agent-Id': agentId
       },
       body: JSON.stringify({
-        agent_id: 'agent_extella_default',
+        agent_id: agentId,
         input: buildAgentInput(text, qa),
         run_timeout: 240
       })
     })
     .then(function (r) { return r.json(); })
     .then(function (data) {
+      // Битый ключ у агента: просим тулбар переключить агента; сообщение
+      // повторится само, когда придёт обновлённая сессия.
+      var errStr = JSON.stringify(data && (data.error || data.message) || '');
+      if (/incorrect api key|invalid_request|apikey/i.test(errStr)) {
+        isTyping = false;
+        if (messages.length && messages[messages.length - 1].role === 'user') {
+          _pendingSend = { text: text, qa: qa };
+          messages.pop();
+        }
+        messages.push({ role: 'user', content: text });
+        messages.push({ role: 'assistant', note: true, content: 'Перенастраиваю подключение к агенту… Сообщение отправится само.' });
+        renderMessages();
+        try { window.parent.postMessage({ type: 'etb_agent_bad', agentId: agentId }, '*'); } catch (e) {}
+        return;
+      }
       isTyping = false;
       var out = extractAgentText(data);
-      messages.push({ role: 'assistant', content: out || 'Sorry, I could not get an answer this time. Please try again.' });
+      messages.push({ role: 'assistant', content: out || 'Не получилось получить ответ. Попробуй ещё раз.' });
       renderMessages();
       saveHistory();
       if (isSplitLayout()) {
@@ -1460,9 +1523,15 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
 
   function buildAgentInput(text, qa) {
     var lines = [];
+    var ru = CHAT_RU[plugin.id] || null;
     lines.push('[Plugin context — not written by the user]');
-    lines.push('You are the assistant of the "' + (plugin.name || plugin.id) + '" plugin inside Extella.');
-    if (plugin.source) {
+    lines.push('You are the assistant of the "' + ((ru && ru.name) || plugin.name || plugin.id) + '" plugin inside Extella.');
+    if (ru) {
+      // Курированная русская карточка: русская задача вместо английского
+      // описания, чтобы агент не съезжал в английский.
+      lines.push('Задача плагина (для пользователя): ' + ru.hint);
+      lines.push('Пользователь ждёт ответ по-русски, если сам не пишет на другом языке.');
+    } else if (plugin.source) {
       lines.push('The plugin wraps the GitHub repository ' + plugin.source +
         (plugin.tagline ? ' (' + plugin.tagline + ')' : '') + '.');
     } else if (plugin.description) lines.push('Plugin description: ' + plugin.description);

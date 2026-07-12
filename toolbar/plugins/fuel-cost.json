@@ -84,5 +84,7 @@
   ],
   "conceptTexts": [
     "Plugin: Fuel Cost Calculator (id: fuel-cost). Wraps Fuel calculator."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

@@ -112,5 +112,7 @@
   ],
   "conceptTexts": [
     "Plugin: Unit Converter (id: unit-converter). Expert unit_converter_convert converts values between length (km/miles/m/ft), weight (kg/lbs/oz/g), temperature (celsius/fahrenheit/kelvin), area (m²/ft²/acre), speed (km/h/mph/m/s), volume (l/ml/gal) units. Params: value, from_unit, to_unit. Returns {output_type: 'json', data: {value, from, to, result, category}}."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

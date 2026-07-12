@@ -83,5 +83,7 @@
   ],
   "conceptTexts": [
     "Plugin: Days Between Dates (id: days-between-dates). Expert days_between_dates_compute calculates duration between dates. Params: date_from (YYYY-MM-DD), date_to (defaults to today). Returns {output_type: 'json', data: {days, weeks, months, years, working_days, weekend_days}}."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

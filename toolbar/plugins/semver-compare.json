@@ -78,5 +78,7 @@
   ],
   "conceptTexts": [
     "Plugin: SemVer Compare (id: semver-compare). Wraps github.com/npm/node-semver."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

@@ -84,5 +84,7 @@
   ],
   "conceptTexts": [
     "Plugin: English Dictionary (id: dictionary-lookup). Expert dictionary_lookup_define returns definitions, phonetics, examples and synonyms for English words using dictionaryapi.dev (free). Param: word (English word). Returns {output_type: 'json', data: {word, phonetic, meanings: [{part_of_speech, definitions, synonyms}]}}."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

@@ -99,5 +99,7 @@
   ],
   "conceptTexts": [
     "Plugin: Number Base Converter (id: number-base-converter). Expert number_base_converter_convert converts integers between decimal, binary, octal, and hexadecimal. Params: number (string), from_base (2/8/10/16). Returns {output_type: 'json', data: {decimal, binary, octal, hexadecimal}}."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

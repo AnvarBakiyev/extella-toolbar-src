@@ -63,5 +63,7 @@
   ],
   "conceptTexts": [
     "Plugin: libphonenumber (id: libphonenumber). Wraps github.com/google/libphonenumber."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

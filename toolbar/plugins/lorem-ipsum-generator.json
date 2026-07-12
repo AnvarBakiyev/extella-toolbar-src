@@ -115,5 +115,7 @@
   ],
   "conceptTexts": [
     "Plugin: Lorem Ipsum Generator (id: lorem-ipsum-generator). Expert lorem_ipsum_generator_generate creates Lorem Ipsum placeholder text. Params: unit (paragraphs/sentences/words), count (1-20), start_with_lorem (bool). Returns {output_type: 'text', data: '<placeholder text>'}."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

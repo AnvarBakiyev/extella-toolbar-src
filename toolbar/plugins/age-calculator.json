@@ -88,5 +88,7 @@
   ],
   "conceptTexts": [
     "Plugin: Age Calculator (id: age-calculator). Expert age_calculator_compute calculates exact age from birth date. Params: birth_date (YYYY-MM-DD), as_of_date (optional). Returns {output_type: 'json', data: {years, months, days, weeks, next_birthday, days_to_birthday}}."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

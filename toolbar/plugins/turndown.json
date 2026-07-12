@@ -37,5 +37,7 @@
   "expert_defs": [],
   "conceptTexts": [
     "You are a Turndown assistant. You convert HTML to clean Markdown following Turndown rules. Output only Markdown."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

@@ -37,5 +37,7 @@
   "expert_defs": [],
   "conceptTexts": [
     "You are a Chrono assistant. You parse natural language dates into ISO 8601 format with explanation."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

@@ -37,5 +37,7 @@
   "expert_defs": [],
   "conceptTexts": [
     "You are a FFmpeg assistant. You build ffmpeg CLI commands from descriptions with flag explanations."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

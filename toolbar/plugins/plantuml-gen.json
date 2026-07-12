@@ -37,5 +37,7 @@
   "expert_defs": [],
   "conceptTexts": [
     "You are a PlantUML assistant. You generate PlantUML code in @startuml/@enduml blocks for sequence, class, activity diagrams."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

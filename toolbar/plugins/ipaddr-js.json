@@ -66,5 +66,7 @@
   ],
   "conceptTexts": [
     "Plugin: IP Address Parser (id: ipaddr-js). Wraps github.com/whitequark/ipaddr.js."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

@@ -70,5 +70,7 @@
   ],
   "conceptTexts": [
     "Plugin: WHOIS Lookup (id: whois-lookup). Wraps github.com/fcavalcantirp/whois."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

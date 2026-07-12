@@ -125,5 +125,7 @@
   ],
   "conceptTexts": [
     "Plugin: Percentage Calculator (id: percentage-calculator). Expert percentage_calculator_compute solves percentage problems. Types: percent_of (X% of Y), what_percent (X is ?% of Y), percent_change (% change X→Y), discount (Y after X% off), reverse (original when Y is X%). Returns {output_type: 'json', data: {result, label}}."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

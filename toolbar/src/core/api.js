@@ -5,7 +5,55 @@
 
 ETB.api = (function () {
   var BASE = 'https://api.extella.ai';
-  var DEFAULT_AGENT = 'agent_extella_default';
+  // Агент НЕ зашивается: у каждого пользователя свой. Определяем динамически
+  // из /api/agent/list (правило: платформенный Qwen/alibaba, при нескольких —
+  // с пометкой DEFAULT; иначе первый в списке). Фолбэк — общий платформенный
+  // агент, который есть у всех аккаунтов. Значение X-Agent-Id обязано
+  // присутствовать в заголовках, но сервером не валидируется (проверено).
+  var FALLBACK_AGENT = 'agent_extella_default';
+  // Кандидаты ранжируются, а не выбирается один: пометка DEFAULT не гарантирует
+  // рабочий ключ (проверено: у DEFAULT-копии ключ может быть битым, 401). Если
+  // текущий агент отвечает ошибкой ключа, advanceAgent() переключает на
+  // следующего кандидата — самовосстановление без участия пользователя.
+  function _rankAgents(list) {
+    var newer = [], plain = [], marked = [], rest = [];
+    for (var i = 0; i < list.length; i++) {
+      var a = list[i] || {};
+      var id = a.id || a.agent_id;
+      if (!id) continue;
+      var nm = String(a.name || '');
+      if (String(a.provider || '').toLowerCase() === 'alibaba') {
+        if (nm.indexOf('NEW') >= 0) newer.push(id);
+        else if (nm.indexOf('DEFAULT') >= 0) marked.push(id);
+        else plain.push(id);
+      } else rest.push(id);
+    }
+    // платформенный Qwen: свежие копии → обычные → помеченные DEFAULT → фолбэк
+    return newer.concat(plain, marked, [FALLBACK_AGENT]);
+  }
+  function _resolveAgent() {
+    if (window.__etbAgentId) return Promise.resolve(window.__etbAgentId);
+    return _post('/api/agent/list', {}).then(function (d) {
+      var cands = _rankAgents((d && d.agents) || []);
+      window.__etbAgentCands = cands;
+      window.__etbAgentIdx = 0;
+      window.__etbAgentId = cands[0] || FALLBACK_AGENT;
+      console.log('[ETB:api] agent resolved: ' + window.__etbAgentId +
+        ' (кандидатов: ' + cands.length + ')');
+      return window.__etbAgentId;
+    }).catch(function () { return FALLBACK_AGENT; });
+  }
+  function _agent() { return window.__etbAgentId || FALLBACK_AGENT; }
+  // Переключить на следующего кандидата (зовётся при ошибке ключа текущего).
+  function _advanceAgent() {
+    var cands = window.__etbAgentCands || [];
+    var i = (window.__etbAgentIdx || 0) + 1;
+    if (i >= cands.length) return null;
+    window.__etbAgentIdx = i;
+    window.__etbAgentId = cands[i];
+    console.log('[ETB:api] agent advanced → ' + cands[i]);
+    return cands[i];
+  }
   // Agents the user actually chats with. Rules are scoped per (account, agent),
   // and the desktop chat resolves to a default Qwen agent whose exact id varies
   // (alibaba default vs the Qwen id). We can't reliably detect which at runtime,
@@ -54,7 +102,7 @@ ETB.api = (function () {
       'Content-Type': 'application/json',
       'X-Auth-Token': ETB.auth.getToken(),
       'X-Profile-Id': 'default',
-      'X-Agent-Id': DEFAULT_AGENT
+      'X-Agent-Id': _agent()
     };
   }
 
@@ -218,7 +266,7 @@ ETB.api = (function () {
     // Explicit caller agent_id wins; otherwise the configured install agent;
     // otherwise the account default. The backend reads the agent from both
     // the body and the X-Agent-Id header — keep them in sync.
-    var agent = body.agent_id || _getInstallAgent() || DEFAULT_AGENT;
+    var agent = body.agent_id || _getInstallAgent() || _agent();
     return _post('/api/agent/run',
       Object.assign({ run_timeout: 600 }, body, { agent_id: agent }),
       { 'X-Agent-Id': agent });
@@ -424,6 +472,12 @@ ETB.api = (function () {
       return _post('/api/agent/list', {});
     },
 
+    // Текущий агент пользователя (динамический) и его принудительное
+    // определение. currentAgent() до резолва отдаёт платформенный фолбэк.
+    currentAgent: _agent,
+    resolveAgent: _resolveAgent,
+    advanceAgent: _advanceAgent,
+
     // Add a rule. `agents` (array of ids) targets specific agents; omit to fall
     // back to the chat-agent candidates. Resolves to an array of { agent, ruleId }
     // refs (skipping failures) so uninstall can remove exactly what was added.
@@ -470,3 +524,7 @@ ETB.api = (function () {
     }
   };
 })();
+
+// Определить агента, как только появился токен; при смене аккаунта — заново.
+ETB.auth.onToken(function () { ETB.api.resolveAgent(); });
+ETB.auth.onSessionChange(function () { window.__etbAgentId = null; if (ETB.auth.getToken()) ETB.api.resolveAgent(); });

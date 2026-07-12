@@ -63,5 +63,7 @@
   ],
   "conceptTexts": [
     "Plugin: Slugify (id: slugify-lib). Wraps github.com/simov/slugify."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

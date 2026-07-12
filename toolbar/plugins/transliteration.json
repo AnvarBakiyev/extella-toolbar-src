@@ -63,5 +63,7 @@
   ],
   "conceptTexts": [
     "Plugin: Transliteration (id: transliteration). Wraps github.com/lyulekraskovy/transliteration."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

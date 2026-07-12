@@ -108,5 +108,7 @@
   ],
   "conceptTexts": [
     "Plugin: BMI Calculator (id: bmi-calculator). Expert bmi_calculator_compute calculates Body Mass Index. Params: weight, height, units (metric: kg/cm, imperial: lbs/inches). Returns {output_type: 'json', data: {bmi, category, note, healthy_weight_range_kg}}."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

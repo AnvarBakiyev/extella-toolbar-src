@@ -50,6 +50,15 @@ ETB.tabs = (function () {
     '}',
     '._etbv2_sec:hover{color:var(--etb-tx);background:var(--etb-s3);}',
     '._etbv2_sec.on{color:var(--etb-a);background:rgba(var(--etb-ar),.1);font-weight:600;}',
+    // Ручка перетаскивания: панель двигается по горизонтали, позиция запоминается.
+    '#_etbv2_nav_grip{',
+      'display:flex;align-items:center;justify-content:center;',
+      'width:14px;align-self:stretch;cursor:grab;color:var(--etb-tx3);',
+      'font-size:10px;letter-spacing:1px;user-select:none;flex-shrink:0;',
+    '}',
+    '#_etbv2_nav_grip:hover{color:var(--etb-tx2);}',
+    '#_etbv2_nav_center.dragging{opacity:.85;}',
+    '#_etbv2_nav_center.dragging ._etbv2_sec{pointer-events:none;}',
     '@keyframes _etbv2_slide_in{from{transform:translateY(8px);opacity:0}to{transform:translateY(0);opacity:1}}',
     '@keyframes _etbv2_slide_out{from{transform:translateY(0);opacity:1}to{transform:translateY(8px);opacity:0}}'
   ].join('');
@@ -62,12 +71,69 @@ ETB.tabs = (function () {
     document.head.appendChild(s);
   }
 
+  // Позиция панели: юзерская настройка живёт в localStorage и переживает
+  // перезапуски. x — доля ширины окна (0..1).
+  var POS_KEY = 'etb_nav_pos_v1';
+  function _loadPos() {
+    try { return JSON.parse(localStorage.getItem(POS_KEY) || '{}') || {}; }
+    catch (e) { return {}; }
+  }
+  function _savePos(p) {
+    try { localStorage.setItem(POS_KEY, JSON.stringify(p)); } catch (e) {}
+  }
+  function _applyPos(nav) {
+    var p = _loadPos();
+    if (typeof p.x === 'number') {
+      // фиксируем левый край в px от доли ширины, отключая центрирование
+      var w = nav.offsetWidth || 260;
+      var left = Math.min(Math.max(p.x * window.innerWidth, 4), window.innerWidth - w - 4);
+      nav.style.left = left + 'px';
+      nav.style.transform = 'none';
+    }
+  }
+
   function _buildBar() {
     var bar = document.createElement('div');
     bar.id = '_etbv2_bar';
 
     var navCenter = document.createElement('div');
     navCenter.id = '_etbv2_nav_center';
+
+    // Ручка слева: тянешь — панель едет по горизонтали. Двойной клик — в центр.
+    var grip = document.createElement('div');
+    grip.id = '_etbv2_nav_grip';
+    grip.title = 'Перетащить панель. Двойной клик — вернуть в центр';
+    grip.textContent = '⋮⋮';
+    (function () {
+      var sx = 0, ox = 0, on = false;
+      grip.addEventListener('mousedown', function (e) {
+        on = true; sx = e.clientX;
+        ox = navCenter.getBoundingClientRect().left;
+        navCenter.classList.add('dragging');
+        e.preventDefault();
+      });
+      window.addEventListener('mousemove', function (e) {
+        if (!on) return;
+        var w = navCenter.offsetWidth;
+        var left = Math.min(Math.max(ox + (e.clientX - sx), 4), window.innerWidth - w - 4);
+        navCenter.style.left = left + 'px';
+        navCenter.style.transform = 'none';
+      });
+      window.addEventListener('mouseup', function () {
+        if (!on) return;
+        on = false;
+        navCenter.classList.remove('dragging');
+        var p = _loadPos();
+        p.x = navCenter.getBoundingClientRect().left / window.innerWidth;
+        _savePos(p);
+      });
+      grip.addEventListener('dblclick', function () {
+        navCenter.style.left = '50%';
+        navCenter.style.transform = 'translateX(-50%)';
+        var p = _loadPos(); delete p.x; _savePos(p);
+      });
+    })();
+    navCenter.appendChild(grip);
 
     var navItems = [
       { id: 'chat',    label: 'Chat',    title: 'Return to chat' },
@@ -103,6 +169,9 @@ ETB.tabs = (function () {
     navCenter.appendChild(reloadBtn);
 
     bar.appendChild(navCenter);
+
+    // применить сохранённую позицию (после вставки в DOM размеры уже известны)
+    setTimeout(function () { _applyPos(navCenter); }, 0);
 
     return bar;
   }

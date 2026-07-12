@@ -64,5 +64,7 @@
   ],
   "conceptTexts": [
     "Plugin: Sentiment (id: sentiment). Wraps github.com/thisandagain/sentiment."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

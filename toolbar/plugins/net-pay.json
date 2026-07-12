@@ -28,20 +28,20 @@
   "capabilities": [
     {
       "id": "calc_net",
-      "name": "Net Pay Calculator",
+      "name": "Зарплата на руки",
       "expert_name": "net_pay_calc",
       "inputs": [
         {
           "name": "gross_annual",
           "type": "float",
-          "label": "Gross annual salary",
+          "label": "Зарплата до налогов (за год)",
           "required": true,
           "placeholder": "60000"
         },
         {
           "name": "tax_rate",
           "type": "float",
-          "label": "Effective tax rate (%)",
+          "label": "Ставка налога (%)",
           "required": false,
           "default": 25,
           "placeholder": "25"
@@ -76,5 +76,7 @@
   ],
   "conceptTexts": [
     "Plugin: Net Pay Calculator (id: net-pay). Wraps Net pay."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "verified"
 }

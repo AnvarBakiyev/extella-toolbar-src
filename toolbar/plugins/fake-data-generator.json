@@ -152,5 +152,7 @@
   ],
   "conceptTexts": [
     "Plugin: Fake Data Generator (id: fake-data-generator). Expert fake_data_generator_generate creates realistic test user profiles using randomuser.me (free). Params: count (1-10), nationality (optional), gender (optional). Returns {output_type: 'json', data: {users: [{name, email, phone, address, age, avatar}]}}."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

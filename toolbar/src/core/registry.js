@@ -8,7 +8,9 @@
 ETB.registry = (function () {
   var INSTALLED_KEY = 'etb_plugins_installed_v1';
   var CUSTOM_KEY    = 'etb_plugins_custom_v1';
-  var REMOVED_KEY   = 'etb_plugins_removed_v1';   // надгробия: удалённые id, которые sync не должен воскрешать
+  var REMOVING_KEY  = 'etb_removing_v1';  // tombstone: id помечен на удаление, пока файл реестра на устройстве ещё есть — не возвращаем при syncFromDevice
+  function _loadRemoving(){ try { return JSON.parse(localStorage.getItem(REMOVING_KEY) || '[]'); } catch(e){ return []; } }
+  function _saveRemoving(a){ try { localStorage.setItem(REMOVING_KEY, JSON.stringify(a)); } catch(e){} }
 
   // ── Persistence helpers ───────────────────────────────────────
   function _loadInstalled() {
@@ -109,6 +111,12 @@ ETB.registry = (function () {
       _saveInstalled(_loadInstalled().filter(function (i) { return i !== id; }));
     },
 
+    // Пометить плагин удаляемым: syncFromDevice не вернёт его, пока файл реестра на устройстве не исчезнет.
+    markRemoving: function (id) {
+      var a = _loadRemoving(); if (a.indexOf(id) === -1) { a.push(id); _saveRemoving(a); }
+    },
+    isRemoving: function (id) { return _loadRemoving().indexOf(id) !== -1; },
+
     // Adds a user-created plugin (e.g. from GitHub URL) and installs it
     addCustom: function (plugin) {
       _untombstone(plugin.id);   // явная установка снимает надгробие — переустановка снова видна
@@ -165,15 +173,16 @@ ETB.registry = (function () {
         try { list = typeof raw === 'string' ? JSON.parse(raw) : raw; }
         catch (e) { list = []; }
         if (!Array.isArray(list)) list = [];
-        var added = [];
+        var added = [], deviceIds = {}, removing = _loadRemoving();
         list.forEach(function (m) {
           if (!m || !m.id) return;
-          // Надгробие: удалённый плагин не воскрешаем фоновым синком — файл реестра на
-          // устройстве мог пережить чистку (гонка/нет device_id). Прицельный синк по
-          // onlyId = намеренная (пере)установка — проходит и снимает надгробие в addCustom.
-          if (self.isRemoved(m.id) && m.id !== onlyId) return;
+          deviceIds[m.id] = true;
+          if (removing.indexOf(m.id) !== -1) return;   // помечен на удаление, файл ещё жив — НЕ возвращаем
           self.addCustom(m); added.push(m);
         });
+        // удаление завершилось (файла на устройстве больше нет) — снимаем метку
+        var still = removing.filter(function (id) { return deviceIds[id]; });
+        if (still.length !== removing.length) _saveRemoving(still);
         return added;
       }
       function run(useTarget) {

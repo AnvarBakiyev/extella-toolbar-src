@@ -29,7 +29,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 
 /* Form */
 .form-section{display:flex;flex-direction:column;gap:14px}
-.form-title{font-size:12px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.06em}
+.form-title{font-size:12px;font-weight:700;color:var(--tx2);letter-spacing:.01em}
 .field{display:flex;flex-direction:column;gap:5px}
 .field label{font-size:11px;font-weight:600;color:var(--tx2);user-select:none}
 .field label .req{color:var(--err);margin-left:2px}
@@ -61,7 +61,7 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--a);cursor:pointer
 /* Result */
 #result_area{display:none;flex-direction:column;gap:12px}
 #result_area.show{display:flex}
-.result-title{font-size:11px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.06em}
+.result-title{font-size:11px;font-weight:700;color:var(--tx2);letter-spacing:.01em}
 .result-img-wrap{display:flex;flex-direction:column;align-items:flex-start;gap:10px}
 .result-img-wrap img{max-width:100%;border-radius:10px;border:1px solid var(--bd);display:block}
 .dl-btn{
@@ -109,6 +109,17 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
   var API_BASE = 'https://api.extella.ai';
   var plugin = null;
   var apiToken = '';
+  var agentId = 'agent_extella_default'; // личный агент приходит от тулбара
+  // Русские шапки курированных форм (Фаза 4)
+  var FORM_RU = {
+    'sales-tax': { name:'Налог из цены', sub:'Добавит или выделит налог из любой суммы' },
+    'net-pay': { name:'Зарплата на руки', sub:'Сколько реально придёт после налогов' },
+    'loan-calculator': { name:'Калькулятор кредита', sub:'Платёж, переплата и график, до похода в банк' },
+    'currency-converter': { name:'Конвертер валют', sub:'Свежие курсы, без вкладки с банком' },
+    'exchange-historical': { name:'Курс на любую дату', sub:'Официальный курс Нацбанка РК на нужный день' },
+    'weather-lookup': { name:'Погода и прогноз', sub:'Брать ли зонт, сейчас и на три дня' }
+  };
+  var _pendingRun = null; // запуск, ждущий подключения
   var activeCap = null;
 
   // ── Init ────────────────────────────────────────────────────────
@@ -139,10 +150,21 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
     if (urlId) {
       startWithPlugin(urlId);
     } else {
+      window.addEventListener('message', function (e) {
+        if (e.data && e.data.type === 'etb_session') {
+          if (e.data.token) apiToken = e.data.token;
+          if (e.data.agentId) agentId = e.data.agentId;
+          if (apiToken && _pendingRun) {
+            var p = _pendingRun; _pendingRun = null;
+            runCapability(p.cap, p.btn);
+          }
+        }
+      });
       window.addEventListener('message', function handler(e) {
         if (e.data && e.data.type === 'etb_init' && e.data.pluginId) {
           window.removeEventListener('message', handler);
           if (e.data.token) apiToken = e.data.token;
+          if (e.data.agentId) agentId = e.data.agentId;
           if (e.data.theme) applyTheme(e.data.theme);
           startWithPlugin(e.data.pluginId);
         }
@@ -165,13 +187,14 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
     plugin = found;
 
     document.title = (plugin.name || 'Plugin') + ' — Extella';
-    document.getElementById('hdr_name').textContent = plugin.name || id;
-    document.getElementById('hdr_sub').textContent = plugin.tagline || '';
+    var ru = FORM_RU[id] || null;
+    document.getElementById('hdr_name').textContent = (ru && ru.name) || plugin.name || id;
+    document.getElementById('hdr_sub').textContent = (ru && ru.sub) || plugin.tagline || '';
 
     var caps = plugin.capabilities || [];
     if (!caps.length) {
       document.getElementById('form_section').innerHTML =
-        '<div class="banner err">This plugin has no form capabilities configured.</div>';
+        '<div class="banner" style="text-align:center;padding:20px;color:var(--tx2,#555)">Это агент, а не форма — у него нет полей для заполнения. Открой его в чате и просто напиши задачу словами.</div>';
       return;
     }
 
@@ -216,7 +239,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
 
     var btn = document.createElement('button');
     btn.id = 'run_btn';
-    btn.textContent = 'Run';
+    btn.textContent = 'Запустить';
     btn.addEventListener('click', function () { runCapability(cap, btn); });
     sec.appendChild(btn);
   }
@@ -359,22 +382,25 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
     var params = collectParams(cap);
     var missing = validate(cap, params);
     if (missing.length) {
-      showResult({ status: 'error', message: 'Required fields missing: ' + missing.join(', ') });
+      showResult({ status: 'error', message: 'Заполни обязательные поля: ' + missing.join(', ') });
       return;
     }
 
     if (!apiToken) {
-      showResult({ status: 'error', message: 'Could not connect to your Extella account. Please reopen the plugin from the toolbar.' });
+      _pendingRun = { cap: cap, btn: btn };
+      var _ra = document.getElementById('result_area');
+      _ra.classList.add('show');
+      _ra.innerHTML = '<div class="running-row"><span class="spinner"></span><span>Подключаюсь к аккаунту Extella… Запустится само через пару секунд.</span></div>';
       return;
     }
 
     btn.disabled = true;
-    btn.textContent = 'Running…';
+    btn.textContent = 'Выполняю…';
     clearResult();
 
     var ra = document.getElementById('result_area');
     ra.classList.add('show');
-    ra.innerHTML = '<div class="running-row"><span class="spinner"></span><span>Running expert — this may take a few seconds…</span></div>';
+    ra.innerHTML = '<div class="running-row"><span class="spinner"></span><span>Выполняю… обычно пара секунд</span></div>';
 
     var expertName = cap.expert_name || cap.id;
 
@@ -384,14 +410,14 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
         'Content-Type': 'application/json',
         'X-Auth-Token': apiToken,
         'X-Profile-Id': 'default',
-        'X-Agent-Id': 'agent_extella_default'
+        'X-Agent-Id': agentId
       },
       body: JSON.stringify({ expert_name: expertName, params: params })
     })
     .then(function (r) { return r.json(); })
     .then(function (data) {
       btn.disabled = false;
-      btn.textContent = 'Run';
+      btn.textContent = 'Запустить';
       // data.result can be:
       //   - a parsed JSON object (ideal)
       //   - a JSON string that needs parsing
@@ -419,7 +445,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
     })
     .catch(function (e) {
       btn.disabled = false;
-      btn.textContent = 'Run';
+      btn.textContent = 'Запустить';
       showResult({ status: 'error', message: 'Network error: ' + e.message });
     });
   }
@@ -438,7 +464,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
 
     var title = document.createElement('div');
     title.className = 'result-title';
-    title.textContent = 'Result';
+    title.textContent = 'Результат';
     ra.appendChild(title);
 
     if (!result || result.status === 'error') {

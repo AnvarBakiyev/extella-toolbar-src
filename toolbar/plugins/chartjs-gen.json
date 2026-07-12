@@ -37,5 +37,7 @@
   "expert_defs": [],
   "conceptTexts": [
     "You are a Chart.js assistant. You generate Chart.js configuration JSON from data descriptions."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

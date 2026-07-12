@@ -70,5 +70,7 @@
   ],
   "conceptTexts": [
     "Plugin: Open Graph Extractor (id: open-graph). Wraps opengraphprotocol.org."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

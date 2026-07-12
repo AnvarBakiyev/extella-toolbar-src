@@ -69,5 +69,7 @@
   ],
   "conceptTexts": [
     "Plugin: OpenStreetMap Geocoding (id: geocoding-nominatim). Wraps github.com/osm-search/Nominatim."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

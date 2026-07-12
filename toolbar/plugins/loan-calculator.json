@@ -28,27 +28,27 @@
   "capabilities": [
     {
       "id": "compute_loan",
-      "name": "Calculate Loan EMI",
+      "name": "Калькулятор кредита",
       "expert_name": "loan_calculator_compute",
       "inputs": [
         {
           "name": "principal",
           "type": "float",
-          "label": "Loan Amount",
+          "label": "Сумма кредита",
           "required": true,
           "placeholder": "200000"
         },
         {
           "name": "annual_rate",
           "type": "float",
-          "label": "Annual Interest Rate (%)",
+          "label": "Годовая ставка (%)",
           "required": true,
           "placeholder": "5.5"
         },
         {
           "name": "years",
           "type": "int",
-          "label": "Loan Term (years)",
+          "label": "Срок (лет)",
           "required": true,
           "placeholder": "20",
           "min": 1,
@@ -106,5 +106,7 @@
   ],
   "conceptTexts": [
     "Plugin: Loan / EMI Calculator (id: loan-calculator). Expert loan_calculator_compute calculates monthly EMI and total interest for any loan. Params: principal, annual_rate (%), years. Returns {output_type: 'json', data: {monthly_payment, total_amount, total_interest, yearly_schedule}}."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "verified"
 }

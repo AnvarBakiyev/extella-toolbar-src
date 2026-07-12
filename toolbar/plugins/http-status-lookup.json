@@ -99,5 +99,7 @@
   ],
   "conceptTexts": [
     "Plugin: HTTP Status Code Reference (id: http-status-lookup). Expert http_status_lookup_find returns the name, category, and description of any HTTP status code. Param: code (e.g. 404). Returns {output_type: 'json', data: {code, name, category, description}}."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

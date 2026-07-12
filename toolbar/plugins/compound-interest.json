@@ -136,5 +136,7 @@
   ],
   "conceptTexts": [
     "Plugin: Compound Interest Calculator (id: compound-interest). Expert compound_interest_compute calculates compound interest with optional monthly contributions. Params: principal, annual_rate, years, compound_freq, monthly_contribution. Returns {output_type: 'json', data: {final_balance, total_interest_earned, total_contributed, yearly_growth}}."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

@@ -94,5 +94,7 @@
   ],
   "conceptTexts": [
     "Plugin: Tip & Bill Splitter (id: tip-calculator). Expert tip_calculator_compute calculates tip and splits bills. Params: bill (amount), tip_percent (default 15), people (default 2). Returns {output_type: 'json', data: {bill, tip_amount, total, per_person, tip_per_person}}."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

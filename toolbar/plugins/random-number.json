@@ -142,5 +142,7 @@
   ],
   "conceptTexts": [
     "Plugin: Random Number Generator (id: random-number). Expert random_number_generate generates random integers, floats, or picks/shuffles list items. Params: mode (integer/float/pick/shuffle), min_val, max_val, count, items. Returns {output_type: 'json', data: {numbers/picked/shuffled}}."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

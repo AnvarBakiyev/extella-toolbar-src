@@ -141,5 +141,7 @@
   ],
   "conceptTexts": [
     "Plugin: Calorie & TDEE Calculator (id: tdee-calculator). Expert tdee_calculator_compute calculates BMR and daily calorie needs (TDEE). Params: age, gender (male/female), weight_kg, height_cm, activity. Returns {output_type: 'json', data: {bmr, tdee, goals: {weight_loss, maintenance, weight_gain}, macros}}."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

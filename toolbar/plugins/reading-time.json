@@ -87,5 +87,7 @@
   ],
   "conceptTexts": [
     "Plugin: Reading Time Estimator (id: reading-time). Expert reading_time_estimate estimates reading and speaking time. Params: text, wpm (default 200). Returns {output_type: 'json', data: {word_count, reading_time, speaking_time, pages_approx}}."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

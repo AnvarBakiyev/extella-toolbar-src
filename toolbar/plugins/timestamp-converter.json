@@ -103,5 +103,7 @@
   ],
   "conceptTexts": [
     "Plugin: Timestamp Converter (id: timestamp-converter). Expert timestamp_converter_convert converts between Unix timestamps and human-readable dates. Params: value (timestamp or date string), direction (ts_to_date/date_to_ts/now). Returns {output_type: 'json', data: {unix_timestamp, utc, iso8601, readable}}."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

@@ -124,5 +124,7 @@
   ],
   "conceptTexts": [
     "Plugin: QR Code Generator (id: qrcode). Expert qrcode_generate_qr creates QR code PNG images via the qrserver.com REST API (no authentication required). Params: data (string — text or URL to encode, required), size (integer — image size in pixels, default 300, range 100-1000), fill_hex (hex color without # for QR modules, default 000000), back_hex (hex color without # for background, default FFFFFF), ecl (error correction level: L=7%, M=15%, Q=25%, H=30%, default M). The expert returns {output_type: 'image_base64', data: '<base64 PNG string>', filename: 'qrcode.png'}. Use run_expert('qrcode_generate_qr', {data: '...', size: '300', fill_hex: '000000', back_hex: 'FFFFFF', ecl: 'M'}) to generate a QR code."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

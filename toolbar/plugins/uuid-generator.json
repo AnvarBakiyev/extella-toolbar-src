@@ -93,5 +93,7 @@
   ],
   "conceptTexts": [
     "Plugin: UUID Generator (id: uuid-generator). Expert uuid_generator_generate creates UUID v1 or v4 identifiers. Params: version (1 or 4), count (1-20). Returns {output_type: 'text', data: '<uuid per line>'}."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

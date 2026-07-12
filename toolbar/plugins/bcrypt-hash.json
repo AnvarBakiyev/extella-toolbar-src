@@ -65,5 +65,7 @@
   ],
   "conceptTexts": [
     "Plugin: Bcrypt Hash (id: bcrypt-hash). Wraps github.com/kelektiv/node.bcrypt.js."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

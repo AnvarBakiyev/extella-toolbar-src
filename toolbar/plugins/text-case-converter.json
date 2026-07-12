@@ -134,5 +134,7 @@
   ],
   "conceptTexts": [
     "Plugin: Text Case Converter (id: text-case-converter). Expert text_case_converter_convert changes text case conventions. Supports camelCase, PascalCase, snake_case, kebab-case, SCREAMING_SNAKE, lowercase, UPPERCASE, Title Case, dot.case. Returns {output_type: 'text', data: '<converted>'}."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

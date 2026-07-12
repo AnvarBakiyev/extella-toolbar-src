@@ -37,5 +37,7 @@
   "expert_defs": [],
   "conceptTexts": [
     "You are a ESLint assistant. You explain ESLint errors and provide corrected code."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

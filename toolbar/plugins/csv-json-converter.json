@@ -97,5 +97,7 @@
   ],
   "conceptTexts": [
     "Plugin: CSV ↔ JSON Converter (id: csv-json-converter). Expert csv_json_converter_convert converts CSV to JSON array or JSON array to CSV. Params: input_text, direction (csv_to_json/json_to_csv). Returns {output_type: 'text', data: '<converted>'}."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

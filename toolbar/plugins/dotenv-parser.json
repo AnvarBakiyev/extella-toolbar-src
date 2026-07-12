@@ -72,5 +72,7 @@
   ],
   "conceptTexts": [
     "Plugin: Dotenv Parser (id: dotenv-parser). Wraps github.com/motdotla/dotenv."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

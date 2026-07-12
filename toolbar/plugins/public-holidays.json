@@ -83,5 +83,7 @@
   ],
   "conceptTexts": [
     "Plugin: Public Holidays (id: public-holidays). Expert public_holidays_get returns official public holidays using date.nager.at (free). Params: country_code (2-letter ISO like US/DE/FR), year (defaults to current). Returns {output_type: 'json', data: {country, year, count, holidays: [{date, name, name_en, type}]}}."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

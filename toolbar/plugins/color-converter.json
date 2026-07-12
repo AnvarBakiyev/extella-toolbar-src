@@ -104,5 +104,7 @@
   ],
   "conceptTexts": [
     "Plugin: Color Format Converter (id: color-converter). Expert color_converter_convert converts colors between HEX, RGB, HSL and HSV. Params: color (color value string), input_format (hex/rgb/hsl). Returns {output_type: 'json', data: {hex, rgb, hsl, hsv, components}}."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

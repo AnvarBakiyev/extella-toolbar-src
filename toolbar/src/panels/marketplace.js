@@ -124,7 +124,25 @@ ETB.marketplace = (function () {
     'body:not(:has(#_etbv2_viewport)) #_etbv2_mkt_ov{',
       'position:fixed;inset:0;',
     '}',
-    '#_etbv2_mkt_frame{flex:1;border:none;display:block;width:100%;}'
+    '#_etbv2_mkt_frame{flex:1;border:none;display:block;width:100%;}',
+    '#_etbv2_mkt_ov.win{position:fixed;inset:auto;left:6vw;top:5vh;width:72vw;height:86vh;',
+      'border:1px solid rgba(140,140,140,.45);border-radius:6px;overflow:hidden;',
+      'box-shadow:0 18px 60px rgba(0,0,0,.45);}',
+    '#_etbv2_mkt_grip{display:none;height:20px;flex-shrink:0;cursor:move;',
+      'background:var(--etb-s1,#141414);border-bottom:1px solid rgba(140,140,140,.25);}',
+    '#_etbv2_mkt_grip::after{content:"";display:block;width:44px;height:4px;border-radius:2px;',
+      'background:rgba(140,140,140,.5);margin:8px auto 0;}',
+    '#_etbv2_mkt_ov.win #_etbv2_mkt_grip{display:block;}',
+    '#_etbv2_mkt_ov.dragging #_etbv2_mkt_frame{pointer-events:none;}',
+    '#_etbv2_mkt_rs{display:none;position:absolute;right:0;bottom:0;width:20px;height:20px;',
+      'cursor:nwse-resize;z-index:5;}',
+    '#_etbv2_mkt_rs::after{content:"";position:absolute;right:4px;bottom:4px;width:8px;height:8px;',
+      'border-right:2px solid rgba(140,140,140,.7);border-bottom:2px solid rgba(140,140,140,.7);}',
+    '#_etbv2_mkt_ov.win #_etbv2_mkt_rs{display:block;}',
+    '#_etbv2_mkt_chip{position:fixed;right:16px;bottom:16px;z-index:2147483632;',
+      'background:var(--etb-s1,#141414);color:var(--etb-tx,#eee);border:1px solid rgba(140,140,140,.45);',
+      'border-radius:999px;padding:9px 16px;font:600 12.5px system-ui;cursor:pointer;',
+      'box-shadow:0 10px 30px rgba(0,0,0,.35);}'
   ].join('');
 
   function _ensureStyles() {
@@ -164,8 +182,80 @@ ETB.marketplace = (function () {
             );
           } catch (e) {}
         }
+        _sendSession();
       }, { once: true });
+
+      // Сессия текущего пользователя (токен + его агент) — витрине, чтобы окна
+      // плагинов могли ходить в API от имени вошедшего пользователя. Без этого
+      // чат-карточки молчат («Could not connect»). Шлём на load, при появлении
+      // токена и после определения агента; при смене аккаунта — заново.
+      function _sendSession() {
+        if (!iframe.contentWindow) return;
+        var send = function () {
+          try {
+            iframe.contentWindow.postMessage({
+              type: 'etb_session',
+              token: (ETB.auth && ETB.auth.getToken()) || '',
+              agentId: (ETB.api && ETB.api.currentAgent) ? ETB.api.currentAgent() : ''
+            }, '*');
+          } catch (e) {}
+        };
+        send();
+        if (ETB.api && ETB.api.resolveAgent) ETB.api.resolveAgent().then(send).catch(function () {});
+      }
+      if (ETB.auth) {
+        ETB.auth.onToken(function () { _sendSession(); });
+        ETB.auth.onSessionChange(function () { _sendSession(); });
+      }
+      // Самовосстановление: окно плагина сообщило, что у агента битый ключ →
+      // переключаемся на следующего кандидата и раздаём сессию заново.
+      window.addEventListener('message', function (e) {
+        if (!e.data || e.data.type !== 'etb_agent_bad') return;
+        if (ETB.api && ETB.api.advanceAgent && ETB.api.advanceAgent()) _sendSession();
+      });
+      var grip = document.createElement('div');
+      grip.id = '_etbv2_mkt_grip';
+      grip.title = 'Перетащить окно';
+      ov.appendChild(grip);
       ov.appendChild(iframe);
+      (function () {
+        var sx, sy, ox, oy, on = false;
+        grip.addEventListener('mousedown', function (e) {
+          on = true; sx = e.clientX; sy = e.clientY;
+          var r = ov.getBoundingClientRect(); ox = r.left; oy = r.top;
+          ov.classList.add('dragging'); e.preventDefault();
+        });
+        document.addEventListener('mousemove', function (e) {
+          if (!on) return;
+          var nx = Math.max(0, Math.min(ox + e.clientX - sx, window.innerWidth - 120));
+          var ny = Math.max(0, Math.min(oy + e.clientY - sy, window.innerHeight - 60));
+          ov.style.left = nx + 'px'; ov.style.top = ny + 'px';
+        });
+        document.addEventListener('mouseup', function () {
+          if (on) { on = false; ov.classList.remove('dragging'); }
+        });
+      })();
+      var rs = document.createElement('div');
+      rs.id = '_etbv2_mkt_rs';
+      rs.title = 'Потянуть, чтобы изменить размер';
+      ov.appendChild(rs);
+      (function () {
+        var sx, sy, ow, oh, on = false;
+        rs.addEventListener('mousedown', function (e) {
+          on = true; sx = e.clientX; sy = e.clientY;
+          var r = ov.getBoundingClientRect(); ow = r.width; oh = r.height;
+          if (!ov.style.left) { ov.style.left = r.left + 'px'; ov.style.top = r.top + 'px'; }
+          ov.classList.add('dragging'); e.preventDefault(); e.stopPropagation();
+        });
+        document.addEventListener('mousemove', function (e) {
+          if (!on) return;
+          ov.style.width = Math.max(560, Math.min(ow + e.clientX - sx, window.innerWidth)) + 'px';
+          ov.style.height = Math.max(380, Math.min(oh + e.clientY - sy, window.innerHeight)) + 'px';
+        });
+        document.addEventListener('mouseup', function () {
+          if (on) { on = false; ov.classList.remove('dragging'); }
+        });
+      })();
 
       if (!window.__etbMktThemeHook && ETB.theme && ETB.theme.onChange) {
         window.__etbMktThemeHook = true;
@@ -386,6 +476,7 @@ ETB.marketplace = (function () {
           if (/^(?:gh_|hf_)/.test(pluginId) || hasArtifacts || isCustom) {
             // Agent-installed / GitHub / HuggingFace / device-synced plugin: full cleanup of every
             // artifact + on-device registry file + custom entry + evict cached panel.
+            if (ETB.registry.markRemoving) ETB.registry.markRemoving(pluginId);
             _removeAgentPlugin(pluginId, unPlugin);
           } else {
             // Built-in / curated plugin: just mark uninstalled and evict.
@@ -400,6 +491,21 @@ ETB.marketplace = (function () {
           ETB.nav.syncUI();
         } else if (action === 'close') {
           ETB.nav.set('chat');
+        } else if (action === 'mkt_win') {
+          var _ov = document.getElementById('_etbv2_mkt_ov');
+          if (_ov) { _ov.classList.toggle('win'); if (!_ov.classList.contains('win')) { _ov.style.left = ''; _ov.style.top = ''; _ov.style.width = ''; _ov.style.height = ''; } }
+        } else if (action === 'mkt_min') {
+          var _ov2 = document.getElementById('_etbv2_mkt_ov');
+          if (_ov2) {
+            _ov2.style.display = 'none';
+            if (!document.getElementById('_etbv2_mkt_chip')) {
+              var chip = document.createElement('div');
+              chip.id = '_etbv2_mkt_chip';
+              chip.textContent = 'Extella Plugins';
+              chip.onclick = function () { _ov2.style.display = ''; chip.remove(); };
+              document.body.appendChild(chip);
+            }
+          }
         }
       };
       window.addEventListener('message', _msgHandler);

@@ -94,5 +94,7 @@
   ],
   "conceptTexts": [
     "Plugin: Hash Calculator (id: hash-calculator). Expert hash_calculator_compute computes MD5, SHA-1, SHA-256 or SHA-512 hash of any text string using Python stdlib hashlib. Params: text (string to hash, required), algorithm (md5/sha1/sha256/sha512, default sha256). Returns {output_type: 'text', data: '<hex digest>', label: '<ALGO> Hash'}. Use run_expert('hash_calculator_compute', {text: '...', algorithm: 'sha256'}) to compute a hash."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

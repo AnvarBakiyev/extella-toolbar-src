@@ -122,5 +122,7 @@
   ],
   "conceptTexts": [
     "Plugin: Random Quote (id: random-quote). Expert random_quote_get fetches random quotes from quotable.io (free). Params: tag (optional topic), count (1-5). Returns {output_type: 'json', data: {quotes: [{text, author, tags}], count}}."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

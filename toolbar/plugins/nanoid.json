@@ -64,5 +64,7 @@
   ],
   "conceptTexts": [
     "Plugin: Nano ID (id: nanoid). Wraps github.com/ai/nanoid."
-  ]
+  ],
+  "hidden": false,
+  "trust_tier": "unverified"
 }

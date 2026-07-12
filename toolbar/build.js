@@ -235,10 +235,15 @@ function indent(code, n) {
 // ── Step 3: Build plugins_manager.html ────────────────────────────────────
 function buildMarketplace(plugins) {
   const template = readFile(path.join(PUBLIC, 'plugins_manager.html'));
+  const _formHtml = buildForm(plugins);
+  const _chatHtml = buildChat(plugins);
   const dataVar = `var BUILTIN_PLUGINS_DATA = ${JSON.stringify(plugins, null, 2)};`;
   // Function replacer required: string replacements treat `$'` / `$&` in plugin
   // expert code (regex patterns) as special patterns and corrupt the output.
-  return template.replace('/* __BUILTIN_PLUGINS_DATA__ */', function () { return dataVar; });
+  return template
+    .replace('/* __BUILTIN_PLUGINS_DATA__ */', function () { return dataVar; })
+    .replace('/* __PLUGIN_FORM_HTML__ */', function () { return 'var _PLUGIN_FORM_HTML = ' + JSON.stringify(_formHtml).replace(/<\/script/gi, '<\\/script') + ';'; })
+    .replace('/* __PLUGIN_CHAT_HTML__ */', function () { return 'var _PLUGIN_CHAT_HTML = ' + JSON.stringify(_chatHtml).replace(/<\/script/gi, '<\\/script') + ';'; });
 }
 
 // ── Step 4: Build plugin-chat.html (inject plugin data, same as marketplace) ──
