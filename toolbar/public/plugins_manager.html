@@ -1847,20 +1847,9 @@ function _bentoHTML(heroes) {
   return html + '</div>';
 }
 // ── Универсальный поиск + чипы-категории (единый для всех каталожных вкладок) ──
-// Работает поверх уже отрисованных полок (.mshelf с заголовком .sect/.sect_hdr):
-// не требует переписывать данные вкладок, фильтрует плитки по тексту и категории.
-function _tfCss(){
-  return '<style>'+
-    '.tabfilter{grid-column:1/-1;display:flex;flex-direction:column;gap:10px;margin:2px 0 16px}'+
-    '.tf_search{display:flex;align-items:center;gap:8px;background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:9px 12px;max-width:440px}'+
-    '.tf_search .lico{width:16px;height:16px;color:var(--tx3)}'+
-    '.tf_inp{border:none;background:none;outline:none;font:400 14px var(--sans);color:var(--tx);width:100%}'+
-    '.tf_chips{display:flex;flex-wrap:wrap;gap:8px}'+
-    '.tf_chip{border:1px solid var(--bd2);background:var(--s1);color:var(--tx2);border-radius:20px;padding:6px 14px;font:500 13px var(--sans);cursor:pointer;transition:background .12s,border-color .12s,color .12s}'+
-    '.tf_chip:hover{border-color:var(--a);color:var(--tx)}'+
-    '.tf_chip.on{background:var(--a);border-color:var(--a);color:#fff}'+
-  '</style>';
-}
+// Тот же визуал, что на «Программах» (классы .fb_srch и .catbar/.cat_chip со счётчиком),
+// но поверх уже отрисованных полок (.mshelf с заголовком .sect/.sect_hdr) — не требует
+// переписывать данные вкладок. Фильтрует плитки по тексту и категории.
 function _tfShelfHead(shelf){
   var p=shelf.previousElementSibling;
   if(p&&(p.classList.contains('sect')||p.classList.contains('sect_hdr'))) return p;
@@ -1875,26 +1864,34 @@ function _mountTabFilter(placeholder){
   var g=document.getElementById('grid'); if(!g) return;
   var shelves=[].slice.call(g.querySelectorAll('.mshelf'));
   if(shelves.length<2) return;  // нечего фильтровать
-  var cats=[]; shelves.forEach(function(s){ var c=_tfShelfCat(s); if(c&&cats.indexOf(c)<0)cats.push(c); });
-  var bar=document.createElement('div'); bar.className='tabfilter';
-  bar.innerHTML=_tfCss()+
-    '<div class="tf_search"><span><svg class="lico"><use href="#ic-search"/></svg></span>'+
-    '<input class="tf_inp" placeholder="'+esc(placeholder||'Поиск…')+'" oninput="_tabFilterApply()"></div>'+
-    (cats.length>1?'<div class="tf_chips"><button class="tf_chip on" data-cat="__all" onclick="_tabFilterCat(this)">Все</button>'+
-      cats.map(function(c){return '<button class="tf_chip" data-cat="'+esc(c)+'" onclick="_tabFilterCat(this)">'+esc(c)+'</button>';}).join('')+'</div>':'');
+  var cats=[], cnt={}, total=0;
+  shelves.forEach(function(s){
+    var c=_tfShelfCat(s); if(!c) return;
+    var n=s.querySelectorAll('.stile').length;
+    if(cats.indexOf(c)<0){ cats.push(c); cnt[c]=0; }
+    cnt[c]+=n; total+=n;
+  });
+  if(cats.length<2) return;
+  var bar=document.createElement('div'); bar.className='tabfilter'; bar.style.gridColumn='1/-1';
+  var search='<div style="grid-column:1/-1;padding:2px 0 10px"><div class="fb_srch" style="max-width:440px">'+
+    '<input class="fb_sinp tf_inp" placeholder="'+esc(placeholder||'Поиск…')+'" autocomplete="off" oninput="_tabFilterApply()">'+
+    '<span class="fb_sico">&#128269;</span></div></div>';
+  var chips='<div class="catbar"><button class="cat_chip on" data-cat="__all" onclick="_tabFilterCat(this)">Все <span class="cat_n">'+total+'</span></button>'+
+    cats.map(function(c){ return '<button class="cat_chip" data-cat="'+esc(c)+'" onclick="_tabFilterCat(this)">'+esc(c)+' <span class="cat_n">'+(cnt[c]||0)+'</span></button>'; }).join('')+'</div>';
+  bar.innerHTML=search+chips;
   var anchor=g.querySelector('.sect, .sect_hdr');
   if(anchor) g.insertBefore(bar, anchor); else g.appendChild(bar);
 }
 function _tabFilterCat(btn){
   var bar=btn.closest('.tabfilter'); if(!bar) return;
-  [].forEach.call(bar.querySelectorAll('.tf_chip'),function(b){ b.classList.toggle('on', b===btn); });
+  [].forEach.call(bar.querySelectorAll('.cat_chip'),function(b){ b.classList.toggle('on', b===btn); });
   _tabFilterApply();
 }
 function _tabFilterApply(){
   var g=document.getElementById('grid'); if(!g) return;
   var bar=g.querySelector('.tabfilter'); if(!bar) return;
   var inp=bar.querySelector('.tf_inp'); var q=(inp&&inp.value||'').trim().toLowerCase();
-  var chip=bar.querySelector('.tf_chip.on'); var cat=chip?chip.getAttribute('data-cat'):'__all';
+  var chip=bar.querySelector('.cat_chip.on'); var cat=chip?chip.getAttribute('data-cat'):'__all';
   [].slice.call(g.querySelectorAll('.mshelf')).forEach(function(shelf){
     var scat=_tfShelfCat(shelf);
     var catOk=(cat==='__all'||cat===scat);
