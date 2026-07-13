@@ -4591,7 +4591,8 @@ function wsRunCap(ws_id,cap){
 function wsOrganize(ws_id){
   wsToast('Смотрю, что можно разложить…');
   wsCall('organize',{ws_id:ws_id,apply:false},60000).then(function(out){
-    if(!out||!out.preview||!(out.moves&&out.moves.length)){ wsToast('Раскладывать нечего — всё на местах.'); return; }
+    if(out&&out.status==='error'){ wsToast('⚠ '+esc(out.message||'не удалось')+' — нажми «↻ Пересобрать» вверху','err'); return; }
+    if(!out||!out.preview||!(out.moves&&out.moves.length)){ wsToast('Раскладывать нечего — всё уже на местах.'); return; }
     wsOrganizeModal(ws_id,out);
   }).catch(function(e){ wsToast('⚠ '+esc((e&&e.message)||'ошибка'),'err'); });
 }
@@ -4615,6 +4616,7 @@ function wsOrganizeApply(ws_id,btn){
   var msg=document.getElementById('ws_org_msg'); if(btn)btn.disabled=true;
   if(msg)msg.innerHTML='⏳ Раскладываю файлы…';
   wsCall('organize',{ws_id:ws_id,apply:true},120000).then(function(out){
+    if(out&&out.status==='error'){ if(btn)btn.disabled=false; if(msg)msg.innerHTML='⚠ '+esc(out.message||'не удалось'); return; }
     var o=document.getElementById('ws_org_ov'); if(o)o.remove();
     if(out&&out.workspace){ _wsCur=out.workspace; wsRenderCockpit(_wsCur); }
     wsToast('✓ Разложено файлов: '+((out&&out.moved)||0)+'. Можно отменить.','ok');
