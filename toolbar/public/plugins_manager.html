@@ -4493,7 +4493,7 @@ function wsSkeleton(){
 function wsSev(s){ return s==='crit'?{i:'⛔',c:'crit'}:{i:'⚠️',c:'warn'}; }
 function wsRenderCockpit(w){
   var g=document.getElementById('grid'); if(!g)return;
-  if(_cb)_cb.style.display='none';
+  try{ var _cbar=document.querySelector('.cmdbar'); if(_cbar)_cbar.style.display='none'; }catch(e){}
   var st=w.state||{}, gaps=st.gaps||[], ledger=w.ledger||[], sources=w.sources||[], versions=w.versions||[], pack=w.pack||{}, ap=w.autopilot||{};
   var verFiles={}; versions.forEach(function(v){(v.files||[]).forEach(function(f){verFiles[f]=1;});});
   var bl=(st.blockers|0);
