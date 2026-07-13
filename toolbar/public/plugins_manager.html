@@ -2709,6 +2709,23 @@ function _dtEsc(s){ return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); 
 // Правый клик по ярлыку → контекстное меню (Открыть/Кабинет/Запустить · Удалить),
 // как в ОС. Управление живёт на столе — отдельные вкладки «Мои»/«Автоматизации» не нужны.
 var _dtReg=[];
+// Открыть Визард: сперва проверяем, поднят ли его мост (:8765). Если Визард не установлен —
+// показываем подсказку с командой установки, а не даём приложению закрыть раздел плагинов.
+function _openWizard(){
+  var done=false; function go(){ if(done)return; done=true; notify('open','extella_adoption_wizard'); }
+  var to=setTimeout(function(){ if(!done){ done=true; _wizardMissing(); } }, 1800);
+  try{
+    fetch('http://127.0.0.1:8765/x/health').then(function(r){ clearTimeout(to); if(done)return; done=true; if(r&&r.ok) notify('open','extella_adoption_wizard'); else _wizardMissing(); })
+      .catch(function(){ clearTimeout(to); if(done)return; done=true; _wizardMissing(); });
+  }catch(_){ clearTimeout(to); _wizardMissing(); }
+}
+function _wizardMissing(){
+  var en=(LANG==='en');
+  var mac='bash <(curl -fsSL https://raw.githubusercontent.com/AnvarBakiyev/extella-marketplace-pack/main/toolbar/install-all.sh)';
+  var win='irm https://raw.githubusercontent.com/AnvarBakiyev/extella-marketplace-pack/main/toolbar/install-all.ps1 | iex';
+  alert((en?'Wizard is not installed on this device.\n\nRun the installer (toolbar + Wizard):':'Визард не установлен на этом устройстве.\n\nЗапусти единый установщик (тулбар + Визард):')+
+    '\n\nmacOS (Terminal):\n'+mac+'\n\nWindows (PowerShell):\n'+win);
+}
 function _dtCloseMenu(){ var m=document.getElementById('dt_menu'); if(m)m.remove(); }
 function _dtCtx(e, i){
   e.preventDefault(); e.stopPropagation();
@@ -2902,7 +2919,7 @@ function renderDesktop(){
 
   g.innerHTML = _dtCss() +
     '<div class="dt_wrap">'+
-      '<div class="dt_hero" onclick="notify(\'open\',\'extella_adoption_wizard\')">'+
+      '<div class="dt_hero" onclick="_openWizard()">'+
         '<div class="dt_hero_ic">'+_icoSym('monitor')+'</div>'+
         '<div class="dt_hero_tx">'+
           '<div class="dt_hero_ttl">Мой компьютер · Визард</div>'+
