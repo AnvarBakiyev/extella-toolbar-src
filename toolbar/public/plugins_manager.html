@@ -1126,8 +1126,19 @@ function _pwResize(w){
 window.addEventListener('message',function(e){
   var d=e.data;if(!d||typeof d!=='object')return;
   if(d.type==='etb_plugin_action'&&d.action==='close'){var w=_pwins[d.pluginId];if(w){_pwClose(w);return;}}
+  // Окно плагина приложило документ (base64): извлекаем текст на устройстве → назад в окно.
+  if(d.type==='etb_extract_b64'){ _pluginExtractDoc(e.source, d.b64, d.name); return; }
   if(d.type==='etb_plugin_action'||d.type==='etb_run'||d.type==='etb_expert_run'||d.type==='etb_agent_bad'){try{if(window.parent!==window)window.parent.postMessage(d,'*');}catch(_){}}
 });
+function _pluginExtractDoc(srcWin, b64, name){
+  function reply(o){ try{ srcWin.postMessage(Object.assign({type:'etb_doc_text'},o), '*'); }catch(_){} }
+  function unwrap(r){ var o=(r&&r.res!==undefined)?r.res:r; if(o&&typeof o==='object'&&(o.result||o.output))o=o.result||o.output; if(typeof o==='string'){try{o=JSON.parse(o);}catch(_){}} return o; }
+  skBridge('etb_run_expert','etb_expert_result',{name:'wz_extract_doc_b64',params:{b64:b64||'',name:name||'doc'}},180000).then(function(r){
+    var x=unwrap(r);
+    if(x&&x.status==='success') reply({text:x.text||'', name:x.name||name||''});
+    else reply({error:(x&&x.message)||'не удалось прочитать документ'});
+  }).catch(function(err){ reply({error:String((err&&err.message)||err)}); });
+}
 function notify(action, pluginId, url) {
   if(action==='open'&&pluginId){
     var _bp=null,_i;for(_i=0;_i<BUILTIN_PLUGINS_DATA.length;_i++){if(BUILTIN_PLUGINS_DATA[_i].id===pluginId){_bp=BUILTIN_PLUGINS_DATA[_i];break;}}

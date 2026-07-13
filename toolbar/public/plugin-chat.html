@@ -217,8 +217,8 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--tx);
       <div id="inp_area">
         <div id="inp_row">
           <textarea id="inp" placeholder="Напиши агенту…" rows="1"></textarea>
-          <button id="attach_btn" title="Приложить текстовый файл (txt, md, csv, json…)">📎</button>
-          <input type="file" id="attach_inp" accept=".txt,.md,.markdown,.csv,.json,.log,.yaml,.yml,text/*" style="display:none">
+          <button id="attach_btn" title="Приложить документ для анализа — PDF, Word, txt">📎</button>
+          <input type="file" id="attach_inp" accept=".pdf,.docx,.doc,.rtf,.odt,.txt,.md,.markdown,.csv,.json,.html,.htm,.log,.yaml,.yml" style="display:none">
           <button id="send_btn">Отправить</button>
         </div>
       </div>
@@ -1626,26 +1626,37 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
     document.getElementById('doc_download').addEventListener('click', downloadDocument);
 
     // Прикрепить текстовый файл: читаем его содержимое в поле ввода (карточка обещает «приложи файл»).
+    // Приложить документ: нативный выбор файла на устройстве → извлечение текста
+    // (PDF/Word/txt) через тулбар → вставка в поле ввода. Работает с реальными договорами.
     var attachBtn = document.getElementById('attach_btn');
     var attachInp = document.getElementById('attach_inp');
     if (attachBtn && attachInp) {
-      attachBtn.addEventListener('click', function () { attachInp.click(); });
+      attachBtn.addEventListener('click', function () { if (!attachBtn._busy) attachInp.click(); });
       attachInp.addEventListener('change', function () {
-        var f = attachInp.files && attachInp.files[0];
-        if (!f) return;
-        if (f.size > 2 * 1024 * 1024) { alert('Файл больше 2 МБ — вставьте нужную часть текстом.'); attachInp.value = ''; return; }
+        var f = attachInp.files && attachInp.files[0]; if (!f) return;
+        if (f.size > 12 * 1024 * 1024) { alert('Файл больше 12 МБ — приложите часть или сожмите PDF.'); attachInp.value = ''; return; }
+        attachBtn._busy = true; attachBtn._old = attachBtn.textContent; attachBtn.textContent = '⏳';
         var reader = new FileReader();
         reader.onload = function () {
-          var body = String(reader.result || '');
-          var head = '--- ' + f.name + ' ---\n';
-          inp.value = (inp.value ? inp.value + '\n\n' : '') + head + body;
-          resizeInp(); inp.focus();
+          try { window.parent.postMessage({ type: 'etb_extract_b64', b64: String(reader.result || ''), name: f.name }, '*'); }
+          catch (e) { _attachReset(); }
           attachInp.value = '';
         };
-        reader.onerror = function () { alert('Не удалось прочитать файл. Это текстовый файл?'); attachInp.value = ''; };
-        reader.readAsText(f);
+        reader.onerror = function () { _attachReset(); alert('Не удалось прочитать файл.'); attachInp.value = ''; };
+        reader.readAsDataURL(f);
       });
     }
+    function _attachReset() { var b = document.getElementById('attach_btn'); if (b) { b._busy = false; b.textContent = b._old || '📎'; } }
+    window.addEventListener('message', function (e) {
+      var d = e.data; if (!d || d.type !== 'etb_doc_text') return;
+      _attachReset();
+      if (d.error) { alert('Не удалось приложить документ: ' + d.error); return; }
+      if (!d.text) { alert('Документ пустой или не распознан.'); return; }
+      var el = document.getElementById('inp');
+      var head = '--- ' + (d.name || 'документ') + ' ---\n';
+      el.value = (el.value ? el.value + '\n\n' : '') + head + d.text;
+      resizeInp(); el.focus();
+    });
 
     document.getElementById('msgs').addEventListener('click', handlePreviewClick);
     document.getElementById('doc_preview').addEventListener('click', handlePreviewClick);
