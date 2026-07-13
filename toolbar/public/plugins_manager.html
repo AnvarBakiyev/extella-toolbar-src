@@ -2709,9 +2709,21 @@ function _dtEsc(s){ return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); 
 // Правый клик по ярлыку → контекстное меню (Открыть/Кабинет/Запустить · Удалить),
 // как в ОС. Управление живёт на столе — отдельные вкладки «Мои»/«Автоматизации» не нужны.
 var _dtReg=[];
-// Открыть Визард. Прямой вызов опенера приложения (мост :8765 регистрируется установщиком).
-// fetch-проверку :8765 из тулбара делать нельзя — тулбар на https, а мост на http (mixed content блокируется).
-function _openWizard(){ notify('open','extella_adoption_wizard'); }
+// Открыть Визард. Делаем ровно то же, что рабочая иконка Визарда на столе: находим его
+// среди ярлыков (_dtReg) и вызываем его же действие открытия — id установленного плагина
+// может отличаться от 'extella_adoption_wizard' (тогда прямой notify приложение не узнаёт).
+function _openWizard(){
+  var w=null;
+  for(var i=0;i<_dtReg.length;i++){ var it=_dtReg[i]; var s=((it.lbl||'')+' '+(it.raw||'')+' '+(it.id||'')).toLowerCase();
+    if(/wizard|визард|adoption|внедрен/.test(s)){ w=it; break; } }
+  if(w){
+    if(w.kind==='agent') openAgentCabinet(w.id);
+    else if(w.kind==='cli') cliRun(w.id);
+    else notify('open', w.id);   // тот же id установленного плагина, что и у рабочей иконки
+    return;
+  }
+  notify('open','extella_adoption_wizard');
+}
 function _wizardMissing(){
   var en=(LANG==='en');
   var mac='bash <(curl -fsSL https://raw.githubusercontent.com/AnvarBakiyev/extella-marketplace-pack/main/toolbar/install-all.sh)';
