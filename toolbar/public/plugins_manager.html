@@ -556,6 +556,34 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);
 .ws_sk{background:linear-gradient(90deg,var(--bd2),var(--bd),var(--bd2));background-size:200% 100%;animation:wssh 1.2s infinite;border-radius:6px;height:14px}
 .ws_skbox{height:150px;border-radius:14px}
 @keyframes wssh{from{background-position:200% 0}to{background-position:-200% 0}}
+/* Workspace — «вкусный» список воркспейсов */
+.wsl_wrap{grid-column:1/-1;animation:fiu .25s ease}
+.wsl_head{margin:2px 0 20px}
+.wsl_h1{font-family:var(--serif);font-size:clamp(24px,3.4vw,32px);letter-spacing:-.01em;margin:0 0 6px;color:var(--tx)}
+.wsl_intro{font-size:14.5px;color:var(--tx2);max-width:70ch;line-height:1.55;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.wsl_grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(248px,1fr));gap:16px}
+.wsl_err{grid-column:1/-1;background:rgba(178,58,46,.08);border:1px solid rgba(178,58,46,.35);color:#B23A2E;border-radius:11px;padding:11px 15px;font-size:13.5px;margin-bottom:14px}
+.wsl_card{position:relative;display:flex;flex-direction:column;text-align:left;gap:0;background:var(--s1);border:1px solid var(--bd);border-radius:16px;padding:18px 18px 16px;cursor:pointer;overflow:hidden;transition:transform .13s ease,box-shadow .16s ease,border-color .13s ease;font-family:var(--sans)}
+.wsl_card:hover{transform:translateY(-3px);border-color:var(--wa);box-shadow:0 14px 34px color-mix(in srgb,var(--wa) 22%,transparent)}
+.wsl_head_bar{position:absolute;left:0;top:0;height:4px;width:100%;background:linear-gradient(90deg,var(--wa),color-mix(in srgb,var(--wa) 45%,transparent))}
+.wsl_row{display:flex;align-items:center;justify-content:space-between;margin-top:4px}
+.wsl_ic{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--wa) 13%,transparent);border:1px solid color-mix(in srgb,var(--wa) 30%,transparent)}
+.wsl_ic .lico{width:21px;height:21px;color:var(--wa);stroke-width:1.7}
+.wsl_ago{font-size:11px;color:var(--tx3)}
+.wsl_nm{font-family:var(--serif);font-size:18px;line-height:1.25;color:var(--tx);margin:13px 0 3px;font-weight:600}
+.wsl_fold{font:500 11.5px var(--mono);color:var(--tx3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wsl_foot{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:12px;border-top:1px solid var(--bd)}
+.wsl_st{display:inline-flex;align-items:center;gap:6px;font:600 12px var(--sans)}
+.wsl_st.ok{color:#2E7D5B}.wsl_st.crit{color:#B23A2E}
+.wsl_dot{width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 0 3px color-mix(in srgb,currentColor 16%,transparent)}
+.wsl_go{font:600 12.5px var(--sans);color:var(--wa);opacity:0;transform:translateX(-4px);transition:opacity .14s,transform .14s}
+.wsl_card:hover .wsl_go{opacity:1;transform:translateX(0)}
+.wsl_new{align-items:flex-start;justify-content:center;border-style:dashed;border-color:var(--bd2);background:transparent;gap:6px}
+.wsl_new:hover{border-color:#2F6B66;transform:translateY(-3px);box-shadow:0 12px 28px rgba(47,107,102,.16)}
+.wsl_new_plus{font-size:26px;font-weight:300;color:#2F6B66;line-height:1}
+.wsl_new_t{font-family:var(--serif);font-size:17px;font-weight:600;color:var(--tx);margin-top:6px}
+.wsl_new_s{font-size:13px;color:var(--tx2);line-height:1.5}
+.wsl_new_m{font:500 11px var(--mono);color:var(--tx3);margin-top:6px}
 /* Workspace-раздел на Рабочем столе */
 .dt_hero_ws{margin-bottom:12px !important;box-shadow:0 8px 24px rgba(36,84,79,.28) !important}
 .dt_ws_strip{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 22px}
@@ -4343,36 +4371,62 @@ function renderWorkspace(){
     }).catch(function(){ _wsList=[]; if(cur==='workspace')renderWorkspace(); });
     return;
   }
-  var html='<div class="sect"><h2>Workspace</h2></div>'+
-    '<div class="ws_lead" style="grid-column:1/-1">Компьютер понимает, над чем ты работаешь, и настраивается под задачу. '+_WS_PRIV+'</div>'+
-    '<div class="mshelf">'+
-      '<div class="stile ws_new" style="--acc:#24544F" onclick="wsBuildModal()">'+
-        '<span class="st_chip">＋ Новый</span>'+
-        '<div class="st_title">Собрать из папки…</div>'+
-        '<div class="st_fact">Выбери папку — Extella поймёт проект по именам файлов и предложит режим работы.</div>'+
-        '<div class="st_foot"><span style="font-size:11px;color:var(--tx3)">~30–45с · локально</span></div></div>'+
+  var html='<div class="wsl_wrap">'+
+    '<div class="wsl_head">'+
+      '<div><h1 class="wsl_h1">Твои воркспейсы</h1>'+
+        '<div class="wsl_intro">Каждый — это отдельная рабочая среда: компьютер уже понял проект и настроился под него. Заходи и работай. '+_WS_PRIV+'</div></div>'+
+    '</div>'+
+    '<div class="wsl_grid">'+
+      '<button class="wsl_card wsl_new" onclick="wsBuildModal()">'+
+        '<span class="wsl_new_plus">＋</span>'+
+        '<span class="wsl_new_t">Собрать из папки…</span>'+
+        '<span class="wsl_new_s">Выбери папку — Extella поймёт проект по именам файлов и настроит режим работы.</span>'+
+        '<span class="wsl_new_m">~30–45с · локально · приватно</span>'+
+      '</button>'+
       _wsList.map(wsListCard).join('')+
-    '</div>';
+    '</div></div>';
   g.innerHTML=html;
   _mountTabFilter('Поиск воркспейса…');
 }
+// Тёплый акцент на воркспейс — стабильный цвет из хеша ws_id (у каждого «своя комната»).
+function wsHue(id){ var h=0; id=String(id||''); for(var i=0;i<id.length;i++)h=(h*31+id.charCodeAt(i))%360; return h; }
+function wsBlWord(n){ n=n%100; if(n>=11&&n<=14)return'блокеров'; n=n%10; if(n===1)return'блокер'; if(n>=2&&n<=4)return'блокера'; return'блокеров'; }
 function wsListCard(w){
+  var hue=wsHue(w.ws_id), acc='hsl('+hue+',44%,42%)', soft='hsl('+hue+',44%,42%)';
   var bl=w.blockers|0;
-  var badge=bl>0?'<span class="ws_bl crit">'+bl+' блокер'+(bl>1?'ов':'')+'</span>':'<span class="ws_bl ok">готов к работе</span>';
-  return '<div class="stile" style="--acc:#2F6B66;cursor:pointer" onclick="wsOpen(\''+esc(w.ws_id)+'\')">'+
-    '<span class="st_chip">🖥 Workspace</span>'+
-    '<div class="st_title">'+esc(w.name||'Без имени')+'</div>'+
-    '<div class="st_fact" style="font-family:var(--mono,monospace);font-size:11px;color:var(--tx3)">'+esc((w.folder||'').replace(/^.*\//,'…/'))+'</div>'+
-    '<div class="st_foot" style="justify-content:space-between;align-items:center">'+badge+
-      '<span style="font-size:11px;color:var(--tx3)">'+esc(wsAgo(w.updated))+'</span></div></div>';
+  var status=bl>0
+    ? '<span class="wsl_st crit"><span class="wsl_dot"></span>'+bl+' '+wsBlWord(bl)+'</span>'
+    : '<span class="wsl_st ok"><span class="wsl_dot"></span>готов к работе</span>';
+  var folder=(w.folder||'').replace(/\/+$/,'');
+  var short=folder.split('/').filter(Boolean).pop()||folder;
+  return '<button class="wsl_card" style="--wa:'+acc+'" onclick="wsOpen(\''+esc(w.ws_id)+'\')" title="'+esc(w.name||'')+' · '+esc(folder)+'">'+
+    '<span class="wsl_head_bar"></span>'+
+    '<span class="wsl_row"><span class="wsl_ic"><svg class="lico"><use href="#ic-home"/></svg></span>'+
+      '<span class="wsl_ago">'+esc(wsAgo(w.updated))+'</span></span>'+
+    '<span class="wsl_nm">'+esc(w.name||'Без имени')+'</span>'+
+    '<span class="wsl_fold" title="'+esc(folder)+'">'+esc(short)+'</span>'+
+    '<span class="wsl_foot">'+status+'<span class="wsl_go">Открыть →</span></span>'+
+  '</button>';
 }
 function wsAgo(iso){ if(!iso)return''; try{var d=(Date.now()-new Date(iso).getTime())/1000; if(d<90)return'только что'; if(d<5400)return Math.round(d/60)+' мин назад'; if(d<172800)return Math.round(d/3600)+' ч назад'; return Math.round(d/86400)+' дн назад';}catch(e){return'';} }
 function wsOpen(ws_id){
   var g=document.getElementById('grid'); if(g)g.innerHTML=_loadingHTML('Открываю воркспейс…');
-  wsCall('get',{ws_id:ws_id},20000).then(function(out){
-    if(out&&out.status==='success'&&out.workspace){ _wsCur=out.workspace; _wsView='cockpit'; wsRenderCockpit(_wsCur); }
-    else { _wsView='list'; if(cur==='workspace')renderWorkspace(); }
-  }).catch(function(){ _wsView='list'; if(cur==='workspace')renderWorkspace(); });
+  wsCall('get',{ws_id:ws_id},30000).then(function(out){
+    if(out&&out.workspace){ _wsCur=out.workspace; _wsView='cockpit'; wsRenderCockpit(_wsCur); return; }
+    _wsView='list';
+    var why=(out&&out.message)||(typeof out==='string'?('движок вернул текст: '+String(out).slice(0,160)):'движок не вернул workspace');
+    wsListError(why);
+  }).catch(function(e){
+    _wsView='list';
+    wsListError((e&&e.message==='_timeout_')?'долго отвечает (таймаут)':((e&&e.message)||'нет ответа от моста'));
+  });
+}
+function wsListError(why){
+  renderWorkspace();
+  var g=document.getElementById('grid'); if(!g)return;
+  var b=document.createElement('div'); b.className='wsl_err';
+  b.innerHTML='⚠ Не удалось открыть воркспейс: '+esc(why);
+  var w=g.querySelector('.wsl_wrap')||g; w.insertBefore(b, w.firstChild);
 }
 function wsBack(){ _wsView='list'; _wsCur=null; renderWorkspace(); }
 function wsBuildModal(){
