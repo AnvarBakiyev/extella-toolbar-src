@@ -412,7 +412,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
         'X-Profile-Id': 'default',
         'X-Agent-Id': agentId
       },
-      body: JSON.stringify({ expert_name: expertName, params: params })
+      body: JSON.stringify({ expert_name: expertName, params: params, global: true })
     })
     .then(function (r) { return r.json(); })
     .then(function (data) {
