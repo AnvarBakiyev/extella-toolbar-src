@@ -541,6 +541,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);
   </div>
   <button class="iconbtn" onclick="notify('mkt_min')" title="Свернуть">&#8211;</button>
   <button class="iconbtn" onclick="notify('mkt_win')" title="В окне / на весь экран"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><rect x="3" y="8" width="13" height="13" rx="1.5"/><path d="M8 5h12a1 1 0 0 1 1 1v12"/></svg></button>
+  <button class="iconbtn" id="langBtn" onclick="setLang(LANG==='en'?'ru':'en')" title="Язык / Language" style="font:600 11px var(--mono,monospace);width:auto;padding:0 8px">EN</button>
   <button class="iconbtn" id="themeBtn" onclick="toggleTheme()" title="Светлая / тёмная тема">☾</button>
   <button class="bclose" onclick="notify('close')" title="Close">&#10005;</button>
 </div>
@@ -1312,6 +1313,7 @@ function renderGrid() {
   else if (cur === 'mine') renderInstalled();
   else if (cur === 'admin') renderAdmin();
   else renderHome();
+  if (LANG === 'en') applyLang();
 }
 
 // Модели, curated AI-model demos in «Для всех»; full HuggingFace search in «Для профи».
@@ -1350,6 +1352,76 @@ var _T_DICT = {
 };
 function _t(k){ var e=_T_DICT[k]; if(!e) return k; return (LANG==='en' && e.en!=null) ? e.en : e.ru; }
 function _lm(m, field){ if(LANG==='en' && m && m.en && m.en[field]!=null) return m.en[field]; return m ? m[field] : ''; }
+
+// ══════════════════════════════════════════════════════════════════════════
+//  EN/RU — центральный DOM-переводчик (как у Визарда): словарь RU→EN + regex
+//  для динамических строк. Применяется при каждом рендере, обратимо (RU = ре-рендер).
+// ══════════════════════════════════════════════════════════════════════════
+try { if (localStorage.getItem('etb_lang') === 'en') LANG = 'en'; } catch (_) {}
+var I18N_EN = {
+  // Вкладки
+  'Рабочий стол':'Desktop','Витрина':'Storefront','Программы':'Programs','Модели':'Models',
+  'Навыки':'Skills','Инструменты':'Tools','Знания':'Knowledge','Агенты':'Agents','Сервисы':'Services','Профи':'Pro',
+  // Шапка / командная строка
+  'Установить':'Install','Для профи':'Pro','Для всех':'For everyone',
+  '🔗  Вставь ссылку, установим в один клик: программа, модель, навык, CLI':'🔗  Paste a link — install in one click: program, model, skill, CLI',
+  'Свернуть':'Minimize','В окне / на весь экран':'Window / fullscreen','Светлая / тёмная тема':'Light / dark theme','Язык / Language':'Язык / Language',
+  // Рабочий стол
+  'Мой компьютер · Визард':'My computer · Wizard',
+  'Твой ИИ-компьютер: собирает установленные программы в единые процессы, запускает их и следит за результатом.':'Your AI computer: bundles installed programs into unified processes, runs them and watches the result.',
+  'Открыть →':'Open →','Открыть':'Open','Запустить':'Run','Кабинет':'Cabinet','Удалить':'Remove','Открыть источник':'Open source','↗ Открыть':'↗ Open','↗ Источник':'↗ Source','⚙ Кабинет':'⚙ Cabinet','▶ Запустить':'▶ Run',
+  // Секции / подписи
+  'ВЫБОР EXTELLA':'EXTELLA PICK','Выбор Extella':'Extella pick',
+  'Мои агенты · собраны Визардом':'My agents · built by the Wizard',
+  'Роли агентов':'Agent roles','Роли для базового агента':'Roles for the base agent','Больше пользы без смены модели':'More value, same model',
+  'Сервисы':'Services','Внешние сервисы':'External services','Живые данные для агента. Проверить можно прямо здесь.':'Live data for the agent. Test it right here.',
+  'Знания':'Knowledge','Своя база из документов':'Your own base from documents','+ Создать базу знаний':'+ Create knowledge base','Новая база':'New base','Мои базы знаний':'My knowledge bases',
+  'Своего инструмента нет?':'Missing a tool?','Фабрика':'Factory',
+  // Кнопки карточек
+  'Подключить':'Connect','Проверить':'Test','Спросить':'Ask','▶ Спросить':'▶ Ask','Добавить программу':'Add program','Добавить модель':'Add model','Добавить навык':'Add skill','Добавить инструмент':'Add tool','Обновить':'Refresh','↻ Обновить':'↻ Refresh','Показать все':'Show all','← Все категории':'← All categories','Все':'All',
+  // Категории (бизнес)
+  'Работа и карьера':'Work & career','Маркетинг и продажи':'Marketing & sales','Деньги и финансы':'Money & finance','Учёба и знания':'Study & knowledge','Дом и быт':'Home & living','Путешествия':'Travel','Здоровье и спорт':'Health & sport','Документы':'Documents','Данные и форматы':'Data & formats','Технологии':'Technology',
+  'Разработка':'Development','Стиль и общение':'Style & tone','Работа и продуктивность':'Work & productivity','Бизнес':'Business','Продажи':'Sales','HR и найм':'HR & hiring','Финансы':'Finance','Маркетинг':'Marketing','Поддержка клиентов':'Customer support','Управление проектами':'Project management','Аналитика данных':'Data analytics','Юридическое':'Legal','Операции':'Operations','Деловая переписка':'Business writing','Встречи и решения':'Meetings','Закупки':'Procurement','Стратегия':'Strategy','Обучение и наставничество':'Training & mentoring','Личная продуктивность':'Personal productivity','Управление рисками':'Risk management','Работа с документами':'Documents','Исследования':'Research','Клиентский успех':'Customer success','Кризис-менеджмент':'Crisis management','Бренд и PR':'Brand & PR','Продуктовый менеджмент':'Product management','Нужного нет?':'Not here?',
+  // Модели / HF
+  'ИИ-модели по разделам':'AI models by category','Локальные модели, на твоём устройстве':'Local models, on your device',
+  'Генерация картинок':'Image generation','Редактирование фото':'Photo editing','Аватары и примерка':'Avatars & try-on','Видео и анимация':'Video & animation','Звук и музыка':'Audio & music','Текст и чат':'Text & chat','Код и приложения':'Code & apps','Другое':'Other',
+  // Состояния
+  'Загружаю…':'Loading…','Пока пусто.':'Nothing yet.','Пока ничего не установлено.':'Nothing installed yet.',
+  // Плейсхолдеры
+  'Поиск по программам…':'Search programs…','Поиск навыка…':'Search skills…','Поиск модели…':'Search models…','Поиск сервиса…':'Search services…','Поиск роли…':'Search roles…','Поиск базы знаний…':'Search knowledge bases…','Поиск…':'Search…',
+  // Карточные подписи / кикеры
+  'Для бизнеса':'For business','Для жизни':'For life','Работа':'Work','Программа':'Program','Навык':'Skill','Модель':'Model','Инструмент':'Tool','Сервис':'Service','Роль агента':'Agent role','Готовая база':'Ready base','База знаний':'Knowledge base',
+  'Программа · Работа':'Program · Work','Живые данные · API':'Live data · API','Приватно · локально':'Private · local','Роли · Qwen':'Roles · Qwen',
+  '+ Добавить программу':'+ Add program','Добавить':'Add','Не здесь?':'Not here?',
+  'Опиши задачу, Строитель найдёт и добавит сам, без разработчика.':'Describe the task — the Builder finds and adds it, no developer needed.',
+  'установлено':'installed','подключено':'connected','ставится…':'installing…','активен':'active','ещё не запускался':'never run',
+  'Как запустить:':'How to run:','через агента':'via agent','Инструменты · через агента':'Tools · via agent','Из интернета · Композитор':'From the internet · Composer'
+};
+var I18N_RX = [
+  [/^Программы на рабочем столе/, 'Programs on the desktop'],
+  [/^Клик — открыть или запустить\. Правый клик — кабинет, настройки, удалить\.?$/, 'Click to open or run. Right-click for cabinet, settings, remove.'],
+  [/^Три шага: копия базового агента → её ID → выбери роль ниже\.?$/, 'Three steps: copy the base agent → its ID → pick a role below.'],
+  [/^Живой каталог работающих демо HuggingFace.*/, 'Live catalog of working HuggingFace demos — run in the cloud, no GPU, one click. Updated weekly.']
+];
+function _trStr(s){
+  var k=String(s).trim(); if(!k) return s;
+  if(I18N_EN[k]) return s.replace(k, I18N_EN[k]);
+  for(var i=0;i<I18N_RX.length;i++){ if(I18N_RX[i][0].test(k)) return s.replace(I18N_RX[i][0], I18N_RX[i][1]); }
+  return s;
+}
+function _walkTranslate(root){
+  if(LANG!=='en'||!root) return;
+  try{
+    var w=document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false), nodes=[], n;
+    while(n=w.nextNode()) nodes.push(n);
+    nodes.forEach(function(t){ var v=t.nodeValue; if(v&&v.trim()){ var nv=_trStr(v); if(nv!==v) t.nodeValue=nv; } });
+    ['placeholder','title'].forEach(function(a){
+      [].forEach.call(root.querySelectorAll('['+a+']'),function(el){ var val=el.getAttribute(a); var nv=_trStr(val); if(nv!==val) el.setAttribute(a,nv); });
+    });
+  }catch(_){}
+}
+function applyLang(){ var b=document.getElementById('langBtn'); if(b)b.textContent=(LANG==='en'?'RU':'EN'); if(LANG==='en') _walkTranslate(document.body); }
+function setLang(l){ LANG=(l==='en')?'en':'ru'; try{localStorage.setItem('etb_lang',LANG);}catch(_){} try{rtabs();}catch(_){} try{renderGrid();}catch(_){} applyLang(); }
 
 var LOCAL_MODELS = [
   {id:'llama32', domain:'Приватный ИИ · компакт', emoji:'⚡', model:'llama3.2:1b', size:'~1.3 ГБ',
@@ -4264,6 +4336,15 @@ function toggleTheme(){ document.documentElement.toggleAttribute('data-lm'); }
 // ── Boot ──────────────────────────────────────────────────────────────────
 setMode('all');
 applyLang();
+// Асинхронные ре-рендеры (KV-догрузка) и модалки/окна: держим перевод актуальным.
+// Наблюдаем только childList (мои правки — characterData, не зациклятся).
+(function(){
+  try{
+    var _tmr=null;
+    var _obs=new MutationObserver(function(){ if(LANG!=='en')return; if(_tmr)clearTimeout(_tmr); _tmr=setTimeout(applyLang,60); });
+    _obs.observe(document.body,{childList:true,subtree:true});
+  }catch(_){}
+})();
 rtabs();
 renderTopics();
 doSearch();
