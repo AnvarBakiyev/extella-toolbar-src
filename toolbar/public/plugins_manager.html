@@ -2931,7 +2931,7 @@ function renderDesktop(){
   // Воркспейсы для раздела на столе (ленивая подгрузка через движок, кэш).
   if (_wsDeskList === undefined) {
     _wsDeskList = null;
-    wsCall('list', {}, 20000).then(function(out){ _wsDeskList = (out&&out.status==='success'&&out.workspaces)?out.workspaces:[]; if(cur==='desktop')renderDesktop(); })
+    wsCall('list', {}, 20000).then(function(out){ _wsDeskList = (out&&out.workspaces)?out.workspaces:[]; if(cur==='desktop')renderDesktop(); })
       .catch(function(){ _wsDeskList = []; if(cur==='desktop')renderDesktop(); });
   }
   // Единый набор контурных значков (как в чипах/карточках Эллы): категория → #ic-*.
@@ -4380,7 +4380,7 @@ function renderWorkspace(){
   if(_wsList===null){
     g.innerHTML=_loadingHTML('Загружаю воркспейсы…');
     wsCall('list',{},20000).then(function(out){
-      _wsList=(out&&out.status==='success'&&out.workspaces)?out.workspaces:[];
+      _wsList=(out&&out.workspaces)?out.workspaces:[];
       if(cur==='workspace')renderWorkspace();
     }).catch(function(){ _wsList=[]; if(cur==='workspace')renderWorkspace(); });
     return;
@@ -4473,23 +4473,48 @@ function wsDoBuild(btn,folderArg,nameArg){
   if(msg)msg.innerHTML='⏳ Читаю имена файлов и понимаю проект… (~30–45с)';
   var g=document.getElementById('grid'); if(g&&_wsView!=='cockpit'){ g.innerHTML=wsSkeleton(); }
   var params={folder:folder}; if(nameArg)params.name=nameArg;
+  var startMs=Date.now();
   wsCall('build',params,180000).then(function(out){
-    if(btn)btn.disabled=false;
-    if(out&&out.status==='success'&&out.workspace){
-      var o=document.getElementById('ws_ov'); if(o)o.remove();
-      _wsList=null; // список пересоберётся при возврате
-      _wsCur=out.workspace; _wsView='cockpit'; wsRenderCockpit(_wsCur);
-    } else {
-      var em=(out&&out.message)||(typeof out==='string'?out:'не удалось собрать');
-      if(msg)msg.innerHTML='⚠ '+esc(String(em).slice(0,300));
-      if(cur==='workspace'&&_wsView!=='cockpit'){ _wsList=_wsList||[]; renderWorkspace(); }
+    // Сразу вернулся готовый воркспейс (синхронно)
+    if(out&&out.workspace){ if(btn)btn.disabled=false; wsBuildDone(out.workspace); return; }
+    // build — ОТЛОЖЕННАЯ задача (движок возвращает task_id, мост не поллит).
+    // Явную ошибку (не про deferred) показываем; иначе поллим синхронный list, пока не появится воркспейс по папке.
+    var s=(typeof out==='string')?out:((out&&out.message)||'');
+    if(s && !/defer|task_id|500|timeout/i.test(s) && !(out&&out.task_id)){
+      if(btn)btn.disabled=false; if(msg)msg.innerHTML='⚠ '+esc(String(s).slice(0,300)); return;
     }
+    wsBuildPoll(folder, startMs, msg, btn, 0);
   }).catch(function(e){
-    if(btn)btn.disabled=false;
-    var t=(e&&e.message==='_timeout_');
-    if(msg)msg.innerHTML=t?'▶ Сборка идёт на устройстве (долго). Загляни в раздел через минуту.':('⚠ '+esc((e&&e.message)||'нет ответа'));
-    if(cur==='workspace'&&_wsView!=='cockpit'){ _wsList=null; renderWorkspace(); }
+    // таймаут моста ≠ провал — сборка идёт, поллим список
+    wsBuildPoll(folder, startMs, msg, btn, 0);
   });
+}
+// Готово: закрыть модалку, открыть кокпит.
+function wsBuildDone(ws){
+  var o=document.getElementById('ws_ov'); if(o)o.remove();
+  _wsList=null; _wsCur=ws; _wsView='cockpit'; wsRenderCockpit(ws);
+}
+// Поллинг синхронного list, пока воркспейс по папке не появится (свежий, updated≥старта).
+function wsBuildPoll(folder, startMs, msg, btn, tries){
+  if(msg)msg.innerHTML='⏳ Собираю воркспейс… компьютер понимает проект (~30–45с)';
+  if(tries>24){ // ~75с
+    if(btn)btn.disabled=false;
+    if(msg)msg.innerHTML='▶ Сборка идёт дольше обычного. Загляни в список через минуту.';
+    _wsList=null; if(cur==='workspace'&&_wsView!=='cockpit')renderWorkspace(); return;
+  }
+  var norm=folder.replace(/\/+$/,'');
+  setTimeout(function(){
+    wsCall('list',{},20000).then(function(out){
+      var wss=(out&&out.workspaces)||[];
+      var m=wss.filter(function(w){
+        if((w.folder||'').replace(/\/+$/,'')!==norm) return false;
+        var t=w.updated?new Date(w.updated).getTime():0;
+        return t>=startMs-8000; // именно свежесобранный (а не старый по этой же папке)
+      })[0];
+      if(m){ if(btn)btn.disabled=false; var o=document.getElementById('ws_ov'); if(o)o.remove(); wsOpen(m.ws_id); return; }
+      wsBuildPoll(folder, startMs, msg, btn, tries+1);
+    }).catch(function(){ wsBuildPoll(folder, startMs, msg, btn, tries+1); });
+  }, 3000);
 }
 // Пересборка уже открытого воркспейса — с подтверждённым именем => стабильный ws_id, журнал копится.
 function wsRebuild(){
