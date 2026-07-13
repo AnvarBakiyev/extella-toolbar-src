@@ -541,6 +541,19 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);
 .ws_tgl span{position:absolute;inset:0;background:var(--bd2);border-radius:20px;transition:.2s}
 .ws_tgl span::before{content:"";position:absolute;left:2px;top:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:.2s}
 .ws_tgl input:checked+span{background:#2F6B66}.ws_tgl input:checked+span::before{transform:translateX(14px)}
+.ws_act.on{cursor:pointer;color:var(--a);border-color:color-mix(in srgb,var(--a) 45%,transparent);opacity:1}
+.ws_act.on:hover{background:color-mix(in srgb,var(--a) 10%,transparent)}
+.ws_on{font:600 11px var(--sans);color:#2E7D5B;background:rgba(46,125,91,.12);border-radius:10px;padding:1px 8px}
+.ws_actions{display:flex;gap:8px;margin:14px 0 2px;flex-wrap:wrap}
+.ws_abtn{font:600 13px var(--sans);border:1px solid var(--bd2);background:var(--s1);color:var(--tx);border-radius:9px;padding:7px 14px;cursor:pointer;transition:border-color .12s,transform .1s}
+.ws_abtn:hover{border-color:#2F6B66;transform:translateY(-1px)}
+.ws_abtn_undo{color:var(--tx2)}
+.ws_org_list{max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+.ws_org_grp{border:1px solid var(--bd2);border-radius:9px;padding:10px 12px}
+.ws_org_to{font:600 13px var(--sans);color:#2F6B66;margin-bottom:6px}
+.ws_org_f{font:500 12px var(--mono);color:var(--tx2);padding:2px 0}
+.ws_toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:100000;background:var(--tx);color:var(--paper);font:600 13px var(--sans);padding:10px 18px;border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.28);opacity:0;transition:opacity .25s;max-width:80vw;text-align:center}
+.ws_toast.ok{background:#2E7D5B;color:#fff}.ws_toast.err{background:#B23A2E;color:#fff}
 .ws_srcs{display:flex;flex-direction:column;gap:5px;max-height:260px;overflow-y:auto}
 .ws_src{display:flex;align-items:center;gap:9px;font-size:13px;padding:4px 0}
 .ws_ext{font:700 10px var(--mono);color:var(--tx3);background:var(--bg);border:1px solid var(--bd2);border-radius:4px;padding:2px 5px;min-width:38px;text-align:center;flex-shrink:0}
@@ -4495,6 +4508,7 @@ function wsRenderCockpit(w){
   var g=document.getElementById('grid'); if(!g)return;
   try{ var _cbar=document.querySelector('.cmdbar'); if(_cbar)_cbar.style.display='none'; }catch(e){}
   var st=w.state||{}, gaps=st.gaps||[], ledger=w.ledger||[], sources=w.sources||[], versions=w.versions||[], pack=w.pack||{}, ap=w.autopilot||{};
+  var wid=_dtEsc(w.ws_id||''), hasMoves=!!(w.moves&&w.moves.length);
   var verFiles={}; versions.forEach(function(v){(v.files||[]).forEach(function(f){verFiles[f]=1;});});
   var bl=(st.blockers|0);
   // шапка
@@ -4514,23 +4528,28 @@ function wsRenderCockpit(w){
   // амбиентная строка (first_task)
   if(st.first_task){
     html+='<div class="ws_ambient"><div><span class="ws_amb_k">Предлагаю начать:</span> '+esc(st.first_task)+'</div>'+
-      '<button class="st_btn" disabled title="Скоро (ws-v1.1)">Давай →</button></div>';
+      '<button class="st_btn" onclick="wsRunCap(\''+wid+'\',\''+_dtEsc(st.first_task)+'\')">Давай →</button></div>';
   }
+  // Действия над воркспейсом: приборка + отмена уборки
+  html+='<div class="ws_actions">'+
+    '<button class="ws_abtn" onclick="wsOrganize(\''+wid+'\')" title="Разложить файлы по папкам (с превью и подтверждением)">🧹 Прибраться</button>'+
+    (hasMoves?'<button class="ws_abtn ws_abtn_undo" onclick="wsUndo(\''+wid+'\')" title="Вернуть файлы, как было">↩ Отменить уборку</button>':'')+
+  '</div>';
   html+='<div class="ws_cols">';
   // Чего не хватает
   html+='<div class="ws_card"><div class="ws_card_h">Состояние · чего не хватает</div>';
   if(gaps.length){ html+=gaps.map(function(gp){ var sv=wsSev(gp.severity); return '<div class="ws_gap '+sv.c+'">'+
     '<div class="ws_gap_t">'+sv.i+' '+esc(gp.title)+'</div>'+
     (gp.why?'<div class="ws_gap_w">'+esc(gp.why)+'</div>':'')+
-    '<button class="ws_act" disabled title="Скоро (ws-v1.1)">Исправить</button></div>'; }).join(''); }
+    '<button class="ws_act on" onclick="wsRunCap(\''+wid+'\',\''+_dtEsc(gp.title)+'\')">Исправить</button></div>'; }).join(''); }
   else { html+='<div class="ws_empty">Пробелов не найдено — всё на месте.</div>'; }
   html+='</div>';
   // Активный пак
   html+='<div class="ws_card"><div class="ws_card_h">Активный режим</div>'+
     '<div class="ws_pack_n">'+esc(pack.name||'—')+(pack.installed===false?' <span class="ws_soon">предложение</span>':'')+'</div>'+
     '<div class="ws_caps">'+((pack.capabilities||[]).map(function(c){return '<span class="ws_cap">'+esc(c)+'</span>';}).join('')||'<span class="ws_empty">нет способностей</span>')+'</div>'+
-    '<div class="ws_apilot"><label class="ws_tgl"><input type="checkbox" '+(ap.enabled?'checked':'')+' disabled><span></span></label>'+
-      '<div><b>Автопилот</b> <span class="ws_soon">скоро</span><div class="ws_rules">'+((ap.rules||[]).map(function(r){return '• '+esc(r);}).join('<br>')||'дежурные правила появятся после запуска')+'</div></div></div>'+
+    '<div class="ws_apilot"><label class="ws_tgl"><input type="checkbox" '+(ap.enabled?'checked':'')+' onchange="wsSetAutopilot(\''+wid+'\',this.checked)"><span></span></label>'+
+      '<div><b>Автопилот</b> '+(ap.enabled?'<span class="ws_on">включён</span>':'')+'<div class="ws_rules">'+((ap.rules||[]).map(function(r){return '• '+esc(r);}).join('<br>')||'дежурные правила появятся после запуска')+'</div></div></div>'+
   '</div>';
   html+='</div>'; // ws_cols
   // Источники
@@ -4542,13 +4561,73 @@ function wsRenderCockpit(w){
   html+='<div class="ws_card"><div class="ws_card_h">Что Extella сделала</div>';
   if(ledger.length){ html+='<div class="ws_ledger">'+ledger.slice().reverse().map(function(l){ return '<div class="ws_lrow"><span class="ws_ln">'+(l.n|0)+'</span>'+
     '<div class="ws_lbody"><div class="ws_la">'+esc(l.action||'')+'</div>'+(l.detail?'<div class="ws_ld">'+esc(l.detail)+'</div>':'')+'</div>'+
-    (l.undo&&l.undo!=='none'?'<button class="ws_undo" disabled title="Скоро (ws-v1.1)">↩</button>':'')+'</div>'; }).join('')+'</div>'; }
+    '</div>'; }).join('')+'</div>'; }
   else html+='<div class="ws_empty">журнал пуст</div>';
   html+='</div>';
   html+='</div>'; // ws_wrap
   g.innerHTML=html;
 }
 function wsPlural(n){ n=n%100; if(n>=11&&n<=14)return'ов'; n=n%10; if(n===1)return''; if(n>=2&&n<=4)return'а'; return'ов'; }
+// --- Действия кокпита (контракт ws-v1.1) ---
+function wsToast(msg,kind){
+  var t=document.getElementById('ws_toast'); if(!t){ t=document.createElement('div'); t.id='ws_toast'; document.body.appendChild(t); }
+  t.className='ws_toast'+(kind?(' '+kind):''); t.innerHTML=msg; t.style.opacity='1';
+  clearTimeout(t._h); t._h=setTimeout(function(){ t.style.opacity='0'; },3200);
+}
+function wsSetAutopilot(ws_id,enabled){
+  wsToast(enabled?'Включаю автопилот…':'Выключаю автопилот…');
+  wsCall('set_autopilot',{ws_id:ws_id,enabled:enabled},60000).then(function(out){
+    if(out&&out.workspace){ _wsCur=out.workspace; wsRenderCockpit(_wsCur); wsToast(enabled?'✓ Автопилот включён':'Автопилот выключен','ok'); }
+    else wsToast('⚠ Не удалось: '+esc((out&&out.message)||'нет ответа'),'err');
+  }).catch(function(e){ wsToast('⚠ '+esc((e&&e.message)||'ошибка'),'err'); });
+}
+function wsRunCap(ws_id,cap){
+  wsToast('Отправляю задачу движку…');
+  wsCall('run_capability',{ws_id:ws_id,capability:cap},60000).then(function(out){
+    if(out&&out.queued) wsToast('✓ Принято: '+esc(out.note||'скоро выполню'),'ok');
+    else wsToast('⚠ '+esc((out&&out.message)||'не удалось'),'err');
+  }).catch(function(e){ wsToast('⚠ '+esc((e&&e.message)||'ошибка'),'err'); });
+}
+function wsOrganize(ws_id){
+  wsToast('Смотрю, что можно разложить…');
+  wsCall('organize',{ws_id:ws_id,apply:false},60000).then(function(out){
+    if(!out||!out.preview||!(out.moves&&out.moves.length)){ wsToast('Раскладывать нечего — всё на местах.'); return; }
+    wsOrganizeModal(ws_id,out);
+  }).catch(function(e){ wsToast('⚠ '+esc((e&&e.message)||'ошибка'),'err'); });
+}
+function wsOrganizeModal(ws_id,prev){
+  var old=document.getElementById('ws_org_ov'); if(old)old.remove();
+  var moves=prev.moves||[], byF={};
+  moves.forEach(function(m){ (byF[m.to_folder]=byF[m.to_folder]||[]).push(m.file); });
+  var rows=Object.keys(byF).map(function(f){ return '<div class="ws_org_grp"><div class="ws_org_to">📁 '+esc(f)+'</div>'+
+    byF[f].map(function(fn){return '<div class="ws_org_f">'+esc(fn)+'</div>';}).join('')+'</div>'; }).join('');
+  var ov=document.createElement('div'); ov.id='ws_org_ov'; ov.style.cssText=_KPOV;
+  ov.innerHTML='<div style="'+_KPMODAL+'">'+
+    '<div style="font-family:var(--serif);font-size:20px;margin-bottom:4px">🧹 Прибраться</div>'+
+    '<div style="color:var(--tx2);font-size:13px;line-height:1.5;margin-bottom:12px">Перенесу <b>'+moves.length+'</b> файл'+wsPlural(moves.length)+' в папки. Только перемещение (не удаление), потом можно отменить.</div>'+
+    '<div class="ws_org_list">'+rows+'</div>'+
+    '<div style="margin-top:14px;display:flex;gap:8px;align-items:center"><button class="st_btn" onclick="wsOrganizeApply(\''+_dtEsc(ws_id)+'\',this)">Разложить '+moves.length+'</button>'+
+    '<button onclick="var o=document.getElementById(\'ws_org_ov\');if(o)o.remove()" style="'+_KPBTN+'">Отмена</button></div>'+
+    '<div id="ws_org_msg" style="font-size:13px;color:var(--tx2);margin-top:10px;min-height:16px"></div></div>';
+  document.body.appendChild(ov);
+}
+function wsOrganizeApply(ws_id,btn){
+  var msg=document.getElementById('ws_org_msg'); if(btn)btn.disabled=true;
+  if(msg)msg.innerHTML='⏳ Раскладываю файлы…';
+  wsCall('organize',{ws_id:ws_id,apply:true},120000).then(function(out){
+    var o=document.getElementById('ws_org_ov'); if(o)o.remove();
+    if(out&&out.workspace){ _wsCur=out.workspace; wsRenderCockpit(_wsCur); }
+    wsToast('✓ Разложено файлов: '+((out&&out.moved)||0)+'. Можно отменить.','ok');
+  }).catch(function(e){ if(btn)btn.disabled=false; if(msg)msg.innerHTML='⚠ '+esc((e&&e.message)||'ошибка'); });
+}
+function wsUndo(ws_id){
+  wsToast('Отменяю уборку…');
+  wsCall('undo',{ws_id:ws_id},60000).then(function(out){
+    if(out&&out.nothing){ wsToast('Отменять нечего.'); return; }
+    if(out&&out.workspace){ _wsCur=out.workspace; wsRenderCockpit(_wsCur); }
+    wsToast('✓ Возвращено файлов: '+((out&&out.restored)||0),'ok');
+  }).catch(function(e){ wsToast('⚠ '+esc((e&&e.message)||'ошибка'),'err'); });
+}
 
 var BUILDER_ID='agent_FLYxB0v1qIY2phB5beVP5';
 function skRunAgent(msg){return skBridge('etb_run_agent','etb_agent_result',{message:msg,agent_id:BUILDER_ID});}
