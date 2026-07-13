@@ -499,6 +499,63 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);
 .dock_chip:hover{border-color:var(--a);color:var(--a)}
 
 @keyframes fiu{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+
+/* ===== Workspace (кокпит) ===== */
+.ws_lead{font-size:13.5px;color:var(--tx2);margin:2px 0 4px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ws_priv{display:inline-flex;align-items:center;gap:4px;font:600 11px var(--sans);color:#2F6B66;background:rgba(47,107,102,.1);border:1px solid rgba(47,107,102,.25);border-radius:20px;padding:2px 9px;white-space:nowrap}
+.ws_bl{font:600 11px var(--sans);border-radius:20px;padding:2px 9px}
+.ws_bl.crit{color:#B23A2E;background:rgba(178,58,46,.1)}
+.ws_bl.ok{color:#2E7D5B;background:rgba(46,125,91,.1)}
+.ws_new{cursor:pointer}
+.ws_wrap{animation:fiu .25s ease;max-width:100%}
+.ws_hd{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.ws_bkbtn,.ws_ghost{background:transparent;border:1px solid var(--bd2);color:var(--tx2);border-radius:6px;padding:5px 11px;font:600 12px var(--sans);cursor:pointer}
+.ws_bkbtn:hover,.ws_ghost:hover{border-color:var(--a);color:var(--a)}
+.ws_h1{font-family:var(--serif);font-size:clamp(22px,3vw,30px);letter-spacing:-.01em;margin:0 0 4px;color:var(--tx)}
+.ws_understood{font-size:15px;color:var(--tx2);max-width:66ch;line-height:1.5}
+.ws_pills{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px}
+.ws_pill{font:600 12px var(--sans);border:1px solid var(--bd2);color:var(--tx2);border-radius:20px;padding:3px 11px}
+.ws_pill.crit{color:#B23A2E;border-color:rgba(178,58,46,.4);background:rgba(178,58,46,.08)}
+.ws_pill.ok{color:#2E7D5B;border-color:rgba(46,125,91,.4);background:rgba(46,125,91,.08)}
+.ws_ambient{display:flex;justify-content:space-between;align-items:center;gap:12px;background:linear-gradient(90deg,rgba(192,130,14,.1),transparent);border:1px solid var(--bd2);border-left:3px solid #C0820E;border-radius:10px;padding:13px 16px;margin:16px 0 6px;flex-wrap:wrap}
+.ws_amb_k{font:600 12px var(--sans);color:#C0820E;text-transform:uppercase;letter-spacing:.04em}
+.ws_cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
+@media(max-width:720px){.ws_cols{grid-template-columns:1fr}}
+.ws_card{background:var(--s1);border:1px solid var(--bd);border-radius:14px;padding:16px 18px;min-width:0}
+.ws_card_h{font:700 12px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);margin-bottom:12px}
+.ws_dim{font-weight:400;text-transform:none;letter-spacing:0}
+.ws_gap{border:1px solid var(--bd2);border-left:3px solid var(--bd2);border-radius:9px;padding:10px 12px;margin-bottom:8px}
+.ws_gap.crit{border-left-color:#B23A2E}.ws_gap.warn{border-left-color:#B8791C}
+.ws_gap_t{font-weight:650;font-size:14px}
+.ws_gap_w{font-size:12.5px;color:var(--tx2);margin:3px 0 8px;line-height:1.45}
+.ws_act,.ws_undo{font:600 12px var(--sans);border:1px solid var(--bd2);background:transparent;color:var(--tx3);border-radius:6px;padding:4px 10px;cursor:not-allowed;opacity:.7}
+.ws_empty{font-size:13px;color:var(--tx3);padding:6px 0}
+.ws_pack_n{font-family:var(--serif);font-size:18px;color:var(--tx);margin-bottom:8px}
+.ws_soon{font:600 10px var(--sans);color:#B8791C;background:rgba(184,121,28,.12);border-radius:10px;padding:1px 7px;vertical-align:middle}
+.ws_caps{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.ws_cap{font:500 12px var(--sans);background:rgba(47,107,102,.1);color:#2F6B66;border-radius:6px;padding:3px 9px}
+.ws_apilot{display:flex;gap:10px;align-items:flex-start;border-top:1px dashed var(--bd2);padding-top:12px}
+.ws_rules{font-size:11.5px;color:var(--tx3);margin-top:4px;line-height:1.5}
+.ws_tgl{position:relative;display:inline-block;width:34px;height:20px;flex-shrink:0}
+.ws_tgl input{opacity:0;width:0;height:0}
+.ws_tgl span{position:absolute;inset:0;background:var(--bd2);border-radius:20px;transition:.2s}
+.ws_tgl span::before{content:"";position:absolute;left:2px;top:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:.2s}
+.ws_tgl input:checked+span{background:#2F6B66}.ws_tgl input:checked+span::before{transform:translateX(14px)}
+.ws_srcs{display:flex;flex-direction:column;gap:5px;max-height:260px;overflow-y:auto}
+.ws_src{display:flex;align-items:center;gap:9px;font-size:13px;padding:4px 0}
+.ws_ext{font:700 10px var(--mono);color:var(--tx3);background:var(--bg);border:1px solid var(--bd2);border-radius:4px;padding:2px 5px;min-width:38px;text-align:center;flex-shrink:0}
+.ws_src_n{color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ws_ver{font:600 10px var(--sans);color:#C0820E;background:rgba(192,130,14,.12);border-radius:10px;padding:1px 7px;flex-shrink:0}
+.ws_ledger{display:flex;flex-direction:column;gap:2px}
+.ws_lrow{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px dashed var(--bd2)}
+.ws_lrow:first-child{border-top:none}
+.ws_ln{font:700 11px var(--mono);color:var(--tx3);min-width:18px}
+.ws_lbody{flex:1;min-width:0}
+.ws_la{font-weight:600;font-size:13.5px}
+.ws_ld{font-size:12px;color:var(--tx2);margin-top:2px}
+.ws_sk{background:linear-gradient(90deg,var(--bd2),var(--bd),var(--bd2));background-size:200% 100%;animation:wssh 1.2s infinite;border-radius:6px;height:14px}
+.ws_skbox{height:150px;border-radius:14px}
+@keyframes wssh{from{background-position:200% 0}to{background-position:-200% 0}}
 </style>
 </head>
 <body>
@@ -1167,6 +1224,7 @@ var CATS = [
   { id: 'skills',   l: 'Навыки' },
   { id: 'cli',      l: 'Инструменты' },
   { id: 'knowledge',l: 'Знания' },
+  { id: 'workspace',l: 'Workspace' },
   { id: 'agents',   l: 'Агенты' },
   { id: 'services', l: 'Сервисы' },
   { id: 'admin',    l: 'Профи', sep: true }
@@ -1200,6 +1258,7 @@ function rtabs() {
 
 function setc(id) {
   cur = id;
+  if (id === 'workspace') { _wsView = 'list'; _wsCur = null; }  // всегда входим на список
   document.body.setAttribute('data-mode', id === 'admin' ? 'pro' : 'all');
   _rescueFilterBar();
   _rescueHFFilterBar();
@@ -1307,6 +1366,7 @@ function renderGrid() {
   else if (cur === 'skills') renderSkillsShelf();
   else if (cur === 'cli') renderCLI();
   else if (cur === 'knowledge') renderKnowledge();
+  else if (cur === 'workspace') renderWorkspace();
   else if (cur === 'agents') renderAgents();
   else if (cur === 'services') renderServices();
   else if (cur === 'automations') renderAutomations();
@@ -4208,6 +4268,181 @@ function kpDoAsk(i){
     else msg.innerHTML='⚠ '+esc((out&&out.message)||'не удалось');
   }).catch(function(e){ if(msg)msg.innerHTML=(e&&e.message==='_timeout_')?'⏳ Долго, попробуй ещё раз.':('⚠ '+esc((e&&e.message)||'нет ответа')); });
 }
+// ============================================================================
+// Workspace — панель «кокпит» (контракт ws-v1 rev2, движок wz_workspace).
+// UI ТОЛЬКО рендерит то, что вернул движок; state/versions/pack не вычисляет.
+// Кнопки-действия (run_capability/organize/set_autopilot/undo) — disabled до ws-v1.1.
+// ============================================================================
+var _wsList=null, _wsView='list', _wsCur=null;
+function _wsParse(r){ var out=r&&r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output; if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}} return out; }
+function wsCall(op,params,timeoutMs){
+  var p=Object.assign({op:op},params||{});
+  return skBridge('etb_run_expert','etb_expert_result',{name:'wz_workspace',params:p},timeoutMs||30000).then(_wsParse);
+}
+var _WS_PRIV='<span class="ws_priv" title="Движок читает только имена файлов, содержимое не трогает">🔒 приватно: только имена файлов</span>';
+function renderWorkspace(){
+  var g=document.getElementById('grid'); if(!g)return;
+  if(_wsView==='cockpit'&&_wsCur){ wsRenderCockpit(_wsCur); return; }
+  if(_wsList===null){
+    g.innerHTML=_loadingHTML('Загружаю воркспейсы…');
+    wsCall('list',{},20000).then(function(out){
+      _wsList=(out&&out.status==='success'&&out.workspaces)?out.workspaces:[];
+      if(cur==='workspace')renderWorkspace();
+    }).catch(function(){ _wsList=[]; if(cur==='workspace')renderWorkspace(); });
+    return;
+  }
+  var html='<div class="sect"><h2>Workspace</h2></div>'+
+    '<div class="ws_lead" style="grid-column:1/-1">Компьютер понимает, над чем ты работаешь, и настраивается под задачу. '+_WS_PRIV+'</div>'+
+    '<div class="mshelf">'+
+      '<div class="stile ws_new" style="--acc:#24544F" onclick="wsBuildModal()">'+
+        '<span class="st_chip">＋ Новый</span>'+
+        '<div class="st_title">Собрать из папки…</div>'+
+        '<div class="st_fact">Выбери папку — Extella поймёт проект по именам файлов и предложит режим работы.</div>'+
+        '<div class="st_foot"><span style="font-size:11px;color:var(--tx3)">~30–45с · локально</span></div></div>'+
+      _wsList.map(wsListCard).join('')+
+    '</div>';
+  g.innerHTML=html;
+  _mountTabFilter('Поиск воркспейса…');
+}
+function wsListCard(w){
+  var bl=w.blockers|0;
+  var badge=bl>0?'<span class="ws_bl crit">'+bl+' блокер'+(bl>1?'ов':'')+'</span>':'<span class="ws_bl ok">готов к работе</span>';
+  return '<div class="stile" style="--acc:#2F6B66;cursor:pointer" onclick="wsOpen(\''+esc(w.ws_id)+'\')">'+
+    '<span class="st_chip">🖥 Workspace</span>'+
+    '<div class="st_title">'+esc(w.name||'Без имени')+'</div>'+
+    '<div class="st_fact" style="font-family:var(--mono,monospace);font-size:11px;color:var(--tx3)">'+esc((w.folder||'').replace(/^.*\//,'…/'))+'</div>'+
+    '<div class="st_foot" style="justify-content:space-between;align-items:center">'+badge+
+      '<span style="font-size:11px;color:var(--tx3)">'+esc(wsAgo(w.updated))+'</span></div></div>';
+}
+function wsAgo(iso){ if(!iso)return''; try{var d=(Date.now()-new Date(iso).getTime())/1000; if(d<90)return'только что'; if(d<5400)return Math.round(d/60)+' мин назад'; if(d<172800)return Math.round(d/3600)+' ч назад'; return Math.round(d/86400)+' дн назад';}catch(e){return'';} }
+function wsOpen(ws_id){
+  var g=document.getElementById('grid'); if(g)g.innerHTML=_loadingHTML('Открываю воркспейс…');
+  wsCall('get',{ws_id:ws_id},20000).then(function(out){
+    if(out&&out.status==='success'&&out.workspace){ _wsCur=out.workspace; _wsView='cockpit'; wsRenderCockpit(_wsCur); }
+    else { _wsView='list'; if(cur==='workspace')renderWorkspace(); }
+  }).catch(function(){ _wsView='list'; if(cur==='workspace')renderWorkspace(); });
+}
+function wsBack(){ _wsView='list'; _wsCur=null; renderWorkspace(); }
+function wsBuildModal(){
+  var old=document.getElementById('ws_ov'); if(old)old.remove();
+  var ov=document.createElement('div'); ov.id='ws_ov'; ov.style.cssText=_KPOV;
+  ov.innerHTML='<div style="'+_KPMODAL+'">'+
+    '<div style="font-family:var(--serif);font-size:20px;margin-bottom:4px">🖥 Новый воркспейс</div>'+
+    '<div style="color:var(--tx2);font-size:13px;line-height:1.5;margin-bottom:12px">Выбери папку проекта. Extella прочитает только ИМЕНА файлов (не содержимое) и поймёт, над чем ты работаешь. '+_WS_PRIV+'</div>'+
+    '<input id="ws_folder" placeholder="папка проекта" autocomplete="off" style="'+_KPINP+'"/>'+
+    '<div style="margin-top:8px"><button onclick="wsPickFolder()" style="'+_KPBTN+'">📁 Выбрать папку…</button></div>'+
+    '<div style="margin-top:14px;display:flex;gap:8px;align-items:center"><button class="st_btn" onclick="wsDoBuild(this)">Собрать воркспейс</button>'+
+    '<button onclick="var o=document.getElementById(\'ws_ov\');if(o)o.remove()" style="'+_KPBTN+'">Закрыть</button></div>'+
+    '<div id="ws_msg" style="font-size:13px;color:var(--tx2);line-height:1.5;margin-top:12px;min-height:18px"></div></div>';
+  document.body.appendChild(ov);
+}
+function wsPickFolder(){
+  var msg=document.getElementById('ws_msg'); if(msg)msg.innerHTML='📁 Открываю выбор папки…';
+  skBridge('etb_run_expert','etb_expert_result',{name:'wz_pick_path',params:{kind:'folder'}},180000).then(function(r){
+    var out=_wsParse(r);
+    if(out&&out.status==='ok'&&out.path){ var inp=document.getElementById('ws_folder'); if(inp)inp.value=out.path; if(msg)msg.innerHTML='✓ Папка выбрана.'; }
+    else if(msg)msg.innerHTML='Выбор отменён — можно вписать путь вручную.';
+  }).catch(function(){ if(msg)msg.innerHTML='Впиши путь вручную.'; });
+}
+// Первый build — без name (предложение). Стабильный ws_id даёт повторная сборка с name (wsRebuild).
+function wsDoBuild(btn,folderArg,nameArg){
+  var folder=folderArg||((document.getElementById('ws_folder')||{}).value||'').trim();
+  var msg=document.getElementById('ws_msg');
+  if(!folder){ if(msg)msg.innerHTML='⚠ Выбери папку проекта.'; return; }
+  if(btn)btn.disabled=true;
+  if(msg)msg.innerHTML='⏳ Читаю имена файлов и понимаю проект… (~30–45с)';
+  var g=document.getElementById('grid'); if(g&&_wsView!=='cockpit'){ g.innerHTML=wsSkeleton(); }
+  var params={folder:folder}; if(nameArg)params.name=nameArg;
+  wsCall('build',params,180000).then(function(out){
+    if(btn)btn.disabled=false;
+    if(out&&out.status==='success'&&out.workspace){
+      var o=document.getElementById('ws_ov'); if(o)o.remove();
+      _wsList=null; // список пересоберётся при возврате
+      _wsCur=out.workspace; _wsView='cockpit'; wsRenderCockpit(_wsCur);
+    } else {
+      var em=(out&&out.message)||(typeof out==='string'?out:'не удалось собрать');
+      if(msg)msg.innerHTML='⚠ '+esc(String(em).slice(0,300));
+      if(cur==='workspace'&&_wsView!=='cockpit'){ _wsList=_wsList||[]; renderWorkspace(); }
+    }
+  }).catch(function(e){
+    if(btn)btn.disabled=false;
+    var t=(e&&e.message==='_timeout_');
+    if(msg)msg.innerHTML=t?'▶ Сборка идёт на устройстве (долго). Загляни в раздел через минуту.':('⚠ '+esc((e&&e.message)||'нет ответа'));
+    if(cur==='workspace'&&_wsView!=='cockpit'){ _wsList=null; renderWorkspace(); }
+  });
+}
+// Пересборка уже открытого воркспейса — с подтверждённым именем => стабильный ws_id, журнал копится.
+function wsRebuild(){
+  if(!_wsCur)return;
+  wsDoBuild(null,_wsCur.folder,_wsCur.name);
+}
+function wsSkeleton(){
+  var sk='<div class="ws_sk"></div>';
+  return '<div class="ws_wrap" style="grid-column:1/-1">'+
+    '<div class="ws_hd"><div style="flex:1"><div class="ws_sk" style="width:40%;height:26px"></div><div class="ws_sk" style="width:70%;height:14px;margin-top:8px"></div></div></div>'+
+    '<div class="ws_cols">'+sk.replace('ws_sk','ws_sk ws_skbox')+sk.replace('ws_sk','ws_sk ws_skbox')+'</div>'+
+    '<div style="text-align:center;color:var(--tx3);font-size:12px;margin-top:14px">Понимаю проект по именам файлов…</div></div>';
+}
+function wsSev(s){ return s==='crit'?{i:'⛔',c:'crit'}:{i:'⚠️',c:'warn'}; }
+function wsRenderCockpit(w){
+  var g=document.getElementById('grid'); if(!g)return;
+  if(_cb)_cb.style.display='none';
+  var st=w.state||{}, gaps=st.gaps||[], ledger=w.ledger||[], sources=w.sources||[], versions=w.versions||[], pack=w.pack||{}, ap=w.autopilot||{};
+  var verFiles={}; versions.forEach(function(v){(v.files||[]).forEach(function(f){verFiles[f]=1;});});
+  var bl=(st.blockers|0);
+  // шапка
+  var html='<div class="ws_wrap" style="grid-column:1/-1">'+
+    '<div class="ws_hd">'+
+      '<button class="ws_bkbtn" onclick="wsBack()">‹ Все воркспейсы</button>'+
+      '<div style="display:flex;gap:8px;align-items:center">'+_WS_PRIV+
+        '<button class="ws_ghost" onclick="wsRebuild()" title="Пересобрать (обновит этот же воркспейс)">↻ Пересобрать</button></div>'+
+    '</div>'+
+    '<h1 class="ws_h1">'+esc(w.name||'Workspace')+'</h1>'+
+    '<div class="ws_understood">'+esc(w.understood||'')+'</div>'+
+    '<div class="ws_pills">'+
+      (bl>0?'<span class="ws_pill crit">⛔ '+bl+' блокер'+(bl>1?'ов':'')+'</span>':'<span class="ws_pill ok">✓ готов к работе</span>')+
+      '<span class="ws_pill">'+sources.length+' источник'+wsPlural(sources.length)+'</span>'+
+      (versions.length?'<span class="ws_pill">'+versions.length+' групп'+(versions.length>1?'ы':'а')+' версий</span>':'')+
+    '</div>';
+  // амбиентная строка (first_task)
+  if(st.first_task){
+    html+='<div class="ws_ambient"><div><span class="ws_amb_k">Предлагаю начать:</span> '+esc(st.first_task)+'</div>'+
+      '<button class="st_btn" disabled title="Скоро (ws-v1.1)">Давай →</button></div>';
+  }
+  html+='<div class="ws_cols">';
+  // Чего не хватает
+  html+='<div class="ws_card"><div class="ws_card_h">Состояние · чего не хватает</div>';
+  if(gaps.length){ html+=gaps.map(function(gp){ var sv=wsSev(gp.severity); return '<div class="ws_gap '+sv.c+'">'+
+    '<div class="ws_gap_t">'+sv.i+' '+esc(gp.title)+'</div>'+
+    (gp.why?'<div class="ws_gap_w">'+esc(gp.why)+'</div>':'')+
+    '<button class="ws_act" disabled title="Скоро (ws-v1.1)">Исправить</button></div>'; }).join(''); }
+  else { html+='<div class="ws_empty">Пробелов не найдено — всё на месте.</div>'; }
+  html+='</div>';
+  // Активный пак
+  html+='<div class="ws_card"><div class="ws_card_h">Активный режим</div>'+
+    '<div class="ws_pack_n">'+esc(pack.name||'—')+(pack.installed===false?' <span class="ws_soon">предложение</span>':'')+'</div>'+
+    '<div class="ws_caps">'+((pack.capabilities||[]).map(function(c){return '<span class="ws_cap">'+esc(c)+'</span>';}).join('')||'<span class="ws_empty">нет способностей</span>')+'</div>'+
+    '<div class="ws_apilot"><label class="ws_tgl"><input type="checkbox" '+(ap.enabled?'checked':'')+' disabled><span></span></label>'+
+      '<div><b>Автопилот</b> <span class="ws_soon">скоро</span><div class="ws_rules">'+((ap.rules||[]).map(function(r){return '• '+esc(r);}).join('<br>')||'дежурные правила появятся после запуска')+'</div></div></div>'+
+  '</div>';
+  html+='</div>'; // ws_cols
+  // Источники
+  html+='<div class="ws_card"><div class="ws_card_h">Источники <span class="ws_dim">(только ссылки, не копии)</span></div><div class="ws_srcs">';
+  if(sources.length){ html+=sources.map(function(s){ var ver=verFiles[s.name]?' <span class="ws_ver">версии</span>':''; return '<div class="ws_src"><span class="ws_ext">'+esc((s.ext||'?').toUpperCase())+'</span><span class="ws_src_n">'+esc(s.name)+'</span>'+ver+'</div>'; }).join(''); }
+  else html+='<div class="ws_empty">нет источников</div>';
+  html+='</div></div>';
+  // Что Extella сделала (журнал)
+  html+='<div class="ws_card"><div class="ws_card_h">Что Extella сделала</div>';
+  if(ledger.length){ html+='<div class="ws_ledger">'+ledger.slice().reverse().map(function(l){ return '<div class="ws_lrow"><span class="ws_ln">'+(l.n|0)+'</span>'+
+    '<div class="ws_lbody"><div class="ws_la">'+esc(l.action||'')+'</div>'+(l.detail?'<div class="ws_ld">'+esc(l.detail)+'</div>':'')+'</div>'+
+    (l.undo&&l.undo!=='none'?'<button class="ws_undo" disabled title="Скоро (ws-v1.1)">↩</button>':'')+'</div>'; }).join('')+'</div>'; }
+  else html+='<div class="ws_empty">журнал пуст</div>';
+  html+='</div>';
+  html+='</div>'; // ws_wrap
+  g.innerHTML=html;
+}
+function wsPlural(n){ n=n%100; if(n>=11&&n<=14)return'ов'; n=n%10; if(n===1)return''; if(n>=2&&n<=4)return'а'; return'ов'; }
+
 var BUILDER_ID='agent_FLYxB0v1qIY2phB5beVP5';
 function skRunAgent(msg){return skBridge('etb_run_agent','etb_agent_result',{message:msg,agent_id:BUILDER_ID});}
 function openCliAdd(){
