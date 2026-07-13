@@ -2709,16 +2709,9 @@ function _dtEsc(s){ return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); 
 // Правый клик по ярлыку → контекстное меню (Открыть/Кабинет/Запустить · Удалить),
 // как в ОС. Управление живёт на столе — отдельные вкладки «Мои»/«Автоматизации» не нужны.
 var _dtReg=[];
-// Открыть Визард: сперва проверяем, поднят ли его мост (:8765). Если Визард не установлен —
-// показываем подсказку с командой установки, а не даём приложению закрыть раздел плагинов.
-function _openWizard(){
-  var done=false; function go(){ if(done)return; done=true; notify('open','extella_adoption_wizard'); }
-  var to=setTimeout(function(){ if(!done){ done=true; _wizardMissing(); } }, 1800);
-  try{
-    fetch('http://127.0.0.1:8765/x/health').then(function(r){ clearTimeout(to); if(done)return; done=true; if(r&&r.ok) notify('open','extella_adoption_wizard'); else _wizardMissing(); })
-      .catch(function(){ clearTimeout(to); if(done)return; done=true; _wizardMissing(); });
-  }catch(_){ clearTimeout(to); _wizardMissing(); }
-}
+// Открыть Визард. Прямой вызов опенера приложения (мост :8765 регистрируется установщиком).
+// fetch-проверку :8765 из тулбара делать нельзя — тулбар на https, а мост на http (mixed content блокируется).
+function _openWizard(){ notify('open','extella_adoption_wizard'); }
 function _wizardMissing(){
   var en=(LANG==='en');
   var mac='bash <(curl -fsSL https://raw.githubusercontent.com/AnvarBakiyev/extella-marketplace-pack/main/toolbar/install-all.sh)';
