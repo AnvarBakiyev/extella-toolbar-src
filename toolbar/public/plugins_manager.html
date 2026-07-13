@@ -556,6 +556,18 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);
 .ws_sk{background:linear-gradient(90deg,var(--bd2),var(--bd),var(--bd2));background-size:200% 100%;animation:wssh 1.2s infinite;border-radius:6px;height:14px}
 .ws_skbox{height:150px;border-radius:14px}
 @keyframes wssh{from{background-position:200% 0}to{background-position:-200% 0}}
+/* Workspace-раздел на Рабочем столе */
+.dt_hero_ws{margin-bottom:12px !important;box-shadow:0 8px 24px rgba(36,84,79,.28) !important}
+.dt_ws_strip{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 22px}
+.dt_ws_card{display:inline-flex;align-items:center;gap:7px;background:var(--s1);border:1px solid var(--bd2);border-radius:10px;padding:8px 13px;font:600 13px var(--sans);color:var(--tx);cursor:pointer;transition:border-color .12s,transform .1s}
+.dt_ws_card:hover{border-color:#2F6B66;transform:translateY(-1px)}
+.dt_ws_dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dt_ws_dot.crit{background:#B23A2E}.dt_ws_dot.ok{background:#2E7D5B}
+.dt_ws_nm{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dt_ws_add{color:#2F6B66;border-style:dashed}
+.dt_ws_more{color:var(--tx3)}
+.dt_ws_empty{background:var(--s1);border:1px dashed var(--bd2);border-radius:10px;padding:12px 15px;margin:0 0 22px;font-size:13px;color:var(--tx2);cursor:pointer;line-height:1.5}
+.dt_ws_empty:hover{border-color:#2F6B66;color:var(--tx)}
 </style>
 </head>
 <body>
@@ -2875,6 +2887,12 @@ function renderDesktop(){
     skKvGet('_mkt_cli_catalog').then(function(r){ _cliReg=(r&&r.items)?r.items:[]; _cliLoaded=true; if(cur==='desktop')renderDesktop(); })
       .catch(function(){ _cliReg=_cliReg||[]; _cliLoaded=true; if(cur==='desktop')renderDesktop(); });
   }
+  // Воркспейсы для раздела на столе (ленивая подгрузка через движок, кэш).
+  if (_wsDeskList === undefined) {
+    _wsDeskList = null;
+    wsCall('list', {}, 20000).then(function(out){ _wsDeskList = (out&&out.status==='success'&&out.workspaces)?out.workspaces:[]; if(cur==='desktop')renderDesktop(); })
+      .catch(function(){ _wsDeskList = []; if(cur==='desktop')renderDesktop(); });
+  }
   // Единый набор контурных значков (как в чипах/карточках Эллы): категория → #ic-*.
   // acc берём из палитры категорий (BIZ_ACC), чтобы цвета совпадали с витриной.
   function _dtAcc(cat){ return (typeof BIZ_ACC!=='undefined'&&BIZ_ACC[cat])||'#2F6B66'; }
@@ -2992,6 +3010,7 @@ function renderDesktop(){
         '</div>'+
         '<div class="dt_hero_go">Открыть →</div>'+
       '</div>'+
+      _dtWorkspaceSection()+
       '<div class="dt_sect">Программы на рабочем столе'+(icons.length?' · '+icons.length:'')+'</div>'+
       (icons.length?'<div class="dt_hint">Клик — открыть или запустить. Правый клик — кабинет, настройки, удалить.</div>':'')+
       (icons.length
@@ -4273,7 +4292,40 @@ function kpDoAsk(i){
 // UI ТОЛЬКО рендерит то, что вернул движок; state/versions/pack не вычисляет.
 // Кнопки-действия (run_capability/organize/set_autopilot/undo) — disabled до ws-v1.1.
 // ============================================================================
-var _wsList=null, _wsView='list', _wsCur=null;
+var _wsList=null, _wsView='list', _wsCur=null, _wsDeskList;
+// Открыть воркспейс с Рабочего стола: переключаемся во вкладку и грузим кокпит.
+function wsOpenFromDesk(ws_id){ setc('workspace'); _wsView='cockpit'; wsOpen(ws_id); }
+function wsDeskBuild(){ setc('workspace'); wsBuildModal(); }
+// Раздел «Workspace» на Рабочем столе: геройский баннер + твои воркспейсы.
+function _dtWorkspaceSection(){
+  var ico='<svg class="lico"><use href="#ic-home"/></svg>';
+  var band='<div class="dt_hero dt_hero_ws" style="background:linear-gradient(100deg,#24544F,#2F6B66 55%,#3C7d76)" onclick="setc(\'workspace\')">'+
+    '<div class="dt_hero_ic">'+ico+'</div>'+
+    '<div class="dt_hero_tx">'+
+      '<div class="dt_hero_ttl">Workspace · компьютер под задачу</div>'+
+      '<div class="dt_hero_sub">Extella понимает проект по папке (только имена файлов) и настраивает режим работы под него — пак, пробелы, автопилот.</div>'+
+    '</div>'+
+    '<div class="dt_hero_go">Открыть →</div>'+
+  '</div>';
+  var list=_wsDeskList;
+  var strip='';
+  if(list===null||list===undefined){ strip=''; }               // грузится — тихо
+  else if(!list.length){
+    strip='<div class="dt_ws_empty" onclick="wsDeskBuild()">＋ Собрать первый воркспейс из папки — компьютер поймёт проект и настроится под него.</div>';
+  } else {
+    var cards=list.slice(0,6).map(function(w){
+      var bl=w.blockers|0;
+      var dot=bl>0?'<span class="dt_ws_dot crit" title="'+bl+' блокер"></span>':'<span class="dt_ws_dot ok" title="готов"></span>';
+      return '<button class="dt_ws_card" onclick="wsOpenFromDesk(\''+_dtEsc(w.ws_id)+'\')" title="'+esc(w.name||'')+'">'+
+        dot+'<span class="dt_ws_nm">'+esc(w.name||'Без имени')+'</span></button>';
+    }).join('');
+    strip='<div class="dt_ws_strip">'+cards+
+      '<button class="dt_ws_card dt_ws_add" onclick="wsDeskBuild()" title="Собрать новый воркспейс">＋ Собрать</button>'+
+      (list.length>6?'<button class="dt_ws_card dt_ws_more" onclick="setc(\'workspace\')">ещё '+(list.length-6)+' →</button>':'')+
+    '</div>';
+  }
+  return band+strip;
+}
 function _wsParse(r){ var out=r&&r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output; if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}} return out; }
 function wsCall(op,params,timeoutMs){
   var p=Object.assign({op:op},params||{});
