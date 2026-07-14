@@ -3267,6 +3267,12 @@ function renderDesktop(){
         '<div class="dt_hero_go">Открыть →</div>'+
       '</div>'+
       _dtWorkspaceSection()+
+      '<div class="dt_updrow" style="display:flex;align-items:center;gap:12px;margin:2px 0 18px;padding:12px 16px;border:1px solid var(--bd);border-radius:14px;background:var(--s1)">'+
+        '<span style="font-size:20px;line-height:1">⟳</span>'+
+        '<div style="flex:1;min-width:0"><b style="font-size:13.5px">Обновить Extella</b>'+
+          '<div style="font-size:11.5px;color:var(--tx2);margin-top:1px">Скачать из GitHub свежий интерфейс и все обновления способностей</div></div>'+
+        '<button class="cmdgo" onclick="selfUpdate()" style="padding:8px 18px;flex:0 0 auto">⟳ Обновить</button>'+
+      '</div>'+
       '<div class="dt_sect">Программы на рабочем столе'+(icons.length?' · '+icons.length:'')+'</div>'+
       (icons.length?'<div class="dt_hint">Клик — открыть или запустить. Правый клик — кабинет, настройки, удалить.</div>':'')+
       (icons.length
