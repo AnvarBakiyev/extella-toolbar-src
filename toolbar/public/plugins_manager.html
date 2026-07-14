@@ -1291,7 +1291,6 @@ var CATS = [
   { id: 'desktop',  l: 'Рабочий стол' },
   { id: 'home',     l: 'Витрина' },
   { id: 'programs', l: 'Программы' },
-  { id: 'apps',     l: 'Приложения' },
   { id: 'models',   l: 'Модели' },
   { id: 'skills',   l: 'Навыки' },
   { id: 'cli',      l: 'Инструменты' },
@@ -1434,7 +1433,6 @@ function renderGrid() {
   if (cur === 'desktop') renderDesktop();
   else if (cur === 'home') renderHome();
   else if (cur === 'programs') renderPrograms();
-  else if (cur === 'apps') renderApps();
   else if (cur === 'models') renderModels();
   else if (cur === 'skills') renderSkillsShelf();
   else if (cur === 'cli') renderCLI();
@@ -1616,14 +1614,14 @@ function modelsSpotlight(){
 // ===== Приложения (Pinokio-совместимые рецепты, детерминированная установка) =====
 var _appReg=null, _appFetched=false;
 function _ensureApps(){ if(_appFetched)return; _appFetched=true;
-  _loadSharded('_mkt_apps').then(function(r){ if(r&&r.shelf){_appReg=r; if(cur==='apps')renderApps();} }).catch(function(){ _appReg={shelf:[]}; if(cur==='apps')renderApps(); }); }
+  _loadSharded('_mkt_apps').then(function(r){ if(r&&r.shelf){_appReg=r; if(cur==='programs')renderPrograms();} }).catch(function(){ _appReg={shelf:[]}; if(cur==='programs')renderPrograms(); }); }
 var _appInstalled=null;   // Set установленных app_id (и их basename)
 function _refreshInstalledApps(){
   skBridge('etb_run_expert','etb_expert_result',{name:'app_list',params:{}},30000).then(function(r){
     var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
     if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}
     var s={}; ((out&&out.apps)||[]).forEach(function(a){ s[a.app_id]=1; var b=a.app_id.split('/').pop(); s[b]=1; });
-    _appInstalled=s; if(cur==='apps')renderApps();   // перерисовать с отметками
+    _appInstalled=s; if(cur==='programs')renderPrograms();   // перерисовать с отметками
   }).catch(function(){ _appInstalled={}; });
 }
 function _curOS(){
@@ -1632,10 +1630,10 @@ function _curOS(){
 }
 function _appOk(a){ var c=a.compat; return !c||!c.platforms||c.platforms.indexOf(_curOS())>=0; }
 var _appOnlyCompat=true;
-function _appToggleCompat(){ _appOnlyCompat=!_appOnlyCompat; renderApps(); }
-function renderApps(){
-  var g=document.getElementById('grid'); if(!g)return;
-  if(!_appReg){ g.innerHTML=_loadingHTML('Загружаю приложения…'); _ensureApps(); return; }
+function _appToggleCompat(){ _appOnlyCompat=!_appOnlyCompat; renderPrograms(); }
+// Секция приложений (Pinokio-репо с GitHub) — встраивается в раздел «Программы». Возвращает HTML-строку.
+function _appsSectionHTML(){
+  if(!_appReg){ _ensureApps(); return '<div class="sect" style="grid-column:1/-1"><h2>Приложения с GitHub</h2></div><div class="ws_lead" style="grid-column:1/-1">Загружаю приложения…</div>'; }
   if(_appInstalled===null){ _appInstalled={}; _refreshInstalledApps(); }
   var all=_appReg.shelf||[];
   var osName={darwin:'macOS',win32:'Windows',linux:'Linux'}[_curOS()]||_curOS();
@@ -1646,11 +1644,10 @@ function renderApps(){
       '<a href="#" onclick="_appToggleCompat();return false" style="color:var(--acc,#7A3FA0)">показать все</a>')
      :('Показаны все, включая несовместимые с '+esc(osName)+'. '+
       '<a href="#" onclick="_appToggleCompat();return false" style="color:var(--acc,#7A3FA0)">только для моей системы</a>'))+'</div>'):'';
-  var html='<div class="sect"><h2>Приложения</h2></div>'+
-    '<div class="ws_lead" style="grid-column:1/-1">Проверенные ИИ-приложения (рецепты Pinokio, MIT). Клик → Extella ставит по рецепту на твоём компьютере, детерминированно, без ИИ-агента. 🔒 работают локально.</div>'+
+  return '<div class="sect" style="grid-column:1/-1"><h2>Приложения с GitHub</h2></div>'+
+    '<div class="ws_lead" style="grid-column:1/-1">ИИ-приложения (рецепты Pinokio, MIT). Клик → Extella ставит по рецепту на твоём компьютере, детерминированно, без ИИ-агента. 🔒 работают локально.</div>'+
     toggle+
     '<div class="mshelf">'+apps.map(appCard).join('')+'</div>';
-  g.innerHTML=html; _mountTabFilter('Поиск приложения…');
 }
 function appCard(a){
   var repo=(a.run&&a.run.repo)||''; var stars=a.stars?('★'+a.stars):'';
@@ -1751,7 +1748,7 @@ function appDoUninstall(btn,id){
     if(out&&out.status==='success'){
       if(_appInstalled)delete _appInstalled[id];
       var o=document.getElementById('app_ov'); if(o)o.remove();
-      if(cur==='apps')renderApps();
+      if(cur==='programs')renderPrograms();
     } else { if(btn)btn.disabled=false; if(msg)msg.innerHTML='⚠ '+esc((out&&out.message)||'не удалось'); }
   }).catch(function(e){ if(btn)btn.disabled=false; if(msg)msg.innerHTML='⚠ '+esc((e&&e.message)||'нет ответа'); });
 }
@@ -2557,7 +2554,13 @@ function progToolsHTML(){
 
 // Программы, the plugin catalogue (business aisles + grid). The raw GitHub
 // search lives here too, but only in «Для профи»; «Для всех» stays curated.
-function renderPrograms() {
+// Раздел «Программы» = живой каталог с GitHub + встроенная секция «Приложения» (Pinokio-репо).
+function renderPrograms(){
+  _renderProgramsCore();
+  var g=document.getElementById('grid'); if(!g)return;
+  try{ g.insertAdjacentHTML('beforeend', _appsSectionHTML()); }catch(e){}
+}
+function _renderProgramsCore() {
   // Always rescue filter_bar before any g.innerHTML wipe. The element lives
   // inside #grid when Other is expanded; innerHTML replacement destroys it.
   _rescueFilterBar();
