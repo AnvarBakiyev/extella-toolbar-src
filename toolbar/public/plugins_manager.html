@@ -4876,7 +4876,8 @@ function wsRenderCockpitV3(w){
     var ts=tasks.filter(function(t){return (t.status||'todo')===c[0];});
     return '<div class="wcol"><div class="wcolh">'+c[1]+'</div>'+(ts.map(function(t){
       var via=t.kind==='capability'?'<span class="wvia cap">способность</span>':(t.kind==='question'?'<span class="wvia you">вопрос</span>':'<span class="wvia you">за тобой</span>');
-      return '<div class="wtask">'+via+'<br>'+esc(t.title||'')+'</div>';
+      var done=(t.status!=='done')?'<button title="Отметить готовой" onclick="wsxSetTask(\''+_dtEsc(t.id||'')+'\',\'done\')" style="float:right;border:1px solid var(--wline2,#ccc);background:transparent;color:var(--wgood,#2C8768);border-radius:6px;width:22px;height:22px;cursor:pointer;font-size:12px;line-height:1;padding:0">✓</button>':'';
+      return '<div class="wtask">'+done+via+'<br>'+esc(t.title||'')+'</div>';
     }).join('')||'<div class="wempty">—</div>')+'</div>';
   }).join('')+'</div>'; }
   else html+='<div class="wempty">Задач пока нет.</div>';
@@ -4906,7 +4907,9 @@ function wsRenderCockpitV3(w){
   // автопилот
   html+='<div class="wcard"><span class="wct">Автопилот</span>'+
     '<div style="display:flex;align-items:center;gap:12px"><label class="wtgl"><input type="checkbox" '+(ap.enabled?'checked':'')+' onchange="wsSetAutopilot(\''+wid+'\',this.checked)"><span></span></label>'+
-    '<div><b>'+(ap.enabled?'Включён':'Выключен')+'</b><div class="wu">'+((ap.rules||[]).map(esc).join(' · ')||'сам ведёт план: делает мои задачи, останавливается на вопросах к тебе')+'</div></div></div></div>';
+    '<div style="flex:1"><b>'+(ap.enabled?'Включён':'Выключен')+'</b><div class="wu">'+((ap.rules||[]).map(esc).join(' · ')||'сам ведёт план: делает мои задачи, останавливается на вопросах к тебе')+'</div></div>'+
+    (ap.enabled?'<button class="wbtn sm" onclick="wsxRunAutopilot(\''+wid+'\',this)">▶ Запустить</button>':'')+
+    '</div><div class="wu" style="margin-top:8px;font-size:11px">Тоггл включает режим. «Запустить» — воркспейс сам делает следующие задачи, пока не упрётся в вопрос к тебе.</div></div>';
   // открытые вопросы также тут (для полноты)
   if(openQ)html+='<div class="wsh"><span class="wt">Вопросы</span><span class="wcnt w">'+openQ+'</span></div><div class="wqs">'+questions.map(wsxQuestion).join('')+'</div>';
   html+='</section>';
@@ -4946,12 +4949,39 @@ function wsxChat(form,wid){
   if(!v)return false; if(inp)inp.value='';
   wsToast('Отправляю: '+esc(v));
   wsCall('run_capability',{ws_id:_wsCur.ws_id,capability:v},90000).then(function(out){
+    // движок может ВЕРНУТЬ ВОПРОС (не знает факта) → он лёг в инбокс; перечитываем и ведём к «Обзору»
+    if(out&&out.clarify){
+      wsToast('Воркспейс уточняет: '+esc(out.question||out.need||'нужен ответ')+' — ответь в «Обзоре»','ok');
+      wsCall('get',{ws_id:_wsCur.ws_id},20000).then(function(r){ if(r&&r.workspace){_wsCur=r.workspace; wsRenderWs(_wsCur); var t=document.getElementById('wt-over'); if(t)t.checked=true;} });
+      return;
+    }
     if(out&&(out.note||out.queued||out.kind)){
-      wsToast('✓ '+esc(out.note||'готово')+(out.advanced?' · закрыл «'+esc(out.advanced)+'»':''),'ok');
+      wsToast('✓ '+esc(out.note||'готово')+(out.advanced?' · закрыл «'+esc(out.advanced)+'»':'')+(out.task_next?' · дальше: '+esc(out.task_next):''),'ok');
       wsCall('get',{ws_id:_wsCur.ws_id},20000).then(function(r){ if(r&&r.workspace){_wsCur=r.workspace; wsRenderWs(_wsCur);} });
     } else wsToast('⚠ '+esc((out&&out.message)||'не удалось'),'err');
   }).catch(function(e){ wsToast('⚠ '+esc((e&&e.message)||'ошибка'),'err'); });
   return false;
+}
+function wsxSetTask(taskId,val){
+  if(!taskId){ wsToast('нет id задачи'); return; }
+  wsToast('Отмечаю…');
+  wsCall('set_task',{ws_id:_wsCur.ws_id,key:taskId,value:val},60000).then(function(out){
+    if(out&&out.workspace){ _wsCur=out.workspace; wsRenderWs(_wsCur);
+      wsToast('✓ Обновил задачу'+(out.task_next?' · дальше: '+esc(out.task_next):''),'ok'); }
+    else wsToast('⚠ '+esc((out&&out.message)||'не удалось'),'err');
+  }).catch(function(e){ wsToast('⚠ '+esc((e&&e.message)||'ошибка'),'err'); });
+}
+function wsxRunAutopilot(wid,btn){
+  if(btn)btn.disabled=true; wsToast('Запускаю автопилот — воркспейс делает следующие задачи…');
+  skBridge('etb_run_expert','etb_expert_result',{name:'wz_ws_autopilot_run',params:{ws_id:_wsCur.ws_id}},300000).then(function(r){
+    var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
+    if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}
+    if(btn)btn.disabled=false;
+    if(out&&out.status==='success'){
+      wsToast('✓ '+esc(out.message||'Автопилот отработал'),'ok');
+      wsCall('get',{ws_id:_wsCur.ws_id},20000).then(function(g){ if(g&&g.workspace){_wsCur=g.workspace; wsRenderWs(_wsCur);} });
+    } else wsToast('⚠ '+esc((out&&out.message)||'не удалось запустить автопилот'),'err');
+  }).catch(function(e){ if(btn)btn.disabled=false; wsToast('▶ Автопилот идёт в фоне — обнови через минуту','ok'); });
 }
 function wsRenderCockpit(w){
   var g=document.getElementById('grid'); if(!g)return;
