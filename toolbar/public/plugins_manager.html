@@ -499,6 +499,133 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);
 .dock_chip:hover{border-color:var(--a);color:var(--a)}
 
 @keyframes fiu{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+
+/* ===== Workspace (кокпит) ===== */
+.ws_lead{font-size:13.5px;color:var(--tx2);margin:2px 0 4px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ws_priv{display:inline-flex;align-items:center;gap:4px;font:600 11px var(--sans);color:#2F6B66;background:rgba(47,107,102,.1);border:1px solid rgba(47,107,102,.25);border-radius:20px;padding:2px 9px;white-space:nowrap}
+.ws_bl{font:600 11px var(--sans);border-radius:20px;padding:2px 9px}
+.ws_bl.crit{color:#B23A2E;background:rgba(178,58,46,.1)}
+.ws_bl.ok{color:#2E7D5B;background:rgba(46,125,91,.1)}
+.ws_new{cursor:pointer}
+.ws_wrap{animation:fiu .25s ease;max-width:100%}
+.ws_hd{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.ws_bkbtn,.ws_ghost{background:transparent;border:1px solid var(--bd2);color:var(--tx2);border-radius:6px;padding:5px 11px;font:600 12px var(--sans);cursor:pointer}
+.ws_bkbtn:hover,.ws_ghost:hover{border-color:var(--a);color:var(--a)}
+.ws_h1{font-family:var(--serif);font-size:clamp(22px,3vw,30px);letter-spacing:-.01em;margin:0 0 4px;color:var(--tx)}
+.ws_understood{font-size:15px;color:var(--tx2);max-width:66ch;line-height:1.5}
+.ws_pills{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px}
+.ws_pill{font:600 12px var(--sans);border:1px solid var(--bd2);color:var(--tx2);border-radius:20px;padding:3px 11px}
+.ws_pill.crit{color:#B23A2E;border-color:rgba(178,58,46,.4);background:rgba(178,58,46,.08)}
+.ws_pill.ok{color:#2E7D5B;border-color:rgba(46,125,91,.4);background:rgba(46,125,91,.08)}
+.ws_ambient{display:flex;justify-content:space-between;align-items:center;gap:12px;background:linear-gradient(90deg,rgba(192,130,14,.1),transparent);border:1px solid var(--bd2);border-left:3px solid #C0820E;border-radius:10px;padding:13px 16px;margin:16px 0 6px;flex-wrap:wrap}
+.ws_amb_k{font:600 12px var(--sans);color:#C0820E;text-transform:uppercase;letter-spacing:.04em}
+.ws_cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
+@media(max-width:720px){.ws_cols{grid-template-columns:1fr}}
+.ws_card{background:var(--s1);border:1px solid var(--bd);border-radius:14px;padding:16px 18px;min-width:0}
+.ws_card_h{font:700 12px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);margin-bottom:12px}
+.ws_dim{font-weight:400;text-transform:none;letter-spacing:0}
+.ws_gap{border:1px solid var(--bd2);border-left:3px solid var(--bd2);border-radius:9px;padding:10px 12px;margin-bottom:8px}
+.ws_gap.crit{border-left-color:#B23A2E}.ws_gap.warn{border-left-color:#B8791C}
+.ws_gap_t{font-weight:650;font-size:14px}
+.ws_gap_w{font-size:12.5px;color:var(--tx2);margin:3px 0 8px;line-height:1.45}
+.ws_act,.ws_undo{font:600 12px var(--sans);border:1px solid var(--bd2);background:transparent;color:var(--tx3);border-radius:6px;padding:4px 10px;cursor:not-allowed;opacity:.7}
+.ws_empty{font-size:13px;color:var(--tx3);padding:6px 0}
+.ws_pack_n{font-family:var(--serif);font-size:18px;color:var(--tx);margin-bottom:8px}
+.ws_soon{font:600 10px var(--sans);color:#B8791C;background:rgba(184,121,28,.12);border-radius:10px;padding:1px 7px;vertical-align:middle}
+.ws_caps{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.ws_cap{font:500 12px var(--sans);background:rgba(47,107,102,.1);color:#2F6B66;border-radius:6px;padding:3px 9px}
+.ws_apilot{display:flex;gap:10px;align-items:flex-start;border-top:1px dashed var(--bd2);padding-top:12px}
+.ws_rules{font-size:11.5px;color:var(--tx3);margin-top:4px;line-height:1.5}
+.ws_tgl{position:relative;display:inline-block;width:34px;height:20px;flex-shrink:0}
+.ws_tgl input{opacity:0;width:0;height:0}
+.ws_tgl span{position:absolute;inset:0;background:var(--bd2);border-radius:20px;transition:.2s}
+.ws_tgl span::before{content:"";position:absolute;left:2px;top:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:.2s}
+.ws_tgl input:checked+span{background:#2F6B66}.ws_tgl input:checked+span::before{transform:translateX(14px)}
+.ws_act.on{cursor:pointer;color:var(--a);border-color:color-mix(in srgb,var(--a) 45%,transparent);opacity:1}
+.ws_act.on:hover{background:color-mix(in srgb,var(--a) 10%,transparent)}
+.ws_on{font:600 11px var(--sans);color:#2E7D5B;background:rgba(46,125,91,.12);border-radius:10px;padding:1px 8px}
+.ws_actions{display:flex;gap:8px;margin:14px 0 2px;flex-wrap:wrap}
+.ws_abtn{font:600 13px var(--sans);border:1px solid var(--bd2);background:var(--s1);color:var(--tx);border-radius:9px;padding:7px 14px;cursor:pointer;transition:border-color .12s,transform .1s}
+.ws_abtn:hover{border-color:#2F6B66;transform:translateY(-1px)}
+.ws_abtn_undo{color:var(--tx2)}
+.ws_org_list{max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+.ws_org_grp{border:1px solid var(--bd2);border-radius:9px;padding:10px 12px}
+.ws_org_to{font:600 13px var(--sans);color:#2F6B66;margin-bottom:6px}
+.ws_org_f{font:500 12px var(--mono);color:var(--tx2);padding:2px 0}
+.ws_toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:100000;background:var(--tx);color:var(--paper);font:600 13px var(--sans);padding:10px 18px;border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.28);opacity:0;transition:opacity .25s;max-width:80vw;text-align:center}
+.ws_toast.ok{background:#2E7D5B;color:#fff}.ws_toast.err{background:#B23A2E;color:#fff}
+/* Курируемый воркспейс — контуры */
+.wsc_grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-top:18px}
+.wsc_card{position:relative;background:var(--s1);border:1px solid var(--bd);border-radius:15px;padding:18px 18px 14px;overflow:hidden}
+.wsc_bar{position:absolute;left:0;top:0;height:4px;width:100%;background:linear-gradient(90deg,var(--wa),color-mix(in srgb,var(--wa) 40%,transparent))}
+.wsc_nm{font-family:var(--serif);font-size:17px;font-weight:600;color:var(--tx);margin-top:4px}
+.wsc_und{font-size:12.5px;color:var(--tx2);line-height:1.45;margin:3px 0 6px}
+.wsc_sec{margin-top:11px}
+.wsc_lab{font:700 11px var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--tx3);display:flex;align-items:center;gap:6px}
+.wsc_sec.ok .wsc_lab{color:#2E7D5B}.wsc_sec.crit .wsc_lab{color:#B23A2E}.wsc_sec.next .wsc_lab{color:var(--a)}.wsc_sec.wait .wsc_lab{color:var(--tx2)}
+.wsc_n{font:700 10px var(--mono);background:var(--bg);border:1px solid var(--bd2);border-radius:9px;padding:0 6px;color:var(--tx3)}
+.wsc_list{margin:5px 0 0;padding:0 0 0 4px;list-style:none;display:flex;flex-direction:column;gap:4px}
+.wsc_list li{font-size:13px;line-height:1.4;color:var(--tx);padding-left:14px;position:relative}
+.wsc_list li::before{content:"";position:absolute;left:2px;top:7px;width:5px;height:5px;border-radius:50%;background:color-mix(in srgb,var(--wa) 65%,transparent)}
+.wsc_sec.crit .wsc_list li::before{background:#B23A2E}.wsc_sec.ok .wsc_list li::before{background:#2E7D5B}
+.wsc_recent{margin-top:12px;padding-top:10px;border-top:1px dashed var(--bd2);font-size:11.5px;color:var(--tx3);line-height:1.5}
+.wsc_rlab{font:700 10px var(--mono);text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);margin-right:4px}
+.wsc_ref{margin-top:8px;font-size:11px;color:var(--tx3);text-align:right}
+.ws_srcs{display:flex;flex-direction:column;gap:5px;max-height:260px;overflow-y:auto}
+.ws_src{display:flex;align-items:center;gap:9px;font-size:13px;padding:4px 0}
+.ws_ext{font:700 10px var(--mono);color:var(--tx3);background:var(--bg);border:1px solid var(--bd2);border-radius:4px;padding:2px 5px;min-width:38px;text-align:center;flex-shrink:0}
+.ws_src_n{color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ws_ver{font:600 10px var(--sans);color:#C0820E;background:rgba(192,130,14,.12);border-radius:10px;padding:1px 7px;flex-shrink:0}
+.ws_ledger{display:flex;flex-direction:column;gap:2px}
+.ws_lrow{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px dashed var(--bd2)}
+.ws_lrow:first-child{border-top:none}
+.ws_ln{font:700 11px var(--mono);color:var(--tx3);min-width:18px}
+.ws_lbody{flex:1;min-width:0}
+.ws_la{font-weight:600;font-size:13.5px}
+.ws_ld{font-size:12px;color:var(--tx2);margin-top:2px}
+.ws_sk{background:linear-gradient(90deg,var(--bd2),var(--bd),var(--bd2));background-size:200% 100%;animation:wssh 1.2s infinite;border-radius:6px;height:14px}
+.ws_skbox{height:150px;border-radius:14px}
+@keyframes wssh{from{background-position:200% 0}to{background-position:-200% 0}}
+/* Workspace — «вкусный» список воркспейсов */
+.wsl_wrap{grid-column:1/-1;animation:fiu .25s ease}
+.wsl_head{margin:2px 0 20px}
+.wsl_h1{font-family:var(--serif);font-size:clamp(24px,3.4vw,32px);letter-spacing:-.01em;margin:0 0 6px;color:var(--tx)}
+.wsl_intro{font-size:14.5px;color:var(--tx2);max-width:70ch;line-height:1.55;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.wsl_grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(248px,1fr));gap:16px}
+.wsl_err{grid-column:1/-1;background:rgba(178,58,46,.08);border:1px solid rgba(178,58,46,.35);color:#B23A2E;border-radius:11px;padding:11px 15px;font-size:13.5px;margin-bottom:14px}
+.wsl_card{position:relative;display:flex;flex-direction:column;text-align:left;gap:0;background:var(--s1);border:1px solid var(--bd);border-radius:16px;padding:18px 18px 16px;cursor:pointer;overflow:hidden;transition:transform .13s ease,box-shadow .16s ease,border-color .13s ease;font-family:var(--sans)}
+.wsl_card:hover{transform:translateY(-3px);border-color:var(--wa);box-shadow:0 14px 34px color-mix(in srgb,var(--wa) 22%,transparent)}
+.wsl_head_bar{position:absolute;left:0;top:0;height:4px;width:100%;background:linear-gradient(90deg,var(--wa),color-mix(in srgb,var(--wa) 45%,transparent))}
+.wsl_row{display:flex;align-items:center;justify-content:space-between;margin-top:4px}
+.wsl_ic{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--wa) 13%,transparent);border:1px solid color-mix(in srgb,var(--wa) 30%,transparent)}
+.wsl_ic .lico{width:21px;height:21px;color:var(--wa);stroke-width:1.7}
+.wsl_ago{font-size:11px;color:var(--tx3)}
+.wsl_nm{font-family:var(--serif);font-size:18px;line-height:1.25;color:var(--tx);margin:13px 0 3px;font-weight:600}
+.wsl_fold{font:500 11.5px var(--mono);color:var(--tx3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wsl_foot{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:12px;border-top:1px solid var(--bd)}
+.wsl_st{display:inline-flex;align-items:center;gap:6px;font:600 12px var(--sans)}
+.wsl_st.ok{color:#2E7D5B}.wsl_st.crit{color:#B23A2E}
+.wsl_dot{width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 0 3px color-mix(in srgb,currentColor 16%,transparent)}
+.wsl_go{font:600 12.5px var(--sans);color:var(--wa);opacity:0;transform:translateX(-4px);transition:opacity .14s,transform .14s}
+.wsl_card:hover .wsl_go{opacity:1;transform:translateX(0)}
+.wsl_new{align-items:flex-start;justify-content:center;border-style:dashed;border-color:var(--bd2);background:transparent;gap:6px}
+.wsl_new:hover{border-color:#2F6B66;transform:translateY(-3px);box-shadow:0 12px 28px rgba(47,107,102,.16)}
+.wsl_new_plus{font-size:26px;font-weight:300;color:#2F6B66;line-height:1}
+.wsl_new_t{font-family:var(--serif);font-size:17px;font-weight:600;color:var(--tx);margin-top:6px}
+.wsl_new_s{font-size:13px;color:var(--tx2);line-height:1.5}
+.wsl_new_m{font:500 11px var(--mono);color:var(--tx3);margin-top:6px}
+/* Workspace-раздел на Рабочем столе */
+.dt_hero_ws{margin-bottom:12px !important;box-shadow:0 8px 24px rgba(36,84,79,.28) !important}
+.dt_ws_strip{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 22px}
+.dt_ws_card{display:inline-flex;align-items:center;gap:7px;background:var(--s1);border:1px solid var(--bd2);border-radius:10px;padding:8px 13px;font:600 13px var(--sans);color:var(--tx);cursor:pointer;transition:border-color .12s,transform .1s}
+.dt_ws_card:hover{border-color:#2F6B66;transform:translateY(-1px)}
+.dt_ws_dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dt_ws_dot.crit{background:#B23A2E}.dt_ws_dot.ok{background:#2E7D5B}
+.dt_ws_nm{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dt_ws_add{color:#2F6B66;border-style:dashed}
+.dt_ws_more{color:var(--tx3)}
+.dt_ws_empty{background:var(--s1);border:1px dashed var(--bd2);border-radius:10px;padding:12px 15px;margin:0 0 22px;font-size:13px;color:var(--tx2);cursor:pointer;line-height:1.5}
+.dt_ws_empty:hover{border-color:#2F6B66;color:var(--tx)}
 </style>
 </head>
 <body>
@@ -1167,6 +1294,7 @@ var CATS = [
   { id: 'skills',   l: 'Навыки' },
   { id: 'cli',      l: 'Инструменты' },
   { id: 'knowledge',l: 'Знания' },
+  { id: 'workspace',l: 'Workspace' },
   { id: 'agents',   l: 'Агенты' },
   { id: 'services', l: 'Сервисы' },
   { id: 'admin',    l: 'Профи', sep: true }
@@ -1200,6 +1328,7 @@ function rtabs() {
 
 function setc(id) {
   cur = id;
+  if (id === 'workspace') { _wsView = 'list'; _wsCur = null; }  // всегда входим на список
   document.body.setAttribute('data-mode', id === 'admin' ? 'pro' : 'all');
   _rescueFilterBar();
   _rescueHFFilterBar();
@@ -1307,6 +1436,7 @@ function renderGrid() {
   else if (cur === 'skills') renderSkillsShelf();
   else if (cur === 'cli') renderCLI();
   else if (cur === 'knowledge') renderKnowledge();
+  else if (cur === 'workspace') renderWorkspace();
   else if (cur === 'agents') renderAgents();
   else if (cur === 'services') renderServices();
   else if (cur === 'automations') renderAutomations();
@@ -2815,6 +2945,12 @@ function renderDesktop(){
     skKvGet('_mkt_cli_catalog').then(function(r){ _cliReg=(r&&r.items)?r.items:[]; _cliLoaded=true; if(cur==='desktop')renderDesktop(); })
       .catch(function(){ _cliReg=_cliReg||[]; _cliLoaded=true; if(cur==='desktop')renderDesktop(); });
   }
+  // Воркспейсы для раздела на столе (ленивая подгрузка через движок, кэш).
+  if (_wsDeskList === undefined) {
+    _wsDeskList = null;
+    wsCall('list', {}, 20000).then(function(out){ _wsDeskList = (out&&out.workspaces)?out.workspaces:[]; if(cur==='desktop')renderDesktop(); })
+      .catch(function(){ _wsDeskList = []; if(cur==='desktop')renderDesktop(); });
+  }
   // Единый набор контурных значков (как в чипах/карточках Эллы): категория → #ic-*.
   // acc берём из палитры категорий (BIZ_ACC), чтобы цвета совпадали с витриной.
   function _dtAcc(cat){ return (typeof BIZ_ACC!=='undefined'&&BIZ_ACC[cat])||'#2F6B66'; }
@@ -2832,6 +2968,7 @@ function renderDesktop(){
   }
   // Осмысленный значок по названию (варьирует и «читается»), потом по типу, потом по категории.
   var _DT_KW=[
+    [/пилот|copilot|второй пилот|глаза и руки|desktop copilot/, 'bot'],
     [/competitor|конкурент|intelligence|разведк|мониторинг/, 'target'],
     [/travel|поездк|тур|лиды|агентств|путешеств/, 'travel'],
     [/визард|wizard|мастер|внедрен/, 'wand'],
@@ -2932,6 +3069,7 @@ function renderDesktop(){
         '</div>'+
         '<div class="dt_hero_go">Открыть →</div>'+
       '</div>'+
+      _dtWorkspaceSection()+
       '<div class="dt_sect">Программы на рабочем столе'+(icons.length?' · '+icons.length:'')+'</div>'+
       (icons.length?'<div class="dt_hint">Клик — открыть или запустить. Правый клик — кабинет, настройки, удалить.</div>':'')+
       (icons.length
@@ -4208,6 +4346,392 @@ function kpDoAsk(i){
     else msg.innerHTML='⚠ '+esc((out&&out.message)||'не удалось');
   }).catch(function(e){ if(msg)msg.innerHTML=(e&&e.message==='_timeout_')?'⏳ Долго, попробуй ещё раз.':('⚠ '+esc((e&&e.message)||'нет ответа')); });
 }
+// ============================================================================
+// Workspace — панель «кокпит» (контракт ws-v1 rev2, движок wz_workspace).
+// UI ТОЛЬКО рендерит то, что вернул движок; state/versions/pack не вычисляет.
+// Кнопки-действия (run_capability/organize/set_autopilot/undo) — disabled до ws-v1.1.
+// ============================================================================
+var _wsList=null, _wsView='list', _wsCur=null, _wsDeskList;
+// Открыть воркспейс с Рабочего стола: переключаемся во вкладку и грузим кокпит.
+function wsOpenFromDesk(ws_id){ setc('workspace'); _wsView='cockpit'; wsOpen(ws_id); }
+function wsDeskBuild(){ setc('workspace'); wsBuildModal(); }
+// Раздел «Workspace» на Рабочем столе: геройский баннер + твои воркспейсы.
+function _dtWorkspaceSection(){
+  var ico='<svg class="lico"><use href="#ic-home"/></svg>';
+  var band='<div class="dt_hero dt_hero_ws" style="background:linear-gradient(100deg,#24544F,#2F6B66 55%,#3C7d76)" onclick="setc(\'workspace\')">'+
+    '<div class="dt_hero_ic">'+ico+'</div>'+
+    '<div class="dt_hero_tx">'+
+      '<div class="dt_hero_ttl">Workspace · компьютер под задачу</div>'+
+      '<div class="dt_hero_sub">Extella понимает проект по папке (только имена файлов) и настраивает режим работы под него — пак, пробелы, автопилот.</div>'+
+    '</div>'+
+    '<div class="dt_hero_go">Открыть →</div>'+
+  '</div>';
+  var list=_wsDeskList;
+  var strip='';
+  if(list===null||list===undefined){ strip=''; }               // грузится — тихо
+  else if(!list.length){
+    strip='<div class="dt_ws_empty" onclick="wsDeskBuild()">＋ Собрать первый воркспейс из папки — компьютер поймёт проект и настроится под него.</div>';
+  } else {
+    var cards=list.slice(0,6).map(function(w){
+      var bl=w.blockers|0;
+      var dot=bl>0?'<span class="dt_ws_dot crit" title="'+bl+' блокер"></span>':'<span class="dt_ws_dot ok" title="готов"></span>';
+      return '<button class="dt_ws_card" onclick="wsOpenFromDesk(\''+_dtEsc(w.ws_id)+'\')" title="'+esc(w.name||'')+'">'+
+        dot+'<span class="dt_ws_nm">'+esc(w.name||'Без имени')+'</span></button>';
+    }).join('');
+    strip='<div class="dt_ws_strip">'+cards+
+      '<button class="dt_ws_card dt_ws_add" onclick="wsDeskBuild()" title="Собрать новый воркспейс">＋ Собрать</button>'+
+      (list.length>6?'<button class="dt_ws_card dt_ws_more" onclick="setc(\'workspace\')">ещё '+(list.length-6)+' →</button>':'')+
+    '</div>';
+  }
+  return band+strip;
+}
+function _wsParse(r){ var out=r&&r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output; if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}} return out; }
+function wsCall(op,params,timeoutMs){
+  var p=Object.assign({op:op},params||{});
+  return skBridge('etb_run_expert','etb_expert_result',{name:'wz_workspace',params:p},timeoutMs||30000).then(_wsParse);
+}
+var _WS_PRIV='<span class="ws_priv" title="Движок читает только имена файлов, содержимое не трогает">🔒 приватно: только имена файлов</span>';
+function renderWorkspace(){
+  var g=document.getElementById('grid'); if(!g)return;
+  if(_wsView==='cockpit'&&_wsCur){ wsRenderWs(_wsCur); return; }
+  if(_wsList===null){
+    g.innerHTML=_loadingHTML('Загружаю воркспейсы…');
+    wsCall('list',{},20000).then(function(out){
+      _wsList=(out&&out.workspaces)?out.workspaces:[];
+      if(cur==='workspace')renderWorkspace();
+    }).catch(function(){ _wsList=[]; if(cur==='workspace')renderWorkspace(); });
+    return;
+  }
+  var html='<div class="wsl_wrap">'+
+    '<div class="wsl_head">'+
+      '<div><h1 class="wsl_h1">Твои воркспейсы</h1>'+
+        '<div class="wsl_intro">Каждый — это отдельная рабочая среда: компьютер уже понял проект и настроился под него. Заходи и работай. '+_WS_PRIV+'</div></div>'+
+    '</div>'+
+    '<div class="wsl_grid">'+
+      '<button class="wsl_card wsl_new" onclick="wsBuildModal()">'+
+        '<span class="wsl_new_plus">＋</span>'+
+        '<span class="wsl_new_t">Собрать из папки…</span>'+
+        '<span class="wsl_new_s">Выбери папку — Extella поймёт проект по именам файлов и настроит режим работы.</span>'+
+        '<span class="wsl_new_m">~30–45с · локально · приватно</span>'+
+      '</button>'+
+      _wsList.map(wsListCard).join('')+
+    '</div></div>';
+  g.innerHTML=html;
+  _mountTabFilter('Поиск воркспейса…');
+}
+// Тёплый акцент на воркспейс — стабильный цвет из хеша ws_id (у каждого «своя комната»).
+function wsHue(id){ var h=0; id=String(id||''); for(var i=0;i<id.length;i++)h=(h*31+id.charCodeAt(i))%360; return h; }
+function wsBlWord(n){ n=n%100; if(n>=11&&n<=14)return'блокеров'; n=n%10; if(n===1)return'блокер'; if(n>=2&&n<=4)return'блокера'; return'блокеров'; }
+function wsListCard(w){
+  var hue=wsHue(w.ws_id), acc='hsl('+hue+',44%,42%)', soft='hsl('+hue+',44%,42%)';
+  var bl=w.blockers|0;
+  var status=bl>0
+    ? '<span class="wsl_st crit"><span class="wsl_dot"></span>'+bl+' '+wsBlWord(bl)+'</span>'
+    : '<span class="wsl_st ok"><span class="wsl_dot"></span>готов к работе</span>';
+  var curated=(w.kind==='curated');
+  var folder=(w.folder||'').replace(/\/+$/,'');
+  var short=curated?'курируемый · контуры':(folder.split('/').filter(Boolean).pop()||folder);
+  return '<button class="wsl_card" style="--wa:'+acc+'" onclick="wsOpen(\''+esc(w.ws_id)+'\')" title="'+esc(w.name||'')+(folder?' · '+esc(folder):'')+'">'+
+    '<span class="wsl_head_bar"></span>'+
+    '<span class="wsl_row"><span class="wsl_ic"><svg class="lico"><use href="#ic-'+(curated?'target':'home')+'"/></svg></span>'+
+      '<span class="wsl_ago">'+esc(wsAgo(w.updated))+'</span></span>'+
+    '<span class="wsl_nm">'+esc(w.name||'Без имени')+'</span>'+
+    '<span class="wsl_fold" title="'+esc(folder)+'">'+esc(short)+'</span>'+
+    '<span class="wsl_foot">'+status+'<span class="wsl_go">Открыть →</span></span>'+
+  '</button>';
+}
+function wsAgo(iso){ if(!iso)return''; try{var d=(Date.now()-new Date(iso).getTime())/1000; if(d<90)return'только что'; if(d<5400)return Math.round(d/60)+' мин назад'; if(d<172800)return Math.round(d/3600)+' ч назад'; return Math.round(d/86400)+' дн назад';}catch(e){return'';} }
+function wsOpen(ws_id){
+  var g=document.getElementById('grid'); if(g)g.innerHTML=_loadingHTML('Открываю воркспейс…');
+  wsCall('get',{ws_id:ws_id},30000).then(function(out){
+    if(out&&out.workspace){ _wsCur=out.workspace; _wsView='cockpit'; wsRenderWs(_wsCur); return; }
+    _wsView='list';
+    var why=(out&&out.message)||(typeof out==='string'?('движок вернул текст: '+String(out).slice(0,160)):'движок не вернул workspace');
+    wsListError(why);
+  }).catch(function(e){
+    _wsView='list';
+    wsListError((e&&e.message==='_timeout_')?'долго отвечает (таймаут)':((e&&e.message)||'нет ответа от моста'));
+  });
+}
+function wsListError(why){
+  renderWorkspace();
+  var g=document.getElementById('grid'); if(!g)return;
+  var b=document.createElement('div'); b.className='wsl_err';
+  b.innerHTML='⚠ Не удалось открыть воркспейс: '+esc(why);
+  var w=g.querySelector('.wsl_wrap')||g; w.insertBefore(b, w.firstChild);
+}
+function wsBack(){ _wsView='list'; _wsCur=null; renderWorkspace(); }
+function wsBuildModal(){
+  var old=document.getElementById('ws_ov'); if(old)old.remove();
+  var ov=document.createElement('div'); ov.id='ws_ov'; ov.style.cssText=_KPOV;
+  ov.innerHTML='<div style="'+_KPMODAL+'">'+
+    '<div style="font-family:var(--serif);font-size:20px;margin-bottom:4px">🖥 Новый воркспейс</div>'+
+    '<div style="color:var(--tx2);font-size:13px;line-height:1.5;margin-bottom:12px">Выбери папку проекта. Extella прочитает только ИМЕНА файлов (не содержимое) и поймёт, над чем ты работаешь. '+_WS_PRIV+'</div>'+
+    '<input id="ws_folder" placeholder="папка проекта" autocomplete="off" style="'+_KPINP+'"/>'+
+    '<div style="margin-top:8px"><button onclick="wsPickFolder()" style="'+_KPBTN+'">📁 Выбрать папку…</button></div>'+
+    '<div style="margin-top:14px;display:flex;gap:8px;align-items:center"><button class="st_btn" onclick="wsDoBuild(this)">Собрать воркспейс</button>'+
+    '<button onclick="var o=document.getElementById(\'ws_ov\');if(o)o.remove()" style="'+_KPBTN+'">Закрыть</button></div>'+
+    '<div id="ws_msg" style="font-size:13px;color:var(--tx2);line-height:1.5;margin-top:12px;min-height:18px"></div></div>';
+  document.body.appendChild(ov);
+}
+function wsPickFolder(){
+  var msg=document.getElementById('ws_msg'); if(msg)msg.innerHTML='📁 Открываю выбор папки…';
+  skBridge('etb_run_expert','etb_expert_result',{name:'wz_pick_path',params:{kind:'folder'}},180000).then(function(r){
+    var out=_wsParse(r);
+    if(out&&out.status==='ok'&&out.path){ var inp=document.getElementById('ws_folder'); if(inp)inp.value=out.path; if(msg)msg.innerHTML='✓ Папка выбрана.'; }
+    else if(msg)msg.innerHTML='Выбор отменён — можно вписать путь вручную.';
+  }).catch(function(){ if(msg)msg.innerHTML='Впиши путь вручную.'; });
+}
+// Первый build — без name (предложение). Стабильный ws_id даёт повторная сборка с name (wsRebuild).
+function wsDoBuild(btn,folderArg,nameArg){
+  var folder=folderArg||((document.getElementById('ws_folder')||{}).value||'').trim();
+  var msg=document.getElementById('ws_msg');
+  if(!folder){ if(msg)msg.innerHTML='⚠ Выбери папку проекта.'; return; }
+  if(btn)btn.disabled=true;
+  if(msg)msg.innerHTML='⏳ Читаю имена файлов и понимаю проект… (~30–45с)';
+  var g=document.getElementById('grid'); if(g&&_wsView!=='cockpit'){ g.innerHTML=wsSkeleton(); }
+  var params={folder:folder}; if(nameArg)params.name=nameArg;
+  var startMs=Date.now();
+  wsCall('build',params,180000).then(function(out){
+    // Сразу вернулся готовый воркспейс (синхронно)
+    if(out&&out.workspace){ if(btn)btn.disabled=false; wsBuildDone(out.workspace); return; }
+    // build — ОТЛОЖЕННАЯ задача (движок возвращает task_id, мост не поллит).
+    // Явную ошибку (не про deferred) показываем; иначе поллим синхронный list, пока не появится воркспейс по папке.
+    var s=(typeof out==='string')?out:((out&&out.message)||'');
+    if(s && !/defer|task_id|500|timeout/i.test(s) && !(out&&out.task_id)){
+      if(btn)btn.disabled=false; if(msg)msg.innerHTML='⚠ '+esc(String(s).slice(0,300)); return;
+    }
+    wsBuildPoll(folder, startMs, msg, btn, 0);
+  }).catch(function(e){
+    // таймаут моста ≠ провал — сборка идёт, поллим список
+    wsBuildPoll(folder, startMs, msg, btn, 0);
+  });
+}
+// Готово: закрыть модалку, открыть кокпит.
+function wsBuildDone(ws){
+  var o=document.getElementById('ws_ov'); if(o)o.remove();
+  _wsList=null; _wsCur=ws; _wsView='cockpit'; wsRenderWs(ws);
+}
+// Поллинг синхронного list, пока воркспейс по папке не появится (свежий, updated≥старта).
+function wsBuildPoll(folder, startMs, msg, btn, tries){
+  if(msg)msg.innerHTML='⏳ Собираю воркспейс… компьютер понимает проект (~30–45с)';
+  if(tries>24){ // ~75с
+    if(btn)btn.disabled=false;
+    if(msg)msg.innerHTML='▶ Сборка идёт дольше обычного. Загляни в список через минуту.';
+    _wsList=null; if(cur==='workspace'&&_wsView!=='cockpit')renderWorkspace(); return;
+  }
+  var norm=folder.replace(/\/+$/,'');
+  setTimeout(function(){
+    wsCall('list',{},20000).then(function(out){
+      var wss=(out&&out.workspaces)||[];
+      var m=wss.filter(function(w){
+        if((w.folder||'').replace(/\/+$/,'')!==norm) return false;
+        var t=w.updated?new Date(w.updated).getTime():0;
+        return t>=startMs-8000; // именно свежесобранный (а не старый по этой же папке)
+      })[0];
+      if(m){ if(btn)btn.disabled=false; var o=document.getElementById('ws_ov'); if(o)o.remove(); wsOpen(m.ws_id); return; }
+      wsBuildPoll(folder, startMs, msg, btn, tries+1);
+    }).catch(function(){ wsBuildPoll(folder, startMs, msg, btn, tries+1); });
+  }, 3000);
+}
+// Пересборка уже открытого воркспейса — с подтверждённым именем => стабильный ws_id, журнал копится.
+function wsRebuild(){
+  if(!_wsCur)return;
+  wsDoBuild(null,_wsCur.folder,_wsCur.name);
+}
+function wsSkeleton(){
+  var sk='<div class="ws_sk"></div>';
+  return '<div class="ws_wrap" style="grid-column:1/-1">'+
+    '<div class="ws_hd"><div style="flex:1"><div class="ws_sk" style="width:40%;height:26px"></div><div class="ws_sk" style="width:70%;height:14px;margin-top:8px"></div></div></div>'+
+    '<div class="ws_cols">'+sk.replace('ws_sk','ws_sk ws_skbox')+sk.replace('ws_sk','ws_sk ws_skbox')+'</div>'+
+    '<div style="text-align:center;color:var(--tx3);font-size:12px;margin-top:14px">Понимаю проект по именам файлов…</div></div>';
+}
+function wsSev(s){ return s==='crit'?{i:'⛔',c:'crit'}:{i:'⚠️',c:'warn'}; }
+// Диспетчер по типу воркспейса: curated → кокпит контуров, иначе → folder-кокпит.
+function wsRenderWs(w){ if(w&&w.kind==='curated') wsRenderCurated(w); else wsRenderCockpit(w); }
+function wsRenderCockpit(w){
+  var g=document.getElementById('grid'); if(!g)return;
+  try{ var _cbar=document.querySelector('.cmdbar'); if(_cbar)_cbar.style.display='none'; }catch(e){}
+  var st=w.state||{}, gaps=st.gaps||[], ledger=w.ledger||[], sources=w.sources||[], versions=w.versions||[], pack=w.pack||{}, ap=w.autopilot||{};
+  var wid=_dtEsc(w.ws_id||''), hasMoves=!!(w.moves&&w.moves.length);
+  var verFiles={}; versions.forEach(function(v){(v.files||[]).forEach(function(f){verFiles[f]=1;});});
+  var bl=(st.blockers|0);
+  // шапка
+  var html='<div class="ws_wrap" style="grid-column:1/-1">'+
+    '<div class="ws_hd">'+
+      '<button class="ws_bkbtn" onclick="wsBack()">‹ Все воркспейсы</button>'+
+      '<div style="display:flex;gap:8px;align-items:center">'+_WS_PRIV+
+        '<button class="ws_ghost" onclick="wsRebuild()" title="Пересобрать (обновит этот же воркспейс)">↻ Пересобрать</button></div>'+
+    '</div>'+
+    '<h1 class="ws_h1">'+esc(w.name||'Workspace')+'</h1>'+
+    '<div class="ws_understood">'+esc(w.understood||'')+'</div>'+
+    '<div class="ws_pills">'+
+      (bl>0?'<span class="ws_pill crit">⛔ '+bl+' блокер'+(bl>1?'ов':'')+'</span>':'<span class="ws_pill ok">✓ готов к работе</span>')+
+      '<span class="ws_pill">'+sources.length+' источник'+wsPlural(sources.length)+'</span>'+
+      (versions.length?'<span class="ws_pill">'+versions.length+' групп'+(versions.length>1?'ы':'а')+' версий</span>':'')+
+    '</div>';
+  // амбиентная строка (first_task)
+  if(st.first_task){
+    html+='<div class="ws_ambient"><div><span class="ws_amb_k">Предлагаю начать:</span> '+esc(st.first_task)+'</div>'+
+      '<button class="st_btn" onclick="wsRunCap(\''+wid+'\',\''+_dtEsc(st.first_task)+'\')">Давай →</button></div>';
+  }
+  // Действия над воркспейсом: приборка + отмена уборки
+  html+='<div class="ws_actions">'+
+    '<button class="ws_abtn" onclick="wsOrganize(\''+wid+'\')" title="Разложить файлы по папкам (с превью и подтверждением)">🧹 Прибраться</button>'+
+    (hasMoves?'<button class="ws_abtn ws_abtn_undo" onclick="wsUndo(\''+wid+'\')" title="Вернуть файлы, как было">↩ Отменить уборку</button>':'')+
+  '</div>';
+  html+='<div class="ws_cols">';
+  // Чего не хватает
+  html+='<div class="ws_card"><div class="ws_card_h">Состояние · чего не хватает</div>';
+  if(gaps.length){ html+=gaps.map(function(gp){ var sv=wsSev(gp.severity); return '<div class="ws_gap '+sv.c+'">'+
+    '<div class="ws_gap_t">'+sv.i+' '+esc(gp.title)+'</div>'+
+    (gp.why?'<div class="ws_gap_w">'+esc(gp.why)+'</div>':'')+
+    '<button class="ws_act on" onclick="wsRunCap(\''+wid+'\',\''+_dtEsc(gp.title)+'\')">Исправить</button></div>'; }).join(''); }
+  else { html+='<div class="ws_empty">Пробелов не найдено — всё на месте.</div>'; }
+  html+='</div>';
+  // Активный пак
+  html+='<div class="ws_card"><div class="ws_card_h">Активный режим</div>'+
+    '<div class="ws_pack_n">'+esc(pack.name||'—')+(pack.installed===false?' <span class="ws_soon">предложение</span>':'')+'</div>'+
+    '<div class="ws_caps">'+((pack.capabilities||[]).map(function(c){return '<span class="ws_cap">'+esc(c)+'</span>';}).join('')||'<span class="ws_empty">нет способностей</span>')+'</div>'+
+    '<div class="ws_apilot"><label class="ws_tgl"><input type="checkbox" '+(ap.enabled?'checked':'')+' onchange="wsSetAutopilot(\''+wid+'\',this.checked)"><span></span></label>'+
+      '<div><b>Автопилот</b> '+(ap.enabled?'<span class="ws_on">включён</span>':'')+'<div class="ws_rules">'+((ap.rules||[]).map(function(r){return '• '+esc(r);}).join('<br>')||'дежурные правила появятся после запуска')+'</div></div></div>'+
+  '</div>';
+  html+='</div>'; // ws_cols
+  // Источники
+  html+='<div class="ws_card"><div class="ws_card_h">Источники <span class="ws_dim">(только ссылки, не копии)</span></div><div class="ws_srcs">';
+  if(sources.length){ html+=sources.map(function(s){ var ver=verFiles[s.name]?' <span class="ws_ver">версии</span>':''; return '<div class="ws_src"><span class="ws_ext">'+esc((s.ext||'?').toUpperCase())+'</span><span class="ws_src_n">'+esc(s.name)+'</span>'+ver+'</div>'; }).join(''); }
+  else html+='<div class="ws_empty">нет источников</div>';
+  html+='</div></div>';
+  // Что Extella сделала (журнал)
+  html+='<div class="ws_card"><div class="ws_card_h">Что Extella сделала</div>';
+  if(ledger.length){ html+='<div class="ws_ledger">'+ledger.slice().reverse().map(function(l){ return '<div class="ws_lrow"><span class="ws_ln">'+(l.n|0)+'</span>'+
+    '<div class="ws_lbody"><div class="ws_la">'+esc(l.action||'')+'</div>'+(l.detail?'<div class="ws_ld">'+esc(l.detail)+'</div>':'')+'</div>'+
+    '</div>'; }).join('')+'</div>'; }
+  else html+='<div class="ws_empty">журнал пуст</div>';
+  html+='</div>';
+  html+='</div>'; // ws_wrap
+  g.innerHTML=html;
+}
+// Кокпит КУРИРУЕМОГО воркспейса (ws-v1.2): контуры × {done,next,blockers,waiting} + recent + refreshed.
+function wsRenderCurated(w){
+  var g=document.getElementById('grid'); if(!g)return;
+  try{ var _cbar=document.querySelector('.cmdbar'); if(_cbar)_cbar.style.display='none'; }catch(e){}
+  var wid=_dtEsc(w.ws_id||''), contours=w.contours||[];
+  var LAB=[['done','Сделано','ok'],['next','Дальше','next'],['blockers','Блокеры','crit'],['waiting','Ждёт тебя','wait']];
+  var totBl=0; contours.forEach(function(c){ totBl+=((c.state||{}).blockers||[]).length; });
+  var html='<div class="ws_wrap" style="grid-column:1/-1">'+
+    '<div class="ws_hd">'+
+      '<button class="ws_bkbtn" onclick="wsBack()">‹ Все воркспейсы</button>'+
+      '<div style="display:flex;gap:8px;align-items:center">'+_WS_PRIV+
+        '<button class="ws_ghost" id="ws_refbtn" onclick="wsRefreshCurated(\''+wid+'\')" title="Собрать свежую активность (git/файлы) по каждому контуру">↻ Обновить</button></div>'+
+    '</div>'+
+    '<h1 class="ws_h1">'+esc(w.name||'Workspace')+'</h1>'+
+    '<div class="ws_understood">'+esc(w.understood||'')+'</div>'+
+    '<div class="ws_pills">'+
+      (totBl>0?'<span class="ws_pill crit">⛔ '+totBl+' блокер'+(totBl>1?'ов':'')+'</span>':'<span class="ws_pill ok">✓ без блокеров</span>')+
+      '<span class="ws_pill">'+contours.length+' контур'+wsPlural(contours.length)+'</span>'+
+    '</div>'+
+    '<div class="wsc_grid">';
+  contours.forEach(function(c){
+    var st=c.state||{}, hue=wsHue(c.key||c.name||''), acc='hsl('+hue+',42%,42%)';
+    html+='<div class="wsc_card" style="--wa:'+acc+'"><div class="wsc_bar"></div>'+
+      '<div class="wsc_nm">'+esc(c.name||'')+'</div>'+
+      (c.understood?'<div class="wsc_und">'+esc(c.understood)+'</div>':'');
+    LAB.forEach(function(l){ var arr=st[l[0]]||[]; if(!arr.length) return;
+      html+='<div class="wsc_sec '+l[2]+'"><div class="wsc_lab">'+l[1]+' <span class="wsc_n">'+arr.length+'</span></div>'+
+        '<ul class="wsc_list">'+arr.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul></div>';
+    });
+    if((st.recent||[]).length){ html+='<div class="wsc_recent"><span class="wsc_rlab">Недавно</span> '+esc((st.recent||[]).slice(0,4).join(' · '))+'</div>'; }
+    html+='<div class="wsc_ref">обновлено '+esc(wsAgo(c.refreshed)||'—')+'</div></div>';
+  });
+  html+='</div></div>';
+  g.innerHTML=html;
+}
+// «↻ Обновить»: локальный сборщик активности (Popen через эксперт-лаунчер) → перечитать get.
+function wsRefreshCurated(ws_id){
+  var b=document.getElementById('ws_refbtn'); if(b){ b.disabled=true; b.textContent='↻ Обновляю…'; }
+  wsToast('Собираю свежую активность из git/файлов…');
+  var before=(_wsCur&&_wsCur.contours&&_wsCur.contours[0]&&_wsCur.contours[0].refreshed)||'';
+  skBridge('etb_run_expert','etb_expert_result',{name:'wz_ws_refresh',params:{ws_id:ws_id}},120000)
+    .then(function(){ wsRefreshPoll(ws_id, before, 0); })
+    .catch(function(){ wsRefreshPoll(ws_id, before, 0); });  // deferred/timeout — всё равно поллим get
+}
+function wsRefreshPoll(ws_id, before, tries){
+  var b=document.getElementById('ws_refbtn');
+  if(tries>16){ if(b){ b.disabled=false; b.textContent='↻ Обновить'; } wsToast('Обновление идёт дольше обычного — попробуй ещё раз через минуту.'); return; }
+  setTimeout(function(){
+    wsCall('get',{ws_id:ws_id},20000).then(function(out){
+      var w=out&&out.workspace;
+      var now=(w&&w.contours&&w.contours[0]&&w.contours[0].refreshed)||'';
+      if(w&&now&&now!==before){ _wsCur=w; wsRenderCurated(w); wsToast('✓ Активность обновлена','ok'); return; }
+      wsRefreshPoll(ws_id, before, tries+1);
+    }).catch(function(){ wsRefreshPoll(ws_id, before, tries+1); });
+  }, 3000);
+}
+function wsPlural(n){ n=n%100; if(n>=11&&n<=14)return'ов'; n=n%10; if(n===1)return''; if(n>=2&&n<=4)return'а'; return'ов'; }
+// --- Действия кокпита (контракт ws-v1.1) ---
+function wsToast(msg,kind){
+  var t=document.getElementById('ws_toast'); if(!t){ t=document.createElement('div'); t.id='ws_toast'; document.body.appendChild(t); }
+  t.className='ws_toast'+(kind?(' '+kind):''); t.innerHTML=msg; t.style.opacity='1';
+  clearTimeout(t._h); t._h=setTimeout(function(){ t.style.opacity='0'; },3200);
+}
+function wsSetAutopilot(ws_id,enabled){
+  wsToast(enabled?'Включаю автопилот…':'Выключаю автопилот…');
+  wsCall('set_autopilot',{ws_id:ws_id,enabled:enabled},60000).then(function(out){
+    if(out&&out.workspace){ _wsCur=out.workspace; wsRenderWs(_wsCur); wsToast(enabled?'✓ Автопилот включён':'Автопилот выключен','ok'); }
+    else wsToast('⚠ Не удалось: '+esc((out&&out.message)||'нет ответа'),'err');
+  }).catch(function(e){ wsToast('⚠ '+esc((e&&e.message)||'ошибка'),'err'); });
+}
+function wsRunCap(ws_id,cap){
+  wsToast('Отправляю задачу движку…');
+  wsCall('run_capability',{ws_id:ws_id,capability:cap},60000).then(function(out){
+    if(out&&out.queued) wsToast('✓ Принято: '+esc(out.note||'скоро выполню'),'ok');
+    else wsToast('⚠ '+esc((out&&out.message)||'не удалось'),'err');
+  }).catch(function(e){ wsToast('⚠ '+esc((e&&e.message)||'ошибка'),'err'); });
+}
+function wsOrganize(ws_id){
+  wsToast('Смотрю, что можно разложить…');
+  wsCall('organize',{ws_id:ws_id,apply:false},60000).then(function(out){
+    if(out&&out.status==='error'){ wsToast('⚠ '+esc(out.message||'не удалось')+' — нажми «↻ Пересобрать» вверху','err'); return; }
+    if(!out||!out.preview||!(out.moves&&out.moves.length)){ wsToast('Раскладывать нечего — всё уже на местах.'); return; }
+    wsOrganizeModal(ws_id,out);
+  }).catch(function(e){ wsToast('⚠ '+esc((e&&e.message)||'ошибка'),'err'); });
+}
+function wsOrganizeModal(ws_id,prev){
+  var old=document.getElementById('ws_org_ov'); if(old)old.remove();
+  var moves=prev.moves||[], byF={};
+  moves.forEach(function(m){ (byF[m.to_folder]=byF[m.to_folder]||[]).push(m.file); });
+  var rows=Object.keys(byF).map(function(f){ return '<div class="ws_org_grp"><div class="ws_org_to">📁 '+esc(f)+'</div>'+
+    byF[f].map(function(fn){return '<div class="ws_org_f">'+esc(fn)+'</div>';}).join('')+'</div>'; }).join('');
+  var ov=document.createElement('div'); ov.id='ws_org_ov'; ov.style.cssText=_KPOV;
+  ov.innerHTML='<div style="'+_KPMODAL+'">'+
+    '<div style="font-family:var(--serif);font-size:20px;margin-bottom:4px">🧹 Прибраться</div>'+
+    '<div style="color:var(--tx2);font-size:13px;line-height:1.5;margin-bottom:12px">Перенесу <b>'+moves.length+'</b> файл'+wsPlural(moves.length)+' в папки. Только перемещение (не удаление), потом можно отменить.</div>'+
+    '<div class="ws_org_list">'+rows+'</div>'+
+    '<div style="margin-top:14px;display:flex;gap:8px;align-items:center"><button class="st_btn" onclick="wsOrganizeApply(\''+_dtEsc(ws_id)+'\',this)">Разложить '+moves.length+'</button>'+
+    '<button onclick="var o=document.getElementById(\'ws_org_ov\');if(o)o.remove()" style="'+_KPBTN+'">Отмена</button></div>'+
+    '<div id="ws_org_msg" style="font-size:13px;color:var(--tx2);margin-top:10px;min-height:16px"></div></div>';
+  document.body.appendChild(ov);
+}
+function wsOrganizeApply(ws_id,btn){
+  var msg=document.getElementById('ws_org_msg'); if(btn)btn.disabled=true;
+  if(msg)msg.innerHTML='⏳ Раскладываю файлы…';
+  wsCall('organize',{ws_id:ws_id,apply:true},120000).then(function(out){
+    if(out&&out.status==='error'){ if(btn)btn.disabled=false; if(msg)msg.innerHTML='⚠ '+esc(out.message||'не удалось'); return; }
+    var o=document.getElementById('ws_org_ov'); if(o)o.remove();
+    if(out&&out.workspace){ _wsCur=out.workspace; wsRenderWs(_wsCur); }
+    wsToast('✓ Разложено файлов: '+((out&&out.moved)||0)+'. Можно отменить.','ok');
+  }).catch(function(e){ if(btn)btn.disabled=false; if(msg)msg.innerHTML='⚠ '+esc((e&&e.message)||'ошибка'); });
+}
+function wsUndo(ws_id){
+  wsToast('Отменяю уборку…');
+  wsCall('undo',{ws_id:ws_id},60000).then(function(out){
+    if(out&&out.nothing){ wsToast('Отменять нечего.'); return; }
+    if(out&&out.workspace){ _wsCur=out.workspace; wsRenderWs(_wsCur); }
+    wsToast('✓ Возвращено файлов: '+((out&&out.restored)||0),'ok');
+  }).catch(function(e){ wsToast('⚠ '+esc((e&&e.message)||'ошибка'),'err'); });
+}
+
 var BUILDER_ID='agent_FLYxB0v1qIY2phB5beVP5';
 function skRunAgent(msg){return skBridge('etb_run_agent','etb_agent_result',{message:msg,agent_id:BUILDER_ID});}
 function openCliAdd(){
