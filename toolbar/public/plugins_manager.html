@@ -1708,9 +1708,11 @@ function appStartOpen(btn,id){
     var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
     if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}
     if(btn){ btn.disabled=false; if(!msg)btn.textContent='▶ Открыть'; }
-    if(out&&out.status==='success'&&out.url){ appEmbed(id,out.url,out.ready); }
-    else { say('⚠ '+esc((out&&out.message)||'не удалось запустить')); }
-  }).catch(function(e){ if(btn){btn.disabled=false; if(!msg)btn.textContent='▶ Открыть';} say('⚠ '+esc((e&&e.message)||'нет ответа')); });
+    // есть URL (success ИЛИ starting) → открываем; iframe сам подхватит, когда приложение догрузит модель
+    if(out&&out.url){ appEmbed(id,out.url,out.ready); }
+    else if(out&&out.status==='error'){ say('⚠ '+esc(out.message||'не запустилось')); }
+    else { say('⏳ '+esc((out&&out.message)||'Приложение грузит модель — нажми ▶ Открыть ещё раз через минуту.')); }
+  }).catch(function(e){ if(btn){btn.disabled=false; if(!msg)btn.textContent='▶ Открыть';} say('⏳ Запуск идёт (долго для ML-приложений). Загляни через минуту.'); });
 }
 function appEmbed(id,url,ready){
   var o=document.getElementById('app_ov'); if(o)o.remove();
@@ -1722,9 +1724,18 @@ function appEmbed(id,url,ready){
     (ready?'':'<span style="font-size:11px;color:#c0872a">поднимается…</span>')+
     '<span style="flex:1"></span>'+
     '<a href="'+esc(url)+'" target="_blank" style="font-size:12px;color:var(--tx3);text-decoration:none">В браузере ↗</a>'+
-    '<button onclick="var x=document.getElementById(\'app_run_ov\');if(x)x.remove()" style="'+_KPBTN+'">Закрыть</button></div>'+
-    '<iframe src="'+esc(url)+'" style="flex:1;border:0;width:100%"></iframe>';
+    '<button onclick="if(window._appReload){clearInterval(window._appReload);window._appReload=null;}var x=document.getElementById(\'app_run_ov\');if(x)x.remove()" style="'+_KPBTN+'">Закрыть</button></div>'+
+    '<iframe id="app_run_if" src="'+esc(url)+'" style="flex:1;border:0;width:100%"></iframe>';
   document.body.appendChild(ov);
+  // если приложение ещё поднимается — перезагружаем iframe, пока не подхватит (ML-модель грузится минуту+)
+  if(!ready){
+    var tries=0; if(window._appReload)clearInterval(window._appReload);
+    window._appReload=setInterval(function(){
+      tries++; var f=document.getElementById('app_run_if');
+      if(!f||tries>20){ clearInterval(window._appReload); window._appReload=null; var b=document.querySelector('#app_run_ov span[style*="c0872a"]'); if(b)b.textContent=''; return; }
+      f.src=url;  // повторная загрузка — как только сервер ответит, страница появится
+    },6000);
+  }
 }
 function renderModels() {
   var g = document.getElementById('grid'); if (!g) return;
