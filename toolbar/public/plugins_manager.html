@@ -1616,23 +1616,61 @@ function modelsSpotlight(){
 var _appReg=null, _appFetched=false;
 function _ensureApps(){ if(_appFetched)return; _appFetched=true;
   _loadSharded('_mkt_apps').then(function(r){ if(r&&r.shelf){_appReg=r; if(cur==='apps')renderApps();} }).catch(function(){ _appReg={shelf:[]}; if(cur==='apps')renderApps(); }); }
+var _appInstalled=null;   // Set установленных app_id (и их basename)
+function _refreshInstalledApps(){
+  skBridge('etb_run_expert','etb_expert_result',{name:'app_list',params:{}},30000).then(function(r){
+    var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
+    if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}
+    var s={}; ((out&&out.apps)||[]).forEach(function(a){ s[a.app_id]=1; var b=a.app_id.split('/').pop(); s[b]=1; });
+    _appInstalled=s; if(cur==='apps')renderApps();   // перерисовать с отметками
+  }).catch(function(){ _appInstalled={}; });
+}
+function _curOS(){
+  var p=(navigator.platform||'')+' '+(navigator.userAgent||'');
+  if(/Mac/i.test(p))return'darwin'; if(/Win/i.test(p))return'win32'; return'linux';
+}
+function _appOk(a){ var c=a.compat; return !c||!c.platforms||c.platforms.indexOf(_curOS())>=0; }
+var _appOnlyCompat=true;
+function _appToggleCompat(){ _appOnlyCompat=!_appOnlyCompat; renderApps(); }
 function renderApps(){
   var g=document.getElementById('grid'); if(!g)return;
   if(!_appReg){ g.innerHTML=_loadingHTML('Загружаю приложения…'); _ensureApps(); return; }
-  var apps=_appReg.shelf||[];
+  if(_appInstalled===null){ _appInstalled={}; _refreshInstalledApps(); }
+  var all=_appReg.shelf||[];
+  var osName={darwin:'macOS',win32:'Windows',linux:'Linux'}[_curOS()]||_curOS();
+  var hidden=all.filter(function(a){return !_appOk(a);}).length;
+  var apps=_appOnlyCompat?all.filter(_appOk):all;
+  var toggle=hidden?('<div class="ws_lead" style="grid-column:1/-1;font-size:12px;color:var(--tx3)">'+
+    (_appOnlyCompat?('Показаны совместимые с '+esc(osName)+'. Скрыто несовместимых: '+hidden+'. '+
+      '<a href="#" onclick="_appToggleCompat();return false" style="color:var(--acc,#7A3FA0)">показать все</a>')
+     :('Показаны все, включая несовместимые с '+esc(osName)+'. '+
+      '<a href="#" onclick="_appToggleCompat();return false" style="color:var(--acc,#7A3FA0)">только для моей системы</a>'))+'</div>'):'';
   var html='<div class="sect"><h2>Приложения</h2></div>'+
     '<div class="ws_lead" style="grid-column:1/-1">Проверенные ИИ-приложения (рецепты Pinokio, MIT). Клик → Extella ставит по рецепту на твоём компьютере, детерминированно, без ИИ-агента. 🔒 работают локально.</div>'+
+    toggle+
     '<div class="mshelf">'+apps.map(appCard).join('')+'</div>';
   g.innerHTML=html; _mountTabFilter('Поиск приложения…');
 }
 function appCard(a){
   var repo=(a.run&&a.run.repo)||''; var stars=a.stars?('★'+a.stars):'';
-  return '<div class="stile" style="--acc:#7A3FA0">'+
-    '<span class="st_chip">📦 '+esc(a.cat||'app')+(stars?' · '+stars:'')+'</span>'+
+  var inst=_appInstalled&&_appInstalled[a.id];
+  var ok=_appOk(a); var c=a.compat||{};
+  var badge=''; if(c.gpu==='nvidia')badge=' · 🖥 NVIDIA'; else if(c.gpu==='cpu')badge=' · 💻 лёгкое'; else if(c.gpu==='unknown')badge=' · ⚠ не проверено';
+  if(c.verified===true)badge+=' · ✓ проверено';
+  var btn;
+  if(!ok){
+    btn='<button class="st_btn" disabled title="'+esc(c.note||'несовместимо с вашей системой')+'" style="opacity:.5;cursor:not-allowed">🖥 не для вашей ОС</button>';
+  } else if(inst){
+    btn='<button class="st_btn" onclick="appStartOpen(this,\''+_dtEsc(a.id)+'\')">▶ Открыть</button>';
+  } else {
+    btn='<button class="st_btn" onclick="appInstall(\''+_dtEsc(repo)+'\',\''+_dtEsc(a.id)+'\',\''+_dtEsc((a.title||a.id))+'\')">Установить</button>';
+  }
+  return '<div class="stile" style="--acc:#7A3FA0'+(ok?'':';opacity:.62')+'">'+
+    '<span class="st_chip">📦 '+esc(a.cat||'app')+(stars?' · '+stars:'')+badge+(inst?' · ✓ установлено':'')+'</span>'+
     '<div class="st_title">'+esc(a.title||a.id)+'</div>'+
     '<div class="st_fact">'+esc(a.desc||'')+'</div>'+
     '<div class="st_foot" style="justify-content:space-between;align-items:center">'+
-      '<button class="st_btn" onclick="appInstall(\''+_dtEsc(repo)+'\',\''+_dtEsc(a.id)+'\',\''+_dtEsc((a.title||a.id))+'\')">Установить</button>'+
+      btn+
       '<a href="'+esc(repo||'#')+'" target="_blank" style="font-size:11px;color:var(--tx3)">GitHub ↗</a></div></div>';
 }
 function appInstall(repo,id,title){
@@ -1654,9 +1692,39 @@ function appDoInstall(btn,repo,id){
     var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
     if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}
     if(btn)btn.disabled=false;
-    if(out&&out.status==='success'){ if(msg)msg.innerHTML='✓ Установлено ('+(out.install_steps||0)+' шагов · '+esc(out.platform||'')+'). Открой в разделе «Рабочий стол».'; }
+    if(out&&out.status==='success'){
+      if(msg)msg.innerHTML='✓ Установлено ('+(out.install_steps||0)+' шагов · '+esc(out.platform||'')+'). '+
+        '<button class="st_btn" style="margin-top:8px" onclick="appStartOpen(this,\''+_dtEsc(id)+'\')">▶ Запустить и открыть</button>';
+    }
     else { if(msg)msg.innerHTML='⚠ '+esc((out&&out.message)||'не удалось'); }
   }).catch(function(e){ if(btn)btn.disabled=false; if(msg)msg.innerHTML=(e&&e.message==='_timeout_')?'▶ Установка идёт (долго). Загляни в раздел через минуту.':('⚠ '+esc((e&&e.message)||'нет ответа')); });
+}
+function appStartOpen(btn,id){
+  var msg=document.getElementById('app_msg');
+  var say=function(t){ if(msg)msg.innerHTML=t; else if(btn)btn.textContent=t.replace(/<[^>]+>/g,''); };
+  if(btn){ btn.disabled=true; if(!msg)btn.textContent='⏳ Запускаю…'; }
+  if(msg)msg.innerHTML='⏳ Запускаю приложение… первый старт может занять до минуты.';
+  skBridge('etb_run_expert','etb_expert_result',{name:'app_start',params:{app_id:id}},300000).then(function(r){
+    var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
+    if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}
+    if(btn){ btn.disabled=false; if(!msg)btn.textContent='▶ Открыть'; }
+    if(out&&out.status==='success'&&out.url){ appEmbed(id,out.url,out.ready); }
+    else { say('⚠ '+esc((out&&out.message)||'не удалось запустить')); }
+  }).catch(function(e){ if(btn){btn.disabled=false; if(!msg)btn.textContent='▶ Открыть';} say('⚠ '+esc((e&&e.message)||'нет ответа')); });
+}
+function appEmbed(id,url,ready){
+  var o=document.getElementById('app_ov'); if(o)o.remove();
+  var ov=document.createElement('div'); ov.id='app_run_ov';
+  ov.style.cssText='position:fixed;inset:0;z-index:9999;background:var(--bg,#faf8f3);display:flex;flex-direction:column';
+  ov.innerHTML='<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--ln,#e4ddd0);background:var(--bg2,#fff)">'+
+    '<span style="font:600 13px var(--mono);color:var(--tx2)">▶ '+esc(id)+'</span>'+
+    '<span style="font-size:11px;color:var(--tx3)">'+esc(url)+'</span>'+
+    (ready?'':'<span style="font-size:11px;color:#c0872a">поднимается…</span>')+
+    '<span style="flex:1"></span>'+
+    '<a href="'+esc(url)+'" target="_blank" style="font-size:12px;color:var(--tx3);text-decoration:none">В браузере ↗</a>'+
+    '<button onclick="var x=document.getElementById(\'app_run_ov\');if(x)x.remove()" style="'+_KPBTN+'">Закрыть</button></div>'+
+    '<iframe src="'+esc(url)+'" style="flex:1;border:0;width:100%"></iframe>';
+  document.body.appendChild(ov);
 }
 function renderModels() {
   var g = document.getElementById('grid'); if (!g) return;
