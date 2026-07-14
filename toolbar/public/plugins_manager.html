@@ -4888,8 +4888,9 @@ function wsRenderCockpitV3(w){
   html+='</section>';
   // ===== МАТЕРИАЛЫ =====
   html+='<section class="wpane" id="wp-mat">';
-  html+='<div class="wcard"><span class="wct">Источники · '+sources.length+' файл'+wsPlural(sources.length)+'</span>';
-  html+=(sources.length?sources.slice(0,40).map(function(s){ return '<div class="wrow"><span class="wic">'+wsExtIcon(s.ext)+'</span><span class="wrn">'+esc(s.name)+'</span><span class="wmeta">'+esc((s.ext||'').toUpperCase())+'</span></div>'; }).join(''):'<div class="wempty">нет источников</div>');
+  var srcTotal=(w.sources_total!=null)?w.sources_total:sources.length;   // sources — выборка; полный счёт в sources_total (движок обрезает большие объекты)
+  html+='<div class="wcard"><span class="wct">Источники · '+srcTotal+' файл'+wsPlural(srcTotal)+'</span>';
+  html+=(sources.length?sources.slice(0,40).map(function(s){ return '<div class="wrow"><span class="wic">'+wsExtIcon(s.ext)+'</span><span class="wrn">'+esc(s.name)+'</span><span class="wmeta">'+esc((s.ext||'').toUpperCase())+'</span></div>'; }).join('')+(srcTotal>sources.length?'<div class="wempty">…и ещё '+(srcTotal-sources.length)+' — показана выборка</div>':''):'<div class="wempty">нет источников</div>');
   html+='</div>';
   // факты
   html+='<div class="wcard"><span class="wct">Что я знаю</span>';
@@ -5001,7 +5002,7 @@ function wsRenderCockpit(w){
     '<div class="ws_understood">'+esc(w.understood||'')+'</div>'+
     '<div class="ws_pills">'+
       (bl>0?'<span class="ws_pill crit">⛔ '+bl+' блокер'+(bl>1?'ов':'')+'</span>':'<span class="ws_pill ok">✓ готов к работе</span>')+
-      '<span class="ws_pill">'+sources.length+' источник'+wsPlural(sources.length)+'</span>'+
+      '<span class="ws_pill">'+((w.sources_total!=null)?w.sources_total:sources.length)+' источник'+wsPlural((w.sources_total!=null)?w.sources_total:sources.length)+'</span>'+
       (versions.length?'<span class="ws_pill">'+versions.length+' групп'+(versions.length>1?'ы':'а')+' версий</span>':'')+
     '</div>';
   // амбиентная строка (first_task)
