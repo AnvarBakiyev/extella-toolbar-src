@@ -2555,11 +2555,7 @@ function progToolsHTML(){
 // Программы, the plugin catalogue (business aisles + grid). The raw GitHub
 // search lives here too, but only in «Для профи»; «Для всех» stays curated.
 // Раздел «Программы» = живой каталог с GitHub + встроенная секция «Приложения» (Pinokio-репо).
-function renderPrograms(){
-  _renderProgramsCore();
-  var g=document.getElementById('grid'); if(!g)return;
-  try{ g.insertAdjacentHTML('beforeend', _appsSectionHTML()); }catch(e){}
-}
+function renderPrograms(){ _renderProgramsCore(); }
 function _renderProgramsCore() {
   // Always rescue filter_bar before any g.innerHTML wipe. The element lives
   // inside #grid when Other is expanded; innerHTML replacement destroys it.
@@ -2570,7 +2566,7 @@ function _renderProgramsCore() {
 
   var _bk = _featCat === 'all' ? '' : '<div class="cat_back"><button class="cb_btn" onclick="_setFeatCat(\'all\')">← Все категории</button></div>';
   var _isPro = document.body.getAttribute('data-mode') === 'pro';
-  var featuredHtml = _progSearchHTML() + _featCatBar() + _bk + ((_featCat === 'all' && !_isPro) ? programsSpotlight() + addTileHTML('programs','Добавить программу') : '') + renderFeaturedSection() + (_featCat !== 'all' ? addTileHTML('programs','Добавить программу') : (_isPro ? '' : progToolsHTML()));
+  var featuredHtml = _progSearchHTML() + _featCatBar() + _bk + ((_featCat === 'all' && !_isPro) ? programsSpotlight() + addTileHTML('programs','Добавить программу') : '') + renderFeaturedSection() + (_featCat === 'all' ? _appsSectionHTML() : '') + (_featCat !== 'all' ? addTileHTML('programs','Добавить программу') : (_isPro ? '' : progToolsHTML()));
 
   // «Для всех», curated only: no raw GitHub firehose.
   if (document.body.getAttribute('data-mode') !== 'pro') {
