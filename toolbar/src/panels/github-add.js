@@ -165,7 +165,17 @@ ETB.githubAdd = (function () {
   ];
   var INSTALL_SCHEDULE = [0, 8, 22, 45, 85, 125]; // seconds; soft fallback only
   var _installTicker = null;
+  var _installCancel = null;  // {cancelled:bool} — токен отмены текущей установки
   var _installLogLines = []; // last 5 lines from agent, shown in Activity block
+
+  // Отмена установки: агент прерван поллингом; best-effort убираем полу-созданную запись реестра.
+  function _onInstallCancelled() {
+    try {
+      var pid = _state && _state.pluginId;
+      if (pid && ETB.registry && typeof ETB.registry.remove === 'function') ETB.registry.remove(pid);
+    } catch (e) {}
+    return { cancelled: true };
+  }
 
   function _fmtTime(secs) {
     var m = Math.floor(secs / 60), s = secs % 60;
@@ -328,7 +338,8 @@ ETB.githubAdd = (function () {
         '</div>',
         _renderInstallProgress(),
         '<div class="_etbv2_gh_actions">',
-        '<button class="_etbv2_gh_btn_cancel" id="_etbv2_gh_hide">Hide</button>',
+        '<button class="_etbv2_gh_btn_cancel" id="_etbv2_gh_stopinstall">Отмена</button>',
+        '<button class="_etbv2_gh_btn_cancel" id="_etbv2_gh_hide">Свернуть</button>',
         '</div>',
         '</div>'
       ].join('');
@@ -589,6 +600,13 @@ ETB.githubAdd = (function () {
 
     var hideBtn = ov.querySelector('#_etbv2_gh_hide');
     if (hideBtn) hideBtn.onclick = function () { ETB.githubAdd.close(); };
+
+    // Отмена установки: прерываем поллинг агента, закрываем окно (чистка — в _onInstallCancelled).
+    var stopBtn = ov.querySelector('#_etbv2_gh_stopinstall');
+    if (stopBtn) stopBtn.onclick = function () {
+      if (_installCancel) _installCancel.cancelled = true;
+      ETB.githubAdd.close();
+    };
 
     // Honest-routing screens (skill / not-an-app).
     var skillClose = ov.querySelector('#_etbv2_gh_skill_close');
@@ -1023,11 +1041,13 @@ ETB.githubAdd = (function () {
 
     function runMainInstall(analysis) {
       var prompt = ETB.installPrompt.build(ctx, analysis);
+      _installCancel = { cancelled: false };   // токен для кнопки «Отмена»
       return ETB.api.runAgentAsync(prompt, {
         run_timeout: 3600,
         maxWait: 3000000,
         interval: 4000,
         stallTimeout: 18 * 60 * 1000,
+        cancelRef: _installCancel,
         onProgress: _makeInstallProgressTracker('')
       }).then(function (res) {
         var agentErr = '';
@@ -1041,6 +1061,7 @@ ETB.githubAdd = (function () {
         } catch (e) { /* registry is source of truth */ }
         return finalizeFromRegistry(agentErr, notes);
       }).catch(function (e) {
+        if (e && e.message === '_cancelled_') { return _onInstallCancelled(); }
         return finalizeFromRegistry((e && e.message) || 'Agent install failed', '');
       });
     }
