@@ -1290,6 +1290,7 @@ var CATS = [
   { id: 'desktop',  l: 'Рабочий стол' },
   { id: 'home',     l: 'Витрина' },
   { id: 'programs', l: 'Программы' },
+  { id: 'apps',     l: 'Приложения' },
   { id: 'models',   l: 'Модели' },
   { id: 'skills',   l: 'Навыки' },
   { id: 'cli',      l: 'Инструменты' },
@@ -1432,6 +1433,7 @@ function renderGrid() {
   if (cur === 'desktop') renderDesktop();
   else if (cur === 'home') renderHome();
   else if (cur === 'programs') renderPrograms();
+  else if (cur === 'apps') renderApps();
   else if (cur === 'models') renderModels();
   else if (cur === 'skills') renderSkillsShelf();
   else if (cur === 'cli') renderCLI();
@@ -1609,6 +1611,52 @@ function modelsSpotlight(){
     addTileHTML('models','Добавить модель')+
     '<div style="grid-column:1/-1;text-align:right;margin:-2px 0 8px"><span style="font-size:11px;color:var(--tx3);margin-right:8px">'+(liveShelf?'живой каталог с HuggingFace':'проверенные модели')+'</span>'+
     '<button onclick="_modReg=null;_modFetched=false;renderModels()" style="border:1px solid var(--bd2);background:transparent;color:var(--tx2);border-radius:5px;padding:4px 10px;font-size:12px;cursor:pointer">↻ Обновить</button></div>';
+}
+// ===== Приложения (Pinokio-совместимые рецепты, детерминированная установка) =====
+var _appReg=null, _appFetched=false;
+function _ensureApps(){ if(_appFetched)return; _appFetched=true;
+  _loadSharded('_mkt_apps').then(function(r){ if(r&&r.shelf){_appReg=r; if(cur==='apps')renderApps();} }).catch(function(){ _appReg={shelf:[]}; if(cur==='apps')renderApps(); }); }
+function renderApps(){
+  var g=document.getElementById('grid'); if(!g)return;
+  if(!_appReg){ g.innerHTML=_loadingHTML('Загружаю приложения…'); _ensureApps(); return; }
+  var apps=_appReg.shelf||[];
+  var html='<div class="sect"><h2>Приложения</h2></div>'+
+    '<div class="ws_lead" style="grid-column:1/-1">Проверенные ИИ-приложения (рецепты Pinokio, MIT). Клик → Extella ставит по рецепту на твоём компьютере, детерминированно, без ИИ-агента. 🔒 работают локально.</div>'+
+    '<div class="mshelf">'+apps.map(appCard).join('')+'</div>';
+  g.innerHTML=html; _mountTabFilter('Поиск приложения…');
+}
+function appCard(a){
+  var repo=(a.run&&a.run.repo)||''; var stars=a.stars?('★'+a.stars):'';
+  return '<div class="stile" style="--acc:#7A3FA0">'+
+    '<span class="st_chip">📦 '+esc(a.cat||'app')+(stars?' · '+stars:'')+'</span>'+
+    '<div class="st_title">'+esc(a.title||a.id)+'</div>'+
+    '<div class="st_fact">'+esc(a.desc||'')+'</div>'+
+    '<div class="st_foot" style="justify-content:space-between;align-items:center">'+
+      '<button class="st_btn" onclick="appInstall(\''+_dtEsc(repo)+'\',\''+_dtEsc(a.id)+'\',\''+_dtEsc((a.title||a.id))+'\')">Установить</button>'+
+      '<a href="'+esc(repo||'#')+'" target="_blank" style="font-size:11px;color:var(--tx3)">GitHub ↗</a></div></div>';
+}
+function appInstall(repo,id,title){
+  var old=document.getElementById('app_ov'); if(old)old.remove();
+  var ov=document.createElement('div'); ov.id='app_ov'; ov.style.cssText=_KPOV;
+  ov.innerHTML='<div style="'+_KPMODAL+'">'+
+    '<div style="font-family:var(--serif);font-size:20px;margin-bottom:6px">📦 Установить «'+esc(title)+'»?</div>'+
+    '<div style="color:var(--tx2);font-size:13px;line-height:1.5;margin-bottom:6px">Extella склонирует репозиторий и выполнит его <b>рецепт установки</b> на твоём компьютере: изолированное окружение + зависимости. Приложение работает локально.</div>'+
+    '<div style="font:600 11px var(--mono);color:var(--tx3);margin-bottom:12px;word-break:break-all">'+esc(repo)+'</div>'+
+    '<div style="display:flex;gap:8px;align-items:center"><button class="st_btn" onclick="appDoInstall(this,\''+_dtEsc(repo)+'\',\''+_dtEsc(id)+'\')">Установить</button>'+
+    '<button onclick="var o=document.getElementById(\'app_ov\');if(o)o.remove()" style="'+_KPBTN+'">Отмена</button></div>'+
+    '<div id="app_msg" style="font-size:13px;color:var(--tx2);margin-top:12px;min-height:16px"></div></div>';
+  document.body.appendChild(ov);
+}
+function appDoInstall(btn,repo,id){
+  var msg=document.getElementById('app_msg'); if(btn)btn.disabled=true;
+  if(msg)msg.innerHTML='⏳ Клонирую и ставлю по рецепту… может занять пару минут.';
+  skBridge('etb_run_expert','etb_expert_result',{name:'app_install',params:{repo:repo,app_id:id}},1800000).then(function(r){
+    var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
+    if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}
+    if(btn)btn.disabled=false;
+    if(out&&out.status==='success'){ if(msg)msg.innerHTML='✓ Установлено ('+(out.install_steps||0)+' шагов · '+esc(out.platform||'')+'). Открой в разделе «Рабочий стол».'; }
+    else { if(msg)msg.innerHTML='⚠ '+esc((out&&out.message)||'не удалось'); }
+  }).catch(function(e){ if(btn)btn.disabled=false; if(msg)msg.innerHTML=(e&&e.message==='_timeout_')?'▶ Установка идёт (долго). Загляни в раздел через минуту.':('⚠ '+esc((e&&e.message)||'нет ответа')); });
 }
 function renderModels() {
   var g = document.getElementById('grid'); if (!g) return;
