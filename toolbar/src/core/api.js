@@ -213,6 +213,9 @@ ETB.api = (function () {
     var _lastOutputChangeAt = Date.now();
 
     function tick() {
+      if (opts.cancelRef && opts.cancelRef.cancelled) {
+        return Promise.reject(new Error('_cancelled_'));
+      }
       if (Date.now() - started > maxWait) {
         return Promise.reject(new Error('Task timed out after ' + Math.round(maxWait / 1000) + 's'));
       }
@@ -353,7 +356,8 @@ ETB.api = (function () {
       interval: opts.interval || 2500,
       maxWait: opts.maxWait || 900000,
       stallTimeout: opts.stallTimeout,   // forward caller-supplied stall window
-      onProgress: onProgress
+      onProgress: onProgress,
+      cancelRef: opts.cancelRef          // {cancelled:bool} — прерывание поллинга (кнопка «Отмена»)
     };
 
     var asyncBody = Object.assign({}, opts, {
