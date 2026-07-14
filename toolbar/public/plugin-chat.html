@@ -109,6 +109,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--tx);
   flex-shrink:0;transition:background .12s;align-self:flex-end}
 #attach_btn:hover{background:var(--s4,#e9e6df)}
 #send_btn:disabled{opacity:.4;cursor:not-allowed}
+#send_btn.stopping{background:#B23A2E;color:#fff}
 #empty{display:flex;flex-direction:column;align-items:center;justify-content:center;
   flex:1;text-align:center;padding:32px}
 #empty_icon{font-size:40px;margin-bottom:12px;opacity:.3}
@@ -264,6 +265,13 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
   };
 
   var isTyping = false;
+  var _abort = null;  // AbortController текущего запроса к агенту — для кнопки «Стоп»
+  function cancelThinking() {
+    if (_abort) { try { _abort.abort(); } catch (e) {} _abort = null; }
+    isTyping = false;
+    messages.push({ role: 'assistant', note: true, content: '⏹ Остановлено. Можешь дописать сообщение и отправить снова.' });
+    renderMessages(); saveHistory();
+  }
   var pluginId = null;
   var apiToken = '';
   var _pendingSend = null; // сообщение, ждущее токена: уйдёт само при подключении
@@ -502,10 +510,12 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
       msgs.insertAdjacentHTML('beforeend', [
         '<div class="msg assistant">',
         '<div class="typing"><span></span><span></span><span></span></div>',
-        '<div class="msg_meta">Думаю… это может занять до минуты</div>',
+        '<div class="msg_meta">Думаю… это может занять до минуты · нажми «Стоп», чтобы прервать</div>',
         '</div>'
       ].join(''));
     }
+    var _sb = document.getElementById('send_btn');
+    if (_sb) { _sb.textContent = isTyping ? 'Стоп' : 'Отправить'; _sb.classList.toggle('stopping', isTyping); }
     msgs.scrollTop = msgs.scrollHeight;
     if (!isSplitLayout()) {
       _flushHighlight();
@@ -1470,8 +1480,10 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
       saveHistory();
       return;
     }
+    _abort = (typeof AbortController !== 'undefined') ? new AbortController() : null;
     fetch(API_BASE + '/api/agent/run', {
       method: 'POST',
+      signal: _abort ? _abort.signal : undefined,
       headers: {
         'Content-Type': 'application/json',
         'X-Auth-Token': apiToken,
@@ -1486,6 +1498,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
     })
     .then(function (r) { return r.json(); })
     .then(function (data) {
+      _abort = null;  // запрос завершился — отменять нечего
       // Битый ключ у агента: просим тулбар переключить агента; сообщение
       // повторится само, когда придёт обновлённая сессия.
       var errStr = JSON.stringify(data && (data.error || data.message) || '');
@@ -1514,6 +1527,8 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
       }
     })
     .catch(function (e) {
+      _abort = null;
+      if (e && e.name === 'AbortError') { return; }  // отмену обработали в cancelThinking()
       isTyping = false;
       messages.push({ role: 'assistant', content: 'Network error: ' + e.message + '. Please try again.' });
       renderMessages();
@@ -1610,9 +1625,9 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
     var sendBtn = document.getElementById('send_btn');
     var clearBtn = document.getElementById('hdr_clr');
 
-    sendBtn.addEventListener('click', function () { sendMessage(inp.value); });
+    sendBtn.addEventListener('click', function () { if (isTyping) { cancelThinking(); } else { sendMessage(inp.value); } });
     inp.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(inp.value); }
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (!isTyping) sendMessage(inp.value); }
     });
     inp.addEventListener('input', resizeInp);
 
