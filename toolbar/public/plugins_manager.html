@@ -1661,7 +1661,8 @@ function appCard(a){
   if(!ok){
     btn='<button class="st_btn" disabled title="'+esc(c.note||'несовместимо с вашей системой')+'" style="opacity:.5;cursor:not-allowed">🖥 не для вашей ОС</button>';
   } else if(inst){
-    btn='<button class="st_btn" onclick="appStartOpen(this,\''+_dtEsc(a.id)+'\')">▶ Открыть</button>';
+    btn='<button class="st_btn" onclick="appStartOpen(this,\''+_dtEsc(a.id)+'\')">▶ Открыть</button>'+
+        '<button class="st_btn" onclick="appUninstall(\''+_dtEsc(a.id)+'\',\''+_dtEsc((a.title||a.id))+'\')" title="Удалить приложение" style="background:transparent;border:1px solid var(--bd2);color:var(--tx3);margin-left:6px;padding:6px 10px">🗑</button>';
   } else {
     btn='<button class="st_btn" onclick="appInstall(\''+_dtEsc(repo)+'\',\''+_dtEsc(a.id)+'\',\''+_dtEsc((a.title||a.id))+'\')">Установить</button>';
   }
@@ -1727,7 +1728,33 @@ function appEmbed(id,url,ready){
     '<button onclick="if(window._appReload){clearInterval(window._appReload);window._appReload=null;}var x=document.getElementById(\'app_run_ov\');if(x)x.remove()" style="'+_KPBTN+'">Закрыть</button></div>'+
     '<iframe id="app_run_if" src="'+esc(url)+'" style="flex:1;border:0;width:100%"></iframe>';
   document.body.appendChild(ov);
-  // если приложение ещё поднимается — перезагружаем iframe, пока не подхватит (ML-модель грузится минуту+)
+  appEmbedReload(url,ready); // если ещё поднимается — перезагружать iframe, пока не подхватит
+}
+function appUninstall(id,title){
+  var old=document.getElementById('app_ov'); if(old)old.remove();
+  var ov=document.createElement('div'); ov.id='app_ov'; ov.style.cssText=_KPOV;
+  ov.innerHTML='<div style="'+_KPMODAL+'">'+
+    '<div style="font-family:var(--serif);font-size:20px;margin-bottom:6px">🗑 Удалить «'+esc(title)+'»?</div>'+
+    '<div style="color:var(--tx2);font-size:13px;line-height:1.5;margin-bottom:12px">Extella остановит приложение и удалит его папку с компьютера. Установить снова можно в любой момент.</div>'+
+    '<div style="display:flex;gap:8px;align-items:center"><button class="st_btn" style="background:#b3452f" onclick="appDoUninstall(this,\''+_dtEsc(id)+'\')">Удалить</button>'+
+    '<button onclick="var o=document.getElementById(\'app_ov\');if(o)o.remove()" style="'+_KPBTN+'">Отмена</button></div>'+
+    '<div id="app_msg" style="font-size:13px;color:var(--tx2);margin-top:12px;min-height:16px"></div></div>';
+  document.body.appendChild(ov);
+}
+function appDoUninstall(btn,id){
+  var msg=document.getElementById('app_msg'); if(btn)btn.disabled=true;
+  if(msg)msg.innerHTML='⏳ Останавливаю и удаляю…';
+  skBridge('etb_run_expert','etb_expert_result',{name:'app_uninstall',params:{app_id:id}},120000).then(function(r){
+    var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
+    if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}
+    if(out&&out.status==='success'){
+      if(_appInstalled)delete _appInstalled[id];
+      var o=document.getElementById('app_ov'); if(o)o.remove();
+      if(cur==='apps')renderApps();
+    } else { if(btn)btn.disabled=false; if(msg)msg.innerHTML='⚠ '+esc((out&&out.message)||'не удалось'); }
+  }).catch(function(e){ if(btn)btn.disabled=false; if(msg)msg.innerHTML='⚠ '+esc((e&&e.message)||'нет ответа'); });
+}
+function appEmbedReload(url,ready){
   if(!ready){
     var tries=0; if(window._appReload)clearInterval(window._appReload);
     window._appReload=setInterval(function(){
