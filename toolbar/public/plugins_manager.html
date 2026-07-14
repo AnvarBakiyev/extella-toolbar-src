@@ -669,6 +669,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);
   <button class="iconbtn" onclick="notify('mkt_min')" title="Свернуть">&#8211;</button>
   <button class="iconbtn" onclick="notify('mkt_win')" title="В окне / на весь экран"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><rect x="3" y="8" width="13" height="13" rx="1.5"/><path d="M8 5h12a1 1 0 0 1 1 1v12"/></svg></button>
   <button class="iconbtn" id="langBtn" onclick="setLang(LANG==='en'?'ru':'en')" title="Язык / Language" style="font:600 11px var(--mono,monospace);width:auto;padding:0 8px">EN</button>
+  <button class="iconbtn" id="updBtn" onclick="selfUpdate()" title="Обновить Extella из GitHub (свежий интерфейс + способности)">⟳</button>
   <button class="iconbtn" id="themeBtn" onclick="toggleTheme()" title="Светлая / тёмная тема">☾</button>
   <button class="bclose" onclick="notify('close')" title="Close">&#10005;</button>
 </div>
@@ -1753,6 +1754,32 @@ function appDoUninstall(btn,id){
       if(cur==='apps')renderApps();
     } else { if(btn)btn.disabled=false; if(msg)msg.innerHTML='⚠ '+esc((out&&out.message)||'не удалось'); }
   }).catch(function(e){ if(btn)btn.disabled=false; if(msg)msg.innerHTML='⚠ '+esc((e&&e.message)||'нет ответа'); });
+}
+function selfUpdate(){
+  var old=document.getElementById('app_ov'); if(old)old.remove();
+  var ov=document.createElement('div'); ov.id='app_ov'; ov.style.cssText=_KPOV;
+  ov.innerHTML='<div style="'+_KPMODAL+'">'+
+    '<div style="font-family:var(--serif);font-size:20px;margin-bottom:6px">⟳ Обновить Extella</div>'+
+    '<div style="color:var(--tx2);font-size:13px;line-height:1.5;margin-bottom:12px">Extella скачает из GitHub свежий интерфейс и все обновления способностей и каталогов. Займёт пару минут. После — перезапусти приложение (Cmd+Q) и открой заново.</div>'+
+    '<div style="display:flex;gap:8px;align-items:center"><button class="st_btn" onclick="selfDoUpdate(this)">Обновить</button>'+
+    '<button onclick="var o=document.getElementById(\'app_ov\');if(o)o.remove()" style="'+_KPBTN+'">Отмена</button></div>'+
+    '<div id="app_msg" style="font-size:13px;color:var(--tx2);line-height:1.5;margin-top:12px;min-height:16px"></div></div>';
+  document.body.appendChild(ov);
+}
+function selfDoUpdate(btn){
+  var msg=document.getElementById('app_msg'); if(btn)btn.disabled=true;
+  if(msg)msg.innerHTML='⏳ Качаю свежий интерфейс и способности из GitHub… (пара минут, не закрывай)';
+  skBridge('etb_run_expert','etb_expert_result',{name:'wz_self_update',params:{what:'all'}},600000).then(function(r){
+    var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
+    if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}
+    if(btn)btn.disabled=false;
+    if(out&&out.status==='success'){ if(msg)msg.innerHTML='✓ '+esc(out.message||'Обновлено. Перезапусти Extella (Cmd+Q).'); }
+    else { if(msg)msg.innerHTML='⚠ '+esc((out&&out.message)||'не удалось обновить'); }
+  }).catch(function(e){
+    // мост мог отвалиться по таймауту, а обновление продолжается
+    if(btn)btn.disabled=false;
+    if(msg)msg.innerHTML='▶ Обновление идёт в фоне. Через минуту перезапусти Extella (Cmd+Q) — увидишь свежий интерфейс.';
+  });
 }
 function appEmbedReload(url,ready){
   if(!ready){
