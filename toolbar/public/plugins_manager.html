@@ -2758,8 +2758,24 @@ function renderHFCard(item, i) {
 }
 
 function installHF(id, kind, btn) {
-  if (btn) { btn.disabled = true; btn.textContent = 'Opening…'; }
-  notify('hf_add_url', '', 'hf:' + kind + ':' + id);
+  // Детерминированная установка gradio-Space (без ИИ-агента): прокси-эксперт создаётся ВСЕГДА, за секунды.
+  // Не-space (модели без Space) и не-gradio — фолбэк на прежний агентный путь.
+  function agentFallback() { if (btn) { btn.disabled = true; btn.textContent = 'Opening…'; } notify('hf_add_url', '', 'hf:' + kind + ':' + id); }
+  if (kind !== 'space') { agentFallback(); return; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Ставлю…'; }
+  skBridge('etb_run_expert', 'etb_expert_result', { name: 'hf_space_install', params: { space: id } }, 180000).then(function (r) {
+    var out = r.res; if (out && typeof out === 'object' && (out.result || out.output)) out = out.result || out.output;
+    if (typeof out === 'string') { try { out = JSON.parse(out); } catch (e) {} }
+    if (out && out.status === 'success' && out.plugin_id) {
+      if (btn) { btn.textContent = 'Готово ✓'; }
+      notify('open', out.plugin_id);  // хост перечитает реестр и откроет свежий плагин
+    } else if (out && out.status === 'not_gradio') {
+      agentFallback();                 // веб-приложение (не gradio) — ставит агент
+    } else {
+      if (btn) { btn.disabled = false; btn.textContent = '+ Install'; }
+      alert('Не удалось установить: ' + ((out && out.message) || 'неизвестная ошибка'));
+    }
+  }).catch(function () { agentFallback(); });  // таймаут/сбой моста — на агента
 }
 
 // ── Installed plugins (builtin featured + custom GitHub) ─────────────────
