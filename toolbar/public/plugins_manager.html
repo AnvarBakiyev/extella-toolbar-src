@@ -4630,13 +4630,38 @@ function wsListCard(w){
   return '<button class="wsl_card" style="--wa:'+acc+'" onclick="wsOpen(\''+esc(w.ws_id)+'\')" title="'+esc(w.name||'')+(folder?' · '+esc(folder):'')+'">'+
     '<span class="wsl_head_bar"></span>'+
     '<span class="wsl_row"><span class="wsl_ic"><svg class="lico"><use href="#ic-'+(curated?'target':'home')+'"/></svg></span>'+
-      '<span class="wsl_ago">'+esc(wsAgo(w.updated))+'</span></span>'+
+      '<span class="wsl_ago">'+esc(wsAgo(w.updated))+'</span>'+
+      '<span class="wsl_del" title="Удалить воркспейс" onclick="event.stopPropagation();wsDelete(\''+esc(w.ws_id)+'\',\''+_dtEsc(w.name||'')+'\')" style="margin-left:8px;cursor:pointer;opacity:.45;font-size:13px;line-height:1">🗑</span></span>'+
     '<span class="wsl_nm">'+esc(w.name||'Без имени')+'</span>'+
     '<span class="wsl_fold" title="'+esc(folder)+'">'+esc(short)+'</span>'+
     '<span class="wsl_foot">'+status+'<span class="wsl_go">Открыть →</span></span>'+
   '</button>';
 }
 function wsAgo(iso){ if(!iso)return''; try{var d=(Date.now()-new Date(iso).getTime())/1000; if(d<90)return'только что'; if(d<5400)return Math.round(d/60)+' мин назад'; if(d<172800)return Math.round(d/3600)+' ч назад'; return Math.round(d/86400)+' дн назад';}catch(e){return'';} }
+function wsDelete(ws_id,name){
+  var old=document.getElementById('ws_ov'); if(old)old.remove();
+  var ov=document.createElement('div'); ov.id='ws_ov'; ov.style.cssText=_KPOV;
+  ov.innerHTML='<div style="'+_KPMODAL+'">'+
+    '<div style="font-family:var(--serif);font-size:20px;margin-bottom:6px">🗑 Удалить воркспейс «'+esc(name||ws_id)+'»?</div>'+
+    '<div style="color:var(--tx2);font-size:13px;line-height:1.5;margin-bottom:12px">Уйдёт только рабочая среда (цели, задачи, факты). <b>Твои файлы и папка на компьютере НЕ тронутся</b> — воркспейс можно собрать заново.</div>'+
+    '<div style="display:flex;gap:8px;align-items:center"><button class="st_btn" style="background:#b3452f" onclick="wsDoDelete(this,\''+_dtEsc(ws_id)+'\')">Удалить</button>'+
+    '<button onclick="var o=document.getElementById(\'ws_ov\');if(o)o.remove()" style="'+_KPBTN+'">Отмена</button></div>'+
+    '<div id="ws_msg" style="font-size:13px;color:var(--tx2);margin-top:12px;min-height:16px"></div></div>';
+  document.body.appendChild(ov);
+}
+function wsDoDelete(btn,ws_id){
+  var msg=document.getElementById('ws_msg'); if(btn)btn.disabled=true;
+  if(msg)msg.innerHTML='⏳ Удаляю…';
+  wsCall('delete',{ws_id:ws_id},60000).then(function(out){
+    if(out&&out.status==='success'){
+      var o=document.getElementById('ws_ov'); if(o)o.remove();
+      _wsList=null; _wsDeskList=undefined;   // перечитать список
+      if(_wsCur&&_wsCur.ws_id===ws_id){ _wsCur=null; _wsView='list'; }
+      renderWorkspace();
+      wsToast('✓ Воркспейс удалён'+(out.remaining!=null?' · осталось: '+out.remaining:''),'ok');
+    } else { if(btn)btn.disabled=false; if(msg)msg.innerHTML='⚠ '+esc((out&&out.message)||'не удалось'); }
+  }).catch(function(e){ if(btn)btn.disabled=false; if(msg)msg.innerHTML='⚠ '+esc((e&&e.message)||'нет ответа'); });
+}
 function wsOpen(ws_id){
   var g=document.getElementById('grid'); if(g)g.innerHTML=_loadingHTML('Открываю воркспейс…');
   wsCall('get',{ws_id:ws_id},30000).then(function(out){
@@ -4905,6 +4930,9 @@ function wsRenderCockpitV3(w){
       '<p class="wx-desc">Выполняет задачи-способности по очереди, останавливается на вопросе или подписи.</p>'+
       '<div class="wx-qrow" style="margin-top:12px">'+(ap.enabled?'<span class="wx-btn sm" onclick="wsxRunAutopilot(\''+wid+'\',this)">▶ Запустить</span>':'')+
       '<span class="wx-btn sm tan" onclick="wsSetAutopilot(\''+wid+'\','+(!ap.enabled)+')">'+(ap.enabled?'Выключить дежурство':'Включить дежурство')+'</span></div></div></div>'+
+    '<div class="wx-section"><div class="wx-sectionh">Воркспейс</div>'+
+      '<div class="wx-row"><span class="wx-em">🗑</span><span>Удалить воркспейс <span class="wx-meta" style="margin:0">файлы не тронутся</span></span>'+
+      '<span class="wx-rr"><span class="wx-btn sm tan" onclick="wsDelete(\''+wid+'\',\''+_dtEsc(w.name||'')+'\')">Удалить</span></span></div></div>'+
     '</div></section>';
   html+='</main>';
   // ── DOCK ──
