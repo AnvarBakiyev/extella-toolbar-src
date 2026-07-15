@@ -106,9 +106,9 @@ fi
 cp "$BUILD_DIR/toolbar.js" "$TB_DIR/toolbar.js"
 echo -e "  ${GREEN}✓ toolbar.js installed${NC}"
 
-# Activity Center is a toolbar panel plus a small read-only observer. The panel
-# is already compiled into toolbar.js; install its macOS bridge and listener
-# hook without modifying the generated toolbar artifact.
+# Activity Center is a toolbar panel plus a small local bridge. The panel is
+# already compiled into toolbar.js; install its macOS activity observer and
+# registry-scoped localhost controls without modifying the generated artifact.
 if [ "$OS" = "Darwin" ] && command -v python3 &> /dev/null; then
     python3 "$SCRIPT_DIR/device/activity-center/install.py"
     echo -e "  ${GREEN}✓ Activity Center observer installed${NC}"

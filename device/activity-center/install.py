@@ -91,18 +91,26 @@ def main() -> None:
     sources = (
         root / "bridge" / "server.py",
         root / "bridge" / "activity_model.py",
+        root / "bridge" / "service_manager.py",
         root / "instrumentation" / "extella_activity_hook.py",
     )
     for source in sources:
         shutil.copy2(source, support_dir / source.name)
 
     hook_paths = install_hooks(support_dir / "extella_activity_hook.py")
+    boot_source = root.parent / "boot" / "restart_local_servers.py"
+    boot_target = Path.home() / "extella-plugins" / "_boot" / boot_source.name
+    boot_updated = False
+    if boot_source.exists() and boot_target.parent.is_dir():
+        shutil.copy2(boot_source, boot_target)
+        boot_updated = True
     plist_path = install_launch_agent(support_dir)
     manifest = {
-        "version": 2,
+        "version": 3,
         "supportDir": str(support_dir),
         "launchAgent": str(plist_path),
         "hookPaths": hook_paths,
+        "bootControllerUpdated": boot_updated,
     }
     (support_dir / "install.json").write_text(
         json.dumps(manifest, indent=2), encoding="utf-8"

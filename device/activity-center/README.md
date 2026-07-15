@@ -7,12 +7,23 @@ It consists of two deliberately separate pieces:
 
 1. `toolbar/src/panels/activity-center.js` renders the bottom-right widget and
    links recurring tasks to **Plugins → Расписания**.
-2. This directory installs a read-only device observer. It stores only
+2. This directory installs a local device bridge. It stores only
    allow-listed lifecycle fields in `~/.extella/activity-center/events.jsonl`
-   and serves the normalized feed on `http://127.0.0.1:8799`.
+   and serves the normalized feed on `http://127.0.0.1:8799`. The bridge also
+   exposes localhost services declared in the Extella plugin registry, with a
+   narrow start/stop endpoint protected by an in-memory control token.
 
 The raw task result is never persisted. Tokens, arbitrary arguments, message
 contents, and listener command lines are not part of the API payload.
+Registry launch commands and full project paths are likewise never returned to
+the toolbar. A process can be stopped only when its cwd or LaunchAgent proves
+that it belongs to the selected service.
+
+In **Plugins → Расписания**, the **Локальные сервисы Extella** block shows each
+registered localhost, port, PID, process name, source, and current state. A
+service switched off there is recorded in
+`~/.extella/activity-center/services.json`, so the 10-minute boot checker does
+not immediately bring it back.
 
 ## Install
 
@@ -23,6 +34,7 @@ deploying the modular toolbar. For observer-only development:
 python3 device/activity-center/install.py
 curl -s http://127.0.0.1:8799/api/health
 curl -s http://127.0.0.1:8799/api/activity
+curl -s http://127.0.0.1:8799/api/services
 ```
 
 Restart Extella after installing so the listener loads the instrumentation

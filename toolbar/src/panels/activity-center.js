@@ -3,8 +3,14 @@
   if (window.__xtlActivityCenterLoaded) return;
   window.__xtlActivityCenterLoaded = true;
 
-  var API = 'http://127.0.0.1:8799/api/activity';
-  var state = { open: false, data: null, bridgeOnline: false, expanded: {} };
+  var API_BASE = 'http://127.0.0.1:8799';
+  var API = API_BASE + '/api/activity';
+  var SERVICES_API = API_BASE + '/api/services';
+  var state = {
+    open: false, data: null, bridgeOnline: false, expanded: {},
+    services: null, servicesToken: '', servicesLoading: false,
+    servicesUpdatedAt: 0, serviceBusy: {}, serviceMessage: ''
+  };
 
   var css = [
     '#_xtlac_root{position:fixed;right:12px;bottom:12px;z-index:2147483638;font-family:-apple-system,system-ui,sans-serif;color:var(--etb-tx,#f0f0f0);pointer-events:auto}',
@@ -76,6 +82,48 @@
     if (pill) pill.setAttribute('aria-expanded', 'false');
   }
 
+  function ensureStorefrontStyles(doc) {
+    if (doc.getElementById('_xtlac_storefront_styles')) return;
+    var style = doc.createElement('style');
+    style.id = '_xtlac_storefront_styles';
+    style.textContent = [
+      '#_xtlac_schedule_shortcut{position:relative;width:100%;display:flex;align-items:center;gap:14px;margin:12px 0 4px;padding:15px 17px;border:1px solid var(--bd2);border-radius:var(--r);background:linear-gradient(135deg,color-mix(in srgb,var(--a) 10%,var(--s2)),var(--s2));color:var(--tx);text-align:left;cursor:pointer;overflow:hidden;font-family:var(--sans)}',
+      '#_xtlac_schedule_shortcut::before{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:var(--a)}',
+      '#_xtlac_schedule_shortcut:hover{border-color:var(--a);transform:translateY(-1px)}',
+      '._xtlac_desk_icon{width:42px;height:42px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;border-radius:10px;background:rgba(var(--ar),.14);font-size:21px}',
+      '._xtlac_desk_copy{min-width:0;flex:1}',
+      '._xtlac_desk_title{display:block;font-size:15px;font-weight:750;line-height:1.3}',
+      '._xtlac_desk_sub{display:block;margin-top:3px;color:var(--tx2);font-size:12px;line-height:1.4}',
+      '._xtlac_desk_count{color:var(--tx3);font:600 10.5px var(--mono);white-space:nowrap}',
+      '._xtlac_desk_go{color:var(--a);font-size:12px;font-weight:750;white-space:nowrap}',
+      '#_xtlac_local_services{grid-column:1/-1;margin:0 0 14px;padding:16px;border:1px solid var(--bd2);border-radius:var(--r);background:var(--s2)}',
+      '._xtlac_srv_head{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px}',
+      '._xtlac_srv_head_copy{min-width:0;flex:1}',
+      '._xtlac_srv_title{font-size:15px;font-weight:760;color:var(--tx)}',
+      '._xtlac_srv_sub{margin-top:3px;color:var(--tx2);font-size:11.5px;line-height:1.45}',
+      '._xtlac_srv_summary{color:var(--tx3);font:650 10.5px var(--mono);white-space:nowrap}',
+      '._xtlac_srv_message{display:none;margin:0 0 10px;padding:8px 10px;border-radius:8px;background:rgba(var(--ar),.1);color:var(--a);font-size:11px}',
+      '._xtlac_srv_message.show{display:block}',
+      '._xtlac_srv_grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}',
+      '._xtlac_srv_card{display:grid;grid-template-columns:9px minmax(0,1fr) auto;gap:9px;align-items:start;padding:11px;border:1px solid var(--bd);border-radius:10px;background:var(--bg)}',
+      '._xtlac_srv_dot{width:8px;height:8px;margin-top:5px;border-radius:50%;background:var(--tx3)}',
+      '._xtlac_srv_card.running ._xtlac_srv_dot{background:#2f9e56;box-shadow:0 0 7px rgba(47,158,86,.4)}',
+      '._xtlac_srv_name{font-size:12px;font-weight:700;line-height:1.35;color:var(--tx)}',
+      '._xtlac_srv_desc{margin-top:3px;color:var(--tx2);font-size:10.5px;line-height:1.35}',
+      '._xtlac_srv_meta{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}',
+      '._xtlac_srv_chip{padding:2px 5px;border-radius:5px;background:var(--s3);color:var(--tx3);font:600 9px var(--mono)}',
+      '._xtlac_srv_link{display:inline-block;margin-top:7px;color:var(--a);font:600 10px var(--mono);text-decoration:none}',
+      '._xtlac_srv_source{margin-top:6px;color:var(--tx3);font-size:9.5px;line-height:1.3}',
+      '._xtlac_srv_btn{min-width:78px;border:1px solid var(--bd2);border-radius:7px;background:transparent;color:var(--tx2);padding:6px 8px;font:650 10px var(--sans);cursor:pointer}',
+      '._xtlac_srv_btn.stop{border-color:rgba(181,66,62,.38);color:#c96b67}',
+      '._xtlac_srv_btn.start{border-color:rgba(47,158,86,.4);color:#57a773}',
+      '._xtlac_srv_btn:disabled{opacity:.45;cursor:default}',
+      '._xtlac_srv_blocked{grid-column:2/4;margin-top:1px;color:#c67e34;font-size:9.5px;line-height:1.35}',
+      '@media(max-width:680px){._xtlac_srv_grid{grid-template-columns:1fr}}'
+    ].join('');
+    doc.head.appendChild(style);
+  }
+
   function injectScheduleShortcut(store) {
     if (!store || store.cur !== 'desktop' || !store.document) return;
     var doc = store.document;
@@ -94,22 +142,7 @@
       return;
     }
 
-    if (!doc.getElementById('_xtlac_storefront_styles')) {
-      var style = doc.createElement('style');
-      style.id = '_xtlac_storefront_styles';
-      style.textContent = [
-        '#_xtlac_schedule_shortcut{position:relative;width:100%;display:flex;align-items:center;gap:14px;margin:12px 0 4px;padding:15px 17px;border:1px solid var(--bd2);border-radius:var(--r);background:linear-gradient(135deg,color-mix(in srgb,var(--a) 10%,var(--s2)),var(--s2));color:var(--tx);text-align:left;cursor:pointer;overflow:hidden;font-family:var(--sans)}',
-        '#_xtlac_schedule_shortcut::before{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:var(--a)}',
-        '#_xtlac_schedule_shortcut:hover{border-color:var(--a);transform:translateY(-1px)}',
-        '._xtlac_desk_icon{width:42px;height:42px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;border-radius:10px;background:rgba(var(--ar),.14);font-size:21px}',
-        '._xtlac_desk_copy{min-width:0;flex:1}',
-        '._xtlac_desk_title{display:block;font-size:15px;font-weight:750;line-height:1.3}',
-        '._xtlac_desk_sub{display:block;margin-top:3px;color:var(--tx2);font-size:12px;line-height:1.4}',
-        '._xtlac_desk_count{color:var(--tx3);font:600 10.5px var(--mono);white-space:nowrap}',
-        '._xtlac_desk_go{color:var(--a);font-size:12px;font-weight:750;white-space:nowrap}'
-      ].join('');
-      doc.head.appendChild(style);
-    }
+    ensureStorefrontStyles(doc);
 
     card = doc.createElement('button');
     card.id = '_xtlac_schedule_shortcut';
@@ -127,6 +160,177 @@
       if (typeof store.setc === 'function') store.setc('automations');
     });
     hero.insertAdjacentElement('afterend', card);
+  }
+
+  function storefrontNode(doc, tag, className, text) {
+    var node = doc.createElement(tag);
+    if (className) node.className = className;
+    if (text != null) node.textContent = text;
+    return node;
+  }
+
+  function serviceCountText(services) {
+    var total = services.length;
+    var running = services.filter(function (service) { return service.status === 'running'; }).length;
+    return running + ' из ' + total + ' работают';
+  }
+
+  function renderLocalServices(store) {
+    if (!store || store.cur !== 'automations' || !store.document) return;
+    var doc = store.document;
+    var section = doc.getElementById('_xtlac_local_services');
+    if (!section) return;
+    section.replaceChildren();
+
+    var head = storefrontNode(doc, 'div', '_xtlac_srv_head');
+    var copy = storefrontNode(doc, 'div', '_xtlac_srv_head_copy');
+    copy.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_title', 'Локальные сервисы Extella'));
+    copy.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_sub', 'Поднятые localhost-сервисы, их PID и источник запуска. Здесь их можно безопасно выключить или включить.'));
+    head.appendChild(copy);
+    var summary = state.services
+      ? serviceCountText(state.services)
+      : (state.servicesLoading ? 'проверяю…' : 'нет данных');
+    head.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_summary', summary));
+    section.appendChild(head);
+
+    var message = storefrontNode(doc, 'div', '_xtlac_srv_message' + (state.serviceMessage ? ' show' : ''), state.serviceMessage);
+    section.appendChild(message);
+    if (!state.services) {
+      section.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_sub', state.servicesLoading ? 'Читаю реестр и проверяю локальные порты…' : 'Локальный bridge пока не ответил.'));
+      return;
+    }
+
+    var grid = storefrontNode(doc, 'div', '_xtlac_srv_grid');
+    state.services.forEach(function (service) {
+      var running = service.status === 'running';
+      var busy = !!state.serviceBusy[service.id];
+      var card = storefrontNode(doc, 'div', '_xtlac_srv_card ' + service.status);
+      card.appendChild(storefrontNode(doc, 'span', '_xtlac_srv_dot'));
+      var info = storefrontNode(doc, 'div', '_xtlac_srv_info');
+      info.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_name', service.name));
+      if (service.description) info.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_desc', service.description));
+      var meta = storefrontNode(doc, 'div', '_xtlac_srv_meta');
+      meta.appendChild(storefrontNode(doc, 'span', '_xtlac_srv_chip', 'PORT ' + service.port));
+      if (service.processes && service.processes.length) {
+        service.processes.forEach(function (process) {
+          meta.appendChild(storefrontNode(doc, 'span', '_xtlac_srv_chip', 'PID ' + process.pid + ' · ' + process.process));
+        });
+      } else {
+        meta.appendChild(storefrontNode(doc, 'span', '_xtlac_srv_chip', 'PID —'));
+      }
+      info.appendChild(meta);
+      if (running) {
+        var link = storefrontNode(doc, 'a', '_xtlac_srv_link', service.url.replace(/^https?:\/\//, ''));
+        link.href = service.url;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        info.appendChild(link);
+      }
+      info.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_source', service.source + (service.project ? ' · ' + service.project : '')));
+      card.appendChild(info);
+
+      var action = running ? 'stop' : 'start';
+      var allowed = running ? service.canStop : service.canStart;
+      var button = storefrontNode(doc, 'button', '_xtlac_srv_btn ' + action, busy ? 'Подождите…' : (running ? 'Выключить' : 'Включить'));
+      button.type = 'button';
+      button.disabled = busy || !allowed;
+      button.addEventListener('click', function () { controlLocalService(store, service, action); });
+      card.appendChild(button);
+      if (service.controlBlockedReason) {
+        card.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_blocked', service.controlBlockedReason));
+      }
+      grid.appendChild(card);
+    });
+    section.appendChild(grid);
+  }
+
+  function injectLocalServices(store) {
+    if (!store || store.cur !== 'automations' || !store.document) return;
+    var doc = store.document;
+    var grid = doc.getElementById('grid');
+    if (!grid) return;
+    ensureStorefrontStyles(doc);
+    var section = doc.getElementById('_xtlac_local_services');
+    if (!section) {
+      section = doc.createElement('section');
+      section.id = '_xtlac_local_services';
+      grid.insertBefore(section, grid.firstChild);
+    }
+    renderLocalServices(store);
+    refreshServices(store, false);
+  }
+
+  function refreshServices(store, force) {
+    if (!store || store.cur !== 'automations') return Promise.resolve();
+    if (state.servicesLoading) return Promise.resolve();
+    if (!force && state.services && Date.now() - state.servicesUpdatedAt < 3500) return Promise.resolve();
+    state.servicesLoading = true;
+    renderLocalServices(store);
+    return fetch(SERVICES_API, { cache: 'no-store' })
+      .then(function (response) {
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        return response.json();
+      })
+      .then(function (payload) {
+        state.services = Array.isArray(payload.services) ? payload.services : [];
+        state.servicesToken = payload.controlToken || '';
+        state.servicesUpdatedAt = Date.now();
+        if (state.serviceMessage === 'Локальный список сервисов недоступен.') state.serviceMessage = '';
+      })
+      .catch(function () {
+        state.serviceMessage = 'Локальный список сервисов недоступен.';
+      })
+      .then(function () {
+        state.servicesLoading = false;
+        renderLocalServices(store);
+      });
+  }
+
+  function controlLocalService(store, service, action) {
+    if (state.serviceBusy[service.id]) return;
+    if (!state.servicesToken) {
+      refreshServices(store, true).then(function () {
+        if (state.servicesToken) controlLocalService(store, service, action);
+        else {
+          state.serviceMessage = 'Управление недоступно: локальный bridge не выдал разрешение.';
+          renderLocalServices(store);
+        }
+      });
+      return;
+    }
+    state.serviceBusy[service.id] = true;
+    state.serviceMessage = (action === 'stop' ? 'Выключаю: ' : 'Включаю: ') + service.name;
+    renderLocalServices(store);
+    fetch(SERVICES_API + '/' + encodeURIComponent(service.id) + '/' + action, {
+      method: 'POST',
+      headers: { 'X-Extella-Control': state.servicesToken }
+    })
+      .then(function (response) {
+        return response.json().then(function (payload) {
+          if (!response.ok) throw new Error(payload.message || ('HTTP ' + response.status));
+          return payload;
+        });
+      })
+      .then(function () {
+        state.serviceMessage = (action === 'stop' ? 'Выключено: ' : 'Включено: ') + service.name;
+      })
+      .catch(function (error) {
+        state.serviceMessage = 'Не удалось изменить состояние: ' + (error.message || 'неизвестная ошибка');
+      })
+      .then(function () {
+        delete state.serviceBusy[service.id];
+        state.servicesUpdatedAt = 0;
+        return refreshServices(store, true);
+      });
+  }
+
+  function refreshVisibleServices() {
+    try {
+      var frame = document.getElementById('_etbv2_mkt_frame');
+      var store = frame && frame.contentWindow;
+      if (!store || store.cur !== 'automations') return;
+      injectLocalServices(store);
+    } catch (e) {}
   }
 
   function enhanceStorefront(frame) {
@@ -156,11 +360,13 @@
         if (grid && store.MutationObserver) {
           store.__xtlacDesktopObserver = new store.MutationObserver(function () {
             injectScheduleShortcut(store);
+            injectLocalServices(store);
           });
           store.__xtlacDesktopObserver.observe(grid, { childList: true });
         }
       }
       injectScheduleShortcut(store);
+      injectLocalServices(store);
     } catch (e) {}
   }
 
@@ -398,4 +604,5 @@
   else mount();
   refresh();
   window.__xtlActivityCenterTimer = setInterval(refresh, 2000);
+  window.__xtlServiceCenterTimer = setInterval(refreshVisibleServices, 5000);
 })();

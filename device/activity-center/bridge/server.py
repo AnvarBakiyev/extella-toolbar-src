@@ -1,10 +1,15 @@
-"""Local read-only API for the Extella Activity Center toolbar extension."""
+"""Local API for the Extella Activity Center toolbar extension.
+
+Activity data stays read-only. The only mutation is a token-protected control
+route for localhost services declared in the Extella plugin registry.
+"""
 
 from __future__ import annotations
 
 import json
 import os
 import re
+import secrets
 import subprocess
 import sys
 import time
@@ -16,6 +21,7 @@ from typing import Any
 from urllib.parse import urlparse
 
 from activity_model import build_activity, read_events
+from service_manager import ServiceError, control_service, list_services
 
 
 HOST = os.environ.get("EXTELLA_ACTIVITY_HOST", "127.0.0.1")
@@ -32,11 +38,18 @@ ALLOWED_ORIGINS = {
     "http://127.0.0.1:8799",
     "http://localhost:8799",
 }
+CONTROL_TOKEN = secrets.token_urlsafe(24)
 
 _process_cache: tuple[float, dict[str, Any]] = (0.0, {})
 _LISTENER_COMMAND = re.compile(
     r"^/\S*/bin/python(?:3(?:\.\d+)?)?\s+/\S*/bin/extella-listener\s+--url\s+"
 )
+
+
+def control_authorized(origin: str, token: str) -> bool:
+    if origin and origin not in ALLOWED_ORIGINS:
+        return False
+    return secrets.compare_digest(token, CONTROL_TOKEN)
 
 
 def listener_processes() -> dict[str, Any]:
@@ -108,8 +121,10 @@ class Handler(BaseHTTPRequestHandler):
         if origin in ALLOWED_ORIGINS:
             self.send_header("Access-Control-Allow-Origin", origin)
             self.send_header("Vary", "Origin")
-        self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header(
+            "Access-Control-Allow-Headers", "Content-Type, X-Extella-Control"
+        )
 
     def _send_json(self, status: int, payload: dict[str, Any]) -> None:
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
@@ -145,7 +160,42 @@ class Handler(BaseHTTPRequestHandler):
                 build_activity(read_events(EVENT_FILE), listener_processes()),
             )
             return
+        if path == "/api/services":
+            self._send_json(
+                200,
+                {
+                    "status": "ok",
+                    "services": list_services(),
+                    "controlToken": CONTROL_TOKEN,
+                },
+            )
+            return
         self._send_json(404, {"status": "not_found"})
+
+    def do_POST(self) -> None:  # noqa: N802
+        origin = self.headers.get("Origin", "")
+        if not control_authorized(
+            origin, self.headers.get("X-Extella-Control", "")
+        ):
+            self._send_json(
+                403,
+                {"status": "forbidden", "message": "Control token required"},
+            )
+            return
+        path = urlparse(self.path).path
+        match = re.fullmatch(r"/api/services/([A-Za-z0-9_.-]{1,128})/(start|stop)", path)
+        if not match:
+            self._send_json(404, {"status": "not_found"})
+            return
+        try:
+            service = control_service(match.group(1), match.group(2))
+        except ServiceError as error:
+            self._send_json(
+                error.status,
+                {"status": "error", "message": str(error)},
+            )
+            return
+        self._send_json(200, {"status": "ok", "service": service})
 
 
 def main() -> None:

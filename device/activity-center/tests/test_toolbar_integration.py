@@ -15,6 +15,9 @@ class ToolbarIntegrationTests(unittest.TestCase):
         source = PANEL.read_text(encoding="utf-8")
         self.assertIn("{ id: 'automations', l: 'Расписания' }", source)
         self.assertIn("Регулярные задачи", source)
+        self.assertIn("Локальные сервисы Extella", source)
+        self.assertIn("X-Extella-Control", source)
+        self.assertIn("PID ", source)
         self.assertIn("right:12px;bottom:12px", source)
 
     def test_removed_subtitle_does_not_return(self) -> None:
