@@ -4754,73 +4754,71 @@ function wsRenderWs(w){
 }
 // --- Вкладочный кокпит ws-v1.3 (Обзор/Задачи/Материалы/Настройки + инбокс вопросов + факты + чат) ---
 function _wsxStyle(){
-  if(document.getElementById('wsx-style'))return;
+  var old=document.getElementById('wsx-style'); if(old)old.remove();
   var s=document.createElement('style'); s.id='wsx-style';
   s.textContent=[
-'.wsx{--wpaper:var(--bg);--wsurf:var(--s1);--wsurf2:var(--s2,var(--s1));--wraise:var(--bg);--wink:var(--tx);--winksoft:var(--tx2);--winkfaint:var(--tx3);--wline:var(--bd);--wline2:var(--bd2);--wgold:var(--a);--wpetrol:#0F5E6B;--wgood:#2C8768;--wwarn:#B07A22;font-family:var(--sans);color:var(--wink);grid-column:1/-1;padding-bottom:96px}',
-'@media (prefers-color-scheme:dark){.wsx{--wpetrol:#54B7C2;--wgood:#46B893;--wwarn:#D6A24A}}',
-'.wsx .wtop{display:flex;align-items:center;gap:14px;margin:2px 2px 18px}',
-'.wsx .wmark{width:32px;height:32px;border-radius:9px;background:var(--wgold);display:grid;place-items:center;color:#1a1206;font-weight:800;font-family:var(--mono);flex:0 0 auto}',
-'.wsx .weye{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--winkfaint)}',
-'.wsx h1.wh{margin:1px 0;font-size:19px;letter-spacing:-.01em;line-height:1.15}',
-'.wsx .wu{color:var(--winksoft);font-size:12.5px}',
-'.wsx .wback{margin-left:auto;background:transparent;border:1px solid var(--wline2);color:var(--winksoft);border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;font-family:var(--sans)}',
-'.wsx .wtabr{position:absolute;opacity:0;pointer-events:none}',
-'.wsx .wtabbar{display:flex;gap:4px;background:var(--wsurf2);padding:5px;border-radius:12px;margin-bottom:18px}',
-'.wsx .wtabbar label{flex:1;text-align:center;font-size:13px;font-weight:600;color:var(--winksoft);padding:9px 10px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px}',
-'.wsx .wtabbar label .wb{font-family:var(--mono);font-size:10px;padding:0 6px;border-radius:99px;font-weight:700}',
-'.wsx .wtabbar label .wb.w{background:var(--wwarn);color:#fff}.wsx .wtabbar label .wb.p{background:var(--wpetrol);color:#fff}',
-'.wsx .wpane{display:none;flex-direction:column;gap:14px}',
-'.wsx #wt-over:checked~.wtabbar label[for="wt-over"],.wsx #wt-task:checked~.wtabbar label[for="wt-task"],.wsx #wt-mat:checked~.wtabbar label[for="wt-mat"],.wsx #wt-set:checked~.wtabbar label[for="wt-set"]{background:var(--wraise);color:var(--wink);box-shadow:0 1px 2px rgba(0,0,0,.08)}',
-'.wsx #wt-over:checked~.wpanes #wp-over,.wsx #wt-task:checked~.wpanes #wp-task,.wsx #wt-mat:checked~.wpanes #wp-mat,.wsx #wt-set:checked~.wpanes #wp-set{display:flex}',
-'.wsx .wsh{display:flex;align-items:baseline;gap:9px;margin:2px}',
-'.wsx .wsh .wt{font-weight:700;font-size:15px}.wsx .wsh .wy{margin-left:auto;font-size:11.5px;color:var(--winkfaint)}',
-'.wsx .wcnt{font-family:var(--mono);font-size:11px;padding:1px 8px;border-radius:99px;border:1px solid var(--wline2);color:var(--winksoft)}',
-'.wsx .wcnt.p{color:var(--wpetrol)}.wsx .wcnt.w{color:var(--wwarn)}',
-'.wsx .wcard{background:var(--wsurf);border:1px solid var(--wline);border-radius:14px;padding:16px 18px}',
-'.wsx .wcard>.wct{font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--winkfaint);display:block;margin-bottom:12px}',
-'.wsx .wgoals{display:grid;gap:12px;grid-template-columns:1fr 1fr}',
-'.wsx .wgoal{background:var(--wsurf);border:1px solid var(--wline);border-left:3px solid var(--wpetrol);border-radius:11px;padding:15px 16px}',
-'.wsx .wgoal .wgt{font-weight:600;font-size:14px;display:flex;align-items:center;gap:8px}',
-'.wsx .wgoal .wgs{margin-left:auto;font-family:var(--mono);font-size:9px;text-transform:uppercase;padding:2px 7px;border-radius:5px;border:1px solid var(--wline2);color:var(--winksoft)}',
-'.wsx .wgoal .wgs.work{color:var(--wgood)}.wsx .wgoal .wgs.wait{color:var(--wwarn)}',
-'.wsx .wgoal .wout{font-size:12px;color:var(--winksoft);margin:7px 0 10px}.wsx .wgoal .wout b{color:var(--wink)}',
-'.wsx .wbar{height:6px;border-radius:99px;background:var(--wsurf2);overflow:hidden;margin-bottom:10px}.wsx .wbar>i{display:block;height:100%;background:var(--wpetrol)}',
-'.wsx .wtoolchip{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;padding:3px 10px;border-radius:99px;background:var(--petrol-bg,rgba(15,94,107,.08));border:1px solid var(--wline2);color:var(--wpetrol);font-weight:500}',
-'.wsx .wnext{background:linear-gradient(180deg,var(--gold-bg,rgba(174,126,28,.1)),transparent 140%);border:1px solid var(--wline2);border-radius:14px;padding:15px 18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}',
-'.wsx .wnext .wnt{font-weight:700}.wsx .wnext .wnd{color:var(--winksoft);font-size:12.5px;margin-top:2px}',
-'.wsx .wqs{display:grid;gap:12px;grid-template-columns:1fr 1fr}',
-'.wsx .wq{background:var(--wraise);border:1px solid var(--wline);border-radius:11px;padding:14px 15px;display:flex;flex-direction:column;gap:10px}',
-'.wsx .wq .wqq{font-size:13px;font-weight:600;line-height:1.4}.wsx .wq .wqm{font-family:var(--mono);font-size:9px;text-transform:uppercase;color:var(--wpetrol)}',
-'.wsx .wchips{display:flex;flex-wrap:wrap;gap:6px}',
-'.wsx .wchip{font-size:12px;padding:5px 11px;border-radius:99px;border:1px solid var(--wline2);background:var(--wsurf);color:var(--wink);cursor:pointer;user-select:none}',
-'.wsx .wchip.on{background:var(--wgold);border-color:var(--wgold);color:#1a1206;font-weight:600}',
-'.wsx .wbtn{font-family:var(--sans);font-size:12.5px;font-weight:600;padding:8px 15px;border-radius:8px;border:1px solid transparent;background:var(--wgold);color:#1a1206;cursor:pointer;white-space:nowrap}',
-'.wsx .wbtn.ghost{background:transparent;border-color:var(--wline2);color:var(--winksoft)}.wsx .wbtn.sm{padding:6px 12px;font-size:12px}',
-'.wsx .wboard{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}',
-'.wsx .wcol .wcolh{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--winkfaint);margin:0 2px 9px}',
-'.wsx .wtask{background:var(--wsurf);border:1px solid var(--wline);border-radius:8px;padding:10px 12px;margin-bottom:9px;font-size:12.5px}',
-'.wsx .wvia{font-family:var(--mono);font-size:9px;padding:1px 6px;border-radius:4px;border:1px solid var(--wline2);color:var(--winksoft);display:inline-block;margin-bottom:5px}',
-'.wsx .wvia.cap{color:var(--wpetrol)}.wsx .wvia.you{color:var(--wgold)}',
-'.wsx .wrow{display:flex;align-items:center;gap:11px;padding:11px 0;border-top:1px solid var(--wline);font-size:13.5px}.wsx .wrow:first-child{border-top:0}',
-'.wsx .wrow .wic{font-size:16px;width:22px;text-align:center;flex:0 0 auto}.wsx .wrow .wrn{font-weight:600}.wsx .wrow .wmeta{margin-left:auto;font-size:11px;color:var(--winksoft);font-family:var(--mono)}',
-'.wsx .wgrp{margin-bottom:14px}.wsx .wgl{font-size:11.5px;color:var(--wpetrol);font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:7px}',
-'.wsx .wgl .wscope{font-family:var(--mono);font-size:9px;text-transform:uppercase;color:var(--winkfaint);border:1px solid var(--wline2);padding:1px 6px;border-radius:5px}',
-'.wsx .wfact{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;padding:6px 10px;border-radius:8px;background:var(--wsurf2);border:1px solid var(--wline);margin:0 6px 6px 0}.wsx .wfact .wk{font-family:var(--mono);font-size:10px;color:var(--winkfaint)}',
-'.wsx .wcaps{display:flex;flex-wrap:wrap;gap:7px}.wsx .wcap{font-size:12px;padding:6px 11px;border-radius:99px;background:var(--petrol-bg,rgba(15,94,107,.08));border:1px solid var(--wline2);color:var(--wpetrol)}',
-'.wsx .wtgl{position:relative;display:inline-block;width:38px;height:22px;flex:0 0 auto}.wsx .wtgl input{opacity:0;width:0;height:0}.wsx .wtgl span{position:absolute;inset:0;background:var(--wline2);border-radius:99px;transition:.2s}.wsx .wtgl span:before{content:"";position:absolute;width:16px;height:16px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}.wsx .wtgl input:checked+span{background:var(--wgood)}.wsx .wtgl input:checked+span:before{transform:translateX(16px)}',
-'.wsx .wchatbar{position:fixed;left:0;right:0;bottom:0;background:var(--wpaper);border-top:1px solid var(--wline);padding:12px 0;z-index:50}',
-'.wsx .wchatbar .winner{max-width:960px;margin:0 auto;padding:0 22px;display:flex;align-items:center;gap:11px}',
-'.wsx .wchatbar .wlast{font-size:11.5px;color:var(--winksoft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:30%}',
-'.wsx .wchatbar form{flex:1;display:flex;gap:9px;align-items:center;min-width:0}',
-'.wsx .wchatbar input{flex:1;min-width:0;background:var(--wraise);border:1px solid var(--wline2);border-radius:99px;padding:11px 16px;font-family:var(--sans);font-size:13.5px;color:var(--wink)}',
-'.wsx .wsend{width:38px;height:38px;border-radius:50%;border:0;background:var(--wgold);color:#1a1206;font-size:16px;cursor:pointer;flex:0 0 auto}',
-'.wsx .wempty{color:var(--winkfaint);font-size:12.5px;padding:4px 0}',
-'@media (max-width:720px){.wsx .wgoals,.wsx .wqs,.wsx .wboard{grid-template-columns:1fr}.wsx .wchatbar .wlast{display:none}}'
+// ── Родная тёплая система Extella. По умолчанию ТЁМНАЯ (тулбар тёмный), [data-lm] = светлая ──
+'.wsx{--paper:#221D17;--card:#2A241D;--inset:#231D16;--ink:#EFE6D5;--muted:#B1A48D;--faint:#7C7160;--wl:#352E24;--wl2:#41382B;--orange:#E29B46;--orange2:#EEB162;--oink:#241809;--osoft:rgba(226,155,70,.14);--tan:#332B20;--tan2:#3E3427;--green:#5CB979;--amber:#DBA548;--grad:linear-gradient(103deg,#4A3A78 0%,#6E56A6 58%,#8C70B6 100%);--sh1:0 1px 2px rgba(0,0,0,.3);--sh2:0 8px 26px rgba(0,0,0,.4);font-family:var(--sans);color:var(--ink);grid-column:1/-1;background:var(--paper);border:1px solid var(--wl);border-radius:16px;overflow:hidden;box-shadow:var(--sh2)}',
+'[data-lm] .wsx{--paper:#F3EEE3;--card:#FFFFFF;--inset:#F6F1E8;--ink:#2A2620;--muted:#877B6B;--faint:#B2A68F;--wl:#EAE1D0;--wl2:#E1D6C1;--orange:#C67A22;--orange2:#B06813;--oink:#FFFFFF;--osoft:#F5E8D6;--tan:#F0E6D5;--tan2:#E7D8C1;--green:#3E9E5E;--amber:#C08A2E;--grad:linear-gradient(103deg,#6C4FAE 0%,#A87FCE 52%,#DAC1E9 100%);--sh1:0 1px 2px rgba(60,45,25,.05);--sh2:0 6px 22px rgba(60,45,25,.08)}',
+'.wsx *{box-sizing:border-box}.wsx .num{font-variant-numeric:tabular-nums}',
+'.wsx .wx-top{background:var(--grad);color:#fff;padding:20px 26px;display:flex;align-items:center;gap:16px;position:relative;overflow:hidden}',
+'.wsx .wx-top::after{content:"";position:absolute;right:-30px;top:-40px;width:180px;height:180px;border-radius:50%;border:14px solid rgba(255,255,255,.07)}',
+'.wsx .wx-cog{width:40px;height:40px;flex:0 0 auto;opacity:.95}.wsx .wx-cog svg{width:100%;height:100%;fill:#fff;animation:wxspin 22s linear infinite}',
+'@keyframes wxspin{to{transform:rotate(360deg)}}@media (prefers-reduced-motion:reduce){.wsx .wx-cog svg{animation:none}}',
+'.wsx .wx-htxt h1{margin:0;font-size:21px;font-weight:700;letter-spacing:-.01em;line-height:1.15;color:#fff}',
+'.wsx .wx-st{display:flex;align-items:center;gap:8px;margin-top:5px;font-size:12.5px;color:rgba(255,255,255,.9)}',
+'.wsx .wx-st .wx-dot{width:8px;height:8px;border-radius:50%;background:#7CF0A0;box-shadow:0 0 8px #7CF0A0}.wsx .wx-st code{font-family:var(--mono);font-size:11.5px;opacity:.9}',
+'.wsx .wx-close{margin-left:auto;color:rgba(255,255,255,.9);font-size:13px;font-weight:600;background:rgba(255,255,255,.14);border:0;border-radius:8px;padding:8px 14px;cursor:pointer}.wsx .wx-close:hover{background:rgba(255,255,255,.22)}',
+'.wsx .wx-tabr{position:absolute;opacity:0;pointer-events:none}',
+'.wsx .wx-tabbar{display:flex;gap:4px;padding:12px 26px 0;background:var(--paper);border-bottom:1px solid var(--wl);flex-wrap:wrap}',
+'.wsx .wx-tabbar label{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--muted);padding:10px 16px;border-radius:10px 10px 0 0;cursor:pointer;position:relative;top:1px;border:1px solid transparent;border-bottom:0}',
+'.wsx .wx-tabbar label:hover{color:var(--ink)}.wsx .wx-tabbar label .wx-b{font-size:11px;background:var(--orange);color:var(--oink);border-radius:20px;padding:0 7px;font-weight:700}',
+'.wsx #wt-over:checked~.wx-tabbar label[for="wt-over"],.wsx #wt-task:checked~.wx-tabbar label[for="wt-task"],.wsx #wt-mat:checked~.wx-tabbar label[for="wt-mat"],.wsx #wt-set:checked~.wx-tabbar label[for="wt-set"]{color:var(--orange);background:var(--card);border-color:var(--wl);border-bottom-color:var(--card)}',
+'.wsx .wx-canvas{padding:24px 26px 96px;background:var(--paper)}',
+'.wsx .wx-view{display:none}',
+'.wsx #wt-over:checked~.wx-canvas #wx-over,.wsx #wt-task:checked~.wx-canvas #wx-task,.wsx #wt-mat:checked~.wx-canvas #wx-mat,.wsx #wt-set:checked~.wx-canvas #wx-set{display:block}',
+'.wsx .wx-domain{display:flex;align-items:baseline;gap:14px;margin:0 0 18px;font-size:13px;color:var(--muted)}.wsx .wx-domain a{margin-left:auto;color:var(--orange);font-weight:600;text-decoration:none;white-space:nowrap;cursor:pointer}',
+'.wsx .wx-panel{background:var(--card);border:1px solid var(--wl);border-radius:16px;box-shadow:var(--sh1);padding:24px 26px}',
+'.wsx .wx-panel h2{margin:0 0 6px;font-size:22px;font-weight:700;letter-spacing:-.015em}.wsx .wx-panel .wx-sub{color:var(--muted);font-size:14px;margin:0 0 20px;max-width:64ch}.wsx .wx-panel .wx-sub b{color:var(--ink);font-weight:600}',
+'.wsx .wx-pills{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:22px}.wsx .wx-pill{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;padding:9px 15px;border-radius:24px;background:var(--tan);color:var(--ink);border:1px solid transparent}.wsx .wx-pill.on{background:var(--orange);color:var(--oink)}',
+'.wsx .wx-step{border:1px solid var(--wl);border-radius:11px;padding:16px 18px;margin-bottom:14px;background:var(--card)}.wsx .wx-step:last-child{margin-bottom:0}',
+'.wsx .wx-steph{display:flex;align-items:center;gap:12px;margin-bottom:6px}.wsx .wx-nchip{width:26px;height:26px;flex:0 0 auto;border-radius:50%;background:var(--tan);color:var(--orange);display:grid;place-items:center;font-weight:700;font-size:13px}',
+'.wsx .wx-steph .wx-tt{font-size:16px;font-weight:700;letter-spacing:-.01em}.wsx .wx-pct{margin-left:auto;font-weight:800;font-size:19px;font-variant-numeric:tabular-nums}',
+'.wsx .wx-desc{color:var(--muted);font-size:13.5px;margin:2px 0 0}.wsx .wx-desc b{color:var(--ink)}',
+'.wsx .wx-badge{font-size:11.5px;font-weight:600;padding:4px 11px;border-radius:20px;background:var(--tan);color:var(--muted)}.wsx .wx-badge.wk{background:var(--osoft);color:var(--orange2)}.wsx .wx-badge.ok{background:color-mix(in srgb,var(--green) 16%,transparent);color:var(--green)}.wsx .wx-badge.you{background:color-mix(in srgb,var(--amber) 16%,transparent);color:var(--amber)}',
+'.wsx .wx-meter{height:8px;border-radius:8px;background:var(--inset);overflow:hidden;margin:14px 0 12px}.wsx .wx-meter>i{display:block;height:100%;background:linear-gradient(90deg,var(--orange),color-mix(in srgb,var(--orange) 70%,#E8B36A));border-radius:8px}',
+'.wsx .wx-gmeta{display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--muted)}.wsx .wx-tag{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;padding:5px 11px;border-radius:8px;background:var(--inset);color:var(--ink);border:1px solid var(--wl)}',
+'.wsx .wx-next{display:flex;align-items:center;gap:16px;background:var(--osoft);border:1px solid var(--tan2);border-radius:11px;padding:15px 18px;margin-top:20px;flex-wrap:wrap}.wsx .wx-next .wx-k{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--orange2)}.wsx .wx-next .wx-v{font-size:15px;font-weight:600;margin-top:2px}',
+'.wsx .wx-btn{font-family:var(--sans);font-size:14px;font-weight:650;padding:11px 18px;border-radius:10px;border:1px solid transparent;background:var(--orange);color:var(--oink);cursor:pointer;white-space:nowrap}.wsx .wx-btn:hover{filter:brightness(1.05)}.wsx .wx-btn.tan{background:var(--tan);color:var(--ink)}.wsx .wx-btn.sm{padding:8px 14px;font-size:13px}',
+'.wsx .wx-field{width:100%;background:var(--inset);border:1px solid var(--wl);border-radius:10px;padding:11px 13px;font-family:var(--sans);font-size:14px;color:var(--ink)}.wsx .wx-field:focus{outline:none;border-color:var(--orange)}',
+'.wsx .wx-chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.wsx .wx-chip{font-size:13px;padding:7px 13px;border-radius:22px;border:1px solid var(--wl2);background:var(--card);color:var(--ink);cursor:pointer;user-select:none}.wsx .wx-chip:hover{border-color:var(--orange);color:var(--orange)}.wsx .wx-chip.on{background:var(--orange);border-color:var(--orange);color:var(--oink);font-weight:600}',
+'.wsx .wx-qrow{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.wsx .wx-qrow .wx-hint{font-size:12.5px;color:var(--faint)}',
+'.wsx .wx-tk{display:flex;align-items:center;gap:14px;padding:13px 0;border-top:1px solid var(--wl)}.wsx .wx-tk:first-child{border-top:0}.wsx .wx-tk .wx-ck{width:20px;height:20px;flex:0 0 auto;border-radius:6px;border:2px solid var(--wl2);position:relative;background:transparent;cursor:pointer}',
+'.wsx .wx-tk.done .wx-ck{background:var(--green);border-color:var(--green);cursor:default}.wsx .wx-tk.done .wx-ck::after{content:"";position:absolute;left:6px;top:2px;width:5px;height:10px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}.wsx .wx-tk.now .wx-ck{border-color:var(--orange);box-shadow:0 0 0 3px var(--osoft)}',
+'.wsx .wx-tk .wx-tt{font-size:14.5px}.wsx .wx-tk.done .wx-tt{color:var(--muted)}.wsx .wx-tk .wx-who{margin-left:auto}',
+'.wsx .wx-lane{display:flex;align-items:center;gap:10px;margin:20px 0 8px;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--faint)}.wsx .wx-lane .wx-line{flex:1;height:1px;background:var(--wl)}',
+'.wsx .wx-row{display:flex;align-items:center;gap:14px;padding:13px 0;border-top:1px solid var(--wl);font-size:14px}.wsx .wx-row:first-child{border-top:0}.wsx .wx-row .wx-em{font-size:17px;width:24px;text-align:center;flex:0 0 auto}.wsx .wx-row .wx-meta{margin-left:auto;font-size:13px;color:var(--muted)}.wsx .wx-row .wx-rr{margin-left:auto;display:flex;gap:9px;align-items:center}',
+'.wsx .wx-fgrp{margin-top:16px}.wsx .wx-fgrp .wx-fl{font-size:12.5px;font-weight:700;color:var(--orange2);margin-bottom:10px;display:flex;gap:9px;align-items:center}.wsx .wx-fgrp .wx-fl .wx-sc{font-weight:600;font-size:11px;color:var(--muted);background:var(--inset);border:1px solid var(--wl);padding:2px 9px;border-radius:20px}',
+'.wsx .wx-fact{display:inline-flex;align-items:baseline;gap:10px;padding:8px 0;margin-right:28px}.wsx .wx-fact .wx-fk{font-size:13px;color:var(--muted);min-width:96px}.wsx .wx-fact .wx-fv{font-size:14.5px;font-weight:600}',
+'.wsx .wx-caps{display:flex;flex-wrap:wrap;gap:9px}.wsx .wx-cap{font-size:13px;font-weight:600;padding:7px 13px;border-radius:9px;background:var(--inset);border:1px solid var(--wl);color:var(--ink)}',
+'.wsx .wx-section{margin-top:22px}.wsx .wx-sectionh{font-size:13px;font-weight:700;color:var(--ink);margin:0 0 14px;display:flex;align-items:baseline;gap:10px}.wsx .wx-sectionh .wx-c{font-size:12px;color:var(--faint);font-weight:600}',
+'.wsx .wx-dock{position:fixed;left:0;right:0;bottom:0;background:color-mix(in srgb,var(--paper) 90%,transparent);backdrop-filter:blur(12px);border-top:1px solid var(--wl);padding:13px 0;z-index:50}.wsx .wx-dock .wx-in{max-width:1080px;margin:0 auto;padding:0 26px;display:flex;align-items:center;gap:14px}',
+'.wsx .wx-dock .wx-last{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:30%}.wsx .wx-dock .wx-last .wx-okk{color:var(--green);font-weight:600}',
+'.wsx .wx-dock form{flex:1;display:flex;align-items:center;gap:10px;min-width:0;background:var(--card);border:1px solid var(--wl2);border-radius:12px;padding:5px 5px 5px 16px}.wsx .wx-dock form:focus-within{border-color:var(--orange)}.wsx .wx-dock input{flex:1;min-width:0;background:transparent;border:0;color:var(--ink);font-family:var(--sans);font-size:14px;padding:8px 0}.wsx .wx-dock input:focus{outline:none}',
+'.wsx .wx-dock .wx-send{width:36px;height:36px;border-radius:9px;border:0;background:var(--orange);color:var(--oink);font-size:16px;cursor:pointer;flex:0 0 auto}.wsx .wx-dock .wx-hint{font-size:11.5px;color:var(--faint);white-space:nowrap}',
+'.wsx .wx-empty{color:var(--faint);font-size:13px;padding:6px 0}',
+'@media (max-width:760px){.wsx .wx-tabbar label .wx-b{display:none}.wsx .wx-dock .wx-last,.wsx .wx-dock .wx-hint{display:none}}'
   ].join('\n');
   document.head.appendChild(s);
 }
 function _wsToolIcon(t){ t=(t||'').toLowerCase(); if(/табл|excel|sheet|csv/.test(t))return'📊'; if(/код|code|markdown|md/.test(t))return'💻'; if(/почт|mail|email/.test(t))return'✉️'; if(/докум|contract|договор|doc/.test(t))return'📄'; return'🔧'; }
+var _WX_COG='<svg viewBox="0 0 24 24"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7zm0 2a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z"/><path d="M19.4 13a7.5 7.5 0 0 0 .05-2l1.6-1.25-1.7-2.94-1.9.76a7.4 7.4 0 0 0-1.73-1l-.29-2.03h-3.4l-.29 2.03c-.62.25-1.2.59-1.73 1l-1.9-.76-1.7 2.94L6.6 11a7.5 7.5 0 0 0 0 2l-1.6 1.25 1.7 2.94 1.9-.76c.53.41 1.11.75 1.73 1l.29 2.03h3.4l.29-2.03c.62-.25 1.2-.59 1.73-1l1.9.76 1.7-2.94L19.4 13z" opacity=".45"/></svg>';
+function _wxTaskBadge(t){
+  if(t.status==='done')return '<span class="wx-badge ok">готово</span>';
+  if(t.kind==='capability')return '<span class="wx-badge wk">я делаю</span>';
+  if(t.kind==='question')return '<span class="wx-badge you">вопрос</span>';
+  return '<span class="wx-badge you">за тобой</span>';
+}
 function wsRenderCockpitV3(w){
   var g=document.getElementById('grid'); if(!g)return;
   _wsxStyle();
@@ -4828,108 +4826,110 @@ function wsRenderCockpitV3(w){
   var wid=_dtEsc(w.ws_id||''), goals=w.goals||[], tasks=w.tasks||[], questions=(w.questions||[]).filter(function(q){return q.status!=='answered';});
   var st=w.state||{}, sources=w.sources||[], pack=w.pack||{}, ap=w.autopilot||{}, ledger=w.ledger||[];
   var facts=w.facts||{}, meFacts=w._me_facts||{};
-  var openQ=questions.length, waitTasks=tasks.filter(function(t){return t.kind==='human'||t.kind==='question';}).filter(function(t){return t.status!=='done';}).length;
-  // header
+  var openQ=questions.length, waitTasks=tasks.filter(function(t){return (t.kind==='human'||t.kind==='question')&&t.status!=='done';}).length;
+  var srcTotal=(w.sources_total!=null)?w.sources_total:sources.length;
+  var und=esc(w.understood||'');
   var html='<div class="wsx">'+
-    '<div class="wtop"><div class="wmark">E</div><div style="flex:1;min-width:0"><div class="weye">Воркспейс</div>'+
-      '<h1 class="wh">'+esc(w.name||'Workspace')+'</h1><div class="wu">'+esc(w.understood||'')+'</div></div>'+
-      '<button class="wback" onclick="wsBack()">‹ Все</button></div>'+
-    // tabs
-    '<input class="wtabr" type="radio" name="wtab" id="wt-over" checked>'+
-    '<input class="wtabr" type="radio" name="wtab" id="wt-task">'+
-    '<input class="wtabr" type="radio" name="wtab" id="wt-mat">'+
-    '<input class="wtabr" type="radio" name="wtab" id="wt-set">'+
-    '<div class="wtabbar">'+
-      '<label for="wt-over">Обзор</label>'+
-      '<label for="wt-task">Задачи'+(openQ?'':'')+(waitTasks?' <span class="wb p">'+waitTasks+'</span>':'')+'</label>'+
-      '<label for="wt-mat">Материалы</label>'+
-      '<label for="wt-set">Настройки'+(openQ?' <span class="wb w">'+openQ+'</span>':'')+'</label>'+
-    '</div><div class="wpanes">';
-  // ===== ОБЗОР =====
-  html+='<section class="wpane" id="wp-over">';
-  html+='<div class="wsh"><span class="wt">Цели</span>'+(goals.length?'<span class="wcnt p">'+goals.length+'</span>':'')+'<span class="wy">к какому результату идём</span></div>';
-  if(goals.length){ html+='<div class="wgoals">'+goals.map(function(gl){
-    var pr=(gl.progress|0), stc=gl.status==='waiting'?'wait':(pr>0?'work':'');
-    return '<div class="wgoal"><div class="wgt">'+esc(gl.title||'')+'<span class="wgs '+stc+'">'+pr+'%</span></div>'+
-      (gl.outcome?'<div class="wout">Результат: <b>'+esc(gl.outcome)+'</b></div>':'')+
-      '<div class="wbar"><i style="width:'+pr+'%"></i></div>'+
-      (gl.tool?'<span class="wtoolchip">'+_wsToolIcon(gl.tool)+' '+esc(gl.tool)+'</span>':'')+'</div>';
-  }).join('')+'</div>'; }
-  else html+='<div class="wempty">Целей пока нет — соберутся при сборке воркспейса.</div>';
-  if(st.next||st.first_task){ html+='<div class="wnext"><div><div class="wnt">Что дальше</div><div class="wnd">'+esc(st.next||st.first_task)+'</div></div>'+
-    '<button class="wbtn" style="margin-left:auto" onclick="wsRunCap(\''+wid+'\',\''+_dtEsc(st.next||st.first_task)+'\')">Давай →</button></div>'; }
-  if(openQ){ html+='<div class="wsh"><span class="wt">Воркспейс спрашивает</span><span class="wcnt w">'+openQ+'</span><span class="wy">спрашиваю только то, чего не знаю — и запоминаю</span></div>'+
-    '<div class="wqs">'+questions.map(wsxQuestion).join('')+'</div>'; }
-  html+='</section>';
-  // ===== ЗАДАЧИ =====
-  html+='<section class="wpane" id="wp-task">';
-  var COLS=[['todo','Надо'],['doing','В работе'],['done','Готово']];
-  html+='<div class="wsh"><span class="wt">Задачи</span><span class="wy">часть — я делаю сам, часть — за тобой</span></div>';
-  if(tasks.length){ html+='<div class="wboard">'+COLS.map(function(c){
-    var ts=tasks.filter(function(t){return (t.status||'todo')===c[0];});
-    return '<div class="wcol"><div class="wcolh">'+c[1]+'</div>'+(ts.map(function(t){
-      var via=t.kind==='capability'?'<span class="wvia cap">способность</span>':(t.kind==='question'?'<span class="wvia you">вопрос</span>':'<span class="wvia you">за тобой</span>');
-      var done=(t.status!=='done')?'<button title="Отметить готовой" onclick="wsxSetTask(\''+_dtEsc(t.id||'')+'\',\'done\')" style="float:right;border:1px solid var(--wline2,#ccc);background:transparent;color:var(--wgood,#2C8768);border-radius:6px;width:22px;height:22px;cursor:pointer;font-size:12px;line-height:1;padding:0">✓</button>':'';
-      return '<div class="wtask">'+done+via+'<br>'+esc(t.title||'')+'</div>';
-    }).join('')||'<div class="wempty">—</div>')+'</div>';
-  }).join('')+'</div>'; }
-  else html+='<div class="wempty">Задач пока нет.</div>';
-  // журнал результатов
-  if(ledger.length){ html+='<div class="wcard"><span class="wct">Что Extella сделала</span>'+ledger.slice().reverse().slice(0,6).map(function(l){
-    return '<div class="wrow"><span class="wic">•</span><span class="wrn">'+esc(l.action||'')+'</span>'+(l.detail?'<span class="wmeta">'+esc(l.detail)+'</span>':'')+'</div>';
-  }).join('')+'</div>'; }
-  html+='</section>';
-  // ===== МАТЕРИАЛЫ =====
-  html+='<section class="wpane" id="wp-mat">';
-  var srcTotal=(w.sources_total!=null)?w.sources_total:sources.length;   // sources — выборка; полный счёт в sources_total (движок обрезает большие объекты)
-  html+='<div class="wcard"><span class="wct">Источники · '+srcTotal+' файл'+wsPlural(srcTotal)+'</span>';
-  html+=(sources.length?sources.slice(0,40).map(function(s){ return '<div class="wrow"><span class="wic">'+wsExtIcon(s.ext)+'</span><span class="wrn">'+esc(s.name)+'</span><span class="wmeta">'+esc((s.ext||'').toUpperCase())+'</span></div>'; }).join('')+(srcTotal>sources.length?'<div class="wempty">…и ещё '+(srcTotal-sources.length)+' — показана выборка</div>':''):'<div class="wempty">нет источников</div>');
+    '<input class="wx-tabr" type="radio" name="wtab" id="wt-over" checked>'+
+    '<input class="wx-tabr" type="radio" name="wtab" id="wt-task">'+
+    '<input class="wx-tabr" type="radio" name="wtab" id="wt-mat">'+
+    '<input class="wx-tabr" type="radio" name="wtab" id="wt-set">'+
+    // ── HEADER ──
+    '<header class="wx-top"><div class="wx-cog">'+_WX_COG+'</div>'+
+      '<div class="wx-htxt"><h1>'+esc(w.name||'Workspace')+'</h1>'+
+      '<div class="wx-st"><span class="wx-dot"></span>активен · <code>'+esc(w.contract||'ws-v1.3')+'</code>'+(und?' · '+und:'')+'</div></div>'+
+      '<button class="wx-close" onclick="wsBack()">‹ Все воркспейсы</button></header>'+
+    // ── TABS ──
+    '<div class="wx-tabbar">'+
+      '<label for="wt-over"><span>📊</span>Обзор</label>'+
+      '<label for="wt-task"><span>✅</span>Задачи'+(waitTasks?' <span class="wx-b">'+waitTasks+'</span>':'')+'</label>'+
+      '<label for="wt-mat"><span>📁</span>Материалы</label>'+
+      '<label for="wt-set"><span>⚙️</span>Настройки'+(openQ?' <span class="wx-b">'+openQ+'</span>':'')+'</label>'+
+    '</div>'+
+    '<main class="wx-canvas">';
+  if(und)html+='<div class="wx-domain">'+und+'<a onclick="notify(\'mkt_win\')">открыть в отдельном окне ↗</a></div>';
+  // ══ ОБЗОР ══
+  html+='<section class="wx-view" id="wx-over"><div class="wx-panel"><h2>Панель воркспейса</h2>'+
+    '<p class="wx-sub">Компьютер понял проект и настроился под него. Ниже — цели, что делать дальше и что нужно от тебя. <b>Ничего не уходит наружу без твоего нажатия.</b></p>'+
+    '<div class="wx-pills"><span class="wx-pill on"><span>🎯</span>Цели</span><span class="wx-pill"><span>📈</span>Прогресс</span>'+(openQ?'<span class="wx-pill"><span>📨</span>Вопросы · '+openQ+'</span>':'')+'</div>';
+  if(goals.length){ html+=goals.map(function(gl,i){
+    var pr=(gl.progress|0);
+    return '<div class="wx-step"><div class="wx-steph"><span class="wx-nchip">'+(i+1)+'</span><span class="wx-tt">'+esc(gl.title||'')+'</span><span class="wx-pct num">'+pr+'%</span></div>'+
+      (gl.outcome?'<p class="wx-desc">Результат: <b>'+esc(gl.outcome)+'</b></p>':'')+
+      '<div class="wx-meter"><i style="width:'+pr+'%"></i></div>'+
+      '<div class="wx-gmeta">'+(gl.tool?'<span class="wx-tag"><span>'+_wsToolIcon(gl.tool)+'</span>'+esc(gl.tool)+'</span>':'')+'</div></div>';
+  }).join(''); }
+  else html+='<div class="wx-empty">Целей пока нет — соберутся при сборке воркспейса.</div>';
+  if(st.next||st.first_task)html+='<div class="wx-next"><div><div class="wx-k">Что дальше</div><div class="wx-v">'+esc(st.next||st.first_task)+'</div></div>'+
+    '<label class="wx-btn" style="margin-left:auto;cursor:pointer" onclick="wsRunCap(\''+wid+'\',\''+_dtEsc(st.next||st.first_task)+'\')">Давай →</label></div>';
   html+='</div>';
-  // факты
-  html+='<div class="wcard"><span class="wct">Что я знаю</span>';
-  var meKeys=Object.keys(meFacts), wsKeys=Object.keys(facts);
-  html+='<div class="wgrp"><div class="wgl">Про тебя <span class="wscope">Я · везде</span></div>'+
-    (meKeys.length?meKeys.map(function(k){return '<span class="wfact"><span class="wk">'+esc(k)+'</span>'+esc(String(meFacts[k]))+'</span>';}).join(''):'<span class="wempty">пока ничего — воркспейс спросит по мере надобности</span>')+'</div>';
-  if(wsKeys.length)html+='<div class="wgrp"><div class="wgl">Про проект <span class="wscope">этот воркспейс</span></div>'+
-    wsKeys.map(function(k){return '<span class="wfact"><span class="wk">'+esc(k)+'</span>'+esc(String(facts[k]))+'</span>';}).join('')+'</div>';
-  html+='</div></section>';
-  // ===== НАСТРОЙКИ =====
-  html+='<section class="wpane" id="wp-set">';
-  html+='<div class="wcard"><span class="wct">Инструменты · под цели</span><div class="wcaps">'+
-    ((pack.capabilities||[]).map(function(c){return '<span class="wcap">'+esc(c)+'</span>';}).join('')||'<span class="wempty">нет способностей</span>')+'</div>'+
-    (pack.name?'<div class="wu" style="margin-top:10px">Пак: '+esc(pack.name)+(pack.installed===false?' · предложение':'')+'</div>':'')+'</div>';
-  // автопилот
-  html+='<div class="wcard"><span class="wct">Автопилот</span>'+
-    '<div style="display:flex;align-items:center;gap:12px"><label class="wtgl"><input type="checkbox" '+(ap.enabled?'checked':'')+' onchange="wsSetAutopilot(\''+wid+'\',this.checked)"><span></span></label>'+
-    '<div style="flex:1"><b>'+(ap.enabled?'Включён':'Выключен')+'</b><div class="wu">'+((ap.rules||[]).map(esc).join(' · ')||'сам ведёт план: делает мои задачи, останавливается на вопросах к тебе')+'</div></div>'+
-    (ap.enabled?'<button class="wbtn sm" onclick="wsxRunAutopilot(\''+wid+'\',this)">▶ Запустить</button>':'')+
-    '</div><div class="wu" style="margin-top:8px;font-size:11px">Тоггл включает режим. «Запустить» — воркспейс сам делает следующие задачи, пока не упрётся в вопрос к тебе.</div></div>';
-  // открытые вопросы также тут (для полноты)
-  if(openQ)html+='<div class="wsh"><span class="wt">Вопросы</span><span class="wcnt w">'+openQ+'</span></div><div class="wqs">'+questions.map(wsxQuestion).join('')+'</div>';
+  if(openQ)html+='<div class="wx-panel" style="margin-top:16px"><div class="wx-sectionh">Воркспейс спрашивает<span class="wx-c">'+openQ+' · спрашиваю только то, чего не знаю — и запоминаю</span></div>'+questions.map(wsxQuestion).join('')+'</div>';
   html+='</section>';
-  html+='</div>'; // wpanes
-  // чат-бар
+  // ══ ЗАДАЧИ ══
+  html+='<section class="wx-view" id="wx-task"><div class="wx-panel"><h2>Задачи</h2>'+
+    '<p class="wx-sub">Способности <b>я закрываю сам</b>; вопросы и подпись — за тобой. План двигается по мере работы.</p>';
+  if(tasks.length){ [['doing','В работе'],['todo','Дальше'],['done','Готово']].forEach(function(c){
+    var ts=tasks.filter(function(t){return (t.status||'todo')===c[0];});
+    if(!ts.length)return;
+    html+='<div class="wx-lane">'+c[1]+'<span class="wx-line"></span></div>'+ts.map(function(t){
+      var cls=t.status==='done'?' done':(t.status==='doing'?' now':'');
+      var ck=(t.status!=='done')?'<span class="wx-ck" title="Отметить готовой" onclick="wsxSetTask(\''+_dtEsc(t.id||'')+'\',\'done\')"></span>':'<span class="wx-ck"></span>';
+      return '<div class="wx-tk'+cls+'">'+ck+'<span class="wx-tt">'+esc(t.title||'')+'</span><span class="wx-who">'+_wxTaskBadge(t)+'</span></div>';
+    }).join('');
+  }); }
+  else html+='<div class="wx-empty">Задач пока нет.</div>';
+  html+='</div>';
+  if(ledger.length)html+='<div class="wx-panel" style="margin-top:16px"><div class="wx-sectionh">Результаты</div>'+ledger.slice().reverse().slice(0,6).map(function(l){
+    return '<div class="wx-row"><span class="wx-em">•</span><span>'+esc(l.action||'')+'</span>'+(l.detail?'<span class="wx-meta">'+esc(l.detail)+'</span>':'')+'</div>';
+  }).join('')+'</div>';
+  html+='</section>';
+  // ══ МАТЕРИАЛЫ ══
+  html+='<section class="wx-view" id="wx-mat"><div class="wx-panel"><h2>Материалы</h2>'+
+    '<p class="wx-sub">Файлы — ссылками, не копиями. Факты — то, что я о тебе и проекте запомнил.</p>'+
+    '<div class="wx-sectionh">Источники<span class="wx-c">'+srcTotal+' файл'+wsPlural(srcTotal)+'</span></div>';
+  html+=(sources.length?sources.slice(0,40).map(function(s){ return '<div class="wx-row"><span class="wx-em">'+wsExtIcon(s.ext)+'</span><span>'+esc(s.name)+'</span><span class="wx-meta">'+esc((s.ext||'').toUpperCase())+'</span></div>'; }).join('')+(srcTotal>sources.length?'<div class="wx-empty">…и ещё '+(srcTotal-sources.length)+' — показана выборка</div>':''):'<div class="wx-empty">нет источников</div>');
+  var meKeys=Object.keys(meFacts), wsKeys=Object.keys(facts);
+  html+='<div class="wx-section"><div class="wx-sectionh">Что я знаю</div>'+
+    '<div class="wx-fgrp"><div class="wx-fl">Про тебя <span class="wx-sc">Я · везде</span></div>'+
+    (meKeys.length?meKeys.map(function(k){return '<span class="wx-fact"><span class="wx-fk">'+esc(k)+'</span><span class="wx-fv">'+esc(String(meFacts[k]))+'</span></span>';}).join(''):'<span class="wx-empty">пока ничего — воркспейс спросит по мере надобности</span>')+'</div>'+
+    (wsKeys.length?'<div class="wx-fgrp"><div class="wx-fl">Про проект <span class="wx-sc">этот воркспейс</span></div>'+wsKeys.map(function(k){return '<span class="wx-fact"><span class="wx-fk">'+esc(k)+'</span><span class="wx-fv">'+esc(String(facts[k]))+'</span></span>';}).join('')+'</div>':'')+
+    '</div></div></section>';
+  // ══ НАСТРОЙКИ ══
+  html+='<section class="wx-view" id="wx-set"><div class="wx-panel"><h2>Настройки</h2>'+
+    '<p class="wx-sub">Под цель подобраны инструменты. Автопилот ведёт план сам и останавливается, где нужен ты.</p>'+
+    '<div class="wx-sectionh">Инструменты<span class="wx-c">под цели</span></div>'+
+    '<div class="wx-caps">'+((pack.capabilities||[]).map(function(c){return '<span class="wx-cap">'+esc(c)+'</span>';}).join('')||'<span class="wx-empty">нет способностей</span>')+'</div>'+
+    (pack.name?'<p class="wx-desc" style="margin-top:12px">Пак: <b>'+esc(pack.name)+'</b>'+(pack.installed===false?' · предложение':'')+'</p>':'')+
+    '<div class="wx-section"><div class="wx-sectionh">Автопилот</div>'+
+      '<div class="wx-step" style="margin:0"><div class="wx-steph"><span class="wx-tt" style="font-size:15px">Ведёт план сам</span><span class="wx-badge'+(ap.enabled?' wk':'')+'">'+(ap.enabled?'вкл':'выкл')+'</span></div>'+
+      '<p class="wx-desc">Выполняет задачи-способности по очереди, останавливается на вопросе или подписи.</p>'+
+      '<div class="wx-qrow" style="margin-top:12px">'+(ap.enabled?'<span class="wx-btn sm" onclick="wsxRunAutopilot(\''+wid+'\',this)">▶ Запустить</span>':'')+
+      '<span class="wx-btn sm tan" onclick="wsSetAutopilot(\''+wid+'\','+(!ap.enabled)+')">'+(ap.enabled?'Выключить дежурство':'Включить дежурство')+'</span></div></div></div>'+
+    '</div></section>';
+  html+='</main>';
+  // ── DOCK ──
   var last=ledger.length?esc((ledger[ledger.length-1].action||'')):'';
-  html+='<div class="wchatbar"><div class="winner">'+
-    (last?'<span class="wlast">последнее: '+last+'</span>':'')+
-    '<form onsubmit="return wsxChat(this,\''+wid+'\')"><input id="wsx_chat" placeholder="Скажи воркспейсу, что сделать… «сведи реестр», «сравни версии»" autocomplete="off"><button class="wsend" title="отправить">↑</button></form>'+
+  html+='<div class="wx-dock"><div class="wx-in">'+
+    (last?'<span class="wx-last">последнее: <span class="wx-okk">'+last+'</span></span>':'')+
+    '<form onsubmit="return wsxChat(this,\''+wid+'\')"><input id="wsx_chat" placeholder="Скажи воркспейсу, что сделать… «сведи реестр», «сравни версии»" autocomplete="off"><button class="wx-send" title="отправить">↑</button></form>'+
+    '<span class="wx-hint">говорить = делать</span>'+
   '</div></div>';
   html+='</div>'; // wsx
   g.innerHTML=html;
 }
 function wsExtIcon(e){ e=(e||'').toLowerCase(); if(/xls|csv|numbers/.test(e))return'📊'; if(/pdf/.test(e))return'📄'; if(/docx?|txt|md/.test(e))return'📝'; if(/png|jpg|jpeg|gif|svg/.test(e))return'🖼'; if(/zip|tar|gz/.test(e))return'🗜'; return'📎'; }
 function wsxQuestion(q){
-  var qid=_dtEsc(q.id||q.key||''), scope=q.scope==='me'?'запомню в «Я» · везде':'этот воркспейс';
+  var qid=_dtEsc(q.id||q.key||''), scope=q.scope==='me'?'запомню в «Я»':'этот воркспейс';
   var cands=q.candidates||[];
-  var chips=cands.length?('<div class="wchips" id="wsq_'+qid+'">'+cands.map(function(c){return '<span class="wchip" onclick="wsxChipToggle(this)">'+esc(c)+'</span>';}).join('')+'</div>')
-    :('<input id="wsq_'+qid+'" class="wchip" style="width:100%;box-sizing:border-box;cursor:text" placeholder="ответ…">');
-  return '<div class="wq"><div class="wqm">'+esc(scope)+'</div><div class="wqq">'+esc(q.question||'')+'</div>'+chips+
-    '<div class="wqrow"><button class="wbtn sm" onclick="wsxAnswer(this,\''+_dtEsc(q.key||q.id||'')+'\',\''+esc(q.scope||'workspace')+'\',\''+qid+'\')">Ответить</button></div></div>';
+  var chips=cands.length?('<div class="wx-chips" id="wsq_'+qid+'">'+cands.map(function(c){return '<span class="wx-chip" onclick="wsxChipToggle(this)">'+esc(c)+'</span>';}).join('')+'</div>')
+    :('<input id="wsq_'+qid+'" class="wx-field" style="margin:12px 0" placeholder="ответ…">');
+  return '<div class="wx-step"><div class="wx-steph"><span class="wx-tt" style="font-size:15px">'+esc(q.question||'')+'</span><span class="wx-badge">'+esc(scope)+'</span></div>'+chips+
+    '<div class="wx-qrow"><span class="wx-btn sm" onclick="wsxAnswer(this,\''+_dtEsc(q.key||q.id||'')+'\',\''+esc(q.scope||'workspace')+'\',\''+qid+'\')">Ответить</span></div></div>';
 }
 function wsxChipToggle(el){ el.classList.toggle('on'); }
 function wsxAnswer(btn,key,scope,qid){
   var box=document.getElementById('wsq_'+qid); var val='';
-  if(box){ if(box.tagName==='INPUT')val=box.value.trim(); else val=[].slice.call(box.querySelectorAll('.wchip.on')).map(function(c){return c.textContent;}).join(', '); }
+  if(box){ if(box.tagName==='INPUT')val=box.value.trim(); else val=[].slice.call(box.querySelectorAll('.wx-chip.on')).map(function(c){return c.textContent;}).join(', '); }
   if(!val){ wsToast('Выбери вариант или впиши ответ'); return; }
   if(btn)btn.disabled=true; wsToast('Запоминаю…');
   wsCall('set_fact',{ws_id:_wsCur.ws_id,key:key,value:val,scope:scope},60000).then(function(out){
