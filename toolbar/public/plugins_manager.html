@@ -1432,6 +1432,7 @@ function syncHFFilterBar() {
 function renderGrid() {
   var _cb = document.querySelector('.cmdbar');
   if (_cb) _cb.style.display = (cur === 'home' || cur === 'desktop') ? 'none' : 'flex';
+  _ensureLoc();   // слой переводов (_mkt_loc) — грузится один раз, перерисовывает вкладку сам
   if (cur === 'desktop') renderDesktop();
   else if (cur === 'home') renderHome();
   else if (cur === 'programs') renderPrograms();
@@ -2323,13 +2324,49 @@ function _tabFilterApply(){
   });
 }
 
+// ===== Слой переводов (_mkt_loc) =====================================
+// Каталоги (_mkt_models/_mkt_programs/…) перезаписывает харвестер на VPS — он
+// затирает любые поля, дописанные в карточку. Поэтому функция/описание живут
+// ОТДЕЛЬНЫМ глобальным ключом _mkt_loc (ключ карточки → func_ru/func_en/desc_*)
+// и накладываются поверх каталога при отрисовке. Харвестер его не трогает,
+// а глобальный KV = один канал для всех пользователей.
+var _locReg=null,_locFetched=false;
+function _locKey(h){ return (h&&(h.hfId||h.repoUrl||h.id))||''; }
+function _locOf(h){ var k=_locKey(h); return (_locReg&&k&&_locReg[k])||null; }
+function _locRedraw(){
+  if(cur==='models')renderModels();
+  else if(cur==='programs')renderPrograms();
+  else if(cur==='skills')renderSkillsShelf();
+  else if(cur==='services')renderServices();
+}
+function _ensureLoc(){
+  if(_locFetched)return; _locFetched=true;
+  skKvGet('_mkt_loc').then(function(r){
+    if(!r){ _locReg={}; return; }
+    var n=r.shards||1, m=r.map||{};
+    if(n<=1){ _locReg=m; _locRedraw(); return; }
+    var reqs=[]; for(var i=2;i<=n;i++) reqs.push(skKvGet('_mkt_loc_'+i).catch(function(){return null;}));
+    Promise.all(reqs).then(function(parts){
+      parts.forEach(function(p){ if(p&&p.map) for(var k in p.map) m[k]=p.map[k]; });
+      _locReg=m; _locRedraw();
+    });
+  }).catch(function(){ _locReg={}; });
+}
 function _tileHTML(h, i, label) {
-  var fact = (h.facts && h.facts[0]) ? '<div class="st_fact">' + esc(h.facts[0]) + '</div>' : '';
-  // Канон карточки: чип «тип · метаданные» ведёт (без иконки </>), затем имя жирным, описание, источник, кнопка.
+  _ensureLoc();
+  // Канон: чип «тип · метаданные» ведёт (без иконки </>), ФУНКЦИЯ жирным,
+  // имя продукта вторичной строкой, описание, источник, кнопка.
+  var L=_locOf(h);
+  var func=L?((LANG==='en'?L.func_en:L.func_ru)||''):'';
+  var dsc=L?((LANG==='en'?L.desc_en:L.desc_ru)||''):((h.facts&&h.facts[0])||'');
+  var name=h.title||'';
+  var head=func||name;
+  var nameLine=(func&&name)?'<div class="st_name">'+esc(name)+'</div>':'';
+  var fact=dsc?'<div class="st_fact">'+esc(dsc)+'</div>':'';
   return '<div class="stile" style="--acc:' + esc(h.acc || '#C57E33') + ';animation-delay:' + Math.min(i * 30, 240) + 'ms">' +
     '<span class="st_chip">' + esc(label || h.label || 'ВЫБОР EXTELLA') + '</span>' +
-    '<div class="st_title">' + esc(h.title || '') + (h.accent ? '<i class="acc_sub">' + esc(h.accent) + '</i>' : '') + '</div>' +
-    fact + (h.source ? '<div class="st_src">' + esc(h.source) + '</div>' : '') +
+    '<div class="st_title">' + esc(head) + (h.accent ? '<i class="acc_sub">' + esc(h.accent) + '</i>' : '') + '</div>' +
+    nameLine + fact + (h.source ? '<div class="st_src">' + esc(h.source) + '</div>' : '') +
     '<div class="st_foot">' + _cardBtn(h, 'st_btn') + '</div>' +
   '</div>';
 }
@@ -3875,10 +3912,15 @@ function skCard(s){
   var foot=on
     ? '<span class="sk_active">● активен'+(it&&it.target?' · '+esc(it.target):'')+'</span><button class="sk_del" data-skdel="'+esc(s.id)+'">Удалить</button>'
     : '<button class="st_btn" data-skinst="'+esc(s.id)+'">+ Установить</button>';
+  // Канон: функция жирным (из слоя _mkt_loc), имя навыка вторичной строкой.
+  var sL=_locOf(s)||{};
+  var sfunc=(LANG==='en'?(s.func_en||sL.func_en):(s.func_ru||sL.func_ru))||'';
+  var sdsc=(LANG==='en'?(s.desc_en||sL.desc_en||s.desc):(s.desc_ru||sL.desc_ru||s.desc))||'';
   return '<div class="stile" style="--acc:'+esc(SK_ACC[s.cat]||'#C57E33')+'">'+
     '<span class="st_chip">'+esc(s.emoji)+' '+esc(s.cat)+'</span>'+
-    '<div class="st_title">'+esc(s.name)+'</div>'+
-    '<div class="st_fact">'+esc(s.desc)+'</div>'+
+    '<div class="st_title">'+esc(sfunc||s.name)+'</div>'+
+    (sfunc?'<div class="st_name">'+esc(s.name)+'</div>':'')+
+    '<div class="st_fact">'+esc(sdsc)+'</div>'+
     '<div class="sk_howto"><b>Как запустить:</b> '+esc(s.howto)+'</div>'+
     '<div class="st_foot" style="justify-content:space-between;align-items:center;gap:8px">'+foot+'</div></div>';
 }
@@ -4231,8 +4273,10 @@ function renderMcpCatalog(){
           else if(conn){ foot='<span class="sk_active">✓ подключён</span><span style="font-size:10.5px;color:var(--tx3);overflow:hidden;text-overflow:ellipsis;max-width:55%">'+esc((c.run&&c.run.pkg)||c.id)+'</span>'; }
           else if(c.run){ foot='<span style="font-size:11px;color:var(--tx3)">'+esc(c.run.type)+' · без ключей</span><button class="st_btn" data-mcpconn="'+esc(c.id)+'">Подключить</button>'; }
           else { foot='<span style="font-size:11px;color:var(--tx3)">remote · подключение позже</span>'; }
-          var mfunc=(LANG==='en'?(c.func_en||c.func):(c.func_ru||c.func))||'';
-          var mdsc=(LANG==='en'?(c.desc_en||c.desc):(c.desc_ru||c.desc))||'';
+          // Перевод: сперва из самой карточки, иначе из слоя _mkt_loc (харвестер каталог перезаписывает).
+          var mL=_locOf(c)||{};
+          var mfunc=(LANG==='en'?(c.func_en||mL.func_en||c.func):(c.func_ru||mL.func_ru||c.func))||'';
+          var mdsc=(LANG==='en'?(c.desc_en||mL.desc_en||c.desc):(c.desc_ru||mL.desc_ru||c.desc))||'';
           return '<div class="stile" style="--acc:'+(CAT_ACC[c.cat]||TYPE_ACC.mcp)+'"><span class="st_chip">🔌 MCP · '+esc(MCP_CATL[c.cat]||c.cat||'')+'</span>'+
             '<div class="st_title">'+(mfunc?esc(mfunc):esc(c.title||short))+'</div>'+(mfunc?'<div class="st_name">'+esc(c.title||short)+'</div>':'')+'<div class="st_fact">'+esc(mdsc)+'</div>'+
             '<div class="st_foot" style="justify-content:space-between;align-items:center;gap:8px">'+foot+'</div></div>';
