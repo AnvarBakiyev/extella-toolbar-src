@@ -14,7 +14,7 @@ ETB.tabs = (function () {
       '--etb-tx:#f0f0f0;--etb-tx2:#888;--etb-tx3:#444;',
     '}',
     'html[data-etb-light]{',
-      '--etb-bg:#f2f2f7;--etb-s1:#fff;--etb-s2:#fff;--etb-s3:#f7f7f9;',
+      '--etb-bg:#F4EFE7;--etb-s1:#fff;--etb-s2:#fff;--etb-s3:#FAF6EF;',
       '--etb-bd:rgba(0,0,0,.07);--etb-bd2:rgba(0,0,0,.14);',
       '--etb-tx:#111;--etb-tx2:#6b6b6b;--etb-tx3:#ccc;',
     '}',
