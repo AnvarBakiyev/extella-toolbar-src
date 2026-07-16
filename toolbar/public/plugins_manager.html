@@ -3133,7 +3133,12 @@ function capInstRemove(kind, id, method){
     .then(function(r){
       var out = r.res; if (out && typeof out === 'object' && (out.result || out.output)) out = out.result || out.output;
       if (typeof out === 'string') { try { out = JSON.parse(out); } catch(e){} }
-      if (out && out.device_removed) { _capInstDropRecord(kind, id); }
+      if (out && out.device_removed) {
+        _capInstDropRecord(kind, id);
+        // MCP отключается вычёркиванием из аллоулиста устройства — перечитать правду,
+        // иначе карточка так и останется «✓ подключён».
+        if (kind === 'mcp') { _mcpConnFetched = false; _ensureMcpConn(); }
+      }
       else { alert((en ? 'Not removed: ' : 'Не удалилось: ') + ((out && out.message) || 'error')); }
     })
     .catch(function(e){
@@ -4330,8 +4335,25 @@ function renderServices(){
 // ── Живой каталог MCP-серверов (харвест офиц. реестра → KV _mkt_mcp, шарды) ──
 var _mcpReg=null;
 var MCP_CATL={data:'Базы данных',web:'Веб и браузер',search:'Поиск',dev:'Разработка',comm:'Коммуникации',files:'Файлы и документы',finance:'Финансы',ai:'ИИ и медиа',other:'Другое'};
-var MCP_CONNECTED=['fetch','time','git','filesystem'];
+// Реальное состояние подключений живёт на УСТРОЙСТВЕ (~/.extella_mcp/allowlist.json,
+// пишет mcp_connect). Раньше тулбар брал его из localStorage + захардкоженного
+// списка ['fetch','time','git','filesystem'] — тот врал в обе стороны: рисовал
+// «подключён» неподключённым и предлагал подключить уже работающие. Спрашиваем
+// устройство экспертом mcp_list и сопоставляем по pkg (точное совпадение).
+var _mcpConn=null, _mcpConnFetched=false;
+function _ensureMcpConn(){
+  if(_mcpConnFetched) return; _mcpConnFetched=true;
+  skBridge('etb_run_expert','etb_expert_result',{name:'mcp_list',params:{}},30000).then(function(r){
+    var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
+    if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}
+    var m={}; ((out&&out.servers)||[]).forEach(function(s){ if(s.pkg) m[s.pkg]=s; });
+    _mcpConn=m;
+    if(cur==='services')renderMcpCatalog();
+  }).catch(function(){ _mcpConn={}; });   // не ответило — молчим, кнопка «Подключить» остаётся
+}
+function _mcpConnOf(c){ var p=(c.run||{}).pkg; return (_mcpConn&&p&&_mcpConn[p])||null; }
 function renderMcpCatalog(){
+  _ensureMcpConn();
   var host=document.getElementById('mcp_cat'); if(!host)return;
   var draw=function(items){
     if(!items||!items.length){ host.innerHTML=''; return; }
@@ -4345,8 +4367,10 @@ function renderMcpCatalog(){
       html+='<div class="sect_hdr" style="margin-top:0"><span class="sect_title" style="font-size:13px;color:var(--tx2);text-transform:none">'+esc(MCP_CATL[ck]||ck)+'</span><span class="sect_line"></span></div><div class="mshelf mshelf_capped">'+
         part.map(function(c){
           var short=(c.id||'').split('/').pop();
-          var dyn=mcpxGet(c.id);
-          var conn=c.conn||MCP_CONNECTED.indexOf(short)>=0;
+          // Правда — с устройства (mcp_list по pkg); localStorage лишь запасной,
+          // на случай если эксперт не ответил.
+          var dyn=_mcpConnOf(c)||mcpxGet(c.id);
+          var conn=c.conn;
           var foot;
           if(dyn){ foot='<span class="sk_active">✓ подключён · '+dyn.count+' инстр.</span><span style="font-size:10.5px;color:var(--tx3)">'+esc(dyn.key)+'</span>'; }
           else if(conn){ foot='<span class="sk_active">✓ подключён</span><span style="font-size:10.5px;color:var(--tx3);overflow:hidden;text-overflow:ellipsis;max-width:55%">'+esc((c.run&&c.run.pkg)||c.id)+'</span>'; }
@@ -4385,6 +4409,7 @@ function mcpConnectRun(id, btn){
     if(out&&out.status==='success'){
       var a=mcpxGi(); a=a.filter(function(x){return x.id!==id;});
       a.push({id:id,key:out.server,title:out.title||c.title,count:out.count||0}); mcpxSi(a);
+      _mcpConnFetched=false; _ensureMcpConn();   // перечитать правду с устройства
       if(cur==='services')renderMcpCatalog();
     } else {
       if(btn){btn.disabled=false;btn.textContent='Подключить';}
