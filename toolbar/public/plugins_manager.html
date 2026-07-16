@@ -2629,13 +2629,13 @@ function progToolsHTML(extra){
   _ensureProg();
   var live=!!(_progReg&&_progReg.shelf&&_progReg.shelf.length);
   if(!live&&!extra)return '';
-  var head='<div class="sect"><h2>Готовые решения</h2></div>'+
-    '<div class="sk_lead" style="grid-column:1/-1">Программы и ИИ-приложения: ставятся в один клик и работают у тебя на компьютере. 🔒</div>';
+  // Ни шапки, ни лида: каталог продолжает то, что идёт сверху, одним полотном.
+  // Границы задают только полки категорий — отдельный заголовок читается как разделитель.
   var cat=live?catalogByCatHTML(_progReg.shelf, repoCat, REPO_ORDER, REPO_LABEL, REPO_ACC,
       '', '', '', '🔧 Инструмент'):'';
   var refresh=live?('<div style="grid-column:1/-1;text-align:right;margin:-2px 0 8px"><span style="font-size:11px;color:var(--tx3);margin-right:8px">живой каталог с GitHub · '+_progReg.shelf.length+'</span>'+
     '<button onclick="_progReg=null;_progFetched=false;renderPrograms()" style="border:1px solid var(--bd2);background:transparent;color:var(--tx2);border-radius:5px;padding:4px 10px;font-size:12px;cursor:pointer">↻ Обновить</button></div>'):'';
-  return head+cat+extra+refresh;
+  return cat+extra+refresh;
 }
 
 // Программы, the plugin catalogue (business aisles + grid). The raw GitHub
@@ -4337,8 +4337,9 @@ function renderMcpCatalog(){
   var draw=function(items){
     if(!items||!items.length){ host.innerHTML=''; return; }
     var order=['web','search','dev','data','files','comm','finance','ai','other'];
-    var html='<div class="sect"><span class="eyebrow">MCP</span><h2>Каталог MCP-серверов <i>— тысячи готовых умений</i></h2></div>'+
-      '<div class="sk_lead" style="grid-column:1/-1">Живой каталог из официального реестра MCP ('+items.length+' проверенных, все — без ключей). Помеченные «✓ подключён» уже доступны через мост; остальные подключаем по запросу.</div>';
+    // Без шапки и лида: MCP — часть общего каталога раздела, а не блок сбоку.
+    // Границы задают только полки категорий.
+    var html='';
     order.forEach(function(ck){
       var part=items.filter(function(c){return (c.cat||'other')===ck;});
       if(!part.length)return;
@@ -4498,7 +4499,7 @@ function agentForgeModal(){
     '<label style="display:block;font-size:12px;color:var(--tx3);margin:8px 0 3px">Роль</label>'+
     '<select id="af_role" style="'+_KPINP+'">'+roleOpts+'</select>'+
     boxes+
-    '<div style="margin-top:10px;font-size:12px;color:var(--tx2);background:var(--bg);border:1px dashed var(--bd2);border-radius:8px;padding:8px 10px;line-height:1.5">💡 Нужно больше умений? Во вкладке <b>«Сервисы» → «Каталог MCP-серверов»</b> подключи любой из <b>200</b> готовых серверов кнопкой «Подключить» — он появится здесь галочкой.</div>'+
+    '<div style="margin-top:10px;font-size:12px;color:var(--tx2);background:var(--bg);border:1px dashed var(--bd2);border-radius:8px;padding:8px 10px;line-height:1.5">💡 Нужно больше умений? Во вкладке <b>«Сервисы»</b> подключи любой из <b>200</b> готовых MCP-серверов кнопкой «Подключить» — он появится здесь галочкой.</div>'+
     '<label style="display:block;font-size:12px;color:var(--tx3);margin:12px 0 3px">ID копии агента (создай копию базового в Extella — 2 клика)</label>'+
     '<input id="af_aid" placeholder="agent_XXXXXXXX" autocomplete="off" style="'+_KPINP+'"/>'+
     '<div style="margin-top:14px;display:flex;gap:8px;align-items:center"><button class="st_btn" onclick="agentForgeRun(this)">🛠 Собрать агента</button>'+
