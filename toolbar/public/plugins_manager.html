@@ -1627,13 +1627,15 @@ var _appReg=null, _appFetched=false;
 function _ensureApps(){ if(_appFetched)return; _appFetched=true;
   _loadSharded('_mkt_apps').then(function(r){ if(r&&r.shelf){_appReg=r; if(cur==='programs')renderPrograms(); else if(cur==='desktop')_deskRedraw();} }).catch(function(){ _appReg={shelf:[]}; if(cur==='programs')renderPrograms(); else if(cur==='desktop')_deskRedraw(); }); }
 var _appInstalled=null;   // Set установленных app_id (и их basename)
+var _appInstLoaded=false; // ответ app_list получен (пустой список — тоже ответ, отличаем от «ещё едет»)
 function _refreshInstalledApps(){
   skBridge('etb_run_expert','etb_expert_result',{name:'app_list',params:{}},30000).then(function(r){
     var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
     if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}
     var s={}; ((out&&out.apps)||[]).forEach(function(a){ s[a.app_id]=1; var b=a.app_id.split('/').pop(); s[b]=1; });
-    _appInstalled=s; if(cur==='programs')renderPrograms(); else if(cur==='desktop')_deskRedraw();   // перерисовать с отметками
-  }).catch(function(){ _appInstalled={}; });
+    _appInstalled=s; _appInstLoaded=true;
+    if(cur==='programs')renderPrograms(); else if(cur==='desktop')_deskRedraw();   // перерисовать с отметками
+  }).catch(function(){ _appInstalled={}; _appInstLoaded=true; if(cur==='desktop')_deskRedraw(); });
 }
 function _curOS(){
   var p=(navigator.platform||'')+' '+(navigator.userAgent||'');
@@ -3270,6 +3272,18 @@ function _deskRedraw(){
   clearTimeout(_deskT);
   _deskT=setTimeout(function(){ if(cur==='desktop') renderDesktop(); }, 90);
 }
+// Что ещё едет. Пустой список = стол можно собирать.
+function _deskPending(){
+  var p=[];
+  if(_autoReg===null) p.push('автоматизации');
+  else if(_autoReg.length && _autoReg.some(function(x){ return !(_agId(x) in _agState); })) p.push('состояния агентов');
+  if(_capInstReg===null) p.push('способности');
+  if(!_appInstLoaded) p.push('установленные приложения');
+  if(!_appReg) p.push('каталог приложений');
+  if(cliGi().length && !_cliLoaded) p.push('инструменты');
+  if(_wsDeskList===undefined || _wsDeskList===null) p.push('воркспейсы');
+  return p;
+}
 function renderDesktop(){
   var g=document.getElementById('grid'); if(!g) return;
   _ensureAuto(); _ensureCapInst();
@@ -3295,6 +3309,19 @@ function renderDesktop(){
     _wsDeskList = null;
     wsCall('list', {}, 20000).then(function(out){ _wsDeskList = (out&&out.workspaces)?out.workspaces:[]; _deskRedraw(); })
       .catch(function(){ _wsDeskList = []; _deskRedraw(); });
+  }
+  // ГЕЙТ ПЕРВОЙ СБОРКИ: пока источники едут — держим заглушку и НЕ рисуем стол.
+  // Иначе каждый ответ достраивает экран заново, и это читается как тряска.
+  // Заглушку ставим один раз (повторные заходы её не трогают → она не мигает).
+  if(!_deskReady){
+    if(!_deskDeadline) _deskDeadline = Date.now() + 8000;   // страховка: источник может не ответить вовсе
+    if(_deskPending().length && Date.now() < _deskDeadline){
+      if(!g.querySelector('.dt_boot')){
+        g.innerHTML = '<div class="dt_boot" style="grid-column:1/-1">' + _loadingHTML('Собираю рабочий стол…') + '</div>';
+      }
+      return;
+    }
+    _deskReady = true;   // дальше стол рисуется сразу, из кэша
   }
   // Единый набор контурных значков (как в чипах/карточках Эллы): категория → #ic-*.
   // acc берём из палитры категорий (BIZ_ACC), чтобы цвета совпадали с витриной.
