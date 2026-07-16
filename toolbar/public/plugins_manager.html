@@ -1297,7 +1297,7 @@ function notify(action, pluginId, url) {
 // (Workspace — с Рабочего стола; их рендеры остаются доступны через setc и под-навигацию).
 var CATS = [
   { id: 'desktop',  l: 'Рабочий стол' },
-  { id: 'programs', l: 'Сервисы' },
+  { id: 'programs', l: 'Каталог' },
   { id: 'models',   l: 'Модели' },
   { id: 'skills',   l: 'Навыки' },
   { id: 'knowledge',l: 'Знания' },
@@ -1497,7 +1497,9 @@ try { if (localStorage.getItem('etb_lang') === 'en') LANG = 'en'; } catch (_) {}
 var I18N_EN = {
   // Вкладки
   'Рабочий стол':'Desktop','Витрина':'Storefront','Программы':'Programs','Модели':'Models',
-  'Навыки':'Skills','Инструменты':'Tools','Знания':'Knowledge','Агенты':'Agents','Сервисы':'Services','Профи':'Pro',
+  'Навыки':'Skills','Инструменты':'Tools','Знания':'Knowledge','Агенты':'Agents','Сервисы':'Services','Каталог':'Catalog','Профи':'Pro',
+  'Все программы':'All programs',
+  'Обработка файлов прямо на твоём компьютере (инструменты командной строки, CLI). Скажи агенту, что сделать с файлами, — он вызовет нужный.':'Works with files right on your computer (command-line tools, CLI). Tell the agent what to do with the files — it calls the right tool.',
   // Шапка / командная строка
   'Установить':'Install','Для профи':'Pro','Для всех':'For everyone',
   '🔍  Найди что угодно или вставь ссылку с GitHub или Hugging Face — установим в один клик: программа, модель, навык':'🔍  Find anything or paste a GitHub / Hugging Face link — one-click install: program, model, skill',
@@ -1511,7 +1513,7 @@ var I18N_EN = {
   'Выбор Extella':'EXTELLA PICK','Выбор Extella':'Extella pick',
   'Мои агенты · собраны Конструктором':'My agents · built by the Wizard',
   'Роли агентов':'Agent roles','Роли для базового агента':'Roles for the base agent','Больше пользы без смены модели':'More value, same model',
-  'Сервисы':'Services','Внешние сервисы':'External services','Живые данные для агента. Проверить можно прямо здесь.':'Live data for the agent. Test it right here.',
+  'Сервисы':'Services','Внешние сервисы':'External services','Живые данные из интернета для агента: курсы, погода, справки. Проверить можно прямо здесь.':'Live data from the internet for your agent: rates, weather, references. Test it right here.',
   'Знания':'Knowledge','Своя база из документов':'Your own base from documents','+ Создать базу знаний':'+ Create knowledge base','Новая база':'New base','Мои базы знаний':'My knowledge bases',
   'Своего инструмента нет?':'Missing a tool?','Фабрика':'Factory',
   // Кнопки карточек
@@ -2046,7 +2048,7 @@ function renderFeaturedSection() {
     });
   }
   var _pro = document.body.getAttribute('data-mode') === 'pro';
-  var html = '<div class="sect"><h2>' + (_pro ? 'Все программы' : 'Каталог') + '</h2></div>';
+  var html = '<div class="sect"><h2>Все программы</h2></div>';
 
   if (featuredError) html += '<div class="banner err">⚠ Установка не удалась: ' + esc(featuredError) + '</div>';
   if (!featured.length) {
@@ -3974,7 +3976,7 @@ function renderCLI(){
   var all=cliCatalog();
   var html=_bentoHTML(TYPE_ED.cli.heroes)+
     '<div class="sect"><h2>Инструменты</h2></div>'+
-    '<div class="sk_lead" style="grid-column:1/-1">Скажи агенту, что сделать с файлами.</div>'+
+    '<div class="sk_lead" style="grid-column:1/-1">Обработка файлов прямо на твоём компьютере (инструменты командной строки, CLI). Скажи агенту, что сделать с файлами, — он вызовет нужный.</div>'+
     '<div class="sect_hdr"><span class="sect_title">Своего инструмента нет?</span><span class="sect_line"></span></div>'+
     '<div class="mshelf"><div class="stile" style="--acc:var(--a);border-style:dashed;cursor:pointer" onclick="openCliAdd()">'+
       '<span class="st_chip">✦ Фабрика</span>'+
@@ -4204,7 +4206,7 @@ function renderServices(){
   var g=document.getElementById('grid'); if(!g)return;
   var html=_bentoHTML(TYPE_ED.services.heroes);
   html+='<div class="sect"><h2>Сервисы</h2></div>'+
-    '<div class="sk_lead" style="grid-column:1/-1">Живые данные для агента. Проверить можно прямо здесь.</div>';
+    '<div class="sk_lead" style="grid-column:1/-1">Живые данные из интернета для агента: курсы, погода, справки. Проверить можно прямо здесь.</div>';
   var cats=[]; CATALOG_SERVICES.forEach(function(s){if(cats.indexOf(s.cat)<0)cats.push(s.cat);});
   cats.forEach(function(cn){
     html+='<div class="sect_hdr"><span class="sect_title">'+esc(cn)+'</span><span class="sect_line"></span></div><div class="mshelf">'+
