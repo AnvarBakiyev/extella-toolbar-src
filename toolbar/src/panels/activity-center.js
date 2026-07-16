@@ -502,7 +502,16 @@
       warning.textContent = 'Локальный журнал недоступен. Перезапустите Extella Activity Center.';
       warning.classList.add('show');
     } else if (orphaned) {
-      warning.textContent = 'Обнаружено лишних процессов listener: ' + orphaned + '. Они могут забирать фоновые задачи параллельно.';
+      // Задание Анвара: не только предупреждать, но и чинить в один клик —
+      // POST /x/listener_cleanup закрывает только сирот, ответ показываем тут же.
+      warning.replaceChildren(
+        el('span', {}, 'Обнаружено лишних процессов listener: ' + orphaned + '. Они могут забирать фоновые задачи параллельно. '),
+        (function () {
+          var btn = el('button', { id: '_xtlac_fix', className: '_xtlac_fixbtn', type: 'button' }, 'Закрыть лишние');
+          btn.addEventListener('click', cleanupListeners);
+          return btn;
+        })()
+      );
       warning.classList.add('show');
     } else {
       warning.classList.remove('show');
@@ -523,6 +532,7 @@
 
   function mount() {
     if (!document.body || document.getElementById('_xtlac_root')) return;
+    css += '._xtlac_fixbtn{margin-left:8px;border:1px solid var(--etb-bd2,rgba(0,0,0,.15));background:transparent;color:inherit;border-radius:5px;padding:2px 10px;font-size:11.5px;cursor:pointer}._xtlac_fixbtn:disabled{opacity:.6;cursor:default}';
     var style = el('style', { id: '_xtlac_styles' });
     style.textContent = css;
     document.head.appendChild(style);
@@ -579,6 +589,23 @@
         };
       }).catch(function () { return null; });
     } catch (e) { return Promise.resolve(null); }
+  }
+
+  function cleanupListeners() {
+    var btn = document.getElementById('_xtlac_fix');
+    if (btn) { btn.disabled = true; btn.textContent = 'Закрываю…'; }
+    var w = document.getElementById('_xtlac_warning');
+    fetch(API_BASE + '/x/listener_cleanup', { method: 'POST' })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var killed = d && (d.killed != null ? d.killed : (Array.isArray(d.pids) ? d.pids.length : d.count));
+        if (w) w.textContent = killed ? ('Закрыто лишних: ' + killed + '.') : 'Сирот нет.';
+        setTimeout(refresh, 1200);
+      })
+      .catch(function () {
+        if (w) w.textContent = 'Не удалось закрыть: мост недоступен.';
+        if (btn) { btn.disabled = false; btn.textContent = 'Закрыть лишние'; }
+      });
   }
 
   function refresh() {

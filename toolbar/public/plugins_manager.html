@@ -1504,7 +1504,7 @@ var I18N_EN = {
   'Твой ИИ-компьютер: собирает установленные программы в единые процессы, запускает их и следит за результатом.':'Your AI computer: bundles installed programs into unified processes, runs them and watches the result.',
   'Открыть →':'Open →','Открыть':'Open','Запустить':'Run','Кабинет':'Cabinet','Удалить':'Remove','Открыть источник':'Open source','↗ Открыть':'↗ Open','↗ Источник':'↗ Source','⚙ Кабинет':'⚙ Cabinet','▶ Запустить':'▶ Run',
   // Секции / подписи
-  'ВЫБОР EXTELLA':'EXTELLA PICK','Выбор Extella':'Extella pick',
+  'Выбор Extella':'EXTELLA PICK','Выбор Extella':'Extella pick',
   'Мои агенты · собраны Визардом':'My agents · built by the Wizard',
   'Роли агентов':'Agent roles','Роли для базового агента':'Roles for the base agent','Больше пользы без смены модели':'More value, same model',
   'Сервисы':'Services','Внешние сервисы':'External services','Живые данные для агента. Проверить можно прямо здесь.':'Live data for the agent. Test it right here.',
@@ -1946,7 +1946,7 @@ var BIZ_ORDER_ALL = ['work','marketing','money','study','home','travel','health'
 // «Для всех», человеческий каталог наших плагинов с русскими описаниями, по 5
 // понятным категориям (44 шт., audience=all). Классификация+перевод, workflow
 // humanize-plugins (Claude): dev/техно-утилиты помечены audience=pro и в «Для всех»
-// НЕ показываются (они в «Для профи»). ВЫБОР EXTELLA-200 (MCP-репо), тоже «Для профи».
+// НЕ показываются (они в «Для профи»). Выбор Extella-200 (MCP-репо), тоже «Для профи».
 var CURATED_PROGRAMS = {
   'legal-simplifier': { biz:'docs', icon:'⚖️', name:'Договор простым языком', tagline:'Объяснит по-человечески и покажет, на что смотреть перед подписью' },
   'meeting-notes': { biz:'work', icon:'📝', name:'Итоги встречи', tagline:'Был созвон, будут задачи: кто, что и к какому сроку' },
@@ -2163,7 +2163,7 @@ var TYPE_ED = {
     shelf: [
       { label:'НОВИНКА', acc:'#24544F', source:'huggingface.co/jbilcke-hf · ♥ 11k', hfId:'jbilcke-hf/ai-comic-factory',
         title:'Фабрика комиксов', facts:['Сюжет словами → готовые страницы комикса'] },
-      { label:'ВЫБОР EXTELLA', acc:'#2F6B66', source:'huggingface.co/enzostvs · ♥ 16k', hfId:'enzostvs/deepsite',
+      { label:'Выбор Extella', acc:'#2F6B66', source:'huggingface.co/enzostvs · ♥ 16k', hfId:'enzostvs/deepsite',
         title:'DeepSite, сайт по описанию', facts:['Собирает рабочий сайт из текста, без кода'] },
       { label:'Документы', acc:'#C57E33', source:'huggingface.co/baidu · ★ 13k', hfId:'baidu/Unlimited-OCR',
         title:'OCR, распознаёт документы', facts:['Достаёт текст из PDF, фото и сканов'] },
@@ -2318,7 +2318,7 @@ function _tileHTML(h, i, label) {
   return '<div class="stile" style="--acc:' + esc(h.acc || '#C57E33') + ';animation-delay:' + Math.min(i * 30, 240) + 'ms">' +
     '<div class="st_top">' +
       '<span class="st_ico" aria-hidden="true">' + _ico(_cardCat(h)) + '</span>' +
-      '<span class="st_chip">' + esc(label || h.label || 'ВЫБОР EXTELLA') + '</span>' +
+      '<span class="st_chip">' + esc(label || h.label || 'Выбор Extella') + '</span>' +
     '</div>' +
     '<div class="st_title">' + esc(h.title || '') + (h.accent ? '<i class="acc_sub">' + esc(h.accent) + '</i>' : '') + '</div>' +
     fact + (h.source ? '<div class="st_src">' + esc(h.source) + '</div>' : '') +
@@ -2355,7 +2355,7 @@ function _shelfHTML(shelf, eyebrow, title) {
 }
 function renderTypeEd(type) {
   var ed = TYPE_ED[type]; if (!ed) return '';
-  return _bentoHTML(ed.heroes) + _shelfHTML(ed.shelf, 'ВЫБОР EXTELLA', 'Выбор Extella');
+  return _bentoHTML(ed.heroes) + _shelfHTML(ed.shelf, 'Выбор Extella', 'Выбор Extella');
 }
 
 // Bento hero (approved concept): one big story card + two side mini-cards.
@@ -2457,7 +2457,7 @@ function renderMerchShelf() {
     return '<div class="stile" style="--acc:' + esc(h.acc || '#C57E33') + ';animation-delay:' + Math.min(i * 30, 240) + 'ms">' +
       '<div class="st_top">' +
         '<span class="st_ico" aria-hidden="true">' + _ico(_cardCat(h)) + '</span>' +
-        '<span class="st_chip">' + esc(h.label || 'ВЫБОР EXTELLA') + '</span>' +
+        '<span class="st_chip">' + esc(h.label || 'Выбор Extella') + '</span>' +
       '</div>' +
       '<div class="st_title">' + esc(h.title || '') + (h.accent ? '<i class="acc_sub">' + esc(h.accent) + '</i>' : '') + '</div>' +
       fact +
@@ -3848,7 +3848,7 @@ function renderSkillsShelf(){
   var live=!!(_skCatReg&&_skCatReg.items&&_skCatReg.items.length);
   var cats=[]; all.forEach(function(s){if(cats.indexOf(s.cat)<0)cats.push(s.cat);});
   var html=_bentoHTML(TYPE_ED.skills.heroes)+
-    _shelfHTML(TYPE_ED.skills.shelf,'ВЫБОР EXTELLA','Выбор Extella')+
+    _shelfHTML(TYPE_ED.skills.shelf,'Выбор Extella','Выбор Extella')+
     '<div class="sect"><h2>Навыки</h2></div>'+
     '<div class="sk_lead" style="grid-column:1/-1">Поставил, и агент это умеет.</div>';
   cats.forEach(function(cn){
