@@ -1634,8 +1634,10 @@ function _curOS(){
 }
 function _appOk(a){ var c=a.compat; return !c||!c.platforms||c.platforms.indexOf(_curOS())>=0; }
 var _appOnlyCompat=true;
-var APP_CATL={image:'Картинки',audio:'Аудио и музыка',video:'Видео',llm:'Модели и чат',avatar:'Аватары','3d':'3D',other:'Другое'};
-var APP_CATL_EN={image:'Images',audio:'Audio & music',video:'Video',llm:'Models & chat',avatar:'Avatars','3d':'3D',other:'Other'};
+var APP_CATL={image:'Картинки',audio:'Аудио и музыка',video:'Видео',avatar:'Аватары','3d':'3D',llm:'Модели и чат',code:'Код и разработка',text:'Текст и документы',data:'Данные и аналитика',other:'Другое'};
+var APP_CATL_EN={image:'Images',audio:'Audio & music',video:'Video',avatar:'Avatars','3d':'3D',llm:'Models & chat',code:'Code & development',text:'Text & documents',data:'Data & analytics',other:'Other'};
+// Порядок полок: «Другое» всегда последним, остальное — как здесь.
+var APP_CAT_ORDER=['image','audio','video','avatar','3d','llm','code','text','data','other'];
 function _appCatL(c){ return (LANG==='en'?APP_CATL_EN[c]:APP_CATL[c])||c; }
 function _appToggleCompat(){ _appOnlyCompat=!_appOnlyCompat; _appToggleRedraw(); }
 // Приложения (Pinokio-репо с GitHub) — полноценная под-вкладка каталога «Сервисы».
@@ -1652,8 +1654,11 @@ function _appsShelvesHTML(){
       '<a href="#" onclick="_appToggleCompat();return false" style="color:var(--a)">показать все</a>')
      :('Показаны все, включая несовместимые с '+esc(osName)+'. '+
       '<a href="#" onclick="_appToggleCompat();return false" style="color:var(--a)">только для моей системы</a>'))+'</div>'):'';
-  var byCat={}, order=[];
-  apps.forEach(function(a){ var c=a.cat||'other'; if(!byCat[c]){byCat[c]=[];order.push(c);} byCat[c].push(a); });
+  var byCat={};
+  apps.forEach(function(a){ var c=a.cat||'other'; (byCat[c]=byCat[c]||[]).push(a); });
+  // Полки в заданном порядке (APP_CAT_ORDER), незнакомые категории — в хвост, «Другое» последним.
+  var order=APP_CAT_ORDER.filter(function(c){return byCat[c];});
+  Object.keys(byCat).forEach(function(c){ if(order.indexOf(c)<0) order.splice(order.length-(byCat.other?1:0),0,c); });
   var shelves=order.map(function(c){
     return '<div class="sect_hdr"><span class="sect_title">'+esc(_appCatL(c))+'</span><span class="sect_line"></span></div>'+
       '<div class="mshelf">'+byCat[c].map(appCard).join('')+'</div>';
