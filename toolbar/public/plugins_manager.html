@@ -1490,7 +1490,7 @@ function _t(k){ var e=_T_DICT[k]; if(!e) return k; return (LANG==='en' && e.en!=
 function _lm(m, field){ if(LANG==='en' && m && m.en && m.en[field]!=null) return m.en[field]; return m ? m[field] : ''; }
 
 // ══════════════════════════════════════════════════════════════════════════
-//  EN/RU — центральный DOM-переводчик (как у Визарда): словарь RU→EN + regex
+//  EN/RU — центральный DOM-переводчик (как у Конструктора): словарь RU→EN + regex
 //  для динамических строк. Применяется при каждом рендере, обратимо (RU = ре-рендер).
 // ══════════════════════════════════════════════════════════════════════════
 try { if (localStorage.getItem('etb_lang') === 'en') LANG = 'en'; } catch (_) {}
@@ -1503,12 +1503,12 @@ var I18N_EN = {
   '🔍  Найди что угодно или вставь ссылку с GitHub или Hugging Face — установим в один клик: программа, модель, навык':'🔍  Find anything or paste a GitHub / Hugging Face link — one-click install: program, model, skill',
   'Свернуть':'Minimize','В окне / на весь экран':'Window / fullscreen','Светлая / тёмная тема':'Light / dark theme','Язык / Language':'Язык / Language',
   // Рабочий стол
-  'Мой компьютер · Визард':'My computer · Wizard',
+  'Мой компьютер · Конструктор':'My computer · Wizard',
   'Твой ИИ-компьютер: собирает установленные программы в единые процессы, запускает их и следит за результатом.':'Your AI computer: bundles installed programs into unified processes, runs them and watches the result.',
   'Открыть →':'Open →','Открыть':'Open','Запустить':'Run','Кабинет':'Cabinet','Удалить':'Remove','Открыть источник':'Open source','↗ Открыть':'↗ Open','↗ Источник':'↗ Source','⚙ Кабинет':'⚙ Cabinet','▶ Запустить':'▶ Run',
   // Секции / подписи
   'Выбор Extella':'EXTELLA PICK','Выбор Extella':'Extella pick',
-  'Мои агенты · собраны Визардом':'My agents · built by the Wizard',
+  'Мои агенты · собраны Конструктором':'My agents · built by the Wizard',
   'Роли агентов':'Agent roles','Роли для базового агента':'Roles for the base agent','Больше пользы без смены модели':'More value, same model',
   'Сервисы':'Services','Внешние сервисы':'External services','Живые данные для агента. Проверить можно прямо здесь.':'Live data for the agent. Test it right here.',
   'Знания':'Knowledge','Своя база из документов':'Your own base from documents','+ Создать базу знаний':'+ Create knowledge base','Новая база':'New base','Мои базы знаний':'My knowledge bases',
@@ -3081,9 +3081,9 @@ function capInstRemove(kind, id, method){
 }
 
 // ══════════════════════════════════════════════════════════════════════════
-//  РАБОЧИЙ СТОЛ (ИИ-ОС): Визард = «Мой компьютер», всё установленное = ярлыки.
+//  РАБОЧИЙ СТОЛ (ИИ-ОС): Конструктор = «Мой компьютер», всё установленное = ярлыки.
 //  Одна метафора — операционная система: рабочий стол, на нём программы, а
-//  Визард объединяет их в процессы и запускает.
+//  Конструктор объединяет их в процессы и запускает.
 // ══════════════════════════════════════════════════════════════════════════
 // ── Единые состояния для всех вкладок (стандарт витрины) ──────────────────
 // Раньше загрузка была то «sk_lead», то «empty+⏳», пустота — по-своему у каждой.
@@ -3100,7 +3100,7 @@ function _dtEsc(s){ return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); 
 // Правый клик по ярлыку → контекстное меню (Открыть/Кабинет/Запустить · Удалить),
 // как в ОС. Управление живёт на столе — отдельные вкладки «Мои»/«Автоматизации» не нужны.
 var _dtReg=[];
-// Открыть Визард. Делаем ровно то же, что рабочая иконка Визарда на столе: находим его
+// Открыть Конструктор. Делаем ровно то же, что рабочая иконка Конструктора на столе: находим его
 // среди ярлыков (_dtReg) и вызываем его же действие открытия — id установленного плагина
 // может отличаться от 'extella_adoption_wizard' (тогда прямой notify приложение не узнаёт).
 function _openWizard(){
@@ -3119,7 +3119,7 @@ function _wizardMissing(){
   var en=(LANG==='en');
   var mac='bash <(curl -fsSL https://raw.githubusercontent.com/AnvarBakiyev/extella-marketplace-pack/main/toolbar/install-all.sh)';
   var win='irm https://raw.githubusercontent.com/AnvarBakiyev/extella-marketplace-pack/main/toolbar/install-all.ps1 | iex';
-  alert((en?'Wizard is not installed on this device.\n\nRun the installer (toolbar + Wizard):':'Визард не установлен на этом устройстве.\n\nЗапусти единый установщик (тулбар + Визард):')+
+  alert((en?'Wizard is not installed on this device.\n\nRun the installer (toolbar + Wizard):':'Конструктор не установлен на этом устройстве.\n\nЗапусти единый установщик (тулбар + Конструктор):')+
     '\n\nmacOS (Terminal):\n'+mac+'\n\nWindows (PowerShell):\n'+win);
 }
 function _dtCloseMenu(){ var m=document.getElementById('dt_menu'); if(m)m.remove(); }
@@ -3218,7 +3218,7 @@ function renderDesktop(){
   // acc берём из палитры категорий (BIZ_ACC), чтобы цвета совпадали с витриной.
   function _dtAcc(cat){ return (typeof BIZ_ACC!=='undefined'&&BIZ_ACC[cat])||'#2F6B66'; }
   function _icoSym(id){ return '<svg class="lico"><use href="#ic-'+id+'"/></svg>'; }
-  // Человеческий ярлык категории агента (из идентичности Визарда) → biz-ключ для значка.
+  // Человеческий ярлык категории агента (из идентичности Конструктора) → biz-ключ для значка.
   function _catRuToBiz(label){
     if(!label) return '';
     var n=String(label).toLowerCase();
@@ -3266,7 +3266,7 @@ function renderDesktop(){
     [/competitor|конкурент|intelligence/i, 'Конкуренты'],
     [/travel|турагент|поездк|лиды|агентств/i, 'Турагентство'],
     [/юрист|договор|контракт/i, 'Юрист по договорам'],
-    [/визард|wizard|внедрен/i, 'Визард внедрения'],
+    [/визард|wizard|конструктор|внедрен/i, 'Конструктор внедрения'],
     [/подпис|subscription/i, 'Забытые подписки']
   ];
   function _dtName(n){ n=String(n||'').trim();
@@ -3276,7 +3276,7 @@ function renderDesktop(){
     return _dtShort(seg||n); }
 
   var icons=[];
-  // 1) Агенты, собранные Визардом → открыть кабинет
+  // 1) Агенты, собранные Конструктором → открыть кабинет
   (_autoReg||[]).filter(function(p){ var st=_agState[_agId(p)]; return !(st&&st.hidden); }).forEach(function(p){
     var cat=_catRuToBiz(p.category)||p._biz||'work', nm=_agCleanName(p);
     icons.push({kind:'agent',cat:cat,lbl:nm,acc:(p.accent||_dtAcc(cat)),id:_agId(p),
@@ -3335,7 +3335,7 @@ function renderDesktop(){
       '<div class="dt_hero" onclick="_openWizard()">'+
         '<div class="dt_hero_ic">'+_icoSym('monitor')+'</div>'+
         '<div class="dt_hero_tx">'+
-          '<div class="dt_hero_ttl">Мой компьютер · Визард</div>'+
+          '<div class="dt_hero_ttl">Мой компьютер · Конструктор</div>'+
           '<div class="dt_hero_sub">Твой ИИ-компьютер: собирает установленные программы в единые процессы, запускает их и следит за результатом.</div>'+
         '</div>'+
         '<div class="dt_hero_go">Открыть →</div>'+
@@ -3345,7 +3345,7 @@ function renderDesktop(){
       (icons.length?'<div class="dt_hint">Клик — открыть или запустить. Правый клик — кабинет, настройки, удалить.</div>':'')+
       (icons.length
         ? '<div class="dt_grid">'+iconHtml+'</div>'
-        : _emptyHTML('🗂️', 'Пока пусто. Установи программы в «Сервисах» или собери агента в Визарде — они появятся здесь ярлыками, как на рабочем столе.'))+
+        : _emptyHTML('🗂️', 'Пока пусто. Установи программы в «Сервисах» или собери агента в Конструкторе — они появятся здесь ярлыками, как на рабочем столе.'))+
     '</div>';
   rtabs();
 }
@@ -3440,10 +3440,10 @@ function _ensureAuto() {
 function autoRefresh() { _autoReg = null; _autoFetched = false; _ensureAuto(); }
 // ══════════════════════════════════════════════════════════════════════════
 //  АГЕНТ КАК УПРАВЛЯЕМЫЙ ОБЪЕКТ (кабинет агента)
-//  Каждый собранный Визардом агент = богатая карточка + полный кабинет.
+//  Каждый собранный Конструктором агент = богатая карточка + полный кабинет.
 //  Данные берём из манифеста каталога _mkt_automations (обогащается wz_publish_pack),
 //  а изменяемое состояние (имя, статус, расписание, история запусков) — клиентский
-//  слой в KV `agent_state:<id>`, чтобы не переписывать owned-Визардом каталог.
+//  слой в KV `agent_state:<id>`, чтобы не переписывать owned-Конструктором каталог.
 // ══════════════════════════════════════════════════════════════════════════
 var _AG_ACCENTS = ['#3A6EA5','#8F4E1E','#57A773','#8E4AA8','#C67E34','#2E7D5B','#D65CA8','#4E8FDB'];
 var _agState = {};          // id -> {name?, status?, schedule?, runs?} (кэш KV)
@@ -3578,7 +3578,7 @@ function renderAutomations() {
     g.innerHTML = _emptyHTML('⚙️', _t('autoEmpty'));
     rtabs(); return;
   }
-  var html = '<div class="sect_hdr" style="grid-column:1/-1"><span class="sect_title">Мои агенты · собраны Визардом</span><span class="sect_line"></span></div>'+
+  var html = '<div class="sect_hdr" style="grid-column:1/-1"><span class="sect_title">Мои агенты · собраны Конструктором</span><span class="sect_line"></span></div>'+
     '<div class="sk_lead" style="grid-column:1/-1;margin:-2px 0 6px">Каждый агент — управляемый объект: запуск, расписание, история, настройки. Открой «⚙ Кабинет».</div>'+
     '<div class="mshelf">' + visible.map(function(p, i){ return autoCardHTML(p, i); }).join('') + '</div>';
   g.innerHTML = html;
@@ -3630,7 +3630,7 @@ function _cabOverview(p){
   var caps=_agCaps(p), experts=_agExperts(p), sub=esc(p.description||p.tagline||'Собранный агент.');
   var src=(p.source&&/^https?:/.test(p.source))?p.source:'';
   var chips=caps.length?caps.map(function(c){return '<span style="display:inline-block;font-size:12px;color:var(--tx2);background:var(--bg);border:1px solid var(--bd2);border-radius:7px;padding:4px 10px;margin:0 6px 6px 0">'+esc(c)+'</span>';}).join(''):'<span style="color:var(--tx3);font-size:13px">умения не размечены</span>';
-  var exList=experts.length?experts.map(function(e){return '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--bd)"><span style="width:6px;height:6px;border-radius:50%;background:'+esc(_agAcc(p))+';flex-shrink:0"></span><code style="font-size:12px;color:var(--tx2)">'+esc(e)+'</code></div>';}).join(''):'<div style="color:var(--tx3);font-size:13px;padding-top:8px">под-эксперты не переданы (обогатим при следующей публикации из Визарда)</div>';
+  var exList=experts.length?experts.map(function(e){return '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--bd)"><span style="width:6px;height:6px;border-radius:50%;background:'+esc(_agAcc(p))+';flex-shrink:0"></span><code style="font-size:12px;color:var(--tx2)">'+esc(e)+'</code></div>';}).join(''):'<div style="color:var(--tx3);font-size:13px;padding-top:8px">под-эксперты не переданы (обогатим при следующей публикации из Конструктора)</div>';
   return _cabCard('<div style="font:700 13px var(--sans);color:var(--tx2);letter-spacing:.02em;margin-bottom:8px">Что делает</div><div style="font-size:14px;line-height:1.6;color:var(--tx)">'+sub+'</div>')+
     _cabCard('<div style="font:700 13px var(--sans);color:var(--tx2);letter-spacing:.02em;margin-bottom:10px">Умения</div>'+chips)+
     _cabCard('<div style="font:700 13px var(--sans);color:var(--tx2);letter-spacing:.02em;margin-bottom:2px">Из чего собран</div><div style="font-size:12px;color:var(--tx3);margin-bottom:6px">Композиция экспертов — Lego-архитектура Extella</div>'+exList)+
@@ -3655,7 +3655,7 @@ function _cabSchedule(p){
   var opts=_SCHED_PRESETS.map(function(o){ var on=(sch&&String(sch.interval_min||'')===o[0])||(!sch&&o[0]===''); return '<option value="'+o[0]+'"'+(on?' selected':'')+'>'+esc(o[1])+'</option>'; }).join('');
   var liveNote = sid
     ? '<div style="font-size:11.5px;color:#2f9e56;margin-top:8px;line-height:1.5">✓ Связано с планировщиком — запустится на VPS 24/7, даже когда приложение закрыто.</div>'
-    : '<div style="font-size:11.5px;color:var(--tx3);margin-top:8px;line-height:1.5">Этот агент опубликован до обновления — крон-связь появится после переиздания из Визарда. Пока фиксируем намерение.</div>';
+    : '<div style="font-size:11.5px;color:var(--tx3);margin-top:8px;line-height:1.5">Этот агент опубликован до обновления — крон-связь появится после переиздания из Конструктора. Пока фиксируем намерение.</div>';
   return _cabCard('<div style="font:700 13px var(--sans);color:var(--tx2);letter-spacing:.02em;margin-bottom:10px">Расписание</div>'+cur)+
     _cabCard('<div style="font:700 13px var(--sans);color:var(--tx2);letter-spacing:.02em;margin-bottom:10px">Настроить</div>'+
       '<label style="display:block;font-size:12px;color:var(--tx3);margin-bottom:3px">Как часто</label>'+
@@ -3673,7 +3673,7 @@ function cabSaveSchedule(id){
   var ch=((document.getElementById('cab_sch_ch')||{}).value||'').trim();
   var msg=document.getElementById('cab_sch_msg');
   var sch = iv ? {interval_min:parseInt(iv,10), human:lbl, period:lbl, channel:ch} : null;
-  // Реальный крон через мост Визарда (:8765) — переиспользуем проверенный /x/schedule.
+  // Реальный крон через мост Конструктора (:8765) — переиспользуем проверенный /x/schedule.
   if(sid){
     if(msg)msg.innerHTML='⏳ Ставлю на планировщик…';
     fetch('http://127.0.0.1:8765/x/schedule',{method:'POST',headers:{'Content-Type':'application/json'},
@@ -3683,7 +3683,7 @@ function cabSaveSchedule(id){
         if(r&&r.status==='success'){ if(sch)sch.live=true;
           _agSaveState(id,{schedule:sch}).then(function(){ if(msg)msg.innerHTML=iv?'✓ На VPS 24/7':'✓ Расписание снято'; setTimeout(_cabRender,900); });
         } else { if(msg)msg.innerHTML='⚠ '+esc((r&&r.message)||'не удалось'); }
-      }).catch(function(e){ if(msg)msg.innerHTML='⚠ мост Визарда недоступен ('+esc((e&&e.message)||'')+') — намерение сохранено'; _agSaveState(id,{schedule:sch}).then(_cabRender); });
+      }).catch(function(e){ if(msg)msg.innerHTML='⚠ мост Конструктора недоступен ('+esc((e&&e.message)||'')+') — намерение сохранено'; _agSaveState(id,{schedule:sch}).then(_cabRender); });
   } else {
     _agSaveState(id,{schedule:sch}).then(function(){ if(msg)msg.innerHTML='✓ Сохранено (намерение)'; setTimeout(_cabRender,700); });
   }
