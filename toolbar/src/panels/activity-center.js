@@ -248,6 +248,74 @@
       grid.appendChild(card);
     });
     section.appendChild(grid);
+    try { renderSystemAgents(section, doc); } catch (e) {}
+  }
+
+  function renderSystemAgents(section, doc) {
+    // Системные агенты устройства (мост визарда /x/launchagents) + чистка сирот листенера.
+    var wrap = storefrontNode(doc, 'div', '_xtlac_srv_sysagents');
+    wrap.style.marginTop = '18px';
+    var head = storefrontNode(doc, 'div', '_xtlac_srv_head');
+    var copy = storefrontNode(doc, 'div', '_xtlac_srv_head_copy');
+    copy.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_title', 'Системные агенты (LaunchAgents)'));
+    copy.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_sub', 'Автозапускаемые фоновые агенты этого Мака. Семейство Dronor — не Extella: его активность может выглядеть как наша.'));
+    head.appendChild(copy);
+    wrap.appendChild(head);
+    var body = storefrontNode(doc, 'div', '_xtlac_srv_sysagents_body', 'проверяю…');
+    wrap.appendChild(body);
+    section.appendChild(wrap);
+    function bridgePost(url, payload) {
+      return fetch('http://127.0.0.1:8765' + url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload || {}) }).then(function (r) { return r.json(); });
+    }
+    fetch('http://127.0.0.1:8765/x/listener_procs').then(function (r) { return r.json(); }).then(function (lp) {
+      if (!lp || !lp.orphans) return;
+      var warn = doc.createElement('div');
+      warn.style.cssText = 'margin:8px 0;padding:8px 12px;border:1px solid #C0392B;border-radius:8px;font-size:12.5px;display:flex;align-items:center;gap:10px';
+      warn.appendChild(doc.createTextNode('Лишние процессы listener: ' + lp.orphans + ' — забирают фоновые задачи параллельно.'));
+      var cbtn = doc.createElement('button');
+      cbtn.type = 'button';
+      cbtn.textContent = 'Закрыть лишние';
+      cbtn.addEventListener('click', function () {
+        cbtn.disabled = true;
+        bridgePost('/x/listener_cleanup').then(function (res) { warn.textContent = (res && res.message) || 'готово'; });
+      });
+      warn.appendChild(cbtn);
+      wrap.insertBefore(warn, body);
+    }).catch(function () {});
+    fetch('http://127.0.0.1:8765/x/launchagents').then(function (r) { return r.json(); }).then(function (d) {
+      var agents = (d && d.agents) || [];
+      body.textContent = '';
+      if (!agents.length) { body.textContent = 'агентов не найдено'; return; }
+      var famTitle = { extella: 'Extella', dronor: 'Dronor / personal AGI (не Extella)', other: 'Прочие' };
+      ['extella', 'dronor', 'other'].forEach(function (fam) {
+        var list = agents.filter(function (a) { return a.family === fam; });
+        if (!list.length) return;
+        var h = doc.createElement('div');
+        h.style.cssText = 'font-weight:700;font-size:12.5px;margin:10px 0 4px;opacity:.85';
+        h.textContent = famTitle[fam] + ' · ' + list.length;
+        body.appendChild(h);
+        list.forEach(function (a) {
+          var row = doc.createElement('div');
+          row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px dashed rgba(128,128,128,.25);font-size:12.5px';
+          var dot = a.running ? '\u{1F7E2}' : (a.enabled ? '⚪' : '⛔');
+          row.appendChild(doc.createTextNode(dot + ' ' + a.label + (a.pid ? ' · pid ' + a.pid : '') + (a.enabled ? '' : ' · автозапуск выключен')));
+          var b = doc.createElement('button');
+          b.type = 'button';
+          b.style.marginLeft = 'auto';
+          var off = a.running || a.enabled;
+          b.textContent = off ? 'Выключить' : 'Включить';
+          b.addEventListener('click', function () {
+            if (b.getAttribute('data-arm') !== '1') { b.setAttribute('data-arm', '1'); b.textContent = off ? 'Точно выключить?' : 'Точно включить?'; return; }
+            b.disabled = true;
+            bridgePost('/x/launchagent_action', { label: a.label, action: off ? 'disable' : 'enable' }).then(function (res) {
+              b.textContent = (res && res.status === 'success') ? (off ? 'выключен ✓' : 'включён ✓') : 'ошибка';
+            });
+          });
+          row.appendChild(b);
+          body.appendChild(row);
+        });
+      });
+    }).catch(function () { body.textContent = 'мост визарда недоступен (localhost:8765)'; });
   }
 
   function injectLocalServices(store) {
