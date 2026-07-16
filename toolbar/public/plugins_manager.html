@@ -1287,19 +1287,18 @@ function notify(action, pluginId, url) {
 // ── Tabs ──────────────────────────────────────────────────────────────────
 // Store aisles by TYPE of good (Anvar's clean IA): an editorial home + the
 // three kinds Extella sells + the user's own. No mixing of «view» and «type».
+// Свёрнутое меню (6 вкладок). «Сервисы» = объединённый раздел (id programs): внутри под-фильтр
+// Программы/Инструменты/Сервисы. Витрина, Профи, отдельные Инструменты/Сервисы/Workspace убраны из меню
+// (Workspace — с Рабочего стола; их рендеры остаются доступны через setc и под-навигацию).
 var CATS = [
   { id: 'desktop',  l: 'Рабочий стол' },
-  { id: 'home',     l: 'Витрина' },
-  { id: 'programs', l: 'Программы' },
+  { id: 'programs', l: 'Сервисы' },
   { id: 'models',   l: 'Модели' },
   { id: 'skills',   l: 'Навыки' },
-  { id: 'cli',      l: 'Инструменты' },
   { id: 'knowledge',l: 'Знания' },
-  { id: 'workspace',l: 'Workspace' },
-  { id: 'agents',   l: 'Агенты' },
-  { id: 'services', l: 'Сервисы' },
-  { id: 'admin',    l: 'Профи', sep: true }
+  { id: 'agents',   l: 'Агенты' }
 ];
+var _SVC_GROUP=['programs','cli','services'];  // под-вкладки объединённого раздела «Сервисы»
 
 var _admView = 'catalog';
 function setAdmView(v){ _admView = v; renderGrid(); }
@@ -1322,7 +1321,8 @@ function rtabs() {
   var inst = gi();
   document.getElementById('tabs').innerHTML = CATS.map(function(c) {
     var n = c.id === 'mine' ? '<span class="tn"> ' + (inst.length + cliGi().length + agCount() + svCount()) + '</span>' : '';
-    return '<button class="tab' + (cur === c.id ? ' on' : '') + (c.sep ? ' tab_sep' : '') + '" onclick="setc(\'' + c.id + '\')">' +
+    var on = (cur === c.id) || (c.id === 'programs' && _SVC_GROUP.indexOf(cur) >= 0);  // «Сервисы» активна для всей группы
+    return '<button class="tab' + (on ? ' on' : '') + (c.sep ? ' tab_sep' : '') + '" onclick="setc(\'' + c.id + '\')">' +
       esc(c.l) + n + '</button>';
   }).join('');
 }
@@ -2554,8 +2554,15 @@ function progToolsHTML(){
 
 // Программы, the plugin catalogue (business aisles + grid). The raw GitHub
 // search lives here too, but only in «Для профи»; «Для всех» stays curated.
+// Под-навигация объединённого раздела «Сервисы»: Программы / Инструменты / Сервисы (старое деление, не в меню).
+function _svcBar(){
+  var it=[['programs','Программы'],['cli','Инструменты'],['services','Сервисы']];
+  return '<div class="svc_sub" style="grid-column:1/-1;display:flex;gap:7px;flex-wrap:wrap;margin:0 0 16px">'+
+    it.map(function(x){return '<button class="cat_chip'+(cur===x[0]?' on':'')+'" onclick="setc(\''+x[0]+'\')">'+x[1]+'</button>';}).join('')+'</div>';
+}
+function _svcPrependBar(){ var g=document.getElementById('grid'); if(g){try{g.insertAdjacentHTML('afterbegin',_svcBar());}catch(e){}} }
 // Раздел «Программы» = живой каталог с GitHub + встроенная секция «Приложения» (Pinokio-репо).
-function renderPrograms(){ _renderProgramsCore(); }
+function renderPrograms(){ _renderProgramsCore(); _svcPrependBar(); }
 function _renderProgramsCore() {
   // Always rescue filter_bar before any g.innerHTML wipe. The element lives
   // inside #grid when Other is expanded; innerHTML replacement destroys it.
@@ -3913,6 +3920,7 @@ function renderCLI(){
   g.innerHTML=html;
   [].forEach.call(g.querySelectorAll('[data-cliinst]'),function(b){b.onclick=function(){installCLI(b.getAttribute('data-cliinst'),b);};});
   [].forEach.call(g.querySelectorAll('[data-clirm]'),function(b){b.onclick=function(){cliUninstall(b.getAttribute('data-clirm'));};});
+  _svcPrependBar();
 }
 function cliUninstall(id){
   // не только галочка: сносим и сам инструмент с устройства (brew uninstall), чтобы не копить свалку.
@@ -4145,6 +4153,7 @@ function renderServices(){
   [].forEach.call(g.querySelectorAll('[data-svdisc]'),function(b){b.onclick=function(){svDisc(b.getAttribute('data-svdisc'));};});
   renderMcpCatalog();
   _mountTabFilter('Поиск сервиса…');
+  _svcPrependBar();
 }
 // ── Живой каталог MCP-серверов (харвест офиц. реестра → KV _mkt_mcp, шарды) ──
 var _mcpReg=null;
