@@ -674,7 +674,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);
   <button class="bclose" onclick="notify('close')" title="Close">&#10005;</button>
 </div>
 <div class="cmdbar">
-  <input id="cmd_url" placeholder="🔗  Вставь ссылку, установим в один клик: программа, модель, навык, CLI" spellcheck="false" autocomplete="off" onkeydown="if(event.key==='Enter')cmdInstall()"/>
+  <input id="cmd_url" placeholder="🔍  Найди что угодно или вставь ссылку — установим в один клик" spellcheck="false" autocomplete="off" onkeydown="if(event.key==='Enter')cmdInstall()"/>
   <button class="cmdgo" onclick="cmdInstall()">Установить</button>
 </div>
 <div class="tabs" id="tabs"></div>
@@ -1495,7 +1495,7 @@ var I18N_EN = {
   'Навыки':'Skills','Инструменты':'Tools','Знания':'Knowledge','Агенты':'Agents','Сервисы':'Services','Профи':'Pro',
   // Шапка / командная строка
   'Установить':'Install','Для профи':'Pro','Для всех':'For everyone',
-  '🔗  Вставь ссылку, установим в один клик: программа, модель, навык, CLI':'🔗  Paste a link — install in one click: program, model, skill, CLI',
+  '🔍  Найди что угодно или вставь ссылку — установим в один клик':'🔗  Paste a link — install in one click: program, model, skill, CLI',
   'Свернуть':'Minimize','В окне / на весь экран':'Window / fullscreen','Светлая / тёмная тема':'Light / dark theme','Язык / Language':'Язык / Language',
   // Рабочий стол
   'Мой компьютер · Визард':'My computer · Wizard',
@@ -1614,14 +1614,14 @@ function modelsSpotlight(){
 // ===== Приложения (Pinokio-совместимые рецепты, детерминированная установка) =====
 var _appReg=null, _appFetched=false;
 function _ensureApps(){ if(_appFetched)return; _appFetched=true;
-  _loadSharded('_mkt_apps').then(function(r){ if(r&&r.shelf){_appReg=r; if(cur==='programs')renderPrograms();} }).catch(function(){ _appReg={shelf:[]}; if(cur==='programs')renderPrograms(); }); }
+  _loadSharded('_mkt_apps').then(function(r){ if(r&&r.shelf){_appReg=r; if(cur==='programs')renderPrograms(); else if(cur==='desktop')renderDesktop();} }).catch(function(){ _appReg={shelf:[]}; if(cur==='programs')renderPrograms(); else if(cur==='desktop')renderDesktop(); }); }
 var _appInstalled=null;   // Set установленных app_id (и их basename)
 function _refreshInstalledApps(){
   skBridge('etb_run_expert','etb_expert_result',{name:'app_list',params:{}},30000).then(function(r){
     var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
     if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}
     var s={}; ((out&&out.apps)||[]).forEach(function(a){ s[a.app_id]=1; var b=a.app_id.split('/').pop(); s[b]=1; });
-    _appInstalled=s; if(cur==='programs')renderPrograms();   // перерисовать с отметками
+    _appInstalled=s; if(cur==='programs')renderPrograms(); else if(cur==='desktop')renderDesktop();   // перерисовать с отметками
   }).catch(function(){ _appInstalled={}; });
 }
 function _curOS(){
@@ -2682,8 +2682,38 @@ function installRepo(repoUrl, btn) {
 function cmdInstall() {
   var inp = document.getElementById('cmd_url');
   var v = inp ? inp.value.trim() : '';
-  if (v) { notify('github_add_url', '', v); if (inp) inp.value = ''; }
-  else { notify('github_add'); }
+  if (!v) { notify('github_add'); return; }
+  var isLink = /^https?:\/\//i.test(v) || /^[\w.-]+\.[a-z]{2,}\//i.test(v) || v.indexOf('github.com') >= 0 || v.indexOf('huggingface.co') >= 0;
+  if (isLink) { notify('github_add_url', '', v); if (inp) inp.value = ''; return; }
+  _gsearch(v);   // текст (не ссылка) → сквозной поиск по всем каталогам
+}
+// Сквозной поиск по всем каталогам (bundled: сервисы/CLI/навыки/модели; KV: программы/приложения/MCP).
+function _gsearch(query){
+  var q=(query||'').toLowerCase().trim(); if(!q)return;
+  // подтянуть KV-каталоги, если ещё не загружены (результат улучшится при повторе)
+  if(!_appReg)_ensureApps();
+  if(!_progReg&&!_progFetched){_progFetched=true;_loadSharded('_mkt_programs').then(function(r){if(r&&r.shelf){_progReg=r;}}).catch(function(){});}
+  if(!_mcpReg){try{_loadSharded('_mkt_mcp','items').then(function(r){_mcpReg=r;}).catch(function(){});}catch(e){}}
+  var res=[];
+  function add(items,type,tab,gn,gd,gc){ (items||[]).forEach(function(it){ var nm=(gn(it)||''); var ds=(gd(it)||''); if((nm+' '+ds).toLowerCase().indexOf(q)>=0) res.push({nm:nm,ds:ds,type:type,tab:tab,cat:gc?(gc(it)||''):''}); }); }
+  add(typeof CATALOG_SERVICES!=='undefined'?CATALOG_SERVICES:[],'Сервис','services',function(x){return x.name;},function(x){return x.desc;},function(x){return x.cat;});
+  add(typeof cliCatalog==='function'?cliCatalog():[],'Инструмент','cli',function(x){return x.name;},function(x){return x.howto||x.desc;},function(x){return x.cat;});
+  add(typeof skCatalog==='function'?skCatalog():[],'Навык','skills',function(x){return x.name;},function(x){return x.desc||x.rule;},function(x){return x.cat;});
+  add(typeof LOCAL_MODELS!=='undefined'?LOCAL_MODELS:[],'Модель','models',function(x){return x.name||x.model;},function(x){return x.desc||x.tagline;},function(x){return x.cat;});
+  add(_progReg&&_progReg.shelf,'Программа','programs',function(x){return x.title;},function(x){return (x.facts||[]).join(' ')||x.tagline;},function(x){return x.label;});
+  add(_appReg&&_appReg.shelf,'Приложение','programs',function(x){return x.title||x.id;},function(x){return x.desc;},function(x){return x.cat;});
+  add(_mcpReg&&(_mcpReg.items||_mcpReg.shelf),'MCP','services',function(x){return (x.id||'').split('/').pop();},function(x){return x.desc||x.tagline;},function(x){return x.cat;});
+  var g=document.getElementById('grid'); if(!g)return;
+  var html='<div class="sect"><h2>Поиск: «'+esc(query)+'»</h2></div>'+
+    '<div class="sk_lead" style="grid-column:1/-1">Найдено: '+res.length+' по всем каталогам · <a href="#" onclick="setc(\'desktop\');return false" style="color:var(--a)">← закрыть</a></div>';
+  if(res.length){
+    html+='<div class="mshelf">'+res.slice(0,80).map(function(r){
+      return '<div class="stile" style="--acc:var(--a)"><span class="st_chip">'+esc(r.type)+(r.cat?' · '+esc(r.cat):'')+'</span>'+
+        '<div class="st_title">'+esc(r.nm)+'</div><div class="st_fact">'+esc((r.ds||'').slice(0,90))+'</div>'+
+        '<div class="st_foot"><button class="st_btn" onclick="setc(\''+r.tab+'\')">Открыть в разделе →</button></div></div>';
+    }).join('')+'</div>';
+  } else html+='<div class="sk_lead" style="grid-column:1/-1">Ничего не нашлось. Попробуй другое слово, или вставь ссылку (GitHub/Hugging Face) — установим напрямую.</div>';
+  g.innerHTML=html;
 }
 
 function loadMore() {
@@ -3146,6 +3176,8 @@ function _dtCss(){
 function renderDesktop(){
   var g=document.getElementById('grid'); if(!g) return;
   _ensureAuto(); _ensureCapInst();
+  if(_appInstalled===null){ _appInstalled={}; _refreshInstalledApps(); }  // установленные приложения на столе
+  if(!_appReg) _ensureApps();                                              // каталог — для имён приложений
   if (cliGi().length && !_cliLoaded) {
     skKvGet('_mkt_cli_catalog').then(function(r){ _cliReg=(r&&r.items)?r.items:[]; _cliLoaded=true; if(cur==='desktop')renderDesktop(); })
       .catch(function(){ _cliReg=_cliReg||[]; _cliLoaded=true; if(cur==='desktop')renderDesktop(); });
@@ -3246,6 +3278,14 @@ function renderDesktop(){
       id:it.id,url:it.url||'',method:it.method||'',rmKind:it.kind||'',
       go: it.url?"window.open('"+_dtEsc(it.url)+"','_blank')":"setc('mine')"});
   });
+  // 5) Установленные приложения (Pinokio) → открыть
+  if(_appInstalled){ Object.keys(_appInstalled).forEach(function(aid){
+    if(aid.indexOf('/')<0)return;   // только полные id owner/name (не basename-дубли)
+    var title=aid.split('/').pop();
+    if(_appReg&&_appReg.shelf){ var mm=_appReg.shelf.filter(function(a){return a.id===aid;})[0]; if(mm)title=mm.title||title; }
+    icons.push({kind:'app',cat:'tech',lbl:title,acc:_dtAcc('tech'),id:aid,
+      go:"appStartOpen(null,'"+_dtEsc(aid)+"')"});
+  }); }
   // Короткое «десктопное» имя (значок и тултип считаем от исходного — там больше ключевых слов).
   icons.forEach(function(ic){ ic.raw=ic.lbl; ic.lbl=_dtName(ic.lbl); });
   // Дедуп по короткому имени (Competitor Intelligence ×3, две «Кадровые документы»).
