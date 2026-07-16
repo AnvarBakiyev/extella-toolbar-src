@@ -634,18 +634,6 @@ body[data-theme="dark"] .inf .tr,html[data-theme="dark"] .inf .tr{stroke:var(--b
 .wsl_new_t{font-family:var(--serif);font-size:17px;font-weight:600;color:var(--tx);margin-top:6px}
 .wsl_new_s{font-size:13px;color:var(--tx2);line-height:1.5}
 .wsl_new_m{font:500 11px var(--mono);color:var(--tx3);margin-top:6px}
-/* Workspace-раздел на Рабочем столе */
-.dt_hero_ws{margin-bottom:12px !important;box-shadow:0 8px 24px rgba(36,84,79,.28) !important}
-.dt_ws_strip{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 22px}
-.dt_ws_card{display:inline-flex;align-items:center;gap:7px;background:var(--s1);border:1px solid var(--bd2);border-radius:10px;padding:8px 13px;font:600 13px var(--sans);color:var(--tx);cursor:pointer;transition:border-color .12s,transform .1s}
-.dt_ws_card:hover{border-color:#2F6B66;transform:translateY(-1px)}
-.dt_ws_dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.dt_ws_dot.crit{background:#B23A2E}.dt_ws_dot.ok{background:#2E7D5B}
-.dt_ws_nm{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.dt_ws_add{color:#2F6B66;border-style:dashed}
-.dt_ws_more{color:var(--tx3)}
-.dt_ws_empty{background:var(--s1);border:1px dashed var(--bd2);border-radius:10px;padding:12px 15px;margin:0 0 22px;font-size:13px;color:var(--tx2);cursor:pointer;line-height:1.5}
-.dt_ws_empty:hover{border-color:#2F6B66;color:var(--tx)}
 </style>
 </head>
 <body>
@@ -1569,8 +1557,13 @@ var I18N_EN = {
   '🔍  Найди что угодно или вставь ссылку — установим в один клик':'🔗  Paste a link — install in one click: program, model, skill, CLI',
   'Свернуть':'Minimize','В окне / на весь экран':'Window / fullscreen','Светлая / тёмная тема':'Light / dark theme','Язык / Language':'Язык / Language',
   // Рабочий стол
-  'Мой компьютер · Визард':'My computer · Wizard',
-  'Твой ИИ-компьютер: собирает установленные программы в единые процессы, запускает их и следит за результатом.':'Your AI computer: bundles installed programs into unified processes, runs them and watches the result.',
+  'Визард':'Wizard','Воркспейс':'Workspace','Композитор':'Composer','Регулярные задачи':'Scheduled tasks','Второй пилот':'Copilot',
+  'Собрать процесс: интервью → план → стройка → запуск':'Build a process: interview → plan → build → launch',
+  'Рабочие среды: компьютер понял проект и настроился':'Workspaces: the computer understood the project and set itself up',
+  'Студия Композитора — внутри Визарда: задача словами → готовая автоматизация':'Composer Studio — inside the Wizard: describe a task → get a working automation',
+  'Автоматизации по расписанию':'Scheduled automations',
+  'Пилот наблюдает экран и помогает':'The copilot watches your screen and helps',
+  'Пока пусто. Установи программы в «Сервисах» или собери агента в Визарде — они появятся здесь ярлыками.':'Nothing yet. Install programs in “Services” or build an agent in the Wizard — they will appear here as icons.',
   'Открыть →':'Open →','Открыть':'Open','Запустить':'Run','Кабинет':'Cabinet','Удалить':'Remove','Открыть источник':'Open source','↗ Открыть':'↗ Open','↗ Источник':'↗ Source','⚙ Кабинет':'⚙ Cabinet','▶ Запустить':'▶ Run',
   // Секции / подписи
   'ВЫБОР EXTELLA':'EXTELLA PICK','Выбор Extella':'Extella pick',
@@ -3318,19 +3311,6 @@ function _dtDo(i, act){
 function _dtCss(){
   return '<style>'+
     '.dt_wrap{grid-column:1/-1;padding:6px 2px 24px}'+
-    '.dt_hero{display:flex;align-items:center;gap:18px;cursor:pointer;border-radius:16px;padding:20px 22px;margin-bottom:22px;'+
-      'background:linear-gradient(135deg,var(--a,#2F6B66) 0%,#24544F 100%);box-shadow:0 8px 26px rgba(36,84,79,.28);'+
-      'transition:transform .14s,box-shadow .14s;position:relative;overflow:hidden}'+
-    '.dt_hero:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(36,84,79,.36)}'+
-    '.dt_hero::after{content:"";position:absolute;right:-30px;top:-30px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.06)}'+
-    '.dt_hero_ic{flex-shrink:0;width:60px;height:60px;border-radius:16px;background:rgba(255,255,255,.14);'+
-      'border:1px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center}'+
-    '.dt_hero_ic .lico{width:32px;height:32px;color:#fff;stroke-width:1.6}'+
-    '.dt_hero_tx{flex:1;min-width:0;position:relative}'+
-    '.dt_hero_ttl{font:750 19px/1.2 var(--sans);letter-spacing:-.01em;color:#fff;text-shadow:0 1px 5px rgba(0,0,0,.25)}'+
-    '.dt_hero_sub{font-size:13px;line-height:1.5;color:rgba(255,255,255,.9);margin-top:5px;max-width:520px}'+
-    '.dt_hero_go{flex-shrink:0;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.4);color:#fff;'+
-      'border-radius:10px;padding:9px 16px;font:650 13px var(--sans);position:relative}'+
     '.dt_sect{font:700 12px var(--sans);text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin:2px 0 14px}'+
     '.dt_grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(94px,1fr));gap:10px}'+
     '.dt_ico{display:flex;flex-direction:column;align-items:center;gap:8px;background:transparent;border:1px solid transparent;'+
@@ -3351,9 +3331,6 @@ function _dtCss(){
     '.dt_mi_danger{color:#c0392b}'+
     '.dt_mi_danger:hover{background:#fbeae8}'+
     '.dt_hint{font-size:11.5px;color:var(--tx3);margin:-8px 0 14px}'+
-    '.dt_empty{text-align:center;padding:40px 20px;color:var(--tx3)}'+
-    '.dt_empty_ic{font-size:44px;margin-bottom:10px}'+
-    '.dt_empty p{font-size:14px;line-height:1.6;max-width:440px;margin:0 auto}'+
   '</style>';
 }
 // Стол собирается из 6 независимых источников (KV + эксперты на устройстве), они
@@ -3376,7 +3353,6 @@ function _deskPending(){
   if(!_appInstLoaded) p.push('установленные приложения');
   if(!_appReg) p.push('каталог приложений');
   if(cliGi().length && !_cliLoaded) p.push('инструменты');
-  if(_wsDeskList===undefined || _wsDeskList===null) p.push('воркспейсы');
   return p;
 }
 function renderDesktop(){
@@ -3398,12 +3374,6 @@ function renderDesktop(){
   if (cliGi().length && !_cliLoaded) {
     skKvGet('_mkt_cli_catalog').then(function(r){ _cliReg=(r&&r.items)?r.items:[]; _cliLoaded=true; _deskRedraw(); })
       .catch(function(){ _cliReg=_cliReg||[]; _cliLoaded=true; _deskRedraw(); });
-  }
-  // Воркспейсы для раздела на столе (ленивая подгрузка через движок, кэш).
-  if (_wsDeskList === undefined) {
-    _wsDeskList = null;
-    wsCall('list', {}, 20000).then(function(out){ _wsDeskList = (out&&out.workspaces)?out.workspaces:[]; _deskRedraw(); })
-      .catch(function(){ _wsDeskList = []; _deskRedraw(); });
   }
   // ГЕЙТ ПЕРВОЙ СБОРКИ: пока источники едут — держим заглушку и НЕ рисуем стол.
   // Иначе каждый ответ достраивает экран заново, и это читается как тряска.
@@ -3480,6 +3450,17 @@ function renderDesktop(){
     return _dtShort(seg||n); }
 
   var icons=[];
+  // Системные ярлыки — пять входов в саму Extella. Живут на столе всегда,
+  // удалить нельзя (нет контекстного меню), значки только из векторного спрайта.
+  // Их динамические двойники ниже отфильтровываются — иначе рядом появлялись
+  // удаляемые копии, которые возвращались после синка с устройством (§4).
+  var SYS_APPS=[
+    {lbl:'Визард',           ico:'wand',     acc:'#C67E34', go:"_openWizard()",                tip:'Собрать процесс: интервью → план → стройка → запуск'},
+    {lbl:'Воркспейс',        ico:'home',     acc:'#2F6B66', go:"notify('open','workspace')",   tip:'Рабочие среды: компьютер понял проект и настроился'},
+    {lbl:'Композитор',       ico:'box',      acc:'#7C5CBF', go:"_openWizard()",                tip:'Студия Композитора — внутри Визарда: задача словами → готовая автоматизация'},
+    {lbl:'Регулярные задачи',ico:'calendar', acc:'#3E7C4F', go:"setc('automations')",          tip:'Автоматизации по расписанию'},
+    {lbl:'Второй пилот',     ico:'bot',      acc:'#4C5FD5', go:"notify('open','copilot_ctl')", tip:'Пилот наблюдает экран и помогает'}
+  ];
   // 1) Агенты, собранные Визардом → открыть кабинет
   // Показываем агента только когда его состояние уже прочитано: иначе убранный
   // со стола ярлык успевает мигнуть до того, как приедет флаг hidden.
@@ -3527,31 +3508,35 @@ function renderDesktop(){
   var _done={}, _out=[];
   icons.forEach(function(ic){ if(_done[ic._k]) return; if(_best[ic._k]===ic){ _out.push(ic); _done[ic._k]=1; } });
   icons=_out;
-  _dtReg=icons;  // реестр для правого клика (открыть/кабинет/удалить)
+  // Двойники системных ярлыков — вон со стола (по id плагина и по имени).
+  var _sysIds={extella_adoption_wizard:1, workspace:1, copilot_ctl:1};
+  var _sysRe=/^(визард( внедрения)?|wizard|workspace|воркспейс(ы|ес)?|композитор|composer|второй пилот|copilot)$/i;
+  icons=icons.filter(function(ic){
+    return !_sysIds[ic.id] && !_sysRe.test(String(ic.lbl||'').trim()) && !_sysRe.test(String(ic.raw||'').trim());
+  });
+  _dtReg=icons;  // реестр для правого клика (открыть/кабинет/удалить); системные сюда не входят
 
+  var sysHtml=SYS_APPS.map(function(s,i){
+    return '<button class="dt_ico" style="animation-delay:'+Math.min(i*14,180)+'ms" title="'+esc(s.tip)+'" onclick="'+s.go+'" oncontextmenu="return false">'+
+      '<span class="dt_ic_badge" style="background:'+s.acc+'14;border-color:'+s.acc+'40;color:'+s.acc+'">'+_icoSym(s.ico)+'</span>'+
+      '<span class="dt_ic_lbl">'+esc(s.lbl)+'</span></button>';
+  }).join('');
   var iconHtml=icons.map(function(ic,i){
     var sym=_dtIco(ic.raw, ic.cat, ic.kind);
-    return '<button class="dt_ico" style="animation-delay:'+Math.min(i*14,180)+'ms" title="'+esc(ic.raw)+' — клик открыть, правый клик меню" onclick="'+ic.go+'" oncontextmenu="return _dtCtx(event,'+i+')">'+
+    return '<button class="dt_ico" style="animation-delay:'+Math.min((SYS_APPS.length+i)*14,180)+'ms" title="'+esc(ic.raw)+' — клик открыть, правый клик меню" onclick="'+ic.go+'" oncontextmenu="return _dtCtx(event,'+i+')">'+
       '<span class="dt_ic_badge" style="background:'+esc(ic.acc)+'14;border-color:'+esc(ic.acc)+'40;color:'+esc(ic.acc)+'">'+_icoSym(sym)+'</span>'+
       '<span class="dt_ic_lbl">'+esc(ic.lbl)+'</span></button>';
   }).join('');
 
   g.innerHTML = _dtCss() +
     '<div class="dt_wrap">'+
-      '<div class="dt_hero" onclick="_openWizard()">'+
-        '<div class="dt_hero_ic">'+_icoSym('monitor')+'</div>'+
-        '<div class="dt_hero_tx">'+
-          '<div class="dt_hero_ttl">Мой компьютер · Визард</div>'+
-          '<div class="dt_hero_sub">Твой ИИ-компьютер: собирает установленные программы в единые процессы, запускает их и следит за результатом.</div>'+
-        '</div>'+
-        '<div class="dt_hero_go">Открыть →</div>'+
-      '</div>'+
-      _dtWorkspaceSection()+
+      '<div class="dt_sect">Extella</div>'+
+      '<div class="dt_grid" style="margin-bottom:24px">'+sysHtml+'</div>'+
       '<div class="dt_sect">Программы на рабочем столе'+(icons.length?' · '+icons.length:'')+'</div>'+
-      (icons.length?'<div class="dt_hint">Клик — открыть или запустить. Правый клик — кабинет, настройки, удалить.</div>':'')+
       (icons.length
-        ? '<div class="dt_grid">'+iconHtml+'</div>'
-        : _emptyHTML('🗂️', 'Пока пусто. Установи программы в «Витрине» или собери агента в Визарде — они появятся здесь ярлыками, как на рабочем столе.'))+
+        ? '<div class="dt_hint">Клик — открыть или запустить. Правый клик — кабинет, настройки, удалить.</div>'+
+          '<div class="dt_grid">'+iconHtml+'</div>'
+        : '<div class="dt_hint">Пока пусто. Установи программы в «Сервисах» или собери агента в Визарде — они появятся здесь ярлыками.</div>')+
     '</div>';
   rtabs();
 }
@@ -4857,39 +4842,8 @@ function kpDoAsk(i){
 // Кнопки-действия (run_capability/organize/set_autopilot/undo) — disabled до ws-v1.1.
 // ============================================================================
 var _wsList=null, _wsView='list', _wsCur=null, _wsDeskList;
-// Открыть воркспейс с Рабочего стола: переключаемся во вкладку и грузим кокпит.
-function wsOpenFromDesk(ws_id){ setc('workspace'); _wsView='cockpit'; wsOpen(ws_id); }
-function wsDeskBuild(){ setc('workspace'); wsBuildModal(); }
-// Раздел «Workspace» на Рабочем столе: геройский баннер + твои воркспейсы.
-function _dtWorkspaceSection(){
-  var ico='<svg class="lico"><use href="#ic-home"/></svg>';
-  var band='<div class="dt_hero dt_hero_ws" style="background:linear-gradient(100deg,#24544F,#2F6B66 55%,#3C7d76)" onclick="setc(\'workspace\')">'+
-    '<div class="dt_hero_ic">'+ico+'</div>'+
-    '<div class="dt_hero_tx">'+
-      '<div class="dt_hero_ttl">Workspace · компьютер под задачу</div>'+
-      '<div class="dt_hero_sub">Extella понимает проект по папке (только имена файлов) и настраивает режим работы под него — пак, пробелы, автопилот.</div>'+
-    '</div>'+
-    '<div class="dt_hero_go">Открыть →</div>'+
-  '</div>';
-  var list=_wsDeskList;
-  var strip='';
-  if(list===null||list===undefined){ strip=''; }               // грузится — тихо
-  else if(!list.length){
-    strip='<div class="dt_ws_empty" onclick="wsDeskBuild()">＋ Собрать первый воркспейс из папки — компьютер поймёт проект и настроится под него.</div>';
-  } else {
-    var cards=list.slice(0,6).map(function(w){
-      var bl=w.blockers|0;
-      var dot=bl>0?'<span class="dt_ws_dot crit" title="'+bl+' блокер"></span>':'<span class="dt_ws_dot ok" title="готов"></span>';
-      return '<button class="dt_ws_card" onclick="wsOpenFromDesk(\''+_dtEsc(w.ws_id)+'\')" title="'+esc(w.name||'')+'">'+
-        dot+'<span class="dt_ws_nm">'+esc(w.name||'Без имени')+'</span></button>';
-    }).join('');
-    strip='<div class="dt_ws_strip">'+cards+
-      '<button class="dt_ws_card dt_ws_add" onclick="wsDeskBuild()" title="Собрать новый воркспейс">＋ Собрать</button>'+
-      (list.length>6?'<button class="dt_ws_card dt_ws_more" onclick="setc(\'workspace\')">ещё '+(list.length-6)+' →</button>':'')+
-    '</div>';
-  }
-  return band+strip;
-}
+// Раздел воркспейсов со стола убран (16.07): вместо баннера+полосы — системный
+// ярлык «Воркспейс», открывающий полный плагин workspace своим окном.
 function _wsParse(r){ var out=r&&r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output; if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}} return out; }
 function wsCall(op,params,timeoutMs){
   var p=Object.assign({op:op},params||{});

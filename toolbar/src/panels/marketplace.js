@@ -487,7 +487,8 @@ ETB.marketplace = (function () {
         } else if (action === 'open' && pluginId) {
           ETB.marketplace.close();
           ETB.nav.syncUI();
-          ETB.router.openById(pluginId);
+          // returnTo: закрыв плагин, пользователь возвращается в Plugins, откуда пришёл.
+          ETB.router.openById(pluginId, { returnTo: 'plugins' });
           ETB.nav.syncUI();
         } else if (action === 'close') {
           ETB.nav.set('chat');
