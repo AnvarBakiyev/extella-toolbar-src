@@ -1634,7 +1634,9 @@ function _curOS(){
 }
 function _appOk(a){ var c=a.compat; return !c||!c.platforms||c.platforms.indexOf(_curOS())>=0; }
 var _appOnlyCompat=true;
-var APP_CATL={image:'Картинки',audio:'Аудио и музыка',video:'Видео',llm:'Модели и чат',other:'Другое'};
+var APP_CATL={image:'Картинки',audio:'Аудио и музыка',video:'Видео',llm:'Модели и чат',avatar:'Аватары','3d':'3D',other:'Другое'};
+var APP_CATL_EN={image:'Images',audio:'Audio & music',video:'Video',llm:'Models & chat',avatar:'Avatars','3d':'3D',other:'Other'};
+function _appCatL(c){ return (LANG==='en'?APP_CATL_EN[c]:APP_CATL[c])||c; }
 function _appToggleCompat(){ _appOnlyCompat=!_appOnlyCompat; _appToggleRedraw(); }
 // Приложения (Pinokio-репо с GitHub) — полноценная под-вкладка каталога «Сервисы».
 // Блок приложений (Pinokio-репо) — встраивается в «Программы» полками по категориям.
@@ -1653,7 +1655,7 @@ function _appsShelvesHTML(){
   var byCat={}, order=[];
   apps.forEach(function(a){ var c=a.cat||'other'; if(!byCat[c]){byCat[c]=[];order.push(c);} byCat[c].push(a); });
   var shelves=order.map(function(c){
-    return '<div class="sect_hdr"><span class="sect_title">'+esc(APP_CATL[c]||c)+'</span><span class="sect_line"></span></div>'+
+    return '<div class="sect_hdr"><span class="sect_title">'+esc(_appCatL(c))+'</span><span class="sect_line"></span></div>'+
       '<div class="mshelf">'+byCat[c].map(appCard).join('')+'</div>';
   }).join('');
   return '<div class="sect" style="grid-column:1/-1"><h2>Приложения</h2></div>'+
@@ -1679,13 +1681,14 @@ function appCard(a){
     btn='<button class="st_btn" onclick="appInstall(\''+_dtEsc(repo)+'\',\''+_dtEsc(a.id)+'\',\''+_dtEsc((a.title||a.id))+'\')">Установить</button>';
   }
   // функция жирным + имя вторично (когда есть локализованные поля func/desc); иначе — как раньше
-  var func=(LANG==='en'?(a.func_en||a.func):(a.func_ru||a.func))||'';
-  var dsc=(LANG==='en'?(a.desc_en||a.desc):(a.desc_ru||a.desc))||'';
+  var aL=_locOf(a)||{};   // перевод из слоя _mkt_loc, если в карточке его нет
+  var func=(LANG==='en'?(a.func_en||aL.func_en||a.func):(a.func_ru||aL.func_ru||a.func))||'';
+  var dsc=(LANG==='en'?(a.desc_en||aL.desc_en||a.desc):(a.desc_ru||aL.desc_ru||a.desc))||'';
   var head, nameLine='';
   if(func){ head=esc(func); nameLine='<div class="st_name">'+esc(a.title||a.id)+'</div>'; }
   else { head=esc(a.title||a.id); }   // фолбэк до локализации
   return '<div class="stile" style="--acc:'+(APP_ACC[a.cat]||TYPE_ACC.app)+(ok?'':';opacity:.62')+'">'+
-    '<span class="st_chip">📦 '+esc(a.cat||'app')+(stars?' · '+stars:'')+badge+(inst?' · ✓ установлено':'')+'</span>'+
+    '<span class="st_chip">📦 '+esc(_appCatL(a.cat||'other'))+(stars?' · '+stars:'')+badge+(inst?' · ✓ установлено':'')+'</span>'+
     '<div class="st_title">'+head+'</div>'+nameLine+
     '<div class="st_fact">'+esc(dsc)+'</div>'+
     '<div class="st_foot" style="justify-content:space-between;align-items:center">'+
