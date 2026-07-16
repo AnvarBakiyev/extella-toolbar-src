@@ -1610,8 +1610,7 @@ function modelsSpotlight(){
   // Полный каталог работающих моделей по разделам (как Навыки), не тизер.
   var catalog=liveShelf
     ? catalogByCatHTML(_modReg.shelf, modelCat, MODEL_ORDER, MODEL_LABEL, MODEL_ACC,
-        'Работающие модели', 'ИИ-модели по разделам',
-        'Живой каталог работающих демо HuggingFace, запускаются в облаке, без своей видеокарты, в один клик. Обновляется каждую неделю.', '🧠 Модель · ✓ работает')
+        '', '', '', '🧠 Модель · ✓ работает')
     : _shelfHTML(TYPE_ED.models.shelf, 'Модели', 'ИИ-модели в один клик');
   return _bentoHTML(mh)+
     catalog+
