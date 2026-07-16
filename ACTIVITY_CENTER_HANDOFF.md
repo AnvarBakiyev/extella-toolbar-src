@@ -17,6 +17,9 @@ User-facing behavior:
 - Plugins → Рабочий стол receives a **Регулярные задачи** shortcut.
 - **Расписания** shows Extella-registered localhost services, ports, PIDs, and
   launch source, with safe on/off controls.
+- one-off Excel tasks use human labels and a successful result closes the row
+  even if the listener omitted its final `completed` event;
+- completed rows can be dismissed individually or cleared from the feed.
 
 ## Architecture
 
@@ -36,6 +39,8 @@ not be committed or attached to an issue.
 Service controls use an in-memory token plus an origin allow-list. Raw registry
 commands and full project paths never reach the browser. A process is stoppable
 only if its cwd or LaunchAgent identity matches the selected registry service.
+Task dismissal uses the same token and only writes task-id tombstones; it never
+deletes workbooks, results, or cloud automation definitions.
 
 ## Review checklist
 

@@ -8,6 +8,7 @@
   var SERVICES_API = API_BASE + '/api/services';
   var state = {
     open: false, data: null, bridgeOnline: false, expanded: {},
+    activityToken: '', taskBusy: {},
     services: null, servicesToken: '', servicesLoading: false,
     servicesUpdatedAt: 0, serviceBusy: {}, serviceMessage: ''
   };
@@ -25,7 +26,10 @@
     '#_xtlac_panel.open{display:flex;animation:_xtlac_in .16s ease}',
     '#_xtlac_head{display:flex;align-items:flex-start;gap:10px;padding:15px 16px 12px;border-bottom:1px solid var(--etb-bd,rgba(255,255,255,.07))}',
     '#_xtlac_head h3{margin:0;font-size:14px;line-height:1.25}',
-    '#_xtlac_close{margin-left:auto;border:0;background:transparent;color:var(--etb-tx2,#888);font-size:18px;cursor:pointer}',
+    '#_xtlac_clear{display:none;margin-left:auto;border:1px solid var(--etb-bd2,rgba(255,255,255,.13));border-radius:7px;background:transparent;color:var(--etb-tx2,#888);padding:5px 8px;font:600 9.5px/1 -apple-system,system-ui,sans-serif;cursor:pointer}',
+    '#_xtlac_clear.show{display:block}',
+    '#_xtlac_clear:hover{color:var(--etb-tx,#f0f0f0)}',
+    '#_xtlac_close{border:0;background:transparent;color:var(--etb-tx2,#888);font-size:18px;cursor:pointer}',
     '#_xtlac_warning{display:none;margin:10px 12px 0;padding:9px 10px;border-radius:10px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);color:#f59e0b;font-size:11px;line-height:1.45}',
     '#_xtlac_warning.show{display:block}',
     '#_xtlac_body{overflow:auto;padding:10px 12px 14px;scrollbar-width:thin}',
@@ -51,6 +55,8 @@
     '._xtlac_meta dd{margin:0;color:var(--etb-tx,#f0f0f0)}',
     '._xtlac_manage{margin-top:10px;border:1px solid rgba(198,126,52,.45);border-radius:8px;background:rgba(198,126,52,.1);color:#d99a58;padding:7px 10px;font:650 10.5px/1.2 -apple-system,system-ui,sans-serif;cursor:pointer}',
     '._xtlac_manage:hover{background:rgba(198,126,52,.18)}',
+    '._xtlac_remove{margin:10px 0 0 7px;border:0;background:transparent;color:var(--etb-tx2,#888);padding:7px 5px;font:600 10px/1.2 -apple-system,system-ui,sans-serif;cursor:pointer}',
+    '._xtlac_remove:hover{color:#ef4444}',
     '._xtlac_hint{margin-top:7px;color:var(--etb-tx2,#888);font-size:9.5px;line-height:1.4}',
     '#_xtlac_empty{padding:24px 12px;text-align:center;color:var(--etb-tx2,#888);font-size:11px;line-height:1.5}',
     '@keyframes _xtlac_pulse{50%{opacity:.45;transform:scale(.86)}}',
@@ -434,6 +440,36 @@
     list.appendChild(el('dd', {}, value));
   }
 
+  function taskAction(path) {
+    if (!state.activityToken) return Promise.reject(new Error('Нет разрешения локального журнала'));
+    return fetch(API_BASE + path, {
+      method: 'POST',
+      headers: { 'X-Extella-Control': state.activityToken }
+    }).then(function (response) {
+      return response.json().then(function (payload) {
+        if (!response.ok) throw new Error(payload.message || ('HTTP ' + response.status));
+        return payload;
+      });
+    });
+  }
+
+  function dismissTask(task) {
+    if (state.taskBusy[task.id]) return;
+    state.taskBusy[task.id] = true;
+    taskAction('/api/tasks/' + encodeURIComponent(task.id) + '/dismiss')
+      .then(function () { delete state.expanded[task.id]; return refresh(); })
+      .catch(function () { render(); })
+      .then(function () { delete state.taskBusy[task.id]; });
+  }
+
+  function clearCompletedTasks() {
+    if (!state.data || !state.data.history || !state.data.history.length) return;
+    if (!window.confirm('Убрать все завершённые записи из этой ленты?')) return;
+    taskAction('/api/tasks/clear-completed')
+      .then(function () { return refresh(); })
+      .catch(function () {});
+  }
+
   function taskNode(task) {
     var expanded = !!state.expanded[task.id];
     var row = el('div', {
@@ -465,6 +501,17 @@
       });
       details.appendChild(manage);
       details.appendChild(el('div', { className: '_xtlac_hint' }, sourceIdHint(task)));
+    }
+    if (task.status === 'running') {
+      details.appendChild(el('div', { className: '_xtlac_hint' }, 'Если задача действительно выполняется и её нужно прервать, используйте красную кнопку Cancel в нижней панели Extella.'));
+    } else {
+      var remove = el('button', { className: '_xtlac_remove', type: 'button' }, state.taskBusy[task.id] ? 'Убираю…' : 'Убрать запись из ленты');
+      remove.disabled = !!state.taskBusy[task.id];
+      remove.addEventListener('click', function (event) {
+        event.stopPropagation();
+        dismissTask(task);
+      });
+      details.appendChild(remove);
     }
     row.appendChild(details);
 
@@ -504,6 +551,8 @@
     root.setAttribute('data-health', health);
     document.getElementById('_xtlac_text').textContent = data ? data.headline : 'Подключение журнала…';
     document.getElementById('_xtlac_count').textContent = data ? ('✓ ' + data.counts.completed) : '';
+    var clear = document.getElementById('_xtlac_clear');
+    if (clear) clear.classList.toggle('show', !!(data && data.history && data.history.length));
 
     var warning = document.getElementById('_xtlac_warning');
     var orphaned = data && data.listeners && data.listeners.orphaned || 0;
@@ -548,6 +597,7 @@
     var heading = el('div');
     heading.appendChild(el('h3', {}, 'Что делает Extella'));
     head.appendChild(heading);
+    head.appendChild(el('button', { id: '_xtlac_clear', type: 'button' }, 'Очистить выполненные'));
     head.appendChild(el('button', { id: '_xtlac_close', type: 'button', 'aria-label': 'Закрыть' }, '×'));
     panel.appendChild(head);
     panel.appendChild(el('div', { id: '_xtlac_warning' }));
@@ -562,6 +612,7 @@
     }
     pill.addEventListener('click', function () { setOpen(!state.open); });
     document.getElementById('_xtlac_close').addEventListener('click', closePanel);
+    document.getElementById('_xtlac_clear').addEventListener('click', clearCompletedTasks);
     document.addEventListener('keydown', function (event) { if (event.key === 'Escape') closePanel(); });
     var marketplaceObserver = new MutationObserver(function () { enhanceMarketplace(); });
     marketplaceObserver.observe(document.body, { childList: true, subtree: true });
@@ -591,9 +642,9 @@
   }
 
   function refresh() {
-    fetch(API, { cache: 'no-store' })
+    return fetch(API, { cache: 'no-store' })
       .then(function (response) { if (!response.ok) throw new Error('HTTP ' + response.status); return response.json(); })
-      .then(function (data) { state.bridgeOnline = true; state.data = data; render(); })
+      .then(function (data) { state.bridgeOnline = true; state.data = data; state.activityToken = data.controlToken || ''; render(); })
       .catch(function () {
         state.bridgeOnline = false;
         fallbackStatus().then(function (data) { if (data) state.data = data; render(); });
