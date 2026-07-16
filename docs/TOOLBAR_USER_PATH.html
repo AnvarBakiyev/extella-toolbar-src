@@ -1,0 +1,272 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Extella Toolbar · Путь пользователя — строительная спецификация</title>
+<style>
+  :root{
+    --paper:#F3EEE3;--card:#FFFFFF;--inset:#F6F1E8;--ink:#2A2620;--muted:#877B6B;--faint:#B2A68F;
+    --line:#EAE1D0;--line2:#E1D6C1;--orange:#C67A22;--orange2:#B06813;--orange-ink:#FFFFFF;--orange-soft:#F5E8D6;
+    --tan:#F0E6D5;--green:#3E9E5E;--amber:#C08A2E;--red:#C25A3C;
+    --grad:linear-gradient(103deg,#6C4FAE 0%,#A87FCE 52%,#DAC1E9 100%);
+    --sans:-apple-system,BlinkMacSystemFont,system-ui,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    --mono:"SF Mono","JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --paper:#221D17;--card:#2A241D;--inset:#231D16;--ink:#EFE6D5;--muted:#B1A48D;--faint:#7C7160;
+    --line:#352E24;--line2:#41382B;--orange:#E29B46;--orange2:#EEB162;--orange-ink:#241809;--orange-soft:rgba(226,155,70,.14);
+    --tan:#332B20;--green:#5CB979;--amber:#DBA548;--red:#DE7454;
+    --grad:linear-gradient(103deg,#4A3A78 0%,#6E56A6 58%,#8C70B6 100%);
+  }}
+  :root[data-theme="light"]{--paper:#F3EEE3;--card:#FFFFFF;--inset:#F6F1E8;--ink:#2A2620;--muted:#877B6B;--faint:#B2A68F;--line:#EAE1D0;--line2:#E1D6C1;--orange:#C67A22;--orange2:#B06813;--orange-ink:#FFFFFF;--orange-soft:#F5E8D6;--tan:#F0E6D5;--green:#3E9E5E;--amber:#C08A2E;--red:#C25A3C;--grad:linear-gradient(103deg,#6C4FAE 0%,#A87FCE 52%,#DAC1E9 100%);}
+  :root[data-theme="dark"]{--paper:#221D17;--card:#2A241D;--inset:#231D16;--ink:#EFE6D5;--muted:#B1A48D;--faint:#7C7160;--line:#352E24;--line2:#41382B;--orange:#E29B46;--orange2:#EEB162;--orange-ink:#241809;--orange-soft:rgba(226,155,70,.14);--tan:#332B20;--green:#5CB979;--amber:#DBA548;--red:#DE7454;--grad:linear-gradient(103deg,#4A3A78 0%,#6E56A6 58%,#8C70B6 100%);}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.62;-webkit-font-smoothing:antialiased}
+  .hero{background:var(--grad);color:#fff;padding:34px 34px 30px}
+  .hero .in{max-width:1020px;margin:0 auto}
+  .hero .ey{font-size:11.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;opacity:.85;margin-bottom:10px}
+  .hero h1{margin:0 0 10px;font-size:29px;font-weight:750;letter-spacing:-.015em;line-height:1.15;text-wrap:balance}
+  .hero p{margin:0;font-size:14.5px;opacity:.92;max-width:70ch}
+  .toc{max-width:1020px;margin:-16px auto 0;padding:0 24px;position:relative}
+  .toc .box{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 8px 28px rgba(60,45,25,.10);padding:14px 18px;display:flex;flex-wrap:wrap;gap:6px 18px}
+  .toc a{color:var(--orange2);font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap}
+  .toc a:hover{text-decoration:underline}
+  .wrap{max-width:1020px;margin:0 auto;padding:26px 24px 90px}
+  section.stage{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:26px 28px;margin-bottom:20px;box-shadow:0 1px 2px rgba(60,45,25,.05)}
+  h2{margin:0 0 14px;font-size:21px;font-weight:750;letter-spacing:-.01em;scroll-margin-top:20px}
+  h3{margin:22px 0 10px;font-size:16px;font-weight:700;color:var(--orange2)}
+  p{margin:0 0 12px;max-width:80ch}
+  ul{margin:0 0 14px;padding-left:22px}
+  li{margin-bottom:5px}
+  b{font-weight:650}
+  code{font-family:var(--mono);font-size:12.5px;background:var(--inset);border:1px solid var(--line);border-radius:5px;padding:1px 6px;color:var(--orange2)}
+  .tw{overflow-x:auto;margin:0 0 14px}
+  table{border-collapse:collapse;width:100%;min-width:640px;font-size:13px}
+  th,td{text-align:left;padding:9px 12px;border:1px solid var(--line);vertical-align:top}
+  th{background:var(--inset);font-weight:700;font-size:12px;white-space:nowrap}
+  tr:nth-child(even) td{background:color-mix(in srgb,var(--inset) 45%,transparent)}
+  .st{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;white-space:nowrap}
+  .st.ok{background:color-mix(in srgb,var(--green) 16%,transparent);color:var(--green)}
+  .st.part{background:color-mix(in srgb,var(--amber) 16%,transparent);color:var(--amber)}
+  .st.no{background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red)}
+  .prop{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;background:var(--orange-soft);color:var(--orange2);white-space:nowrap}
+  a{color:var(--orange2)}
+  .foot{text-align:center;font-size:12px;color:var(--faint);padding-bottom:30px}
+  :focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+  @media (max-width:700px){.hero{padding:26px 18px}.wrap{padding:20px 14px 70px}section.stage{padding:18px 16px}.toc{padding:0 14px}}
+</style>
+<div class="hero"><div class="in">
+  <div class="ey">Extella Toolbar · строительная спецификация</div>
+  <h1>Как человек живёт в приложении Extella — путь от установки до удаления</h1>
+  <p>Этапы 0–5: установка и первый запуск · рабочий стол и витрина · установка контента («вставь ссылку — поставим в один клик») · пользование установленным (панели паков, Workspace-кокпит, второй пилот) · обновления и автоподъём серверов · удаление. Что появляется на машине человека (плагины, реестр, локальные серверы, LaunchAgent, рантаймы), edge-cases и честные статусы: есть / частично / построить.</p>
+</div></div>
+<div class="toc"><div class="box">
+  <a href="#s1">Рамка и канон</a>
+  <a href="#s2">1. Резюме пути: этапы 0–5</a>
+  <a href="#s3">2. Таксономия контента витрины</a>
+  <a href="#s4">3. Артефакты на машине человека</a>
+  <a href="#s5">4. Этап 0 — установка и первый запуск</a>
+  <a href="#s6">5. Этап 1 — рабочий стол и витрина</a>
+  <a href="#s7">6. Этап 2 — установка контента</a>
+  <a href="#s8">7. Этап 3 — пользование установленным</a>
+  <a href="#s9">8. Этап 4 — обновления и автоподъём</a>
+  <a href="#s10">9. Этап 5 — удаление</a>
+  <a href="#s11">10. Edge-cases</a>
+  <a href="#s12">11. Сводная «что построить»</a>
+  <a href="#s13">Открытые вопросы Анвару</a>
+</div></div>
+<div class="wrap">
+
+<section class="stage">
+<h2 id="s1">Рамка и канон</h2>
+<p><b>Extella Toolbar (приложение-витрина Extella) — строительная спецификация пользовательского пути.</b> Кому: Анвар (со-основатель/CCO Extella.ai) и команды-исполнители. Пара к спецификациям Workspace-движка и Wizard в проекте «Разработка Extella». Документ — основа для стройки со стороны тулбара.</p>
+<p><b>База (as-built).</b> Тулбар — панель внутри Electron-приложения Extella. Приложение грузит UI из файла <code>toolbar.js</code> в userData (macOS: <code>~/Library/Application&nbsp;Support/extella-desktop/toolbar.js</code>). Исходник — <code>toolbar/public/plugins_manager.html</code> (репо <code>extella-toolbar-src</code>), сборка <code>node build.js</code> → <code>build/toolbar.js</code> (инлайнит public/*.html + src/core/*.js). UI общается с устройством через <b>мост на 8765</b> (<code>skBridge</code> → <code>etb_run_expert</code>/<code>etb_run_agent</code> и т.д.); мост исполняет эксперты/агенты на <b>листенере</b> (<code>extella-listener</code>, Python 3.12), листенер говорит с <code>disnet.extella.ai</code>. REST-ядро — <code>api.extella.ai</code> (заголовки X-Auth-Token / X-Profile-Id / X-Agent-Id). Токен и agent_id — в <code>~/extella_wizard/app/config.json</code>.</p>
+<p><b>Разделы витрины (вкладки):</b> Рабочий стол · Витрина · Программы (включает влитые Pinokio-приложения) · Модели · Навыки · Инструменты · Знания · Workspace · Агенты · Сервисы · Профи. Режимы «Для всех» / «Для профи».</p>
+<p><b>Легенда статусов:</b> <span class="st ok">есть</span> — работает сегодня, проверено; <span class="st part">частично</span> — работает не целиком или требует сверки; <span class="st no">построить</span> — отсутствует. Рабочие имена новых операций/файлов — <span class="prop">предложение</span>, в текущем коде их нет.</p>
+<p><b>Инварианты (канон, нарушать нельзя):</b></p>
+<ul>
+<li><b>Всё ставится по кнопке, без LLM-токенов.</b> Установка любой карточки витрины — детерминированные эксперты/рецепты/пакеты, не агент. Токены тратятся только при РАБОТЕ агентных способностей (Композитор, штурм) — это использование, не установка.</li>
+<li><b>Клиентские агенты — платформенный Qwen 3.7.</b> BYOK/gpt-4o запрещён; платный Claude-дефолт (<code>agent_extella_default</code>) клиентам не ставится — подмена на <code>agent_extella_alibaba_default</code>.</li>
+<li><b>Приложения/файлы человека не трогаются без его действия.</b> Удаление приложения и воркспейса — по подтверждению; удаление воркспейса сносит только рабочую среду, файлы на диске целы.</li>
+<li><b>Показываем только совместимое с машиной человека.</b> Тулбар определяет ОС и прячет несовместимое (напр. NVIDIA-приложения на Mac).</li>
+<li><b>Тулбар v6 не патчим напрямую — только через исходник и пересборку;</b> прод-плагины и реестр не ломаем.</li>
+<li><b>Секреты (токен, PIN-хеш) в логи и чаты не печатаются.</b></li>
+</ul>
+</section>
+
+<section class="stage">
+<h2 id="s2">1. Резюме пути: этапы 0–5 одной таблицей</h2>
+<div class="tw"><table><thead><tr><th>Этап</th><th>Название</th><th>Суть одной фразой</th><th>Человек делает</th><th>Ключевые операции / артефакты</th><th>Готовность</th></tr></thead><tbody>
+<tr><td><b>0</b></td><td>Установка и первый запуск</td><td>Один установщик ставит приложение + мост + листенер + эксперты + каталоги; человек вводит токен</td><td>Запускает <code>install-all.sh</code> (или ставит приложение), вставляет Extella-токен</td><td><code>install-all.sh</code>, <code>install.py</code>, регистрация CSPL-handlers, старт моста 8765</td><td><span class="st ok">есть</span> — одностроч-установщик, авто-подъём моста, сидинг</td></tr>
+<tr><td><b>1</b></td><td>Рабочий стол и витрина</td><td>Стартовый экран: «Мой компьютер · Визард», «Workspace», ярлыки установленного; витрина по категориям</td><td>Смотрит рабочий стол, листает витрину, ищет контент</td><td><code>renderDesktop</code>, <code>renderHome</code>, каталоги KV (<code>_mkt_*</code>), поиск/категории</td><td><span class="st ok">есть</span> — стол, витрина, ярлыки, правый клик</td></tr>
+<tr><td><b>2</b></td><td>Установка контента</td><td>«Вставь ссылку — поставим в один клик» + карточки по типам (программы/приложения/модели/навыки/CLI/знания/MCP/паки)</td><td>Вставляет ссылку ИЛИ жмёт «Установить» на карточке</td><td><code>cmdInstall</code>, <code>app_install</code>+<code>app_start</code>, <code>hf_space_install</code>, <code>skInstall</code>, <code>cap_*_resolver</code>, сидинг паков</td><td><span class="st ok">есть</span> — все категории ставятся детерминированно; гейт pre-flight зелёный</td></tr>
+<tr><td><b>3</b></td><td>Пользование установленным</td><td>Панели паков, Workspace-кокпит, запущенные приложения в iframe, второй пилот</td><td>Открывает пак/приложение/воркспейс, работает</td><td>плагины <code>~/extella-plugins/</code>, <code>app_start</code>+iframe, Workspace ws-v1.3, пилот (copilot)</td><td><span class="st part">частично</span> — паки/приложения/Workspace <span class="st ok">есть</span>; пилот — прототип</td></tr>
+<tr><td><b>4</b></td><td>Обновления и автоподъём</td><td>Кнопка «⟳ Обновить Extella» тянет всё из GitHub; локальные серверы поднимаются на boot</td><td>Жмёт «Обновить», перезапускает приложение</td><td><code>wz_self_update</code> (curl toolbar.js + install.py), LaunchAgent, router.js автостарт</td><td><span class="st part">частично</span> — self-update <span class="st ok">есть</span>; автоподъём серверов — ветки в репо</td></tr>
+<tr><td><b>5</b></td><td>Удаление</td><td>Приложение / воркспейс / плагин убираются по подтверждению; файлы человека целы</td><td>Жмёт 🗑, подтверждает</td><td><code>app_uninstall</code>, Workspace <code>op:delete</code>; построить: удаление программ/навыков/CLI из UI</td><td><span class="st part">частично</span> — приложения и воркспейсы <span class="st ok">есть</span>; остальные типы — построить</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="stage">
+<h2 id="s3">2. Таксономия контента витрины</h2>
+<h3>2.1. Принципы</h3>
+<ul>
+<li><b>Единая обещание витрины:</b> «то, что мы рекламируем и совместимо с машиной человека — ставится по кнопке, детерминированно, без токенов». Каждый тип имеет свой детерминированный установщик.</li>
+<li><b>Каталоги — в KV, шардированы</b> (<code>_mkt_models</code>, <code>_mkt_mcp</code>, <code>_mkt_apps</code>, <code>_mkt_programs</code>, <code>_mkt_skills_catalog</code>, <code>_mkt_cli_catalog</code>, <code>composer:catalog</code>). Первый шард несёт <code>shards:N</code>; UI склеивает через <code>_loadSharded</code>. Глобально-засеянные ключи читать с <code>global:true</code>.</li>
+<li><b>Витрина = директория/реклама GitHub-репозиториев</b> (для приложений/программ): мы не распространяем код приложений, а рекламируем репо; лицензия репо — забота пользователя. Установщик клонирует и исполняет рецепт на его машине.</li>
+<li><b>Честность про совместимость:</b> «совместимо по рецепту» ≠ «проверено вживую». Метка <code>verified</code> ставится только после реального прогона (deep-verify).</li>
+</ul>
+<h3>2.2. Обзорная таблица: типы контента и их установщики</h3>
+<div class="tw"><table><thead><tr><th>#</th><th>Тип (вкладка)</th><th>Что это</th><th>Установщик (точные имена)</th><th>Детерминизм / токены</th><th>Статус</th></tr></thead><tbody>
+<tr><td>C1</td><td>Программы</td><td>Наши bundled form-плагины (вычислит.) + харвест GitHub-репо</td><td>form-плагины из пака (install.py) <span class="st ok">есть</span>; произвольный репо — агентом (Строитель) best-effort</td><td>bundled — да, без токенов; агент-путь — токены</td><td><span class="st ok">есть</span> (71 verified) / агент-путь <span class="st part">частично</span></td></tr>
+<tr><td>C2</td><td>Приложения (Pinokio)</td><td>ИИ-приложения по рецептам Pinokio (клон репо + рецепт)</td><td><code>app_install</code> → <code>app_start</code> → <code>app_uninstall</code>; резолвер рецепта в песочнице; свой формат <code>recipe_x</code>/<code>.extella.json</code></td><td>детерминированно, без токенов; shell-шаги рецепта — по согласию</td><td><span class="st ok">есть</span> — доказано на SillyTavern/RMBG/cropper; 157/178 Mac-friendly, deep-verify 5</td></tr>
+<tr><td>C3</td><td>Модели (HF)</td><td>HuggingFace Spaces: gradio (прокси) или web-app (встройка URL)</td><td><code>hf_space_install</code>: gradio → генерит прокси-эксперт <code>&lt;pid&gt;_run</code>; не-gradio → iframe URL</td><td>детерминированно, без токенов</td><td><span class="st ok">есть</span> — 197/197 (170 gradio + 27 embed)</td></tr>
+<tr><td>C4</td><td>Навыки</td><td>Skills/rules — правила поведения агента</td><td><code>skInstall</code> → <code>etb_rule_add</code> (правило в аккаунт)</td><td>детерминированно, без токенов</td><td><span class="st ok">есть</span> — 200 в каталоге</td></tr>
+<tr><td>C5</td><td>Инструменты (CLI)</td><td>Консольные утилиты (PDF/OCR/конвертеры) через Homebrew</td><td><code>cap_&lt;id&gt;_resolver({confirm_install})</code> → brew; снос <code>wz_capability_uninstall</code></td><td>детерминированно; разовый Homebrew по согласию</td><td><span class="st ok">есть</span> — 19/19</td></tr>
+<tr><td>C6</td><td>Знания</td><td>Юр-паки, wiki-контуры (adilet/ГК)</td><td>сидинг знаний из пака (install.py)</td><td>детерминированно, без токенов</td><td><span class="st ok">есть</span> — 2 (ГК полный, adilet)</td></tr>
+<tr><td>C7</td><td>MCP-серверы</td><td>MCP из npm/pypi (реклама репо)</td><td>реклама + инструкция; фактическая установка — вне гарантии пака (npm/pip на машине)</td><td>каталог детерминирован; установка — best-effort</td><td><span class="st part">частично</span> — 198 в каталоге, установка не бандлится</td></tr>
+<tr><td>C8</td><td>Агенты</td><td>Готовые агенты (Qwen) — карточки</td><td><code>etb_agents_*</code> / профиль; создание — Визард/Строитель</td><td>детерминированно (привязка), без токенов</td><td><span class="st part">частично</span> — витрина есть, полный кабинет впереди</td></tr>
+<tr><td>C9</td><td>Сервисы</td><td><code>svc_*</code>-эксперты (валюта, время и т.д.)</td><td>сидинг из пака; прогон svc_-эксперта</td><td>детерминированно, без токенов</td><td><span class="st ok">есть</span> — 13</td></tr>
+<tr><td>C10</td><td>Паки-автоматизации</td><td>Готовые контуры (Travel Agency, Юрист по договорам, Competitor Intelligence)</td><td>сидинг из пака: эксперты + реестры + UI-папки; подстановка Qwen-агента</td><td>детерминированно, без токенов</td><td><span class="st ok">есть</span> — 3 пака, 30 экспертов</td></tr>
+</tbody></table></div>
+<h3>2.3. Установка «в один клик по ссылке» (<code>cmdInstall</code>)</h3>
+<p>Верхняя строка витрины: «Вставь ссылку, установим в один клик: программа, модель, навык, CLI». Механизм: детект типа по URL/тексту → маршрутизация в нужный установщик. GitHub-репо → приложение/программа; HF-ссылка → модель; иначе — Строитель (агент) подбирает. Часть детекта детерминирована, часть уходит агенту (best-effort).</p>
+<div class="tw"><table><thead><tr><th>Вход</th><th>Куда маршрутизирует</th><th>Статус</th></tr></thead><tbody>
+<tr><td>github.com/... с рецептом Pinokio</td><td><code>app_install</code></td><td><span class="st ok">есть</span></td></tr>
+<tr><td>huggingface.co/spaces/...</td><td><code>hf_space_install</code></td><td><span class="st ok">есть</span></td></tr>
+<tr><td>произвольный GitHub без рецепта</td><td>Строитель (агент) → best-effort</td><td><span class="st part">частично</span> — не в гарантии</td></tr>
+<tr><td>текст-описание задачи</td><td>Композитор / Строитель</td><td><span class="st part">частично</span></td></tr>
+</tbody></table></div>
+</section>
+
+<section class="stage">
+<h2 id="s4">3. Артефакты на машине человека</h2>
+<p>Что реально появляется на компьютере после установки и использования. Разделение важно: <b>UI (toolbar.js)</b> — файл на машине человека, удалённо не подменить; <b>серверная часть (эксперты + каталоги)</b> — в аккаунте через листенер; <b>исполняемые артефакты</b> — на диске.</p>
+<div class="tw"><table><thead><tr><th>Артефакт</th><th>Путь / где</th><th>Когда появляется</th><th>Жизненный цикл</th><th>Статус учёта</th></tr></thead><tbody>
+<tr><td><b>toolbar.js</b> (UI)</td><td><code>~/Library/Application&nbsp;Support/extella-desktop/toolbar.js</code> (macOS)</td><td>установка / «Обновить»</td><td>перезапись новой версией (+ <code>.bak</code>); Electron кэширует до Cmd+Q</td><td><span class="st ok">есть</span></td></tr>
+<tr><td><b>config.json</b> (токен/agent)</td><td><code>~/extella_wizard/app/config.json</code></td><td>ввод токена при установке</td><td>читается мостом/экспертами; секрет</td><td><span class="st ok">есть</span></td></tr>
+<tr><td><b>Эксперты</b> (server-side)</td><td>аккаунт (global, cspl=fython)</td><td>сидинг install.py</td><td>перезаписываются при обновлении</td><td><span class="st ok">есть</span></td></tr>
+<tr><td><b>Каталоги</b> (KV)</td><td>KV аккаунта (шарды <code>_mkt_*</code>)</td><td>сидинг install.py</td><td>перезапись; embedding-лимит (см. edge-cases)</td><td><span class="st ok">есть</span></td></tr>
+<tr><td><b>Плагины-UI</b></td><td><code>~/extella-plugins/&lt;id&gt;/</code> + <code>_registry/&lt;id&gt;.json</code></td><td>установка пака/плагина</td><td>реестр — источник карточки/моста; удаление — снос папки+реестра</td><td><span class="st ok">есть</span></td></tr>
+<tr><td><b>Приложения (Pinokio)</b></td><td><code>~/extella-apps/&lt;owner&gt;/&lt;name&gt;/</code> (+ venv, <code>server.log</code>, <code>.extella.json</code>)</td><td><code>app_install</code></td><td>venv/зависимости; <code>app_uninstall</code> сносит папку+реестр+процесс</td><td><span class="st ok">есть</span></td></tr>
+<tr><td><b>Локальные серверы</b></td><td>процессы (порт из лога/реестра)</td><td><code>app_start</code> / плагины-серверы</td><td>умирают на ребуте → нужен автоподъём (этап 4)</td><td><span class="st part">частично</span></td></tr>
+<tr><td><b>LaunchAgent</b></td><td><code>~/Library/LaunchAgents/</code></td><td>установка автоподъёма</td><td>поднимает серверы на boot</td><td><span class="st part">частично</span> — ветка в репо, установлен локально</td></tr>
+<tr><td><b>Рантаймы</b></td><td>Homebrew, Node, Python venv (3.12), Miniconda (user-space)</td><td>рантайм-бутстрап при установке приложений/CLI</td><td>переиспользуются; Homebrew — разово по согласию</td><td><span class="st ok">есть</span></td></tr>
+<tr><td><b>Прокси-эксперты моделей</b></td><td>аккаунт (<code>&lt;pid&gt;_run</code>) + панель + реестр</td><td><code>hf_space_install</code> (gradio)</td><td>как плагин; порт 8800+hash(pid)</td><td><span class="st ok">есть</span></td></tr>
+</tbody></table></div>
+<p><b>Ключевая мысль:</b> удаление должно чистить ВСЕ три слоя честно. Сегодня <code>app_uninstall</code> закрывает слой приложений (процесс+папка+реестр); для программ/навыков/CLI из UI снос — <span class="st no">построить</span> (эксперты сноса есть: <code>wz_capability_uninstall</code>; кнопок в карточках нет).</p>
+</section>
+
+<section class="stage">
+<h2 id="s5">4. Этап 0 — установка и первый запуск</h2>
+<div class="tw"><table><thead><tr><th>Шаг</th><th>Человек → экран</th><th>Под капотом (точные имена)</th><th>Статус</th></tr></thead><tbody>
+<tr><td>0.1 Установщик</td><td>Запускает одностроч <code>install-all.sh</code> (curl | bash)</td><td>тянет пак+Визард тарболы, ставит toolbar.js, эксперты, каталоги; certifi для SSL</td><td><span class="st ok">есть</span></td></tr>
+<tr><td>0.2 Токен</td><td>Вставляет Extella-токен, Enter</td><td>пишет <code>config.json</code> (auth_token, api_base, agent_id, port 8765)</td><td><span class="st ok">есть</span></td></tr>
+<tr><td>0.3 Рантаймы</td><td>Согласие на Homebrew/Node один раз</td><td>brew + node (для CLI/MCP); Python 3.12; certifi привязан к дефолту</td><td><span class="st ok">есть</span></td></tr>
+<tr><td>0.4 Сидинг</td><td>«Ставлю эксперты…»</td><td><code>install.py</code>: эксперты (global), концепты, правила, каталоги моделей/MCP/приложений, паки-автоматизации</td><td><span class="st ok">есть</span></td></tr>
+<tr><td>0.5 Старт</td><td>Приложение открывается на Plugins</td><td>мост server.py на :8765 (health <code>/x/health</code>); листенер зарегистрирован; открытие Extella</td><td><span class="st ok">есть</span></td></tr>
+<tr><td>0.6 Регистрация устройства</td><td>—</td><td>на новом устройстве — CSPL-handlers (<code>run_expert install_nohup_handler</code> + <code>register_cspl_shell</code>), иначе <code>'str' object is not callable</code></td><td><span class="st part">частично</span> — ручной шаг, автоматизировать <span class="prop">предложение</span></td></tr>
+</tbody></table></div>
+<p><b>Честно:</b> первый запуск требует токен вручную и (на новом устройстве) регистрацию CSPL-handlers. Онбординг «получить токен» — вне тулбара (аккаунт Extella). Построить: экран-визард первого запуска внутри приложения (сейчас установка — терминал/скрипт).</p>
+</section>
+
+<section class="stage">
+<h2 id="s6">5. Этап 1 — рабочий стол и витрина</h2>
+<div class="tw"><table><thead><tr><th>Шаг</th><th>Человек → экран</th><th>Под капотом</th><th>Статус</th></tr></thead><tbody>
+<tr><td>1.1 Рабочий стол</td><td>Видит «Мой компьютер · Визард», «Workspace · компьютер под задачу», ярлыки установленного</td><td><code>renderDesktop</code>: геро-карточки + сетка ярлыков (программы/CLI/капы/воркспейсы); правый клик — кабинет/удалить</td><td><span class="st ok">есть</span></td></tr>
+<tr><td>1.2 Витрина</td><td>Листает по категориям, ищет</td><td><code>renderHome</code> + <code>_loadSharded</code> каталогов; поиск, чипы категорий</td><td><span class="st ok">есть</span></td></tr>
+<tr><td>1.3 Разделы</td><td>Переключает вкладки (Программы/Модели/Навыки/…)</td><td>диспетч <code>setc</code> → render&lt;Раздел&gt;; фильтр по ОС для приложений</td><td><span class="st ok">есть</span></td></tr>
+<tr><td>1.4 Режимы</td><td>«Для всех» / «Для профи»</td><td><code>data-mode</code>; профи открывает сырые GitHub-результаты</td><td><span class="st ok">есть</span></td></tr>
+</tbody></table></div>
+</section>
+
+<section class="stage">
+<h2 id="s7">6. Этап 2 — установка контента</h2>
+<p>Главный акт витрины. Разбит по типам (раздел 2). Общий гейт качества: <b>pre-flight verifier</b> (<code>preflight_verify.py</code>) гоняет перед публикацией пака — все категории зелёные (Модели 197, MCP 198, Программы 71, Приложения 157 Mac-friendly, CLI 19, Знания 2).</p>
+<h3>6.1. Приложения (эталонный поток «клон + рецепт»)</h3>
+<div class="tw"><table><thead><tr><th>Шаг</th><th>Человек → экран</th><th>Под капотом</th><th>Статус</th></tr></thead><tbody>
+<tr><td>Установить</td><td>Жмёт «Установить» → модалка согласия «склонирую репо + выполню рецепт»</td><td><code>app_install</code>: клон → резолв <code>install.js</code> в vm-песочнице → рантайм-бутстрап (uv/conda/node) → venv (Python 3.12) → shell-шаги</td><td><span class="st ok">есть</span></td></tr>
+<tr><td>Запустить</td><td>«▶ Запустить и открыть»</td><td><code>app_start</code>: резолв <code>start.js</code> (kernel-шим) → daemon → реальный порт из <code>server.log</code> (приём Pinokio on:event); идемпотентность</td><td><span class="st ok">есть</span></td></tr>
+<tr><td>Открыть</td><td>Приложение в iframe на весь экран внутри Extella (+ «в браузере ↗»)</td><td><code>appEmbed</code> + авто-reload пока модель грузится</td><td><span class="st ok">есть</span></td></tr>
+</tbody></table></div>
+<h3>6.2. Остальные типы (кратко, по разделу 2.2)</h3>
+<p>Модели — <code>hf_space_install</code> (gradio-прокси / embed); Навыки — <code>skInstall</code>→<code>etb_rule_add</code>; CLI — <code>cap_*_resolver</code> (brew); Программы — bundled form-плагины; Знания/Сервисы/Паки — сидинг. Все — без токенов, детерминированно.</p>
+<h3>6.3. Свой формат рецепта (Фаза 4, задел на будущее)</h3>
+<p><code>.extella.json</code> — декларативный формат (данные, не код) для app/cli/service; раннер <code>recipe_x</code> на чистом Python (без Node, без песочницы). Pinokio-рецепты конвертируются в наш формат офлайн (<code>pinokio_to_extella.py</code> через песочный резолвер). Осталось: пакетно сконвертировать 178, поле <code>xrecipe</code> в карточке → тулбар выбирает <code>recipe_x</code> vs <code>app_install</code>. <span class="st part">частично</span> — доказано на 1, каталог не сконвертирован.</p>
+</section>
+
+<section class="stage">
+<h2 id="s8">7. Этап 3 — пользование установленным</h2>
+<div class="tw"><table><thead><tr><th>Объект</th><th>Человек → экран</th><th>Под капотом</th><th>Статус</th></tr></thead><tbody>
+<tr><td>Панели паков</td><td>Открывает пак (Travel Agency и т.п.) — контуры, кнопки, формы</td><td>плагин <code>~/extella-plugins/&lt;id&gt;/</code>, реестр, мост к экспертам пака</td><td><span class="st ok">есть</span></td></tr>
+<tr><td>Приложения</td><td>Открывает установленное — iframe</td><td><code>app_start</code> (идемпотентно) → embed</td><td><span class="st ok">есть</span></td></tr>
+<tr><td>Workspace-кокпит</td><td>«Компьютер под задачу»: вкладки Обзор/Задачи/Материалы/Настройки, чат-док, инбокс вопросов, автопилот</td><td>движок <code>wz_workspace</code> (ws-v1.3); UI — тёплый reskin; замкнутый цикл (чат→инбокс, ✓ задачи, ▶ автопилот)</td><td><span class="st ok">есть</span> (UI); движок отдельной спецификацией</td></tr>
+<tr><td>Композитор</td><td>Собирает способности в пайплайн словами</td><td><code>wz_auto_compose</code> + <code>composer:catalog</code> (global)</td><td><span class="st part">частично</span></td></tr>
+<tr><td>Второй пилот</td><td>Наблюдает экран, подсказывает оверлеем</td><td>copilot/ (perceive→decide→клик-сквозь); листенер headless → пилот = helper в GUI-сессии</td><td><span class="st part">частично</span> — прототип доказан</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="stage">
+<h2 id="s9">8. Этап 4 — обновления и автоподъём</h2>
+<div class="tw"><table><thead><tr><th>Шаг</th><th>Человек → экран</th><th>Под капотом</th><th>Статус</th></tr></thead><tbody>
+<tr><td>Обновление</td><td>Жмёт «⟳ Обновить» (иконка в шапке) → «пара минут» → перезапусти</td><td><code>wz_self_update</code>: curl свежий toolbar.js в папку Electron (по ОС) + <code>install.py</code> из пак-тарбола (эксперты+каталоги); загрузка через curl (системные сертификаты)</td><td><span class="st ok">есть</span></td></tr>
+<tr><td>Бутстрап кнопки</td><td>Первый раз UI доставляется разово (curl), дальше — кнопкой</td><td>кнопка живёт В toolbar.js → нужен один первичный <code>curl</code> файла</td><td><span class="st part">частично</span> — бутстрап ручной</td></tr>
+<tr><td>Синхронизация пака</td><td>—</td><td>дистрибутивный <code>toolbar/toolbar.js</code> в паке синхронизируется со сборкой при каждом релизе (иначе установщик раздаёт старый UI)</td><td><span class="st ok">есть</span> — процессное правило</td></tr>
+<tr><td>Автоподъём серверов</td><td>После ребута плагины-серверы (excalidraw и др.) снова живы</td><td>router.js автостарт (loop-proof) + LaunchAgent (<code>~/Library/LaunchAgents</code>)</td><td><span class="st part">частично</span> — ветки в репо тулбара, установлен локально; в дистрибутив — построить</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="stage">
+<h2 id="s10">9. Этап 5 — удаление</h2>
+<div class="tw"><table><thead><tr><th>Объект</th><th>Человек → экран</th><th>Под капотом</th><th>Статус</th></tr></thead><tbody>
+<tr><td>Приложение</td><td>🗑 на установленной карточке → «файлы не тронутся»</td><td><code>app_uninstall</code>: стоп процесса (порт из лога → lsof kill) + rmtree папки + снос реестра; freed_mb</td><td><span class="st ok">есть</span></td></tr>
+<tr><td>Воркспейс</td><td>🗑 в списке / Настройках → подтверждение «уйдёт только среда»</td><td>Workspace <code>op:delete</code> → перечитать list</td><td><span class="st ok">есть</span></td></tr>
+<tr><td>Программа / навык / CLI</td><td>—</td><td>эксперты сноса есть (<code>wz_capability_uninstall</code>), кнопок в карточках нет</td><td><span class="st no">построить</span> — кнопка «Удалить» в этих разделах</td></tr>
+<tr><td>Пак-автоматизация</td><td>—</td><td>снос плагина+реестра+экспертов пака</td><td><span class="st no">построить</span></td></tr>
+</tbody></table></div>
+<p><b>Канон удаления:</b> удаление всегда сносит только объект Extella (плагин/реестр/процесс/рабочую среду), файлы и папки человека не трогает. Приложения — исключение осмысленное: удаляется склонированная папка приложения (её создала Extella), не документы человека.</p>
+</section>
+
+<section class="stage">
+<h2 id="s11">10. Edge-cases (проверено на практике)</h2>
+<div class="tw"><table><thead><tr><th>Ситуация</th><th>Симптом</th><th>Решение (as-built)</th><th>Статус</th></tr></thead><tbody>
+<tr><td>Порт занят (AirPlay :5000)</td><td>Docker-установки падали (403 → recursion limit)</td><td>порт-детект + ручная регистрация плагина; фикс валидатора</td><td><span class="st ok">есть</span></td></tr>
+<tr><td>Приложение на фикс-порту</td><td>ML-приложение печатает свой порт (7861) вместо нашего</td><td>реальный порт из <code>server.log</code>; идемпотентность</td><td><span class="st ok">есть</span></td></tr>
+<tr><td>Ребут</td><td>Локальные серверы умирают</td><td>router.js автостарт + LaunchAgent</td><td><span class="st part">частично</span></td></tr>
+<tr><td>Офлайн / приложение закрыто</td><td>«Target unavailable» — эксперт негде исполнить</td><td>терминальная команда работает без листенера; эксперт — только при открытом приложении</td><td><span class="st ok">есть</span> (диагностировано)</td></tr>
+<tr><td>KV embedding-лимит</td><td>value &gt; ~20KB → HTTP 500 (OpenAI embeddings 400)</td><td>переразбить каталог на мелкие шарды (≤~13KB)</td><td><span class="st ok">есть</span></td></tr>
+<tr><td>Старый Python (Xcode 3.9)</td><td>приложения падали (<code>X\|None</code> TypeError)</td><td>venv на Python 3.12/3.11 явно, не sys.executable</td><td><span class="st ok">есть</span></td></tr>
+<tr><td>Python-SSL на листенере</td><td>кнопка «Обновить» падала (сертификаты)</td><td>загрузка через curl (системные сертификаты), urllib — фолбэк</td><td><span class="st ok">есть</span></td></tr>
+<tr><td>Electron кэширует UI</td><td>новый toolbar.js не виден</td><td>Cmd+Q + открыть заново</td><td><span class="st ok">есть</span> — процессное правило</td></tr>
+<tr><td>Пак раздаёт старый UI</td><td>установщик даёт устаревший интерфейс</td><td>синхронизировать пак-<code>toolbar.js</code> со сборкой при релизе</td><td><span class="st ok">есть</span></td></tr>
+<tr><td>Несовместимое приложение (NVIDIA/upstream)</td><td>падает на Mac (fluxgym, cogstudio)</td><td>compat-фильтр по ОС + честная метка 🖥; verified только после deep-verify</td><td><span class="st ok">есть</span></td></tr>
+</tbody></table></div>
+</section>
+
+<section class="stage">
+<h2 id="s12">11. Сводная таблица «что построить»</h2>
+<div class="tw"><table><thead><tr><th>Блок</th><th>Что</th><th>Зачем</th><th>Оценка</th></tr></thead><tbody>
+<tr><td>T-1</td><td>Экран-визард первого запуска <b>внутри</b> приложения (токен, устройство, CSPL-handlers авто)</td><td>убрать терминал из онбординга</td><td>средне</td></tr>
+<tr><td>T-2</td><td>Кнопки «Удалить» в разделах Программы/Навыки/CLI/Паки (эксперты сноса уже есть)</td><td>честный жизненный цикл всех типов</td><td>дёшево</td></tr>
+<tr><td>T-3</td><td>Автоподъём локальных серверов в дистрибутив (LaunchAgent + router.js из веток в пак)</td><td>серверы живут после ребута у всех, не только локально</td><td>средне</td></tr>
+<tr><td>T-4</td><td>Пакетная конвертация 178 приложений в <code>.extella.json</code> + поле <code>xrecipe</code> в карточке</td><td>безопасный путь recipe_x (без Node/песочницы на клиенте)</td><td>тяжело (клон каждого)</td></tr>
+<tr><td>T-5</td><td>Расширить deep-verify на больше приложений (метка verified после Python-3.12-фикса)</td><td>больше карточек «✓ проверено» в спотлайт</td><td>тяжело (реальная установка)</td></tr>
+<tr><td>T-6</td><td>Установка MCP-серверов из UI (npm/pip) в гарантию, не только реклама</td><td>закрыть последний тип до «ставится по кнопке»</td><td>средне</td></tr>
+<tr><td>T-7</td><td>Кабинет агента (обзор/запуски/расписание/настройки) — этап 2 Визард-манифеста</td><td>агент как управляемый объект</td><td>средне</td></tr>
+<tr><td>T-8</td><td>Автоматизировать регистрацию CSPL-handlers при первом запуске на устройстве</td><td>убрать ручной шаг 0.6</td><td>дёшево</td></tr>
+<tr><td>T-9</td><td>Довести второй пилот из прототипа (perceive→decide→оверлей) до продукта</td><td>нативный macOS второй-пилот</td><td>тяжело</td></tr>
+</tbody></table></div>
+<p><b>Общая находка:</b> сам механизм установки/запуска/удаления по всем 10 типам контента — <b>построен и детерминирован</b> (гейт зелёный). Основной долг тулбара не в установке, а в: (1) онбординге первого запуска без терминала, (2) равномерном удалении всех типов, (3) автоподъёме серверов в дистрибутиве, (4) продуктизации второго пилота. Самое дешёвое с высоким эффектом — T-2 и T-8.</p>
+</section>
+
+<section class="stage">
+<h2 id="s13">Открытые вопросы Анвару</h2>
+<ul>
+<li><b>№1 — Онбординг первого запуска.</b> Оставляем установку через <code>install-all.sh</code> (терминал) как основной путь, или строим экран-визард внутри приложения (T-1)? Для US-демо, вероятно, нужен внутренний экран — подтвердить приоритет.</li>
+<li><b>№2 — MCP-серверы.</b> Доводить установку MCP из UI до гарантии (npm/pip на машине, T-6), или оставить как рекламу репо (сейчас)? Влияет на обещание «всё ставится по кнопке».</li>
+<li><b>№3 — Автоподъём серверов.</b> Класть LaunchAgent + router.js-автостарт в общий дистрибутив всем (T-3), или оставить как опцию для тех, у кого есть плагины-серверы? Есть вопрос доверия (LaunchAgent = автозапуск на boot).</li>
+<li><b>№4 — Пакетная конвертация приложений в <code>.extella.json</code> (T-4).</b> Гонять тяжёлый офлайн-джоб (клон 178 репо) сейчас, или по мере надобности на самые ходовые? Даёт безопасный путь без Node на клиенте.</li>
+<li><b>№5 — Второй пилот (T-9).</b> Приоритет продуктизации относительно Workspace и приложений? Прототип доказан, но это отдельный большой трек (2 TCC-разрешения, латентность).</li>
+<li><b>№6 — Единый «Магазин».</b> Анвар слил Приложения в Программы. Идти дальше — свести Модели/Навыки/CLI под меньше вкладок, или текущая раскладка (Программы/Модели/Навыки/Инструменты/Знания/Агенты/Сервисы) остаётся?</li>
+</ul>
+</section>
+
+<div class="foot">Extella Toolbar · строительная спецификация пути пользователя · сторона тулбара · пара к спецификациям Workspace-движка и Wizard в проекте «Разработка Extella»</div>
+</div>
