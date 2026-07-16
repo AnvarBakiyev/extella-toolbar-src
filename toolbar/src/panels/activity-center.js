@@ -338,22 +338,13 @@
       var store = frame && frame.contentWindow;
       if (!store || !store.document || !store.document.getElementById('tabs')) return;
 
-      var changed = false;
+      // «Расписания» НЕ выносим отдельной вкладкой в меню (решение Анвара: свод до 6 вкладок).
+      // Доступ — через карточку «Регулярные задачи» на Рабочем столе (injectScheduleShortcut → setc('automations')).
+      // Если прежняя сборка уже добавила вкладку — убираем её.
       if (Array.isArray(store.CATS)) {
-        var schedules = store.CATS.filter(function (category) { return category.id === 'automations'; })[0];
-        if (!schedules) {
-          var beforeAgents = store.CATS.findIndex(function (category) { return category.id === 'agents'; });
-          var entry = { id: 'automations', l: 'Расписания' };
-          if (beforeAgents >= 0) store.CATS.splice(beforeAgents, 0, entry);
-          else store.CATS.push(entry);
-          changed = true;
-        } else if (schedules.l !== 'Расписания') {
-          schedules.l = 'Расписания';
-          changed = true;
-        }
+        var idx = store.CATS.findIndex(function (category) { return category.id === 'automations'; });
+        if (idx >= 0) { store.CATS.splice(idx, 1); if (typeof store.rtabs === 'function') store.rtabs(); }
       }
-      if (store.I18N_EN) store.I18N_EN['Расписания'] = 'Schedules';
-      if (changed && typeof store.rtabs === 'function') store.rtabs();
 
       if (!store.__xtlacDesktopObserver) {
         var grid = store.document.getElementById('grid');
