@@ -1947,7 +1947,6 @@ var CURATED_PROGRAMS = {
   'study-schedule': { biz:'study', icon:'📚', name:'План подготовки', tagline:'Разложит учёбу к экзамену по дням, без ночных подвигов' },
   'net-pay': { biz:'money', icon:'💰', name:'Зарплата на руки', tagline:'Сколько реально придёт после налогов' },
   'loan-calculator': { biz:'money', icon:'🏦', name:'Калькулятор кредита', tagline:'Платёж, переплата и график, до похода в банк' },
-  'currency-converter': { biz:'money', icon:'💱', name:'Конвертер валют', tagline:'Свежие курсы, без вкладки с банком' },
   'budget-advisor': { biz:'money', icon:'📊', name:'Личный бюджет', tagline:'Покажет, куда уходят деньги, спокойно и без укоров' },
   'sales-tax': { biz:'money', icon:'🧾', name:'Налог из цены', tagline:'Добавит или выделит налог из любой суммы' },
   'exchange-historical': { biz:'money', icon:'📅', name:'Курс на любую дату', tagline:'Официальный курс Нацбанка РК на нужный день, для первички' },
@@ -2390,7 +2389,6 @@ var DEFAULT_MERCH = {
       facts:['Напиши, что есть дома, получи варианты ужина'] }
   ],
   shelf: [
-    { label:'Деньги', acc:'#2F6E7E', pluginId:'currency-converter', title:'Конвертер валют', facts:['Свежие курсы, без вкладки с банком'] },
     { label:'Деньги', acc:'#2F6E7E', pluginId:'budget-advisor', title:'Личный бюджет', facts:['Куда уходят деньги, спокойно и без укоров'] },
     { label:'Работа', acc:'#C57E33', pluginId:'brainstorm', title:'Мозговой штурм', facts:['Накидает идей, пока кофе не остыл'] },
     { label:'Жизнь', acc:'#3D8078', pluginId:'fitness-coach', title:'Фитнес-план', facts:['Тренировки под твой уровень, без фанатизма'] },
@@ -4121,16 +4119,11 @@ function agentFlash(roleId, btn){
 var CATALOG_SERVICES=[
   {id:'svc_currency', cat:'Финансы и данные', name:'Курсы валют', emoji:'💱', acc:'#2E8B57', desc:'Свежие курсы и пересчёт сумм: USD, EUR, KZT, RUB и другие.', params:[{k:'base',label:'Из валюты',ph:'USD',def:'USD'},{k:'to',label:'В валюту',ph:'KZT',def:'KZT'},{k:'amount',label:'Сумма',ph:'1',def:'100'}]},
   {id:'svc_crypto', cat:'Финансы и данные', name:'Курс криптовалют', emoji:'🪙', acc:'#C99A2E', desc:'Сколько сейчас стоит биткоин, эфир или другая монета.', params:[{k:'coin',label:'Монета (id)',ph:'bitcoin',def:'bitcoin'},{k:'vs',label:'Валюта',ph:'usd',def:'usd'}]},
-  {id:'svc_worldbank', cat:'Финансы и данные', name:'Экономика страны', emoji:'🏦', acc:'#3E7CAD', desc:'ВВП и другие показатели любой страны, по данным Всемирного банка.', params:[{k:'country',label:'Страна (код)',ph:'KZ',def:'KZ'},{k:'indicator',label:'Показатель',ph:'NY.GDP.MKTP.CD',def:'NY.GDP.MKTP.CD'}]},
   {id:'svc_weather', cat:'Погода и гео', name:'Погода', emoji:'🌤️', acc:'#2F6B66', desc:'Температура, ветер и влажность в любом городе прямо сейчас.', params:[{k:'city',label:'Город',ph:'Алматы',def:'Алматы'}]},
   {id:'svc_ipgeo', cat:'Погода и гео', name:'Геолокация по IP', emoji:'📍', acc:'#24544F', desc:'Определит страну, город и провайдера по IP-адресу.', params:[{k:'ip',label:'IP-адрес',ph:'8.8.8.8',def:'8.8.8.8'}]},
-  {id:'svc_postal', cat:'Погода и гео', name:'Почтовый индекс', emoji:'📮', acc:'#4A8DB7', desc:'Найдёт город по почтовому индексу, удобно для адресов и доставок.', params:[{k:'country',label:'Страна (код)',ph:'us',def:'us'},{k:'code',label:'Индекс',ph:'90210',def:'90210'}]},
   {id:'svc_wiki', cat:'Справка и данные', name:'Справка из Википедии', emoji:'📖', acc:'#6B6B6B', desc:'Короткая справка по любой теме из Википедии.', params:[{k:'topic',label:'Тема',ph:'Алматы',def:'Алматы'}]},
-  {id:'svc_books', cat:'Справка и данные', name:'Поиск книг', emoji:'📚', acc:'#B5642E', desc:'Найдёт книгу, автора и год издания в мировом каталоге.', params:[{k:'query',label:'Запрос',ph:'Война и мир',def:'Абай'}]},
   {id:'svc_github', cat:'Справка и данные', name:'Данные GitHub', emoji:'🐙', acc:'#3E8B8B', desc:'Живая карточка репозитория: звёзды, язык, описание.', params:[{k:'repo',label:'Репозиторий',ph:'owner/name',def:'torvalds/linux'}]},
-  {id:'svc_hackernews', cat:'Справка и данные', name:'Новости технологий', emoji:'📰', acc:'#C0504D', desc:'Что обсуждают технари прямо сейчас: топ Hacker News со ссылками.', params:[{k:'count',label:'Сколько новостей',ph:'5',def:'5'}]},
   {id:'svc_translate', cat:'Утилиты', name:'Перевод текста', emoji:'🌐', acc:'#2E7D5B', desc:'Быстрый перевод фразы между языками, прямо в карточке.', params:[{k:'text',label:'Текст',ph:'hello',def:'quarterly report'},{k:'src',label:'С языка',ph:'en',def:'en'},{k:'to',label:'На язык',ph:'ru',def:'ru'}]},
-  {id:'svc_holidays', cat:'Утилиты', name:'Праздники и выходные', emoji:'📅', acc:'#A5632A', desc:'Календарь госпраздников на год: чтобы сроки не попали в выходные.', params:[{k:'country',label:'Страна (код)',ph:'KZ',def:'KZ'},{k:'year',label:'Год',ph:'2026',def:'2026'}]},
   {id:'svc_qr', cat:'Утилиты', name:'Генератор QR-кода', emoji:'🔳', acc:'#7A4AA8', desc:'Превратит ссылку или текст в QR-картинку.', params:[{k:'data',label:'Ссылка или текст',ph:'https://extella.ai',def:'https://extella.ai'}]}
 ];
 var SV_KEY='extella_services_connected';
@@ -4299,9 +4292,9 @@ var FORGE_ROLES=[{id:'universal',n:'Универсальный помощник'
 var FORGE_TOOLS=[
  {g:'Живые данные (сервисы)', items:[
    {id:'svc_currency',n:'💱 Курсы валют'},{id:'svc_crypto',n:'🪙 Криптовалюты'},{id:'svc_weather',n:'🌤️ Погода'},
-   {id:'svc_translate',n:'🌐 Перевод'},{id:'svc_wiki',n:'📖 Википедия'},{id:'svc_worldbank',n:'🏦 Экономика стран'},
-   {id:'svc_holidays',n:'📅 Праздники'},{id:'svc_github',n:'🐙 GitHub'},{id:'svc_hackernews',n:'📰 Тех-новости'},
-   {id:'svc_books',n:'📚 Книги'},{id:'svc_ipgeo',n:'📍 Гео по IP'},{id:'svc_postal',n:'📮 Индексы'},{id:'svc_qr',n:'🔳 QR-код'}]},
+   {id:'svc_translate',n:'🌐 Перевод'},{id:'svc_wiki',n:'📖 Википедия'},
+   {id:'svc_github',n:'🐙 GitHub'},
+   {id:'svc_ipgeo',n:'📍 Гео по IP'},{id:'svc_qr',n:'🔳 QR-код'}]},
  {g:'MCP-серверы (через мост)', items:[
    {id:'mcp_fetch',n:'🌍 Чтение веб-страниц'},{id:'mcp_time',n:'🕐 Точное время'},
    {id:'mcp_git',n:'🔧 Git-репозитории'},{id:'mcp_files',n:'📁 Файлы (Downloads)'}]}
