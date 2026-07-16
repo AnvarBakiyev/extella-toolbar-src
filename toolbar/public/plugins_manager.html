@@ -4015,6 +4015,7 @@ var SKILLS_CATALOG=[
 ];
 var SK_ACC={'Стиль и общение':'#C57E33','Работа и продуктивность':'#2F6B66','Бизнес':'#2E7D5B','Разработка':'#24544F'};
 var _skReg={v:1,items:[]}, _skCatReg=null, _skLoaded=false, _skAgents=null, _skPick=null;
+var _skFetching=false;   // KV уже едет: не дёргаем повторно и НЕ блокируем отрисовку
 
 function skBridge(sendType,resultType,payload,timeoutMs){
   return new Promise(function(res,rej){
@@ -4055,13 +4056,16 @@ function skItem(id){return (_skReg.items||[]).filter(function(x){return x.id===i
 
 function renderSkillsShelf(){
   var g=document.getElementById('grid'); if(!g)return;
-  if(!_skLoaded){
-    g.innerHTML=_loadingHTML('Загружаю навыки…');
+  // Навыки были ЕДИНСТВЕННОЙ вкладкой, которая ждала KV перед первой отрисовкой:
+  // пустой экран с лоадером, хотя встроенный SKILLS_CATALOG доступен сразу.
+  // Остальные вкладки рисуют встроенное мгновенно и дообогащаются, когда приедет
+  // KV. Делаем так же: грузим в фоне и НЕ прерываем отрисовку.
+  if(!_skLoaded && !_skFetching){
+    _skFetching=true;
     Promise.all([
       skKvGet('_mkt_skills').then(function(r){_skReg=(r&&r.items)?r:{v:1,items:[]};if(!_skReg.items)_skReg.items=[];}).catch(function(){_skReg={v:1,items:[]};}),
       _loadSharded('_mkt_skills_catalog','items').then(function(r){_skCatReg=(r&&r.items&&r.items.length)?r:null;}).catch(function(){_skCatReg=null;})
-    ]).then(function(){_skLoaded=true;if(cur==='skills')renderSkillsShelf();});
-    return;
+    ]).then(function(){_skLoaded=true;_skFetching=false;if(cur==='skills')renderSkillsShelf();});
   }
   var all=skCatalog();
   var live=!!(_skCatReg&&_skCatReg.items&&_skCatReg.items.length);
