@@ -1300,7 +1300,7 @@ var CATS = [
   { id: 'knowledge',l: 'Знания' },
   { id: 'agents',   l: 'Агенты' }
 ];
-var _SVC_GROUP=['programs','cli','services'];  // под-вкладки объединённого раздела «Сервисы»
+var _SVC_GROUP=['programs','apps','cli','services'];  // под-вкладки объединённого раздела «Сервисы»
 
 var _admView = 'catalog';
 function setAdmView(v){ _admView = v; renderGrid(); }
@@ -1435,6 +1435,7 @@ function renderGrid() {
   if (cur === 'desktop') renderDesktop();
   else if (cur === 'home') renderHome();
   else if (cur === 'programs') renderPrograms();
+  else if (cur === 'apps') renderApps();
   else if (cur === 'models') renderModels();
   else if (cur === 'skills') renderSkillsShelf();
   else if (cur === 'cli') renderCLI();
@@ -1616,14 +1617,14 @@ function modelsSpotlight(){
 // ===== Приложения (Pinokio-совместимые рецепты, детерминированная установка) =====
 var _appReg=null, _appFetched=false;
 function _ensureApps(){ if(_appFetched)return; _appFetched=true;
-  _loadSharded('_mkt_apps').then(function(r){ if(r&&r.shelf){_appReg=r; if(cur==='programs')renderPrograms(); else if(cur==='desktop')renderDesktop();} }).catch(function(){ _appReg={shelf:[]}; if(cur==='programs')renderPrograms(); else if(cur==='desktop')renderDesktop(); }); }
+  _loadSharded('_mkt_apps').then(function(r){ if(r&&r.shelf){_appReg=r; if(cur==='apps')renderApps(); else if(cur==='desktop')renderDesktop();} }).catch(function(){ _appReg={shelf:[]}; if(cur==='apps')renderApps(); else if(cur==='desktop')renderDesktop(); }); }
 var _appInstalled=null;   // Set установленных app_id (и их basename)
 function _refreshInstalledApps(){
   skBridge('etb_run_expert','etb_expert_result',{name:'app_list',params:{}},30000).then(function(r){
     var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
     if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}
     var s={}; ((out&&out.apps)||[]).forEach(function(a){ s[a.app_id]=1; var b=a.app_id.split('/').pop(); s[b]=1; });
-    _appInstalled=s; if(cur==='programs')renderPrograms(); else if(cur==='desktop')renderDesktop();   // перерисовать с отметками
+    _appInstalled=s; if(cur==='apps')renderApps(); else if(cur==='desktop')renderDesktop();   // перерисовать с отметками
   }).catch(function(){ _appInstalled={}; });
 }
 function _curOS(){
@@ -1632,10 +1633,12 @@ function _curOS(){
 }
 function _appOk(a){ var c=a.compat; return !c||!c.platforms||c.platforms.indexOf(_curOS())>=0; }
 var _appOnlyCompat=true;
-function _appToggleCompat(){ _appOnlyCompat=!_appOnlyCompat; renderPrograms(); }
-// Секция приложений (Pinokio-репо с GitHub) — встраивается в раздел «Программы». Возвращает HTML-строку.
-function _appsSectionHTML(){
-  if(!_appReg){ _ensureApps(); return '<div class="sect" style="grid-column:1/-1"><h2>Приложения с GitHub</h2></div><div class="sk_lead" style="grid-column:1/-1">Загружаю приложения…</div>'; }
+var APP_CATL={image:'Картинки',audio:'Аудио и музыка',video:'Видео',llm:'Модели и чат',other:'Другое'};
+function _appToggleCompat(){ _appOnlyCompat=!_appOnlyCompat; renderApps(); }
+// Приложения (Pinokio-репо с GitHub) — полноценная под-вкладка каталога «Сервисы».
+function renderApps(){
+  var g=document.getElementById('grid'); if(!g)return;
+  if(!_appReg){ g.innerHTML=_loadingHTML('Загружаю приложения…'); _ensureApps(); _svcPrependBar(); return; }
   if(_appInstalled===null){ _appInstalled={}; _refreshInstalledApps(); }
   var all=_appReg.shelf||[];
   var osName={darwin:'macOS',win32:'Windows',linux:'Linux'}[_curOS()]||_curOS();
@@ -1643,13 +1646,21 @@ function _appsSectionHTML(){
   var apps=_appOnlyCompat?all.filter(_appOk):all;
   var toggle=hidden?('<div class="sk_lead" style="grid-column:1/-1;font-size:12px;color:var(--tx3)">'+
     (_appOnlyCompat?('Показаны совместимые с '+esc(osName)+'. Скрыто несовместимых: '+hidden+'. '+
-      '<a href="#" onclick="_appToggleCompat();return false" style="color:var(--acc,#7A3FA0)">показать все</a>')
+      '<a href="#" onclick="_appToggleCompat();return false" style="color:var(--a)">показать все</a>')
      :('Показаны все, включая несовместимые с '+esc(osName)+'. '+
-      '<a href="#" onclick="_appToggleCompat();return false" style="color:var(--acc,#7A3FA0)">только для моей системы</a>'))+'</div>'):'';
-  return '<div class="sect" style="grid-column:1/-1"><h2>Приложения с GitHub</h2></div>'+
-    '<div class="sk_lead" style="grid-column:1/-1">ИИ-приложения (рецепты Pinokio, MIT). Клик → Extella ставит по рецепту на твоём компьютере, детерминированно, без ИИ-агента. 🔒 работают локально.</div>'+
-    toggle+
-    '<div class="mshelf">'+apps.map(appCard).join('')+'</div>';
+      '<a href="#" onclick="_appToggleCompat();return false" style="color:var(--a)">только для моей системы</a>'))+'</div>'):'';
+  // группировка по категории (полки, как в других вкладках)
+  var byCat={}, order=[];
+  apps.forEach(function(a){ var c=a.cat||'other'; if(!byCat[c]){byCat[c]=[];order.push(c);} byCat[c].push(a); });
+  var shelves=order.map(function(c){
+    return '<div class="sect_hdr"><span class="sect_title">'+esc(APP_CATL[c]||c)+'</span><span class="sect_line"></span></div>'+
+      '<div class="mshelf">'+byCat[c].map(appCard).join('')+'</div>';
+  }).join('');
+  g.innerHTML='<div class="sect" style="grid-column:1/-1"><h2>Приложения с GitHub</h2></div>'+
+    '<div class="sk_lead" style="grid-column:1/-1">ИИ-приложения (рецепты Pinokio, MIT). Клик → Extella ставит по рецепту на твоём компьютере, локально, без ИИ-агента. 🔒</div>'+
+    toggle+(shelves||'<div class="sk_lead" style="grid-column:1/-1">Нет приложений для твоей системы.</div>');
+  _mountTabFilter('Поиск приложения…');
+  _svcPrependBar();
 }
 function appCard(a){
   var repo=(a.run&&a.run.repo)||''; var stars=a.stars?('★'+a.stars):'';
@@ -2286,8 +2297,8 @@ function _mountTabFilter(placeholder){
   var chips='<div class="catbar"><button class="cat_chip on" data-cat="__all" onclick="_tabFilterCat(this)">Все <span class="cat_n">'+total+'</span></button>'+
     cats.map(function(c){ return '<button class="cat_chip" data-cat="'+esc(c)+'" onclick="_tabFilterCat(this)">'+esc(c)+' <span class="cat_n">'+(cnt[c]||0)+'</span></button>'; }).join('')+'</div>';
   bar.innerHTML=search+chips;
-  var anchor=g.querySelector('.sect, .sect_hdr');
-  if(anchor) g.insertBefore(bar, anchor); else g.appendChild(bar);
+  // Шапка (поиск + категории) — В САМЫЙ ВЕРХ, НАД hero-баннером (единый порядок: поиск → категории → hero).
+  if(g.firstChild) g.insertBefore(bar, g.firstChild); else g.appendChild(bar);
 }
 function _tabFilterCat(btn){
   var bar=btn.closest('.tabfilter'); if(!bar) return;
@@ -2571,7 +2582,7 @@ function progToolsHTML(){
 // search lives here too, but only in «Для профи»; «Для всех» stays curated.
 // Под-навигация объединённого раздела «Сервисы»: Программы / Инструменты / Сервисы (старое деление, не в меню).
 function _svcBar(){
-  var it=[['programs','Программы'],['cli','Инструменты'],['services','Сервисы']];
+  var it=[['programs','Программы'],['apps','Приложения'],['cli','Инструменты'],['services','Сервисы']];
   return '<div class="svc_sub" style="grid-column:1/-1;display:flex;gap:7px;flex-wrap:wrap;margin:0 0 16px">'+
     it.map(function(x){return '<button class="cat_chip'+(cur===x[0]?' on':'')+'" onclick="setc(\''+x[0]+'\')">'+x[1]+'</button>';}).join('')+'</div>';
 }
@@ -2588,7 +2599,7 @@ function _renderProgramsCore() {
 
   var _bk = _featCat === 'all' ? '' : '<div class="cat_back"><button class="cb_btn" onclick="_setFeatCat(\'all\')">← Все категории</button></div>';
   var _isPro = document.body.getAttribute('data-mode') === 'pro';
-  var featuredHtml = _progSearchHTML() + _featCatBar() + _bk + ((_featCat === 'all' && !_isPro) ? programsSpotlight() + addTileHTML('programs','Добавить программу') : '') + renderFeaturedSection() + (_featCat === 'all' ? _appsSectionHTML() : '') + (_featCat !== 'all' ? addTileHTML('programs','Добавить программу') : (_isPro ? '' : progToolsHTML()));
+  var featuredHtml = _progSearchHTML() + _featCatBar() + _bk + ((_featCat === 'all' && !_isPro) ? programsSpotlight() + addTileHTML('programs','Добавить программу') : '') + renderFeaturedSection() + (_featCat !== 'all' ? addTileHTML('programs','Добавить программу') : (_isPro ? '' : progToolsHTML()));
 
   // «Для всех», curated only: no raw GitHub firehose.
   if (document.body.getAttribute('data-mode') !== 'pro') {
@@ -3975,6 +3986,7 @@ function renderCLI(){
   g.innerHTML=html;
   [].forEach.call(g.querySelectorAll('[data-cliinst]'),function(b){b.onclick=function(){installCLI(b.getAttribute('data-cliinst'),b);};});
   [].forEach.call(g.querySelectorAll('[data-clirm]'),function(b){b.onclick=function(){cliUninstall(b.getAttribute('data-clirm'));};});
+  _mountTabFilter('Поиск инструмента…');
   _svcPrependBar();
 }
 function cliUninstall(id){
