@@ -29,7 +29,7 @@
     '#_xtlac_warning{display:none;margin:10px 12px 0;padding:9px 10px;border-radius:10px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);color:#f59e0b;font-size:11px;line-height:1.45}',
     '#_xtlac_warning.show{display:block}',
     '#_xtlac_body{overflow:auto;padding:10px 12px 14px;scrollbar-width:thin}',
-    '._xtlac_section{margin:2px 2px 7px;color:var(--etb-tx2,#888);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}',
+    '._xtlac_section{margin:2px 2px 7px;color:var(--etb-tx2,#888);font-size:10px;font-weight:800;letter-spacing:.02em}',
     '._xtlac_task{display:grid;grid-template-columns:22px 1fr auto;gap:9px;align-items:start;padding:10px;border-radius:11px;border:1px solid transparent;margin-bottom:5px;cursor:pointer;outline:none}',
     '._xtlac_task:hover{background:var(--etb-s3,#1c1c1c);border-color:var(--etb-bd,rgba(255,255,255,.07))}',
     '._xtlac_task:focus-visible{border-color:rgba(198,126,52,.65)}',
