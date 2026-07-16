@@ -1591,11 +1591,14 @@ var I18N_EN = {
   'Опиши задачу, Строитель найдёт и добавит сам, без разработчика.':'Describe the task — the Builder finds and adds it, no developer needed.',
   'установлено':'installed','подключено':'connected','ставится…':'installing…','активен':'active','ещё не запускался':'never run',
   'Как запустить:':'How to run:','через агента':'via agent','Инструменты · через агента':'Tools · via agent','Из интернета · Композитор':'From the internet · Composer',
-  'Убрать из витрины':'Remove from storefront','Удалить навсегда':'Delete forever','Опасная зона':'Danger zone',
+  'Убрать из витрины':'Remove from storefront','Удалить навсегда':'Delete forever','Опасная зона':'Danger zone','Автоматизации':'Automations',
   '«Убрать из витрины» прячет карточку и ярлык у тебя. «Удалить навсегда» вычищает запись из каталога автоматизаций целиком. Эксперты и данные в Extella не трогаются.':'"Remove from storefront" hides the card and icon for you. "Delete forever" wipes the entry from the automations catalog entirely. Experts and data in Extella are untouched.'
 };
 var I18N_RX = [
   [/^Программы на рабочем столе/, 'Programs on the desktop'],
+  [/^Автоматизации(?= ·)/, 'Automations'],
+  [/^Программы(?= ·)/, 'Programs'],
+  [/^Инструменты(?= ·)/, 'Tools'],
   [/^Клик — открыть или запустить\. Правый клик — кабинет, настройки, удалить\.?$/, 'Click to open or run. Right-click for cabinet, settings, remove.'],
   [/^Три шага: копия базового агента → её ID → выбери роль ниже\.?$/, 'Three steps: copy the base agent → its ID → pick a role below.'],
   [/^Живой каталог работающих демо HuggingFace.*/, 'Live catalog of working HuggingFace demos — run in the cloud, no GPU, one click. Updated weekly.']
@@ -3544,21 +3547,31 @@ function renderDesktop(){
       '<span class="dt_ic_badge" style="background:'+s.acc+'14;border-color:'+s.acc+'40;color:'+s.acc+'">'+_icoSym(s.ico)+'</span>'+
       '<span class="dt_ic_lbl">'+esc(s.lbl)+'</span></button>';
   }).join('');
-  var iconHtml=icons.map(function(ic,i){
+  // Группы стола (просьба Анвара «чтобы всё было видно и отличалось»):
+  // автоматизации (собраны Визардом/Композитором) · программы (плагины витрины
+  // и приложения) · инструменты (CLI и способности из интернета).
+  // Индексы для правого клика — глобальные по массиву icons (_dtReg), поэтому
+  // кнопки строим с исходным i, а по группам только раскладываем.
+  function _dtGrp(k){ return k==='agent' ? 0 : (k==='cli'||k==='cap') ? 2 : 1; }
+  function _dtIconBtn(ic,i){
     var sym=_dtIco(ic.raw, ic.cat, ic.kind);
     return '<button class="dt_ico" style="animation-delay:'+Math.min((SYS_APPS.length+i)*14,180)+'ms" title="'+esc(ic.raw)+' — клик открыть, правый клик меню" onclick="'+ic.go+'" oncontextmenu="return _dtCtx(event,'+i+')">'+
       '<span class="dt_ic_badge" style="background:'+esc(ic.acc)+'14;border-color:'+esc(ic.acc)+'40;color:'+esc(ic.acc)+'">'+_icoSym(sym)+'</span>'+
       '<span class="dt_ic_lbl">'+esc(ic.lbl)+'</span></button>';
+  }
+  var _grpBtns=[[],[],[]];
+  icons.forEach(function(ic,i){ _grpBtns[_dtGrp(ic.kind)].push(_dtIconBtn(ic,i)); });
+  var grpHtml=[{t:'Автоматизации'},{t:'Программы'},{t:'Инструменты'}].map(function(G,gi){
+    var b=_grpBtns[gi];
+    return b.length ? '<div class="dt_sect">'+G.t+' · '+b.length+'</div><div class="dt_grid" style="margin-bottom:24px">'+b.join('')+'</div>' : '';
   }).join('');
 
   g.innerHTML = _dtCss() +
     '<div class="dt_wrap">'+
       '<div class="dt_sect">Extella</div>'+
       '<div class="dt_grid" style="margin-bottom:24px">'+sysHtml+'</div>'+
-      '<div class="dt_sect">Программы на рабочем столе'+(icons.length?' · '+icons.length:'')+'</div>'+
       (icons.length
-        ? '<div class="dt_hint">Клик — открыть или запустить. Правый клик — кабинет, настройки, удалить.</div>'+
-          '<div class="dt_grid">'+iconHtml+'</div>'
+        ? '<div class="dt_hint">Клик — открыть или запустить. Правый клик — кабинет, настройки, удалить.</div>'+grpHtml
         : '<div class="dt_hint">Пока пусто. Установи программы в «Сервисах» или собери агента в Визарде — они появятся здесь ярлыками.</div>')+
     '</div>';
   rtabs();
