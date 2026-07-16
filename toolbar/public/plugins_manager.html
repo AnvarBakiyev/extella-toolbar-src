@@ -1557,7 +1557,7 @@ var I18N_EN = {
   '🔍  Найди что угодно или вставь ссылку — установим в один клик':'🔗  Paste a link — install in one click: program, model, skill, CLI',
   'Свернуть':'Minimize','В окне / на весь экран':'Window / fullscreen','Светлая / тёмная тема':'Light / dark theme','Язык / Language':'Язык / Language',
   // Рабочий стол
-  'Визард':'Wizard','Воркспейс':'Workspace','Композитор':'Composer','Регулярные задачи':'Scheduled tasks','Второй пилот':'Copilot',
+  'Визард':'Wizard','Воркспейс':'Workspace','Композитор':'Composer','Регулярные задачи':'Scheduled tasks','Второй пилот':'Copilot','Студия языков':'Language Studio','Команда':'Team',
   'Собрать процесс: интервью → план → стройка → запуск':'Build a process: interview → plan → build → launch',
   'Рабочие среды: компьютер понял проект и настроился':'Workspaces: the computer understood the project and set itself up',
   'Студия Композитора — внутри Визарда: задача словами → готовая автоматизация':'Composer Studio — inside the Wizard: describe a task → get a working automation',
@@ -3481,7 +3481,9 @@ function renderDesktop(){
     {lbl:'Воркспейс',        ico:'home',     acc:'#2F6B66', go:"notify('open','workspace')",   tip:'Рабочие среды: компьютер понял проект и настроился'},
     {lbl:'Композитор',       ico:'box',      acc:'#7C5CBF', go:"_openWizard()",                tip:'Студия Композитора — внутри Визарда: задача словами → готовая автоматизация'},
     {lbl:'Регулярные задачи',ico:'calendar', acc:'#3E7C4F', go:"setc('automations')",          tip:'Автоматизации по расписанию'},
-    {lbl:'Второй пилот',     ico:'bot',      acc:'#4C5FD5', go:"notify('open','copilot_ctl')", tip:'Пилот наблюдает экран и помогает'}
+    {lbl:'Второй пилот',     ico:'bot',      acc:'#4C5FD5', go:"notify('open','copilot_ctl')", tip:'Пилот наблюдает экран и помогает'},
+    {lbl:'Студия языков',    ico:'terminal', acc:'#2A6F77', go:"notify('open','extella_cspl_studio')", tip:'Свои предметные языки: программа словами дела → проверенный результат'},
+    {lbl:'Команда',          ico:'users',    acc:'#C9A35C', go:"notify('open','extella_team')",        tip:'Пригласить в общий контур — именные ключи доступа'}
   ];
   // 1) Агенты, собранные Визардом → открыть кабинет
   // Показываем агента только когда его состояние уже прочитано: иначе убранный
@@ -3535,8 +3537,8 @@ function renderDesktop(){
   icons=_out;
   icons.forEach(function(ic){ ic.dups=_dups[ic._k]||[ic]; });
   // Двойники системных ярлыков — вон со стола (по id плагина и по имени).
-  var _sysIds={extella_adoption_wizard:1, workspace:1, copilot_ctl:1};
-  var _sysRe=/^(визард( внедрения)?|wizard|workspace|воркспейс(ы|ес)?|композитор|composer|второй пилот|copilot)$/i;
+  var _sysIds={extella_adoption_wizard:1, workspace:1, copilot_ctl:1, extella_cspl_studio:1, extella_team:1};
+  var _sysRe=/^(визард( внедрения)?|wizard|workspace|воркспейс(ы|ес)?|композитор|composer|второй пилот|copilot|студия языков|language studio|команда|team)$/i;
   icons=icons.filter(function(ic){
     return !_sysIds[ic.id] && !_sysRe.test(String(ic.lbl||'').trim()) && !_sysRe.test(String(ic.raw||'').trim());
   });
