@@ -230,3 +230,12 @@ cached panel.
 3. Wire it into `toolbar/build.js` (inline its `dist/index.html` + shim) and a
    toolbar button.
 4. `npm run build`.
+
+## Activity Center
+
+The modular build includes a bottom-right, human-readable feed of listener
+activity. It also exposes recurring task management through
+**Plugins → Расписания** and a **Регулярные задачи** shortcut on the marketplace
+desktop. The companion macOS observer lives in
+[`device/activity-center`](device/activity-center/README.md) and is installed by
+`./install.sh`.
