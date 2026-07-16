@@ -1336,8 +1336,35 @@ function rtabs() {
   }).join('');
 }
 
+// ── Память навигации ───────────────────────────────────────────────────────
+// Хост переинжектит тулбар при КАЖДОЙ полной навигации (открыл плагин — код
+// загрузился заново). Раздел жил в обычной переменной и сбрасывался на
+// «Рабочий стол», поэтому после захода куда-либо приходилось искать раздел
+// заново. Запоминаем раздел и прокрутку и восстанавливаем при следующем старте.
+var NAV_KEY='etb_nav_v1', _navT=null, _navY=0;
+function _navValid(id){
+  if(!id) return false;
+  for(var i=0;i<CATS.length;i++) if(CATS[i].id===id) return true;
+  return _SVC_GROUP.indexOf(id)>=0;   // под-вкладки «Сервисов» — тоже валидный раздел
+}
+function _navSave(){
+  try{
+    var s=document.querySelector('.scr');
+    localStorage.setItem(NAV_KEY, JSON.stringify({cur:cur, y:(s?s.scrollTop:0)||0, ts:Date.now()}));
+  }catch(_){}
+}
+function _navSaveScroll(){ if(_navT) return; _navT=setTimeout(function(){ _navT=null; _navSave(); }, 400); }
+function _navRestore(){
+  try{
+    var st=JSON.parse(localStorage.getItem(NAV_KEY)||'null');
+    if(!st || !_navValid(st.cur)) return null;
+    if(Date.now()-(st.ts||0) > 864e5) return null;   // сутки не заходил — начинаем с Рабочего стола
+    return st;
+  }catch(_){ return null; }
+}
 function setc(id) {
   cur = id;
+  _navSave();
   if (id === 'workspace') { _wsView = 'list'; _wsCur = null; }  // всегда входим на список
   document.body.setAttribute('data-mode', id === 'admin' ? 'pro' : 'all');
   _rescueFilterBar();
@@ -5575,6 +5602,26 @@ function setMode(m){
 function toggleTheme(){ document.documentElement.toggleAttribute('data-lm'); }
 
 // ── Boot ──────────────────────────────────────────────────────────────────
+// Вернуть раздел, где человек был до того, как хост переинжектил тулбар.
+// ВАЖНО: до setMode('all') — он вызывает первую отрисовку сетки.
+(function(){
+  try{
+    var st=_navRestore();
+    if(st){ cur=st.cur; _navY=st.y||0; }
+    var sc=document.querySelector('.scr');
+    if(!sc) return;
+    sc.addEventListener('scroll', _navSaveScroll);
+    if(!_navY) return;
+    // Контент приезжает асинхронно, поэтому прокрутку возвращаем мягко:
+    // пробуем, пока список не дорастёт, и сдаёмся через ~3с.
+    var tries=0;
+    var t=setInterval(function(){
+      tries++;
+      if(sc.scrollHeight > _navY + sc.clientHeight){ sc.scrollTop=_navY; clearInterval(t); }
+      else if(tries>12) clearInterval(t);
+    },250);
+  }catch(_){}
+})();
 setMode('all');
 applyLang();
 // Асинхронные ре-рендеры (KV-догрузка) и модалки/окна: держим перевод актуальным.
