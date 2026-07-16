@@ -1917,6 +1917,8 @@ function _setInstCat(cat) {
 
 // Business aisle colours + labels (cards grouped by aisle, coloured, like Навыки).
 // Цвет по ТИПУ каталога (гибрид: тип задаёт основной акцент карточки)
+// Цвет по категории/домену (вариация внутри вкладки — гибрид)
+var CAT_ACC = {dev:"#C57E33",data:"#3E8B8B",ai:"#7A3FA0",search:"#B07A22",finance:"#2C8768",web:"#4A6FA5",comm:"#B5642E",files:"#0F5E6B",other:"#877B6B"};
 var TYPE_ACC = {program:"#C67A22",app:"#7A3FA0",cli:"#0F5E6B",service:"#2C8768",mcp:"#3E8B8B",model:"#4A5FA8",skill:"#B07A22",agent:"#B5642E"};
 var BIZ_ACC   = { work:'#C57E33', marketing:'#D4984F', money:'#2F6B66', study:'#A5632A', home:'#3D8078', travel:'#5FA8A0', health:'#6BB3AA', docs:'#24544F', data:'#3D8078', tech:'#24544F', sales:'#C57E33', content:'#D4984F', automation:'#3D8078', life:'#D4984F',
   dev:'#24544F', calc:'#C57E33', textcode:'#A5632A', webapi:'#2F6B66', aiwork:'#C57E33', ailife:'#D4984F' };
@@ -4228,7 +4230,7 @@ function renderMcpCatalog(){
           else { foot='<span style="font-size:11px;color:var(--tx3)">remote · подключение позже</span>'; }
           var mfunc=(LANG==='en'?(c.func_en||c.func):(c.func_ru||c.func))||'';
           var mdsc=(LANG==='en'?(c.desc_en||c.desc):(c.desc_ru||c.desc))||'';
-          return '<div class="stile" style="--acc:'+TYPE_ACC.mcp+'"><span class="st_chip">🔌 MCP-сервер</span>'+
+          return '<div class="stile" style="--acc:'+(CAT_ACC[c.cat]||TYPE_ACC.mcp)+'"><span class="st_chip">🔌 MCP · '+esc(MCP_CATL[c.cat]||c.cat||'')+'</span>'+
             '<div class="st_title">'+(mfunc?esc(mfunc):esc(c.title||short))+'</div>'+(mfunc?'<div class="st_name">'+esc(c.title||short)+'</div>':'')+'<div class="st_fact">'+esc(mdsc)+'</div>'+
             '<div class="st_foot" style="justify-content:space-between;align-items:center;gap:8px">'+foot+'</div></div>';
         }).join('')+'</div>';
