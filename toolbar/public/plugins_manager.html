@@ -3298,16 +3298,28 @@ function _dtDo(i, act){
     return;
   }
   if(act==='remove'){
-    if(it.kind==='agent'){
-      if(!confirm('Убрать «'+it.lbl+'» с рабочего стола?')) return;
-      _autoReg=(_autoReg||[]).filter(function(x){return _agId(x)!==it.id;});
-      _agSaveState(it.id,{status:'removed', hidden:true});
-      renderDesktop();
-    } else if(it.kind==='program'){ uninst(it.id); setTimeout(_deskRedraw,60); }
-    else if(it.kind==='cli'){ cliUninstall(it.id); setTimeout(_deskRedraw,60); }
-    else if(it.kind==='cap'){ capInstRemove(it.rmKind, it.id, it.method||''); setTimeout(_deskRedraw,300); }
-    // Ветки для приложений не было вовсе — «Удалить» на ярлыке приложения молча ничего не делал.
-    else if(it.kind==='app'){ appUninstall(it.id, it.raw||it.lbl); }
+    // Ярлык мог быть СКЛЕЕН дедупом из нескольких записей (карточка каталога +
+    // файлы реестра устройства с почти одинаковыми именами — «Кадровые документы»
+    // собирались из трёх). Удаление только выбранной записи оставляло двойников,
+    // и ярлык «возвращался». Убираем ВСЕ источники склейки разом.
+    var list=(it.dups&&it.dups.length)?it.dups:[it];
+    var hasModal=list.some(function(d){return d.kind==='app';});   // у приложений свой модал с подтверждением
+    if(!hasModal){
+      var msg='Убрать «'+it.lbl+'» с рабочего стола?';
+      if(list.length>1) msg+='\nЯрлык собран из '+list.length+' записей — уберу все.';
+      if(!confirm(msg)) return;
+    }
+    list.forEach(function(d){
+      if(d.kind==='agent'){
+        _autoReg=(_autoReg||[]).filter(function(x){return _agId(x)!==d.id;});
+        _agSaveState(d.id,{status:'removed', hidden:true});
+      }
+      else if(d.kind==='program'){ uninst(d.id); }
+      else if(d.kind==='cli'){ cliUninstall(d.id); }
+      else if(d.kind==='cap'){ capInstRemove(d.rmKind, d.id, d.method||''); }
+      else if(d.kind==='app'){ appUninstall(d.id, d.raw||d.lbl); }
+    });
+    setTimeout(_deskRedraw,300);
   }
 }
 function _dtCss(){
@@ -3507,9 +3519,13 @@ function renderDesktop(){
   // Предпочитаем карточку С идентичностью (свой цвет/эмодзи), а не пустую старую.
   icons.forEach(function(ic){ ic._k=String(ic.lbl||'').toLowerCase().trim(); });
   var _best={}; icons.forEach(function(ic){ if(!(ic._k in _best) || (ic.ident && !_best[ic._k].ident)) _best[ic._k]=ic; });
+  // Запоминаем ВСЕХ участников склейки: «Удалить» с ярлыка убирает каждого,
+  // иначе выжившие двойники (каталог + файлы реестра) возвращали ярлык.
+  var _dups={}; icons.forEach(function(ic){ (_dups[ic._k]=_dups[ic._k]||[]).push(ic); });
   var _done={}, _out=[];
   icons.forEach(function(ic){ if(_done[ic._k]) return; if(_best[ic._k]===ic){ _out.push(ic); _done[ic._k]=1; } });
   icons=_out;
+  icons.forEach(function(ic){ ic.dups=_dups[ic._k]||[ic]; });
   // Двойники системных ярлыков — вон со стола (по id плагина и по имени).
   var _sysIds={extella_adoption_wizard:1, workspace:1, copilot_ctl:1};
   var _sysRe=/^(визард( внедрения)?|wizard|workspace|воркспейс(ы|ес)?|композитор|composer|второй пилот|copilot)$/i;
