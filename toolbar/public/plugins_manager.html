@@ -1590,7 +1590,9 @@ var I18N_EN = {
   '+ Добавить программу':'+ Add program','Добавить':'Add','Не здесь?':'Not here?',
   'Опиши задачу, Строитель найдёт и добавит сам, без разработчика.':'Describe the task — the Builder finds and adds it, no developer needed.',
   'установлено':'installed','подключено':'connected','ставится…':'installing…','активен':'active','ещё не запускался':'never run',
-  'Как запустить:':'How to run:','через агента':'via agent','Инструменты · через агента':'Tools · via agent','Из интернета · Композитор':'From the internet · Composer'
+  'Как запустить:':'How to run:','через агента':'via agent','Инструменты · через агента':'Tools · via agent','Из интернета · Композитор':'From the internet · Composer',
+  'Убрать из витрины':'Remove from storefront','Удалить навсегда':'Delete forever','Опасная зона':'Danger zone',
+  '«Убрать из витрины» прячет карточку и ярлык у тебя. «Удалить навсегда» вычищает запись из каталога автоматизаций целиком. Эксперты и данные в Extella не трогаются.':'"Remove from storefront" hides the card and icon for you. "Delete forever" wipes the entry from the automations catalog entirely. Experts and data in Extella are untouched.'
 };
 var I18N_RX = [
   [/^Программы на рабочем столе/, 'Programs on the desktop'],
@@ -3899,8 +3901,11 @@ function _cabSettings(p){
       '<button class="st_btn" style="background:transparent;color:var(--tx2);border:1px solid var(--bd2)" onclick="cabEditViaBuilder(\''+esc(id)+'\')">✎ Изменить через Строителя</button>'+
       '<div id="cab_edit_msg" style="font-size:12.5px;color:var(--tx2);margin-top:10px;min-height:16px"></div>')+
     _cabCard('<div style="font:700 13px var(--sans);color:#e0533d;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Опасная зона</div>'+
-      '<button class="sk_del" onclick="cabRemove(\''+esc(id)+'\')">Убрать из витрины</button>'+
-      '<div style="font-size:11.5px;color:var(--tx3);margin-top:8px;line-height:1.5">Убирает карточку из «AI Автоматизаций». Сам агент и его эксперты в Extella не удаляются.</div>');
+      '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+        '<button class="sk_del" onclick="cabRemove(\''+esc(id)+'\')">Убрать из витрины</button>'+
+        '<button class="sk_del" style="border-color:rgba(224,83,61,.55);color:#e0533d" onclick="cabDeleteForever(\''+esc(id)+'\')">Удалить навсегда</button>'+
+      '</div>'+
+      '<div style="font-size:11.5px;color:var(--tx3);margin-top:8px;line-height:1.5">«Убрать из витрины» прячет карточку и ярлык у тебя. «Удалить навсегда» вычищает запись из каталога автоматизаций целиком. Эксперты и данные в Extella не трогаются.</div>');
 }
 function cabRename(id){
   var v=((document.getElementById('cab_name')||{}).value||'').trim(); if(!v)return;
@@ -3917,6 +3922,23 @@ function cabRemove(id){
   var p=_cabAgent(); if(!p)return;
   _autoReg=(_autoReg||[]).filter(function(x){return _agId(x)!==id;});
   _agSaveState(id,{status:'removed', hidden:true});
+  closeAgentCabinet(); renderAutomations();
+}
+// «Удалить навсегда»: помимо личного скрытия вычищает запись из каталога
+// _mkt_automations (глобальный ключ, пишет wz_publish_pack). Перечитываем
+// свежую копию перед записью, чтобы не затереть чужие изменения каталога.
+function cabDeleteForever(id){
+  var p=_cabAgent(); if(!p)return;
+  if(!confirm('Удалить «'+_agName(p)+'» навсегда? Карточка исчезнет из каталога автоматизаций, ярлык — со стола. Эксперты и данные в Extella не трогаются.')) return;
+  _autoReg=(_autoReg||[]).filter(function(x){return _agId(x)!==id;});
+  _agSaveState(id,{status:'removed', hidden:true});
+  skKvGet('_mkt_automations').then(function(r){
+    if(!r || !r.items) return null;
+    var left=r.items.filter(function(x){ return _agId(x)!==id; });
+    if(left.length===r.items.length) return null;   // записи уже нет — не переписываем
+    r.items=left;
+    return skKvSet('_mkt_automations', r);
+  }).catch(function(){ /* каталог перечитается — личное скрытие уже держит ярлык убранным */ });
   closeAgentCabinet(); renderAutomations();
 }
 

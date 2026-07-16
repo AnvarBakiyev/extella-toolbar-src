@@ -384,13 +384,21 @@ ETB.marketplace = (function () {
           try {
             if (_t === 'etb_kv_get' || _t === 'etb_kv_set') {
               var _key = String(e.data.key || '');
-              if (_key.indexOf('_mkt_') !== 0) { _kerr('key not allowed'); return; }
+              // Витринные каталоги (_mkt_*) — глобальные, один канал на всех.
+              // agent_state:<id> — ЛИЧНЫЙ слой поверх каталога (убран со стола,
+              // имя, пауза, расписание): пишется в скоуп пользователя. Раньше
+              // этот префикс отбрасывался «key not allowed», из-за чего удаление
+              // карточки/ярлыка агента молча не сохранялось и он возвращался.
+              var _isMkt = _key.indexOf('_mkt_') === 0;
+              var _isAgSt = _key.indexOf('agent_state:') === 0;
+              if (!_isMkt && !_isAgSt) { _kerr('key not allowed'); return; }
+              var _scope = _isMkt ? { global: true } : {};
               if (_t === 'etb_kv_get') {
-                ETB.api.kvGet(_key, { global: true })
+                ETB.api.kvGet(_key, _scope)
                   .then(function (r) { _back({ type: 'etb_kv_result', reqId: _rid, ok: true, value: (r && r.value != null) ? r.value : null }); })
                   .catch(function (er) { _kerr((er && er.message) || 'kv get failed'); });
               } else {
-                ETB.api.kvSet(_key, e.data.value, e.data.description || 'Marketplace (storefront)', { global: true })
+                ETB.api.kvSet(_key, e.data.value, e.data.description || 'Marketplace (storefront)', _scope)
                   .then(function () { _back({ type: 'etb_kv_result', reqId: _rid, ok: true }); })
                   .catch(function (er) { _kerr((er && er.message) || 'kv set failed'); });
               }
