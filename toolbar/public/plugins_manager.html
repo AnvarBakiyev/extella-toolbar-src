@@ -3290,9 +3290,12 @@ function _dtCss(){
     '.dt_empty p{font-size:14px;line-height:1.6;max-width:440px;margin:0 auto}'+
   '</style>';
 }
-// Стол собирается из 6 независимых источников, каждый прилетает своим ответом.
-// Без склейки каждый ответ = полная перерисовка (экран «трясёт»). Копим их в один кадр.
-var _deskT=null, _deskStLoading=false;
+// Стол собирается из 6 независимых источников (KV + эксперты на устройстве), они
+// приезжают с разбросом в СЕКУНДЫ. Рисовать по каждому ответу = экран трясёт.
+// Поэтому до первой сборки держим заглушку и не рисуем стол, пока всё не приедет.
+// _deskReady/_deskDeadline ОБЯЗАНЫ быть объявлены: гейт их читает до присваивания,
+// без var это ReferenceError и стол не открывается вовсе.
+var _deskT=null, _deskStLoading=false, _deskReady=false, _deskDeadline=0;
 function _deskRedraw(){
   if(cur!=='desktop') return;
   clearTimeout(_deskT);
