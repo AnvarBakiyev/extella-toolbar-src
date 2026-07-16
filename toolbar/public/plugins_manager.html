@@ -220,6 +220,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);
 .st_ico{width:34px;height:34px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--acc,var(--a))}
 .st_ico .lico{width:22px;height:22px}
 .st_title{font:600 13.5px/1.4 var(--sans);color:var(--tx);letter-spacing:0;margin-top:1px}
+.st_name{font-size:11px;font-weight:600;color:var(--acc,var(--a));margin-top:-2px;margin-bottom:2px}
 .st_title i{font-style:normal;color:inherit}
 .acc_sub{display:block;font-style:normal;font-weight:500;color:var(--tx2);margin-top:2px}
 .st_fact{font-size:12px;color:var(--tx);opacity:.78;line-height:1.45;
@@ -1664,10 +1665,16 @@ function appCard(a){
   } else {
     btn='<button class="st_btn" onclick="appInstall(\''+_dtEsc(repo)+'\',\''+_dtEsc(a.id)+'\',\''+_dtEsc((a.title||a.id))+'\')">Установить</button>';
   }
-  return '<div class="stile" style="--acc:#7A3FA0'+(ok?'':';opacity:.62')+'">'+
+  // функция жирным + имя вторично (когда есть локализованные поля func/desc); иначе — как раньше
+  var func=(LANG==='en'?(a.func_en||a.func):(a.func_ru||a.func))||'';
+  var dsc=(LANG==='en'?(a.desc_en||a.desc):(a.desc_ru||a.desc))||'';
+  var head, nameLine='';
+  if(func){ head=esc(func); nameLine='<div class="st_name">'+esc(a.title||a.id)+'</div>'; }
+  else { head=esc(a.title||a.id); }   // фолбэк до локализации
+  return '<div class="stile" style="--acc:'+TYPE_ACC.app+(ok?'':';opacity:.62')+'">'+
     '<span class="st_chip">📦 '+esc(a.cat||'app')+(stars?' · '+stars:'')+badge+(inst?' · ✓ установлено':'')+'</span>'+
-    '<div class="st_title">'+esc(a.title||a.id)+'</div>'+
-    '<div class="st_fact">'+esc(a.desc||'')+'</div>'+
+    '<div class="st_title">'+head+'</div>'+nameLine+
+    '<div class="st_fact">'+esc(dsc)+'</div>'+
     '<div class="st_foot" style="justify-content:space-between;align-items:center">'+
       btn+
       '<a href="'+esc(repo||'#')+'" target="_blank" style="font-size:11px;color:var(--tx3)">GitHub ↗</a></div></div>';
@@ -4218,8 +4225,10 @@ function renderMcpCatalog(){
           else if(conn){ foot='<span class="sk_active">✓ подключён</span><span style="font-size:10.5px;color:var(--tx3);overflow:hidden;text-overflow:ellipsis;max-width:55%">'+esc((c.run&&c.run.pkg)||c.id)+'</span>'; }
           else if(c.run){ foot='<span style="font-size:11px;color:var(--tx3)">'+esc(c.run.type)+' · без ключей</span><button class="st_btn" data-mcpconn="'+esc(c.id)+'">Подключить</button>'; }
           else { foot='<span style="font-size:11px;color:var(--tx3)">remote · подключение позже</span>'; }
+          var mfunc=(LANG==='en'?(c.func_en||c.func):(c.func_ru||c.func))||'';
+          var mdsc=(LANG==='en'?(c.desc_en||c.desc):(c.desc_ru||c.desc))||'';
           return '<div class="stile" style="--acc:'+TYPE_ACC.mcp+'"><span class="st_chip">🔌 MCP-сервер</span>'+
-            '<div class="st_title">'+esc(c.title||short)+'</div><div class="st_fact">'+esc(c.desc||'')+'</div>'+
+            '<div class="st_title">'+(mfunc?esc(mfunc):esc(c.title||short))+'</div>'+(mfunc?'<div class="st_name">'+esc(c.title||short)+'</div>':'')+'<div class="st_fact">'+esc(mdsc)+'</div>'+
             '<div class="st_foot" style="justify-content:space-between;align-items:center;gap:8px">'+foot+'</div></div>';
         }).join('')+'</div>';
     });
