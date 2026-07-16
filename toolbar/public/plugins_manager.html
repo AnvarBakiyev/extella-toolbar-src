@@ -458,6 +458,13 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);
 /* ── Empty states ────────────────────────────────────────────────────── */
 .empty{grid-column:1/-1;text-align:center;padding:56px 20px;color:var(--tx2)}
 .eico{font-size:36px;margin-bottom:12px;opacity:.4}
+/* Загрузка = анимированная бесконечность (единый приём Extella, вместо ⏳/спиннеров). */
+.inf{display:inline-block;vertical-align:middle;line-height:0}
+.inf .tr{fill:none;stroke:#E7D8C1;stroke-width:7;stroke-linecap:round;opacity:.55}
+.inf .run{fill:none;stroke:url(#infg);stroke-width:7;stroke-linecap:round;stroke-dasharray:46 154;animation:infrun 1.5s linear infinite}
+@keyframes infrun{to{stroke-dashoffset:-200}}
+body[data-theme="dark"] .inf .tr,html[data-theme="dark"] .inf .tr{stroke:var(--bd2);opacity:.7}
+@media (prefers-reduced-motion:reduce){.inf .run{animation:none;stroke-dasharray:none}}
 .empty p{font-size:13px;margin-top:6px;line-height:1.6}
 
 /* ── HuggingFace kind toggle ─────────────────────────────────────────── */
@@ -1643,7 +1650,7 @@ function _appToggleCompat(){ _appOnlyCompat=!_appOnlyCompat; _appToggleRedraw();
 // Приложения (Pinokio-репо с GitHub) — полноценная под-вкладка каталога «Сервисы».
 // Блок приложений (Pinokio-репо) — встраивается в «Программы» полками по категориям.
 function _appsShelvesHTML(){
-  if(!_appReg){ _ensureApps(); return '<div class="sect" style="grid-column:1/-1"><h2>Приложения</h2></div><div class="sk_lead" style="grid-column:1/-1">Загружаю приложения…</div>'; }
+  if(!_appReg){ _ensureApps(); return '<div class="sect" style="grid-column:1/-1"><h2>Приложения</h2></div>'+_loadingHTML('Загружаю приложения…'); }
   if(_appInstalled===null){ _appInstalled={}; _refreshInstalledApps(); }
   var all=_appReg.shelf||[];
   var osName={darwin:'macOS',win32:'Windows',linux:'Linux'}[_curOS()]||_curOS();
@@ -1714,7 +1721,7 @@ function appInstall(repo,id,title){
 }
 function appDoInstall(btn,repo,id){
   var msg=document.getElementById('app_msg'); if(btn)btn.disabled=true;
-  if(msg)msg.innerHTML='⏳ Клонирую и ставлю по рецепту… может занять пару минут.';
+  if(msg)msg.innerHTML=INF(28)+' Клонирую и ставлю по рецепту… может занять пару минут.';
   skBridge('etb_run_expert','etb_expert_result',{name:'app_install',params:{repo:repo,app_id:id}},1800000).then(function(r){
     var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
     if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}
@@ -1729,8 +1736,8 @@ function appDoInstall(btn,repo,id){
 function appStartOpen(btn,id){
   var msg=document.getElementById('app_msg');
   var say=function(t){ if(msg)msg.innerHTML=t; else if(btn)btn.textContent=t.replace(/<[^>]+>/g,''); };
-  if(btn){ btn.disabled=true; if(!msg)btn.textContent='⏳ Запускаю…'; }
-  if(msg)msg.innerHTML='⏳ Запускаю приложение… первый старт может занять до минуты.';
+  if(btn){ btn.disabled=true; if(!msg)btn.textContent=INF(28)+' Запускаю…'; }
+  if(msg)msg.innerHTML=INF(28)+' Запускаю приложение… первый старт может занять до минуты.';
   skBridge('etb_run_expert','etb_expert_result',{name:'app_start',params:{app_id:id}},300000).then(function(r){
     var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
     if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}
@@ -1738,8 +1745,8 @@ function appStartOpen(btn,id){
     // есть URL (success ИЛИ starting) → открываем; iframe сам подхватит, когда приложение догрузит модель
     if(out&&out.url){ appEmbed(id,out.url,out.ready); }
     else if(out&&out.status==='error'){ say('⚠ '+esc(out.message||'не запустилось')); }
-    else { say('⏳ '+esc((out&&out.message)||'Приложение грузит модель — нажми ▶ Открыть ещё раз через минуту.')); }
-  }).catch(function(e){ if(btn){btn.disabled=false; if(!msg)btn.textContent='▶ Открыть';} say('⏳ Запуск идёт (долго для ML-приложений). Загляни через минуту.'); });
+    else { say(INF(28)+' '+esc((out&&out.message)||'Приложение грузит модель — нажми ▶ Открыть ещё раз через минуту.')); }
+  }).catch(function(e){ if(btn){btn.disabled=false; if(!msg)btn.textContent='▶ Открыть';} say(INF(28)+' Запуск идёт (долго для ML-приложений). Загляни через минуту.'); });
 }
 function appEmbed(id,url,ready){
   var o=document.getElementById('app_ov'); if(o)o.remove();
@@ -1769,7 +1776,7 @@ function appUninstall(id,title){
 }
 function appDoUninstall(btn,id){
   var msg=document.getElementById('app_msg'); if(btn)btn.disabled=true;
-  if(msg)msg.innerHTML='⏳ Останавливаю и удаляю…';
+  if(msg)msg.innerHTML=INF(28)+' Останавливаю и удаляю…';
   skBridge('etb_run_expert','etb_expert_result',{name:'app_uninstall',params:{app_id:id}},120000).then(function(r){
     var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
     if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}
@@ -1793,7 +1800,7 @@ function selfUpdate(){
 }
 function selfDoUpdate(btn){
   var msg=document.getElementById('app_msg'); if(btn)btn.disabled=true;
-  if(msg)msg.innerHTML='⏳ Качаю свежий интерфейс и способности из GitHub… (пара минут, не закрывай)';
+  if(msg)msg.innerHTML=INF(28)+' Качаю свежий интерфейс и способности из GitHub… (пара минут, не закрывай)';
   skBridge('etb_run_expert','etb_expert_result',{name:'wz_self_update',params:{what:'all'}},600000).then(function(r){
     var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
     if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}
@@ -3132,7 +3139,12 @@ function capInstRemove(kind, id, method){
 // ── Единые состояния для всех вкладок (стандарт витрины) ──────────────────
 // Раньше загрузка была то «sk_lead», то «empty+⏳», пустота — по-своему у каждой.
 // Теперь один вид: центрированная иконка + текст.
-function _loadingHTML(text){ return '<div class="empty"><div class="eico">⏳</div><p>'+esc(text||'Загружаю…')+'</p></div>'; }
+// Анимированная бесконечность — единый индикатор загрузки Extella (приём из Workspace).
+var INF_PATH='M25,25 C25,11 43,11 50,25 C57,39 75,39 75,25 C75,11 57,11 50,25 C43,39 25,39 25,25 Z';
+function INF(w){ w=w||56; return '<span class="inf" style="width:'+w+'px"><svg viewBox="0 0 100 50" width="'+w+'" height="'+(w/2)+'" aria-hidden="true">'+
+  '<defs><linearGradient id="infg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#C67A22"/><stop offset="1" stop-color="#E8B36A"/></linearGradient></defs>'+
+  '<path class="tr" d="'+INF_PATH+'" pathLength="200"/><path class="run" d="'+INF_PATH+'" pathLength="200"/></svg></span>'; }
+function _loadingHTML(text){ return '<div class="empty"><div style="margin-bottom:10px">'+INF(84)+'</div><p>'+esc(text||'Загружаю…')+'</p></div>'; }
 function _emptyHTML(icon, html){ return '<div class="empty"><div class="eico">'+(icon||'📦')+'</div><p>'+html+'</p></div>'; }
 
 function _dtEsc(s){ return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
@@ -3542,7 +3554,7 @@ function autoRun(orch, btn){
     var m = (e && e.message) || 'error';
     // HTTP 500/timeout ≠ провал (канон): работа могла продолжиться — помечаем как «идёт».
     var deferred = /500|timeout|defer/i.test(m);
-    if (el) el.innerHTML = deferred ? '⏳ запущено — идёт в фоне' : ('⚠ ' + m);
+    if (el) el.innerHTML = deferred ? INF(28)+' запущено — идёт в фоне' : ('⚠ ' + m);
     _recRun(id, deferred ? null : false, deferred ? 'в фоне' : m, startedTs);
   });
 }
@@ -3680,7 +3692,7 @@ function _cabRuns(p){
   var runs=_agRuns(p), orch=p.orchestrator||'';
   var runBtn = orch ? '<button class="st_btn" onclick="autoRun(\''+esc(orch)+'\',this)">▶ Запустить сейчас</button>' : '<span style="color:var(--tx3);font-size:13px">нет оркестратора — запуск недоступен</span>';
   var list = runs.length ? runs.map(function(r){
-    var ic = r.ok===true?'<span style="color:#2f9e56">✓</span>':(r.ok===false?'<span style="color:#e0533d">✕</span>':'<span style="color:#C67E34">⏳</span>');
+    var ic = r.ok===true?'<span style="color:#2f9e56">✓</span>':(r.ok===false?'<span style="color:#e0533d">✕</span>':INF(26));
     var lbl = r.ok===true?'успешно':(r.ok===false?'ошибка':'в фоне');
     return '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--bd)"><span style="font-size:14px">'+ic+'</span>'+
       '<span style="font-variant-numeric:tabular-nums;font-size:13px;color:var(--tx);min-width:82px">'+_fmtTs(r.ts)+'</span>'+
@@ -3715,7 +3727,7 @@ function cabSaveSchedule(id){
   var sch = iv ? {interval_min:parseInt(iv,10), human:lbl, period:lbl, channel:ch} : null;
   // Реальный крон через мост Визарда (:8765) — переиспользуем проверенный /x/schedule.
   if(sid){
-    if(msg)msg.innerHTML='⏳ Ставлю на планировщик…';
+    if(msg)msg.innerHTML=INF(28)+' Ставлю на планировщик…';
     fetch('http://127.0.0.1:8765/x/schedule',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({session_id:sid, period:iv?lbl:'', interval_min:iv?parseInt(iv,10):0, deliver:ch})})
       .then(function(r){return r.json();})
@@ -4076,7 +4088,7 @@ function cliRunOp(batchExpert, btn){
   var msg=document.getElementById('clirun_msg');
   if(!dir){ if(msg)msg.innerHTML='⚠ Укажи папку с файлами.'; return; }
   if(btn)btn.disabled=true;
-  if(msg)msg.innerHTML='⏳ Запущено на устройстве… обработка идёт, результат появится рядом с файлами. Может занять до пары минут.';
+  if(msg)msg.innerHTML=INF(28)+' Запущено на устройстве… обработка идёт, результат появится рядом с файлами. Может занять до пары минут.';
   skBridge('etb_run_expert','etb_expert_result',{name:batchExpert,params:{in_dir:dir}}, 180000).then(function(r){
     if(btn)btn.disabled=false;
     var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
@@ -4206,7 +4218,7 @@ function agentFlash(roleId, btn){
   var msg=document.getElementById('ag_msg');
   if(!aid||aid.indexOf('agent_')!==0){ if(msg)msg.innerHTML='⚠ Вставь корректный ID копии агента (начинается с <code>agent_</code>).'; return; }
   if(btn)btn.disabled=true;
-  if(msg)msg.innerHTML='⏳ Прошиваю роль и подключаю сервисы в агента… (до минуты)';
+  if(msg)msg.innerHTML=INF(28)+' Прошиваю роль и подключаю сервисы в агента… (до минуты)';
   skBridge('etb_run_expert','etb_expert_result',{name:'agent_flash_role',params:{agent_id:aid,role_id:roleId}}, 300000).then(function(r){
     if(btn)btn.disabled=false;
     var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
@@ -4307,7 +4319,7 @@ function mcpxGet(id){ return mcpxGi().filter(function(x){return x.id===id;})[0];
 function mcpConnectRun(id, btn){
   var c=(_mcpReg||[]).filter(function(x){return x.id===id;})[0];
   if(!c||!c.run)return;
-  if(btn){btn.disabled=true;btn.textContent='⏳ подключаю…';}
+  if(btn){btn.disabled=true;btn.textContent=INF(28)+' подключаю…';}
   skBridge('etb_run_expert','etb_expert_result',{name:'mcp_connect',params:{server_id:c.id,pkg_type:c.run.type,pkg:c.run.pkg,title:c.title||''}}, 300000).then(function(r){
     var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
     if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}
@@ -4343,7 +4355,7 @@ function packScoutRun(btn){
   var msg=document.getElementById('ps_msg');
   if(!url){ if(msg)msg.innerHTML='⚠ Укажи адрес сайта.'; return; }
   if(btn)btn.disabled=true;
-  if(msg)msg.innerHTML='⏳ Работаю: читаю сайт → собираю справку → пишу сводку… (1–2 минуты)';
+  if(msg)msg.innerHTML=INF(28)+' Работаю: читаю сайт → собираю справку → пишу сводку… (1–2 минуты)';
   skBridge('etb_run_expert','etb_expert_result',{name:'pack_scout_run',params:{url:url,name:name}}, 300000).then(function(r){
     if(btn)btn.disabled=false;
     var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
@@ -4354,7 +4366,7 @@ function packScoutRun(btn){
       var rep=esc(out.report||'').replace(/\n/g,'<br>');
       msg.innerHTML='<div style="font-size:11px;color:var(--tx3);margin-bottom:8px">'+esc(steps)+'</div>'+
         '<div style="background:var(--bg);border:1px solid var(--bd2);border-radius:10px;padding:12px;color:var(--tx)">'+rep+'</div>';
-    } else if(typeof out==='string'&&out.indexOf('deferred')>=0){ msg.innerHTML='⏳ Задача выполняется на устройстве дольше обычного — подожди минуту и нажми «Разведать» ещё раз.'; }
+    } else if(typeof out==='string'&&out.indexOf('deferred')>=0){ msg.innerHTML=INF(28)+' Задача выполняется на устройстве дольше обычного — подожди минуту и нажми «Разведать» ещё раз.'; }
     else { msg.innerHTML='⚠ '+esc((out&&out.message)||'не удалось выполнить'); }
   }).catch(function(e){ if(btn)btn.disabled=false; if(msg)msg.innerHTML='⚠ '+esc((e&&e.message==='_timeout_')?'долгая обработка — попробуй ещё раз через минуту':((e&&e.message)||'ошибка')); });
 }
@@ -4384,7 +4396,7 @@ function packAutomateRun(packId, btn){
   name=conf.name||conf[first.k];
   var msg=document.getElementById('pa_msg');
   if(btn)btn.disabled=true;
-  if(msg)msg.innerHTML='⏳ Публикую автоматизацию…';
+  if(msg)msg.innerHTML=INF(28)+' Публикую автоматизацию…';
   skBridge('etb_run_expert','etb_expert_result',{name:'pack_automate',params:{pack_id:packId,config_json:JSON.stringify(conf),display_name:'Мониторинг '+name}}, 120000).then(function(r){
     if(btn)btn.disabled=false;
     var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
@@ -4392,7 +4404,7 @@ function packAutomateRun(packId, btn){
     if(out&&out.status==='success'){
       if(msg)msg.innerHTML='✓ Опубликовано! Перехожу в «AI Автоматизации» — там задай расписание и канал.';
       setTimeout(function(){ var o=document.getElementById('pa_ov'); if(o)o.remove(); _autoReg=null; _autoFetched=false; cur='automations'; renderGrid(); rtabs(); },1400);
-    } else if(typeof out==='string'&&out.indexOf('deferred')>=0){ if(msg)msg.innerHTML='⏳ Публикация идёт — подожди минуту и попробуй ещё раз.'; }
+    } else if(typeof out==='string'&&out.indexOf('deferred')>=0){ if(msg)msg.innerHTML=INF(28)+' Публикация идёт — подожди минуту и попробуй ещё раз.'; }
     else { if(msg)msg.innerHTML='⚠ '+esc((out&&out.message)||'не удалось опубликовать'); }
   }).catch(function(e){ if(btn)btn.disabled=false; if(msg)msg.innerHTML='⚠ '+esc((e&&e.message)||'ошибка'); });
 }
@@ -4443,7 +4455,7 @@ function agentForgeRun(btn){
   if(!aid||aid.indexOf('agent_')!==0){ if(msg)msg.innerHTML='⚠ Вставь ID копии агента (начинается с <code>agent_</code>).'; return; }
   if(!tools.length){ if(msg)msg.innerHTML='⚠ Отметь хотя бы одно умение.'; return; }
   if(btn)btn.disabled=true;
-  if(msg)msg.innerHTML='⏳ Собираю: прошиваю роль и подключаю '+tools.length+' умений… (до минуты)';
+  if(msg)msg.innerHTML=INF(28)+' Собираю: прошиваю роль и подключаю '+tools.length+' умений… (до минуты)';
   skBridge('etb_run_expert','etb_expert_result',{name:'agent_forge',params:{agent_id:aid,role_id:role,tools_csv:tools.join(',')}}, 300000).then(function(r){
     if(btn)btn.disabled=false;
     var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
@@ -4451,7 +4463,7 @@ function agentForgeRun(btn){
     if(!msg)return;
     if(out&&out.status==='success'){
       msg.innerHTML='✓ Готово! Агент собран: роль «'+esc(out.role||role)+'», умений подключено: '+(out.tools||tools.length)+'. Открой его в чате Extella и дай задачу — он будет вызывать инструменты сам.';
-    } else if(typeof out==='string'&&out.indexOf('deferred')>=0){ msg.innerHTML='⏳ Сборка идёт дольше обычного — подожди минуту и попробуй ещё раз.'; }
+    } else if(typeof out==='string'&&out.indexOf('deferred')>=0){ msg.innerHTML=INF(28)+' Сборка идёт дольше обычного — подожди минуту и попробуй ещё раз.'; }
     else { msg.innerHTML='⚠ '+esc((out&&out.message)||'не удалось собрать'); }
   }).catch(function(e){ if(btn)btn.disabled=false; if(msg)msg.innerHTML='⚠ '+esc((e&&e.message==='_timeout_')?'нет ответа от устройства — попробуй ещё раз':((e&&e.message)||'ошибка')); });
 }
@@ -4484,7 +4496,7 @@ function svcRun(id, btn){
   var params={}; (s.params||[]).forEach(function(p){ var el=document.getElementById('sv_'+p.k); params[p.k]=el?el.value.trim():(p.def||''); });
   var msg=document.getElementById('sv_msg');
   if(btn)btn.disabled=true;
-  if(msg)msg.innerHTML='⏳ Запрашиваю…';
+  if(msg)msg.innerHTML=INF(28)+' Запрашиваю…';
   skBridge('etb_run_expert','etb_expert_result',{name:id,params:params}, 60000).then(function(r){
     if(btn)btn.disabled=false;
     var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
@@ -4537,12 +4549,12 @@ function kpInstallReady(packId, name){
   document.body.appendChild(ov);
   var msg=document.getElementById('kpi_msg');
   var run=function(){
-    if(msg)msg.innerHTML='⏳ Скачиваю официальный источник и собираю базу «'+esc(name)+'» локально… Большие кодексы, до нескольких минут.';
+    if(msg)msg.innerHTML=INF(28)+' Скачиваю официальный источник и собираю базу «'+esc(name)+'» локально… Большие кодексы, до нескольких минут.';
     skBridge('etb_run_expert','etb_expert_result',{name:'kp_install_pack',params:{pack_id:packId}}, 900000).then(function(r){
       var out=_kpParse(r);
       if(out&&out.status==='success'){ kpAdd(out.name||name); if(msg)msg.innerHTML='✓ База «'+esc(out.name||name)+'» установлена: '+(out.chunks||0)+' фрагментов. Можешь спрашивать.'; setTimeout(function(){var o=document.getElementById('kpi_ov');if(o)o.remove();renderKnowledge();},1600); }
       else if(msg)msg.innerHTML='⚠ '+esc((out&&out.message)||(typeof out==='string'?out:'не удалось установить'));
-    }).catch(function(e){ if(msg)msg.innerHTML=(e&&e.message==='_timeout_')?'⏳ Сборка идёт на устройстве (большой кодекс). Загляни в раздел через пару минут, база появится.':('⚠ '+esc((e&&e.message)||'нет ответа')); });
+    }).catch(function(e){ if(msg)msg.innerHTML=(e&&e.message==='_timeout_')?INF(28)+' Сборка идёт на устройстве (большой кодекс). Загляни в раздел через пару минут, база появится.':('⚠ '+esc((e&&e.message)||'нет ответа')); });
   };
   var ready=false; try{ready=localStorage.getItem('kp_engine_ready')==='1';}catch(_){}
   if(ready){ run(); return; }
@@ -4612,7 +4624,7 @@ function kpDoIngest(btn){
   if(!folder){ if(msg)msg.innerHTML='⚠ Выбери папку с документами.'; return; }
   if(btn)btn.disabled=true;
   var ingest=function(){
-    if(msg)msg.innerHTML='⏳ Собираю базу на устройстве… векторизация может занять пару минут.';
+    if(msg)msg.innerHTML=INF(28)+' Собираю базу на устройстве… векторизация может занять пару минут.';
     skBridge('etb_run_expert','etb_expert_result',{name:'kp_ingest',params:{name:name,folder:folder}},300000).then(function(r){
       if(btn)btn.disabled=false;
       var out=_kpParse(r);
@@ -4648,14 +4660,14 @@ function kpDoAsk(i){
   var q=((document.getElementById('kpa_q')||{}).value||'').trim();
   var msg=document.getElementById('kpa_msg');
   if(!q){ if(msg)msg.innerHTML='⚠ Задай вопрос.'; return; }
-  if(msg)msg.innerHTML='⏳ Ищу по документам и формирую ответ…';
+  if(msg)msg.innerHTML=INF(28)+' Ищу по документам и формирую ответ…';
   skBridge('etb_run_expert','etb_expert_result',{name:'kp_ask',params:{name:name,question:q}},180000).then(function(r){
     var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
     if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}
     if(!msg)return;
     if(out&&out.status==='success'){ msg.innerHTML='<div style="white-space:pre-wrap">'+esc(out.answer)+'</div>'+((out.sources&&out.sources.length)?('<div style="color:var(--tx3);font-size:11px;margin-top:8px">📄 Источники: '+esc(out.sources.join(', '))+'</div>'):''); }
     else msg.innerHTML='⚠ '+esc((out&&out.message)||'не удалось');
-  }).catch(function(e){ if(msg)msg.innerHTML=(e&&e.message==='_timeout_')?'⏳ Долго, попробуй ещё раз.':('⚠ '+esc((e&&e.message)||'нет ответа')); });
+  }).catch(function(e){ if(msg)msg.innerHTML=(e&&e.message==='_timeout_')?INF(28)+' Долго, попробуй ещё раз.':('⚠ '+esc((e&&e.message)||'нет ответа')); });
 }
 // ============================================================================
 // Workspace — панель «кокпит» (контракт ws-v1 rev2, движок wz_workspace).
@@ -4766,7 +4778,7 @@ function wsDelete(ws_id,name){
 }
 function wsDoDelete(btn,ws_id){
   var msg=document.getElementById('ws_msg'); if(btn)btn.disabled=true;
-  if(msg)msg.innerHTML='⏳ Удаляю…';
+  if(msg)msg.innerHTML=INF(28)+' Удаляю…';
   wsCall('delete',{ws_id:ws_id},60000).then(function(out){
     if(out&&out.status==='success'){
       var o=document.getElementById('ws_ov'); if(o)o.remove();
@@ -4827,7 +4839,7 @@ function wsDoBuild(btn,folderArg,nameArg){
   var msg=document.getElementById('ws_msg');
   if(!folder){ if(msg)msg.innerHTML='⚠ Выбери папку проекта.'; return; }
   if(btn)btn.disabled=true;
-  if(msg)msg.innerHTML='⏳ Читаю имена файлов и понимаю проект… (~30–45с)';
+  if(msg)msg.innerHTML=INF(28)+' Читаю имена файлов и понимаю проект… (~30–45с)';
   var g=document.getElementById('grid'); if(g&&_wsView!=='cockpit'){ g.innerHTML=wsSkeleton(); }
   var params={folder:folder}; if(nameArg)params.name=nameArg;
   var startMs=Date.now();
@@ -4853,7 +4865,7 @@ function wsBuildDone(ws){
 }
 // Поллинг синхронного list, пока воркспейс по папке не появится (свежий, updated≥старта).
 function wsBuildPoll(folder, startMs, msg, btn, tries){
-  if(msg)msg.innerHTML='⏳ Собираю воркспейс… компьютер понимает проект (~30–45с)';
+  if(msg)msg.innerHTML=INF(28)+' Собираю воркспейс… компьютер понимает проект (~30–45с)';
   if(tries>24){ // ~75с
     if(btn)btn.disabled=false;
     if(msg)msg.innerHTML='▶ Сборка идёт дольше обычного. Загляни в список через минуту.';
@@ -5286,7 +5298,7 @@ function wsOrganizeModal(ws_id,prev){
 }
 function wsOrganizeApply(ws_id,btn){
   var msg=document.getElementById('ws_org_msg'); if(btn)btn.disabled=true;
-  if(msg)msg.innerHTML='⏳ Раскладываю файлы…';
+  if(msg)msg.innerHTML=INF(28)+' Раскладываю файлы…';
   wsCall('organize',{ws_id:ws_id,apply:true},120000).then(function(out){
     if(out&&out.status==='error'){ if(btn)btn.disabled=false; if(msg)msg.innerHTML='⚠ '+esc(out.message||'не удалось'); return; }
     var o=document.getElementById('ws_org_ov'); if(o)o.remove();
