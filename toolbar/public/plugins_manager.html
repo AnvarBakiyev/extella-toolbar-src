@@ -243,6 +243,17 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);
 .cat_back{grid-column:1/-1;padding:0 0 2px}
 .cb_btn{border:none;background:transparent;color:var(--tx2);font:600 13px var(--sans);cursor:pointer;padding:4px 0}
 .cb_btn:hover{color:var(--a)}
+/* Единая полоса подэкрана: «← Назад» + хлебные крошки. Раньше у каждого подэкрана
+   был свой выход (чип / .cat_back / крестик), и нигде не было видно, где ты. */
+.subnav{grid-column:1/-1;display:flex;align-items:center;gap:14px;padding:2px 0 14px;flex-wrap:wrap}
+.sn_back{border:1px solid var(--bd2);background:transparent;color:var(--tx2);font:600 12.5px var(--sans);
+  cursor:pointer;padding:5px 12px;border-radius:7px;transition:border-color .14s,color .14s}
+.sn_back:hover{border-color:var(--a);color:var(--a)}
+.cr_path{font-size:12px;color:var(--tx3);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.cr_up{cursor:pointer}
+.cr_up:hover{color:var(--a);text-decoration:underline}
+.cr_sep{opacity:.45}
+.cr_now{color:var(--tx2);font-weight:600}
 .cat_chip .ci{display:inline-flex;margin-right:5px}
 .cat_chip .ci .lico{width:15px;height:15px}
 .cat_chip.off{opacity:.45}
@@ -1362,6 +1373,28 @@ function _navRestore(){
     return st;
   }catch(_){ return null; }
 }
+// Единая полоса подэкрана: «← Назад» + хлебные крошки (показывают, где ты).
+// crumbs: [{l:'Модели', go:"setc('models')"}, {l:'Поиск по Hugging Face'}] —
+// последняя крошка это текущее место, она без перехода. back — код кнопки.
+// Показываем ТОЛЬКО на подэкранах: в корне раздела след даёт подсвеченная вкладка,
+// лишняя полоса там была бы шумом.
+// Человеческое имя раздела по id (для крошек). Под-вкладки «Сервисов» тоже.
+function _tabLabel(id){
+  for(var i=0;i<CATS.length;i++) if(CATS[i].id===id) return CATS[i].l;
+  var S={programs:'Программы',apps:'Приложения',cli:'Инструменты',services:'Сервисы',
+         workspace:'Воркспейсы',automations:'Автоматизации',mine:'Установленное'};
+  return S[id]||id;
+}
+function _subNavHTML(crumbs, back){
+  var n=(crumbs||[]).length;
+  var path=(crumbs||[]).map(function(c,i){
+    if(i===n-1) return '<span class="cr_now">'+esc(c.l)+'</span>';
+    return '<span class="cr_up" onclick="'+(c.go||'')+'">'+esc(c.l)+'</span>';
+  }).join('<span class="cr_sep">›</span>');
+  return '<div class="subnav">'+
+    '<button class="sn_back" onclick="'+back+'">← Назад</button>'+
+    '<span class="cr_path">'+path+'</span></div>';
+}
 function setc(id) {
   cur = id;
   _navSave();
@@ -1860,7 +1893,9 @@ function renderModels() {
   if (_modHF) {
     if (!hfState.inited) { hfState.inited = true; searchHF(); }
     renderHFDiscover();
-    g.insertAdjacentHTML('afterbegin','<div class="svc_sub" style="grid-column:1/-1;margin-bottom:12px"><button class="cat_chip" onclick="_modHFset(false)">← К подборке моделей</button><span style="font-size:12px;color:var(--tx3);margin-left:8px;align-self:center">поиск по Hugging Face — не проверено Extella</span></div>');
+    g.insertAdjacentHTML('afterbegin',
+      _subNavHTML([{l:'Модели', go:"_modHFset(false)"},{l:'Поиск по Hugging Face'}], "_modHFset(false)")+
+      '<div class="sk_lead" style="grid-column:1/-1;margin:-8px 0 12px;font-size:12px;color:var(--tx3)">поиск по Hugging Face — не проверено Extella</div>');
     return;
   }
   g.innerHTML = modelsSpotlight() +
@@ -2701,7 +2736,9 @@ function _renderProgramsCore() {
   var g = document.getElementById('grid');
   if (!g) return;
 
-  var _bk = _featCat === 'all' ? '' : '<div class="cat_back"><button class="cb_btn" onclick="_setFeatCat(\'all\')">← Все категории</button></div>';
+  var _bk = _featCat === 'all' ? ''
+    : _subNavHTML([{l:'Сервисы', go:"_setFeatCat('all')"},{l:'Программы', go:"_setFeatCat('all')"},
+                   {l:(BIZ_LABEL[_featCat]||_featCat)}], "_setFeatCat('all')");
   var _isPro = document.body.getAttribute('data-mode') === 'pro';
   // Свой поиск и свои чипы («Все 19») считали ТОЛЬКО курируемые программы и не
   // управляли живым каталогом и приложениями ниже — раздел выглядел несшитым.
@@ -2836,8 +2873,10 @@ function _gsearch(query){
   add(_appReg&&_appReg.shelf,'Приложение','programs',function(x){return x.title||x.id;},function(x){return x.desc;},function(x){return x.cat;});
   add(_mcpReg&&(_mcpReg.items||_mcpReg.shelf),'MCP','services',function(x){return (x.id||'').split('/').pop();},function(x){return x.desc||x.tagline;},function(x){return x.cat;});
   var g=document.getElementById('grid'); if(!g)return;
-  var html='<div class="sect"><h2>Поиск: «'+esc(query)+'»</h2></div>'+
-    '<div class="sk_lead" style="grid-column:1/-1">Найдено: '+res.length+' по всем каталогам · <a href="#" onclick="setc(\'desktop\');return false" style="color:var(--a)">← закрыть</a></div>';
+  // «Назад» возвращает в тот раздел, из которого искали (renderGrid рисует текущий cur),
+  // а не выкидывает на Рабочий стол, как делала прежняя ссылка «закрыть».
+  var html=_subNavHTML([{l:_tabLabel(cur), go:'renderGrid()'},{l:'Поиск: «'+query+'»'}], 'renderGrid()')+
+    '<div class="sk_lead" style="grid-column:1/-1">Найдено: '+res.length+' по всем каталогам</div>';
   if(res.length){
     html+='<div class="mshelf">'+res.slice(0,80).map(function(r){
       return '<div class="stile" style="--acc:var(--a)"><span class="st_chip">'+esc(r.type)+(r.cat?' · '+esc(r.cat):'')+'</span>'+
