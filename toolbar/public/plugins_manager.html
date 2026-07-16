@@ -3303,9 +3303,11 @@ function _dtDo(i, act){
     // собирались из трёх). Удаление только выбранной записи оставляло двойников,
     // и ярлык «возвращался». Убираем ВСЕ источники склейки разом.
     var list=(it.dups&&it.dups.length)?it.dups:[it];
+    var agentIds=list.filter(function(d){return d.kind==='agent';}).map(function(d){return d.id;});
     var hasModal=list.some(function(d){return d.kind==='app';});   // у приложений свой модал с подтверждением
     if(!hasModal){
-      var msg='Убрать «'+it.lbl+'» с рабочего стола?';
+      var msg='Удалить «'+it.lbl+'» с рабочего стола?';
+      if(agentIds.length) msg+='\nКарточка автоматизации удалится из каталога целиком (эксперты и данные в Extella не трогаются).';
       if(list.length>1) msg+='\nЯрлык собран из '+list.length+' записей — уберу все.';
       if(!confirm(msg)) return;
     }
@@ -3319,6 +3321,9 @@ function _dtDo(i, act){
       else if(d.kind==='cap'){ capInstRemove(d.rmKind, d.id, d.method||''); }
       else if(d.kind==='app'){ appUninstall(d.id, d.raw||d.lbl); }
     });
+    // Удаление со стола = настоящее (требование Анвара): агентские записи
+    // вычищаются и из глобального каталога, одной перезаписью на все id.
+    if(agentIds.length) _agCatalogPurge(agentIds);
     setTimeout(_deskRedraw,300);
   }
 }
@@ -3940,21 +3945,26 @@ function cabRemove(id){
   _agSaveState(id,{status:'removed', hidden:true});
   closeAgentCabinet(); renderAutomations();
 }
-// «Удалить навсегда»: помимо личного скрытия вычищает запись из каталога
-// _mkt_automations (глобальный ключ, пишет wz_publish_pack). Перечитываем
-// свежую копию перед записью, чтобы не затереть чужие изменения каталога.
+// Вычистка записей из каталога _mkt_automations (глобальный ключ, пишет
+// wz_publish_pack). Все id — ОДНОЙ перезаписью: параллельные read-modify-write
+// теряли бы друг друга. Перечитываем свежую копию перед записью.
+function _agCatalogPurge(ids){
+  var kill={}; (ids||[]).forEach(function(i){ kill[i]=1; });
+  return skKvGet('_mkt_automations').then(function(r){
+    if(!r || !r.items) return null;
+    var left=r.items.filter(function(x){ return !kill[_agId(x)]; });
+    if(left.length===r.items.length) return null;   // записей уже нет — не переписываем
+    r.items=left;
+    return skKvSet('_mkt_automations', r);
+  }).catch(function(){ /* каталог перечитается — личное скрытие уже держит ярлык убранным */ });
+}
+// «Удалить навсегда»: помимо личного скрытия вычищает запись из каталога.
 function cabDeleteForever(id){
   var p=_cabAgent(); if(!p)return;
   if(!confirm('Удалить «'+_agName(p)+'» навсегда? Карточка исчезнет из каталога автоматизаций, ярлык — со стола. Эксперты и данные в Extella не трогаются.')) return;
   _autoReg=(_autoReg||[]).filter(function(x){return _agId(x)!==id;});
   _agSaveState(id,{status:'removed', hidden:true});
-  skKvGet('_mkt_automations').then(function(r){
-    if(!r || !r.items) return null;
-    var left=r.items.filter(function(x){ return _agId(x)!==id; });
-    if(left.length===r.items.length) return null;   // записи уже нет — не переписываем
-    r.items=left;
-    return skKvSet('_mkt_automations', r);
-  }).catch(function(){ /* каталог перечитается — личное скрытие уже держит ярлык убранным */ });
+  _agCatalogPurge([id]);
   closeAgentCabinet(); renderAutomations();
 }
 
