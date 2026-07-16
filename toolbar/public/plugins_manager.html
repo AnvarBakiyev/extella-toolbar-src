@@ -2066,7 +2066,8 @@ function renderFeaturedSection() {
     });
   }
   var _pro = document.body.getAttribute('data-mode') === 'pro';
-  var html = '<div class="sect"><h2>' + (_pro ? 'Все программы' : 'Каталог') + '</h2></div>';
+  // Без шапки: полки по категориям идут одним полотном с остальным каталогом раздела.
+  var html = '';
 
   if (featuredError) html += '<div class="banner err">⚠ Установка не удалась: ' + esc(featuredError) + '</div>';
   if (!featured.length) {
@@ -2299,6 +2300,16 @@ function _tfShelfCat(shelf){
 }
 function _mountTabFilter(placeholder){
   var g=document.getElementById('grid'); if(!g) return;
+  // Часть каталогов (MCP) приезжает АСИНХРОННО, уже после первой отрисовки: шапку
+  // тогда надо пересобрать, иначе чипы не посчитают то, что приехало позже.
+  // Поэтому функция идемпотентна: старую шапку снимаем, ввод пользователя переносим.
+  var prevQ='', prevCat='__all';
+  var old=g.querySelector('.tabfilter');
+  if(old){
+    var oi=old.querySelector('.tf_inp'); if(oi) prevQ=oi.value||'';
+    var oc=old.querySelector('.cat_chip.on'); if(oc) prevCat=oc.getAttribute('data-cat')||'__all';
+    old.remove();
+  }
   var shelves=[].slice.call(g.querySelectorAll('.mshelf'));
   if(shelves.length<2) return;  // нечего фильтровать
   var cats=[], cnt={}, total=0;
@@ -2318,6 +2329,13 @@ function _mountTabFilter(placeholder){
   bar.innerHTML=search+chips;
   // Шапка (поиск + категории) — В САМЫЙ ВЕРХ, НАД hero-баннером (единый порядок: поиск → категории → hero).
   if(g.firstChild) g.insertBefore(bar, g.firstChild); else g.appendChild(bar);
+  // Вернуть то, что пользователь уже ввёл/выбрал до пересборки.
+  if(prevQ){ var ni=bar.querySelector('.tf_inp'); if(ni) ni.value=prevQ; }
+  if(prevCat && prevCat!=='__all'){
+    var nb=bar.querySelector('.cat_chip[data-cat="'+prevCat.replace(/"/g,'\\"')+'"]');
+    if(nb){ [].forEach.call(bar.querySelectorAll('.cat_chip'),function(b){ b.classList.toggle('on', b===nb); }); }
+  }
+  if(prevQ || (prevCat && prevCat!=='__all')) _tabFilterApply();
 }
 function _tabFilterCat(btn){
   var bar=btn.closest('.tabfilter'); if(!bar) return;
@@ -2647,7 +2665,7 @@ function _svcBar(){
 }
 function _svcPrependBar(){ var g=document.getElementById('grid'); if(g){try{g.insertAdjacentHTML('afterbegin',_svcBar());}catch(e){}} }
 // Раздел «Программы» = живой каталог с GitHub + встроенная секция «Приложения» (Pinokio-репо).
-function renderPrograms(){ _renderProgramsCore(); _svcPrependBar(); }
+function renderPrograms(){ _renderProgramsCore(); _mountTabFilter('Поиск по программам…'); _svcPrependBar(); }
 function _renderProgramsCore() {
   // Always rescue filter_bar before any g.innerHTML wipe. The element lives
   // inside #grid when Other is expanded; innerHTML replacement destroys it.
@@ -2658,7 +2676,11 @@ function _renderProgramsCore() {
 
   var _bk = _featCat === 'all' ? '' : '<div class="cat_back"><button class="cb_btn" onclick="_setFeatCat(\'all\')">← Все категории</button></div>';
   var _isPro = document.body.getAttribute('data-mode') === 'pro';
-  var featuredHtml = _progSearchHTML() + _featCatBar() + _bk + ((_featCat === 'all' && !_isPro) ? programsSpotlight() + addTileHTML('programs','Добавить программу') : '') + renderFeaturedSection() + (_featCat !== 'all' ? addTileHTML('programs','Добавить программу') : (_isPro ? '' : progToolsHTML(_appsShelvesHTML())));
+  // Свой поиск и свои чипы («Все 19») считали ТОЛЬКО курируемые программы и не
+  // управляли живым каталогом и приложениями ниже — раздел выглядел несшитым.
+  // Теперь тут общая шапка-фильтр (_mountTabFilter), как во всех остальных вкладках:
+  // она строит чипы из реальных полок и фильтрует всё, что в разделе есть.
+  var featuredHtml = _bk + ((_featCat === 'all' && !_isPro) ? programsSpotlight() + addTileHTML('programs','Добавить программу') : '') + renderFeaturedSection() + (_featCat !== 'all' ? addTileHTML('programs','Добавить программу') : (_isPro ? '' : progToolsHTML(_appsShelvesHTML())));
 
   // «Для всех», curated only: no raw GitHub firehose.
   if (document.body.getAttribute('data-mode') !== 'pro') {
@@ -4387,6 +4409,9 @@ function renderMcpCatalog(){
     });
     host.innerHTML=html;
     [].forEach.call(host.querySelectorAll('[data-mcpconn]'),function(b){b.onclick=function(){mcpConnectRun(b.getAttribute('data-mcpconn'),b);};});
+    // MCP приехал (возможно, уже после первой отрисовки) — пересобрать шапку,
+    // иначе чипы и счётчик «Все N» не учтут 200 карточек.
+    if(cur==='services') _mountTabFilter('Поиск сервиса…');
   };
   if(_mcpReg){ draw(_mcpReg); return; }
   _loadSharded('_mkt_mcp','items').then(function(r){
