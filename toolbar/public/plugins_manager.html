@@ -1570,7 +1570,7 @@ var LOCAL_MODELS = [
    name:'Финансы (англоязычный)', desc:'Разбирает англоязычные финансы и отчёты приватно. Английский, сильно; русский, слабее.', frame:'не инвест-совет, проверяет человек'}
 ];
 function localModelCard(m){
-  return '<div class="stile" style="--acc:#2E7D5B">'+
+  return '<div class="stile" style="--acc:'+TYPE_ACC.model+'">'+
     '<span class="st_chip">'+esc(m.emoji)+' '+esc(_lm(m,'domain'))+'</span>'+
     '<div class="st_title">'+esc(_lm(m,'name'))+'</div>'+
     '<div class="st_fact">'+esc(_lm(m,'desc'))+'</div>'+
@@ -1908,6 +1908,8 @@ function _setInstCat(cat) {
 }
 
 // Business aisle colours + labels (cards grouped by aisle, coloured, like Навыки).
+// Цвет по ТИПУ каталога (гибрид: тип задаёт основной акцент карточки)
+var TYPE_ACC = {program:"#C67A22",app:"#7A3FA0",cli:"#0F5E6B",service:"#2C8768",mcp:"#3E8B8B",model:"#4A5FA8",skill:"#B07A22",agent:"#B5642E"};
 var BIZ_ACC   = { work:'#C57E33', marketing:'#D4984F', money:'#2F6B66', study:'#A5632A', home:'#3D8078', travel:'#5FA8A0', health:'#6BB3AA', docs:'#24544F', data:'#3D8078', tech:'#24544F', sales:'#C57E33', content:'#D4984F', automation:'#3D8078', life:'#D4984F',
   dev:'#24544F', calc:'#C57E33', textcode:'#A5632A', webapi:'#2F6B66', aiwork:'#C57E33', ailife:'#D4984F' };
 var ICO_SYM = { work:'work', marketing:'marketing', money:'money', study:'study', home:'home', travel:'travel', health:'health', docs:'docs', data:'data', tech:'tech', sales:'marketing', content:'marketing', automation:'tech', life:'home',
@@ -3854,7 +3856,7 @@ function skCard(s){
   var foot=on
     ? '<span class="sk_active">● активен'+(it&&it.target?' · '+esc(it.target):'')+'</span><button class="sk_del" data-skdel="'+esc(s.id)+'">Удалить</button>'
     : '<button class="st_btn" data-skinst="'+esc(s.id)+'">+ Установить</button>';
-  return '<div class="stile" style="--acc:'+esc(SK_ACC[s.cat]||'#C57E33')+'">'+
+  return '<div class="stile" style="--acc:'+TYPE_ACC.skill+'">'+
     '<span class="st_chip">'+esc(s.emoji)+' '+esc(s.cat)+'</span>'+
     '<div class="st_title">'+esc(s.name)+'</div>'+
     '<div class="st_fact">'+esc(s.desc)+'</div>'+
@@ -4109,7 +4111,7 @@ function agCard(a){
   var foot=on
     ? '<span class="sk_active">● установлена</span><button class="st_btn" data-aginst="'+esc(a.id)+'">Прошить снова</button><button class="sk_del" data-agdel="'+esc(a.id)+'" style="margin-left:6px">Убрать</button>'
     : '<button class="st_btn" data-aginst="'+esc(a.id)+'">Установить роль</button>';
-  return '<div class="stile" style="--acc:'+esc(a.acc)+'"><span class="st_chip">'+a.emoji+' Роль агента</span>'+
+  return '<div class="stile" style="--acc:'+TYPE_ACC.agent+'"><span class="st_chip">'+a.emoji+' Роль агента</span>'+
     '<div class="st_title">'+esc(a.name)+'</div><div class="st_fact">'+esc(a.tagline)+'</div>'+
     '<div style="margin:8px 0 2px">'+caps+'</div>'+
     '<div class="st_foot" style="justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap">'+foot+'</div></div>';
@@ -4216,7 +4218,7 @@ function renderMcpCatalog(){
           else if(conn){ foot='<span class="sk_active">✓ подключён</span><span style="font-size:10.5px;color:var(--tx3);overflow:hidden;text-overflow:ellipsis;max-width:55%">'+esc((c.run&&c.run.pkg)||c.id)+'</span>'; }
           else if(c.run){ foot='<span style="font-size:11px;color:var(--tx3)">'+esc(c.run.type)+' · без ключей</span><button class="st_btn" data-mcpconn="'+esc(c.id)+'">Подключить</button>'; }
           else { foot='<span style="font-size:11px;color:var(--tx3)">remote · подключение позже</span>'; }
-          return '<div class="stile" style="--acc:#4A6FA5"><span class="st_chip">🔌 MCP-сервер</span>'+
+          return '<div class="stile" style="--acc:'+TYPE_ACC.mcp+'"><span class="st_chip">🔌 MCP-сервер</span>'+
             '<div class="st_title">'+esc(c.title||short)+'</div><div class="st_fact">'+esc(c.desc||'')+'</div>'+
             '<div class="st_foot" style="justify-content:space-between;align-items:center;gap:8px">'+foot+'</div></div>';
         }).join('')+'</div>';
@@ -4391,7 +4393,7 @@ function svCard(s){
   var foot=on
     ? '<span class="sk_active">● подключено</span><button class="st_btn" data-svrun="'+esc(s.id)+'">▶ Проверить</button><button class="sk_del" data-svdisc="'+esc(s.id)+'" style="margin-left:6px">Убрать</button>'
     : '<button class="st_btn" data-svconn="'+esc(s.id)+'">Подключить</button><button class="st_btn" data-svrun="'+esc(s.id)+'" style="margin-left:6px;background:transparent;color:var(--tx2);border:1px solid var(--bd2)">Проверить</button>';
-  return '<div class="stile" style="--acc:'+esc(s.acc)+'"><span class="st_chip">'+s.emoji+' Сервис</span>'+
+  return '<div class="stile" style="--acc:'+TYPE_ACC.service+'"><span class="st_chip">'+s.emoji+' Сервис</span>'+
     '<div class="st_title">'+esc(s.name)+'</div><div class="st_fact">'+esc(s.desc)+'</div>'+
     '<div class="st_foot" style="justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap">'+foot+'</div></div>';
 }
@@ -5344,7 +5346,7 @@ function cliCard(c){
     : cliInstalled(c.id)
       ? '<span class="sk_active">● установлено</span><span style="display:flex;gap:6px"><button class="st_btn" onclick="cliRun(\''+esc(c.id)+'\')">▶ Запустить</button><button class="sk_del" data-clirm="'+esc(c.id)+'">Удалить</button></span>'
       : '<span class="cli_note" style="font-size:11px;color:var(--text-muted)">локально · офлайн</span><button class="st_btn" data-cliinst="'+esc(c.id)+'">Установить</button>';
-  return '<div class="stile" style="--acc:'+esc(CLI_ACC[c.cat]||'#C57E33')+'">'+
+  return '<div class="stile" style="--acc:'+TYPE_ACC.cli+'">'+
     '<span class="st_chip">'+esc(c.emoji)+' '+esc(c.cat)+'</span>'+
     '<div class="st_title">'+esc(c.name)+'</div>'+
     '<div class="st_fact">'+esc(c.desc)+'</div>'+
