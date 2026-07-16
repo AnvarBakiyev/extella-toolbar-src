@@ -1633,19 +1633,19 @@ var _appOnlyCompat=true;
 function _appToggleCompat(){ _appOnlyCompat=!_appOnlyCompat; renderPrograms(); }
 // Секция приложений (Pinokio-репо с GitHub) — встраивается в раздел «Программы». Возвращает HTML-строку.
 function _appsSectionHTML(){
-  if(!_appReg){ _ensureApps(); return '<div class="sect" style="grid-column:1/-1"><h2>Приложения с GitHub</h2></div><div class="ws_lead" style="grid-column:1/-1">Загружаю приложения…</div>'; }
+  if(!_appReg){ _ensureApps(); return '<div class="sect" style="grid-column:1/-1"><h2>Приложения с GitHub</h2></div><div class="sk_lead" style="grid-column:1/-1">Загружаю приложения…</div>'; }
   if(_appInstalled===null){ _appInstalled={}; _refreshInstalledApps(); }
   var all=_appReg.shelf||[];
   var osName={darwin:'macOS',win32:'Windows',linux:'Linux'}[_curOS()]||_curOS();
   var hidden=all.filter(function(a){return !_appOk(a);}).length;
   var apps=_appOnlyCompat?all.filter(_appOk):all;
-  var toggle=hidden?('<div class="ws_lead" style="grid-column:1/-1;font-size:12px;color:var(--tx3)">'+
+  var toggle=hidden?('<div class="sk_lead" style="grid-column:1/-1;font-size:12px;color:var(--tx3)">'+
     (_appOnlyCompat?('Показаны совместимые с '+esc(osName)+'. Скрыто несовместимых: '+hidden+'. '+
       '<a href="#" onclick="_appToggleCompat();return false" style="color:var(--acc,#7A3FA0)">показать все</a>')
      :('Показаны все, включая несовместимые с '+esc(osName)+'. '+
       '<a href="#" onclick="_appToggleCompat();return false" style="color:var(--acc,#7A3FA0)">только для моей системы</a>'))+'</div>'):'';
   return '<div class="sect" style="grid-column:1/-1"><h2>Приложения с GitHub</h2></div>'+
-    '<div class="ws_lead" style="grid-column:1/-1">ИИ-приложения (рецепты Pinokio, MIT). Клик → Extella ставит по рецепту на твоём компьютере, детерминированно, без ИИ-агента. 🔒 работают локально.</div>'+
+    '<div class="sk_lead" style="grid-column:1/-1">ИИ-приложения (рецепты Pinokio, MIT). Клик → Extella ставит по рецепту на твоём компьютере, детерминированно, без ИИ-агента. 🔒 работают локально.</div>'+
     toggle+
     '<div class="mshelf">'+apps.map(appCard).join('')+'</div>';
 }
