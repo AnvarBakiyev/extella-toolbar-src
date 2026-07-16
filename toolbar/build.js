@@ -43,6 +43,7 @@ const CORE_ORDER = [
 
 const PANELS_ORDER = [
   'marketplace.js',
+  'activity-center.js',
   'library.js',
   'github-add.js',
   'hf-add.js',
