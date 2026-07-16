@@ -1625,14 +1625,14 @@ function modelsSpotlight(){
 // ===== Приложения (Pinokio-совместимые рецепты, детерминированная установка) =====
 var _appReg=null, _appFetched=false;
 function _ensureApps(){ if(_appFetched)return; _appFetched=true;
-  _loadSharded('_mkt_apps').then(function(r){ if(r&&r.shelf){_appReg=r; if(cur==='programs')renderPrograms(); else if(cur==='desktop')renderDesktop();} }).catch(function(){ _appReg={shelf:[]}; if(cur==='programs')renderPrograms(); else if(cur==='desktop')renderDesktop(); }); }
+  _loadSharded('_mkt_apps').then(function(r){ if(r&&r.shelf){_appReg=r; if(cur==='programs')renderPrograms(); else if(cur==='desktop')_deskRedraw();} }).catch(function(){ _appReg={shelf:[]}; if(cur==='programs')renderPrograms(); else if(cur==='desktop')_deskRedraw(); }); }
 var _appInstalled=null;   // Set установленных app_id (и их basename)
 function _refreshInstalledApps(){
   skBridge('etb_run_expert','etb_expert_result',{name:'app_list',params:{}},30000).then(function(r){
     var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
     if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}
     var s={}; ((out&&out.apps)||[]).forEach(function(a){ s[a.app_id]=1; var b=a.app_id.split('/').pop(); s[b]=1; });
-    _appInstalled=s; if(cur==='programs')renderPrograms(); else if(cur==='desktop')renderDesktop();   // перерисовать с отметками
+    _appInstalled=s; if(cur==='programs')renderPrograms(); else if(cur==='desktop')_deskRedraw();   // перерисовать с отметками
   }).catch(function(){ _appInstalled={}; });
 }
 function _curOS(){
@@ -1677,7 +1677,7 @@ function _appsShelvesHTML(){
 }
 // Приложения слиты в «Программы» — стрелка сюда ведёт туда же.
 function renderApps(){ setc('programs'); }
-function _appToggleRedraw(){ if(cur==='programs')renderPrograms(); else if(cur==='desktop')renderDesktop(); }
+function _appToggleRedraw(){ if(cur==='programs')renderPrograms(); else if(cur==='desktop')_deskRedraw(); }
 function appCard(a){
   var repo=(a.run&&a.run.repo)||''; var stars=a.stars?('★'+a.stars):'';
   var inst=_appInstalled&&_appInstalled[a.id];
@@ -1784,7 +1784,8 @@ function appDoUninstall(btn,id){
     if(out&&out.status==='success'){
       if(_appInstalled)delete _appInstalled[id];
       var o=document.getElementById('app_ov'); if(o)o.remove();
-      if(cur==='programs')renderPrograms();
+      // Раньше обновлялись только «Программы» — на столе удалённое приложение оставалось.
+      if(cur==='programs')renderPrograms(); else if(cur==='desktop')_deskRedraw();
     } else { if(btn)btn.disabled=false; if(msg)msg.innerHTML='⚠ '+esc((out&&out.message)||'не удалось'); }
   }).catch(function(e){ if(btn)btn.disabled=false; if(msg)msg.innerHTML='⚠ '+esc((e&&e.message)||'нет ответа'); });
 }
@@ -3101,8 +3102,8 @@ var CAPINST_KIND = {model:'модель', mcp:'MCP-сервер', cli:'CLI', ski
 var CAPINST_KIND_EN = {model:'model', mcp:'MCP server', cli:'CLI', skill:'skill', service:'service', api:'API'};
 function _ensureCapInst() {
   if (_capInstFetched) return; _capInstFetched = true;
-  skKvGet('_mkt_installed').then(function(r){ _capInstReg = (r && r.items) ? r.items : []; rtabs(); if (cur === 'mine') renderInstalled(); else if (cur === 'desktop') renderDesktop(); })
-    .catch(function(){ _capInstReg = _capInstReg || []; if (cur === 'mine') renderInstalled(); else if (cur === 'desktop') renderDesktop(); });
+  skKvGet('_mkt_installed').then(function(r){ _capInstReg = (r && r.items) ? r.items : []; rtabs(); if (cur === 'mine') renderInstalled(); else if (cur === 'desktop') _deskRedraw(); })
+    .catch(function(){ _capInstReg = _capInstReg || []; if (cur === 'mine') renderInstalled(); else if (cur === 'desktop') _deskRedraw(); });
 }
 function capInstCount(){ return (_capInstReg && _capInstReg.length) || 0; }
 function capInstRefresh(){ _capInstReg = null; _capInstFetched = false; _ensureCapInst(); }
@@ -3213,9 +3214,11 @@ function _dtDo(i, act){
       _autoReg=(_autoReg||[]).filter(function(x){return _agId(x)!==it.id;});
       _agSaveState(it.id,{status:'removed', hidden:true});
       renderDesktop();
-    } else if(it.kind==='program'){ uninst(it.id); setTimeout(renderDesktop,60); }
-    else if(it.kind==='cli'){ cliUninstall(it.id); setTimeout(renderDesktop,60); }
-    else if(it.kind==='cap'){ capInstRemove(it.rmKind, it.id, it.method||''); setTimeout(renderDesktop,300); }
+    } else if(it.kind==='program'){ uninst(it.id); setTimeout(_deskRedraw,60); }
+    else if(it.kind==='cli'){ cliUninstall(it.id); setTimeout(_deskRedraw,60); }
+    else if(it.kind==='cap'){ capInstRemove(it.rmKind, it.id, it.method||''); setTimeout(_deskRedraw,300); }
+    // Ветки для приложений не было вовсе — «Удалить» на ярлыке приложения молча ничего не делал.
+    else if(it.kind==='app'){ appUninstall(it.id, it.raw||it.lbl); }
   }
 }
 function _dtCss(){
@@ -3259,20 +3262,39 @@ function _dtCss(){
     '.dt_empty p{font-size:14px;line-height:1.6;max-width:440px;margin:0 auto}'+
   '</style>';
 }
+// Стол собирается из 6 независимых источников, каждый прилетает своим ответом.
+// Без склейки каждый ответ = полная перерисовка (экран «трясёт»). Копим их в один кадр.
+var _deskT=null, _deskStLoading=false;
+function _deskRedraw(){
+  if(cur!=='desktop') return;
+  clearTimeout(_deskT);
+  _deskT=setTimeout(function(){ if(cur==='desktop') renderDesktop(); }, 90);
+}
 function renderDesktop(){
   var g=document.getElementById('grid'); if(!g) return;
   _ensureAuto(); _ensureCapInst();
   if(_appInstalled===null){ _appInstalled={}; _refreshInstalledApps(); }  // установленные приложения на столе
   if(!_appReg) _ensureApps();                                              // каталог — для имён приложений
+  // Флаг «убран со стола» лежит в agent_state:<id>. Стол его НЕ грузил (в отличие от
+  // «Автоматизаций») — из-за этого удалённые агенты возвращались после перезагрузки.
+  if(_autoReg && _autoReg.length && !_deskStLoading){
+    var _needSt=_autoReg.filter(function(p){ return !(_agId(p) in _agState); });
+    if(_needSt.length){
+      _deskStLoading=true;
+      Promise.all(_needSt.map(function(p){ return _agLoadState(_agId(p)); }))
+        .then(function(){ _deskStLoading=false; _deskRedraw(); })
+        .catch(function(){ _deskStLoading=false; _deskRedraw(); });
+    }
+  }
   if (cliGi().length && !_cliLoaded) {
-    skKvGet('_mkt_cli_catalog').then(function(r){ _cliReg=(r&&r.items)?r.items:[]; _cliLoaded=true; if(cur==='desktop')renderDesktop(); })
-      .catch(function(){ _cliReg=_cliReg||[]; _cliLoaded=true; if(cur==='desktop')renderDesktop(); });
+    skKvGet('_mkt_cli_catalog').then(function(r){ _cliReg=(r&&r.items)?r.items:[]; _cliLoaded=true; _deskRedraw(); })
+      .catch(function(){ _cliReg=_cliReg||[]; _cliLoaded=true; _deskRedraw(); });
   }
   // Воркспейсы для раздела на столе (ленивая подгрузка через движок, кэш).
   if (_wsDeskList === undefined) {
     _wsDeskList = null;
-    wsCall('list', {}, 20000).then(function(out){ _wsDeskList = (out&&out.workspaces)?out.workspaces:[]; if(cur==='desktop')renderDesktop(); })
-      .catch(function(){ _wsDeskList = []; if(cur==='desktop')renderDesktop(); });
+    wsCall('list', {}, 20000).then(function(out){ _wsDeskList = (out&&out.workspaces)?out.workspaces:[]; _deskRedraw(); })
+      .catch(function(){ _wsDeskList = []; _deskRedraw(); });
   }
   // Единый набор контурных значков (как в чипах/карточках Эллы): категория → #ic-*.
   // acc берём из палитры категорий (BIZ_ACC), чтобы цвета совпадали с витриной.
@@ -3337,7 +3359,9 @@ function renderDesktop(){
 
   var icons=[];
   // 1) Агенты, собранные Визардом → открыть кабинет
-  (_autoReg||[]).filter(function(p){ var st=_agState[_agId(p)]; return !(st&&st.hidden); }).forEach(function(p){
+  // Показываем агента только когда его состояние уже прочитано: иначе убранный
+  // со стола ярлык успевает мигнуть до того, как приедет флаг hidden.
+  (_autoReg||[]).filter(function(p){ var id=_agId(p); if(!(id in _agState)) return false; var st=_agState[id]; return !(st&&st.hidden); }).forEach(function(p){
     var cat=_catRuToBiz(p.category)||p._biz||'work', nm=_agCleanName(p);
     icons.push({kind:'agent',cat:cat,lbl:nm,acc:(p.accent||_dtAcc(cat)),id:_agId(p),
       ident:!!(p.accent||p.emoji||p.category),
@@ -3494,8 +3518,8 @@ function _ensureAuto() {
   skKvGet('_mkt_automations').then(function(r) {
     _autoReg = (r && r.items) ? r.items : [];
     if (cur === 'automations') renderAutomations();
-    else if (cur === 'desktop') renderDesktop();
-  }).catch(function() { _autoReg = _autoReg || []; if (cur === 'automations') renderAutomations(); else if (cur === 'desktop') renderDesktop(); });
+    else if (cur === 'desktop') _deskRedraw();
+  }).catch(function() { _autoReg = _autoReg || []; if (cur === 'automations') renderAutomations(); else if (cur === 'desktop') _deskRedraw(); });
 }
 function autoRefresh() { _autoReg = null; _autoFetched = false; _ensureAuto(); }
 // ══════════════════════════════════════════════════════════════════════════
