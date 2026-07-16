@@ -1788,14 +1788,18 @@ function appEmbedReload(url,ready){
     },6000);
   }
 }
+var _modHF = false;  // «Поиск по Hugging Face» — перенесён из убранного режима Профи
+function _modHFset(v){ _modHF = v; if (v && !hfState.inited) { hfState.inited = true; searchHF(); } renderModels(); }
 function renderModels() {
   var g = document.getElementById('grid'); if (!g) return;
-  if (document.body.getAttribute('data-mode') === 'pro') {
+  if (_modHF) {
     if (!hfState.inited) { hfState.inited = true; searchHF(); }
     renderHFDiscover();
+    g.insertAdjacentHTML('afterbegin','<div class="svc_sub" style="grid-column:1/-1;margin-bottom:12px"><button class="cat_chip" onclick="_modHFset(false)">← К подборке моделей</button><span style="font-size:12px;color:var(--tx3);margin-left:8px;align-self:center">поиск по Hugging Face — не проверено Extella</span></div>');
     return;
   }
-  g.innerHTML = modelsSpotlight();
+  g.innerHTML = modelsSpotlight() +
+    '<div style="grid-column:1/-1;text-align:center;margin:10px 0 0"><button class="cat_chip" onclick="_modHFset(true)">🔍 Искать ещё на Hugging Face</button></div>';
   [].forEach.call(g.querySelectorAll('[data-lminst]'),function(b){b.onclick=function(){installLocalModel(b.getAttribute('data-lminst'),b);};});
   _mountTabFilter('Поиск модели…');
 }
@@ -2750,7 +2754,7 @@ function searchHF(append) {
     hfState.total = cached.total;
     hfState.loading = false;
     hfState.error = null;
-    if (cur === 'models' && document.body.getAttribute('data-mode') === 'pro') renderHFDiscover();
+    if (cur === 'models' && _modHF) renderHFDiscover();
     return;
   }
 
@@ -2780,7 +2784,7 @@ function searchHF(append) {
       hfState.error = (e && e.message) || 'error';
     })
     .then(function() {
-      if (cur === 'models' && document.body.getAttribute('data-mode') === 'pro') {
+      if (cur === 'models' && _modHF) {
         _renderHFKeepFocus(function() {
           renderHFDiscover();
           syncHFFilterBar();
