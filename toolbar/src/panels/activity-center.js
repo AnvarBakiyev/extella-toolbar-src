@@ -8,6 +8,7 @@
   var SERVICES_API = API_BASE + '/api/services';
   var state = {
     open: false, data: null, bridgeOnline: false, expanded: {},
+    activityToken: '', taskBusy: {},
     services: null, servicesToken: '', servicesLoading: false,
     servicesUpdatedAt: 0, serviceBusy: {}, serviceMessage: ''
   };
@@ -25,11 +26,14 @@
     '#_xtlac_panel.open{display:flex;animation:_xtlac_in .16s ease}',
     '#_xtlac_head{display:flex;align-items:flex-start;gap:10px;padding:15px 16px 12px;border-bottom:1px solid var(--etb-bd,rgba(255,255,255,.07))}',
     '#_xtlac_head h3{margin:0;font-size:14px;line-height:1.25}',
-    '#_xtlac_close{margin-left:auto;border:0;background:transparent;color:var(--etb-tx2,#888);font-size:18px;cursor:pointer}',
+    '#_xtlac_clear{display:none;margin-left:auto;border:1px solid var(--etb-bd2,rgba(255,255,255,.13));border-radius:7px;background:transparent;color:var(--etb-tx2,#888);padding:5px 8px;font:600 9.5px/1 -apple-system,system-ui,sans-serif;cursor:pointer}',
+    '#_xtlac_clear.show{display:block}',
+    '#_xtlac_clear:hover{color:var(--etb-tx,#f0f0f0)}',
+    '#_xtlac_close{border:0;background:transparent;color:var(--etb-tx2,#888);font-size:18px;cursor:pointer}',
     '#_xtlac_warning{display:none;margin:10px 12px 0;padding:9px 10px;border-radius:10px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);color:#f59e0b;font-size:11px;line-height:1.45}',
     '#_xtlac_warning.show{display:block}',
     '#_xtlac_body{overflow:auto;padding:10px 12px 14px;scrollbar-width:thin}',
-    '._xtlac_section{margin:2px 2px 7px;color:var(--etb-tx2,#888);font-size:10px;font-weight:800;letter-spacing:.02em}',
+    '._xtlac_section{margin:2px 2px 7px;color:var(--etb-tx2,#888);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}',
     '._xtlac_task{display:grid;grid-template-columns:22px 1fr auto;gap:9px;align-items:start;padding:10px;border-radius:11px;border:1px solid transparent;margin-bottom:5px;cursor:pointer;outline:none}',
     '._xtlac_task:hover{background:var(--etb-s3,#1c1c1c);border-color:var(--etb-bd,rgba(255,255,255,.07))}',
     '._xtlac_task:focus-visible{border-color:rgba(198,126,52,.65)}',
@@ -51,6 +55,8 @@
     '._xtlac_meta dd{margin:0;color:var(--etb-tx,#f0f0f0)}',
     '._xtlac_manage{margin-top:10px;border:1px solid rgba(198,126,52,.45);border-radius:8px;background:rgba(198,126,52,.1);color:#d99a58;padding:7px 10px;font:650 10.5px/1.2 -apple-system,system-ui,sans-serif;cursor:pointer}',
     '._xtlac_manage:hover{background:rgba(198,126,52,.18)}',
+    '._xtlac_remove{margin:10px 0 0 7px;border:0;background:transparent;color:var(--etb-tx2,#888);padding:7px 5px;font:600 10px/1.2 -apple-system,system-ui,sans-serif;cursor:pointer}',
+    '._xtlac_remove:hover{color:#ef4444}',
     '._xtlac_hint{margin-top:7px;color:var(--etb-tx2,#888);font-size:9.5px;line-height:1.4}',
     '#_xtlac_empty{padding:24px 12px;text-align:center;color:var(--etb-tx2,#888);font-size:11px;line-height:1.5}',
     '@keyframes _xtlac_pulse{50%{opacity:.45;transform:scale(.86)}}',
@@ -242,6 +248,74 @@
       grid.appendChild(card);
     });
     section.appendChild(grid);
+    try { renderSystemAgents(section, doc); } catch (e) {}
+  }
+
+  function renderSystemAgents(section, doc) {
+    // Системные агенты устройства (мост визарда /x/launchagents) + чистка сирот листенера.
+    var wrap = storefrontNode(doc, 'div', '_xtlac_srv_sysagents');
+    wrap.style.marginTop = '18px';
+    var head = storefrontNode(doc, 'div', '_xtlac_srv_head');
+    var copy = storefrontNode(doc, 'div', '_xtlac_srv_head_copy');
+    copy.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_title', 'Системные агенты (LaunchAgents)'));
+    copy.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_sub', 'Автозапускаемые фоновые агенты этого Мака. Семейство Dronor — не Extella: его активность может выглядеть как наша.'));
+    head.appendChild(copy);
+    wrap.appendChild(head);
+    var body = storefrontNode(doc, 'div', '_xtlac_srv_sysagents_body', 'проверяю…');
+    wrap.appendChild(body);
+    section.appendChild(wrap);
+    function bridgePost(url, payload) {
+      return fetch('http://127.0.0.1:8765' + url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload || {}) }).then(function (r) { return r.json(); });
+    }
+    fetch('http://127.0.0.1:8765/x/listener_procs').then(function (r) { return r.json(); }).then(function (lp) {
+      if (!lp || !lp.orphans) return;
+      var warn = doc.createElement('div');
+      warn.style.cssText = 'margin:8px 0;padding:8px 12px;border:1px solid #C0392B;border-radius:8px;font-size:12.5px;display:flex;align-items:center;gap:10px';
+      warn.appendChild(doc.createTextNode('Лишние процессы listener: ' + lp.orphans + ' — забирают фоновые задачи параллельно.'));
+      var cbtn = doc.createElement('button');
+      cbtn.type = 'button';
+      cbtn.textContent = 'Закрыть лишние';
+      cbtn.addEventListener('click', function () {
+        cbtn.disabled = true;
+        bridgePost('/x/listener_cleanup').then(function (res) { warn.textContent = (res && res.message) || 'готово'; });
+      });
+      warn.appendChild(cbtn);
+      wrap.insertBefore(warn, body);
+    }).catch(function () {});
+    fetch('http://127.0.0.1:8765/x/launchagents').then(function (r) { return r.json(); }).then(function (d) {
+      var agents = (d && d.agents) || [];
+      body.textContent = '';
+      if (!agents.length) { body.textContent = 'агентов не найдено'; return; }
+      var famTitle = { extella: 'Extella', dronor: 'Dronor / personal AGI (не Extella)', other: 'Прочие' };
+      ['extella', 'dronor', 'other'].forEach(function (fam) {
+        var list = agents.filter(function (a) { return a.family === fam; });
+        if (!list.length) return;
+        var h = doc.createElement('div');
+        h.style.cssText = 'font-weight:700;font-size:12.5px;margin:10px 0 4px;opacity:.85';
+        h.textContent = famTitle[fam] + ' · ' + list.length;
+        body.appendChild(h);
+        list.forEach(function (a) {
+          var row = doc.createElement('div');
+          row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px dashed rgba(128,128,128,.25);font-size:12.5px';
+          var dot = a.running ? '\u{1F7E2}' : (a.enabled ? '⚪' : '⛔');
+          row.appendChild(doc.createTextNode(dot + ' ' + a.label + (a.pid ? ' · pid ' + a.pid : '') + (a.enabled ? '' : ' · автозапуск выключен')));
+          var b = doc.createElement('button');
+          b.type = 'button';
+          b.style.marginLeft = 'auto';
+          var off = a.running || a.enabled;
+          b.textContent = off ? 'Выключить' : 'Включить';
+          b.addEventListener('click', function () {
+            if (b.getAttribute('data-arm') !== '1') { b.setAttribute('data-arm', '1'); b.textContent = off ? 'Точно выключить?' : 'Точно включить?'; return; }
+            b.disabled = true;
+            bridgePost('/x/launchagent_action', { label: a.label, action: off ? 'disable' : 'enable' }).then(function (res) {
+              b.textContent = (res && res.status === 'success') ? (off ? 'выключен ✓' : 'включён ✓') : 'ошибка';
+            });
+          });
+          row.appendChild(b);
+          body.appendChild(row);
+        });
+      });
+    }).catch(function () { body.textContent = 'мост визарда недоступен (localhost:8765)'; });
   }
 
   function injectLocalServices(store) {
@@ -338,13 +412,22 @@
       var store = frame && frame.contentWindow;
       if (!store || !store.document || !store.document.getElementById('tabs')) return;
 
-      // «Расписания» НЕ выносим отдельной вкладкой в меню (решение Анвара: свод до 6 вкладок).
-      // Доступ — через карточку «Регулярные задачи» на Рабочем столе (injectScheduleShortcut → setc('automations')).
-      // Если прежняя сборка уже добавила вкладку — убираем её.
+      var changed = false;
       if (Array.isArray(store.CATS)) {
-        var idx = store.CATS.findIndex(function (category) { return category.id === 'automations'; });
-        if (idx >= 0) { store.CATS.splice(idx, 1); if (typeof store.rtabs === 'function') store.rtabs(); }
+        var schedules = store.CATS.filter(function (category) { return category.id === 'automations'; })[0];
+        if (!schedules) {
+          var beforeAgents = store.CATS.findIndex(function (category) { return category.id === 'agents'; });
+          var entry = { id: 'automations', l: 'Расписания' };
+          if (beforeAgents >= 0) store.CATS.splice(beforeAgents, 0, entry);
+          else store.CATS.push(entry);
+          changed = true;
+        } else if (schedules.l !== 'Расписания') {
+          schedules.l = 'Расписания';
+          changed = true;
+        }
       }
+      if (store.I18N_EN) store.I18N_EN['Расписания'] = 'Schedules';
+      if (changed && typeof store.rtabs === 'function') store.rtabs();
 
       if (!store.__xtlacDesktopObserver) {
         var grid = store.document.getElementById('grid');
@@ -425,6 +508,36 @@
     list.appendChild(el('dd', {}, value));
   }
 
+  function taskAction(path) {
+    if (!state.activityToken) return Promise.reject(new Error('Нет разрешения локального журнала'));
+    return fetch(API_BASE + path, {
+      method: 'POST',
+      headers: { 'X-Extella-Control': state.activityToken }
+    }).then(function (response) {
+      return response.json().then(function (payload) {
+        if (!response.ok) throw new Error(payload.message || ('HTTP ' + response.status));
+        return payload;
+      });
+    });
+  }
+
+  function dismissTask(task) {
+    if (state.taskBusy[task.id]) return;
+    state.taskBusy[task.id] = true;
+    taskAction('/api/tasks/' + encodeURIComponent(task.id) + '/dismiss')
+      .then(function () { delete state.expanded[task.id]; return refresh(); })
+      .catch(function () { render(); })
+      .then(function () { delete state.taskBusy[task.id]; });
+  }
+
+  function clearCompletedTasks() {
+    if (!state.data || !state.data.history || !state.data.history.length) return;
+    if (!window.confirm('Убрать все завершённые записи из этой ленты?')) return;
+    taskAction('/api/tasks/clear-completed')
+      .then(function () { return refresh(); })
+      .catch(function () {});
+  }
+
   function taskNode(task) {
     var expanded = !!state.expanded[task.id];
     var row = el('div', {
@@ -456,6 +569,17 @@
       });
       details.appendChild(manage);
       details.appendChild(el('div', { className: '_xtlac_hint' }, sourceIdHint(task)));
+    }
+    if (task.status === 'running') {
+      details.appendChild(el('div', { className: '_xtlac_hint' }, 'Если задача действительно выполняется и её нужно прервать, используйте красную кнопку Cancel в нижней панели Extella.'));
+    } else {
+      var remove = el('button', { className: '_xtlac_remove', type: 'button' }, state.taskBusy[task.id] ? 'Убираю…' : 'Убрать запись из ленты');
+      remove.disabled = !!state.taskBusy[task.id];
+      remove.addEventListener('click', function (event) {
+        event.stopPropagation();
+        dismissTask(task);
+      });
+      details.appendChild(remove);
     }
     row.appendChild(details);
 
@@ -495,6 +619,8 @@
     root.setAttribute('data-health', health);
     document.getElementById('_xtlac_text').textContent = data ? data.headline : 'Подключение журнала…';
     document.getElementById('_xtlac_count').textContent = data ? ('✓ ' + data.counts.completed) : '';
+    var clear = document.getElementById('_xtlac_clear');
+    if (clear) clear.classList.toggle('show', !!(data && data.history && data.history.length));
 
     var warning = document.getElementById('_xtlac_warning');
     var orphaned = data && data.listeners && data.listeners.orphaned || 0;
@@ -549,6 +675,7 @@
     var heading = el('div');
     heading.appendChild(el('h3', {}, 'Что делает Extella'));
     head.appendChild(heading);
+    head.appendChild(el('button', { id: '_xtlac_clear', type: 'button' }, 'Очистить выполненные'));
     head.appendChild(el('button', { id: '_xtlac_close', type: 'button', 'aria-label': 'Закрыть' }, '×'));
     panel.appendChild(head);
     panel.appendChild(el('div', { id: '_xtlac_warning' }));
@@ -563,6 +690,7 @@
     }
     pill.addEventListener('click', function () { setOpen(!state.open); });
     document.getElementById('_xtlac_close').addEventListener('click', closePanel);
+    document.getElementById('_xtlac_clear').addEventListener('click', clearCompletedTasks);
     document.addEventListener('keydown', function (event) { if (event.key === 'Escape') closePanel(); });
     var marketplaceObserver = new MutationObserver(function () { enhanceMarketplace(); });
     marketplaceObserver.observe(document.body, { childList: true, subtree: true });
@@ -609,9 +737,9 @@
   }
 
   function refresh() {
-    fetch(API, { cache: 'no-store' })
+    return fetch(API, { cache: 'no-store' })
       .then(function (response) { if (!response.ok) throw new Error('HTTP ' + response.status); return response.json(); })
-      .then(function (data) { state.bridgeOnline = true; state.data = data; render(); })
+      .then(function (data) { state.bridgeOnline = true; state.data = data; state.activityToken = data.controlToken || ''; render(); })
       .catch(function () {
         state.bridgeOnline = false;
         fallbackStatus().then(function (data) { if (data) state.data = data; render(); });

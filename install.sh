@@ -106,6 +106,14 @@ fi
 cp "$BUILD_DIR/toolbar.js" "$TB_DIR/toolbar.js"
 echo -e "  ${GREEN}✓ toolbar.js installed${NC}"
 
+# Activity Center is a toolbar panel plus a small local bridge. The panel is
+# already compiled into toolbar.js; install its macOS activity observer and
+# registry-scoped localhost controls without modifying the generated artifact.
+if [ "$OS" = "Darwin" ] && command -v python3 &> /dev/null; then
+    python3 "$SCRIPT_DIR/device/activity-center/install.py"
+    echo -e "  ${GREEN}✓ Activity Center observer installed${NC}"
+fi
+
 if [ -d "$LEGACY_PLUGINS_DIR" ]; then
     rm -rf "$LEGACY_PLUGINS_DIR"
     echo -e "  ${GREEN}✓ Removed legacy $LEGACY_PLUGINS_DIR (UI is embedded in toolbar.js)${NC}"
@@ -189,6 +197,9 @@ echo ""
 echo "  Installed:"
 echo -e "  ${CYAN}→${NC} $TB_DIR/toolbar.js"
 echo "     (marketplace, plugin chat, and forms are embedded in toolbar.js)"
+if [ "$OS" = "Darwin" ]; then
+  echo -e "  ${CYAN}→${NC} Activity Center observer at http://127.0.0.1:8799"
+fi
 echo ""
   echo "  Next steps:"
   echo "  1. Restart Extella ($QUIT_CMD)"

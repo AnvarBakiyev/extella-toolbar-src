@@ -6,6 +6,8 @@ docs/design
 .DS_Store
 .env.local
 .env.*.local
+__pycache__/
+*.py[cod]
 
 # IDE / editor
 .idea/
