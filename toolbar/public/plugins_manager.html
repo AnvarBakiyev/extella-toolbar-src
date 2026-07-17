@@ -1555,7 +1555,7 @@ var I18N_EN = {
 };
 var I18N_RX = [
   [/^Программы на рабочем столе/, 'Programs on the desktop'],
-  [/^Клик — открыть или запустить\. Правый клик — кабинет, настройки, удалить\.?$/, 'Click to open or run. Right-click for cabinet, settings, remove.'],
+  [/^Клик — открыть\. Правый клик — открыть или удалить\.?$/, 'Click to open. Right-click to open or remove.'],
   [/^Три шага: копия базового агента → её ID → выбери роль ниже\.?$/, 'Three steps: copy the base agent → its ID → pick a role below.'],
   [/^Живой каталог работающих демо HuggingFace.*/, 'Live catalog of working HuggingFace demos — run in the cloud, no GPU, one click. Updated weekly.']
 ];
@@ -3188,7 +3188,11 @@ function _dtDo(i, act){
 function _dtCss(){
   return '<style>'+
     '.dt_wrap{grid-column:1/-1;padding:6px 2px 24px}'+
-    '.dt_hero{display:flex;align-items:center;gap:18px;cursor:pointer;border-radius:6px;padding:18px 20px;margin-bottom:18px;'+
+    '.dt_hero_pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:12px;margin-bottom:12px}'+
+    '.dt_hero_pair .dt_hero{margin-bottom:0;flex-direction:column;align-items:flex-start;gap:12px}'+
+    '.dt_hero_pair .dt_hero_tx{flex:initial}'+
+    '.dt_hero_pair .dt_hero_go{margin-top:auto}'+
+    '.dt_hero{display:flex;flex-wrap:wrap;align-items:center;gap:14px 18px;cursor:pointer;border-radius:6px;padding:18px 20px;margin-bottom:18px;'+
       'background:#A5632A;box-shadow:none;border:1px solid rgba(0,0,0,.08);'+
       'transition:transform .14s,box-shadow .14s;position:relative;overflow:hidden}'+
     '.dt_hero:hover{transform:translateY(-2px)}'+
@@ -3359,6 +3363,7 @@ function renderDesktop(){
 
   g.innerHTML = _dtCss() +
     '<div class="dt_wrap">'+
+      '<div class="dt_hero_pair">'+
       '<div class="dt_hero" onclick="_openWizard()">'+
         '<div class="dt_hero_ic">'+_icoSym('monitor')+'</div>'+
         '<div class="dt_hero_tx">'+
@@ -3367,9 +3372,11 @@ function renderDesktop(){
         '</div>'+
         '<div class="dt_hero_go">Открыть →</div>'+
       '</div>'+
-      _dtWorkspaceSection()+
+      _dtWorkspaceSection('band')+
+      '</div>'+
+      _dtWorkspaceSection('strip')+
       '<div class="dt_sect">Программы на рабочем столе'+(icons.length?' · '+icons.length:'')+'</div>'+
-      (icons.length?'<div class="dt_hint">Клик — открыть или запустить. Правый клик — кабинет, настройки, удалить.</div>':'')+
+      (icons.length?'<div class="dt_hint">Клик — открыть. Правый клик — открыть или удалить.</div>':'')+
       (icons.length
         ? '<div class="dt_grid">'+iconHtml+'</div>'
         : _emptyHTML('🗂️', 'Пока пусто. Установи программы в «Каталоге» или собери агента в Конструкторе — они появятся здесь ярлыками, как на рабочем столе.'))+
@@ -4654,7 +4661,7 @@ var _wsList=null, _wsView='list', _wsCur=null, _wsDeskList;
 function wsOpenFromDesk(ws_id){ setc('workspace'); _wsView='cockpit'; wsOpen(ws_id); }
 function wsDeskBuild(){ setc('workspace'); wsBuildModal(); }
 // Раздел «Workspace» на Рабочем столе: геройский баннер + твои воркспейсы.
-function _dtWorkspaceSection(){
+function _dtWorkspaceSection(mode){
   var ico='<svg class="lico"><use href="#ic-home"/></svg>';
   var band='<div class="dt_hero dt_hero_ws" style="background:var(--petrol,#2F6B66)" onclick="setc(\'workspace\')">'+
     '<div class="dt_hero_ic">'+ico+'</div>'+
@@ -4681,6 +4688,8 @@ function _dtWorkspaceSection(){
       (list.length>6?'<button class="dt_ws_card dt_ws_more" onclick="setc(\'workspace\')">ещё '+(list.length-6)+' →</button>':'')+
     '</div>';
   }
+  if(mode==='band') return band;
+  if(mode==='strip') return strip;
   return band+strip;
 }
 function _wsParse(r){ var out=r&&r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output; if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}} return out; }

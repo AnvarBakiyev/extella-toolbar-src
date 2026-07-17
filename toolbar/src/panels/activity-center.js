@@ -169,7 +169,8 @@
     card.addEventListener('click', function () {
       if (typeof store.setc === 'function') store.setc('automations');
     });
-    hero.insertAdjacentElement('afterend', card);
+    var pair = hero.closest('.dt_hero_pair');
+    (pair || hero).insertAdjacentElement('afterend', card);
   }
 
   function storefrontNode(doc, tag, className, text) {
