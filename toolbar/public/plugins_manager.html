@@ -1298,10 +1298,11 @@ function notify(action, pluginId, url) {
 var CATS = [
   { id: 'desktop',  l: 'Рабочий стол' },
   { id: 'programs', l: 'Каталог' },
+  { id: 'services', l: 'Сервисы' },
   { id: 'knowledge',l: 'Знания' },
   { id: 'agents',   l: 'Агенты' }
 ];
-var _SVC_GROUP=['programs','cli','services','models','skills'];  // полки «Каталога»: берёшь готовое; Знания и Агенты — отдельно, они наполняются твоим
+var _SVC_GROUP=['programs','cli','models','skills'];  // полки «Каталога»: берёшь готовое; Знания и Агенты — отдельно, они наполняются твоим
 
 var _admView = 'catalog';
 function setAdmView(v){ _admView = v; renderGrid(); }
@@ -2586,7 +2587,7 @@ function progToolsHTML(){
 // search lives here too, but only in «Для профи»; «Для всех» stays curated.
 // Под-навигация объединённого раздела «Сервисы»: Программы / Инструменты / Сервисы (старое деление, не в меню).
 function _svcBar(){
-  var it=[['programs','Программы'],['cli','Инструменты'],['services','Сервисы'],['models','Модели'],['skills','Навыки']];
+  var it=[['programs','Программы'],['cli','Инструменты'],['models','Модели'],['skills','Навыки']];
   return '<div class="svc_sub" style="grid-column:1/-1;display:flex;gap:7px;flex-wrap:wrap;margin:0 0 16px">'+
     it.map(function(x){return '<button class="cat_chip'+(cur===x[0]?' on':'')+'" onclick="setc(\''+x[0]+'\')">'+x[1]+'</button>';}).join('')+'</div>';
 }
@@ -4223,7 +4224,7 @@ function renderServices(){
   [].forEach.call(g.querySelectorAll('[data-svdisc]'),function(b){b.onclick=function(){svDisc(b.getAttribute('data-svdisc'));};});
   renderMcpCatalog();
   _mountTabFilter('Поиск сервиса…');
-  _svcPrependBar();
+  
 }
 // ── Живой каталог MCP-серверов (харвест офиц. реестра → KV _mkt_mcp, шарды) ──
 var _mcpReg=null;
