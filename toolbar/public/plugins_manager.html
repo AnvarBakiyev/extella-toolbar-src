@@ -42,7 +42,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);
 .tabs{display:flex;gap:1px;padding:6px 18px;background:var(--s1);
   border-bottom:1px solid var(--bd);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
-.tab{padding:5px 12px;border-radius:5px;cursor:pointer;font-size:12px;font-weight:500;
+.tab{padding:6px 14px;border-radius:5px;cursor:pointer;font-size:13.5px;font-weight:600;
   color:var(--tx2);background:transparent;border:none;white-space:nowrap;transition:all .15s;
   display:flex;align-items:center;gap:4px}
 .tab:hover{color:var(--tx);background:var(--s3)}
@@ -205,9 +205,13 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);
 .hi_ex_card .lico{width:16px;height:16px;color:var(--tx3);flex-shrink:0}
 .hi_ex_card:hover .lico{color:var(--a)}
 .catbar{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:flex-start;gap:8px;padding:0 0 14px}
+.adm_seg{display:flex;background:var(--s2);border:1px solid var(--bd);border-radius:5px;padding:2px;gap:2px}
+.adm_seg button{border:none;background:transparent;color:var(--tx2);font:600 12.5px var(--sans);padding:6px 13px;border-radius:4px;cursor:pointer}
+.adm_seg button.on{background:var(--s1);color:var(--tx);border:1px solid var(--bd2)}
+.adm_seg button:hover{color:var(--tx)}
 .cat_chip{display:inline-flex;align-items:center;white-space:nowrap;flex:0 0 auto;
   border:1px solid var(--bd2);background:transparent;color:var(--tx2);border-radius:5px;
-  padding:8px 15px;font-size:13px;font-weight:600;line-height:1;cursor:pointer;transition:all .14s}
+  padding:4px 10px;font-size:11.5px;font-weight:600;line-height:1;cursor:pointer;transition:all .14s}
 .cat_chip:hover{border-color:var(--a);color:var(--a)}
 .cat_chip.on{background:var(--a);border-color:var(--a);color:#fff}
 .cat_n{opacity:.55;font-size:11px;font-family:var(--mono);margin-left:5px}
@@ -2586,9 +2590,10 @@ function progToolsHTML(){
 // search lives here too, but only in «Для профи»; «Для всех» stays curated.
 // Под-навигация объединённого раздела «Сервисы»: Программы / Инструменты / Сервисы (старое деление, не в меню).
 function _svcBar(){
+  // Уровень 2 навигации: сегмент-переключатель (тяжелее фильтров, легче вкладок)
   var it=[['programs','Программы'],['cli','Инструменты'],['models','Модели'],['skills','Навыки']];
-  return '<div class="svc_sub" style="grid-column:1/-1;display:flex;gap:7px;flex-wrap:wrap;margin:0 0 16px">'+
-    it.map(function(x){return '<button class="cat_chip'+(cur===x[0]?' on':'')+'" onclick="setc(\''+x[0]+'\')">'+x[1]+'</button>';}).join('')+'</div>';
+  return '<div class="svc_sub" style="grid-column:1/-1;margin:0 0 16px"><div class="adm_seg" style="display:inline-flex">'+
+    it.map(function(x){return '<button class="'+(cur===x[0]?'on':'')+'" onclick="setc(\''+x[0]+'\')">'+x[1]+'</button>';}).join('')+'</div></div>';
 }
 function _svcPrependBar(){ var g=document.getElementById('grid'); if(g){try{g.insertAdjacentHTML('afterbegin',_svcBar());}catch(e){}} }
 // Раздел «Программы» = живой каталог с GitHub + встроенная секция «Приложения» (Pinokio-репо).
