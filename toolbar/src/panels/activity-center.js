@@ -195,8 +195,8 @@
 
     var head = storefrontNode(doc, 'div', '_xtlac_srv_head');
     var copy = storefrontNode(doc, 'div', '_xtlac_srv_head_copy');
-    copy.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_title', 'Локальные сервисы Extella'));
-    copy.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_sub', 'Поднятые localhost-сервисы, их PID и источник запуска. Здесь их можно безопасно выключить или включить.'));
+    copy.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_title', 'Что работает в фоне'));
+    copy.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_sub', 'Программы Extella, которые сейчас крутятся на этом компьютере. Здесь их можно выключить или снова включить — безопасно.'));
     head.appendChild(copy);
     var summary = state.services
       ? serviceCountText(state.services)
@@ -207,7 +207,7 @@
     var message = storefrontNode(doc, 'div', '_xtlac_srv_message' + (state.serviceMessage ? ' show' : ''), state.serviceMessage);
     section.appendChild(message);
     if (!state.services) {
-      section.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_sub', state.servicesLoading ? 'Читаю реестр и проверяю локальные порты…' : 'Локальный bridge пока не ответил.'));
+      section.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_sub', state.servicesLoading ? 'Проверяю, что сейчас запущено…' : 'Extella ещё подключается к этому компьютеру. Загляни через минуту — если не появится, перезапусти приложение.'));
       return;
     }
 
@@ -354,10 +354,10 @@
         state.services = Array.isArray(payload.services) ? payload.services : [];
         state.servicesToken = payload.controlToken || '';
         state.servicesUpdatedAt = Date.now();
-        if (state.serviceMessage === 'Локальный список сервисов недоступен.') state.serviceMessage = '';
+        if (state.serviceMessage === 'Список пока недоступен — Extella подключается.') state.serviceMessage = '';
       })
       .catch(function () {
-        state.serviceMessage = 'Локальный список сервисов недоступен.';
+        state.serviceMessage = 'Список пока недоступен — Extella подключается.';
       })
       .then(function () {
         state.servicesLoading = false;
