@@ -265,6 +265,11 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);
   background:linear-gradient(90deg,var(--acc,var(--a)) 0%,color-mix(in srgb,var(--acc,var(--a)) 30%,transparent) 85%)}
 .chero{grid-column:span 2;grid-row:span 2;
   background:radial-gradient(340px 200px at 85% 8%,color-mix(in srgb,var(--acc,#2F6B66) 13%,transparent),transparent 70%),var(--s2)}
+/* Полка с единственным героем: без мини-карточек 2×2-плита стоит полупустой —
+   даём карточке высоту по контенту на всю ширину */
+.bento_solo{grid-auto-rows:auto}
+.bento_solo .chero{grid-column:1/-1;grid-row:auto;min-height:186px}
+.bento_solo .hbody{margin-top:0;padding-top:46px}
 .splats{position:absolute;inset:0;pointer-events:none;opacity:.32;background:
   radial-gradient(4px 4px at 78% 16%,var(--acc,#2F6B66) 50%,transparent 51%),
   radial-gradient(3px 3px at 86% 30%,#D65CA8 50%,transparent 51%),
@@ -294,7 +299,13 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);
 .mini_desc{font-size:12.5px;font-weight:500;color:var(--tx2);line-height:1.4;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .mini_foot{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:6px;flex-shrink:0}
-@media(max-width:900px){.bento{grid-template-columns:1fr 1fr}.chero{grid-column:span 2}}
+/* Узкая панель: герой занимает всю ширину, мини уходят вниз — 2×2-высота
+   оставляла полупустую плиту; сжимаем героя до высоты контента */
+@media(max-width:900px){
+  .bento{grid-template-columns:1fr 1fr;grid-auto-rows:minmax(158px,auto)}
+  .chero{grid-column:span 2;grid-row:auto;min-height:186px}
+  .chero .hbody{margin-top:0;padding-top:46px}
+}
 
 /* ── Skills shelf (Навыки as an in-store category) ─────────────────────── */
 .sk_lead{grid-column:1/-1;font-size:13px;color:var(--tx2);line-height:1.5;margin:-2px 0 8px}
@@ -2288,7 +2299,7 @@ var TYPE_ED = {
 
 function _bentoHTML(heroes) {
   if (!heroes || !heroes.length) return '';
-  var html = '<div class="bento">' + _heroBig(heroes[0]);
+  var html = '<div class="bento' + (heroes.length === 1 ? ' bento_solo' : '') + '">' + _heroBig(heroes[0]);
   heroes.slice(1, 3).forEach(function (h) { html += _heroMini(h); });
   return html + '</div>';
 }
@@ -2466,7 +2477,7 @@ function renderMerchHero() {
   var heroes = (m.heroes && m.heroes.length) ? m.heroes : (m.hero ? [m.hero] : []);
   if (!heroes.length) return '';
   var html = '<div class="sect"><h2>Стоит поставить</h2></div>' +
-    '<div class="bento">' + _heroBig(heroes[0]);
+    '<div class="bento' + (heroes.length === 1 ? ' bento_solo' : '') + '">' + _heroBig(heroes[0]);
   heroes.slice(1, 3).forEach(function (h) { html += _heroMini(h); });
   html += '</div>';
   return html;
