@@ -1549,8 +1549,11 @@ var I18N_EN = {
   'Мои агенты · собраны Конструктором':'My agents · built by the Wizard',
   'Роли агентов':'Agent roles','Роли для базового агента':'Roles for the base agent','Больше пользы без смены модели':'More value, same model',
   'Сервисы':'Services','Внешние сервисы':'External services','Живые данные из интернета для агента: курсы, погода, справки. Проверить можно прямо здесь.':'Live data from the internet for your agent: rates, weather, references. Test it right here.',
+  'Твои документы и готовые справочники: агент отвечает по ним, а не по памяти. Возьми готовую базу — или собери свою из папки.':'Your documents and ready-made references: the agent answers from them, not from memory. Pick a ready base — or build your own from a folder.',
+  'Готовые роли превращают базового агента в сотрудника: продажи, поддержка, финансы и другие.':'Ready-made roles turn the base agent into an employee: sales, support, finance and more.',
   'Знания':'Knowledge','Своя база из документов':'Your own base from documents','+ Создать базу знаний':'+ Create knowledge base','Новая база':'New base','Мои базы знаний':'My knowledge bases',
   'Своего инструмента нет?':'Missing a tool?','Своего навыка нет?':'Missing a skill?','Своей программы нет?':'Missing a program?','Своей модели нет?':'Missing a model?','Композитор':'Composer',
+  'Смотреть базы':'Browse bases','Выбрать базу':'Pick a base','Собрать свою':'Build your own','Смотреть сервисы':'Browse services','Смотреть':'Browse','Выбрать роль':'Pick a role','Установить роль':'Install role',
   // Кнопки карточек
   'Подключить':'Connect','Проверить':'Test','Спросить':'Ask','▶ Спросить':'▶ Ask','Добавить программу':'Add program','Добавить модель':'Add model','Добавить навык':'Add skill','Добавить инструмент':'Add tool','Обновить':'Refresh','↻ Обновить':'↻ Refresh','Показать все':'Show all','← Все категории':'← All categories','Все':'All',
   // Категории (бизнес)
@@ -1583,8 +1586,28 @@ function _trStr(s){
   for(var i=0;i<I18N_RX.length;i++){ if(I18N_RX[i][0].test(k)) return s.replace(I18N_RX[i][0], I18N_RX[i][1]); }
   return s;
 }
+// Слепок русской статики (шапка: плейсхолдер поиска, кнопки, тултипы) до первого
+// перевода — walker работает только RU→EN, и после возврата на русский статичные
+// узлы (их никто не перерисовывает) оставались английскими.
+var _RU_SNAP=null;
+function _snapRuChrome(){
+  if(_RU_SNAP) return; _RU_SNAP={t:[],a:[]};
+  try{
+    var w=document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false), n;
+    while(n=w.nextNode()){ if(n.nodeValue&&n.nodeValue.trim()) _RU_SNAP.t.push([n,n.nodeValue]); }
+    ['placeholder','title'].forEach(function(a){
+      [].forEach.call(document.querySelectorAll('['+a+']'),function(el){ _RU_SNAP.a.push([el,a,el.getAttribute(a)]); });
+    });
+  }catch(_){}
+}
+function _restoreRuChrome(){
+  if(!_RU_SNAP) return;
+  _RU_SNAP.t.forEach(function(p){ try{ if(p[0].nodeValue!==p[1]) p[0].nodeValue=p[1]; }catch(_){} });
+  _RU_SNAP.a.forEach(function(p){ try{ if(p[0].getAttribute(p[1])!==p[2]) p[0].setAttribute(p[1],p[2]); }catch(_){} });
+}
 function _walkTranslate(root){
   if(LANG!=='en'||!root) return;
+  _snapRuChrome();
   try{
     var w=document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false), nodes=[], n;
     while(n=w.nextNode()) nodes.push(n);
@@ -1594,7 +1617,7 @@ function _walkTranslate(root){
     });
   }catch(_){}
 }
-function applyLang(){ var b=document.getElementById('langBtn'); if(b)b.textContent=(LANG==='en'?'RU':'EN'); if(LANG==='en') _walkTranslate(document.body); }
+function applyLang(){ var b=document.getElementById('langBtn'); if(b)b.textContent=(LANG==='en'?'RU':'EN'); if(LANG==='en') _walkTranslate(document.body); else _restoreRuChrome(); }
 function setLang(l){ LANG=(l==='en')?'en':'ru'; try{localStorage.setItem('etb_lang',LANG);}catch(_){} try{rtabs();}catch(_){} try{renderGrid();}catch(_){} applyLang(); }
 
 var LOCAL_MODELS = [
@@ -2170,8 +2193,19 @@ function _cardBtn(h, cls) {
       ? '<button class="' + cls + '" onclick="notify(\'open\',\'' + esc(h.pluginId) + '\')">Открыть</button>'
       : '<button class="' + cls + '" onclick="installFeatured(\'' + esc(h.pluginId) + '\',this)">Установить</button>';
   }
+  if (h.go)      return '<button class="' + cls + '" onclick="' + h.go + '">' + esc(h.btn || 'Открыть') + '</button>';
   if (h.soon)    return '<button class="' + cls + '" disabled style="opacity:.5;cursor:default">Скоро</button>';
   return '';
+}
+// Прокрутка к разделу каталога по тексту его заголовка (для карточек-обзоров).
+// scrollIntoView внутри .scr не срабатывает — считаем смещение вручную.
+function _jumpSect(txt){
+  var hs=document.querySelectorAll('.sect h2');
+  for(var i=0;i<hs.length;i++){ if(hs[i].textContent.indexOf(txt)===0){
+    var sc=document.querySelector('.scr');
+    if(sc){ var top=hs[i].getBoundingClientRect().top - sc.getBoundingClientRect().top + sc.scrollTop - 8;
+      sc.scrollTop=Math.max(0,top); }  // мгновенно: smooth-анимация в webview глохнет
+    return; } }
 }
 
 // Per-type editorial layer, every aisle (Программы/Модели/Навыки) gets the
@@ -2260,25 +2294,31 @@ var TYPE_ED = {
     heroes: [
       { label:'Приватно · локально', acc:'#2F6B66', source:'База знаний',
         title:'База знаний компании', accent:'Агент отвечает по твоим документам',
+        go:"_jumpSect('Знания')", btn:'Смотреть базы',
         facts:['Регламенты, инструкции, договоры — ответы строго по ним','Собирается на устройстве за пару минут','Отвечает по фактам, без выдумок'] },
       { label:'Без настройки', acc:'#C57E33', source:'База · готовая',
         title:'Готовые базы знаний', accent:'Кодексы и справочники сразу в дело',
+        go:"_jumpSect('Знания')", btn:'Выбрать базу',
         facts:['Юр-базы РК и другие — уже собраны и готовы'] },
       { label:'Своя папка', acc:'#3D8078', source:'База · своя',
         title:'База из своих документов', accent:'Укажи папку — соберу базу',
+        go:"kpCreate()", btn:'Собрать свою',
         facts:['PDF, Word, тексты — по всем заработает поиск'] }
     ]
   },
   services: {
     heroes: [
-      { label:'Живые данные · API', acc:'#2E8B57', source:'Сервисы',
+      { label:'Живые данные', acc:'#2E8B57', source:'Сервисы',
         title:'Внешние сервисы', accent:'Курсы валют, погода и новости для агента',
+        go:"_jumpSect('Сервисы')", btn:'Смотреть сервисы',
         facts:['Курсы валют, погода, справки, переводы, новости — вживую','Агент запрашивает живые данные вместо выдумок','Подключил, проверил, дальше пользуется агент'] },
       { label:'Финансы', acc:'#2F6B66', source:'Сервис · Деньги',
         title:'Курсы и котировки', accent:'Валюты и крипто в реальном времени',
+        go:"_jumpSect('Сервисы')", btn:'Смотреть',
         facts:['USD, EUR, KZT, биткоин — свежие цифры'] },
       { label:'Справки', acc:'#C57E33', source:'Сервис · Данные',
         title:'Погода, переводы, вики', accent:'Факты по запросу агента',
+        go:"_jumpSect('Сервисы')", btn:'Смотреть',
         facts:['Погода, перевод текста, статьи — на лету'] }
     ]
   },
@@ -2286,12 +2326,15 @@ var TYPE_ED = {
     heroes: [
       { label:'Роли · Qwen', acc:'#C57E33', source:'Агенты',
         title:'Роли для базового агента', accent:'Больше пользы без смены модели',
+        go:"_jumpSect('Роли агентов')", btn:'Выбрать роль',
         facts:['Выбери роль и вставь ID копии базового агента','Модель остаётся Qwen — честный тест','Готовые роли: продажи, поддержка, аналитика и другие'] },
       { label:'Продажи', acc:'#2F6B66', source:'Роль · Продажи',
         title:'Агент продаж', accent:'Квалифицирует лиды и пишет ответы',
+        go:"agentInstallModal('sdr')", btn:'Установить роль',
         facts:['SDR-роль: работа с входящими за тебя'] },
       { label:'Поддержка', acc:'#3D8078', source:'Роль · Поддержка',
         title:'Агент поддержки', accent:'Отвечает клиентам по базе знаний',
+        go:"agentInstallModal('support')", btn:'Установить роль',
         facts:['Быстрые ответы на частые вопросы'] }
     ]
   }
@@ -4166,7 +4209,8 @@ function agInstalled(id){ return !!agGi()[id]; }
 function agCount(){ try{return Object.keys(agGi()).length;}catch(_){return 0;} }
 function renderAgents(){
   var g=document.getElementById('grid'); if(!g)return;
-  var html=_bentoHTML(TYPE_ED.agents.heroes)+
+  var html='<div class="sk_lead" style="grid-column:1/-1">Готовые роли превращают базового агента в сотрудника: продажи, поддержка, финансы и другие.</div>'+
+    _bentoHTML(TYPE_ED.agents.heroes)+
     '<div class="sect"><h2>Роли агентов</h2></div>'+
     '<div class="sk_lead" style="grid-column:1/-1">Три шага: копия базового агента → её ID → выбери роль ниже.</div>'+
     '<div class="steps">' +
@@ -4574,9 +4618,9 @@ var _KPBTN='border:1px solid var(--bd2);background:transparent;color:var(--tx);b
 function renderKnowledge(){
   var g=document.getElementById('grid'); if(!g)return;
   var packs=kpGi();
-  var html=_bentoHTML(TYPE_ED.knowledge.heroes);
+  var html='<div class="sk_lead" style="grid-column:1/-1">Твои документы и готовые справочники: агент отвечает по ним, а не по памяти. Возьми готовую базу — или собери свою из папки.</div>'+
+    _bentoHTML(TYPE_ED.knowledge.heroes);
   html+='<div class="sect"><h2>Знания</h2></div>'+
-    '<div class="sk_lead" style="grid-column:1/-1">Возьми готовую базу — или собери свою из папки документов.</div>'+
     '<div class="sect_hdr"><span class="sect_title">Своя база из документов</span><span class="sect_line"></span></div>'+
     '<div class="mshelf"><div class="stile" style="--acc:var(--a);border-style:dashed;cursor:pointer" onclick="kpCreate()">'+
       '<span class="st_chip">✦ Новая база</span><div class="st_title">+ Создать базу знаний</div>'+
