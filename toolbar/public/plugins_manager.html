@@ -1802,8 +1802,8 @@ function modelsSpotlight(){
         'Работающие модели', 'ИИ-модели по разделам',
         'Живой каталог работающих демо HuggingFace: запускаются в облаке, своя видеокарта не нужна. Обновляется каждую неделю.', 'Работает')
     : _shelfHTML(TYPE_ED.models.shelf, 'Модели', 'ИИ-модели: облачные и локальные');
-  return _bentoHTML(mh)+
-    addTileHTML('models','Добавить модель','Своей модели нет?')+
+  return addTileHTML('models','Добавить модель')+
+    _bentoHTML(mh)+
     catalog+
     '<div class="sect_hdr"><span class="sect_title">Локальные модели, на твоём устройстве</span><span class="sect_line"></span></div>'+
     '<div class="sk_lead" style="grid-column:1/-1">Для русского лучше всего «Приватная модель».</div>'+
@@ -2242,8 +2242,7 @@ function renderFeaturedSection() {
   }
   var _pro = document.body.getAttribute('data-mode') === 'pro';
   var _bk2 = _featCat === 'all' ? '' : '<div class="cat_back"><button class="cb_btn" onclick="_setFeatCat(\'all\')">← Все категории</button></div>';
-  var html = '<div class="sect"><h2>Все программы</h2></div>' + _progSearchHTML() + _featCatBar() + _bk2 +
-    (_featCat === 'all' ? addTileHTML('programs','Добавить программу','Своей программы нет?') : '');
+  var html = '<div class="sect"><h2>Все программы</h2></div>' + _progSearchHTML() + _featCatBar() + _bk2;
 
   if (featuredError) html += '<div class="banner err">⚠ Установка не удалась: ' + esc(featuredError) + '</div>';
   if (!featured.length) {
@@ -2496,7 +2495,7 @@ function _tfShelfCat(shelf){
 }
 function _mountTabFilter(placeholder){
   var g=document.getElementById('grid'); if(!g) return;
-  var shelves=[].slice.call(g.querySelectorAll('.mshelf'));
+  var shelves=[].slice.call(g.querySelectorAll('.mshelf')).filter(function(s){ return !s.classList.contains('tf_skip'); });
   if(shelves.length<2) return;  // нечего фильтровать
   var cats=[], cnt={}, total=0;
   shelves.forEach(function(s){
@@ -2529,6 +2528,7 @@ function _tabFilterApply(){
   var inp=bar.querySelector('.tf_inp'); var q=(inp&&inp.value||'').trim().toLowerCase();
   var chip=bar.querySelector('.cat_chip.on'); var cat=chip?chip.getAttribute('data-cat'):'__all';
   [].slice.call(g.querySelectorAll('.mshelf')).forEach(function(shelf){
+    if(shelf.classList.contains('tf_skip')) return;  // плитки «Добавить…» всегда видимы
     var scat=_tfShelfCat(shelf);
     var catOk=(cat==='__all'||cat===scat);
     var anyVisible=false;
@@ -2820,7 +2820,7 @@ function _renderProgramsCore() {
   var _isPro = document.body.getAttribute('data-mode') === 'pro';
   var _lead = (_featCat === 'all') ? '<div class="sk_lead" style="grid-column:1/-1">Мини-программы Extella и приложения с GitHub: берёшь с полки — живут у тебя на компьютере.</div>' : '';
   // Единый шаблон полки: описание → витрина → [заголовок каталога + поиск + категории] → карточки → «не нашёл — собери»
-  var featuredHtml = _lead + ((_featCat === 'all' && !_isPro) ? programsSpotlight() : '') + renderFeaturedSection() + (_featCat === 'all' ? _appsSectionHTML() : '') + (_featCat === 'all' && !_isPro ? progToolsHTML() : '');
+  var featuredHtml = _lead + (_featCat === 'all' && !_isPro ? addTileHTML('programs','Добавить программу') : '') + ((_featCat === 'all' && !_isPro) ? programsSpotlight() : '') + renderFeaturedSection() + (_featCat === 'all' ? _appsSectionHTML() : '') + (_featCat === 'all' && !_isPro ? progToolsHTML() : '');
 
   // «Для всех», curated only: no raw GitHub firehose.
   if (document.body.getAttribute('data-mode') !== 'pro') {
@@ -4093,10 +4093,10 @@ function _renderSkillsCore(){
   var live=!!(_skCatReg&&_skCatReg.items&&_skCatReg.items.length);
   var cats=[]; all.forEach(function(s){if(cats.indexOf(s.cat)<0)cats.push(s.cat);});
   var html='<div class="sk_lead" style="grid-column:1/-1">Готовые умения для твоего агента: поставил — и он это умеет.</div>'+
+    addTileHTML('skills','Добавить навык')+
     _bentoHTML(TYPE_ED.skills.heroes)+
     _shelfHTML(TYPE_ED.skills.shelf,'Выбор Extella','Выбор Extella')+
-    '<div class="sect"><h2>Навыки</h2></div>'+
-    addTileHTML('skills','Добавить навык','Своего навыка нет?');
+    '<div class="sect"><h2>Навыки</h2></div>';
   cats.forEach(function(cn){
     html+='<div class="sect_hdr"><span class="sect_title">'+esc(cn)+'</span><span class="sect_line"></span></div>';
     html+='<div class="mshelf">'+all.filter(function(s){return s.cat===cn;}).map(skCard).join('')+'</div>';
@@ -4204,10 +4204,7 @@ function renderCLI(){
   }
   var all=cliCatalog();
   var html='<div class="sk_lead" style="grid-column:1/-1">Обработка файлов прямо на твоём компьютере (инструменты командной строки, CLI).<br>Скажи агенту, что сделать с файлами, — он вызовет нужный.</div>'+
-    _bentoHTML(TYPE_ED.cli.heroes)+
-    '<div class="sect"><h2>Инструменты</h2></div>'+
-    '<div class="sect_hdr"><span class="sect_title">Своего инструмента нет?</span><span class="sect_line"></span></div>'+
-    '<div class="mshelf"><div class="stile" style="--acc:var(--a);border-style:dashed;cursor:pointer" onclick="openCliAdd()">'+
+    '<div class="mshelf tf_skip"><div class="stile" style="--acc:var(--a);border-style:dashed;cursor:pointer" onclick="openCliAdd()">'+
       '<span class="st_chip">✦ Композитор</span>'+
       '<div class="st_title">+ Добавить инструмент</div>'+
       '<div class="st_fact">Опиши задачу — Композитор подберёт открытый инструмент, установит и добавит его сам.</div>'+
@@ -4756,7 +4753,7 @@ function renderKnowledge(){
     _bentoHTML(TYPE_ED.knowledge.heroes);
   html+='<div class="sect"><h2>Знания</h2></div>'+
     '<div class="sect_hdr"><span class="sect_title">Своя база из документов</span><span class="sect_line"></span></div>'+
-    '<div class="mshelf"><div class="stile" style="--acc:var(--a);border-style:dashed;cursor:pointer" onclick="kpCreate()">'+
+    '<div class="mshelf tf_skip"><div class="stile" style="--acc:var(--a);border-style:dashed;cursor:pointer" onclick="kpCreate()">'+
       '<span class="st_chip">✦ Новая база</span><div class="st_title">+ Создать базу знаний</div>'+
       '<div class="st_fact">Выбери папку с документами, соберу базу за пару минут.</div>'+
       '<div class="st_foot"><span style="font-size:11px;color:var(--tx3)">локально · приватно</span></div></div></div>'+
@@ -5551,7 +5548,9 @@ var ADD_KINDS={
   models:{where:'Модели, полка новинок',title:'Добавить модель',sub:'Опиши, какая ИИ-модель нужна, Композитор подберёт работающую и добавит в магазин.',ph:'напр.: генерация музыки · распознавание речи · перевод',refresh:function(){_modReg=null;_modFetched=false;if(cur==='models')renderModels();},prompt:function(v){return 'Пользователь просит добавить ИИ-МОДЕЛЬ в магазин Extella: «'+v+'». Подбери РАБОТАЮЩЕЕ пространство HuggingFace (RUNNING) под задачу и добавь карточку: kv_get "_mkt_models" (global), добавь в .shelf {hfId,title,facts:[кратко по-русски],source:"huggingface.co/<owner> · ♥ N",acc:"#2E7D5B",label:"Работает"}, kv_set global.';}},
   skills:{where:'Навыки',title:'Добавить навык',sub:'Опиши поведение для агента, Композитор составит навык (правило) и добавит в каталог.',ph:'напр.: всегда предлагать сроки · проверять цифры дважды',refresh:function(){_skLoaded=false;_skCatReg=null;if(cur==='skills')renderSkillsShelf();},prompt:function(v){return 'Пользователь просит добавить НАВЫК (правило поведения) в магазин Extella: «'+v+'». Составь один навык: {id:"skill_<латиница>",cat:"Бизнес" или "Работа и продуктивность" или "Стиль и общение" или "Разработка",emoji,name:"<рус 2-3 слова>",desc:"<рус фраза>",rule:"[skill:Имя] <конкретное правило на русском>",howto:"<рус>"}. Добавь: kv_get "_mkt_skills_catalog" (global) {items:[...]}, dedup по id и name, append, kv_set global. Подтверди.';}}
 };
-function addTileHTML(kind,label,hdr){return '<div class="sect_hdr"><span class="sect_title">'+(hdr||'Нужного нет?')+'</span><span class="sect_line"></span></div><div class="mshelf"><div class="stile" style="--acc:var(--a);border-style:dashed;cursor:pointer" onclick="openAddModal(\''+kind+'\')"><span class="st_chip">✦ Добавить</span><div class="st_title">+ '+esc(label)+'</div><div class="st_fact">Опиши задачу — Композитор найдёт и добавит сам.</div><div class="st_foot"><span style="font-size:11px;color:var(--tx3)">через Композитора</span></div></div></div>';}
+// Плитка «Добавить…» — стоит в начале полки, БЕЗ заголовка-раздела и с tf_skip:
+// иначе фильтр категорий считал её отдельным разделом («Своего навыка нет? 1»)
+function addTileHTML(kind,label){return '<div class="mshelf tf_skip"><div class="stile" style="--acc:var(--a);border-style:dashed;cursor:pointer" onclick="openAddModal(\''+kind+'\')"><span class="st_chip">✦ Добавить</span><div class="st_title">+ '+esc(label)+'</div><div class="st_fact">Опиши задачу — Композитор найдёт и добавит сам.</div><div class="st_foot"><span style="font-size:11px;color:var(--tx3)">через Композитора</span></div></div></div>';}
 function etbFindInstall(btn){
   var q = (btn && btn.getAttribute('data-q')) || '';
   openAddModal('programs');
