@@ -134,13 +134,17 @@
     if (!store || store.cur !== 'desktop' || !store.document) return;
     var doc = store.document;
     var wrap = doc.querySelector('.dt_wrap');
-    var hero = wrap && wrap.querySelector('.dt_hero');
+    var heroes = wrap ? wrap.querySelectorAll('.dt_hero') : null;
+    var hero = heroes && heroes.length ? heroes[heroes.length - 1] : null;  // после ПОСЛЕДНЕГО героя: пара баннеров не разрывается
     if (!wrap || !hero) return;
 
     var packs = Array.isArray(store._autoReg) ? store._autoReg : [];
+    var en = false;
+    try { en = doc.defaultView.localStorage.getItem('etb_lang') === 'en'; } catch (e) {}
     var countText = packs.length
-      ? packs.length + ' ' + (packs.length === 1 ? 'процесс' : (packs.length < 5 ? 'процесса' : 'процессов'))
-      : 'расписания, запуски и настройки';
+      ? (en ? packs.length + (packs.length === 1 ? ' process' : ' processes')
+            : packs.length + ' ' + (packs.length === 1 ? 'процесс' : (packs.length < 5 ? 'процесса' : 'процессов')))
+      : (en ? 'schedules, runs and settings' : 'расписания, запуски и настройки');
     var card = doc.getElementById('_xtlac_schedule_shortcut');
     if (card) {
       var count = card.querySelector('._xtlac_desk_count');
@@ -156,11 +160,11 @@
     card.innerHTML =
       '<span class="_xtlac_desk_icon">◷</span>' +
       '<span class="_xtlac_desk_copy">' +
-        '<span class="_xtlac_desk_title">Регулярные задачи</span>' +
-        '<span class="_xtlac_desk_sub">Расписания, последние запуски и управление автоматизациями.</span>' +
+        '<span class="_xtlac_desk_title">' + (en ? 'Recurring tasks' : 'Регулярные задачи') + '</span>' +
+        '<span class="_xtlac_desk_sub">' + (en ? 'Schedules, recent runs and automation management.' : 'Расписания, последние запуски и управление автоматизациями.') + '</span>' +
       '</span>' +
       '<span class="_xtlac_desk_count"></span>' +
-      '<span class="_xtlac_desk_go">Открыть →</span>';
+      '<span class="_xtlac_desk_go">' + (en ? 'Open →' : 'Открыть →') + '</span>';
     card.querySelector('._xtlac_desk_count').textContent = countText;
     card.addEventListener('click', function () {
       if (typeof store.setc === 'function') store.setc('automations');
