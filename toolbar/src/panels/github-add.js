@@ -317,6 +317,11 @@ ETB.githubAdd = (function () {
         '<div class="_etbv2_gh_sub" style="margin-bottom:18px;">',
         _esc(s.customName || (s.repoData && s.repoData.name) || ''),
         ' is now available in Plugins.</div>',
+        (s.doneWarning
+          ? '<div style="margin:0 auto 18px;max-width:420px;text-align:left;background:rgba(198,126,52,.1);' +
+            'border:1px solid rgba(198,126,52,.4);border-radius:9px;padding:10px 14px;font-size:12px;' +
+            'line-height:1.55;color:var(--etb-tx,#f0f0f0);">&#9888; ' + _esc(s.doneWarning) + '</div>'
+          : ''),
         '<div class="_etbv2_gh_actions" style="justify-content:center;">',
         '<button class="_etbv2_gh_btn_cancel" id="_etbv2_gh_close_done">Close</button>',
         '<button class="_etbv2_gh_btn_primary" id="_etbv2_gh_open_now">Open Plugin</button>',
@@ -1026,10 +1031,30 @@ ETB.githubAdd = (function () {
         if (plugin) {
           _registerConcepts(plugin);
           _state.lastPluginId = ctx.pluginId;
-          _state.step = 'done';
-          ETB.tabs.refresh();
-          _render();
-          return;
+          // Пост-проверка «немого» плагина: агент мог молча провалить сохранение
+          // экспертов (реальный кейс 16.07 — MarkMello/md_reader ставились без
+          // своих экспертов и падали «Expert not found» на каждой кнопке).
+          // Проверяем каждое заявленное имя + старт-эксперт; недостачу честно
+          // показываем на экране успеха вместо тихой поломки.
+          var declared = (plugin.experts || []).slice();
+          var startEx = plugin.ui && plugin.ui.startExpert;
+          if (startEx && declared.indexOf(startEx) < 0) declared.push(startEx);
+          declared = declared.filter(Boolean);
+          var checks = declared.map(function (n) {
+            return ETB.api.expertGet(n)
+              .then(function (r) { return (r && r.status === 'success') ? null : n; })
+              .catch(function () { return null; });   // сеть упала ≠ эксперта нет: не пугаем зря
+          });
+          return Promise.all(checks).then(function (marks) {
+            var missing = marks.filter(Boolean);
+            _state.doneWarning = missing.length
+              ? 'Installed, but ' + missing.length + ' expert(s) were NOT created: ' + missing.join(', ') +
+                '. Buttons calling them will fail with "Expert not found". Open the plugin and use ✨ Repair to finish setup.'
+              : '';
+            _state.step = 'done';
+            ETB.tabs.refresh();
+            _render();
+          });
         }
         _state.step = 'analysis_error';
         _state.errorMsg = agentErr ||
