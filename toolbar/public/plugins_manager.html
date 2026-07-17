@@ -1523,8 +1523,8 @@ var I18N_EN = {
   'Свернуть':'Minimize','В окне / на весь экран':'Window / fullscreen','Светлая / тёмная тема':'Light / dark theme','Язык / Language':'Язык / Language',
   // Рабочий стол
   'Мой компьютер · Конструктор':'My computer · Wizard',
-  'Собирает из твоих программ рабочие цепочки: запускает их и показывает результат.':'Builds working pipelines from your installed programs, runs them, and shows the result.',
-  'Покажи папку проекта — Extella поймёт, над чем ты работаешь, подберёт нужные инструменты и поведёт задачи сама.':"Point it at a project folder — Extella figures out what you're working on, sets up the right tools, and drives the tasks for you.",
+  'Все установленные программы в одном месте: настраивай, соединяй в связки и запускай.':'All your installed programs in one place: set up, link into workflows, and run.',
+  'Покажи папку проекта — Extella поймёт, что за работа, подберёт инструменты и возьмёт рутину на себя.':"Point it at a project folder — Extella understands the work, sets up the right tools, and takes the routine off your hands.",
   'Открыть →':'Open →','Открыть':'Open','Запустить':'Run','Кабинет':'Cabinet','Удалить':'Remove','Открыть источник':'Open source','↗ Открыть':'↗ Open','↗ Источник':'↗ Source','⚙ Кабинет':'⚙ Cabinet','▶ Запустить':'▶ Run',
   // Секции / подписи
   'Выбор Extella':'EXTELLA PICK','Выбор Extella':'Extella pick',
@@ -3133,14 +3133,15 @@ var _dtReg=[];
 function _openWizard(){
   var w=null;
   for(var i=0;i<_dtReg.length;i++){ var it=_dtReg[i]; var s=((it.lbl||'')+' '+(it.raw||'')+' '+(it.id||'')).toLowerCase();
-    if(/wizard|визард|adoption|внедрен/.test(s)){ w=it; break; } }
+    if(/wizard|визард|конструктор|adoption|внедрен/.test(s)){ w=it; break; } }
   if(w){
     if(w.kind==='agent') openAgentCabinet(w.id);
     else if(w.kind==='cli') cliRun(w.id);
     else notify('open', w.id);   // тот же id установленного плагина, что и у рабочей иконки
     return;
   }
-  notify('open','extella_adoption_wizard');
+  // Конструктора нет среди установленных — молчать нельзя: показываем, как поставить
+  _wizardMissing();
 }
 function _wizardMissing(){
   var en=(LANG==='en');
@@ -3368,7 +3369,7 @@ function renderDesktop(){
         '<div class="dt_hero_ic">'+_icoSym('monitor')+'</div>'+
         '<div class="dt_hero_tx">'+
           '<div class="dt_hero_ttl">Мой компьютер · Конструктор</div>'+
-          '<div class="dt_hero_sub">Собирает из твоих программ рабочие цепочки: запускает их и показывает результат.</div>'+
+          '<div class="dt_hero_sub">Все установленные программы в одном месте: настраивай, соединяй в связки и запускай.</div>'+
         '</div>'+
         '<div class="dt_hero_go">Открыть →</div>'+
       '</div>'+
@@ -4667,7 +4668,7 @@ function _dtWorkspaceSection(mode){
     '<div class="dt_hero_ic">'+ico+'</div>'+
     '<div class="dt_hero_tx">'+
       '<div class="dt_hero_ttl">Workspace · компьютер под задачу</div>'+
-      '<div class="dt_hero_sub">Покажи папку проекта — Extella поймёт, над чем ты работаешь, подберёт нужные инструменты и поведёт задачи сама.</div>'+
+      '<div class="dt_hero_sub">Покажи папку проекта — Extella поймёт, что за работа, подберёт инструменты и возьмёт рутину на себя.</div>'+
     '</div>'+
     '<div class="dt_hero_go">Открыть →</div>'+
   '</div>';
