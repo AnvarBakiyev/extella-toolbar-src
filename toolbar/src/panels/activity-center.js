@@ -514,7 +514,7 @@
   }
 
   function taskAction(path) {
-    if (!state.activityToken) return Promise.reject(new Error('Нет разрешения локального журнала'));
+    if (!state.activityToken) return Promise.reject(new Error('Список действий пока недоступен — перезапусти Extella'));
     return fetch(API_BASE + path, {
       method: 'POST',
       headers: { 'X-Extella-Control': state.activityToken }
@@ -622,7 +622,7 @@
     if (!root) return;
     var health = data ? data.health : (state.bridgeOnline ? 'ok' : 'warning');
     root.setAttribute('data-health', health);
-    document.getElementById('_xtlac_text').textContent = data ? data.headline : 'Подключение журнала…';
+    document.getElementById('_xtlac_text').textContent = data ? data.headline : 'Подключаюсь…';
     document.getElementById('_xtlac_count').textContent = data ? ('✓ ' + data.counts.completed) : '';
     var clear = document.getElementById('_xtlac_clear');
     if (clear) clear.classList.toggle('show', !!(data && data.history && data.history.length));
@@ -630,7 +630,7 @@
     var warning = document.getElementById('_xtlac_warning');
     var orphaned = data && data.listeners && data.listeners.orphaned || 0;
     if (!state.bridgeOnline) {
-      warning.textContent = 'Локальный журнал недоступен. Перезапустите Extella Activity Center.';
+      warning.textContent = 'Не вижу, что делает Extella. Полностью перезапусти Extella (⌘Q и открой заново) — список вернётся.';
       warning.classList.add('show');
     } else if (orphaned) {
       // Задание Анвара: не только предупреждать, но и чинить в один клик —
@@ -669,9 +669,9 @@
     document.head.appendChild(style);
 
     var root = el('div', { id: '_xtlac_root', 'data-health': 'warning' });
-    var pill = el('button', { id: '_xtlac_pill', type: 'button', 'aria-label': 'Открыть журнал действий Extella' });
+    var pill = el('button', { id: '_xtlac_pill', type: 'button', 'aria-label': 'Что делает Extella — открыть список' });
     pill.appendChild(el('span', { id: '_xtlac_dot' }));
-    pill.appendChild(el('span', { id: '_xtlac_text' }, 'Подключение журнала…'));
+    pill.appendChild(el('span', { id: '_xtlac_text' }, 'Подключаюсь…'));
     pill.appendChild(el('span', { id: '_xtlac_count' }));
     root.appendChild(pill);
 
@@ -711,11 +711,11 @@
         var active = status.isBusy ? [{
           id: status.currentTaskId || 'unknown', shortId: String(status.currentTaskId || '').slice(0, 8),
           status: 'running', title: 'Extella выполняет задачу',
-          detail: 'Подробное название появится после подключения локального журнала.', category: 'action'
+          detail: 'Название задачи появится после перезапуска Extella.', category: 'action'
         }] : [];
         return {
           health: active.length ? 'busy' : 'warning',
-          headline: active.length ? active[0].title : 'Журнал требует перезапуска',
+          headline: active.length ? active[0].title : 'Нужен перезапуск Extella',
           active: active, history: [],
           counts: { active: active.length, completed: status.tasksCompleted || 0, failed: status.tasksFailed || 0 },
           listeners: { count: status.running ? 1 : 0, orphaned: 0 }

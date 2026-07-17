@@ -5374,7 +5374,7 @@ function wsRenderCockpit(w){
   if(ledger.length){ html+='<div class="ws_ledger">'+ledger.slice().reverse().map(function(l){ return '<div class="ws_lrow"><span class="ws_ln">'+(l.n|0)+'</span>'+
     '<div class="ws_lbody"><div class="ws_la">'+esc(l.action||'')+'</div>'+(l.detail?'<div class="ws_ld">'+esc(l.detail)+'</div>':'')+'</div>'+
     '</div>'; }).join('')+'</div>'; }
-  else html+='<div class="ws_empty">журнал пуст</div>';
+  else html+='<div class="ws_empty">пока ничего — здесь появится список сделанного</div>';
   html+='</div>';
   html+='</div>'; // ws_wrap
   g.innerHTML=html;
