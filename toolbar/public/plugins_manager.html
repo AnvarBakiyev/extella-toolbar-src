@@ -1556,7 +1556,7 @@ var I18N_EN = {
   'Для бизнеса':'For business','Для жизни':'For life','Работа':'Work','Программа':'Program','Навык':'Skill','Модель':'Model','Инструмент':'Tool','Сервис':'Service','Роль агента':'Agent role','Готовая база':'Ready base','База знаний':'Knowledge base',
   'Программа · Работа':'Program · Work','Живые данные · API':'Live data · API','Приватно · локально':'Private · local','Роли · Qwen':'Roles · Qwen',
   '+ Добавить программу':'+ Add program','Добавить':'Add','Не здесь?':'Not here?',
-  'Опиши задачу — Строитель найдёт и добавит сам, без разработчика.':'Describe the task — the Builder finds and adds it, no developer needed.',
+  'Опиши задачу — Строитель найдёт и добавит сам.':'Describe the task — the Builder finds and adds it.',
   'установлено':'installed','подключено':'connected','ставится…':'installing…','активен':'active','ещё не запускался':'never run',
   'Как запустить:':'How to run:','через агента':'via agent','Инструменты · через агента':'Tools · via agent','Из интернета · Композитор':'From the internet · Composer'
 };
@@ -3200,18 +3200,17 @@ function _dtCss(){
     '.dt_hero_pair .dt_hero{margin-bottom:0;flex-direction:column;align-items:flex-start;gap:12px}'+
     '.dt_hero_pair .dt_hero_tx{flex:initial}'+
     '.dt_hero_pair .dt_hero_go{margin-top:auto}'+
-    '.dt_hero{display:flex;flex-wrap:wrap;align-items:center;gap:14px 18px;cursor:pointer;border-radius:6px;padding:18px 20px;margin-bottom:18px;'+
-      'background:#A5632A;box-shadow:none;border:1px solid rgba(0,0,0,.08);'+
-      'transition:transform .14s,box-shadow .14s;position:relative;overflow:hidden}'+
-    '.dt_hero:hover{transform:translateY(-2px)}'+
-    '.dt_hero::after{content:"";position:absolute;right:-30px;top:-30px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.06)}'+
-    '.dt_hero_ic{flex-shrink:0;width:56px;height:56px;border-radius:6px;background:rgba(255,255,255,.14);'+
-      'border:1px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center}'+
-    '.dt_hero_ic .lico{width:32px;height:32px;color:#fff;stroke-width:1.6}'+
+    '.dt_hero{--hacc:var(--a);display:flex;flex-wrap:wrap;align-items:center;gap:14px 18px;cursor:pointer;border-radius:6px;padding:18px 20px;margin-bottom:18px;'+
+      'background:var(--s1);box-shadow:none;border:1px solid var(--bd2);'+
+      'transition:transform .14s,border-color .14s;position:relative;overflow:hidden}'+
+    '.dt_hero:hover{transform:translateY(-2px);border-color:var(--hacc)}'+
+    '.dt_hero_ic{flex-shrink:0;width:56px;height:56px;border-radius:6px;background:var(--s2);'+
+      'border:1px solid var(--bd);display:flex;align-items:center;justify-content:center}'+
+    '.dt_hero_ic .lico{width:32px;height:32px;color:var(--hacc);stroke-width:1.6}'+
     '.dt_hero_tx{flex:1;min-width:0;position:relative}'+
-    '.dt_hero_ttl{font:750 19px/1.2 var(--sans);letter-spacing:-.01em;color:#fff;text-shadow:0 1px 5px rgba(0,0,0,.25)}'+
-    '.dt_hero_sub{font-size:13px;line-height:1.5;color:rgba(255,255,255,.9);margin-top:5px;max-width:520px}'+
-    '.dt_hero_go{flex-shrink:0;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.4);color:#fff;'+
+    '.dt_hero_ttl{font:750 19px/1.2 var(--sans);letter-spacing:-.01em;color:var(--tx)}'+
+    '.dt_hero_sub{font-size:13px;line-height:1.5;color:var(--tx2);margin-top:5px;max-width:520px}'+
+    '.dt_hero_go{flex-shrink:0;background:var(--hacc);border:1px solid var(--hacc);color:#fff;'+
       'border-radius:5px;padding:9px 16px;font:650 13px var(--sans);position:relative}'+
     '.dt_sect{font:700 12px var(--sans);letter-spacing:.02em;color:var(--tx3);margin:2px 0 14px}'+
     '.dt_grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(94px,1fr));gap:10px}'+
@@ -4022,7 +4021,7 @@ function renderCLI(){
     '<div class="mshelf"><div class="stile" style="--acc:var(--a);border-style:dashed;cursor:pointer" onclick="openCliAdd()">'+
       '<span class="st_chip">✦ Фабрика</span>'+
       '<div class="st_title">+ Добавить инструмент</div>'+
-      '<div class="st_fact">Опиши задачу, Строитель подберёт открытый инструмент, установит и добавит его сам, без разработчика.</div>'+
+      '<div class="st_fact">Опиши задачу — Строитель подберёт открытый инструмент, установит и добавит его сам.</div>'+
       '<div class="st_foot"><span style="font-size:11px;color:var(--tx3)">через Строителя</span></div></div></div>';
   var cats=[]; all.forEach(function(c){if(cats.indexOf(c.cat)<0)cats.push(c.cat);});
   cats.forEach(function(cn){
@@ -4672,7 +4671,7 @@ function wsDeskBuild(){ setc('workspace'); wsBuildModal(); }
 // Раздел «Workspace» на Рабочем столе: геройский баннер + твои воркспейсы.
 function _dtWorkspaceSection(mode){
   var ico='<svg class="lico"><use href="#ic-home"/></svg>';
-  var band='<div class="dt_hero dt_hero_ws" style="background:var(--petrol,#2F6B66)" onclick="setc(\'workspace\')">'+
+  var band='<div class="dt_hero dt_hero_ws" style="--hacc:var(--petrol,#2F6B66)" onclick="setc(\'workspace\')">'+
     '<div class="dt_hero_ic">'+ico+'</div>'+
     '<div class="dt_hero_tx">'+
       '<div class="dt_hero_ttl">Workspace · компьютер под задачу</div>'+
@@ -5362,7 +5361,7 @@ var ADD_KINDS={
   models:{where:'Модели, полка новинок',title:'Добавить модель',sub:'Опиши, какая ИИ-модель нужна, Строитель подберёт работающую и добавит в магазин.',ph:'напр.: генерация музыки · распознавание речи · перевод',refresh:function(){_modReg=null;_modFetched=false;if(cur==='models')renderModels();},prompt:function(v){return 'Пользователь просит добавить ИИ-МОДЕЛЬ в магазин Extella: «'+v+'». Подбери РАБОТАЮЩЕЕ пространство HuggingFace (RUNNING) под задачу и добавь карточку: kv_get "_mkt_models" (global), добавь в .shelf {hfId,title,facts:[кратко по-русски],source:"huggingface.co/<owner> · ♥ N",acc:"#2E7D5B",label:"Работает"}, kv_set global.';}},
   skills:{where:'Навыки',title:'Добавить навык',sub:'Опиши поведение для агента, Строитель составит навык (правило) и добавит в каталог.',ph:'напр.: всегда предлагать сроки · проверять цифры дважды',refresh:function(){_skLoaded=false;_skCatReg=null;if(cur==='skills')renderSkillsShelf();},prompt:function(v){return 'Пользователь просит добавить НАВЫК (правило поведения) в магазин Extella: «'+v+'». Составь один навык: {id:"skill_<латиница>",cat:"Бизнес" или "Работа и продуктивность" или "Стиль и общение" или "Разработка",emoji,name:"<рус 2-3 слова>",desc:"<рус фраза>",rule:"[skill:Имя] <конкретное правило на русском>",howto:"<рус>"}. Добавь: kv_get "_mkt_skills_catalog" (global) {items:[...]}, dedup по id и name, append, kv_set global. Подтверди.';}}
 };
-function addTileHTML(kind,label,hdr){return '<div class="sect_hdr"><span class="sect_title">'+(hdr||'Нужного нет?')+'</span><span class="sect_line"></span></div><div class="mshelf"><div class="stile" style="--acc:var(--a);border-style:dashed;cursor:pointer" onclick="openAddModal(\''+kind+'\')"><span class="st_chip">✦ Добавить</span><div class="st_title">+ '+esc(label)+'</div><div class="st_fact">Опиши задачу — Строитель найдёт и добавит сам, без разработчика.</div><div class="st_foot"><span style="font-size:11px;color:var(--tx3)">через Строителя</span></div></div></div>';}
+function addTileHTML(kind,label,hdr){return '<div class="sect_hdr"><span class="sect_title">'+(hdr||'Нужного нет?')+'</span><span class="sect_line"></span></div><div class="mshelf"><div class="stile" style="--acc:var(--a);border-style:dashed;cursor:pointer" onclick="openAddModal(\''+kind+'\')"><span class="st_chip">✦ Добавить</span><div class="st_title">+ '+esc(label)+'</div><div class="st_fact">Опиши задачу — Строитель найдёт и добавит сам.</div><div class="st_foot"><span style="font-size:11px;color:var(--tx3)">через Строителя</span></div></div></div>';}
 function etbFindInstall(btn){
   var q = (btn && btn.getAttribute('data-q')) || '';
   openAddModal('programs');
