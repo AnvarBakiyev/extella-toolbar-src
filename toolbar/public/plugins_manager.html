@@ -1539,7 +1539,7 @@ var I18N_EN = {
   'Роли агентов':'Agent roles','Роли для базового агента':'Roles for the base agent','Больше пользы без смены модели':'More value, same model',
   'Сервисы':'Services','Внешние сервисы':'External services','Живые данные из интернета для агента: курсы, погода, справки. Проверить можно прямо здесь.':'Live data from the internet for your agent: rates, weather, references. Test it right here.',
   'Знания':'Knowledge','Своя база из документов':'Your own base from documents','+ Создать базу знаний':'+ Create knowledge base','Новая база':'New base','Мои базы знаний':'My knowledge bases',
-  'Своего инструмента нет?':'Missing a tool?','Своего навыка нет?':'Missing a skill?','Фабрика':'Factory',
+  'Своего инструмента нет?':'Missing a tool?','Своего навыка нет?':'Missing a skill?','Своей программы нет?':'Missing a program?','Своей модели нет?':'Missing a model?','Фабрика':'Factory',
   // Кнопки карточек
   'Подключить':'Connect','Проверить':'Test','Спросить':'Ask','▶ Спросить':'▶ Ask','Добавить программу':'Add program','Добавить модель':'Add model','Добавить навык':'Add skill','Добавить инструмент':'Add tool','Обновить':'Refresh','↻ Обновить':'↻ Refresh','Показать все':'Show all','← Все категории':'← All categories','Все':'All',
   // Категории (бизнес)
@@ -1635,11 +1635,11 @@ function modelsSpotlight(){
         'Живой каталог работающих демо HuggingFace: запускаются в облаке, своя видеокарта не нужна. Обновляется каждую неделю.', 'Работает')
     : _shelfHTML(TYPE_ED.models.shelf, 'Модели', 'ИИ-модели: облачные и локальные');
   return _bentoHTML(mh)+
+    addTileHTML('models','Добавить модель','Своей модели нет?')+
     catalog+
     '<div class="sect_hdr"><span class="sect_title">Локальные модели, на твоём устройстве</span><span class="sect_line"></span></div>'+
     '<div class="sk_lead" style="grid-column:1/-1">Для русского лучше всего «Приватная модель».</div>'+
     '<div class="mshelf">'+LOCAL_MODELS.map(localModelCard).join('')+'</div>'+
-    addTileHTML('models','Добавить модель')+
     '<div style="grid-column:1/-1;text-align:right;margin:-2px 0 8px"><span style="font-size:11px;color:var(--tx3);margin-right:8px">'+(liveShelf?'живой каталог с HuggingFace':'проверенные модели')+'</span>'+
     '<button onclick="_modReg=null;_modFetched=false;renderModels()" style="border:1px solid var(--bd2);background:transparent;color:var(--tx2);border-radius:5px;padding:4px 10px;font-size:12px;cursor:pointer">↻ Обновить</button></div>';
 }
@@ -2074,7 +2074,8 @@ function renderFeaturedSection() {
   }
   var _pro = document.body.getAttribute('data-mode') === 'pro';
   var _bk2 = _featCat === 'all' ? '' : '<div class="cat_back"><button class="cb_btn" onclick="_setFeatCat(\'all\')">← Все категории</button></div>';
-  var html = '<div class="sect"><h2>Все программы</h2></div>' + _progSearchHTML() + _featCatBar() + _bk2;
+  var html = '<div class="sect"><h2>Все программы</h2></div>' + _progSearchHTML() + _featCatBar() + _bk2 +
+    (_featCat === 'all' ? addTileHTML('programs','Добавить программу','Своей программы нет?') : '');
 
   if (featuredError) html += '<div class="banner err">⚠ Установка не удалась: ' + esc(featuredError) + '</div>';
   if (!featured.length) {
@@ -2631,7 +2632,7 @@ function _renderProgramsCore() {
   var _isPro = document.body.getAttribute('data-mode') === 'pro';
   var _lead = (_featCat === 'all') ? '<div class="sk_lead" style="grid-column:1/-1">Мини-программы Extella и приложения с GitHub: берёшь с полки — живут у тебя на компьютере.</div>' : '';
   // Единый шаблон полки: описание → витрина → [заголовок каталога + поиск + категории] → карточки → «не нашёл — собери»
-  var featuredHtml = _lead + ((_featCat === 'all' && !_isPro) ? programsSpotlight() : '') + renderFeaturedSection() + (_featCat === 'all' ? _appsSectionHTML() : '') + addTileHTML('programs','Добавить программу') + (_featCat === 'all' && !_isPro ? progToolsHTML() : '');
+  var featuredHtml = _lead + ((_featCat === 'all' && !_isPro) ? programsSpotlight() : '') + renderFeaturedSection() + (_featCat === 'all' ? _appsSectionHTML() : '') + (_featCat === 'all' && !_isPro ? progToolsHTML() : '');
 
   // «Для всех», curated only: no raw GitHub firehose.
   if (document.body.getAttribute('data-mode') !== 'pro') {
