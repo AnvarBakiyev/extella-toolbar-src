@@ -1517,7 +1517,8 @@ var I18N_EN = {
   'Рабочий стол':'Desktop','Витрина':'Storefront','Программы':'Programs','Модели':'Models',
   'Навыки':'Skills','Инструменты':'Tools','Знания':'Knowledge','Агенты':'Agents','Сервисы':'Services','Каталог':'Catalog','Профи':'Pro','История':'History','Автозапуск':'Auto-run',
   'На Рабочий стол':'Back to Desktop',
-  'Мини-программы Extella и приложения с GitHub — ставятся в один клик, работают у тебя.':'Extella mini-programs and GitHub apps — one-click install, running on your machine.',
+  'Мини-программы Extella и приложения с GitHub: ставишь одним кликом — живут у тебя на компьютере.':'Extella mini-programs and apps from GitHub: one click to install — they live on your computer.',
+  'Каталог популярных открытых инструментов: ставишь одним кликом — работают у тебя на компьютере. Обновляется каждую неделю.':'A catalog of popular open-source tools: one click to install — they run on your computer. Updated weekly.',
   'Готовые приложения с GitHub: клик — и Extella установит на твой компьютер. Работают локально.':'Ready-made apps from GitHub: one click and Extella installs them on your computer. They run locally.',
   'Модели с Hugging Face — найди или вставь ссылку, поставим в один клик. Локальные работают прямо на твоём компьютере.':'Models from Hugging Face — search or paste a link, installed in one click. Local models run right on your computer.',
   'Все программы':'All programs',
@@ -2600,7 +2601,7 @@ function progToolsHTML(){
   if(!(_progReg&&_progReg.shelf&&_progReg.shelf.length))return '';
   return catalogByCatHTML(_progReg.shelf, repoCat, REPO_ORDER, REPO_LABEL, REPO_ACC,
       'Инструменты с GitHub', 'Готовые инструменты',
-      'Живой каталог популярных открытых инструментов, ставятся в один клик, работают у вас. Обновляется каждую неделю.', 'Инструмент')+
+      'Каталог популярных открытых инструментов: ставишь одним кликом — работают у тебя на компьютере. Обновляется каждую неделю.', 'Инструмент')+
     '<div style="grid-column:1/-1;text-align:right;margin:-2px 0 8px"><span style="font-size:11px;color:var(--tx3);margin-right:8px">живой каталог с GitHub · '+_progReg.shelf.length+'</span>'+
     '<button onclick="_progReg=null;_progFetched=false;renderPrograms()" style="border:1px solid var(--bd2);background:transparent;color:var(--tx2);border-radius:5px;padding:4px 10px;font-size:12px;cursor:pointer">↻ Обновить</button></div>';
 }
@@ -2627,7 +2628,7 @@ function _renderProgramsCore() {
 
   var _bk = _featCat === 'all' ? '' : '<div class="cat_back"><button class="cb_btn" onclick="_setFeatCat(\'all\')">← Все категории</button></div>';
   var _isPro = document.body.getAttribute('data-mode') === 'pro';
-  var _lead = (_featCat === 'all') ? '<div class="sk_lead" style="grid-column:1/-1">Мини-программы Extella и приложения с GitHub — ставятся в один клик, работают у тебя.</div>' : '';
+  var _lead = (_featCat === 'all') ? '<div class="sk_lead" style="grid-column:1/-1">Мини-программы Extella и приложения с GitHub: ставишь одним кликом — живут у тебя на компьютере.</div>' : '';
   // Единый шаблон полки: описание → витрина → [заголовок каталога + поиск + категории] → карточки → «не нашёл — собери»
   var featuredHtml = _lead + ((_featCat === 'all' && !_isPro) ? programsSpotlight() : '') + renderFeaturedSection() + (_featCat === 'all' ? _appsSectionHTML() : '') + addTileHTML('programs','Добавить программу') + (_featCat === 'all' && !_isPro ? progToolsHTML() : '');
 
