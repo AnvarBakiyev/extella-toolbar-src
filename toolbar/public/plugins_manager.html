@@ -1510,7 +1510,7 @@ try { if (localStorage.getItem('etb_lang') === 'en') LANG = 'en'; } catch (_) {}
 var I18N_EN = {
   // Вкладки
   'Рабочий стол':'Desktop','Витрина':'Storefront','Программы':'Programs','Модели':'Models',
-  'Навыки':'Skills','Инструменты':'Tools','Знания':'Knowledge','Агенты':'Agents','Сервисы':'Services','Каталог':'Catalog','Профи':'Pro','История':'History',
+  'Навыки':'Skills','Инструменты':'Tools','Знания':'Knowledge','Агенты':'Agents','Сервисы':'Services','Каталог':'Catalog','Профи':'Pro','История':'History','Автозапуск':'Auto-run',
   'На Рабочий стол':'Back to Desktop',
   'Мини-программы Extella и приложения с GitHub — ставятся в один клик, работают у тебя.':'Extella mini-programs and GitHub apps — one-click install, running on your machine.',
   'Готовые приложения с GitHub: клик — и Extella установит на твой компьютер. Работают локально.':'Ready-made apps from GitHub: one click and Extella installs them on your computer. They run locally.',
@@ -3633,7 +3633,7 @@ function _cabRender(){
   var p=_cabAgent(); if(!p){ closeAgentCabinet(); return; }
   var o=document.getElementById('ag_cab'); if(!o){ o=document.createElement('div'); o.id='ag_cab'; o.style.cssText='position:fixed;inset:0;background:var(--bg);z-index:9998;display:flex;flex-direction:column;animation:fiu .16s ease both'; document.body.appendChild(o); }
   var acc=_agAcc(p), name=esc(_agCleanName(p)), status=_agStatus(p), tag=esc(_agTagline(p)), em=_agEmoji(p);
-  var tabs=[['overview','Обзор'],['runs','История'],['schedule','Расписание'],['settings','Настройки']];
+  var tabs=[['overview','Обзор'],['runs','История'],['schedule','Автозапуск'],['settings','Настройки']];
   var tabBar=tabs.map(function(t){ var on=_cabTab===t[0];
     return '<button onclick="cabTab(\''+t[0]+'\')" style="border:none;background:'+(on?'rgba(var(--ar),.12)':'transparent')+';color:'+(on?'var(--a)':'var(--tx2)')+';font:600 13px var(--sans);padding:8px 16px;border-radius:8px;cursor:pointer">'+t[1]+'</button>'; }).join('');
   o.innerHTML =
@@ -3691,7 +3691,7 @@ function _cabSchedule(p){
   var liveNote = sid
     ? '<div style="font-size:11.5px;color:#2f9e56;margin-top:8px;line-height:1.5">✓ Включено: работает в облаке круглосуточно — даже когда компьютер выключен, даже когда приложение закрыто.</div>'
     : '<div style="font-size:11.5px;color:var(--tx3);margin-top:8px;line-height:1.5">Этот агент опубликован в старой версии — расписание заработает после повторной публикации. Открой «Опубликовать» ещё раз, а до тех пор настройка просто сохранится.</div>';
-  return _cabCard('<div style="font:700 13px var(--sans);color:var(--tx2);letter-spacing:.02em;margin-bottom:10px">Расписание</div>'+cur)+
+  return _cabCard('<div style="font:700 13px var(--sans);color:var(--tx2);letter-spacing:.02em;margin-bottom:10px">Автозапуск</div>'+cur)+
     _cabCard('<div style="font:700 13px var(--sans);color:var(--tx2);letter-spacing:.02em;margin-bottom:10px">Настроить</div>'+
       '<label style="display:block;font-size:12px;color:var(--tx3);margin-bottom:3px">Как часто</label>'+
       '<select id="cab_sch_int" style="'+_KPINP+';margin-bottom:8px">'+opts+'</select>'+
