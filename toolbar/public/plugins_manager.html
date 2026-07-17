@@ -276,6 +276,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);
 .hsrc{font:600 10.5px var(--mono);letter-spacing:.01em;color:var(--tx3);text-transform:none}
 .chero h3{font:600 22px/1.18 var(--serif);color:var(--tx);text-wrap:balance;max-width:26ch;letter-spacing:0}
 .chero h3 i{font-style:normal;color:inherit}
+.chero h3 .acc_sub{font:500 15.5px/1.45 var(--sans);color:var(--tx2);margin-top:7px;letter-spacing:0}
 .cfacts{list-style:none;display:flex;flex-direction:column;gap:5px;margin:0;padding:0}
 .cfacts li{font-size:14px;font-weight:500;color:var(--tx2);line-height:1.45;padding-left:22px;position:relative}
 .cfacts li::before{content:"→";position:absolute;left:0;color:var(--amber);font-weight:700}
@@ -2409,14 +2410,14 @@ function _heroBig(h) {
     '</div></div>';
 }
 function _heroMini(h) {
-  var desc = (h.facts && h.facts[0]) || '';
+  var desc = (h.facts && h.facts[0]) || h.accent || '';
   var btn = _cardBtn(h, 'cget');
   var mico = h.icon || (h.pluginId && (CURATED_PROGRAMS[h.pluginId] || {}).icon) || '';
   return '<div class="ccard" style="--acc:' + esc(h.acc || '#C57E33') + '">' +
     '<span class="mini_ico" aria-hidden="true">' + _ico(_cardCat(h)) + '</span>' +
     '<div class="mini_body">' +
       (h.label ? '<div class="hsrc">' + esc(h.label) + '</div>' : '') +
-      '<div class="mini_h">' + esc(h.title || '') + (h.accent ? '<i class="acc_sub">' + esc(h.accent) + '</i>' : '') + '</div>' +
+      '<div class="mini_h">' + esc(h.title || '') + '</div>' +
       (desc ? '<div class="mini_desc">' + esc(desc) + '</div>' : '') +
       '<div class="mini_foot">' + (h.stats ? '<span class="cstat">' + esc(h.stats) + '</span>' : '<span></span>') + btn + '</div>' +
     '</div></div>';
