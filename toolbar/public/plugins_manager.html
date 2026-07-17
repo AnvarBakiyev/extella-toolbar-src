@@ -2056,7 +2056,8 @@ function renderFeaturedSection() {
     });
   }
   var _pro = document.body.getAttribute('data-mode') === 'pro';
-  var html = '<div class="sect"><h2>Все программы</h2></div>';
+  var _bk2 = _featCat === 'all' ? '' : '<div class="cat_back"><button class="cb_btn" onclick="_setFeatCat(\'all\')">← Все категории</button></div>';
+  var html = '<div class="sect"><h2>Все программы</h2></div>' + _progSearchHTML() + _featCatBar() + _bk2;
 
   if (featuredError) html += '<div class="banner err">⚠ Установка не удалась: ' + esc(featuredError) + '</div>';
   if (!featured.length) {
@@ -2300,9 +2301,11 @@ function _mountTabFilter(placeholder){
   });
   if(cats.length<2) return;
   var bar=document.createElement('div'); bar.className='tabfilter'; bar.style.gridColumn='1/-1';
-  var search='<div style="grid-column:1/-1;padding:2px 0 10px"><div class="fb_srch" style="max-width:440px">'+
+  // Локальная строка поиска имеет смысл только на большом инвентаре (>=30):
+  // на малых полках всё ищет глобальная строка сверху, дубли убраны (решение Эллы).
+  var search = total>=30 ? '<div style="grid-column:1/-1;padding:2px 0 10px"><div class="fb_srch" style="max-width:440px">'+
     '<input class="fb_sinp tf_inp" placeholder="'+esc(placeholder||'Поиск…')+'" autocomplete="off" oninput="_tabFilterApply()">'+
-    '<span class="fb_sico">&#128269;</span></div></div>';
+    '<span class="fb_sico">&#128269;</span></div></div>' : '';
   var chips='<div class="catbar"><button class="cat_chip on" data-cat="__all" onclick="_tabFilterCat(this)">Все <span class="cat_n">'+total+'</span></button>'+
     cats.map(function(c){ return '<button class="cat_chip" data-cat="'+esc(c)+'" onclick="_tabFilterCat(this)">'+esc(c)+' <span class="cat_n">'+(cnt[c]||0)+'</span></button>'; }).join('')+'</div>';
   bar.innerHTML=search+chips;
@@ -2610,8 +2613,8 @@ function _renderProgramsCore() {
   var _bk = _featCat === 'all' ? '' : '<div class="cat_back"><button class="cb_btn" onclick="_setFeatCat(\'all\')">← Все категории</button></div>';
   var _isPro = document.body.getAttribute('data-mode') === 'pro';
   var _lead = (_featCat === 'all') ? '<div class="sk_lead" style="grid-column:1/-1">Мини-программы Extella и приложения с GitHub — ставятся в один клик, работают у тебя.</div>' : '';
-  // Путь пользователя: описание → поиск+категории → редакция → каталог → «не нашёл — собери»
-  var featuredHtml = _lead + _progSearchHTML() + _featCatBar() + _bk + ((_featCat === 'all' && !_isPro) ? programsSpotlight() : '') + renderFeaturedSection() + (_featCat === 'all' ? _appsSectionHTML() : '') + addTileHTML('programs','Добавить программу') + (_featCat === 'all' && !_isPro ? progToolsHTML() : '');
+  // Единый шаблон полки: описание → витрина → [заголовок каталога + поиск + категории] → карточки → «не нашёл — собери»
+  var featuredHtml = _lead + ((_featCat === 'all' && !_isPro) ? programsSpotlight() : '') + renderFeaturedSection() + (_featCat === 'all' ? _appsSectionHTML() : '') + addTileHTML('programs','Добавить программу') + (_featCat === 'all' && !_isPro ? progToolsHTML() : '');
 
   // «Для всех», curated only: no raw GitHub firehose.
   if (document.body.getAttribute('data-mode') !== 'pro') {
@@ -3875,10 +3878,10 @@ function _renderSkillsCore(){
   var all=skCatalog();
   var live=!!(_skCatReg&&_skCatReg.items&&_skCatReg.items.length);
   var cats=[]; all.forEach(function(s){if(cats.indexOf(s.cat)<0)cats.push(s.cat);});
-  var html=_bentoHTML(TYPE_ED.skills.heroes)+
+  var html='<div class="sk_lead" style="grid-column:1/-1">Готовые умения для твоего агента: поставил — и он это умеет.</div>'+
+    _bentoHTML(TYPE_ED.skills.heroes)+
     _shelfHTML(TYPE_ED.skills.shelf,'Выбор Extella','Выбор Extella')+
-    '<div class="sect"><h2>Навыки</h2></div>'+
-    '<div class="sk_lead" style="grid-column:1/-1">Поставил, и агент это умеет.</div>';
+    '<div class="sect"><h2>Навыки</h2></div>';
   cats.forEach(function(cn){
     html+='<div class="sect_hdr"><span class="sect_title">'+esc(cn)+'</span><span class="sect_line"></span></div>';
     html+='<div class="mshelf">'+all.filter(function(s){return s.cat===cn;}).map(skCard).join('')+'</div>';
@@ -3986,9 +3989,9 @@ function renderCLI(){
     return;
   }
   var all=cliCatalog();
-  var html=_bentoHTML(TYPE_ED.cli.heroes)+
+  var html='<div class="sk_lead" style="grid-column:1/-1">Обработка файлов прямо на твоём компьютере (инструменты командной строки, CLI). Скажи агенту, что сделать с файлами, — он вызовет нужный.</div>'+
+    _bentoHTML(TYPE_ED.cli.heroes)+
     '<div class="sect"><h2>Инструменты</h2></div>'+
-    '<div class="sk_lead" style="grid-column:1/-1">Обработка файлов прямо на твоём компьютере (инструменты командной строки, CLI). Скажи агенту, что сделать с файлами, — он вызовет нужный.</div>'+
     '<div class="sect_hdr"><span class="sect_title">Своего инструмента нет?</span><span class="sect_line"></span></div>'+
     '<div class="mshelf"><div class="stile" style="--acc:var(--a);border-style:dashed;cursor:pointer" onclick="openCliAdd()">'+
       '<span class="st_chip">✦ Фабрика</span>'+
@@ -4216,9 +4219,9 @@ function svConnect(id){ var a=svGi(); if(a.indexOf(id)<0){a.push(id);svSi(a);} i
 function svDisc(id){ var a=svGi(); var i=a.indexOf(id); if(i>=0){a.splice(i,1);svSi(a);} if(cur==='services')renderServices(); }
 function renderServices(){
   var g=document.getElementById('grid'); if(!g)return;
-  var html=_bentoHTML(TYPE_ED.services.heroes);
-  html+='<div class="sect"><h2>Сервисы</h2></div>'+
-    '<div class="sk_lead" style="grid-column:1/-1">Живые данные из интернета для агента: курсы, погода, справки. Проверить можно прямо здесь.</div>';
+  var html='<div class="sk_lead" style="grid-column:1/-1">Живые данные из интернета для агента: курсы, погода, справки. Проверить можно прямо здесь.</div>'+
+    _bentoHTML(TYPE_ED.services.heroes);
+  html+='<div class="sect"><h2>Сервисы</h2></div>';
   var cats=[]; CATALOG_SERVICES.forEach(function(s){if(cats.indexOf(s.cat)<0)cats.push(s.cat);});
   cats.forEach(function(cn){
     html+='<div class="sect_hdr"><span class="sect_title">'+esc(cn)+'</span><span class="sect_line"></span></div><div class="mshelf">'+
