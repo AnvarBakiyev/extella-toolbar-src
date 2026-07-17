@@ -3691,7 +3691,8 @@ function _cabSchedule(p){
   var liveNote = sid
     ? '<div style="font-size:11.5px;color:#2f9e56;margin-top:8px;line-height:1.5">✓ Включено: работает в облаке круглосуточно — даже когда компьютер выключен, даже когда приложение закрыто.</div>'
     : '<div style="font-size:11.5px;color:var(--tx3);margin-top:8px;line-height:1.5">Этот агент опубликован в старой версии — расписание заработает после повторной публикации. Открой «Опубликовать» ещё раз, а до тех пор настройка просто сохранится.</div>';
-  return _cabCard('<div style="font:700 13px var(--sans);color:var(--tx2);letter-spacing:.02em;margin-bottom:10px">Автозапуск</div>'+cur)+
+  return _cabCard('<div style="font:700 13px var(--sans);color:var(--tx2);letter-spacing:.02em;margin-bottom:10px">Автозапуск</div>'+
+    '<div style="font-size:12.5px;color:var(--tx2);line-height:1.55;margin-bottom:12px">Чтобы агент работал без тебя: по расписанию (например, каждое утро) или постоянно в облаке — даже когда компьютер выключен. Ничего не включишь — агент запускается только вручную.</div>'+cur)+
     _cabCard('<div style="font:700 13px var(--sans);color:var(--tx2);letter-spacing:.02em;margin-bottom:10px">Настроить</div>'+
       '<label style="display:block;font-size:12px;color:var(--tx3);margin-bottom:3px">Как часто</label>'+
       '<select id="cab_sch_int" style="'+_KPINP+';margin-bottom:8px">'+opts+'</select>'+
