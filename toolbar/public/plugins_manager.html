@@ -1298,12 +1298,10 @@ function notify(action, pluginId, url) {
 var CATS = [
   { id: 'desktop',  l: 'Рабочий стол' },
   { id: 'programs', l: 'Каталог' },
-  { id: 'models',   l: 'Модели' },
-  { id: 'skills',   l: 'Навыки' },
   { id: 'knowledge',l: 'Знания' },
   { id: 'agents',   l: 'Агенты' }
 ];
-var _SVC_GROUP=['programs','cli','services'];  // под-вкладки объединённого раздела «Сервисы»
+var _SVC_GROUP=['programs','cli','services','models','skills'];  // полки «Каталога»: берёшь готовое; Знания и Агенты — отдельно, они наполняются твоим
 
 var _admView = 'catalog';
 function setAdmView(v){ _admView = v; renderGrid(); }
@@ -1807,7 +1805,8 @@ function appEmbedReload(url,ready){
 }
 var _modHF = false;  // «Поиск по Hugging Face» — перенесён из убранного режима Профи
 function _modHFset(v){ _modHF = v; if (v && !hfState.inited) { hfState.inited = true; searchHF(); } renderModels(); }
-function renderModels() {
+function renderModels(){ _renderModelsCore(); _svcPrependBar(); }
+function _renderModelsCore() {
   var g = document.getElementById('grid'); if (!g) return;
   if (_modHF) {
     if (!hfState.inited) { hfState.inited = true; searchHF(); }
@@ -2587,7 +2586,7 @@ function progToolsHTML(){
 // search lives here too, but only in «Для профи»; «Для всех» stays curated.
 // Под-навигация объединённого раздела «Сервисы»: Программы / Инструменты / Сервисы (старое деление, не в меню).
 function _svcBar(){
-  var it=[['programs','Программы'],['cli','Инструменты'],['services','Сервисы']];
+  var it=[['programs','Программы'],['cli','Инструменты'],['services','Сервисы'],['models','Модели'],['skills','Навыки']];
   return '<div class="svc_sub" style="grid-column:1/-1;display:flex;gap:7px;flex-wrap:wrap;margin:0 0 16px">'+
     it.map(function(x){return '<button class="cat_chip'+(cur===x[0]?' on':'')+'" onclick="setc(\''+x[0]+'\')">'+x[1]+'</button>';}).join('')+'</div>';
 }
@@ -3854,7 +3853,8 @@ function skCatalog(){ var byId={}; SKILLS_CATALOG.forEach(function(s){byId[s.id]
 function skGet(id){return skCatalog().filter(function(s){return s.id===id;})[0];}
 function skItem(id){return (_skReg.items||[]).filter(function(x){return x.id===id;})[0];}
 
-function renderSkillsShelf(){
+function renderSkillsShelf(){ _renderSkillsCore(); _svcPrependBar(); }
+function _renderSkillsCore(){
   var g=document.getElementById('grid'); if(!g)return;
   if(!_skLoaded){
     g.innerHTML=_loadingHTML('Загружаю навыки…');
