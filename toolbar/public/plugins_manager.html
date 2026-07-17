@@ -2051,8 +2051,7 @@ function renderFeaturedSection() {
     });
   }
   var _pro = document.body.getAttribute('data-mode') === 'pro';
-  var html = '<div class="sect"><h2>Все программы</h2></div>' +
-    '<div class="sk_lead" style="grid-column:1/-1">Мини-программы Extella и приложения с GitHub — ставятся в один клик, работают у тебя.</div>';
+  var html = '<div class="sect"><h2>Все программы</h2></div>';
 
   if (featuredError) html += '<div class="banner err">⚠ Установка не удалась: ' + esc(featuredError) + '</div>';
   if (!featured.length) {
@@ -2604,7 +2603,9 @@ function _renderProgramsCore() {
 
   var _bk = _featCat === 'all' ? '' : '<div class="cat_back"><button class="cb_btn" onclick="_setFeatCat(\'all\')">← Все категории</button></div>';
   var _isPro = document.body.getAttribute('data-mode') === 'pro';
-  var featuredHtml = _progSearchHTML() + _featCatBar() + _bk + ((_featCat === 'all' && !_isPro) ? programsSpotlight() + addTileHTML('programs','Добавить программу') : '') + renderFeaturedSection() + (_featCat === 'all' ? _appsSectionHTML() : '') + (_featCat !== 'all' ? addTileHTML('programs','Добавить программу') : (_isPro ? '' : progToolsHTML()));
+  var _lead = (_featCat === 'all') ? '<div class="sk_lead" style="grid-column:1/-1">Мини-программы Extella и приложения с GitHub — ставятся в один клик, работают у тебя.</div>' : '';
+  // Путь пользователя: описание → поиск+категории → редакция → каталог → «не нашёл — собери»
+  var featuredHtml = _lead + _progSearchHTML() + _featCatBar() + _bk + ((_featCat === 'all' && !_isPro) ? programsSpotlight() : '') + renderFeaturedSection() + (_featCat === 'all' ? _appsSectionHTML() : '') + addTileHTML('programs','Добавить программу') + (_featCat === 'all' && !_isPro ? progToolsHTML() : '');
 
   // «Для всех», curated only: no raw GitHub firehose.
   if (document.body.getAttribute('data-mode') !== 'pro') {
