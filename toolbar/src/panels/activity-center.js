@@ -320,7 +320,7 @@
           body.appendChild(row);
         });
       });
-    }).catch(function () { body.textContent = 'мост визарда недоступен (localhost:8765)'; });
+    }).catch(function () { body.textContent = 'Конструктор сейчас не отвечает — загляни через минуту.'; });
   }
 
   function injectLocalServices(store) {
@@ -736,7 +736,7 @@
         setTimeout(refresh, 1200);
       })
       .catch(function () {
-        if (w) w.textContent = 'Не удалось закрыть: мост недоступен.';
+        if (w) w.textContent = 'Не получилось закрыть: Extella не отвечает. Попробуй ещё раз через минуту.';
         if (btn) { btn.disabled = false; btn.textContent = 'Закрыть лишние'; }
       });
   }

@@ -2172,7 +2172,7 @@ var TYPE_ED = {
         facts:['Маршрут, план и список вещей, от билетов до зарядки'] }
     ],
     shelf: [
-      { label:'Данные', acc:'#2F6B66', source:'Программа', pluginId:'chartjs-gen', title:'Chart.js, графики', facts:['Конфиг диаграммы по описанию'] },
+      { label:'Данные', acc:'#2F6B66', source:'Программа', pluginId:'chartjs-gen', title:'Chart.js, графики', facts:['Опиши график словами — вернёт готовую диаграмму'] },
       { label:'Работа', acc:'#C57E33', source:'Программа', pluginId:'user-story-generator', title:'User Story генератор', facts:['Agile-истории с критериями приёмки'] },
       { label:'Работа', acc:'#C57E33', source:'Программа', pluginId:'email-composer', title:'Редактор писем', facts:['Профессиональные письма на любой случай'] },
       { label:'Разработка', acc:'#24544F', source:'Программа', pluginId:'code-explainer', title:'Объяснение кода', facts:['Любой сниппет, простыми словами'] },
@@ -3088,7 +3088,7 @@ function capInstRemove(kind, id, method){
   var en = (typeof LANG !== 'undefined' && LANG === 'en');
   var device = (kind === 'model' || kind === 'mcp' || method === 'brew' || method === 'ollama' || method === 'mcp_connect');
   var what = kind === 'model' ? (en ? 'The model will be DELETED from this device (frees space; re-downloadable).' : 'Модель будет УДАЛЕНА с устройства (освободит место; скачать можно заново).')
-    : kind === 'mcp' ? (en ? 'The MCP server will be disconnected (removed from the device allowlist).' : 'MCP-сервер будет отключён (вычищен из аллоулиста устройства).')
+    : kind === 'mcp' ? (en ? 'The MCP server will be disconnected (removed from the device allowlist).' : 'Подключение будет отключено от агента и убрано с этого компьютера.')
     : method === 'brew' ? (en ? 'The tool will be uninstalled from this device (brew uninstall).' : 'Инструмент будет удалён с устройства (brew uninstall).')
     : (en ? 'The entry will be removed from My.' : 'Запись будет убрана из «Мои».');
   if (!confirm((en ? 'Remove "' : 'Удалить «') + id + (en ? '"?\n\n' : '»?\n\n') + what)) return;
@@ -3429,7 +3429,7 @@ function renderInstalled() {
           : '<span style="color:#C67E34;font-size:11px;font-weight:600">● ' + (en ? 'linked' : 'подключено') + '</span>');
       var hint = it.how || it.desc || '';
       var open = it.url ? '<button class="ibtn_open" onclick="window.open(\'' + esc(it.url) + '\',\'_blank\')">' + (en ? 'Source' : 'Источник') + '</button>' : '';
-      var rm = '<button class="ibtn_rm" title="' + (en ? 'Deletes it from the device (model/MCP/brew), then drops the entry' : 'Удаляет с устройства (модель/MCP/brew), затем убирает запись') + '" onclick="capInstRemove(\'' + esc(it.kind) + '\',\'' + esc(it.id) + '\',\'' + esc(it.method || '') + '\')">' + (en ? 'Remove' : 'Удалить') + '</button>';
+      var rm = '<button class="ibtn_rm" title="' + (en ? 'Deletes it from the device (model/MCP/brew), then drops the entry' : 'Удаляет с компьютера полностью, затем убирает запись') + '" onclick="capInstRemove(\'' + esc(it.kind) + '\',\'' + esc(it.id) + '\',\'' + esc(it.method || '') + '\')">' + (en ? 'Remove' : 'Удалить') + '</button>';
       return '<div class="icard" style="align-items:flex-start;animation-delay:' + Math.min(i*12,120) + 'ms"><div class="idot" style="margin-top:5px"></div>' +
         '<div class="iinfo"><div class="iname">' + esc(it.title || it.id) + ' <span style="font-size:10px;font-weight:700;letter-spacing:.4px;color:#9a8f7a;background:#f2ede4;border-radius:5px;padding:1px 6px;margin-left:4px">' + esc(kind) + '</span>  ' + badge + '</div>' +
         (hint ? '<div class="isub" style="white-space:normal;overflow:visible;text-overflow:clip;line-height:1.45">' + esc(hint) + '</div>' : '') +
@@ -3686,11 +3686,11 @@ function _cabRuns(p){
 var _SCHED_PRESETS=[['','вручную (без расписания)'],['60','каждый час'],['360','каждые 6 часов'],['1440','каждый день'],['10080','каждую неделю']];
 function _cabSchedule(p){
   var sch=_agSchedule(p), id=_agId(p), sid=p.sessionId||'';
-  var cur = sch ? '<div style="font-size:14px;color:var(--tx)">Текущее: <b>'+esc(sch.human||sch.period||'')+'</b>'+(sch.channel?' → '+esc(sch.channel):'')+(sch.live?' <span style="color:#2f9e56;font-size:11px">● на VPS 24/7</span>':'')+'</div>' : '<div style="font-size:14px;color:var(--tx3)">Расписание не задано — агент запускается вручную.</div>';
+  var cur = sch ? '<div style="font-size:14px;color:var(--tx)">Текущее: <b>'+esc(sch.human||sch.period||'')+'</b>'+(sch.channel?' → '+esc(String(sch.channel).replace(/VPS/i,'облако')):'')+(sch.live?' <span style="color:#2f9e56;font-size:11px">● в облаке 24/7</span>':'')+'</div>' : '<div style="font-size:14px;color:var(--tx3)">Расписание не задано — агент запускается вручную.</div>';
   var opts=_SCHED_PRESETS.map(function(o){ var on=(sch&&String(sch.interval_min||'')===o[0])||(!sch&&o[0]===''); return '<option value="'+o[0]+'"'+(on?' selected':'')+'>'+esc(o[1])+'</option>'; }).join('');
   var liveNote = sid
-    ? '<div style="font-size:11.5px;color:#2f9e56;margin-top:8px;line-height:1.5">✓ Связано с планировщиком — запустится на VPS 24/7, даже когда приложение закрыто.</div>'
-    : '<div style="font-size:11.5px;color:var(--tx3);margin-top:8px;line-height:1.5">Этот агент опубликован до обновления — крон-связь появится после переиздания из Конструктора. Пока фиксируем намерение.</div>';
+    ? '<div style="font-size:11.5px;color:#2f9e56;margin-top:8px;line-height:1.5">✓ Включено: работает в облаке круглосуточно — даже когда компьютер выключен, даже когда приложение закрыто.</div>'
+    : '<div style="font-size:11.5px;color:var(--tx3);margin-top:8px;line-height:1.5">Этот агент опубликован в старой версии — расписание заработает после повторной публикации. Открой «Опубликовать» ещё раз, а до тех пор настройка просто сохранится.</div>';
   return _cabCard('<div style="font:700 13px var(--sans);color:var(--tx2);letter-spacing:.02em;margin-bottom:10px">Расписание</div>'+cur)+
     _cabCard('<div style="font:700 13px var(--sans);color:var(--tx2);letter-spacing:.02em;margin-bottom:10px">Настроить</div>'+
       '<label style="display:block;font-size:12px;color:var(--tx3);margin-bottom:3px">Как часто</label>'+
@@ -3716,9 +3716,9 @@ function cabSaveSchedule(id){
       .then(function(r){return r.json();})
       .then(function(r){
         if(r&&r.status==='success'){ if(sch)sch.live=true;
-          _agSaveState(id,{schedule:sch}).then(function(){ if(msg)msg.innerHTML=iv?'✓ На VPS 24/7':'✓ Расписание снято'; setTimeout(_cabRender,900); });
+          _agSaveState(id,{schedule:sch}).then(function(){ if(msg)msg.innerHTML=iv?'✓ Работает в облаке 24/7':'✓ Расписание снято'; setTimeout(_cabRender,900); });
         } else { if(msg)msg.innerHTML='⚠ '+esc((r&&r.message)||'не удалось'); }
-      }).catch(function(e){ if(msg)msg.innerHTML='⚠ мост Конструктора недоступен ('+esc((e&&e.message)||'')+') — намерение сохранено'; _agSaveState(id,{schedule:sch}).then(_cabRender); });
+      }).catch(function(e){ if(msg)msg.innerHTML='⚠ Конструктор сейчас не отвечает — настройка сохранена и применится, когда он проснётся'; _agSaveState(id,{schedule:sch}).then(_cabRender); });
   } else {
     _agSaveState(id,{schedule:sch}).then(function(){ if(msg)msg.innerHTML='✓ Сохранено (намерение)'; setTimeout(_cabRender,700); });
   }
@@ -4139,7 +4139,7 @@ var CATALOG_PACKS=[
   {id:'eco', cat:'Наука и здоровье', name:'Экология и климат', emoji:'🌍', acc:'#4C9A6B', desc:'Климат и энергетика: что происходит с планетой, по данным.'}
 ];
 // ═══════════ ГОТОВЫЕ АГЕНТЫ (роли → прошивка в UI-копию через agent_flash_role) ═══════════
-var CATALOG_AGENTS=[{"id": "sdr", "cat": "Продажи", "name": "Менеджер по продажам (SDR)", "emoji": "📞", "tagline": "Квалифицирует лидов, готовит первые касания и follow-up", "caps": ["Квалификация лидов", "Реестр лидов и статусов", "Черновики писем", "Follow-up-цепочки"], "desc": "Первая линия продаж: квалификация лидов, реестр статусов, черновики писем и follow-up", "acc": "#2F6B66"}, {"id": "account", "cat": "Продажи", "name": "Аккаунт-менеджер", "emoji": "🤝", "tagline": "Ведёт действующих клиентов, апсейл и удержание", "caps": ["Check-in письма (черновики)", "Отслеживание продлений и оттока", "Апсейл и кросс-сейл", "Статус-отчёты по аккаунтам"], "desc": "Ведёт портфель клиентов: check-in письма, продления, апсейл, статус-отчёты", "acc": "#2F6B66"}, {"id": "smm", "cat": "Маркетинг", "name": "SMM-контент менеджер", "emoji": "📱", "tagline": "Идеи, тексты постов и контент-план для соцсетей", "caps": ["Контент-план на неделю и месяц", "Тексты под площадку", "Заголовки и CTA", "Адаптация посыла в форматы"], "desc": "Рубрики, контент-план и тексты постов под площадку, черновики для человека", "acc": "#B5642E"}, {"id": "copywriter", "cat": "Маркетинг", "name": "Маркетолог-копирайтер", "emoji": "✍️", "tagline": "Продающие тексты: лендинги, письма, описания", "caps": ["Заголовки и оферы", "Лендинги и рассылки", "Описания продуктов", "Варианты под аудиторию"], "desc": "Продающие тексты от боли и выгоды: заголовки, лендинги, письма", "acc": "#B5642E"}, {"id": "support", "cat": "Поддержка", "name": "Агент поддержки (1-я линия)", "emoji": "🎧", "tagline": "Отвечает на обращения по базе знаний, эскалирует сложное", "caps": ["Ответы по базе знаний", "Пошаговые инструкции", "Эскалация человеку", "Черновики ответов клиенту"], "desc": "Первая линия поддержки: отвечает по базе знаний и вовремя эскалирует человеку", "acc": "#2E7D5B"}, {"id": "faq", "cat": "Поддержка", "name": "FAQ-агент по продукту", "emoji": "❓", "tagline": "Быстрые ответы о продукте, ценах и условиях", "caps": ["Ответы из базы знаний", "Точная цифра и условие", "Подсказка следующего шага", "Честно про пробелы"], "desc": "Отвечает на частые вопросы о продукте и тарифах строго по материалам компании", "acc": "#2E7D5B"}, {"id": "bookkeeper", "cat": "Финансы", "name": "Агент-бухгалтер", "emoji": "🧾", "tagline": "Первичка, категоризация расходов, напоминания о сроках", "caps": ["Категоризация операций", "Расчёт НДС", "Черновики первички", "Напоминания о сроках"], "desc": "Снимает рутину учёта: категоризация, НДС, черновики первички, сроки", "acc": "#24544F"}, {"id": "finanalyst", "cat": "Финансы", "name": "Финансовый аналитик", "emoji": "📊", "tagline": "Разбор цифр, сводки, простые прогнозы", "caps": ["Динамика и доли", "Отклонения план-факт", "Прозрачные расчёты", "Короткие выводы"], "desc": "Разбирает финансовые данные: динамика, доли, отклонения и короткие выводы", "acc": "#24544F"}, {"id": "recruiter", "cat": "HR", "name": "Рекрутер (скрининг)", "emoji": "🧑‍💼", "tagline": "Скрининг резюме, вопросы для интервью, письма кандидатам", "caps": ["Сверка резюме с вакансией", "Красные флаги кандидата", "Вопросы под роль", "Черновики писем кандидатам"], "desc": "Скрининг кандидатов: сверка резюме с вакансией, вопросы и черновики писем", "acc": "#C0504D"}, {"id": "onboarding", "cat": "HR", "name": "Онбординг-агент", "emoji": "🚀", "tagline": "Проводит новичка по плану адаптации", "caps": ["План адаптации новичка", "Чек-лист «что сделано»", "Объясняет по регламентам", "Напоминает о сроках"], "desc": "Ведёт новичка по плану адаптации и держит чек-лист по внутренним материалам", "acc": "#C0504D"}, {"id": "assistant", "cat": "Операции", "name": "Личный бизнес-агент", "emoji": "🗂️", "tagline": "Планирование, повестки, напоминания, задачи", "caps": ["Планы дня и недели", "Повестки и итоги встреч", "Задачи и next steps", "Приоритеты и напоминания"], "desc": "Планирует день и неделю, готовит повестки, итоги встреч, задачи и напоминания", "acc": "#3E7CAD"}, {"id": "docs", "cat": "Операции", "name": "Агент по документам", "emoji": "📄", "tagline": "Договоры, письма, регламенты, черновики и разбор", "caps": ["Черновики деловых документов", "Пояснение пунктов простым языком", "Проверка пропущенных условий", "Пометка для юриста"], "desc": "Готовит черновики документов, поясняет пункты и ловит пропущенные условия", "acc": "#3E7CAD"}, {"id": "pm", "cat": "Операции", "name": "Агент проектного менеджера", "emoji": "📋", "tagline": "Статусы, риски, следующие шаги по проекту", "caps": ["Статусы и сводки задач", "Блокеры и риски", "Следующие шаги и ответственные", "Статус-апдейты для команды и заказчика"], "desc": "Ведёт статусы задач, ловит блокеры и риски, готовит статус-апдейты", "acc": "#3E7CAD"}, {"id": "analyst", "cat": "Операции", "name": "Бизнес-аналитик (сводки)", "emoji": "🔎", "tagline": "Собирает данные в понятные отчёты и выводы", "caps": ["Структурирует сводки", "Выводы и рекомендации", "Ссылается на источники", "Не выдумывает данные"], "desc": "Превращает разрозненные данные в сводку «что происходит и что делать» с источниками", "acc": "#3E7CAD"}];
+var CATALOG_AGENTS=[{"id": "sdr", "cat": "Продажи", "name": "Менеджер по продажам (SDR)", "emoji": "📞", "tagline": "Квалифицирует лидов, готовит первые касания и follow-up", "caps": ["Квалификация лидов", "Реестр лидов и статусов", "Черновики писем", "Follow-up-цепочки"], "desc": "Первая линия продаж: квалификация лидов, реестр статусов, черновики писем и follow-up", "acc": "#2F6B66"}, {"id": "account", "cat": "Продажи", "name": "Аккаунт-менеджер", "emoji": "🤝", "tagline": "Ведёт действующих клиентов, апсейл и удержание", "caps": ["Check-in письма (черновики)", "Отслеживание продлений и оттока", "Апсейл и кросс-сейл", "Статус-отчёты по аккаунтам"], "desc": "Ведёт портфель клиентов: check-in письма, продления, апсейл, статус-отчёты", "acc": "#2F6B66"}, {"id": "smm", "cat": "Маркетинг", "name": "SMM-контент менеджер", "emoji": "📱", "tagline": "Идеи, тексты постов и контент-план для соцсетей", "caps": ["Контент-план на неделю и месяц", "Тексты под площадку", "Заголовки и CTA", "Адаптация посыла в форматы"], "desc": "Рубрики, контент-план и тексты постов под площадку, черновики для человека", "acc": "#B5642E"}, {"id": "copywriter", "cat": "Маркетинг", "name": "Маркетолог-копирайтер", "emoji": "✍️", "tagline": "Продающие тексты: лендинги, письма, описания", "caps": ["Заголовки и оферы", "Лендинги и рассылки", "Описания продуктов", "Варианты под аудиторию"], "desc": "Продающие тексты от боли и выгоды: заголовки, лендинги, письма", "acc": "#B5642E"}, {"id": "support", "cat": "Поддержка", "name": "Агент поддержки (1-я линия)", "emoji": "🎧", "tagline": "Отвечает на обращения по базе знаний, эскалирует сложное", "caps": ["Ответы по базе знаний", "Пошаговые инструкции", "Эскалация человеку", "Черновики ответов клиенту"], "desc": "Первая линия поддержки: отвечает по базе знаний и вовремя эскалирует человеку", "acc": "#2E7D5B"}, {"id": "faq", "cat": "Поддержка", "name": "FAQ-агент по продукту", "emoji": "❓", "tagline": "Быстрые ответы о продукте, ценах и условиях", "caps": ["Ответы из базы знаний", "Точная цифра и условие", "Подсказка следующего шага", "Честно про пробелы"], "desc": "Отвечает на частые вопросы о продукте и тарифах строго по материалам компании", "acc": "#2E7D5B"}, {"id": "bookkeeper", "cat": "Финансы", "name": "Агент-бухгалтер", "emoji": "🧾", "tagline": "Первичка, категоризация расходов, напоминания о сроках", "caps": ["Категоризация операций", "Расчёт НДС", "Черновики первички", "Напоминания о сроках"], "desc": "Снимает рутину учёта: категоризация, НДС, черновики первички, сроки", "acc": "#24544F"}, {"id": "finanalyst", "cat": "Финансы", "name": "Финансовый аналитик", "emoji": "📊", "tagline": "Разбор цифр, сводки, простые прогнозы", "caps": ["Динамика и доли", "Отклонения план-факт", "Прозрачные расчёты", "Короткие выводы"], "desc": "Разбирает финансовые данные: динамика, доли, отклонения и короткие выводы", "acc": "#24544F"}, {"id": "recruiter", "cat": "HR", "name": "Рекрутер (скрининг)", "emoji": "🧑‍💼", "tagline": "Скрининг резюме, вопросы для интервью, письма кандидатам", "caps": ["Сверка резюме с вакансией", "Красные флаги кандидата", "Вопросы под роль", "Черновики писем кандидатам"], "desc": "Скрининг кандидатов: сверка резюме с вакансией, вопросы и черновики писем", "acc": "#C0504D"}, {"id": "onboarding", "cat": "HR", "name": "Онбординг-агент", "emoji": "🚀", "tagline": "Проводит новичка по плану адаптации", "caps": ["План адаптации новичка", "Чек-лист «что сделано»", "Объясняет по регламентам", "Напоминает о сроках"], "desc": "Ведёт новичка по плану адаптации и держит чек-лист по внутренним материалам", "acc": "#C0504D"}, {"id": "assistant", "cat": "Операции", "name": "Личный бизнес-агент", "emoji": "🗂️", "tagline": "Планирование, повестки, напоминания, задачи", "caps": ["Планы дня и недели", "Повестки и итоги встреч", "Задачи и next steps", "Приоритеты и напоминания"], "desc": "Планирует день и неделю, готовит повестки, итоги встреч, задачи и напоминания", "acc": "#3E7CAD"}, {"id": "docs", "cat": "Операции", "name": "Агент по документам", "emoji": "📄", "tagline": "Договоры, письма, регламенты, черновики и разбор", "caps": ["Черновики деловых документов", "Пояснение пунктов простым языком", "Проверка пропущенных условий", "Пометка для юриста"], "desc": "Готовит черновики документов, поясняет пункты и ловит пропущенные условия", "acc": "#3E7CAD"}, {"id": "pm", "cat": "Операции", "name": "Агент проектного менеджера", "emoji": "📋", "tagline": "Статусы, риски, следующие шаги по проекту", "caps": ["Статусы и сводки задач", "Препятствия и риски", "Следующие шаги и ответственные", "Статус-апдейты для команды и заказчика"], "desc": "Ведёт статусы задач, ловит блокеры и риски, готовит статус-апдейты", "acc": "#3E7CAD"}, {"id": "analyst", "cat": "Операции", "name": "Бизнес-аналитик (сводки)", "emoji": "🔎", "tagline": "Собирает данные в понятные отчёты и выводы", "caps": ["Структурирует сводки", "Выводы и рекомендации", "Ссылается на источники", "Не выдумывает данные"], "desc": "Превращает разрозненные данные в сводку «что происходит и что делать» с источниками", "acc": "#3E7CAD"}];
 var AG_KEY='extella_agents_installed';
 function agGi(){ try{return JSON.parse(localStorage.getItem(AG_KEY)||'{}');}catch(_){return{};} }
 function agSi(o){ try{localStorage.setItem(AG_KEY,JSON.stringify(o));}catch(_){} }
@@ -4264,7 +4264,7 @@ function renderMcpCatalog(){
     if(!items||!items.length){ host.innerHTML=''; return; }
     var order=['web','search','dev','data','files','comm','finance','ai','other'];
     var html='<div class="sect"><span class="eyebrow">MCP</span><h2>Каталог MCP-серверов <i>— тысячи готовых умений</i></h2></div>'+
-      '<div class="sk_lead" style="grid-column:1/-1">Живой каталог из официального реестра MCP ('+items.length+' проверенных, все — без ключей). Помеченные «✓ подключён» уже доступны через мост; остальные подключаем по запросу.</div>';
+      '<div class="sk_lead" style="grid-column:1/-1">Готовые подключения для агента — из официального каталога MCP ('+items.length+' проверенных, все — без ключей). Помеченные «✓ подключён» уже доступны через мост; остальные подключаем по запросу.</div>';
     order.forEach(function(ck){
       var part=items.filter(function(c){return (c.cat||'other')===ck;});
       if(!part.length)return;
@@ -4680,7 +4680,7 @@ function _dtWorkspaceSection(mode){
   } else {
     var cards=list.slice(0,6).map(function(w){
       var bl=w.blockers|0;
-      var dot=bl>0?'<span class="dt_ws_dot crit" title="'+bl+' блокер"></span>':'<span class="dt_ws_dot ok" title="готов"></span>';
+      var dot=bl>0?'<span class="dt_ws_dot crit" title="'+bl+' препятствие(й)"></span>':'<span class="dt_ws_dot ok" title="готов"></span>';
       return '<button class="dt_ws_card" onclick="wsOpenFromDesk(\''+_dtEsc(w.ws_id)+'\')" title="'+esc(w.name||'')+'">'+
         dot+'<span class="dt_ws_nm">'+esc(w.name||'Без имени')+'</span></button>';
     }).join('');
@@ -4729,7 +4729,7 @@ function renderWorkspace(){
 }
 // Тёплый акцент на воркспейс — стабильный цвет из хеша ws_id (у каждого «своя комната»).
 function wsHue(id){ var h=0; id=String(id||''); for(var i=0;i<id.length;i++)h=(h*31+id.charCodeAt(i))%360; return h; }
-function wsBlWord(n){ n=n%100; if(n>=11&&n<=14)return'блокеров'; n=n%10; if(n===1)return'блокер'; if(n>=2&&n<=4)return'блокера'; return'блокеров'; }
+function wsBlWord(n){ n=n%100; if(n>=11&&n<=14)return'препятствий'; n=n%10; if(n===1)return'препятствие'; if(n>=2&&n<=4)return'препятствия'; return'препятствий'; }
 function wsListCard(w){
   var hue=wsHue(w.ws_id), acc='hsl('+hue+',44%,42%)', soft='hsl('+hue+',44%,42%)';
   var bl=w.blockers|0;
@@ -4786,7 +4786,7 @@ function wsOpen(ws_id){
     wsListError(why);
   }).catch(function(e){
     _wsView='list';
-    wsListError((e&&e.message==='_timeout_')?'долго отвечает (таймаут)':((e&&e.message)||'нет ответа от моста'));
+    wsListError((e&&e.message==='_timeout_')?'долго отвечает (таймаут)':((e&&e.message)||'Extella не отвечает — попробуй через минуту'));
   });
 }
 function wsListError(why){
@@ -5051,7 +5051,7 @@ function wsRenderCockpitV3(w){
   var last=ledger.length?esc((ledger[ledger.length-1].action||'')):'';
   html+='<div class="wx-dock"><div class="wx-in">'+
     (last?'<span class="wx-last">последнее: <span class="wx-okk">'+last+'</span></span>':'')+
-    '<form onsubmit="return wsxChat(this,\''+wid+'\')"><input id="wsx_chat" placeholder="Скажи воркспейсу, что сделать… «сведи реестр», «сравни версии»" autocomplete="off"><button class="wx-send" title="отправить">↑</button></form>'+
+    '<form onsubmit="return wsxChat(this,\''+wid+'\')"><input id="wsx_chat" placeholder="Скажи воркспейсу, что сделать… «подготовь отчёт», «сравни версии»" autocomplete="off"><button class="wx-send" title="отправить">↑</button></form>'+
     '<span class="wx-hint">говорить = делать</span>'+
   '</div></div>';
   html+='</div>'; // wsx
@@ -5134,7 +5134,7 @@ function wsRenderCockpit(w){
     '<h1 class="ws_h1">'+esc(w.name||'Workspace')+'</h1>'+
     '<div class="ws_understood">'+esc(w.understood||'')+'</div>'+
     '<div class="ws_pills">'+
-      (bl>0?'<span class="ws_pill crit">⛔ '+bl+' блокер'+(bl>1?'ов':'')+'</span>':'<span class="ws_pill ok">✓ готов к работе</span>')+
+      (bl>0?'<span class="ws_pill crit">⛔ '+bl+' '+wsBlWord(bl)+'</span>':'<span class="ws_pill ok">✓ готов к работе</span>')+
       '<span class="ws_pill">'+((w.sources_total!=null)?w.sources_total:sources.length)+' источник'+wsPlural((w.sources_total!=null)?w.sources_total:sources.length)+'</span>'+
       (versions.length?'<span class="ws_pill">'+versions.length+' групп'+(versions.length>1?'ы':'а')+' версий</span>':'')+
     '</div>';
@@ -5196,7 +5196,7 @@ function wsRenderCurated(w){
     '<h1 class="ws_h1">'+esc(w.name||'Workspace')+'</h1>'+
     '<div class="ws_understood">'+esc(w.understood||'')+'</div>'+
     '<div class="ws_pills">'+
-      (totBl>0?'<span class="ws_pill crit">⛔ '+totBl+' блокер'+(totBl>1?'ов':'')+'</span>':'<span class="ws_pill ok">✓ без блокеров</span>')+
+      (totBl>0?'<span class="ws_pill crit">⛔ '+totBl+' '+wsBlWord(totBl)+'</span>':'<span class="ws_pill ok">✓ без препятствий</span>')+
       '<span class="ws_pill">'+contours.length+' контур'+wsPlural(contours.length)+'</span>'+
     '</div>'+
     '<div class="wsc_grid">';
