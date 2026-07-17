@@ -139,7 +139,7 @@ ETB.marketplace = (function () {
     '#_etbv2_mkt_rs::after{content:"";position:absolute;right:4px;bottom:4px;width:8px;height:8px;',
       'border-right:2px solid rgba(140,140,140,.7);border-bottom:2px solid rgba(140,140,140,.7);}',
     '#_etbv2_mkt_ov.win #_etbv2_mkt_rs{display:block;}',
-    '#_etbv2_mkt_chip{position:fixed;right:16px;bottom:16px;z-index:2147483632;',
+    '#_etbv2_mkt_chip{position:fixed;right:16px;bottom:64px;z-index:2147483639;',
       'background:var(--etb-s1,#141414);color:var(--etb-tx,#eee);border:1px solid rgba(140,140,140,.45);',
       'border-radius:999px;padding:9px 16px;font:600 12.5px system-ui;cursor:pointer;',
       'box-shadow:0 10px 30px rgba(0,0,0,.35);}'
