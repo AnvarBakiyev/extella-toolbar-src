@@ -1347,6 +1347,7 @@ function _logoHome(el){
   setc('desktop');
 }
 function setc(id) {
+  var again = (cur === id);  // повторный клик по активной вкладке
   cur = id;
   if (id === 'workspace') { _wsView = 'list'; _wsCur = null; }  // всегда входим на список
   document.body.setAttribute('data-mode', id === 'admin' ? 'pro' : 'all');
@@ -1356,6 +1357,9 @@ function setc(id) {
   renderGrid();
   syncFilterBar();
   syncHFFilterBar();
+  // Раздел всегда начинается с начала: повторный клик — плавно наверх, переход — сразу
+  var sc = document.querySelector('.scr');
+  if (sc) { if (again) sc.scrollTo({ top: 0, behavior: 'smooth' }); else sc.scrollTop = 0; }
   // HF-поиск («Для профи») инициализируется в pro-ветке renderModels, НЕ здесь,
   // иначе в «Для всех» он перерисовывал старый discover поверх нового спотлайта.
 }
