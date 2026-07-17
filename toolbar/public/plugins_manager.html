@@ -4188,7 +4188,7 @@ var CLI_ACC={'Документы и PDF':'#C57E33','Картинки и меди
 // Живой каталог: захардкоженная база + инструменты, добавленные фабрикой в KV
 // (_mkt_cli_catalog). Новый инструмент от wz_cli_capability_pack появляется сам,
 // без правки этого файла, «фабрика без разработчика».
-var _cliReg=null, _cliLoaded=false;
+var _cliReg=null, _cliLoaded=false, _cliPending=0; // _cliPending: когда передали сборку инструмента — показать «⏳ ищу…» на полке
 function cliCatalog(){
   var byId={}; CLI_CATALOG.forEach(function(c){byId[c.id]=c;});
   (_cliReg||[]).forEach(function(c){ if(c&&c.id) byId[c.id]=Object.assign({}, byId[c.id]||{}, c); });
@@ -4204,6 +4204,9 @@ function renderCLI(){
   }
   var all=cliCatalog();
   var html='<div class="sk_lead" style="grid-column:1/-1">Обработка файлов прямо на твоём компьютере (инструменты командной строки, CLI).<br>Скажи агенту, что сделать с файлами, — он вызовет нужный.</div>'+
+    (_cliPending && (Date.now()-_cliPending < 10*60*1000)
+      ? '<div style="grid-column:1/-1;border:1px solid var(--bd2);border-radius:5px;padding:10px 14px;font-size:12.5px;color:var(--tx2);background:var(--s1)">⏳ Ищу и собираю новый инструмент — обычно минута-другая. Нажми «↻ Обновить каталог» внизу, чтобы проверить.</div>'
+      : '')+
     '<div class="mshelf tf_skip"><div class="stile" style="--acc:var(--a);border-style:dashed;cursor:pointer" onclick="openCliAdd()">'+
       '<span class="st_chip">✦ Добавить</span>'+
       '<div class="st_title">+ Добавить инструмент</div>'+
@@ -4214,6 +4217,8 @@ function renderCLI(){
     html+='<div class="sect_hdr"><span class="sect_title">'+esc(cn)+'</span><span class="sect_line"></span></div>';
     html+='<div class="mshelf">'+all.filter(function(c){return c.cat===cn;}).map(cliCard).join('')+'</div>';
   });
+  html+='<div style="grid-column:1/-1;text-align:right;margin:-2px 0 8px"><span style="font-size:11px;color:var(--tx3);margin-right:8px">'+(all.length)+' инструментов</span>'+
+    '<button onclick="_cliLoaded=false;_cliReg=null;renderCLI()" style="border:1px solid var(--bd2);background:transparent;color:var(--tx2);border-radius:5px;padding:4px 10px;font-size:12px;cursor:pointer">↻ Обновить каталог</button></div>';
   g.innerHTML=html;
   [].forEach.call(g.querySelectorAll('[data-cliinst]'),function(b){b.onclick=function(){installCLI(b.getAttribute('data-cliinst'),b);};});
   [].forEach.call(g.querySelectorAll('[data-clirm]'),function(b){b.onclick=function(){cliUninstall(b.getAttribute('data-clirm'));};});
@@ -5531,6 +5536,7 @@ function submitCliAdd(){
     'вызови run_expert("wz_cli_capability_pack", {spec_json: <анкета>}). '+
     'Если инструмент проприетарный (Excel/Photoshop) или без открытого CLI, честно откажись и предложи альтернативу. После выпуска инструмент сам появится в разделе «Инструменты».';
   skRunAgent(prompt).then(function(){
+    _cliPending=Date.now();
     if(m)m.innerHTML='✓ Ищу и собираю инструмент — минута-другая. Затем нажми «Обновить каталог».';
     b.textContent='Передано';
     if(!document.getElementById('cliadd_refresh')){
