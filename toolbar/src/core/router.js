@@ -28,6 +28,11 @@ ETB.router = (function () {
     return (ETB.theme && ETB.theme.current) ? ETB.theme.current() : 'dark';
   }
 
+  // Язык витрины (localStorage общий у хоста и blob-iframe окон)
+  function _currentLang() {
+    try { return localStorage.getItem('etb_lang') === 'en' ? 'en' : 'ru'; } catch (e) { return 'ru'; }
+  }
+
   function _postThemeToIframe(iframe, theme) {
     if (!iframe || !iframe.contentWindow) return;
     try {
@@ -335,7 +340,8 @@ ETB.router = (function () {
                   token: token,
                   apiBase: 'https://api.extella.ai',
                   experts: plugin.experts || [],
-                  theme: _currentTheme()
+                  theme: _currentTheme(),
+                  lang: _currentLang()
                 };
                 if (hfToken) initMsg.hf_token = hfToken;
                 iframe.contentWindow.postMessage(initMsg, '*');
@@ -549,7 +555,8 @@ ETB.router = (function () {
               token: token,
               apiBase: 'https://api.extella.ai',
               experts: plugin.experts || [],
-              theme: _currentTheme()
+              theme: _currentTheme(),
+              lang: _currentLang()
             }, '*');
             _postThemeToIframe(iframe);
           } catch (e) {}
@@ -569,7 +576,7 @@ ETB.router = (function () {
         _wireIframeToken(iframe, function (token) {
           try {
             iframe.contentWindow.postMessage(
-              { type: 'etb_init', pluginId: plugin.id, token: token, theme: _currentTheme() },
+              { type: 'etb_init', pluginId: plugin.id, token: token, theme: _currentTheme(), lang: _currentLang() },
               '*'
             );
             _postThemeToIframe(iframe);
@@ -589,7 +596,7 @@ ETB.router = (function () {
         _wireIframeToken(iframe, function (token) {
           try {
             iframe.contentWindow.postMessage(
-              { type: 'etb_init', pluginId: plugin.id, token: token, theme: _currentTheme() },
+              { type: 'etb_init', pluginId: plugin.id, token: token, theme: _currentTheme(), lang: _currentLang() },
               '*'
             );
             _postThemeToIframe(iframe);

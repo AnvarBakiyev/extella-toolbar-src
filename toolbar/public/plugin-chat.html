@@ -245,6 +245,23 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
   var API_BASE = 'https://api.extella.ai';
   var plugin = null;
   var messages = [];
+  // Язык окна = язык витрины: приходит в etb_init, фолбэк — общий localStorage (same-origin)
+  var LANG = (function () { try { return localStorage.getItem('etb_lang') === 'en' ? 'en' : 'ru'; } catch (e) { return 'ru'; } })();
+  function T(ru, en) { return LANG === 'en' ? en : ru; }
+  function chatRu(id) { return (LANG === 'ru' && CHAT_RU[id]) || null; }
+  function applyLangChrome() {
+    var el;
+    el = document.getElementById('hdr_clr'); if (el) { el.textContent = T('Очистить', 'Clear'); el.title = T('Очистить переписку', 'Clear the conversation'); }
+    el = document.getElementById('inp'); if (el) el.placeholder = T('Напиши агенту…', 'Message the agent…');
+    el = document.getElementById('attach_btn'); if (el) el.title = T('Приложить документ для анализа — PDF, Word, txt', 'Attach a document — PDF, Word, txt');
+    el = document.getElementById('send_btn'); if (el && !isTyping) el.textContent = T('Отправить', 'Send');
+    el = document.getElementById('doc_copy'); if (el) el.textContent = T('Копировать', 'Copy');
+    el = document.getElementById('doc_download'); if (el) el.textContent = T('Скачать', 'Download');
+    var tabs = document.querySelectorAll('#mobile_tab_bar .mobile_tab');
+    if (tabs[0]) tabs[0].textContent = T('Чат', 'Chat');
+    if (tabs[1]) tabs[1].textContent = T('Документ', 'Document');
+    el = document.querySelector('#doc_toolbar span'); if (el) el.textContent = T('Документ', 'Document');
+  }
   // Русские инструкции для курированных карточек (Фаза 4).
   // hint — что написать агенту; sugg — кликабельные примеры-старты.
   var CHAT_RU = {
@@ -269,7 +286,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
   function cancelThinking() {
     if (_abort) { try { _abort.abort(); } catch (e) {} _abort = null; }
     isTyping = false;
-    messages.push({ role: 'assistant', note: true, content: '⏹ Остановлено. Можешь дописать сообщение и отправить снова.' });
+    messages.push({ role: 'assistant', note: true, content: T('⏹ Остановлено. Можешь дописать сообщение и отправить снова.', '⏹ Stopped. You can edit your message and send it again.') });
     renderMessages(); saveHistory();
   }
   var pluginId = null;
@@ -323,6 +340,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
 
   function startWithPlugin(id) {
     pluginId = id;
+    applyLangChrome();
     loadPlugin(id);
   }
 
@@ -337,6 +355,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
           if (e.data.token) apiToken = e.data.token;
           if (e.data.agentId) agentId = e.data.agentId;
           if (e.data.theme) applyTheme(e.data.theme);
+          if (e.data.lang === 'en' || e.data.lang === 'ru') LANG = e.data.lang;
           startWithPlugin(e.data.pluginId);
         }
       });
@@ -393,7 +412,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
   }
 
   function getQuickActions() {
-    var ru = plugin && CHAT_RU[plugin.id];
+    var ru = plugin && chatRu(plugin.id);
     if (ru && ru.sugg) return ru.sugg.map(function (t) { return { label: t, prompt: t }; });
     return (plugin && plugin.ui && plugin.ui.quickActions) || [];
   }
@@ -419,8 +438,8 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
   }
 
   function renderHeader() {
-    var ru = CHAT_RU[plugin.id] || null;
-    var nm = (ru && ru.name) || plugin.name || plugin.id || 'Плагин';
+    var ru = chatRu(plugin.id);
+    var nm = (ru && ru.name) || plugin.name || plugin.id || T('Плагин', 'Plugin');
     document.getElementById('hdr_name').textContent = nm;
     document.getElementById('hdr_sub').textContent = (ru && ru.hint) || plugin.tagline || plugin.description || '';
     document.title = nm + ' — Extella';
@@ -428,7 +447,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
 
   function renderContext() {
     var bar = document.getElementById('ctx_bar');
-    if (CHAT_RU[plugin.id]) { bar.style.display = 'none'; return; } // русские карточки: без англ. плашек
+    if (chatRu(plugin.id)) { bar.style.display = 'none'; return; } // русские карточки: без англ. плашек
     var pills = plugin.pills || [];
     if (plugin.type) pills = [plugin.type].concat(pills);
     if (!pills.length) { bar.style.display = 'none'; return; }
@@ -441,14 +460,14 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
   function renderEmpty() {
     var msgs = document.getElementById('msgs');
     if (messages.length > 0) { msgs.innerHTML = ''; updateDocPreview(); return; }
-    var ru = CHAT_RU[pluginId] || CHAT_RU[plugin.id] || null;
-    var initialPrompt = (ru && ru.hint) || (plugin.ui && plugin.ui.initialPrompt) || ('Напиши агенту, что нужно сделать: «' + (plugin.name || 'плагин') + '» подхватит.');
+    var ru = chatRu(pluginId) || chatRu(plugin.id);
+    var initialPrompt = (ru && ru.hint) || (plugin.ui && plugin.ui.initialPrompt) || T('Напиши агенту, что нужно сделать: «' + (plugin.name || 'плагин') + '» подхватит.', 'Tell the agent what you need — "' + (plugin.name || 'the plugin') + '" will take it from there.');
     var actions = getQuickActions();
     var suggestions = (ru && ru.sugg) || (actions.length ? actions.map(function (qa) { return qa.label; }) : buildSuggestions());
     msgs.innerHTML = [
       '<div id="empty">',
       '<div id="empty_icon">&#128268;</div>',
-      '<div id="empty_title">' + esc((ru && ru.name) || plugin.name || 'Плагин') + '</div>',
+      '<div id="empty_title">' + esc((ru && ru.name) || plugin.name || T('Плагин', 'Plugin')) + '</div>',
       '<div id="empty_sub">' + esc(initialPrompt) + '</div>',
       suggestions.length ? '<div id="suggestions">' + suggestions.map(function (s, i) {
         return '<button class="sugg" data-i="' + i + '" data-q="' + esc(s) + '">' + esc(s) + '</button>';
@@ -466,10 +485,10 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
 
   function buildSuggestions() {
     var t = plugin.type || '';
-    if (t === 'github') return ['List files in the root directory', 'Read the README', 'Search for TODO comments', 'Create a new issue'];
-    if (t === 'mcp') return ['What can you do?', 'Show me a summary', 'Get recent activity'];
-    if (t === 'knowledge') return ['What are the key concepts?', 'Give me a summary', 'Best practices'];
-    return ['What can you help me with?'];
+    if (t === 'github') return LANG === 'ru' ? ['Покажи файлы в корне', 'Прочитай README', 'Найди пометки TODO в коде'] : ['List files in the root directory', 'Read the README', 'Search for TODO comments', 'Create a new issue'];
+    if (t === 'mcp') return LANG === 'ru' ? ['Что ты умеешь?', 'Покажи сводку', 'Что нового?'] : ['What can you do?', 'Show me a summary', 'Get recent activity'];
+    if (t === 'knowledge') return LANG === 'ru' ? ['Главные понятия этой базы?', 'Сделай краткую выжимку', 'Лучшие практики'] : ['What are the key concepts?', 'Give me a summary', 'Best practices'];
+    return [T('С чем ты можешь помочь?', 'What can you help me with?')];
   }
 
   function lastAssistantContent() {
@@ -491,7 +510,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
     var content = lastAssistantContent();
     var preview = document.getElementById('doc_preview');
     if (!content) {
-      preview.innerHTML = '<p style="color:var(--tx2);font-size:13px">Send a message to generate a document.</p>';
+      preview.innerHTML = '<p style="color:var(--tx2);font-size:13px">' + T('Отправь сообщение — документ соберётся здесь.', 'Send a message to generate a document.') + '</p>';
       return;
     }
     preview.innerHTML = formatContent(content);
@@ -510,12 +529,12 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
       msgs.insertAdjacentHTML('beforeend', [
         '<div class="msg assistant">',
         '<div class="typing"><span></span><span></span><span></span></div>',
-        '<div class="msg_meta">Думаю… это может занять до минуты · нажми «Стоп», чтобы прервать</div>',
+        '<div class="msg_meta">' + T('Думаю… это может занять до минуты · нажми «Стоп», чтобы прервать', 'Thinking… this can take up to a minute · press "Stop" to cancel') + '</div>',
         '</div>'
       ].join(''));
     }
     var _sb = document.getElementById('send_btn');
-    if (_sb) { _sb.textContent = isTyping ? 'Стоп' : 'Отправить'; _sb.classList.toggle('stopping', isTyping); }
+    if (_sb) { _sb.textContent = isTyping ? T('Стоп', 'Stop') : T('Отправить', 'Send'); _sb.classList.toggle('stopping', isTyping); }
     msgs.scrollTop = msgs.scrollHeight;
     if (!isSplitLayout()) {
       _flushHighlight();
@@ -616,7 +635,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
       '<img src="' + safeSrc + '" alt="' + esc(alt || fname) + '">',
       '<div class="md-img-actions">',
       '<button type="button" class="md-img-btn md-img-copy" data-img-id="' + id + '">Copy</button>',
-      '<button type="button" class="md-img-btn md-img-download" data-img-id="' + id + '" data-filename="' + esc(fname) + '">Download</button>',
+      '<button type="button" class="md-img-btn md-img-download" data-img-id="' + id + '" data-filename="' + esc(fname) + '">' + T('Скачать', 'Download') + '</button>',
       '</div></div>'
     ].join('');
   }
@@ -1231,17 +1250,17 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
       try {
         mermaid.render(svgId, code).then(function (r) {
           wrap.innerHTML = [
-            '<div class="mmd-diagram-hdr"><span class="md-code-lang">Diagram</span></div>',
+            '<div class="mmd-diagram-hdr"><span class="md-code-lang">' + T('Схема', 'Diagram') + '</span></div>',
             '<div class="mmd-diagram">' + r.svg + '</div>',
             '<div class="md-img-actions">',
             '<button type="button" class="md-img-btn mmd-copy" data-mmd-id="' + divId + '">Copy PNG</button>',
-            '<button type="button" class="md-img-btn mmd-download" data-mmd-id="' + divId + '">Download PNG</button>',
+            '<button type="button" class="md-img-btn mmd-download" data-mmd-id="' + divId + '">' + T('Скачать PNG', 'Download PNG') + '</button>',
             '<button type="button" class="md-img-btn mmd-copy-code" data-mmd-id="' + divId + '">Copy code</button>',
             '</div>',
             '<div class="mmd-src-store" style="display:none">' + esc(code) + '</div>'
           ].join('');
         }).catch(function (e) {
-          wrap.innerHTML = '<pre style="color:var(--err);font-size:11px;white-space:pre-wrap">Diagram error: ' +
+          wrap.innerHTML = '<pre style="color:var(--err);font-size:11px;white-space:pre-wrap">' + T('Ошибка схемы: ', 'Diagram error: ') +
             esc(String(e)) + '</pre>';
         });
       } catch (e) {
@@ -1285,7 +1304,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
     _mermaidSvgToPng(svg, function (blob) {
       if (!blob) return;
       navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]).then(function () {
-        if (btn) { var o = btn.textContent; btn.textContent = 'Copied!'; setTimeout(function () { btn.textContent = o; }, 1500); }
+        if (btn) { var o = btn.textContent; btn.textContent = T('Скопировано!', 'Copied!'); setTimeout(function () { btn.textContent = o; }, 1500); }
       }).catch(function () {});
     });
   }
@@ -1311,7 +1330,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
     var store = wrap && wrap.querySelector('.mmd-src-store');
     if (!store) return;
     navigator.clipboard.writeText(store.textContent).then(function () {
-      if (btn) { var o = btn.textContent; btn.textContent = 'Copied!'; setTimeout(function () { btn.textContent = o; }, 1500); }
+      if (btn) { var o = btn.textContent; btn.textContent = T('Скопировано!', 'Copied!'); setTimeout(function () { btn.textContent = o; }, 1500); }
     }).catch(function () {});
   }
 
@@ -1369,7 +1388,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
     var text = getDocumentRawText();
     if (!text) return;
     navigator.clipboard.writeText(text).then(function () {
-      if (btn) { var o = btn.textContent; btn.textContent = 'Copied!'; setTimeout(function () { btn.textContent = o; }, 1500); }
+      if (btn) { var o = btn.textContent; btn.textContent = T('Скопировано!', 'Copied!'); setTimeout(function () { btn.textContent = o; }, 1500); }
     }).catch(function () {});
   }
 
@@ -1391,7 +1410,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
     var code = el.querySelector('code');
     if (!code) return;
     navigator.clipboard.writeText(code.textContent).then(function () {
-      if (btn) { var o = btn.textContent; btn.textContent = 'Copied!'; setTimeout(function () { btn.textContent = o; }, 1500); }
+      if (btn) { var o = btn.textContent; btn.textContent = T('Скопировано!', 'Copied!'); setTimeout(function () { btn.textContent = o; }, 1500); }
     }).catch(function () {});
   }
 
@@ -1400,7 +1419,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
     var img = wrap && wrap.querySelector('img');
     if (!img || !img.src) return;
     function onCopied() {
-      if (btn) { var o = btn.textContent; btn.textContent = 'Copied!'; setTimeout(function () { btn.textContent = o; }, 1500); }
+      if (btn) { var o = btn.textContent; btn.textContent = T('Скопировано!', 'Copied!'); setTimeout(function () { btn.textContent = o; }, 1500); }
     }
     fetch(img.src).then(function (r) { return r.blob(); }).then(function (blob) {
       var type = blob.type && blob.type.indexOf('image/') === 0 ? blob.type : 'image/png';
@@ -1439,7 +1458,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
     var body = artifact.querySelector('.md-artifact-body');
     if (!body) return;
     navigator.clipboard.writeText(body.textContent).then(function () {
-      var o = btn.textContent; btn.textContent = 'Copied!'; setTimeout(function () { btn.textContent = o; }, 1500);
+      var o = btn.textContent; btn.textContent = T('Скопировано!', 'Copied!'); setTimeout(function () { btn.textContent = o; }, 1500);
     }).catch(function () {});
   }
 
@@ -1475,7 +1494,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
     if (!apiToken) {
       isTyping = false;
       _pendingSend = { text: text, qa: qa };
-      messages.push({ role: 'assistant', note: true, content: 'Подключаюсь к аккаунту Extella… Сообщение отправится само через пару секунд.' });
+      messages.push({ role: 'assistant', note: true, content: T('Подключаюсь к аккаунту Extella… Сообщение отправится само через пару секунд.', 'Connecting to your Extella account… Your message will send automatically in a couple of seconds.') });
       renderMessages();
       saveHistory();
       return;
@@ -1516,7 +1535,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
       }
       isTyping = false;
       var out = extractAgentText(data);
-      messages.push({ role: 'assistant', content: out || 'Не получилось получить ответ. Попробуй ещё раз.' });
+      messages.push({ role: 'assistant', content: out || T('Не получилось получить ответ. Попробуй ещё раз.', 'Could not get a response. Please try again.') });
       renderMessages();
       saveHistory();
       if (isSplitLayout()) {
@@ -1538,7 +1557,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
 
   function buildAgentInput(text, qa) {
     var lines = [];
-    var ru = CHAT_RU[plugin.id] || null;
+    var ru = chatRu(plugin.id);
     lines.push('[Plugin context — not written by the user]');
     lines.push('You are the assistant of the "' + ((ru && ru.name) || plugin.name || plugin.id) + '" plugin inside Extella.');
     if (ru) {
@@ -1565,6 +1584,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
       lines.push('Hint: expert "' + qa.expert + '" with params ' + JSON.stringify(qa.params || {}) + '.');
     }
     lines.push('Answer concisely in plain language, in the language the user writes in. Do not mention internal tool or expert names unless asked.');
+    if (LANG === 'ru' && !ru) lines.push('The user interface is in Russian. Default to Russian unless the user writes in another language.');
     lines.push('DOCUMENT OUTPUT RULES (mandatory):');
     lines.push('- Output plain Markdown only — write headings, tables, and prose directly in the response body.');
     lines.push('- Never wrap the entire response in a code fence (no ```text, ```markdown, or ```md around the whole answer).');

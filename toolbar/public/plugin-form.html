@@ -110,6 +110,12 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
   var plugin = null;
   var apiToken = '';
   var agentId = 'agent_extella_default'; // личный агент приходит от тулбара
+  // Язык окна = язык витрины: приходит в etb_init, фолбэк — общий localStorage (same-origin)
+  var LANG = (function () { try { return localStorage.getItem('etb_lang') === 'en' ? 'en' : 'ru'; } catch (e) { return 'ru'; } })();
+  function T(ru, en) { return LANG === 'en' ? en : ru; }
+  /* __FORM_I18N_RU__ */
+  if (typeof FORM_I18N_RU === 'undefined') { var FORM_I18N_RU = {}; } // EN-лейблы полей из plugins/*.json → русские
+  function trL(s) { if (LANG !== 'ru' || !s) return s; return FORM_I18N_RU[s] || s; }
   // Русские шапки курированных форм (Фаза 4)
   var FORM_RU = {
     'sales-tax': { name:'Налог из цены', sub:'Добавит или выделит налог из любой суммы' },
@@ -166,6 +172,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
           if (e.data.token) apiToken = e.data.token;
           if (e.data.agentId) agentId = e.data.agentId;
           if (e.data.theme) applyTheme(e.data.theme);
+          if (e.data.lang === 'en' || e.data.lang === 'ru') LANG = e.data.lang;
           startWithPlugin(e.data.pluginId);
         }
       });
@@ -187,14 +194,14 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
     plugin = found;
 
     document.title = (plugin.name || 'Plugin') + ' — Extella';
-    var ru = FORM_RU[id] || null;
+    var ru = (LANG === 'ru' && FORM_RU[id]) || null;
     document.getElementById('hdr_name').textContent = (ru && ru.name) || plugin.name || id;
     document.getElementById('hdr_sub').textContent = (ru && ru.sub) || plugin.tagline || '';
 
     var caps = plugin.capabilities || [];
     if (!caps.length) {
       document.getElementById('form_section').innerHTML =
-        '<div class="banner" style="text-align:center;padding:20px;color:var(--tx2,#555)">Это агент, а не форма — у него нет полей для заполнения. Открой его в чате и просто напиши задачу словами.</div>';
+        '<div class="banner" style="text-align:center;padding:20px;color:var(--tx2,#555)">' + T('Это агент, а не форма — у него нет полей для заполнения. Открой его в чате и просто напиши задачу словами.', 'This is an agent, not a form — there are no fields to fill in. Open it in chat and just describe the task.') + '</div>';
       return;
     }
 
@@ -208,7 +215,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
     tabsEl.style.display = 'flex';
     tabsEl.innerHTML = caps.map(function (c, i) {
       return '<div class="tab' + (i === 0 ? ' on' : '') + '" data-idx="' + i + '">' +
-        esc(c.name || c.id) + '</div>';
+        esc(trL(c.name || c.id)) + '</div>';
     }).join('');
     tabsEl.querySelectorAll('.tab').forEach(function (t) {
       t.addEventListener('click', function () {
@@ -229,7 +236,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
     if (cap.name) {
       var title = document.createElement('div');
       title.className = 'form-title';
-      title.textContent = cap.name;
+      title.textContent = trL(cap.name);
       sec.appendChild(title);
     }
 
@@ -239,7 +246,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
 
     var btn = document.createElement('button');
     btn.id = 'run_btn';
-    btn.textContent = 'Запустить';
+    btn.textContent = T('Запустить', 'Run');
     btn.addEventListener('click', function () { runCapability(cap, btn); });
     sec.appendChild(btn);
   }
@@ -250,7 +257,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
 
     var label = document.createElement('label');
     label.setAttribute('for', 'f_' + inp.name);
-    label.innerHTML = esc(inp.label || inp.name) +
+    label.innerHTML = esc(trL(inp.label || inp.name)) +
       (inp.required ? '<span class="req">*</span>' : '');
     wrap.appendChild(label);
 
@@ -264,7 +271,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
         var val = (typeof opt === 'object') ? opt.value : opt;
         var lbl = (typeof opt === 'object') ? opt.label : opt;
         o.value = val;
-        o.textContent = lbl;
+        o.textContent = trL(lbl);
         if (val === String(inp.default)) o.selected = true;
         ctrl.appendChild(o);
       });
@@ -280,7 +287,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
       var boolLbl = document.createElement('label');
       boolLbl.className = 'bool-label';
       boolLbl.setAttribute('for', 'f_' + inp.name);
-      boolLbl.textContent = inp.label || inp.name;
+      boolLbl.textContent = trL(inp.label || inp.name);
       row.appendChild(ctrl); row.appendChild(boolLbl);
       wrap.appendChild(row);
 
@@ -314,7 +321,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
     } else if (inp.type === 'textarea') {
       ctrl = document.createElement('textarea');
       ctrl.id = 'f_' + inp.name;
-      ctrl.placeholder = inp.placeholder || '';
+      ctrl.placeholder = trL(inp.placeholder || '');
       ctrl.value = String(inp.default || '');
       wrap.appendChild(ctrl);
 
@@ -333,7 +340,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
       ctrl = document.createElement('input');
       ctrl.type = 'text';
       ctrl.id = 'f_' + inp.name;
-      ctrl.placeholder = inp.placeholder || '';
+      ctrl.placeholder = trL(inp.placeholder || '');
       ctrl.value = String(inp.default || '');
       if (inp.required) ctrl.addEventListener('keydown', function (e) {
         if (e.key === 'Enter') {
@@ -373,7 +380,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
   function validate(cap, params) {
     var missing = (cap.inputs || []).filter(function (inp) {
       return inp.required && !String(params[inp.name] || '').trim();
-    }).map(function (inp) { return inp.label || inp.name; });
+    }).map(function (inp) { return trL(inp.label || inp.name); });
     return missing;
   }
 
@@ -382,7 +389,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
     var params = collectParams(cap);
     var missing = validate(cap, params);
     if (missing.length) {
-      showResult({ status: 'error', message: 'Заполни обязательные поля: ' + missing.join(', ') });
+      showResult({ status: 'error', message: T('Заполни обязательные поля: ', 'Fill in the required fields: ') + missing.join(', ') });
       return;
     }
 
@@ -390,17 +397,17 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
       _pendingRun = { cap: cap, btn: btn };
       var _ra = document.getElementById('result_area');
       _ra.classList.add('show');
-      _ra.innerHTML = '<div class="running-row"><span class="spinner"></span><span>Подключаюсь к аккаунту Extella… Запустится само через пару секунд.</span></div>';
+      _ra.innerHTML = '<div class="running-row"><span class="spinner"></span><span>' + T('Подключаюсь к аккаунту Extella… Запустится само через пару секунд.', 'Connecting to your Extella account… It will start automatically in a couple of seconds.') + '</span></div>';
       return;
     }
 
     btn.disabled = true;
-    btn.textContent = 'Выполняю…';
+    btn.textContent = T('Выполняю…', 'Running…');
     clearResult();
 
     var ra = document.getElementById('result_area');
     ra.classList.add('show');
-    ra.innerHTML = '<div class="running-row"><span class="spinner"></span><span>Выполняю… обычно пара секунд</span></div>';
+    ra.innerHTML = '<div class="running-row"><span class="spinner"></span><span>' + T('Выполняю… обычно пара секунд', 'Running… usually a couple of seconds') + '</span></div>';
 
     var expertName = cap.expert_name || cap.id;
 
@@ -417,7 +424,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
     .then(function (r) { return r.json(); })
     .then(function (data) {
       btn.disabled = false;
-      btn.textContent = 'Запустить';
+      btn.textContent = T('Запустить', 'Run');
       // data.result can be:
       //   - a parsed JSON object (ideal)
       //   - a JSON string that needs parsing
@@ -437,7 +444,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
                 .replace(/\bNone\b/g, 'null')
             );
           } catch (e2) {
-            result = { status: 'error', message: 'Could not parse expert result: ' + String(result).slice(0, 200) };
+            result = { status: 'error', message: T('Не получилось разобрать ответ. Попробуй ещё раз. Детали: ', 'Could not parse the result. Try again. Details: ') + String(result).slice(0, 200) };
           }
         }
       }
@@ -445,8 +452,8 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
     })
     .catch(function (e) {
       btn.disabled = false;
-      btn.textContent = 'Запустить';
-      showResult({ status: 'error', message: 'Network error: ' + e.message });
+      btn.textContent = T('Запустить', 'Run');
+      showResult({ status: 'error', message: T('Нет связи с сервером — проверь интернет и попробуй ещё раз. Детали: ', 'No connection to the server — check your internet and try again. Details: ') + e.message });
     });
   }
 
@@ -464,13 +471,13 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
 
     var title = document.createElement('div');
     title.className = 'result-title';
-    title.textContent = 'Результат';
+    title.textContent = T('Результат', 'Result');
     ra.appendChild(title);
 
     if (!result || result.status === 'error') {
       var banner = document.createElement('div');
       banner.className = 'banner err';
-      banner.textContent = (result && result.message) || 'Unknown error';
+      banner.textContent = (result && result.message) || T('Что-то пошло не так — попробуй ещё раз', 'Something went wrong — try again');
       ra.appendChild(banner);
       return;
     }
@@ -490,7 +497,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
         dlBtn.className = 'dl-btn';
         dlBtn.download = result.filename;
         dlBtn.href = img.src;
-        dlBtn.textContent = 'Download ' + result.filename;
+        dlBtn.textContent = T('Скачать ', 'Download ') + result.filename;
         imgWrap.appendChild(dlBtn);
       }
       ra.appendChild(imgWrap);
@@ -509,7 +516,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
       dlBtn2.className = 'dl-btn';
       dlBtn2.download = result.filename;
       dlBtn2.href = 'data:' + mime + ';base64,' + result.data;
-      dlBtn2.textContent = 'Download ' + result.filename;
+      dlBtn2.textContent = T('Скачать ', 'Download ') + result.filename;
       ra.appendChild(dlBtn2);
 
     } else {

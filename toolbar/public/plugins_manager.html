@@ -1225,7 +1225,7 @@ function openPluginWindow(id){
   var _html=chat?_PLUGIN_CHAT_HTML:_PLUGIN_FORM_HTML;
   if(_html){
     var _url=URL.createObjectURL(new Blob([_html],{type:'text/html'}));
-    _ifr.addEventListener('load',function(){try{var _ss=window._etbSess||{};_ifr.contentWindow.postMessage({type:'etb_init',pluginId:id,token:_ss.token||'',agentId:_ss.agentId||''},'*');}catch(_){}});
+    _ifr.addEventListener('load',function(){try{var _ss=window._etbSess||{};_ifr.contentWindow.postMessage({type:'etb_init',pluginId:id,token:_ss.token||'',agentId:_ss.agentId||'',lang:(LANG==='en'?'en':'ru')},'*');}catch(_){}});
     _ifr.src=_url;
   } else {
     _ifr.src=(chat?'plugin-chat.html':'plugin-form.html')+'?id='+encodeURIComponent(id);
