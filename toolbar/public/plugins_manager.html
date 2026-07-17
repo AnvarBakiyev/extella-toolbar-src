@@ -1520,9 +1520,10 @@ var I18N_EN = {
   'Мини-программы Extella и приложения с GitHub: ставишь одним кликом — живут у тебя на компьютере.':'Extella mini-programs and apps from GitHub: one click to install — they live on your computer.',
   'Каталог популярных открытых инструментов: ставишь одним кликом — работают у тебя на компьютере. Обновляется каждую неделю.':'A catalog of popular open-source tools: one click to install — they run on your computer. Updated weekly.',
   'Готовые приложения с GitHub: клик — и Extella установит на твой компьютер. Работают локально.':'Ready-made apps from GitHub: one click and Extella installs them on your computer. They run locally.',
-  'Модели с Hugging Face — найди или вставь ссылку, поставим в один клик. Локальные работают прямо на твоём компьютере.':'Models from Hugging Face — search or paste a link, installed in one click. Local models run right on your computer.',
+  'Модели с Hugging Face: найди или вставь ссылку — встанет одним кликом. Локальные модели работают у тебя на компьютере, даже без интернета.':'Models from Hugging Face: search or paste a link — installed in one click. Local models run on your computer, even offline.',
   'Все программы':'All programs',
-  'Обработка файлов прямо на твоём компьютере (инструменты командной строки, CLI). Скажи агенту, что сделать с файлами, — он вызовет нужный.':'Works with files right on your computer (command-line tools, CLI). Tell the agent what to do with the files — it calls the right tool.',
+  'Обработка файлов прямо на твоём компьютере (инструменты командной строки, CLI).':'Works with files right on your computer (command-line tools, CLI).',
+  'Скажи агенту, что сделать с файлами, — он вызовет нужный.':'Tell the agent what to do with the files — it calls the right tool.',
   // Шапка / командная строка
   'Установить':'Install','Для профи':'Pro','Для всех':'For everyone',
   '🔍  Поиск по всем разделам — или вставь ссылку с GitHub / Hugging Face: программа, модель, навык встанут в один клик':'🔍  Search across all sections — or paste a GitHub / Hugging Face link: programs, models, skills install in one click',
@@ -1594,11 +1595,11 @@ var LOCAL_MODELS = [
   {id:'code', domain:'Код', emoji:'💻', model:'qwen2.5-coder:7b', size:'~4.7 ГБ',
    name:'Модель для кода', desc:'Генерация, объяснение и рефакторинг кода приватно, на устройстве.', frame:'черновик, проверяй результат'},
   {id:'law', domain:'Право · англ.', emoji:'⚖️', model:'hf.co/TheBloke/law-chat-GGUF:Q4_K_M', size:'~4 ГБ',
-   name:'Юрист (англоязычный)', desc:'Разбор англоязычных договоров и юр-текстов приватно. На английском, сильна; на русском, слабее.', frame:'черновик, не заключение'},
+   name:'Юрист (англоязычный)', desc:'Разбор англоязычных договоров и юр-текстов приватно. На английском сильна, на русском слабее.', frame:'черновик, не заключение'},
   {id:'medical', domain:'Медицина · англ.', emoji:'🩺', model:'hf.co/mradermacher/II-Medical-8B-GGUF:Q4_K_M', size:'~5 ГБ',
-   name:'Медицина (англоязычная)', desc:'Разбор англоязычных мед-текстов и вопросов приватно. Английский, сильно; русский, слабее.', frame:'не диагноз, для специалиста'},
+   name:'Медицина (англоязычная)', desc:'Разбор англоязычных мед-текстов и вопросов приватно. На английском сильно, на русском слабее.', frame:'не диагноз, для специалиста'},
   {id:'finance', domain:'Финансы · англ.', emoji:'📊', model:'martain7r/finance-llama-8b:q4_k_m', size:'~5 ГБ',
-   name:'Финансы (англоязычный)', desc:'Разбирает англоязычные финансы и отчёты приватно. Английский, сильно; русский, слабее.', frame:'не инвест-совет, проверяет человек'}
+   name:'Финансы (англоязычный)', desc:'Разбирает англоязычные финансы и отчёты приватно. На английском сильно, на русском слабее.', frame:'не инвест-совет, проверяет человек'}
 ];
 function localModelCard(m){
   return '<div class="stile" style="--acc:'+TYPE_ACC.model+'">'+
@@ -1688,7 +1689,7 @@ function appCard(a){
   if(c.verified===true)badge+=' · ✓ проверено';
   var btn;
   if(!ok){
-    btn='<button class="st_btn" disabled title="'+esc(c.note||'несовместимо с вашей системой')+'" style="opacity:.5;cursor:not-allowed">🖥 не для вашей ОС</button>';
+    btn='<button class="st_btn" disabled title="'+esc(c.note||'несовместимо с твоей системой')+'" style="opacity:.5;cursor:not-allowed">🖥 не для твоей системы</button>';
   } else if(inst){
     btn='<button class="st_btn" onclick="appStartOpen(this,\''+_dtEsc(a.id)+'\')">▶ Открыть</button>'+
         '<button class="st_btn" onclick="appUninstall(\''+_dtEsc(a.id)+'\',\''+_dtEsc((a.title||a.id))+'\')" title="Удалить приложение" style="background:transparent;border:1px solid var(--bd2);color:var(--tx3);margin-left:6px;padding:6px 10px">🗑</button>';
@@ -1836,7 +1837,7 @@ function _renderModelsCore() {
     g.insertAdjacentHTML('afterbegin','<div class="svc_sub" style="grid-column:1/-1;margin-bottom:12px"><button class="cat_chip" onclick="_modHFset(false)">← К подборке моделей</button><span style="font-size:12px;color:var(--tx3);margin-left:8px;align-self:center">поиск по Hugging Face — не проверено Extella</span></div>');
     return;
   }
-  g.innerHTML = '<div class="sk_lead" style="grid-column:1/-1">Модели с Hugging Face — найди или вставь ссылку, поставим в один клик. Локальные работают прямо на твоём компьютере.</div>' + modelsSpotlight() +
+  g.innerHTML = '<div class="sk_lead" style="grid-column:1/-1">Модели с Hugging Face: найди или вставь ссылку — встанет одним кликом. Локальные модели работают у тебя на компьютере, даже без интернета.</div>' + modelsSpotlight() +
     '<div style="grid-column:1/-1;text-align:center;margin:10px 0 0"><button class="cat_chip" onclick="_modHFset(true)">🔍 Искать ещё на Hugging Face</button></div>';
   [].forEach.call(g.querySelectorAll('[data-lminst]'),function(b){b.onclick=function(){installLocalModel(b.getAttribute('data-lminst'),b);};});
   _mountTabFilter('Поиск модели…');
@@ -1991,7 +1992,7 @@ var CURATED_PROGRAMS = {
   'cover-letter-writer': { biz:'work', icon:'📬', name:'Сопроводительное письмо', tagline:'Убедительно, но без «я командный игрок»' },
   'interview-questions': { biz:'work', icon:'💼', name:'Вопросы к собеседованию', tagline:'Подготовит вопросы и погоняет по ответам, без паники в переговорке' },
   'marketing-copy': { biz:'marketing', icon:'📣', name:'Тексты для рекламы', tagline:'Заголовки и лендинги, которые не стыдно показать клиенту' },
-  'product-description': { biz:'marketing', icon:'🛍️', name:'Описание товара', tagline:'Из «ну, это такая штука», в текст, который продаёт' },
+  'product-description': { biz:'marketing', icon:'🛍️', name:'Описание товара', tagline:'Из «ну, это такая штука» — в текст, который продаёт' },
   'brainstorm': { biz:'work', icon:'💡', name:'Мозговой штурм', tagline:'Накидает идей, пока кофе не остыл' },
   'study-schedule': { biz:'study', icon:'📚', name:'План подготовки', tagline:'Разложит учёбу к экзамену по дням, без ночных подвигов' },
   'net-pay': { biz:'money', icon:'💰', name:'Зарплата на руки', tagline:'Сколько реально придёт после налогов' },
@@ -2079,7 +2080,7 @@ function renderFeaturedSection() {
   if (!featured.length) {
     var _q = (_featSearch || '').trim();
     html += '<div class="empty" style="grid-column:1/-1;padding:26px 20px;text-align:center">' +
-      '<p style="margin:0 0 4px;font-weight:600">' + (_q ? 'Такого в каталоге пока нет' : 'В этой полке пока пусто') + '</p>' +
+      '<p style="margin:0 0 4px;font-weight:600">' + (_q ? 'Такого в каталоге пока нет' : 'На этой полке пока пусто') + '</p>' +
       '<p style="margin:0 0 14px;color:var(--tx2);font-size:13px">Опиши задачу, Строитель найдёт подходящее и добавит.</p>' +
       '<button class="st_btn" data-q="' + esc(_q) + '" onclick="etbFindInstall(this)">Найти и установить</button>' +
     '</div>';
@@ -2232,15 +2233,15 @@ var TYPE_ED = {
   },
   cli: {
     heroes: [
-      { label:'Работает у вас', acc:'#C57E33', source:'Инструмент · Документы', cliTool:'ghostscript', stats:'локально, офлайн',
+      { label:'Работает у тебя', acc:'#C57E33', source:'Инструмент · Документы', cliTool:'ghostscript', stats:'локально, офлайн',
         title:'Сжатие PDF на 50–70%', accent:'Когда файл не проходит по лимиту почты',
         facts:['Папка на 2000 PDF ужимается разом','Влезть в лимит портала или почты','Проверено: 15 МБ → 0,5 МБ'] },
       { label:'Документы', acc:'#2E7D5B', source:'Инструмент · Документы', cliTool:'pandoc',
         title:'Документы Word по шаблону', accent:'Подставит данные и соберёт целую пачку',
         facts:['2000 договоров или КП из шаблона и данных'] },
-      { label:'Магия для клиента', acc:'#2F6B66', source:'Инструмент · Документы', cliTool:'ocr',
+      { label:'Для бумажных архивов', acc:'#2F6B66', source:'Инструмент · Документы', cliTool:'ocr',
         title:'Распознавание сканов (OCR)', accent:'Сканы становятся документами с поиском',
-        facts:['10 лет сканов договоров станут искомыми','Русский и английский, локально'] }
+        facts:['10 лет сканов договоров — и по ним работает поиск','Русский и английский, локально'] }
     ]
   },
   knowledge: {
@@ -2253,14 +2254,14 @@ var TYPE_ED = {
         facts:['Юр-базы РК и другие — ставятся одним кликом'] },
       { label:'Своя папка', acc:'#3D8078', source:'База · своя',
         title:'База из своих документов', accent:'Укажи папку — соберу базу',
-        facts:['PDF, Word, тексты — всё станет искомым'] }
+        facts:['PDF, Word, тексты — по всем заработает поиск'] }
     ]
   },
   services: {
     heroes: [
       { label:'Живые данные · API', acc:'#2E8B57', source:'Сервисы',
         title:'Внешние сервисы', accent:'Курсы валют, погода и новости для агента',
-        facts:['Курсы валют, погода, справки, переводы, новости — вживую','Агент дёргает реальные API вместо выдумок','Подключил, проверил, дальше пользуется агент'] },
+        facts:['Курсы валют, погода, справки, переводы, новости — вживую','Агент запрашивает живые данные вместо выдумок','Подключил, проверил, дальше пользуется агент'] },
       { label:'Финансы', acc:'#2F6B66', source:'Сервис · Деньги',
         title:'Курсы и котировки', accent:'Валюты и крипто в реальном времени',
         facts:['USD, EUR, KZT, биткоин — свежие цифры'] },
@@ -2449,9 +2450,9 @@ var DEFAULT_MERCH = {
     { label:'Работа', acc:'#C57E33', pluginId:'resume-builder', title:'Резюме под вакансию', facts:['Усилит так, что дочитают до конца'] }
   ],
   collections: [
-    { eyebrow:'Для работы', title:'Рабочий набор', desc:'Письма, встречи, резюме, и день короче', acc:'#C57E33',
+    { eyebrow:'Для работы', title:'Рабочий набор', desc:'Письма, встречи, резюме — и день короче', acc:'#C57E33',
       items:[{id:'email-composer'},{id:'meeting-notes'},{id:'resume-builder'}] },
-    { eyebrow:'Для специалистов', title:'Бухгалтеру', desc:'Налоги, курсы и зарплата, каждый день', acc:'#2F6E7E',
+    { eyebrow:'Для специалистов', title:'Бухгалтеру', desc:'Налоги, курсы и зарплата — каждый день', acc:'#2F6E7E',
       items:[{id:'sales-tax'},{id:'net-pay'},{id:'exchange-historical'}] },
     { eyebrow:'Для жизни', title:'На каждый день', desc:'Мелочи, которые выручают', acc:'#3D8078',
       items:[{id:'recipe-suggester'},{id:'weather-lookup'},{id:'fitness-coach'}] }
@@ -3570,7 +3571,7 @@ function autoCardHTML(p, i){
   var id=_agId(p), acc=_agAcc(p), name=esc(_agCleanName(p)), tag=esc(_agTagline(p)), em=_agEmoji(p);
   var caps=_agCaps(p), status=_agStatus(p), sch=_agSchedule(p);
   var chips=caps.slice(0,4).map(function(c){ return '<span style="display:inline-block;font-size:11px;color:var(--tx2);background:var(--bg);border:1px solid var(--bd2);border-radius:6px;padding:2px 8px;margin:0 5px 5px 0">'+esc(c)+'</span>'; }).join('');
-  var runs=_agRuns(p), lastRun = runs[0] ? ('послед. запуск '+_fmtTs(runs[0].ts)) : 'ещё не запускался';
+  var runs=_agRuns(p), lastRun = runs[0] ? ('последний запуск '+_fmtTs(runs[0].ts)) : 'ещё не запускался';
   var schTxt = sch ? ('⏰ '+esc(sch.human||sch.period||'по расписанию')) : lastRun;
   var disabled = (status==='frozen');
   return '<div class="stile agcard" style="--acc:'+esc(acc)+';padding:0;overflow:hidden;animation-delay:'+Math.min(i*12,120)+'ms">'+
@@ -3846,8 +3847,8 @@ var SKILLS_CATALOG=[
   {id:'skill_legal',cat:'Бизнес',emoji:'📜',name:'Юрист-упроститель',desc:'Присылаешь договор, получаешь простое объяснение и список рисков.',rule:'[skill:Юрист-упроститель] Когда пользователь присылает договор, оферту, условия или юридический текст, объясни простым языком: что подписывают, ключевые риски и подводные камни, на что обратить внимание. Без юридического жаргона.',howto:'Вставь текст договора и скажи «разбери», получишь простое объяснение и риски.'},
   {id:'skill_numbers',cat:'Бизнес',emoji:'📊',name:'Разбор цифр',desc:'Присылаешь таблицу/отчёт, выделяет ключевые цифры, тренды и аномалии.',rule:'[skill:Разбор цифр] Когда пользователь присылает таблицу, отчёт или набор чисел, выдели ключевые показатели, тренды и аномалии простыми словами. Начни с 3–5 главных выводов, потом детали. Без воды.',howto:'Вставь таблицу или цифры и скажи «разбери», получишь ключевые выводы и аномалии.'},
   {id:'skill_email',cat:'Бизнес',emoji:'✉️',name:'Редактор писем',desc:'Пишет короткие, вежливые письма с чёткой темой и запросом.',rule:'[skill:Редактор писем] Когда просят написать письмо, сделай короткое и вежливое: тема, приветствие, суть в 2–4 предложениях, чёткий запрос/призыв к действию, подпись. Без воды и канцелярита.',howto:'Скажи «напиши письмо …», получишь готовое короткое деловое письмо.'},
-  {id:'skill_debug',cat:'Разработка',emoji:'🐞',name:'Метод отладки',desc:'Отлаживает системно: воспроизвести → изолировать → гипотеза → проверка.',rule:'[skill:Метод отладки] При отладке ошибок не гадай. Действуй по шагам: 1) воспроизведи и опиши симптом; 2) изолируй, где ломается; 3) сформулируй гипотезу о причине; 4) предложи минимальную проверку. Только потом, исправление.',howto:'Скинь ошибку или баг, агент разберёт её системно, а не наугад.'},
-  {id:'skill_review',cat:'Разработка',emoji:'👀',name:'Ревью кода',desc:'Ищет баги, дыры безопасности и читаемость, с конкретными правками.',rule:'[skill:Ревью кода] При ревью кода ищи по приоритету: 1) баги и логические ошибки; 2) уязвимости безопасности; 3) читаемость. Давай КОНКРЕТНЫЕ правки с примером, а не общие советы. Фокус, на проблемах.',howto:'Вставь код и скажи «сделай ревью», получишь конкретные замечания и правки.'}
+  {id:'skill_debug',cat:'Разработка',emoji:'🐞',name:'Метод отладки',desc:'Отлаживает системно: воспроизвести → изолировать → гипотеза → проверка.',rule:'[skill:Метод отладки] При отладке ошибок не гадай. Действуй по шагам: 1) воспроизведи и опиши симптом; 2) изолируй, где ломается; 3) сформулируй гипотезу о причине; 4) предложи минимальную проверку. Только потом — исправление.',howto:'Скинь ошибку или баг, агент разберёт её системно, а не наугад.'},
+  {id:'skill_review',cat:'Разработка',emoji:'👀',name:'Ревью кода',desc:'Ищет баги, дыры безопасности и читаемость, с конкретными правками.',rule:'[skill:Ревью кода] При ревью кода ищи по приоритету: 1) баги и логические ошибки; 2) уязвимости безопасности; 3) читаемость. Давай КОНКРЕТНЫЕ правки с примером, а не общие советы. Фокус — на проблемах.',howto:'Вставь код и скажи «сделай ревью», получишь конкретные замечания и правки.'}
 ];
 var SK_ACC={'Стиль и общение':'#C57E33','Работа и продуктивность':'#2F6B66','Бизнес':'#2E7D5B','Разработка':'#24544F'};
 var _skReg={v:1,items:[]}, _skCatReg=null, _skLoaded=false, _skAgents=null, _skPick=null;
@@ -3976,7 +3977,7 @@ var CLI_CATALOG=[
   {id:'ocr',cat:'Документы и PDF',emoji:'🔎',name:'Поиск по сканам (OCR)',live:true,batch:['cap_ocr_searchable_batch'],
    desc:'Превращает сканы и фото-PDF в документы с полнотекстовым поиском, русский и английский.',
    ops:['Скан → PDF с поиском','Папкой'],
-   howto:'Скажи: «сделай эти сканы искомыми», вернёт PDF с текстовым слоем.'},
+   howto:'Скажи: «добавь в эти сканы текстовый слой» — вернёт PDF, по которому работает поиск.'},
   {id:'libreoffice',cat:'Документы и PDF',emoji:'🗂️',name:'Office → PDF',live:true,batch:['cap_libreoffice_to_pdf_batch'],
    desc:'Конвертирует Word, Excel и PowerPoint в PDF, целыми папками.',
    ops:['Office → PDF','папкой'],
@@ -4014,7 +4015,7 @@ function renderCLI(){
     return;
   }
   var all=cliCatalog();
-  var html='<div class="sk_lead" style="grid-column:1/-1">Обработка файлов прямо на твоём компьютере (инструменты командной строки, CLI). Скажи агенту, что сделать с файлами, — он вызовет нужный.</div>'+
+  var html='<div class="sk_lead" style="grid-column:1/-1">Обработка файлов прямо на твоём компьютере (инструменты командной строки, CLI).<br>Скажи агенту, что сделать с файлами, — он вызовет нужный.</div>'+
     _bentoHTML(TYPE_ED.cli.heroes)+
     '<div class="sect"><h2>Инструменты</h2></div>'+
     '<div class="sect_hdr"><span class="sect_title">Своего инструмента нет?</span><span class="sect_line"></span></div>'+
@@ -4176,7 +4177,7 @@ function agCard(a){
   var on=agInstalled(a.id), it=agGi()[a.id];
   var caps=(a.caps||[]).slice(0,4).map(function(c){return '<span style="display:inline-block;font-size:11px;color:var(--tx2);background:var(--bg);border:1px solid var(--bd2);border-radius:5px;padding:2px 7px;margin:0 4px 4px 0">'+esc(c)+'</span>';}).join('');
   var foot=on
-    ? '<span class="sk_active">● установлена</span><button class="st_btn" data-aginst="'+esc(a.id)+'">Прошить снова</button><button class="sk_del" data-agdel="'+esc(a.id)+'" style="margin-left:6px">Убрать</button>'
+    ? '<span class="sk_active">● установлена</span><button class="st_btn" data-aginst="'+esc(a.id)+'">Назначить снова</button><button class="sk_del" data-agdel="'+esc(a.id)+'" style="margin-left:6px">Убрать</button>'
     : '<button class="st_btn" data-aginst="'+esc(a.id)+'">Установить роль</button>';
   return '<div class="stile" style="--acc:'+esc(a.acc)+'"><span class="st_chip">'+a.emoji+' Роль агента</span>'+
     '<div class="st_title">'+esc(a.name)+'</div><div class="st_fact">'+esc(a.tagline)+'</div>'+
@@ -4195,12 +4196,12 @@ function agentInstallModal(roleId){
     '<div class="steps" style="flex-direction:column;gap:9px;margin-bottom:12px">'+
       '<div class="step" style="max-width:none"><span class="step_n">1</span><div>Сделай в Extella <b>копию базового агента</b>, это два клика</div></div>'+
       '<div class="step" style="max-width:none"><span class="step_n">2</span><div>Скопируй <b>ID копии</b>, начинается с <code>agent_</code></div></div>'+
-      '<div class="step" style="max-width:none"><span class="step_n">3</span><div>Вставь ID ниже и нажми «Прошить роль»</div></div>'+
+      '<div class="step" style="max-width:none"><span class="step_n">3</span><div>Вставь ID ниже и нажми «Назначить роль»</div></div>'+
     '</div>'+
     '<div style="font-size:12px;color:var(--tx3);line-height:1.5;margin-bottom:12px">Вместе с ролью агент получит 13 живых сервисов: курсы валют, погода, перевод, новости.</div>'+
     '<div style="border:1px solid var(--a);border-radius:5px;padding:9px 12px;font-size:12.5px;line-height:1.5;color:var(--tx2);margin-bottom:12px"><b>Важно:</b> если на этом агенте уже есть правила, концепты или эксперты, они сохранятся, роль добавится поверх. Это удобно, чтобы дообучить рабочего агента. Для чистого старта сначала сделай новую копию агента.</div>'+
     '<input id="ag_aid" value="'+esc(prev)+'" placeholder="agent_XXXXXXXX, ID копии агента" autocomplete="off" style="'+_KPINP+'"/>'+
-    '<div style="margin-top:14px;display:flex;gap:8px;align-items:center"><button class="st_btn" onclick="agentFlash(\''+esc(roleId)+'\',this)">Прошить роль</button>'+
+    '<div style="margin-top:14px;display:flex;gap:8px;align-items:center"><button class="st_btn" onclick="agentFlash(\''+esc(roleId)+'\',this)">Назначить роль</button>'+
     '<button onclick="var o=document.getElementById(\'ag_ov\');if(o)o.remove()" style="'+_KPBTN+'">Закрыть</button></div>'+
     '<div id="ag_msg" style="font-size:13px;color:var(--tx2);line-height:1.55;margin-top:12px;min-height:18px"></div></div>';
   document.body.appendChild(ov);
@@ -4210,7 +4211,7 @@ function agentFlash(roleId, btn){
   var msg=document.getElementById('ag_msg');
   if(!aid||aid.indexOf('agent_')!==0){ if(msg)msg.innerHTML='⚠ Вставь корректный ID копии агента (начинается с <code>agent_</code>).'; return; }
   if(btn)btn.disabled=true;
-  if(msg)msg.innerHTML='⏳ Прошиваю роль и подключаю сервисы в агента… (до минуты)';
+  if(msg)msg.innerHTML='⏳ Назначаю роль и подключаю сервисы агенту… (до минуты)';
   skBridge('etb_run_expert','etb_expert_result',{name:'agent_flash_role',params:{agent_id:aid,role_id:roleId}}, 300000).then(function(r){
     if(btn)btn.disabled=false;
     var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
@@ -4218,7 +4219,7 @@ function agentFlash(roleId, btn){
     if(out&&out.status==='success'){
       var o=agGi(); o[roleId]=aid; agSi(o);
       var svc=(out.services?(' + '+out.services+' сервисов'):'');
-      if(msg)msg.innerHTML='✓ Готово! Твой агент теперь, «'+esc(out.name||roleId)+'»'+svc+'. Открой его в чате Extella и дай задачу, он может дёргать курсы, погоду, перевод и т.д.';
+      if(msg)msg.innerHTML='✓ Готово! Твой агент теперь — «'+esc(out.name||roleId)+'»'+svc+'. Открой его в чате Extella и дай задачу: он умеет запрашивать курсы, погоду, перевод и т.д.';
       setTimeout(function(){var ov=document.getElementById('ag_ov');if(ov)ov.remove();renderAgents();},2600);
     } else if(msg){ msg.innerHTML='⚠ '+esc((out&&out.message)||'не удалось прошить'); }
   }).catch(function(e){ if(btn)btn.disabled=false; if(msg)msg.innerHTML='⚠ '+esc((e&&e.message==='_timeout_')?'нет ответа от устройства, попробуй ещё раз':((e&&e.message)||'ошибка')); });
@@ -4271,7 +4272,7 @@ function renderMcpCatalog(){
     if(!items||!items.length){ host.innerHTML=''; return; }
     var order=['web','search','dev','data','files','comm','finance','ai','other'];
     var html='<div class="sect"><span class="eyebrow">MCP</span><h2>Каталог MCP-серверов <i>— тысячи готовых умений</i></h2></div>'+
-      '<div class="sk_lead" style="grid-column:1/-1">Готовые подключения для агента — из официального каталога MCP ('+items.length+' проверенных, все — без ключей). Помеченные «✓ подключён» уже доступны через мост; остальные подключаем по запросу.</div>';
+      '<div class="sk_lead" style="grid-column:1/-1">Готовые подключения для агента — из официального каталога MCP ('+items.length+' проверенных, все — без ключей). Помеченные «✓ подключён» уже работают; остальные подключим по запросу.</div>';
     order.forEach(function(ck){
       var part=items.filter(function(c){return (c.cat||'other')===ck;});
       if(!part.length)return;
@@ -4281,10 +4282,10 @@ function renderMcpCatalog(){
           var dyn=mcpxGet(c.id);
           var conn=c.conn||MCP_CONNECTED.indexOf(short)>=0;
           var foot;
-          if(dyn){ foot='<span class="sk_active">✓ подключён · '+dyn.count+' инстр.</span><span style="font-size:10.5px;color:var(--tx3)">'+esc(dyn.key)+'</span>'; }
+          if(dyn){ foot='<span class="sk_active">✓ подключён · инструментов: '+dyn.count+'</span><span style="font-size:10.5px;color:var(--tx3)">'+esc(dyn.key)+'</span>'; }
           else if(conn){ foot='<span class="sk_active">✓ подключён</span><span style="font-size:10.5px;color:var(--tx3);overflow:hidden;text-overflow:ellipsis;max-width:55%">'+esc((c.run&&c.run.pkg)||c.id)+'</span>'; }
           else if(c.run){ foot='<span style="font-size:11px;color:var(--tx3)">'+esc(c.run.type)+' · без ключей</span><button class="st_btn" data-mcpconn="'+esc(c.id)+'">Подключить</button>'; }
-          else { foot='<span style="font-size:11px;color:var(--tx3)">remote · подключение позже</span>'; }
+          else { foot='<span style="font-size:11px;color:var(--tx3)">облачный · подключение позже</span>'; }
           var mfunc=(LANG==='en'?(c.func_en||c.func):(c.func_ru||c.func))||'';
           var mdsc=(LANG==='en'?(c.desc_en||c.desc):(c.desc_ru||c.desc))||'';
           return '<div class="stile" style="--acc:'+(CAT_ACC[c.cat]||TYPE_ACC.mcp)+'"><span class="st_chip">🔌 MCP · '+esc(MCP_CATL[c.cat]||c.cat||'')+'</span>'+
@@ -4406,7 +4407,7 @@ var FORGE_TOOLS=[
    {id:'svc_translate',n:'🌐 Перевод'},{id:'svc_wiki',n:'📖 Википедия'},
    {id:'svc_github',n:'🐙 GitHub'},
    {id:'svc_ipgeo',n:'📍 Гео по IP'},{id:'svc_qr',n:'🔳 QR-код'}]},
- {g:'MCP-серверы (через мост)', items:[
+ {g:'MCP-серверы (встроенные)', items:[
    {id:'mcp_fetch',n:'🌍 Чтение веб-страниц'},{id:'mcp_time',n:'🕐 Точное время'},
    {id:'mcp_git',n:'🔧 Git-репозитории'},{id:'mcp_files',n:'📁 Файлы (Downloads)'}]}
 ];
@@ -4415,7 +4416,7 @@ function agentForgeModal(){
   var roleOpts=FORGE_ROLES.map(function(r){return '<option value="'+esc(r.id)+'">'+esc(r.n)+'</option>';}).join('');
   var groups=FORGE_TOOLS.slice();
   var dyn=mcpxGi();
-  if(dyn.length){ groups=groups.concat([{g:'Подключённые из каталога MCP', items:dyn.map(function(d){return {id:'mcpx:'+d.key, n:'🔌 '+(d.title||d.key)+' ('+(d.count||'?')+' инстр.)'};})}]); }
+  if(dyn.length){ groups=groups.concat([{g:'Подключённые из каталога MCP', items:dyn.map(function(d){return {id:'mcpx:'+d.key, n:'🔌 '+(d.title||d.key)+' (инструментов: '+(d.count||'?')+')'};})}]); }
   var boxes=groups.map(function(gr){
     return '<div style="font-size:11px;letter-spacing:.02em;color:var(--tx3);margin:10px 0 6px">'+esc(gr.g)+'</div>'+
       '<div style="display:flex;flex-wrap:wrap;gap:6px">'+gr.items.map(function(t){
@@ -4548,7 +4549,7 @@ function kpInstallReady(packId, name){
   };
   var ready=false; try{ready=localStorage.getItem('kp_engine_ready')==='1';}catch(_){}
   if(ready){ run(); return; }
-  if(msg)msg.innerHTML='⚙️ Готовлю движок знаний (Ollama + модель эмбеддингов). Разово…';
+  if(msg)msg.innerHTML='⚙️ Готовлю движок знаний — он даст поиск по смыслу, не только по словам. Разово…';
   skBridge('etb_run_expert','etb_expert_result',{name:'kp_resolver',params:{}}, 900000).then(function(r){
     var out=_kpParse(r);
     if(out&&out.status==='ok'){ try{localStorage.setItem('kp_engine_ready','1');}catch(_){}; run(); }
@@ -4614,7 +4615,7 @@ function kpDoIngest(btn){
   if(!folder){ if(msg)msg.innerHTML='⚠ Выбери папку с документами.'; return; }
   if(btn)btn.disabled=true;
   var ingest=function(){
-    if(msg)msg.innerHTML='⏳ Собираю базу на устройстве… векторизация может занять пару минут.';
+    if(msg)msg.innerHTML='⏳ Собираю базу на устройстве… подготовка поиска может занять пару минут.';
     skBridge('etb_run_expert','etb_expert_result',{name:'kp_ingest',params:{name:name,folder:folder}},300000).then(function(r){
       if(btn)btn.disabled=false;
       var out=_kpParse(r);
@@ -4625,7 +4626,7 @@ function kpDoIngest(btn){
   var ready=false; try{ready=localStorage.getItem('kp_engine_ready')==='1';}catch(_){}
   if(ready){ ingest(); return; }
   // Разовая установка движка знаний (Ollama + модель эмбеддингов), для новых пользователей.
-  if(msg)msg.innerHTML='⚙️ Готовлю движок знаний: ставлю локальный эмбеддер (Ollama + nomic-embed-text). Разово, может занять пару минут…';
+  if(msg)msg.innerHTML='⚙️ Готовлю движок знаний: ставлю поиск по смыслу на твой компьютер. Разово, может занять пару минут…';
   skBridge('etb_run_expert','etb_expert_result',{name:'kp_resolver',params:{}},900000).then(function(r){
     var out=_kpParse(r);
     if(out&&out.status==='ok'){ try{localStorage.setItem('kp_engine_ready','1');}catch(_){}; ingest(); }
@@ -4994,7 +4995,7 @@ function wsRenderCockpitV3(w){
   if(und)html+='<div class="wx-domain">'+und+'<a onclick="notify(\'mkt_win\')">открыть в отдельном окне ↗</a></div>';
   // ══ ОБЗОР ══
   html+='<section class="wx-view" id="wx-over"><div class="wx-panel"><h2>Панель воркспейса</h2>'+
-    '<p class="wx-sub">Компьютер понял проект и настроился под него. Ниже — цели, что делать дальше и что нужно от тебя. <b>Ничего не уходит наружу без твоего нажатия.</b></p>'+
+    '<p class="wx-sub">Компьютер понял проект и настроился под него. Ниже — цели, что делать дальше и что нужно от тебя. <b>Ничего не уходит наружу без твоего подтверждения.</b></p>'+
     '<div class="wx-pills"><span class="wx-pill on"><span>🎯</span>Цели</span><span class="wx-pill"><span>📈</span>Прогресс</span>'+(openQ?'<span class="wx-pill"><span>📨</span>Вопросы · '+openQ+'</span>':'')+'</div>';
   if(goals.length){ html+=goals.map(function(gl,i){
     var pr=(gl.progress|0);
