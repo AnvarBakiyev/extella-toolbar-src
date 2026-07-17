@@ -5185,7 +5185,7 @@ function wsRenderCurated(w){
   var g=document.getElementById('grid'); if(!g)return;
   try{ var _cbar=document.querySelector('.cmdbar'); if(_cbar)_cbar.style.display='none'; }catch(e){}
   var wid=_dtEsc(w.ws_id||''), contours=w.contours||[];
-  var LAB=[['done','Сделано','ok'],['next','Дальше','next'],['blockers','Блокеры','crit'],['waiting','Ждёт тебя','wait']];
+  var LAB=[['done','Сделано','ok'],['next','Дальше','next'],['blockers','Препятствия','crit'],['waiting','Ждёт тебя','wait']];
   var totBl=0; contours.forEach(function(c){ totBl+=((c.state||{}).blockers||[]).length; });
   var html='<div class="ws_wrap" style="grid-column:1/-1">'+
     '<div class="ws_hd">'+
