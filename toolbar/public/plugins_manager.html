@@ -1552,7 +1552,7 @@ var I18N_EN = {
   'Твои документы и готовые справочники: агент отвечает по ним, а не по памяти. Возьми готовую базу — или собери свою из папки.':'Your documents and ready-made references: the agent answers from them, not from memory. Pick a ready base — or build your own from a folder.',
   'Готовые роли превращают базового агента в сотрудника: продажи, поддержка, финансы и другие.':'Ready-made roles turn the base agent into an employee: sales, support, finance and more.',
   'Знания':'Knowledge','Своя база из документов':'Your own base from documents','+ Создать базу знаний':'+ Create knowledge base','Новая база':'New base','Мои базы знаний':'My knowledge bases',
-  'Своего инструмента нет?':'Missing a tool?','Своего навыка нет?':'Missing a skill?','Своей программы нет?':'Missing a program?','Своей модели нет?':'Missing a model?','Композитор':'Composer',
+  'Своего инструмента нет?':'Missing a tool?','Своего навыка нет?':'Missing a skill?','Своей программы нет?':'Missing a program?','Своей модели нет?':'Missing a model?','Найти и добавить':'Find and add','из открытых источников':'from open sources',
   'Смотреть базы':'Browse bases','Выбрать базу':'Pick a base','Собрать свою':'Build your own','Смотреть сервисы':'Browse services','Смотреть':'Browse','Выбрать роль':'Pick a role','Установить роль':'Install role',
   // Кнопки карточек
   'Подключить':'Connect','Проверить':'Test','Спросить':'Ask','▶ Спросить':'▶ Ask','Добавить программу':'Add program','Добавить модель':'Add model','Добавить навык':'Add skill','Добавить инструмент':'Add tool','Обновить':'Refresh','↻ Обновить':'↻ Refresh','Показать все':'Show all','← Все категории':'← All categories','Все':'All',
@@ -1570,9 +1570,9 @@ var I18N_EN = {
   'Для бизнеса':'For business','Для жизни':'For life','Работа':'Work','Программа':'Program','Навык':'Skill','Модель':'Model','Инструмент':'Tool','Сервис':'Service','Роль агента':'Agent role','Готовая база':'Ready base','База знаний':'Knowledge base',
   'Программа · Работа':'Program · Work','Живые данные · API':'Live data · API','Приватно · локально':'Private · local','Роли · Qwen':'Roles · Qwen',
   '+ Добавить программу':'+ Add program','Добавить':'Add','Не здесь?':'Not here?',
-  'Опиши задачу — Композитор найдёт и добавит сам.':'Describe the task — the Composer finds and adds it.',
+  'Опиши задачу — Extella найдёт и добавит сама.':'Describe the task — Extella finds and adds it for you.',
   'установлено':'installed','подключено':'connected','ставится…':'installing…','активен':'active','ещё не запускался':'never run',
-  'Как запустить:':'How to run:','через агента':'via agent','Инструменты · через агента':'Tools · via agent','Из интернета · Композитор':'From the internet · Composer',
+  'Как запустить:':'How to run:','через агента':'via agent','Инструменты · через агента':'Tools · via agent','Из интернета · добавлено Extella':'From the internet · added by Extella',
   // Витринные карточки (TYPE_ED героев): авто-влито 17.07
   '10 лет сканов договоров — и по ним работает поиск':'10 years of contract scans — all searchable',
   '2000 договоров или КП из шаблона и данных':'2,000 contracts or quotes from a template and data',
@@ -2249,7 +2249,7 @@ function renderFeaturedSection() {
     var _q = (_featSearch || '').trim();
     html += '<div class="empty" style="grid-column:1/-1;padding:26px 20px;text-align:center">' +
       '<p style="margin:0 0 4px;font-weight:600">' + (_q ? 'Такого в каталоге пока нет' : 'На этой полке пока пусто') + '</p>' +
-      '<p style="margin:0 0 14px;color:var(--tx2);font-size:13px">Опиши задачу, Композитор найдёт подходящее и добавит.</p>' +
+      '<p style="margin:0 0 14px;color:var(--tx2);font-size:13px">Опиши задачу — Extella найдёт подходящее и добавит.</p>' +
       '<button class="st_btn" data-q="' + esc(_q) + '" onclick="etbFindInstall(this)">Найти и установить</button>' +
     '</div>';
     return html;
@@ -3613,7 +3613,7 @@ function renderInstalled() {
   var html = '';
   if (capItems.length) {
     var en = (typeof LANG !== 'undefined' && LANG === 'en');
-    html += '<div class="sect_hdr"><span class="sect_title">' + (en ? 'From the internet · Composer' : 'Из интернета · Композитор') + '</span><span class="sect_line"></span></div>';
+    html += '<div class="sect_hdr"><span class="sect_title">' + (en ? 'From the internet · added by Extella' : 'Из интернета · добавлено Extella') + '</span><span class="sect_line"></span></div>';
     html += capItems.map(function(it, i){
       var kmap = en ? CAPINST_KIND_EN : CAPINST_KIND;
       var kind = kmap[it.kind] || it.kind || '';
@@ -3933,10 +3933,10 @@ function _cabSettings(p){
       '<span id="cab_name_msg" style="font-size:12.5px;color:var(--tx2);margin-left:10px"></span>')+
     _cabCard('<div style="font:700 13px var(--sans);color:var(--tx2);letter-spacing:.02em;margin-bottom:10px">Состояние</div>'+
       '<div style="display:flex;gap:8px;flex-wrap:wrap">'+pauseBtn+freezeBtn+'</div>'+
-      '<div style="font-size:11.5px;color:var(--tx3);margin-top:10px;line-height:1.5">Пауза скрывает кнопку запуска. Заморозка (F2) фиксирует агента как продовый — правки только через Композитора.</div>')+
+      '<div style="font-size:11.5px;color:var(--tx3);margin-top:10px;line-height:1.5">Пауза скрывает кнопку запуска. Заморозка фиксирует агента как рабочий эталон — правки только через чат с Extella.</div>')+
     _cabCard('<div style="font:700 13px var(--sans);color:var(--tx2);letter-spacing:.02em;margin-bottom:10px">Инструкция агента</div>'+
-      '<div style="font-size:13px;color:var(--tx2);line-height:1.55;margin-bottom:10px">Инструкция и логика меняются через <b>Композитора</b> с записью решения в сессию — так канон Extella защищает продовых агентов.</div>'+
-      '<button class="st_btn" style="background:transparent;color:var(--tx2);border:1px solid var(--bd2)" onclick="cabEditViaBuilder(\''+esc(id)+'\')">✎ Изменить через Композитора</button>'+
+      '<div style="font-size:13px;color:var(--tx2);line-height:1.55;margin-bottom:10px">Инструкция и логика меняются через <b>чат с Extella</b>, каждое решение записывается — так рабочие агенты защищены от случайных правок.</div>'+
+      '<button class="st_btn" style="background:transparent;color:var(--tx2);border:1px solid var(--bd2)" onclick="cabEditViaBuilder(\''+esc(id)+'\')">✎ Изменить через чат</button>'+
       '<div id="cab_edit_msg" style="font-size:12.5px;color:var(--tx2);margin-top:10px;min-height:16px"></div>')+
     _cabCard('<div style="font:700 13px var(--sans);color:#e0533d;letter-spacing:.02em;margin-bottom:8px">Опасная зона</div>'+
       '<button class="sk_del" onclick="cabRemove(\''+esc(id)+'\')">Убрать из витрины</button>'+
@@ -3950,7 +3950,7 @@ function cabRename(id){
 function cabSetStatus(id, st){ _agSaveState(id,{status:st}).then(function(){ _cabRender(); }); }
 function cabEditViaBuilder(id){
   var p=_cabAgent(); var msg=document.getElementById('cab_edit_msg');
-  var m='Открой Композитора (agent_FLYxB0v1qIY2phB5beVP5) и скажи: «измени агента '+(_agName(p))+' — …». Композитор внесёт правку и запишет решение в сессию.';
+  var m='Открой агента Extella (agent_FLYxB0v1qIY2phB5beVP5) и скажи: «измени агента '+(_agName(p))+' — …». Правка внесётся с записью решения в сессию.';
   if(msg)msg.innerHTML=esc(m);
 }
 function cabRemove(id){
@@ -4205,10 +4205,10 @@ function renderCLI(){
   var all=cliCatalog();
   var html='<div class="sk_lead" style="grid-column:1/-1">Обработка файлов прямо на твоём компьютере (инструменты командной строки, CLI).<br>Скажи агенту, что сделать с файлами, — он вызовет нужный.</div>'+
     '<div class="mshelf tf_skip"><div class="stile" style="--acc:var(--a);border-style:dashed;cursor:pointer" onclick="openCliAdd()">'+
-      '<span class="st_chip">✦ Композитор</span>'+
+      '<span class="st_chip">✦ Добавить</span>'+
       '<div class="st_title">+ Добавить инструмент</div>'+
-      '<div class="st_fact">Опиши задачу — Композитор подберёт открытый инструмент, установит и добавит его сам.</div>'+
-      '<div class="st_foot"><span style="font-size:11px;color:var(--tx3)">через Композитора</span></div></div></div>';
+      '<div class="st_fact">Опиши задачу — Extella подберёт открытый инструмент, установит и добавит сама.</div>'+
+      '<div class="st_foot"><span style="font-size:11px;color:var(--tx3)">из открытых источников</span></div></div></div>';
   var cats=[]; all.forEach(function(c){if(cats.indexOf(c.cat)<0)cats.push(c.cat);});
   cats.forEach(function(cn){
     html+='<div class="sect_hdr"><span class="sect_title">'+esc(cn)+'</span><span class="sect_line"></span></div>';
@@ -5503,12 +5503,12 @@ function openCliAdd(){
     ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px';
     ov.innerHTML='<div style="background:var(--s1);color:var(--tx);max-width:520px;width:100%;border:1px solid var(--bd);border-radius:var(--r);padding:22px;box-shadow:none;font-family:var(--sans)">'+
       '<div style="font-family:var(--serif);font-size:20px;margin-bottom:4px">Добавить инструмент</div>'+
-      '<div style="color:var(--tx2);font-size:13px;line-height:1.5;margin-bottom:14px">Опиши, что нужно уметь, Композитор подберёт открытый инструмент, установит его и добавит в магазин. Проприетарные программы (Excel, Photoshop) не поддерживаются.</div>'+
+      '<div style="color:var(--tx2);font-size:13px;line-height:1.5;margin-bottom:14px">Опиши, что нужно уметь, — Extella подберёт открытый инструмент, установит и добавит в магазин. Проприетарные программы (Excel, Photoshop) не поддерживаются.</div>'+
       '<textarea id="cliadd_txt" rows="3" placeholder="напр.: конвертировать электронные книги в PDF · убрать фон с фото · сжать видео" style="width:100%;box-sizing:border-box;border:1px solid var(--bd2);border-radius:5px;padding:10px;font-family:var(--sans);font-size:14px;background:var(--bg);color:var(--tx);resize:vertical"></textarea>'+
       '<div id="cliadd_msg" style="font-size:13px;color:var(--tx2);line-height:1.5;margin-top:10px;min-height:18px"></div>'+
       '<div id="cliadd_foot" style="display:flex;gap:8px;justify-content:flex-end;align-items:center;margin-top:14px">'+
         '<button onclick="closeCliAdd()" style="border:1px solid var(--bd2);background:transparent;color:var(--tx);border-radius:5px;padding:8px 14px;cursor:pointer;font-family:var(--sans)">Закрыть</button>'+
-        '<button id="cliadd_go" onclick="submitCliAdd()" style="border:0;background:var(--a);color:#fff;border-radius:5px;padding:8px 16px;cursor:pointer;font-weight:600;font-family:var(--sans)">Передать Композитору</button>'+
+        '<button id="cliadd_go" onclick="submitCliAdd()" style="border:0;background:var(--a);color:#fff;border-radius:5px;padding:8px 16px;cursor:pointer;font-weight:600;font-family:var(--sans)">Найти и добавить</button>'+
       '</div></div>';
     ov.onclick=function(e){if(e.target===ov)closeCliAdd();};
     document.body.appendChild(ov);
@@ -5516,7 +5516,7 @@ function openCliAdd(){
   ov.style.display='flex';
   var m=document.getElementById('cliadd_msg'); if(m)m.textContent='';
   var rb=document.getElementById('cliadd_refresh'); if(rb)rb.remove();
-  var go=document.getElementById('cliadd_go'); if(go){go.disabled=false;go.textContent='Передать Композитору';}
+  var go=document.getElementById('cliadd_go'); if(go){go.disabled=false;go.textContent='Найти и добавить';}
   var t=document.getElementById('cliadd_txt'); if(t){t.value='';t.focus();}
 }
 function closeCliAdd(){var ov=document.getElementById('cliadd_ov');if(ov)ov.style.display='none';}
@@ -5531,7 +5531,7 @@ function submitCliAdd(){
     'вызови run_expert("wz_cli_capability_pack", {spec_json: <анкета>}). '+
     'Если инструмент проприетарный (Excel/Photoshop) или без открытого CLI, честно откажись и предложи альтернативу. После выпуска инструмент сам появится в разделе «Инструменты».';
   skRunAgent(prompt).then(function(){
-    if(m)m.innerHTML='✓ Передал Композитору, он подбирает и собирает инструмент (минута-другая). Затем нажми «Обновить каталог».';
+    if(m)m.innerHTML='✓ Ищу и собираю инструмент — минута-другая. Затем нажми «Обновить каталог».';
     b.textContent='Передано';
     if(!document.getElementById('cliadd_refresh')){
       var rb=document.createElement('button'); rb.id='cliadd_refresh'; rb.textContent='Обновить каталог';
@@ -5544,13 +5544,13 @@ function submitCliAdd(){
 // Обобщённая кнопка «+ Добавить» для Программ/Моделей/Навыков, передаёт Композитору
 // (Qwen) типовую задачу; после он добавляет карточку в живой каталог соответствующего раздела.
 var ADD_KINDS={
-  programs:{where:'Программы, полка «Инструменты с GitHub»',title:'Добавить программу',sub:'Опиши, какая программа нужна, Композитор найдёт открытый вариант и добавит в магазин.',ph:'напр.: планировщик задач · трекер времени · генератор счетов',refresh:function(){_progReg=null;_progFetched=false;if(cur==='programs')renderPrograms();},prompt:function(v){return 'Пользователь просит добавить ПРОГРАММУ (плагин/приложение/MCP-сервер) в магазин Extella: «'+v+'». Найди подходящий ОТКРЫТЫЙ репозиторий и добавь карточку в живой каталог программ: kv_get "_mkt_programs" (global), добавь в .shelf объект {repoUrl,title,facts:[кратко по-русски],source:"github.com/<owner> · ★ N",acc:"#2F6B66",label:"MCP-инструмент"}, kv_set global. Если открытого нет, честно откажись.';}},
-  models:{where:'Модели, полка новинок',title:'Добавить модель',sub:'Опиши, какая ИИ-модель нужна, Композитор подберёт работающую и добавит в магазин.',ph:'напр.: генерация музыки · распознавание речи · перевод',refresh:function(){_modReg=null;_modFetched=false;if(cur==='models')renderModels();},prompt:function(v){return 'Пользователь просит добавить ИИ-МОДЕЛЬ в магазин Extella: «'+v+'». Подбери РАБОТАЮЩЕЕ пространство HuggingFace (RUNNING) под задачу и добавь карточку: kv_get "_mkt_models" (global), добавь в .shelf {hfId,title,facts:[кратко по-русски],source:"huggingface.co/<owner> · ♥ N",acc:"#2E7D5B",label:"Работает"}, kv_set global.';}},
-  skills:{where:'Навыки',title:'Добавить навык',sub:'Опиши поведение для агента, Композитор составит навык (правило) и добавит в каталог.',ph:'напр.: всегда предлагать сроки · проверять цифры дважды',refresh:function(){_skLoaded=false;_skCatReg=null;if(cur==='skills')renderSkillsShelf();},prompt:function(v){return 'Пользователь просит добавить НАВЫК (правило поведения) в магазин Extella: «'+v+'». Составь один навык: {id:"skill_<латиница>",cat:"Бизнес" или "Работа и продуктивность" или "Стиль и общение" или "Разработка",emoji,name:"<рус 2-3 слова>",desc:"<рус фраза>",rule:"[skill:Имя] <конкретное правило на русском>",howto:"<рус>"}. Добавь: kv_get "_mkt_skills_catalog" (global) {items:[...]}, dedup по id и name, append, kv_set global. Подтверди.';}}
+  programs:{where:'Программы, полка «Инструменты с GitHub»',title:'Добавить программу',sub:'Опиши, какая программа нужна, — Extella найдёт открытый вариант и добавит в магазин.',ph:'напр.: планировщик задач · трекер времени · генератор счетов',refresh:function(){_progReg=null;_progFetched=false;if(cur==='programs')renderPrograms();},prompt:function(v){return 'Пользователь просит добавить ПРОГРАММУ (плагин/приложение/MCP-сервер) в магазин Extella: «'+v+'». Найди подходящий ОТКРЫТЫЙ репозиторий и добавь карточку в живой каталог программ: kv_get "_mkt_programs" (global), добавь в .shelf объект {repoUrl,title,facts:[кратко по-русски],source:"github.com/<owner> · ★ N",acc:"#2F6B66",label:"MCP-инструмент"}, kv_set global. Если открытого нет, честно откажись.';}},
+  models:{where:'Модели, полка новинок',title:'Добавить модель',sub:'Опиши, какая ИИ-модель нужна, — Extella подберёт работающую и добавит в магазин.',ph:'напр.: генерация музыки · распознавание речи · перевод',refresh:function(){_modReg=null;_modFetched=false;if(cur==='models')renderModels();},prompt:function(v){return 'Пользователь просит добавить ИИ-МОДЕЛЬ в магазин Extella: «'+v+'». Подбери РАБОТАЮЩЕЕ пространство HuggingFace (RUNNING) под задачу и добавь карточку: kv_get "_mkt_models" (global), добавь в .shelf {hfId,title,facts:[кратко по-русски],source:"huggingface.co/<owner> · ♥ N",acc:"#2E7D5B",label:"Работает"}, kv_set global.';}},
+  skills:{where:'Навыки',title:'Добавить навык',sub:'Опиши поведение для агента — Extella составит навык и добавит в каталог.',ph:'напр.: всегда предлагать сроки · проверять цифры дважды',refresh:function(){_skLoaded=false;_skCatReg=null;if(cur==='skills')renderSkillsShelf();},prompt:function(v){return 'Пользователь просит добавить НАВЫК (правило поведения) в магазин Extella: «'+v+'». Составь один навык: {id:"skill_<латиница>",cat:"Бизнес" или "Работа и продуктивность" или "Стиль и общение" или "Разработка",emoji,name:"<рус 2-3 слова>",desc:"<рус фраза>",rule:"[skill:Имя] <конкретное правило на русском>",howto:"<рус>"}. Добавь: kv_get "_mkt_skills_catalog" (global) {items:[...]}, dedup по id и name, append, kv_set global. Подтверди.';}}
 };
 // Плитка «Добавить…» — стоит в начале полки, БЕЗ заголовка-раздела и с tf_skip:
 // иначе фильтр категорий считал её отдельным разделом («Своего навыка нет? 1»)
-function addTileHTML(kind,label){return '<div class="mshelf tf_skip"><div class="stile" style="--acc:var(--a);border-style:dashed;cursor:pointer" onclick="openAddModal(\''+kind+'\')"><span class="st_chip">✦ Добавить</span><div class="st_title">+ '+esc(label)+'</div><div class="st_fact">Опиши задачу — Композитор найдёт и добавит сам.</div><div class="st_foot"><span style="font-size:11px;color:var(--tx3)">через Композитора</span></div></div></div>';}
+function addTileHTML(kind,label){return '<div class="mshelf tf_skip"><div class="stile" style="--acc:var(--a);border-style:dashed;cursor:pointer" onclick="openAddModal(\''+kind+'\')"><span class="st_chip">✦ Добавить</span><div class="st_title">+ '+esc(label)+'</div><div class="st_fact">Опиши задачу — Extella найдёт и добавит сама.</div><div class="st_foot"><span style="font-size:11px;color:var(--tx3)">из открытых источников</span></div></div></div>';}
 function etbFindInstall(btn){
   var q = (btn && btn.getAttribute('data-q')) || '';
   openAddModal('programs');
@@ -5569,7 +5569,7 @@ function openAddModal(kind){
       '<div id="add_msg" style="font-size:13px;color:var(--tx2);line-height:1.5;margin-top:10px;min-height:18px"></div>'+
       '<div id="add_foot" style="display:flex;gap:8px;justify-content:flex-end;align-items:center;margin-top:14px">'+
         '<button onclick="document.getElementById(\'add_ov\').style.display=\'none\'" style="border:1px solid var(--bd2);background:transparent;color:var(--tx);border-radius:5px;padding:8px 14px;cursor:pointer;font-family:var(--sans)">Закрыть</button>'+
-        '<button id="add_go" onclick="submitAddModal()" style="border:0;background:var(--a);color:#fff;border-radius:5px;padding:8px 16px;cursor:pointer;font-weight:600;font-family:var(--sans)">Передать Композитору</button>'+
+        '<button id="add_go" onclick="submitAddModal()" style="border:0;background:var(--a);color:#fff;border-radius:5px;padding:8px 16px;cursor:pointer;font-weight:600;font-family:var(--sans)">Найти и добавить</button>'+
       '</div></div>';
     ov.onclick=function(e){if(e.target===ov)ov.style.display='none';};
     document.body.appendChild(ov);
@@ -5578,7 +5578,7 @@ function openAddModal(kind){
   document.getElementById('add_title').textContent=cfg.title;
   document.getElementById('add_sub').textContent=cfg.sub;
   var rb=document.getElementById('add_refresh'); if(rb)rb.remove();
-  var go=document.getElementById('add_go'); go.disabled=false; go.textContent='Передать Композитору';
+  var go=document.getElementById('add_go'); go.disabled=false; go.textContent='Найти и добавить';
   document.getElementById('add_msg').textContent='';
   var t=document.getElementById('add_txt'); t.value=''; t.placeholder=cfg.ph; ov.style.display='flex'; t.focus();
 }
@@ -5702,7 +5702,7 @@ function submitAddModal(){
   }
   b.textContent='Передаю…';
   skRunAgent(cfg.prompt(v)).then(function(){
-    m.innerHTML='✓ Передал Композитору, он работает в фоне минуту-другую. Результат появится в разделе: <b>'+esc(cfg.where||'')+'</b>. Нажми «Обновить», чтобы проверить.';
+    m.innerHTML='✓ Ищу и добавляю — минута-другая. Результат появится в разделе: <b>'+esc(cfg.where||'')+'</b>. Нажми «Обновить», чтобы проверить.';
     b.textContent='Передано';
     if(!document.getElementById('add_refresh')){
       var rb=document.createElement('button'); rb.id='add_refresh'; rb.textContent='Обновить';
