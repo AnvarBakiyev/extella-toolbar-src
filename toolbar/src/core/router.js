@@ -725,6 +725,18 @@ ETB.router = (function () {
         } catch (err) {
           reply4({ type: 'etb_agents_result', reqId: reqId4, ok: false, error: (err && err.message) || 'agents failed' });
         }
+      } else if (e.data.type === 'etb_plugin_action' && e.data.action === 'open' && e.data.pluginId) {
+        // Плагин просит открыть ДРУГОЙ установленный плагин окном приложения.
+        // Без этого встроенные UI (Визард → «Воркспейсес») делали window.open,
+        // а хост уводил 127.0.0.1 во внешний браузер (setWindowOpenHandler).
+        // Слушатель marketplace к этому моменту снят (оверлей Plugins закрыт),
+        // поэтому просьбу обслуживает панель. Источник проверяем СТРОГО по
+        // contentWindow — иначе сработали бы обработчики всех кэшированных панелей.
+        var srcOk = false, _ifr = content.querySelectorAll('iframe');
+        for (var _k = 0; _k < _ifr.length; _k++) {
+          try { if (_ifr[_k].contentWindow === e.source) { srcOk = true; break; } } catch (_) {}
+        }
+        if (srcOk) ETB.router.openById(String(e.data.pluginId), { returnTo: 'plugins' });
       }
     };
     window.addEventListener('message', _pmHandler);
@@ -1510,7 +1522,7 @@ ETB.router = (function () {
         });
     },
 
-    open: function (plugin) {
+    open: function (plugin, opts) {
       var id = plugin.id;
 
       // Hide currently visible panel (keep it in cache).
@@ -1542,17 +1554,25 @@ ETB.router = (function () {
         _activeId = id;
       }
 
+      // Where to land when this panel is closed. A plugin opened from the
+      // Plugins storefront returns TO the storefront (it is the user's home
+      // surface); without this the ✕ dropped the user into chat with no way
+      // back except reopening Plugins from the pill.
+      _cache[id].returnTo = (opts && opts.returnTo) || _cache[id].returnTo || '';
+
       if (ETB.nav) ETB.nav.syncUI();
     },
 
-    openById: function (id) {
+    openById: function (id, opts) {
       var plugin = ETB.registry.getById(id);
-      if (plugin) this.open(plugin);
+      if (plugin) this.open(plugin, opts);
     },
 
     close: function (opts) {
+      var returnTo = '';
       if (_activeId && _cache[_activeId]) {
         var panel = _cache[_activeId].panel;
+        returnTo = _cache[_activeId].returnTo || '';
         _cache[_activeId].lastUsed = Date.now(); // keep it fresh in LRU
         panel.style.animation = '_etbv2_slide_out .15s ease forwards';
         setTimeout(function () {
@@ -1563,6 +1583,10 @@ ETB.router = (function () {
       }
       _activeId = null;
       window.__etbResendInit = null;
+      if (returnTo === 'plugins' && (!opts || !opts.silent) && ETB.nav) {
+        ETB.nav.set('plugins');
+        return;
+      }
       if (ETB.nav && (!opts || !opts.silent)) ETB.nav.syncUI();
     },
 

@@ -252,6 +252,17 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);
 .cat_back{grid-column:1/-1;padding:0 0 2px}
 .cb_btn{border:none;background:transparent;color:var(--tx2);font:600 13px var(--sans);cursor:pointer;padding:4px 0}
 .cb_btn:hover{color:var(--a)}
+/* Единая полоса подэкрана: «← Назад» + хлебные крошки. Раньше у каждого подэкрана
+   был свой выход (чип / .cat_back / крестик), и нигде не было видно, где ты. */
+.subnav{grid-column:1/-1;display:flex;align-items:center;gap:14px;padding:2px 0 14px;flex-wrap:wrap}
+.sn_back{border:1px solid var(--bd2);background:transparent;color:var(--tx2);font:600 12.5px var(--sans);
+  cursor:pointer;padding:5px 12px;border-radius:7px;transition:border-color .14s,color .14s}
+.sn_back:hover{border-color:var(--a);color:var(--a)}
+.cr_path{font-size:12px;color:var(--tx3);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.cr_up{cursor:pointer}
+.cr_up:hover{color:var(--a);text-decoration:underline}
+.cr_sep{opacity:.45}
+.cr_now{color:var(--tx2);font-weight:600}
 .cat_chip .ci{display:inline-flex;margin-right:5px}
 .cat_chip .ci .lico{width:15px;height:15px}
 .cat_chip.off{opacity:.45}
@@ -483,6 +494,13 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);
 .eico{font-size:36px;margin-bottom:12px;opacity:.4}
 .eico .lico{width:34px;height:34px;color:var(--tx3)}
 .st_chip .chip_ic{width:11px;height:11px;vertical-align:-2px;margin-right:4px;color:var(--acc,var(--a))}
+/* Загрузка = анимированная бесконечность (единый приём Extella, вместо ⏳/спиннеров). */
+.inf{display:inline-block;vertical-align:middle;line-height:0}
+.inf .tr{fill:none;stroke:#E7D8C1;stroke-width:7;stroke-linecap:round;opacity:.55}
+.inf .run{fill:none;stroke:url(#infg);stroke-width:7;stroke-linecap:round;stroke-dasharray:46 154;animation:infrun 1.5s linear infinite}
+@keyframes infrun{to{stroke-dashoffset:-200}}
+body[data-theme="dark"] .inf .tr,html[data-theme="dark"] .inf .tr{stroke:var(--bd2);opacity:.7}
+@media (prefers-reduced-motion:reduce){.inf .run{animation:none;stroke-dasharray:none}}
 .empty p{font-size:13px;margin-top:6px;line-height:1.6}
 
 /* ── HuggingFace kind toggle ─────────────────────────────────────────── */
@@ -641,18 +659,6 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);
 .wsl_new_t{font-family:var(--serif);font-size:17px;font-weight:600;color:var(--tx);margin-top:6px}
 .wsl_new_s{font-size:13px;color:var(--tx2);line-height:1.5}
 .wsl_new_m{font:500 11px var(--mono);color:var(--tx3);margin-top:6px}
-/* Workspace-раздел на Рабочем столе */
-.dt_hero_ws{margin-bottom:12px !important;box-shadow:none !important}
-.dt_ws_strip{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 22px}
-.dt_ws_card{display:inline-flex;align-items:center;gap:7px;background:var(--s1);border:1px solid var(--bd2);border-radius:10px;padding:8px 13px;font:600 13px var(--sans);color:var(--tx);cursor:pointer;transition:border-color .12s,transform .1s}
-.dt_ws_card:hover{border-color:#2F6B66;transform:translateY(-1px)}
-.dt_ws_dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.dt_ws_dot.crit{background:#B23A2E}.dt_ws_dot.ok{background:#2E7D5B}
-.dt_ws_nm{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.dt_ws_add{color:#2F6B66;border-style:dashed}
-.dt_ws_more{color:var(--tx3)}
-.dt_ws_empty{background:var(--s1);border:1px dashed var(--bd2);border-radius:10px;padding:12px 15px;margin:0 0 22px;font-size:13px;color:var(--tx2);cursor:pointer;line-height:1.5}
-.dt_ws_empty:hover{border-color:#2F6B66;color:var(--tx)}
 </style>
 </head>
 <body>
@@ -1324,7 +1330,7 @@ var CATS = [
   { id: 'knowledge',l: 'Знания' },
   { id: 'agents',   l: 'Агенты' }
 ];
-var _SVC_GROUP=['programs','cli','models','skills'];  // полки «Каталога»: берёшь готовое; Знания и Агенты — отдельно, они наполняются твоим
+var _SVC_GROUP=['programs','apps','cli','models','skills'];  // полки «Каталога» (IA Эллы) + apps для обратной совместимости setc('apps')
 
 var _admView = 'catalog';
 function setAdmView(v){ _admView = v; renderGrid(); }
@@ -1359,9 +1365,58 @@ function _logoHome(el){
   }catch(_){}
   setc('desktop');
 }
+// ── Память навигации ───────────────────────────────────────────────────────
+// Хост переинжектит тулбар при КАЖДОЙ полной навигации (открыл плагин — код
+// загрузился заново). Раздел жил в обычной переменной и сбрасывался на
+// «Рабочий стол», поэтому после захода куда-либо приходилось искать раздел
+// заново. Запоминаем раздел и прокрутку и восстанавливаем при следующем старте.
+var NAV_KEY='etb_nav_v1', _navT=null, _navY=0;
+function _navValid(id){
+  if(!id) return false;
+  for(var i=0;i<CATS.length;i++) if(CATS[i].id===id) return true;
+  return _SVC_GROUP.indexOf(id)>=0;   // под-вкладки «Сервисов» — тоже валидный раздел
+}
+function _navSave(){
+  try{
+    var s=document.querySelector('.scr');
+    localStorage.setItem(NAV_KEY, JSON.stringify({cur:cur, y:(s?s.scrollTop:0)||0, ts:Date.now()}));
+  }catch(_){}
+}
+function _navSaveScroll(){ if(_navT) return; _navT=setTimeout(function(){ _navT=null; _navSave(); }, 400); }
+function _navRestore(){
+  try{
+    var st=JSON.parse(localStorage.getItem(NAV_KEY)||'null');
+    if(!st || !_navValid(st.cur)) return null;
+    if(Date.now()-(st.ts||0) > 864e5) return null;   // сутки не заходил — начинаем с Рабочего стола
+    return st;
+  }catch(_){ return null; }
+}
+// Единая полоса подэкрана: «← Назад» + хлебные крошки (показывают, где ты).
+// crumbs: [{l:'Модели', go:"setc('models')"}, {l:'Поиск по Hugging Face'}] —
+// последняя крошка это текущее место, она без перехода. back — код кнопки.
+// Показываем ТОЛЬКО на подэкранах: в корне раздела след даёт подсвеченная вкладка,
+// лишняя полоса там была бы шумом.
+// Человеческое имя раздела по id (для крошек). Под-вкладки «Сервисов» тоже.
+function _tabLabel(id){
+  for(var i=0;i<CATS.length;i++) if(CATS[i].id===id) return CATS[i].l;
+  var S={programs:'Программы',apps:'Приложения',cli:'Инструменты',services:'Сервисы',
+         workspace:'Воркспейсы',automations:'Автоматизации',mine:'Установленное'};
+  return S[id]||id;
+}
+function _subNavHTML(crumbs, back){
+  var n=(crumbs||[]).length;
+  var path=(crumbs||[]).map(function(c,i){
+    if(i===n-1) return '<span class="cr_now">'+esc(c.l)+'</span>';
+    return '<span class="cr_up" onclick="'+(c.go||'')+'">'+esc(c.l)+'</span>';
+  }).join('<span class="cr_sep">›</span>');
+  return '<div class="subnav">'+
+    '<button class="sn_back" onclick="'+back+'">← Назад</button>'+
+    '<span class="cr_path">'+path+'</span></div>';
+}
 function setc(id) {
   var again = (cur === id);  // повторный клик по активной вкладке
   cur = id;
+  _navSave();
   if (id === 'workspace') { _wsView = 'list'; _wsCur = null; }  // всегда входим на список
   document.body.setAttribute('data-mode', id === 'admin' ? 'pro' : 'all');
   _rescueFilterBar();
@@ -1466,9 +1521,11 @@ function syncHFFilterBar() {
 function renderGrid() {
   var _cb = document.querySelector('.cmdbar');
   if (_cb) _cb.style.display = (cur === 'home' || cur === 'desktop') ? 'none' : 'flex';
+  _ensureLoc();   // слой переводов (_mkt_loc) — грузится один раз, перерисовывает вкладку сам
   if (cur === 'desktop') renderDesktop();
   else if (cur === 'home') renderHome();
   else if (cur === 'programs') renderPrograms();
+  else if (cur === 'apps') renderApps();
   else if (cur === 'models') renderModels();
   else if (cur === 'skills') renderSkillsShelf();
   else if (cur === 'cli') renderCLI();
@@ -1545,6 +1602,13 @@ var I18N_EN = {
   'Мой компьютер · Конструктор':'My computer · Wizard',
   'Все установленные программы в одном месте: настраивай, соединяй в связки и запускай.':'All your installed programs in one place: set up, link into workflows, and run.',
   'Покажи папку проекта — Extella поймёт, что за работа, подберёт инструменты и возьмёт рутину на себя.':"Point it at a project folder — Extella understands the work, sets up the right tools, and takes the routine off your hands.",
+  'Визард':'Wizard','Воркспейс':'Workspace','Композитор':'Composer','Регулярные задачи':'Scheduled tasks','Второй пилот':'Copilot','Студия языков':'Language Studio','Команда':'Team',
+  'Собрать процесс: интервью → план → стройка → запуск':'Build a process: interview → plan → build → launch',
+  'Рабочие среды: компьютер понял проект и настроился':'Workspaces: the computer understood the project and set itself up',
+  'Студия Композитора — внутри Визарда: задача словами → готовая автоматизация':'Composer Studio — inside the Wizard: describe a task → get a working automation',
+  'Автоматизации по расписанию':'Scheduled automations',
+  'Пилот наблюдает экран и помогает':'The copilot watches your screen and helps',
+  'Пока пусто. Установи программы в «Сервисах» или собери агента в Визарде — они появятся здесь ярлыками.':'Nothing yet. Install programs in “Services” or build an agent in the Wizard — they will appear here as icons.',
   'Открыть →':'Open →','Открыть':'Open','Запустить':'Run','Кабинет':'Cabinet','Удалить':'Remove','Открыть источник':'Open source','↗ Открыть':'↗ Open','↗ Источник':'↗ Source','⚙ Кабинет':'⚙ Cabinet','▶ Запустить':'▶ Run',
   // Секции / подписи
   'Выбор Extella':'EXTELLA PICK','Выбор Extella':'Extella pick',
@@ -2112,10 +2176,17 @@ var I18N_EN = {
   'Опиши задачу — Extella подберёт открытый инструмент, установит и добавит сама.':'Describe the task — Extella picks an open tool, installs and adds it for you.',
   '↻ Обновить каталог':'↻ Refresh catalog',
   '🔍 Искать ещё на Hugging Face':'🔍 Search more on Hugging Face',
+  'Из интернета · Композитор':'From the internet · Composer',
+  'Убрать из витрины':'Remove from storefront','Удалить навсегда':'Delete forever','Опасная зона':'Danger zone','Автоматизации':'Automations',
+  '«Убрать из витрины» прячет карточку и ярлык у тебя. «Удалить навсегда» вычищает запись из каталога автоматизаций целиком. Эксперты и данные в Extella не трогаются.':'"Remove from storefront" hides the card and icon for you. "Delete forever" wipes the entry from the automations catalog entirely. Experts and data in Extella are untouched.'
 };
 var I18N_RX = [
   [/^Программы на рабочем столе/, 'Programs on the desktop'],
+  [/^Автоматизации(?= ·)/, 'Automations'],
+  [/^Программы(?= ·)/, 'Programs'],
+  [/^Инструменты(?= ·)/, 'Tools'],
   [/^Клик — открыть\. Правый клик — открыть или удалить\.?$/, 'Click to open. Right-click to open or remove.'],
+  [/^Клик — открыть или запустить\. Правый клик — кабинет, настройки, удалить\.?$/, 'Click to open or run. Right-click for cabinet, settings, remove.'],
   [/^Три шага: копия базового агента → её ID → выбери роль ниже\.?$/, 'Three steps: copy the base agent → its ID → pick a role below.'],
   [/^Живой каталог работающих демо HuggingFace.*/, 'Live catalog of working HuggingFace demos — run in the cloud, no GPU, one click. Updated weekly.'],
   [/^Проверено Extella ·/, 'Verified by Extella ·'],
@@ -2243,15 +2314,17 @@ function modelsSpotlight(){
 // ===== Приложения (Pinokio-совместимые рецепты, детерминированная установка) =====
 var _appReg=null, _appFetched=false;
 function _ensureApps(){ if(_appFetched)return; _appFetched=true;
-  _loadSharded('_mkt_apps').then(function(r){ if(r&&r.shelf){_appReg=r; if(cur==='programs')renderPrograms(); else if(cur==='desktop')renderDesktop();} }).catch(function(){ _appReg={shelf:[]}; if(cur==='programs')renderPrograms(); else if(cur==='desktop')renderDesktop(); }); }
+  _loadSharded('_mkt_apps').then(function(r){ if(r&&r.shelf){_appReg=r; if(cur==='programs')renderPrograms(); else if(cur==='desktop')_deskRedraw();} }).catch(function(){ _appReg={shelf:[]}; if(cur==='programs')renderPrograms(); else if(cur==='desktop')_deskRedraw(); }); }
 var _appInstalled=null;   // Set установленных app_id (и их basename)
+var _appInstLoaded=false; // ответ app_list получен (пустой список — тоже ответ, отличаем от «ещё едет»)
 function _refreshInstalledApps(){
   skBridge('etb_run_expert','etb_expert_result',{name:'app_list',params:{}},30000).then(function(r){
     var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
     if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}
     var s={}; ((out&&out.apps)||[]).forEach(function(a){ s[a.app_id]=1; var b=a.app_id.split('/').pop(); s[b]=1; });
-    _appInstalled=s; if(cur==='programs')renderPrograms(); else if(cur==='desktop')renderDesktop();   // перерисовать с отметками
-  }).catch(function(){ _appInstalled={}; });
+    _appInstalled=s; _appInstLoaded=true;
+    if(cur==='programs')renderPrograms(); else if(cur==='desktop')_deskRedraw();   // перерисовать с отметками
+  }).catch(function(){ _appInstalled={}; _appInstLoaded=true; if(cur==='desktop')_deskRedraw(); });
 }
 function _curOS(){
   var p=(navigator.platform||'')+' '+(navigator.userAgent||'');
@@ -2259,10 +2332,16 @@ function _curOS(){
 }
 function _appOk(a){ var c=a.compat; return !c||!c.platforms||c.platforms.indexOf(_curOS())>=0; }
 var _appOnlyCompat=true;
-function _appToggleCompat(){ _appOnlyCompat=!_appOnlyCompat; renderPrograms(); }
-// Секция приложений (Pinokio-репо с GitHub) — встраивается в раздел «Программы». Возвращает HTML-строку.
-function _appsSectionHTML(){
-  if(!_appReg){ _ensureApps(); return '<div class="sect" style="grid-column:1/-1"><h2>Приложения с GitHub</h2></div><div class="sk_lead" style="grid-column:1/-1">Загружаю приложения…</div>'; }
+var APP_CATL={image:'Картинки',audio:'Аудио и музыка',video:'Видео',avatar:'Аватары','3d':'3D',llm:'Модели и чат',code:'Код и разработка',text:'Текст и документы',data:'Данные и аналитика',other:'Другое'};
+var APP_CATL_EN={image:'Images',audio:'Audio & music',video:'Video',avatar:'Avatars','3d':'3D',llm:'Models & chat',code:'Code & development',text:'Text & documents',data:'Data & analytics',other:'Other'};
+// Порядок полок: «Другое» всегда последним, остальное — как здесь.
+var APP_CAT_ORDER=['image','audio','video','avatar','3d','llm','code','text','data','other'];
+function _appCatL(c){ return (LANG==='en'?APP_CATL_EN[c]:APP_CATL[c])||c; }
+function _appToggleCompat(){ _appOnlyCompat=!_appOnlyCompat; _appToggleRedraw(); }
+// Приложения (Pinokio-репо с GitHub) — НЕ отдельный блок: их полки вливаются
+// в общий каталог раздела «Программы», продолжая полки, что идут сверху.
+function _appsShelvesHTML(){
+  if(!_appReg){ _ensureApps(); return _loadingHTML('Загружаю приложения…'); }
   if(_appInstalled===null){ _appInstalled={}; _refreshInstalledApps(); }
   var all=_appReg.shelf||[];
   var osName={darwin:'macOS',win32:'Windows',linux:'Linux'}[_curOS()]||_curOS();
@@ -2270,14 +2349,26 @@ function _appsSectionHTML(){
   var apps=_appOnlyCompat?all.filter(_appOk):all;
   var toggle=hidden?('<div class="sk_lead" style="grid-column:1/-1;font-size:12px;color:var(--tx3)">'+
     (_appOnlyCompat?('Показаны совместимые с '+esc(osName)+'. Скрыто несовместимых: '+hidden+'. '+
-      '<a href="#" onclick="_appToggleCompat();return false" style="color:var(--acc,#7A3FA0)">показать все</a>')
+      '<a href="#" onclick="_appToggleCompat();return false" style="color:var(--a)">показать все</a>')
      :('Показаны все, включая несовместимые с '+esc(osName)+'. '+
-      '<a href="#" onclick="_appToggleCompat();return false" style="color:var(--acc,#7A3FA0)">только для моей системы</a>'))+'</div>'):'';
-  return '<div class="sect" style="grid-column:1/-1"><h2>Приложения с GitHub</h2></div>'+
-    '<div class="sk_lead" style="grid-column:1/-1">Готовые приложения с GitHub: клик — и Extella установит на твой компьютер. Работают локально.</div>'+
-    toggle+
-    '<div class="mshelf">'+apps.map(appCard).join('')+'</div>';
+      '<a href="#" onclick="_appToggleCompat();return false" style="color:var(--a)">только для моей системы</a>'))+'</div>'):'';
+  var byCat={};
+  apps.forEach(function(a){ var c=a.cat||'other'; (byCat[c]=byCat[c]||[]).push(a); });
+  // Полки в заданном порядке (APP_CAT_ORDER), незнакомые категории — в хвост, «Другое» последним.
+  var order=APP_CAT_ORDER.filter(function(c){return byCat[c];});
+  Object.keys(byCat).forEach(function(c){ if(order.indexOf(c)<0) order.splice(order.length-(byCat.other?1:0),0,c); });
+  var shelves=order.map(function(c){
+    return '<div class="sect_hdr"><span class="sect_title">'+esc(_appCatL(c))+'</span><span class="sect_line"></span></div>'+
+      '<div class="mshelf">'+byCat[c].map(appCard).join('')+'</div>';
+  }).join('');
+  // Ни своего <h2>, ни своего лида: приложения — часть общего каталога раздела,
+  // их полки просто продолжают полки, которые идут сверху. Строка про совместимость
+  // остаётся (она рабочая), но уходит в хвост и приглушена.
+  return (shelves||'<div class="sk_lead" style="grid-column:1/-1">Нет приложений для твоей системы.</div>')+toggle;
 }
+// Приложения слиты в «Программы» — стрелка сюда ведёт туда же.
+function renderApps(){ setc('programs'); }
+function _appToggleRedraw(){ if(cur==='programs')renderPrograms(); else if(cur==='desktop')_deskRedraw(); }
 function appCard(a){
   var repo=(a.run&&a.run.repo)||''; var stars=a.stars?('★'+a.stars):'';
   var inst=_appInstalled&&_appInstalled[a.id];
@@ -2294,13 +2385,14 @@ function appCard(a){
     btn='<button class="st_btn" onclick="appInstall(\''+_dtEsc(repo)+'\',\''+_dtEsc(a.id)+'\',\''+_dtEsc((a.title||a.id))+'\')">Установить</button>';
   }
   // функция жирным + имя вторично (когда есть локализованные поля func/desc); иначе — как раньше
-  var func=(LANG==='en'?(a.func_en||a.func):(a.func_ru||a.func))||'';
-  var dsc=(LANG==='en'?(a.desc_en||a.desc):(a.desc_ru||a.desc))||'';
+  var aL=_locOf(a)||{};   // перевод из слоя _mkt_loc, если в карточке его нет
+  var func=(LANG==='en'?(a.func_en||aL.func_en||a.func):(a.func_ru||aL.func_ru||a.func))||'';
+  var dsc=(LANG==='en'?(a.desc_en||aL.desc_en||a.desc):(a.desc_ru||aL.desc_ru||a.desc))||'';
   var head, nameLine='';
   if(func){ head=esc(func); nameLine='<div class="st_name">'+esc(a.title||a.id)+'</div>'; }
   else { head=esc(a.title||a.id); }   // фолбэк до локализации
   return '<div class="stile" style="--acc:'+(APP_ACC[a.cat]||TYPE_ACC.app)+(ok?'':';opacity:.62')+'">'+
-    '<span class="st_chip">📦 '+esc(a.cat||'app')+(stars?' · '+stars:'')+badge+(inst?' · ✓ установлено':'')+'</span>'+
+    '<span class="st_chip">📦 '+esc(_appCatL(a.cat||'other'))+(stars?' · '+stars:'')+badge+(inst?' · ✓ установлено':'')+'</span>'+
     '<div class="st_title">'+head+'</div>'+nameLine+
     '<div class="st_fact">'+esc(dsc)+'</div>'+
     '<div class="st_foot" style="justify-content:space-between;align-items:center">'+
@@ -2321,7 +2413,7 @@ function appInstall(repo,id,title){
 }
 function appDoInstall(btn,repo,id){
   var msg=document.getElementById('app_msg'); if(btn)btn.disabled=true;
-  if(msg)msg.innerHTML='⏳ Клонирую и ставлю по рецепту… может занять пару минут.';
+  if(msg)msg.innerHTML=INF(28)+' Клонирую и ставлю по рецепту… может занять пару минут.';
   skBridge('etb_run_expert','etb_expert_result',{name:'app_install',params:{repo:repo,app_id:id}},1800000).then(function(r){
     var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
     if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}
@@ -2336,8 +2428,8 @@ function appDoInstall(btn,repo,id){
 function appStartOpen(btn,id){
   var msg=document.getElementById('app_msg');
   var say=function(t){ if(msg)msg.innerHTML=t; else if(btn)btn.textContent=t.replace(/<[^>]+>/g,''); };
-  if(btn){ btn.disabled=true; if(!msg)btn.textContent='⏳ Запускаю…'; }
-  if(msg)msg.innerHTML='⏳ Запускаю приложение… первый старт может занять до минуты.';
+  if(btn){ btn.disabled=true; if(!msg)btn.textContent=INF(28)+' Запускаю…'; }
+  if(msg)msg.innerHTML=INF(28)+' Запускаю приложение… первый старт может занять до минуты.';
   skBridge('etb_run_expert','etb_expert_result',{name:'app_start',params:{app_id:id}},300000).then(function(r){
     var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
     if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}
@@ -2345,8 +2437,8 @@ function appStartOpen(btn,id){
     // есть URL (success ИЛИ starting) → открываем; iframe сам подхватит, когда приложение догрузит модель
     if(out&&out.url){ appEmbed(id,out.url,out.ready); }
     else if(out&&out.status==='error'){ say('⚠ '+esc(out.message||'не запустилось')); }
-    else { say('⏳ '+esc((out&&out.message)||'Приложение грузит модель — нажми ▶ Открыть ещё раз через минуту.')); }
-  }).catch(function(e){ if(btn){btn.disabled=false; if(!msg)btn.textContent='▶ Открыть';} say('⏳ Запуск идёт (долго для ML-приложений). Загляни через минуту.'); });
+    else { say(INF(28)+' '+esc((out&&out.message)||'Приложение грузит модель — нажми ▶ Открыть ещё раз через минуту.')); }
+  }).catch(function(e){ if(btn){btn.disabled=false; if(!msg)btn.textContent='▶ Открыть';} say(INF(28)+' Запуск идёт (долго для ML-приложений). Загляни через минуту.'); });
 }
 function appEmbed(id,url,ready){
   var o=document.getElementById('app_ov'); if(o)o.remove();
@@ -2376,14 +2468,15 @@ function appUninstall(id,title){
 }
 function appDoUninstall(btn,id){
   var msg=document.getElementById('app_msg'); if(btn)btn.disabled=true;
-  if(msg)msg.innerHTML='⏳ Останавливаю и удаляю…';
+  if(msg)msg.innerHTML=INF(28)+' Останавливаю и удаляю…';
   skBridge('etb_run_expert','etb_expert_result',{name:'app_uninstall',params:{app_id:id}},120000).then(function(r){
     var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
     if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}
     if(out&&out.status==='success'){
       if(_appInstalled)delete _appInstalled[id];
       var o=document.getElementById('app_ov'); if(o)o.remove();
-      if(cur==='programs')renderPrograms();
+      // Раньше обновлялись только «Программы» — на столе удалённое приложение оставалось.
+      if(cur==='programs')renderPrograms(); else if(cur==='desktop')_deskRedraw();
     } else { if(btn)btn.disabled=false; if(msg)msg.innerHTML='⚠ '+esc((out&&out.message)||'не удалось'); }
   }).catch(function(e){ if(btn)btn.disabled=false; if(msg)msg.innerHTML='⚠ '+esc((e&&e.message)||'нет ответа'); });
 }
@@ -2400,7 +2493,7 @@ function selfUpdate(){
 }
 function selfDoUpdate(btn){
   var msg=document.getElementById('app_msg'); if(btn)btn.disabled=true;
-  if(msg)msg.innerHTML='⏳ Качаю свежий интерфейс и способности из GitHub… (пара минут, не закрывай)';
+  if(msg)msg.innerHTML=INF(28)+' Качаю свежий интерфейс и способности из GitHub… (пара минут, не закрывай)';
   skBridge('etb_run_expert','etb_expert_result',{name:'wz_self_update',params:{what:'all'}},600000).then(function(r){
     var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
     if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}
@@ -2431,7 +2524,9 @@ function _renderModelsCore() {
   if (_modHF) {
     if (!hfState.inited) { hfState.inited = true; searchHF(); }
     renderHFDiscover();
-    g.insertAdjacentHTML('afterbegin','<div class="svc_sub" style="grid-column:1/-1;margin-bottom:12px"><button class="cat_chip" onclick="_modHFset(false)">← К подборке моделей</button><span style="font-size:12px;color:var(--tx3);margin-left:8px;align-self:center">поиск по Hugging Face — не проверено Extella</span></div>');
+    g.insertAdjacentHTML('afterbegin',
+      _subNavHTML([{l:'Модели', go:"_modHFset(false)"},{l:'Поиск по Hugging Face'}], "_modHFset(false)")+
+      '<div class="sk_lead" style="grid-column:1/-1;margin:-8px 0 12px;font-size:12px;color:var(--tx3)">поиск по Hugging Face — не проверено Extella</div>');
     return;
   }
   g.innerHTML = '<div class="sk_lead" style="grid-column:1/-1">Модели с Hugging Face: найди или вставь ссылку — Extella поставит сама. Локальные модели работают у тебя на компьютере, даже без интернета.</div>' + modelsSpotlight() +
@@ -2670,8 +2765,8 @@ function renderFeaturedSection() {
     });
   }
   var _pro = document.body.getAttribute('data-mode') === 'pro';
-  var _bk2 = _featCat === 'all' ? '' : '<div class="cat_back"><button class="cb_btn" onclick="_setFeatCat(\'all\')">← Все категории</button></div>';
-  var html = '<div class="sect"><h2>Все программы</h2></div>' + _progSearchHTML() + _featCatBar() + _bk2;
+  // Без шапки: полки по категориям идут одним полотном с остальным каталогом раздела.
+  var html = '';
 
   if (featuredError) html += '<div class="banner err">⚠ Установка не удалась: ' + esc(featuredError) + '</div>';
   if (!featured.length) {
@@ -2924,6 +3019,17 @@ function _tfShelfCat(shelf){
 }
 function _mountTabFilter(placeholder){
   var g=document.getElementById('grid'); if(!g) return;
+  // Часть каталогов (MCP) приезжает АСИНХРОННО, уже после первой отрисовки: шапку
+  // тогда надо пересобрать, иначе чипы не посчитают то, что приехало позже.
+  // Поэтому функция идемпотентна: старую шапку снимаем, ввод пользователя переносим.
+  var prevQ='', prevCat='__all';
+  var old=g.querySelector('.tabfilter');
+  if(old){
+    var oi=old.querySelector('.tf_inp'); if(oi) prevQ=oi.value||'';
+    var oc=old.querySelector('.cat_chip.on'); if(oc) prevCat=oc.getAttribute('data-cat')||'__all';
+    old.remove();
+  }
+  // tf_skip — полки, которые фильтр не трогает (приём Эллы: локальные модели и т.п.)
   var shelves=[].slice.call(g.querySelectorAll('.mshelf')).filter(function(s){ return !s.classList.contains('tf_skip'); });
   if(shelves.length<2) return;  // нечего фильтровать
   var cats=[], cnt={}, total=0;
@@ -2943,8 +3049,15 @@ function _mountTabFilter(placeholder){
   var chips='<div class="catbar"><button class="cat_chip on" data-cat="__all" onclick="_tabFilterCat(this)">Все <span class="cat_n">'+total+'</span></button>'+
     cats.map(function(c){ return '<button class="cat_chip" data-cat="'+esc(c)+'" onclick="_tabFilterCat(this)">'+esc(c)+' <span class="cat_n">'+(cnt[c]||0)+'</span></button>'; }).join('')+'</div>';
   bar.innerHTML=search+chips;
-  var anchor=g.querySelector('.sect, .sect_hdr');
-  if(anchor) g.insertBefore(bar, anchor); else g.appendChild(bar);
+  // Шапка (поиск + категории) — В САМЫЙ ВЕРХ, НАД hero-баннером (единый порядок: поиск → категории → hero).
+  if(g.firstChild) g.insertBefore(bar, g.firstChild); else g.appendChild(bar);
+  // Вернуть то, что пользователь уже ввёл/выбрал до пересборки.
+  if(prevQ){ var ni=bar.querySelector('.tf_inp'); if(ni) ni.value=prevQ; }
+  if(prevCat && prevCat!=='__all'){
+    var nb=bar.querySelector('.cat_chip[data-cat="'+prevCat.replace(/"/g,'\\"')+'"]');
+    if(nb){ [].forEach.call(bar.querySelectorAll('.cat_chip'),function(b){ b.classList.toggle('on', b===nb); }); }
+  }
+  if(prevQ || (prevCat && prevCat!=='__all')) _tabFilterApply();
 }
 function _tabFilterCat(btn){
   var bar=btn.closest('.tabfilter'); if(!bar) return;
@@ -2970,16 +3083,54 @@ function _tabFilterApply(){
   });
 }
 
+// ===== Слой переводов (_mkt_loc) =====================================
+// Каталоги (_mkt_models/_mkt_programs/…) перезаписывает харвестер на VPS — он
+// затирает любые поля, дописанные в карточку. Поэтому функция/описание живут
+// ОТДЕЛЬНЫМ глобальным ключом _mkt_loc (ключ карточки → func_ru/func_en/desc_*)
+// и накладываются поверх каталога при отрисовке. Харвестер его не трогает,
+// а глобальный KV = один канал для всех пользователей.
+var _locReg=null,_locFetched=false;
+function _locKey(h){ return (h&&(h.hfId||h.repoUrl||h.id))||''; }
+function _locOf(h){ var k=_locKey(h); return (_locReg&&k&&_locReg[k])||null; }
+function _locRedraw(){
+  if(cur==='models')renderModels();
+  else if(cur==='programs')renderPrograms();
+  else if(cur==='skills')renderSkillsShelf();
+  else if(cur==='services')renderServices();
+}
+function _ensureLoc(){
+  if(_locFetched)return; _locFetched=true;
+  skKvGet('_mkt_loc').then(function(r){
+    if(!r){ _locReg={}; return; }
+    var n=r.shards||1, m=r.map||{};
+    if(n<=1){ _locReg=m; _locRedraw(); return; }
+    var reqs=[]; for(var i=2;i<=n;i++) reqs.push(skKvGet('_mkt_loc_'+i).catch(function(){return null;}));
+    Promise.all(reqs).then(function(parts){
+      parts.forEach(function(p){ if(p&&p.map) for(var k in p.map) m[k]=p.map[k]; });
+      _locReg=m; _locRedraw();
+    });
+  }).catch(function(){ _locReg={}; });
+}
 function _tileHTML(h, i, label) {
-  var fact = (h.facts && h.facts[0]) ? '<div class="st_fact">' + esc(h.facts[0]) + '</div>' : '';
-  var ico2 = h.icon || (h.pluginId && (CURATED_PROGRAMS[h.pluginId] || {}).icon) || '';
+  _ensureLoc();
+  // Канон: чип «тип · метаданные» ведёт (без иконки </>), ФУНКЦИЯ жирным,
+  // имя продукта вторичной строкой, описание, источник, кнопка.
+  var L=_locOf(h);
+  var func=L?((LANG==='en'?L.func_en:L.func_ru)||''):'';
+  var dsc=L?((LANG==='en'?L.desc_en:L.desc_ru)||''):((h.facts&&h.facts[0])||'');
+  var name=h.title||'';
+  var head=func||name;
+  var nameLine=(func&&name)?'<div class="st_name">'+esc(name)+'</div>':'';
+  var fact=dsc?'<div class="st_fact">'+esc(dsc)+'</div>':'';
   return '<div class="stile" style="--acc:' + esc(h.acc || '#C57E33') + ';animation-delay:' + Math.min(i * 30, 240) + 'ms">' +
+    // Дизайн Эллы (st_top + векторная иконка + чип) поверх логики Анвара
+    // (функция жирным из слоя _mkt_loc, имя продукта вторичной строкой).
     '<div class="st_top">' +
       '<span class="st_ico" aria-hidden="true">' + _ico(_cardCat(h)) + '</span>' +
       '<span class="st_chip">' + esc(label || h.label || 'Выбор Extella') + '</span>' +
     '</div>' +
-    '<div class="st_title">' + esc(h.title || '') + (h.accent ? '<i class="acc_sub">' + esc(h.accent) + '</i>' : '') + '</div>' +
-    fact + (h.source ? '<div class="st_src">' + esc(h.source) + '</div>' : '') +
+    '<div class="st_title">' + esc(head) + (h.accent ? '<i class="acc_sub">' + esc(h.accent) + '</i>' : '') + '</div>' +
+    nameLine + fact + (h.source ? '<div class="st_src">' + esc(h.source) + '</div>' : '') +
     '<div class="st_foot">' + _cardBtn(h, 'st_btn') + '</div>' +
   '</div>';
 }
@@ -2989,7 +3140,8 @@ function catalogByCatHTML(cards, catFn, order, labels, acc, eyebrow, title, lead
   if (!cards || !cards.length) return '';
   var groups = {};
   cards.forEach(function (c) { var k = catFn(c); (groups[k] = groups[k] || []).push(c); });
-  var html = '<div class="sect"><h2>' + title + '</h2></div>';
+  // title/lead пустые -> рисуем только полки: каталог может жить под общей шапкой раздела.
+  var html = title ? '<div class="sect"><h2>' + title + '</h2></div>' : '';
   if (lead) html += '<div class="sk_lead" style="grid-column:1/-1">' + lead + '</div>';
   order.forEach(function (k) {
     var items = groups[k]; if (!items || !items.length) return;
@@ -3214,15 +3366,21 @@ function programsSpotlight(){
 }
 // Полный каталог устанавливаемых репо по функциональным разделам (как Навыки).
 // Только «Для всех»; в «Для профи», сырой поиск GitHub.
-function progToolsHTML(){
+// Единый каталог раздела: программы с GitHub и приложения идут ОДНИМ потоком полок
+// под одной шапкой — это не два каталога подряд. extra = полки приложений.
+function progToolsHTML(extra){
+  extra=extra||'';
   if(document.body.getAttribute('data-mode')==='pro')return '';
   _ensureProg();
-  if(!(_progReg&&_progReg.shelf&&_progReg.shelf.length))return '';
-  return catalogByCatHTML(_progReg.shelf, repoCat, REPO_ORDER, REPO_LABEL, REPO_ACC,
-      'Инструменты с GitHub', 'Готовые инструменты',
-      'Каталог популярных открытых инструментов — Extella ставит их сама, работают у тебя на компьютере. Обновляется каждую неделю.', 'Инструмент')+
-    '<div style="grid-column:1/-1;text-align:right;margin:-2px 0 8px"><span style="font-size:11px;color:var(--tx3);margin-right:8px">живой каталог с GitHub · '+_progReg.shelf.length+'</span>'+
-    '<button onclick="_progReg=null;_progFetched=false;renderPrograms()" style="border:1px solid var(--bd2);background:transparent;color:var(--tx2);border-radius:5px;padding:4px 10px;font-size:12px;cursor:pointer">↻ Обновить</button></div>';
+  var live=!!(_progReg&&_progReg.shelf&&_progReg.shelf.length);
+  if(!live&&!extra)return '';
+  // Ни шапки, ни лида: каталог продолжает то, что идёт сверху, одним полотном.
+  // Границы задают только полки категорий — отдельный заголовок читается как разделитель.
+  var cat=live?catalogByCatHTML(_progReg.shelf, repoCat, REPO_ORDER, REPO_LABEL, REPO_ACC,
+      '', '', '', '🔧 Инструмент'):'';
+  var refresh=live?('<div style="grid-column:1/-1;text-align:right;margin:-2px 0 8px"><span style="font-size:11px;color:var(--tx3);margin-right:8px">живой каталог с GitHub · '+_progReg.shelf.length+'</span>'+
+    '<button onclick="_progReg=null;_progFetched=false;renderPrograms()" style="border:1px solid var(--bd2);background:transparent;color:var(--tx2);border-radius:5px;padding:4px 10px;font-size:12px;cursor:pointer">↻ Обновить</button></div>'):'';
+  return cat+extra+refresh;
 }
 
 // Программы, the plugin catalogue (business aisles + grid). The raw GitHub
@@ -3236,7 +3394,7 @@ function _svcBar(){
 }
 function _svcPrependBar(){ var g=document.getElementById('grid'); if(g){try{g.insertAdjacentHTML('afterbegin',_svcBar());}catch(e){}} }
 // Раздел «Программы» = живой каталог с GitHub + встроенная секция «Приложения» (Pinokio-репо).
-function renderPrograms(){ _renderProgramsCore(); _svcPrependBar(); }
+function renderPrograms(){ _renderProgramsCore(); _mountTabFilter('Поиск по программам…'); _svcPrependBar(); }
 function _renderProgramsCore() {
   // Always rescue filter_bar before any g.innerHTML wipe. The element lives
   // inside #grid when Other is expanded; innerHTML replacement destroys it.
@@ -3245,11 +3403,15 @@ function _renderProgramsCore() {
   var g = document.getElementById('grid');
   if (!g) return;
 
-  var _bk = _featCat === 'all' ? '' : '<div class="cat_back"><button class="cb_btn" onclick="_setFeatCat(\'all\')">← Все категории</button></div>';
+  var _bk = _featCat === 'all' ? ''
+    : _subNavHTML([{l:'Сервисы', go:"_setFeatCat('all')"},{l:'Программы', go:"_setFeatCat('all')"},
+                   {l:(BIZ_LABEL[_featCat]||_featCat)}], "_setFeatCat('all')");
   var _isPro = document.body.getAttribute('data-mode') === 'pro';
-  var _lead = (_featCat === 'all') ? '<div class="sk_lead" style="grid-column:1/-1">Мини-программы Extella и приложения с GitHub: берёшь с полки — живут у тебя на компьютере.</div>' : '';
-  // Единый шаблон полки: описание → витрина → [заголовок каталога + поиск + категории] → карточки → «не нашёл — собери»
-  var featuredHtml = _lead + (_featCat === 'all' && !_isPro ? addTileHTML('programs','Добавить программу') : '') + ((_featCat === 'all' && !_isPro) ? programsSpotlight() : '') + renderFeaturedSection() + (_featCat === 'all' ? _appsSectionHTML() : '') + (_featCat === 'all' && !_isPro ? progToolsHTML() : '');
+  // Свой поиск и свои чипы («Все 19») считали ТОЛЬКО курируемые программы и не
+  // управляли живым каталогом и приложениями ниже — раздел выглядел несшитым.
+  // Теперь тут общая шапка-фильтр (_mountTabFilter), как во всех остальных вкладках:
+  // она строит чипы из реальных полок и фильтрует всё, что в разделе есть.
+  var featuredHtml = _bk + ((_featCat === 'all' && !_isPro) ? programsSpotlight() + addTileHTML('programs','Добавить программу') : '') + renderFeaturedSection() + (_featCat !== 'all' ? addTileHTML('programs','Добавить программу') : (_isPro ? '' : progToolsHTML(_appsShelvesHTML())));
 
   // «Для всех», curated only: no raw GitHub firehose.
   if (document.body.getAttribute('data-mode') !== 'pro') {
@@ -3378,8 +3540,10 @@ function _gsearch(query){
   add(_appReg&&_appReg.shelf,'Приложение','programs',function(x){return x.title||x.id;},function(x){return x.desc;},function(x){return x.cat;});
   add(_mcpReg&&(_mcpReg.items||_mcpReg.shelf),'MCP','services',function(x){return (x.id||'').split('/').pop();},function(x){return x.desc||x.tagline;},function(x){return x.cat;});
   var g=document.getElementById('grid'); if(!g)return;
-  var html='<div class="sect"><h2>Поиск: «'+esc(query)+'»</h2></div>'+
-    '<div class="sk_lead" style="grid-column:1/-1">Найдено: '+res.length+' по всем каталогам · <a href="#" onclick="setc(\'desktop\');return false" style="color:var(--a)">← закрыть</a></div>';
+  // «Назад» возвращает в тот раздел, из которого искали (renderGrid рисует текущий cur),
+  // а не выкидывает на Рабочий стол, как делала прежняя ссылка «закрыть».
+  var html=_subNavHTML([{l:_tabLabel(cur), go:'renderGrid()'},{l:'Поиск: «'+query+'»'}], 'renderGrid()')+
+    '<div class="sk_lead" style="grid-column:1/-1">Найдено: '+res.length+' по всем каталогам</div>';
   if(res.length){
     html+='<div class="mshelf">'+res.slice(0,80).map(function(r){
       return '<div class="stile" style="--acc:var(--a)"><span class="st_chip">'+esc(r.type)+(r.cat?' · '+esc(r.cat):'')+'</span>'+
@@ -3694,8 +3858,8 @@ var CAPINST_KIND = {model:'модель', mcp:'MCP-сервер', cli:'CLI', ski
 var CAPINST_KIND_EN = {model:'model', mcp:'MCP server', cli:'CLI', skill:'skill', service:'service', api:'API'};
 function _ensureCapInst() {
   if (_capInstFetched) return; _capInstFetched = true;
-  skKvGet('_mkt_installed').then(function(r){ _capInstReg = (r && r.items) ? r.items : []; rtabs(); if (cur === 'mine') renderInstalled(); else if (cur === 'desktop') renderDesktop(); })
-    .catch(function(){ _capInstReg = _capInstReg || []; if (cur === 'mine') renderInstalled(); else if (cur === 'desktop') renderDesktop(); });
+  skKvGet('_mkt_installed').then(function(r){ _capInstReg = (r && r.items) ? r.items : []; rtabs(); if (cur === 'mine') renderInstalled(); else if (cur === 'desktop') _deskRedraw(); })
+    .catch(function(){ _capInstReg = _capInstReg || []; if (cur === 'mine') renderInstalled(); else if (cur === 'desktop') _deskRedraw(); });
 }
 function capInstCount(){ return (_capInstReg && _capInstReg.length) || 0; }
 function capInstRefresh(){ _capInstReg = null; _capInstFetched = false; _ensureCapInst(); }
@@ -3724,7 +3888,12 @@ function capInstRemove(kind, id, method){
     .then(function(r){
       var out = r.res; if (out && typeof out === 'object' && (out.result || out.output)) out = out.result || out.output;
       if (typeof out === 'string') { try { out = JSON.parse(out); } catch(e){} }
-      if (out && out.device_removed) { _capInstDropRecord(kind, id); }
+      if (out && out.device_removed) {
+        _capInstDropRecord(kind, id);
+        // MCP отключается вычёркиванием из аллоулиста устройства — перечитать правду,
+        // иначе карточка так и останется «✓ подключён».
+        if (kind === 'mcp') { _mcpConnFetched = false; _ensureMcpConn(); }
+      }
       else { alert((en ? 'Not removed: ' : 'Не удалилось: ') + ((out && out.message) || 'error')); }
     })
     .catch(function(e){
@@ -3740,7 +3909,12 @@ function capInstRemove(kind, id, method){
 // ── Единые состояния для всех вкладок (стандарт витрины) ──────────────────
 // Раньше загрузка была то «sk_lead», то «empty+⏳», пустота — по-своему у каждой.
 // Теперь один вид: центрированная иконка + текст.
-function _loadingHTML(text){ return '<div class="empty"><div class="eico">⏳</div><p>'+esc(text||'Загружаю…')+'</p></div>'; }
+// Анимированная бесконечность — единый индикатор загрузки Extella (приём из Workspace).
+var INF_PATH='M25,25 C25,11 43,11 50,25 C57,39 75,39 75,25 C75,11 57,11 50,25 C43,39 25,39 25,25 Z';
+function INF(w){ w=w||56; return '<span class="inf" style="width:'+w+'px"><svg viewBox="0 0 100 50" width="'+w+'" height="'+(w/2)+'" aria-hidden="true">'+
+  '<defs><linearGradient id="infg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#C67A22"/><stop offset="1" stop-color="#E8B36A"/></linearGradient></defs>'+
+  '<path class="tr" d="'+INF_PATH+'" pathLength="200"/><path class="run" d="'+INF_PATH+'" pathLength="200"/></svg></span>'; }
+function _loadingHTML(text){ return '<div class="empty"><div style="margin-bottom:10px">'+INF(84)+'</div><p>'+esc(text||'Загружаю…')+'</p></div>'; }
 function _emptyHTML(icon, html){
   // канон: линейные иконки, не эмодзи — старые вызовы с эмодзи мапятся на символы
   var MAP={'🔍':'box','🤗':'box','🗂️':'box','📦':'box','⚙️':'tech','📚':'docs'};
@@ -3801,36 +3975,39 @@ function _dtDo(i, act){
     return;
   }
   if(act==='remove'){
-    if(it.kind==='agent'){
-      if(!confirm('Убрать «'+it.lbl+'» с рабочего стола?')) return;
-      _autoReg=(_autoReg||[]).filter(function(x){return _agId(x)!==it.id;});
-      _agSaveState(it.id,{status:'removed', hidden:true});
-      renderDesktop();
-    } else if(it.kind==='program'){ uninst(it.id); setTimeout(renderDesktop,60); }
-    else if(it.kind==='cli'){ cliUninstall(it.id); setTimeout(renderDesktop,60); }
-    else if(it.kind==='cap'){ capInstRemove(it.rmKind, it.id, it.method||''); setTimeout(renderDesktop,300); }
+    // Ярлык мог быть СКЛЕЕН дедупом из нескольких записей (карточка каталога +
+    // файлы реестра устройства с почти одинаковыми именами — «Кадровые документы»
+    // собирались из трёх). Удаление только выбранной записи оставляло двойников,
+    // и ярлык «возвращался». Убираем ВСЕ источники склейки разом.
+    var list=(it.dups&&it.dups.length)?it.dups:[it];
+    var agentIds=list.filter(function(d){return d.kind==='agent';}).map(function(d){return d.id;});
+    var hasModal=list.some(function(d){return d.kind==='app';});   // у приложений свой модал с подтверждением
+    if(!hasModal){
+      var msg='Удалить «'+it.lbl+'» с рабочего стола?';
+      if(agentIds.length) msg+='\nКарточка автоматизации удалится из каталога целиком (эксперты и данные в Extella не трогаются).';
+      if(list.length>1) msg+='\nЯрлык собран из '+list.length+' записей — уберу все.';
+      if(!confirm(msg)) return;
+    }
+    list.forEach(function(d){
+      if(d.kind==='agent'){
+        _autoReg=(_autoReg||[]).filter(function(x){return _agId(x)!==d.id;});
+        _agSaveState(d.id,{status:'removed', hidden:true});
+      }
+      else if(d.kind==='program'){ uninst(d.id); }
+      else if(d.kind==='cli'){ cliUninstall(d.id); }
+      else if(d.kind==='cap'){ capInstRemove(d.rmKind, d.id, d.method||''); }
+      else if(d.kind==='app'){ appUninstall(d.id, d.raw||d.lbl); }
+    });
+    // Удаление со стола = настоящее (требование Анвара): агентские записи
+    // вычищаются и из глобального каталога, одной перезаписью на все id.
+    if(agentIds.length) _agCatalogPurge(agentIds);
+    setTimeout(_deskRedraw,300);
   }
 }
 function _dtCss(){
   return '<style>'+
     '.dt_wrap{grid-column:1/-1;padding:6px 2px 24px}'+
-    '.dt_hero_pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:12px;margin-bottom:12px}'+
-    '.dt_hero_pair .dt_hero{margin-bottom:0;flex-direction:column;align-items:flex-start;gap:12px}'+
-    '.dt_hero_pair .dt_hero_tx{flex:initial}'+
-    '.dt_hero_pair .dt_hero_go{margin-top:auto}'+
-    '.dt_hero{--hacc:var(--a);display:flex;flex-wrap:wrap;align-items:center;gap:14px 18px;cursor:pointer;border-radius:6px;padding:18px 20px;margin-bottom:18px;'+
-      'background:var(--s1);box-shadow:none;border:1px solid var(--bd2);'+
-      'transition:transform .14s,border-color .14s;position:relative;overflow:hidden}'+
-    '.dt_hero:hover{transform:translateY(-2px);border-color:var(--hacc)}'+
-    '.dt_hero_ic{flex-shrink:0;width:56px;height:56px;border-radius:6px;background:var(--s2);'+
-      'border:1px solid var(--bd);display:flex;align-items:center;justify-content:center}'+
-    '.dt_hero_ic .lico{width:32px;height:32px;color:var(--hacc);stroke-width:1.6}'+
-    '.dt_hero_tx{flex:1;min-width:0;position:relative}'+
-    '.dt_hero_ttl{font:750 19px/1.2 var(--sans);letter-spacing:-.01em;color:var(--tx)}'+
-    '.dt_hero_sub{font-size:13px;line-height:1.5;color:var(--tx2);margin-top:5px;max-width:520px}'+
-    '.dt_hero_go{flex-shrink:0;background:var(--hacc);border:1px solid var(--hacc);color:#fff;'+
-      'border-radius:5px;padding:9px 16px;font:650 13px var(--sans);position:relative}'+
-    '.dt_sect{font:700 12px var(--sans);letter-spacing:.02em;color:var(--tx3);margin:2px 0 14px}'+
+    '.dt_sect{font:700 12px var(--sans);text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin:2px 0 14px}'+
     '.dt_grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(94px,1fr));gap:10px}'+
     '.dt_ico{display:flex;flex-direction:column;align-items:center;gap:8px;background:transparent;border:1px solid transparent;'+
       'border-radius:6px;padding:12px 6px 10px;cursor:pointer;transition:background .12s,border-color .12s,transform .1s;animation:fiu .22s ease both}'+
@@ -3850,25 +4027,62 @@ function _dtCss(){
     '.dt_mi_danger{color:#c0392b}'+
     '.dt_mi_danger:hover{background:#fbeae8}'+
     '.dt_hint{font-size:11.5px;color:var(--tx3);margin:-8px 0 14px}'+
-    '.dt_empty{text-align:center;padding:40px 20px;color:var(--tx3)}'+
-    '.dt_empty_ic{font-size:44px;margin-bottom:10px}'+
-    '.dt_empty p{font-size:14px;line-height:1.6;max-width:440px;margin:0 auto}'+
   '</style>';
+}
+// Стол собирается из 6 независимых источников (KV + эксперты на устройстве), они
+// приезжают с разбросом в СЕКУНДЫ. Рисовать по каждому ответу = экран трясёт.
+// Поэтому до первой сборки держим заглушку и не рисуем стол, пока всё не приедет.
+// _deskReady/_deskDeadline ОБЯЗАНЫ быть объявлены: гейт их читает до присваивания,
+// без var это ReferenceError и стол не открывается вовсе.
+var _deskT=null, _deskStLoading=false, _deskReady=false, _deskDeadline=0;
+function _deskRedraw(){
+  if(cur!=='desktop') return;
+  clearTimeout(_deskT);
+  _deskT=setTimeout(function(){ if(cur==='desktop') renderDesktop(); }, 90);
+}
+// Что ещё едет. Пустой список = стол можно собирать.
+function _deskPending(){
+  var p=[];
+  if(_autoReg===null) p.push('автоматизации');
+  else if(_autoReg.length && _autoReg.some(function(x){ return !(_agId(x) in _agState); })) p.push('состояния агентов');
+  if(_capInstReg===null) p.push('способности');
+  if(!_appInstLoaded) p.push('установленные приложения');
+  if(!_appReg) p.push('каталог приложений');
+  if(cliGi().length && !_cliLoaded) p.push('инструменты');
+  return p;
 }
 function renderDesktop(){
   var g=document.getElementById('grid'); if(!g) return;
   _ensureAuto(); _ensureCapInst();
   if(_appInstalled===null){ _appInstalled={}; _refreshInstalledApps(); }  // установленные приложения на столе
   if(!_appReg) _ensureApps();                                              // каталог — для имён приложений
-  if (cliGi().length && !_cliLoaded) {
-    skKvGet('_mkt_cli_catalog').then(function(r){ _cliReg=(r&&r.items)?r.items:[]; _cliLoaded=true; if(cur==='desktop')renderDesktop(); })
-      .catch(function(){ _cliReg=_cliReg||[]; _cliLoaded=true; if(cur==='desktop')renderDesktop(); });
+  // Флаг «убран со стола» лежит в agent_state:<id>. Стол его НЕ грузил (в отличие от
+  // «Автоматизаций») — из-за этого удалённые агенты возвращались после перезагрузки.
+  if(_autoReg && _autoReg.length && !_deskStLoading){
+    var _needSt=_autoReg.filter(function(p){ return !(_agId(p) in _agState); });
+    if(_needSt.length){
+      _deskStLoading=true;
+      Promise.all(_needSt.map(function(p){ return _agLoadState(_agId(p)); }))
+        .then(function(){ _deskStLoading=false; _deskRedraw(); })
+        .catch(function(){ _deskStLoading=false; _deskRedraw(); });
+    }
   }
-  // Воркспейсы для раздела на столе (ленивая подгрузка через движок, кэш).
-  if (_wsDeskList === undefined) {
-    _wsDeskList = null;
-    wsCall('list', {}, 20000).then(function(out){ _wsDeskList = (out&&out.workspaces)?out.workspaces:[]; if(cur==='desktop')renderDesktop(); })
-      .catch(function(){ _wsDeskList = []; if(cur==='desktop')renderDesktop(); });
+  if (cliGi().length && !_cliLoaded) {
+    skKvGet('_mkt_cli_catalog').then(function(r){ _cliReg=(r&&r.items)?r.items:[]; _cliLoaded=true; _deskRedraw(); })
+      .catch(function(){ _cliReg=_cliReg||[]; _cliLoaded=true; _deskRedraw(); });
+  }
+  // ГЕЙТ ПЕРВОЙ СБОРКИ: пока источники едут — держим заглушку и НЕ рисуем стол.
+  // Иначе каждый ответ достраивает экран заново, и это читается как тряска.
+  // Заглушку ставим один раз (повторные заходы её не трогают → она не мигает).
+  if(!_deskReady){
+    if(!_deskDeadline) _deskDeadline = Date.now() + 8000;   // страховка: источник может не ответить вовсе
+    if(_deskPending().length && Date.now() < _deskDeadline){
+      if(!g.querySelector('.dt_boot')){
+        g.innerHTML = '<div class="dt_boot" style="grid-column:1/-1">' + _loadingHTML('Собираю рабочий стол…') + '</div>';
+      }
+      return;
+    }
+    _deskReady = true;   // дальше стол рисуется сразу, из кэша
   }
   // Единый набор контурных значков (как в чипах/карточках Эллы): категория → #ic-*.
   // acc берём из палитры категорий (BIZ_ACC), чтобы цвета совпадали с витриной.
@@ -3932,8 +4146,23 @@ function renderDesktop(){
     return _dtShort(seg||n); }
 
   var icons=[];
-  // 1) Агенты, собранные Конструктором → открыть кабинет
-  (_autoReg||[]).filter(function(p){ var st=_agState[_agId(p)]; return !(st&&st.hidden); }).forEach(function(p){
+  // Системные ярлыки — пять входов в саму Extella. Живут на столе всегда,
+  // удалить нельзя (нет контекстного меню), значки только из векторного спрайта.
+  // Их динамические двойники ниже отфильтровываются — иначе рядом появлялись
+  // удаляемые копии, которые возвращались после синка с устройством (§4).
+  var SYS_APPS=[
+    {lbl:'Визард',           ico:'wand',     acc:'#C67E34', go:"_openWizard()",                tip:'Собрать процесс: интервью → план → стройка → запуск'},
+    {lbl:'Воркспейс',        ico:'home',     acc:'#2F6B66', go:"notify('open','workspace')",   tip:'Рабочие среды: компьютер понял проект и настроился'},
+    {lbl:'Композитор',       ico:'box',      acc:'#7C5CBF', go:"notify('open','extella_composer_studio')", tip:'Студия Композитора — внутри Визарда: задача словами → готовая автоматизация'},
+    {lbl:'Регулярные задачи',ico:'calendar', acc:'#3E7C4F', go:"setc('automations')",          tip:'Автоматизации по расписанию'},
+    {lbl:'Второй пилот',     ico:'bot',      acc:'#4C5FD5', go:"notify('open','copilot_ctl')", tip:'Пилот наблюдает экран и помогает'},
+    {lbl:'Студия языков',    ico:'terminal', acc:'#2A6F77', go:"notify('open','extella_cspl_studio')", tip:'Свои предметные языки: программа словами дела → проверенный результат'},
+    {lbl:'Команда',          ico:'users',    acc:'#C9A35C', go:"notify('open','extella_team')",        tip:'Пригласить в общий контур — именные ключи доступа'}
+  ];
+  // 1) Агенты, собранные Визардом → открыть кабинет
+  // Показываем агента только когда его состояние уже прочитано: иначе убранный
+  // со стола ярлык успевает мигнуть до того, как приедет флаг hidden.
+  (_autoReg||[]).filter(function(p){ var id=_agId(p); if(!(id in _agState)) return false; var st=_agState[id]; return !(st&&st.hidden); }).forEach(function(p){
     var cat=_catRuToBiz(p.category)||p._biz||'work', nm=_agCleanName(p);
     icons.push({kind:'agent',cat:cat,lbl:nm,acc:(p.accent||_dtAcc(cat)),id:_agId(p),
       ident:!!(p.accent||p.emoji||p.category),
@@ -3974,37 +4203,52 @@ function renderDesktop(){
   // Предпочитаем карточку С идентичностью (свой цвет/эмодзи), а не пустую старую.
   icons.forEach(function(ic){ ic._k=String(ic.lbl||'').toLowerCase().trim(); });
   var _best={}; icons.forEach(function(ic){ if(!(ic._k in _best) || (ic.ident && !_best[ic._k].ident)) _best[ic._k]=ic; });
+  // Запоминаем ВСЕХ участников склейки: «Удалить» с ярлыка убирает каждого,
+  // иначе выжившие двойники (каталог + файлы реестра) возвращали ярлык.
+  var _dups={}; icons.forEach(function(ic){ (_dups[ic._k]=_dups[ic._k]||[]).push(ic); });
   var _done={}, _out=[];
   icons.forEach(function(ic){ if(_done[ic._k]) return; if(_best[ic._k]===ic){ _out.push(ic); _done[ic._k]=1; } });
   icons=_out;
-  _dtReg=icons;  // реестр для правого клика (открыть/кабинет/удалить)
+  icons.forEach(function(ic){ ic.dups=_dups[ic._k]||[ic]; });
+  // Двойники системных ярлыков — вон со стола (по id плагина и по имени).
+  var _sysIds={extella_adoption_wizard:1, workspace:1, copilot_ctl:1, extella_cspl_studio:1, extella_team:1, extella_composer_studio:1};
+  var _sysRe=/^(визард( внедрения)?|wizard|workspace|воркспейс(ы|ес)?|композитор|composer|второй пилот|copilot|студия языков|language studio|команда|team)$/i;
+  icons=icons.filter(function(ic){
+    return !_sysIds[ic.id] && !_sysRe.test(String(ic.lbl||'').trim()) && !_sysRe.test(String(ic.raw||'').trim());
+  });
+  _dtReg=icons;  // реестр для правого клика (открыть/кабинет/удалить); системные сюда не входят
 
-  var iconHtml=icons.map(function(ic,i){
+  var sysHtml=SYS_APPS.map(function(s,i){
+    return '<button class="dt_ico" style="animation-delay:'+Math.min(i*14,180)+'ms" title="'+esc(s.tip)+'" onclick="'+s.go+'" oncontextmenu="return false">'+
+      '<span class="dt_ic_badge" style="background:'+s.acc+'14;border-color:'+s.acc+'40;color:'+s.acc+'">'+_icoSym(s.ico)+'</span>'+
+      '<span class="dt_ic_lbl">'+esc(s.lbl)+'</span></button>';
+  }).join('');
+  // Группы стола (просьба Анвара «чтобы всё было видно и отличалось»):
+  // автоматизации (собраны Визардом/Композитором) · программы (плагины витрины
+  // и приложения) · инструменты (CLI и способности из интернета).
+  // Индексы для правого клика — глобальные по массиву icons (_dtReg), поэтому
+  // кнопки строим с исходным i, а по группам только раскладываем.
+  function _dtGrp(k){ return k==='agent' ? 0 : (k==='cli'||k==='cap') ? 2 : 1; }
+  function _dtIconBtn(ic,i){
     var sym=_dtIco(ic.raw, ic.cat, ic.kind);
-    return '<button class="dt_ico" style="animation-delay:'+Math.min(i*14,180)+'ms" title="'+esc(ic.raw)+' — клик открыть, правый клик меню" onclick="'+ic.go+'" oncontextmenu="return _dtCtx(event,'+i+')">'+
+    return '<button class="dt_ico" style="animation-delay:'+Math.min((SYS_APPS.length+i)*14,180)+'ms" title="'+esc(ic.raw)+' — клик открыть, правый клик меню" onclick="'+ic.go+'" oncontextmenu="return _dtCtx(event,'+i+')">'+
       '<span class="dt_ic_badge" style="background:'+esc(ic.acc)+'14;border-color:'+esc(ic.acc)+'40;color:'+esc(ic.acc)+'">'+_icoSym(sym)+'</span>'+
       '<span class="dt_ic_lbl">'+esc(ic.lbl)+'</span></button>';
+  }
+  var _grpBtns=[[],[],[]];
+  icons.forEach(function(ic,i){ _grpBtns[_dtGrp(ic.kind)].push(_dtIconBtn(ic,i)); });
+  var grpHtml=[{t:'Автоматизации'},{t:'Программы'},{t:'Инструменты'}].map(function(G,gi){
+    var b=_grpBtns[gi];
+    return b.length ? '<div class="dt_sect">'+G.t+' · '+b.length+'</div><div class="dt_grid" style="margin-bottom:24px">'+b.join('')+'</div>' : '';
   }).join('');
 
   g.innerHTML = _dtCss() +
     '<div class="dt_wrap">'+
-      '<div class="dt_hero_pair">'+
-      '<div class="dt_hero" onclick="_openWizard()">'+
-        '<div class="dt_hero_ic">'+_icoSym('monitor')+'</div>'+
-        '<div class="dt_hero_tx">'+
-          '<div class="dt_hero_ttl">Мой компьютер · Конструктор</div>'+
-          '<div class="dt_hero_sub">Все установленные программы в одном месте: настраивай, соединяй в связки и запускай.</div>'+
-        '</div>'+
-        '<div class="dt_hero_go">Открыть →</div>'+
-      '</div>'+
-      _dtWorkspaceSection('band')+
-      '</div>'+
-      _dtWorkspaceSection('strip')+
-      '<div class="dt_sect">Программы на рабочем столе'+(icons.length?' · '+icons.length:'')+'</div>'+
-      (icons.length?'<div class="dt_hint">Клик — открыть. Правый клик — открыть или удалить.</div>':'')+
+      '<div class="dt_sect">Extella</div>'+
+      '<div class="dt_grid" style="margin-bottom:24px">'+sysHtml+'</div>'+
       (icons.length
-        ? '<div class="dt_grid">'+iconHtml+'</div>'
-        : _emptyHTML('🗂️', 'Пока пусто. Установи программы в «Каталоге» или собери агента в Конструкторе — они появятся здесь ярлыками, как на рабочем столе.'))+
+        ? '<div class="dt_hint">Клик — открыть или запустить. Правый клик — кабинет, настройки, удалить.</div>'+grpHtml
+        : '<div class="dt_hint">Пока пусто. Установи программы в «Сервисах» или собери агента в Визарде — они появятся здесь ярлыками.</div>')+
     '</div>';
   rtabs();
 }
@@ -4093,8 +4337,8 @@ function _ensureAuto() {
   skKvGet('_mkt_automations').then(function(r) {
     _autoReg = (r && r.items) ? r.items : [];
     if (cur === 'automations') renderAutomations();
-    else if (cur === 'desktop') renderDesktop();
-  }).catch(function() { _autoReg = _autoReg || []; if (cur === 'automations') renderAutomations(); else if (cur === 'desktop') renderDesktop(); });
+    else if (cur === 'desktop') _deskRedraw();
+  }).catch(function() { _autoReg = _autoReg || []; if (cur === 'automations') renderAutomations(); else if (cur === 'desktop') _deskRedraw(); });
 }
 function autoRefresh() { _autoReg = null; _autoFetched = false; _ensureAuto(); }
 // ══════════════════════════════════════════════════════════════════════════
@@ -4161,7 +4405,7 @@ function autoRun(orch, btn){
     var m = (e && e.message) || 'error';
     // HTTP 500/timeout ≠ провал (канон): работа могла продолжиться — помечаем как «идёт».
     var deferred = /500|timeout|defer/i.test(m);
-    if (el) el.innerHTML = deferred ? '⏳ запущено — идёт в фоне' : ('⚠ ' + m);
+    if (el) el.innerHTML = deferred ? INF(28)+' запущено — идёт в фоне' : ('⚠ ' + m);
     _recRun(id, deferred ? null : false, deferred ? 'в фоне' : m, startedTs);
   });
 }
@@ -4299,7 +4543,7 @@ function _cabRuns(p){
   var runs=_agRuns(p), orch=p.orchestrator||'';
   var runBtn = orch ? '<button class="st_btn" onclick="autoRun(\''+esc(orch)+'\',this)">▶ Запустить сейчас</button>' : '<span style="color:var(--tx3);font-size:13px">нет оркестратора — запуск недоступен</span>';
   var list = runs.length ? runs.map(function(r){
-    var ic = r.ok===true?'<span style="color:#2f9e56">✓</span>':(r.ok===false?'<span style="color:#e0533d">✕</span>':'<span style="color:#C67E34">⏳</span>');
+    var ic = r.ok===true?'<span style="color:#2f9e56">✓</span>':(r.ok===false?'<span style="color:#e0533d">✕</span>':INF(26));
     var lbl = r.ok===true?'успешно':(r.ok===false?'ошибка':'в фоне');
     return '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--bd)"><span style="font-size:14px">'+ic+'</span>'+
       '<span style="font-variant-numeric:tabular-nums;font-size:13px;color:var(--tx);min-width:82px">'+_fmtTs(r.ts)+'</span>'+
@@ -4335,7 +4579,7 @@ function cabSaveSchedule(id){
   var sch = iv ? {interval_min:parseInt(iv,10), human:lbl, period:lbl, channel:ch} : null;
   // Реальный крон через мост Конструктора (:8765) — переиспользуем проверенный /x/schedule.
   if(sid){
-    if(msg)msg.innerHTML='⏳ Ставлю на планировщик…';
+    if(msg)msg.innerHTML=INF(28)+' Ставлю на планировщик…';
     fetch('http://127.0.0.1:8765/x/schedule',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({session_id:sid, period:iv?lbl:'', interval_min:iv?parseInt(iv,10):0, deliver:ch})})
       .then(function(r){return r.json();})
@@ -4367,9 +4611,12 @@ function _cabSettings(p){
       '<div style="font-size:13px;color:var(--tx2);line-height:1.55;margin-bottom:10px">Инструкция и логика меняются через <b>чат с Extella</b>, каждое решение записывается — так рабочие агенты защищены от случайных правок.</div>'+
       '<button class="st_btn" style="background:transparent;color:var(--tx2);border:1px solid var(--bd2)" onclick="cabEditViaBuilder(\''+esc(id)+'\')">✎ Изменить через чат</button>'+
       '<div id="cab_edit_msg" style="font-size:12.5px;color:var(--tx2);margin-top:10px;min-height:16px"></div>')+
-    _cabCard('<div style="font:700 13px var(--sans);color:#e0533d;letter-spacing:.02em;margin-bottom:8px">Опасная зона</div>'+
-      '<button class="sk_del" onclick="cabRemove(\''+esc(id)+'\')">Убрать из витрины</button>'+
-      '<div style="font-size:11.5px;color:var(--tx3);margin-top:8px;line-height:1.5">Убирает карточку из «AI Автоматизаций». Сам агент и его эксперты в Extella не удаляются.</div>');
+    _cabCard('<div style="font:700 13px var(--sans);color:#e0533d;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Опасная зона</div>'+
+      '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+        '<button class="sk_del" onclick="cabRemove(\''+esc(id)+'\')">Убрать из витрины</button>'+
+        '<button class="sk_del" style="border-color:rgba(224,83,61,.55);color:#e0533d" onclick="cabDeleteForever(\''+esc(id)+'\')">Удалить навсегда</button>'+
+      '</div>'+
+      '<div style="font-size:11.5px;color:var(--tx3);margin-top:8px;line-height:1.5">«Убрать из витрины» прячет карточку и ярлык у тебя. «Удалить навсегда» вычищает запись из каталога автоматизаций целиком. Эксперты и данные в Extella не трогаются.</div>');
 }
 function cabRename(id){
   var v=((document.getElementById('cab_name')||{}).value||'').trim(); if(!v)return;
@@ -4386,6 +4633,28 @@ function cabRemove(id){
   var p=_cabAgent(); if(!p)return;
   _autoReg=(_autoReg||[]).filter(function(x){return _agId(x)!==id;});
   _agSaveState(id,{status:'removed', hidden:true});
+  closeAgentCabinet(); renderAutomations();
+}
+// Вычистка записей из каталога _mkt_automations (глобальный ключ, пишет
+// wz_publish_pack). Все id — ОДНОЙ перезаписью: параллельные read-modify-write
+// теряли бы друг друга. Перечитываем свежую копию перед записью.
+function _agCatalogPurge(ids){
+  var kill={}; (ids||[]).forEach(function(i){ kill[i]=1; });
+  return skKvGet('_mkt_automations').then(function(r){
+    if(!r || !r.items) return null;
+    var left=r.items.filter(function(x){ return !kill[_agId(x)]; });
+    if(left.length===r.items.length) return null;   // записей уже нет — не переписываем
+    r.items=left;
+    return skKvSet('_mkt_automations', r);
+  }).catch(function(){ /* каталог перечитается — личное скрытие уже держит ярлык убранным */ });
+}
+// «Удалить навсегда»: помимо личного скрытия вычищает запись из каталога.
+function cabDeleteForever(id){
+  var p=_cabAgent(); if(!p)return;
+  if(!confirm('Удалить «'+_agName(p)+'» навсегда? Карточка исчезнет из каталога автоматизаций, ярлык — со стола. Эксперты и данные в Extella не трогаются.')) return;
+  _autoReg=(_autoReg||[]).filter(function(x){return _agId(x)!==id;});
+  _agSaveState(id,{status:'removed', hidden:true});
+  _agCatalogPurge([id]);
   closeAgentCabinet(); renderAutomations();
 }
 
@@ -4469,6 +4738,7 @@ var SKILLS_CATALOG=[
 ];
 var SK_ACC={'Стиль и общение':'#C57E33','Работа и продуктивность':'#2F6B66','Бизнес':'#2E7D5B','Разработка':'#24544F'};
 var _skReg={v:1,items:[]}, _skCatReg=null, _skLoaded=false, _skAgents=null, _skPick=null;
+var _skFetching=false;   // KV уже едет: не дёргаем повторно и НЕ блокируем отрисовку
 
 function skBridge(sendType,resultType,payload,timeoutMs){
   return new Promise(function(res,rej){
@@ -4510,13 +4780,16 @@ function skItem(id){return (_skReg.items||[]).filter(function(x){return x.id===i
 function renderSkillsShelf(){ _renderSkillsCore(); _svcPrependBar(); }
 function _renderSkillsCore(){
   var g=document.getElementById('grid'); if(!g)return;
-  if(!_skLoaded){
-    g.innerHTML=_loadingHTML('Загружаю навыки…');
+  // Навыки были ЕДИНСТВЕННОЙ вкладкой, которая ждала KV перед первой отрисовкой:
+  // пустой экран с лоадером, хотя встроенный SKILLS_CATALOG доступен сразу.
+  // Остальные вкладки рисуют встроенное мгновенно и дообогащаются, когда приедет
+  // KV. Делаем так же: грузим в фоне и НЕ прерываем отрисовку.
+  if(!_skLoaded && !_skFetching){
+    _skFetching=true;
     Promise.all([
       skKvGet('_mkt_skills').then(function(r){_skReg=(r&&r.items)?r:{v:1,items:[]};if(!_skReg.items)_skReg.items=[];}).catch(function(){_skReg={v:1,items:[]};}),
       _loadSharded('_mkt_skills_catalog','items').then(function(r){_skCatReg=(r&&r.items&&r.items.length)?r:null;}).catch(function(){_skCatReg=null;})
-    ]).then(function(){_skLoaded=true;if(cur==='skills')renderSkillsShelf();});
-    return;
+    ]).then(function(){_skLoaded=true;_skFetching=false;if(cur==='skills')renderSkillsShelf();});
   }
   var all=skCatalog();
   var live=!!(_skCatReg&&_skCatReg.items&&_skCatReg.items.length);
@@ -4541,10 +4814,16 @@ function skCard(s){
   var foot=on
     ? '<span class="sk_active">● активен'+(it&&it.target?' · '+esc(it.target):'')+'</span><button class="sk_del" data-skdel="'+esc(s.id)+'">Удалить</button>'
     : '<button class="st_btn" data-skinst="'+esc(s.id)+'">+ Установить</button>';
+  // Канон: функция жирным (из слоя _mkt_loc), имя навыка вторичной строкой.
+  var sL=_locOf(s)||{};
+  var sfunc=(LANG==='en'?(s.func_en||sL.func_en):(s.func_ru||sL.func_ru))||'';
+  var sdsc=(LANG==='en'?(s.desc_en||sL.desc_en||s.desc):(s.desc_ru||sL.desc_ru||s.desc))||'';
   return '<div class="stile" style="--acc:'+esc(SK_ACC[s.cat]||'#C57E33')+'">'+
+    // Векторный чип категории (дизайн Эллы) + функция жирным/имя вторично (логика Анвара)
     '<span class="st_chip">'+_catIco(s.cat)+esc(s.cat)+'</span>'+
-    '<div class="st_title">'+esc(s.name)+'</div>'+
-    '<div class="st_fact">'+esc(s.desc)+'</div>'+
+    '<div class="st_title">'+esc(sfunc||s.name)+'</div>'+
+    (sfunc?'<div class="st_name">'+esc(s.name)+'</div>':'')+
+    '<div class="st_fact">'+esc(sdsc)+'</div>'+
     '<div class="sk_howto"><b>Как запустить:</b> '+esc(s.howto)+'</div>'+
     '<div class="st_foot" style="justify-content:space-between;align-items:center;gap:8px">'+foot+'</div></div>';
 }
@@ -4673,6 +4952,7 @@ function renderCLI(){
   g.innerHTML=html;
   [].forEach.call(g.querySelectorAll('[data-cliinst]'),function(b){b.onclick=function(){installCLI(b.getAttribute('data-cliinst'),b);};});
   [].forEach.call(g.querySelectorAll('[data-clirm]'),function(b){b.onclick=function(){cliUninstall(b.getAttribute('data-clirm'));};});
+  _mountTabFilter('Поиск инструмента…');
   _svcPrependBar();
 }
 function cliUninstall(id){
@@ -4715,7 +4995,7 @@ function cliRunOp(batchExpert, btn){
   var msg=document.getElementById('clirun_msg');
   if(!dir){ if(msg)msg.innerHTML='⚠ Укажи папку с файлами.'; return; }
   if(btn)btn.disabled=true;
-  if(msg)msg.innerHTML='⏳ Запущено на устройстве… обработка идёт, результат появится рядом с файлами. Может занять до пары минут.';
+  if(msg)msg.innerHTML=INF(28)+' Запущено на устройстве… обработка идёт, результат появится рядом с файлами. Может занять до пары минут.';
   skBridge('etb_run_expert','etb_expert_result',{name:batchExpert,params:{in_dir:dir}}, 180000).then(function(r){
     if(btn)btn.disabled=false;
     var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
@@ -4853,7 +5133,7 @@ function agentFlash(roleId, btn){
   var msg=document.getElementById('ag_msg');
   if(!aid||aid.indexOf('agent_')!==0){ if(msg)msg.innerHTML='⚠ Вставь корректный ID копии агента (начинается с <code>agent_</code>).'; return; }
   if(btn)btn.disabled=true;
-  if(msg)msg.innerHTML='⏳ Назначаю роль и подключаю сервисы агенту… (до минуты)';
+  if(msg)msg.innerHTML=INF(28)+' Прошиваю роль и подключаю сервисы в агента… (до минуты)';
   skBridge('etb_run_expert','etb_expert_result',{name:'agent_flash_role',params:{agent_id:aid,role_id:roleId}}, 300000).then(function(r){
     if(btn)btn.disabled=false;
     var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
@@ -4907,8 +5187,25 @@ function renderServices(){
 // ── Живой каталог MCP-серверов (харвест офиц. реестра → KV _mkt_mcp, шарды) ──
 var _mcpReg=null;
 var MCP_CATL={data:'Базы данных',web:'Веб и браузер',search:'Поиск',dev:'Разработка',comm:'Коммуникации',files:'Файлы и документы',finance:'Финансы',ai:'ИИ и медиа',other:'Другое'};
-var MCP_CONNECTED=['fetch','time','git','filesystem'];
+// Реальное состояние подключений живёт на УСТРОЙСТВЕ (~/.extella_mcp/allowlist.json,
+// пишет mcp_connect). Раньше тулбар брал его из localStorage + захардкоженного
+// списка ['fetch','time','git','filesystem'] — тот врал в обе стороны: рисовал
+// «подключён» неподключённым и предлагал подключить уже работающие. Спрашиваем
+// устройство экспертом mcp_list и сопоставляем по pkg (точное совпадение).
+var _mcpConn=null, _mcpConnFetched=false;
+function _ensureMcpConn(){
+  if(_mcpConnFetched) return; _mcpConnFetched=true;
+  skBridge('etb_run_expert','etb_expert_result',{name:'mcp_list',params:{}},30000).then(function(r){
+    var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
+    if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}
+    var m={}; ((out&&out.servers)||[]).forEach(function(s){ if(s.pkg) m[s.pkg]=s; });
+    _mcpConn=m;
+    if(cur==='services')renderMcpCatalog();
+  }).catch(function(){ _mcpConn={}; });   // не ответило — молчим, кнопка «Подключить» остаётся
+}
+function _mcpConnOf(c){ var p=(c.run||{}).pkg; return (_mcpConn&&p&&_mcpConn[p])||null; }
 function renderMcpCatalog(){
+  _ensureMcpConn();
   var host=document.getElementById('mcp_cat'); if(!host)return;
   var draw=function(items){
     if(!items||!items.length){ host.innerHTML=''; return; }
@@ -4921,15 +5218,19 @@ function renderMcpCatalog(){
       html+='<div class="sect_hdr" style="margin-top:0"><span class="sect_title" style="font-size:13px;color:var(--tx2);text-transform:none">'+esc(MCP_CATL[ck]||ck)+'</span><span class="sect_line"></span></div><div class="mshelf mshelf_capped">'+
         part.map(function(c){
           var short=(c.id||'').split('/').pop();
-          var dyn=mcpxGet(c.id);
-          var conn=c.conn||MCP_CONNECTED.indexOf(short)>=0;
+          // Правда — с устройства (mcp_list по pkg); localStorage лишь запасной,
+          // на случай если эксперт не ответил.
+          var dyn=_mcpConnOf(c)||mcpxGet(c.id);
+          var conn=c.conn;
           var foot;
           if(dyn){ foot='<span class="sk_active">✓ подключён · инструментов: '+dyn.count+'</span><span style="font-size:10.5px;color:var(--tx3)">'+esc(dyn.key)+'</span>'; }
           else if(conn){ foot='<span class="sk_active">✓ подключён</span><span style="font-size:10.5px;color:var(--tx3);overflow:hidden;text-overflow:ellipsis;max-width:55%">'+esc((c.run&&c.run.pkg)||c.id)+'</span>'; }
           else if(c.run){ foot='<span style="font-size:11px;color:var(--tx3)">'+esc(c.run.type)+' · без ключей</span><button class="st_btn" data-mcpconn="'+esc(c.id)+'">Подключить</button>'; }
-          else { foot='<span style="font-size:11px;color:var(--tx3)">облачный · подключение позже</span>'; }
-          var mfunc=(LANG==='en'?(c.func_en||c.func):(c.func_ru||c.func))||'';
-          var mdsc=(LANG==='en'?(c.desc_en||c.desc):(c.desc_ru||c.desc))||'';
+          else { foot='<span style="font-size:11px;color:var(--tx3)">remote · подключение позже</span>'; }
+          // Перевод: сперва из самой карточки, иначе из слоя _mkt_loc (харвестер каталог перезаписывает).
+          var mL=_locOf(c)||{};
+          var mfunc=(LANG==='en'?(c.func_en||mL.func_en||c.func):(c.func_ru||mL.func_ru||c.func))||'';
+          var mdsc=(LANG==='en'?(c.desc_en||mL.desc_en||c.desc):(c.desc_ru||mL.desc_ru||c.desc))||'';
           return '<div class="stile" style="--acc:'+(CAT_ACC[c.cat]||TYPE_ACC.mcp)+'"><span class="st_chip">🔌 MCP · '+esc(MCP_CATL[c.cat]||c.cat||'')+'</span>'+
             '<div class="st_title">'+(mfunc?esc(mfunc):esc(c.title||short))+'</div>'+(mfunc?'<div class="st_name">'+esc(c.title||short)+'</div>':'')+'<div class="st_fact">'+esc(mdsc)+'</div>'+
             '<div class="st_foot" style="justify-content:space-between;align-items:center;gap:8px">'+foot+'</div></div>';
@@ -4937,6 +5238,9 @@ function renderMcpCatalog(){
     });
     host.innerHTML=html;
     [].forEach.call(host.querySelectorAll('[data-mcpconn]'),function(b){b.onclick=function(){mcpConnectRun(b.getAttribute('data-mcpconn'),b);};});
+    // MCP приехал (возможно, уже после первой отрисовки) — пересобрать шапку,
+    // иначе чипы и счётчик «Все N» не учтут 200 карточек.
+    if(cur==='services') _mountTabFilter('Поиск сервиса…');
   };
   if(_mcpReg){ draw(_mcpReg); return; }
   _loadSharded('_mkt_mcp','items').then(function(r){
@@ -4952,13 +5256,14 @@ function mcpxGet(id){ return mcpxGi().filter(function(x){return x.id===id;})[0];
 function mcpConnectRun(id, btn){
   var c=(_mcpReg||[]).filter(function(x){return x.id===id;})[0];
   if(!c||!c.run)return;
-  if(btn){btn.disabled=true;btn.textContent='⏳ подключаю…';}
+  if(btn){btn.disabled=true;btn.textContent=INF(28)+' подключаю…';}
   skBridge('etb_run_expert','etb_expert_result',{name:'mcp_connect',params:{server_id:c.id,pkg_type:c.run.type,pkg:c.run.pkg,title:c.title||''}}, 300000).then(function(r){
     var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
     if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}
     if(out&&out.status==='success'){
       var a=mcpxGi(); a=a.filter(function(x){return x.id!==id;});
       a.push({id:id,key:out.server,title:out.title||c.title,count:out.count||0}); mcpxSi(a);
+      _mcpConnFetched=false; _ensureMcpConn();   // перечитать правду с устройства
       if(cur==='services')renderMcpCatalog();
     } else {
       if(btn){btn.disabled=false;btn.textContent='Подключить';}
@@ -4988,7 +5293,7 @@ function packScoutRun(btn){
   var msg=document.getElementById('ps_msg');
   if(!url){ if(msg)msg.innerHTML='⚠ Укажи адрес сайта.'; return; }
   if(btn)btn.disabled=true;
-  if(msg)msg.innerHTML='⏳ Работаю: читаю сайт → собираю справку → пишу сводку… (1–2 минуты)';
+  if(msg)msg.innerHTML=INF(28)+' Работаю: читаю сайт → собираю справку → пишу сводку… (1–2 минуты)';
   skBridge('etb_run_expert','etb_expert_result',{name:'pack_scout_run',params:{url:url,name:name}}, 300000).then(function(r){
     if(btn)btn.disabled=false;
     var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
@@ -4999,7 +5304,7 @@ function packScoutRun(btn){
       var rep=esc(out.report||'').replace(/\n/g,'<br>');
       msg.innerHTML='<div style="font-size:11px;color:var(--tx3);margin-bottom:8px">'+esc(steps)+'</div>'+
         '<div style="background:var(--bg);border:1px solid var(--bd2);border-radius:10px;padding:12px;color:var(--tx)">'+rep+'</div>';
-    } else if(typeof out==='string'&&out.indexOf('deferred')>=0){ msg.innerHTML='⏳ Задача выполняется на устройстве дольше обычного — подожди минуту и нажми «Разведать» ещё раз.'; }
+    } else if(typeof out==='string'&&out.indexOf('deferred')>=0){ msg.innerHTML=INF(28)+' Задача выполняется на устройстве дольше обычного — подожди минуту и нажми «Разведать» ещё раз.'; }
     else { msg.innerHTML='⚠ '+esc((out&&out.message)||'не удалось выполнить'); }
   }).catch(function(e){ if(btn)btn.disabled=false; if(msg)msg.innerHTML='⚠ '+esc((e&&e.message==='_timeout_')?'долгая обработка — попробуй ещё раз через минуту':((e&&e.message)||'ошибка')); });
 }
@@ -5029,7 +5334,7 @@ function packAutomateRun(packId, btn){
   name=conf.name||conf[first.k];
   var msg=document.getElementById('pa_msg');
   if(btn)btn.disabled=true;
-  if(msg)msg.innerHTML='⏳ Публикую автоматизацию…';
+  if(msg)msg.innerHTML=INF(28)+' Публикую автоматизацию…';
   skBridge('etb_run_expert','etb_expert_result',{name:'pack_automate',params:{pack_id:packId,config_json:JSON.stringify(conf),display_name:'Мониторинг '+name}}, 120000).then(function(r){
     if(btn)btn.disabled=false;
     var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
@@ -5037,7 +5342,7 @@ function packAutomateRun(packId, btn){
     if(out&&out.status==='success'){
       if(msg)msg.innerHTML='✓ Опубликовано! Перехожу в «AI Автоматизации» — там задай расписание и канал.';
       setTimeout(function(){ var o=document.getElementById('pa_ov'); if(o)o.remove(); _autoReg=null; _autoFetched=false; cur='automations'; renderGrid(); rtabs(); },1400);
-    } else if(typeof out==='string'&&out.indexOf('deferred')>=0){ if(msg)msg.innerHTML='⏳ Публикация идёт — подожди минуту и попробуй ещё раз.'; }
+    } else if(typeof out==='string'&&out.indexOf('deferred')>=0){ if(msg)msg.innerHTML=INF(28)+' Публикация идёт — подожди минуту и попробуй ещё раз.'; }
     else { if(msg)msg.innerHTML='⚠ '+esc((out&&out.message)||'не удалось опубликовать'); }
   }).catch(function(e){ if(btn)btn.disabled=false; if(msg)msg.innerHTML='⚠ '+esc((e&&e.message)||'ошибка'); });
 }
@@ -5072,7 +5377,7 @@ function agentForgeModal(){
     '<label style="display:block;font-size:12px;color:var(--tx3);margin:8px 0 3px">Роль</label>'+
     '<select id="af_role" style="'+_KPINP+'">'+roleOpts+'</select>'+
     boxes+
-    '<div style="margin-top:10px;font-size:12px;color:var(--tx2);background:var(--bg);border:1px dashed var(--bd2);border-radius:8px;padding:8px 10px;line-height:1.5">💡 Нужно больше умений? Во вкладке <b>«Сервисы» → «Каталог MCP-серверов»</b> подключи любой из <b>200</b> готовых серверов кнопкой «Подключить» — он появится здесь галочкой.</div>'+
+    '<div style="margin-top:10px;font-size:12px;color:var(--tx2);background:var(--bg);border:1px dashed var(--bd2);border-radius:8px;padding:8px 10px;line-height:1.5">💡 Нужно больше умений? Во вкладке <b>«Сервисы»</b> подключи любой из <b>200</b> готовых MCP-серверов кнопкой «Подключить» — он появится здесь галочкой.</div>'+
     '<label style="display:block;font-size:12px;color:var(--tx3);margin:12px 0 3px">ID копии агента (создай копию базового в Extella — 2 клика)</label>'+
     '<input id="af_aid" placeholder="agent_XXXXXXXX" autocomplete="off" style="'+_KPINP+'"/>'+
     '<div style="margin-top:14px;display:flex;gap:8px;align-items:center"><button class="st_btn" onclick="agentForgeRun(this)">🛠 Собрать агента</button>'+
@@ -5088,7 +5393,7 @@ function agentForgeRun(btn){
   if(!aid||aid.indexOf('agent_')!==0){ if(msg)msg.innerHTML='⚠ Вставь ID копии агента (начинается с <code>agent_</code>).'; return; }
   if(!tools.length){ if(msg)msg.innerHTML='⚠ Отметь хотя бы одно умение.'; return; }
   if(btn)btn.disabled=true;
-  if(msg)msg.innerHTML='⏳ Собираю: прошиваю роль и подключаю '+tools.length+' умений… (до минуты)';
+  if(msg)msg.innerHTML=INF(28)+' Собираю: прошиваю роль и подключаю '+tools.length+' умений… (до минуты)';
   skBridge('etb_run_expert','etb_expert_result',{name:'agent_forge',params:{agent_id:aid,role_id:role,tools_csv:tools.join(',')}}, 300000).then(function(r){
     if(btn)btn.disabled=false;
     var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
@@ -5096,7 +5401,7 @@ function agentForgeRun(btn){
     if(!msg)return;
     if(out&&out.status==='success'){
       msg.innerHTML='✓ Готово! Агент собран: роль «'+esc(out.role||role)+'», умений подключено: '+(out.tools||tools.length)+'. Открой его в чате Extella и дай задачу — он будет вызывать инструменты сам.';
-    } else if(typeof out==='string'&&out.indexOf('deferred')>=0){ msg.innerHTML='⏳ Сборка идёт дольше обычного — подожди минуту и попробуй ещё раз.'; }
+    } else if(typeof out==='string'&&out.indexOf('deferred')>=0){ msg.innerHTML=INF(28)+' Сборка идёт дольше обычного — подожди минуту и попробуй ещё раз.'; }
     else { msg.innerHTML='⚠ '+esc((out&&out.message)||'не удалось собрать'); }
   }).catch(function(e){ if(btn)btn.disabled=false; if(msg)msg.innerHTML='⚠ '+esc((e&&e.message==='_timeout_')?'нет ответа от устройства — попробуй ещё раз':((e&&e.message)||'ошибка')); });
 }
@@ -5129,7 +5434,7 @@ function svcRun(id, btn){
   var params={}; (s.params||[]).forEach(function(p){ var el=document.getElementById('sv_'+p.k); params[p.k]=el?el.value.trim():(p.def||''); });
   var msg=document.getElementById('sv_msg');
   if(btn)btn.disabled=true;
-  if(msg)msg.innerHTML='⏳ Запрашиваю…';
+  if(msg)msg.innerHTML=INF(28)+' Запрашиваю…';
   skBridge('etb_run_expert','etb_expert_result',{name:id,params:params}, 60000).then(function(r){
     if(btn)btn.disabled=false;
     var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
@@ -5182,12 +5487,12 @@ function kpInstallReady(packId, name){
   document.body.appendChild(ov);
   var msg=document.getElementById('kpi_msg');
   var run=function(){
-    if(msg)msg.innerHTML='⏳ Скачиваю официальный источник и собираю базу «'+esc(name)+'» локально… Большие кодексы, до нескольких минут.';
+    if(msg)msg.innerHTML=INF(28)+' Скачиваю официальный источник и собираю базу «'+esc(name)+'» локально… Большие кодексы, до нескольких минут.';
     skBridge('etb_run_expert','etb_expert_result',{name:'kp_install_pack',params:{pack_id:packId}}, 900000).then(function(r){
       var out=_kpParse(r);
       if(out&&out.status==='success'){ kpAdd(out.name||name); if(msg)msg.innerHTML='✓ База «'+esc(out.name||name)+'» установлена: '+(out.chunks||0)+' фрагментов. Можешь спрашивать.'; setTimeout(function(){var o=document.getElementById('kpi_ov');if(o)o.remove();renderKnowledge();},1600); }
       else if(msg)msg.innerHTML='⚠ '+esc((out&&out.message)||(typeof out==='string'?out:'не удалось установить'));
-    }).catch(function(e){ if(msg)msg.innerHTML=(e&&e.message==='_timeout_')?'⏳ Сборка идёт на устройстве (большой кодекс). Загляни в раздел через пару минут, база появится.':('⚠ '+esc((e&&e.message)||'нет ответа')); });
+    }).catch(function(e){ if(msg)msg.innerHTML=(e&&e.message==='_timeout_')?INF(28)+' Сборка идёт на устройстве (большой кодекс). Загляни в раздел через пару минут, база появится.':('⚠ '+esc((e&&e.message)||'нет ответа')); });
   };
   var ready=false; try{ready=localStorage.getItem('kp_engine_ready')==='1';}catch(_){}
   if(ready){ run(); return; }
@@ -5257,7 +5562,7 @@ function kpDoIngest(btn){
   if(!folder){ if(msg)msg.innerHTML='⚠ Выбери папку с документами.'; return; }
   if(btn)btn.disabled=true;
   var ingest=function(){
-    if(msg)msg.innerHTML='⏳ Собираю базу на устройстве… подготовка поиска может занять пару минут.';
+    if(msg)msg.innerHTML=INF(28)+' Собираю базу на устройстве… векторизация может занять пару минут.';
     skBridge('etb_run_expert','etb_expert_result',{name:'kp_ingest',params:{name:name,folder:folder}},300000).then(function(r){
       if(btn)btn.disabled=false;
       var out=_kpParse(r);
@@ -5293,14 +5598,14 @@ function kpDoAsk(i){
   var q=((document.getElementById('kpa_q')||{}).value||'').trim();
   var msg=document.getElementById('kpa_msg');
   if(!q){ if(msg)msg.innerHTML='⚠ Задай вопрос.'; return; }
-  if(msg)msg.innerHTML='⏳ Ищу по документам и формирую ответ…';
+  if(msg)msg.innerHTML=INF(28)+' Ищу по документам и формирую ответ…';
   skBridge('etb_run_expert','etb_expert_result',{name:'kp_ask',params:{name:name,question:q}},180000).then(function(r){
     var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
     if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}
     if(!msg)return;
     if(out&&out.status==='success'){ msg.innerHTML='<div style="white-space:pre-wrap">'+esc(out.answer)+'</div>'+((out.sources&&out.sources.length)?('<div style="color:var(--tx3);font-size:11px;margin-top:8px">📄 Источники: '+esc(out.sources.join(', '))+'</div>'):''); }
     else msg.innerHTML='⚠ '+esc((out&&out.message)||'не удалось');
-  }).catch(function(e){ if(msg)msg.innerHTML=(e&&e.message==='_timeout_')?'⏳ Долго, попробуй ещё раз.':('⚠ '+esc((e&&e.message)||'нет ответа')); });
+  }).catch(function(e){ if(msg)msg.innerHTML=(e&&e.message==='_timeout_')?INF(28)+' Долго, попробуй ещё раз.':('⚠ '+esc((e&&e.message)||'нет ответа')); });
 }
 // ============================================================================
 // Workspace — панель «кокпит» (контракт ws-v1 rev2, движок wz_workspace).
@@ -5308,41 +5613,8 @@ function kpDoAsk(i){
 // Кнопки-действия (run_capability/organize/set_autopilot/undo) — disabled до ws-v1.1.
 // ============================================================================
 var _wsList=null, _wsView='list', _wsCur=null, _wsDeskList;
-// Открыть воркспейс с Рабочего стола: переключаемся во вкладку и грузим кокпит.
-function wsOpenFromDesk(ws_id){ setc('workspace'); _wsView='cockpit'; wsOpen(ws_id); }
-function wsDeskBuild(){ setc('workspace'); wsBuildModal(); }
-// Раздел «Workspace» на Рабочем столе: геройский баннер + твои воркспейсы.
-function _dtWorkspaceSection(mode){
-  var ico='<svg class="lico"><use href="#ic-home"/></svg>';
-  var band='<div class="dt_hero dt_hero_ws" style="--hacc:var(--petrol,#2F6B66)" onclick="setc(\'workspace\')">'+
-    '<div class="dt_hero_ic">'+ico+'</div>'+
-    '<div class="dt_hero_tx">'+
-      '<div class="dt_hero_ttl">Workspace · рабочее место под проект</div>'+
-      '<div class="dt_hero_sub">Покажи папку проекта — Extella поймёт, что за работа, подберёт инструменты и возьмёт рутину на себя.</div>'+
-    '</div>'+
-    '<div class="dt_hero_go">Открыть →</div>'+
-  '</div>';
-  var list=_wsDeskList;
-  var strip='';
-  if(list===null||list===undefined){ strip=''; }               // грузится — тихо
-  else if(!list.length){
-    strip='<div class="dt_ws_empty" onclick="wsDeskBuild()">＋ Собрать первый воркспейс из папки — компьютер поймёт проект и настроится под него.</div>';
-  } else {
-    var cards=list.slice(0,6).map(function(w){
-      var bl=w.blockers|0;
-      var dot=bl>0?'<span class="dt_ws_dot crit" title="'+bl+' препятствие(й)"></span>':'<span class="dt_ws_dot ok" title="готов"></span>';
-      return '<button class="dt_ws_card" onclick="wsOpenFromDesk(\''+_dtEsc(w.ws_id)+'\')" title="'+esc(w.name||'')+'">'+
-        dot+'<span class="dt_ws_nm">'+esc(w.name||'Без имени')+'</span></button>';
-    }).join('');
-    strip='<div class="dt_ws_strip">'+cards+
-      '<button class="dt_ws_card dt_ws_add" onclick="wsDeskBuild()" title="Собрать новый воркспейс">＋ Собрать</button>'+
-      (list.length>6?'<button class="dt_ws_card dt_ws_more" onclick="setc(\'workspace\')">ещё '+(list.length-6)+' →</button>':'')+
-    '</div>';
-  }
-  if(mode==='band') return band;
-  if(mode==='strip') return strip;
-  return band+strip;
-}
+// Раздел воркспейсов со стола убран (16.07): вместо баннера+полосы — системный
+// ярлык «Воркспейс», открывающий полный плагин workspace своим окном.
 function _wsParse(r){ var out=r&&r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output; if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}} return out; }
 function wsCall(op,params,timeoutMs){
   var p=Object.assign({op:op},params||{});
@@ -5413,7 +5685,7 @@ function wsDelete(ws_id,name){
 }
 function wsDoDelete(btn,ws_id){
   var msg=document.getElementById('ws_msg'); if(btn)btn.disabled=true;
-  if(msg)msg.innerHTML='⏳ Удаляю…';
+  if(msg)msg.innerHTML=INF(28)+' Удаляю…';
   wsCall('delete',{ws_id:ws_id},60000).then(function(out){
     if(out&&out.status==='success'){
       var o=document.getElementById('ws_ov'); if(o)o.remove();
@@ -5474,7 +5746,7 @@ function wsDoBuild(btn,folderArg,nameArg){
   var msg=document.getElementById('ws_msg');
   if(!folder){ if(msg)msg.innerHTML='⚠ Выбери папку проекта.'; return; }
   if(btn)btn.disabled=true;
-  if(msg)msg.innerHTML='⏳ Читаю имена файлов и понимаю проект… (~30–45с)';
+  if(msg)msg.innerHTML=INF(28)+' Читаю имена файлов и понимаю проект… (~30–45с)';
   var g=document.getElementById('grid'); if(g&&_wsView!=='cockpit'){ g.innerHTML=wsSkeleton(); }
   var params={folder:folder}; if(nameArg)params.name=nameArg;
   var startMs=Date.now();
@@ -5500,7 +5772,7 @@ function wsBuildDone(ws){
 }
 // Поллинг синхронного list, пока воркспейс по папке не появится (свежий, updated≥старта).
 function wsBuildPoll(folder, startMs, msg, btn, tries){
-  if(msg)msg.innerHTML='⏳ Собираю воркспейс: Extella изучает проект и подбирает инструменты (~30–45 с)';
+  if(msg)msg.innerHTML=INF(28)+' Собираю воркспейс… компьютер понимает проект (~30–45с)';
   if(tries>24){ // ~75с
     if(btn)btn.disabled=false;
     if(msg)msg.innerHTML='▶ Сборка идёт дольше обычного. Загляни в список через минуту.';
@@ -5933,7 +6205,7 @@ function wsOrganizeModal(ws_id,prev){
 }
 function wsOrganizeApply(ws_id,btn){
   var msg=document.getElementById('ws_org_msg'); if(btn)btn.disabled=true;
-  if(msg)msg.innerHTML='⏳ Раскладываю файлы…';
+  if(msg)msg.innerHTML=INF(28)+' Раскладываю файлы…';
   wsCall('organize',{ws_id:ws_id,apply:true},120000).then(function(out){
     if(out&&out.status==='error'){ if(btn)btn.disabled=false; if(msg)msg.innerHTML='⚠ '+esc(out.message||'не удалось'); return; }
     var o=document.getElementById('ws_org_ov'); if(o)o.remove();
@@ -6214,6 +6486,26 @@ function setMode(m){
 function toggleTheme(){ document.documentElement.toggleAttribute('data-lm'); }
 
 // ── Boot ──────────────────────────────────────────────────────────────────
+// Вернуть раздел, где человек был до того, как хост переинжектил тулбар.
+// ВАЖНО: до setMode('all') — он вызывает первую отрисовку сетки.
+(function(){
+  try{
+    var st=_navRestore();
+    if(st){ cur=st.cur; _navY=st.y||0; }
+    var sc=document.querySelector('.scr');
+    if(!sc) return;
+    sc.addEventListener('scroll', _navSaveScroll);
+    if(!_navY) return;
+    // Контент приезжает асинхронно, поэтому прокрутку возвращаем мягко:
+    // пробуем, пока список не дорастёт, и сдаёмся через ~3с.
+    var tries=0;
+    var t=setInterval(function(){
+      tries++;
+      if(sc.scrollHeight > _navY + sc.clientHeight){ sc.scrollTop=_navY; clearInterval(t); }
+      else if(tries>12) clearInterval(t);
+    },250);
+  }catch(_){}
+})();
 setMode('all');
 applyLang();
 // Асинхронные ре-рендеры (KV-догрузка) и модалки/окна: держим перевод актуальным.

@@ -510,6 +510,13 @@ ETB.api = (function () {
       return _post('/api/rules/list', {}, { 'X-Agent-Id': CHAT_AGENTS[0] });
     },
 
+    // Существует ли эксперт (глобальный скоуп). Пост-проверка установщика:
+    // агент может молча провалить сохранение экспертов — тогда плагин ставится
+    // «немым» и падает «Expert not found» на каждой кнопке.
+    expertGet: function (name) {
+      return _post('/api/expert/get', { name: name, global: true });
+    },
+
     kvGet: function (key, opts) {
       var body = { key: key };
       if (opts && opts.global) body.global = true;

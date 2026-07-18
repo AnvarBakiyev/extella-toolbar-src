@@ -43,7 +43,7 @@
 | Вкладка | Рендер | Герой | Карточка |
 |---|---|---|---|
 | Сервисы › Программы | `renderPrograms`/`_renderProgramsCore` | spotlight+поиск | `.stile` |
-| Сервисы › Приложения | `_appsSectionHTML`/`appCard` | sect+lead | `.stile` |
+| Сервисы › Приложения | `renderApps`/`appCard` | sect+lead+полки | `.stile` |
 | Сервисы › Инструменты | `renderCLI`/`cliCard` | bento | `.stile` |
 | Сервисы › Сервисы | `renderServices`/`svCard` | bento | `.stile` |
 | Модели | `renderModels`/`modelsSpotlight` | bento/spotlight | `.stile` |
