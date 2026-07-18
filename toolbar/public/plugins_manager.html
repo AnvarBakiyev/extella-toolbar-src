@@ -2176,9 +2176,9 @@ var I18N_EN = {
   'Опиши задачу — Extella подберёт открытый инструмент, установит и добавит сама.':'Describe the task — Extella picks an open tool, installs and adds it for you.',
   '↻ Обновить каталог':'↻ Refresh catalog',
   '🔍 Искать ещё на Hugging Face':'🔍 Search more on Hugging Face',
-  'Из интернета · Композитор':'From the internet · Composer',
   'Убрать из витрины':'Remove from storefront','Удалить навсегда':'Delete forever','Опасная зона':'Danger zone','Автоматизации':'Automations',
-  '«Убрать из витрины» прячет карточку и ярлык у тебя. «Удалить навсегда» вычищает запись из каталога автоматизаций целиком. Эксперты и данные в Extella не трогаются.':'"Remove from storefront" hides the card and icon for you. "Delete forever" wipes the entry from the automations catalog entirely. Experts and data in Extella are untouched.'
+  '«Убрать из витрины» прячет карточку и ярлык у тебя. «Удалить навсегда» вычищает запись из каталога автоматизаций целиком. Эксперты и данные в Extella не трогаются.':'"Remove from storefront" hides the card and icon for you. "Delete forever" wipes the entry from the automations catalog entirely. Experts and data in Extella are untouched.',
+  'Собрать базу компании':'Build a company base',
 };
 var I18N_RX = [
   [/^Программы на рабочем столе/, 'Programs on the desktop'],
@@ -2951,7 +2951,7 @@ var TYPE_ED = {
     heroes: [
       { label:'Приватно · локально', acc:'#2F6B66', source:'База знаний',
         title:'База знаний компании', accent:'Агент отвечает по твоим документам',
-        go:"_jumpSect('Знания')", btn:'Смотреть базы',
+        go:"kpCreate()", btn:'Собрать базу компании',
         facts:['Регламенты, инструкции, договоры — ответы строго по ним','Собирается на устройстве за пару минут','Отвечает по фактам, без выдумок'] },
       { label:'Без настройки', acc:'#C57E33', source:'База · готовая',
         title:'Готовые базы знаний', accent:'Кодексы и справочники сразу в дело',
