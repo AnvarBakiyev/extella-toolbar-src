@@ -3926,12 +3926,15 @@ function _dtEsc(s){ return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); 
 // Правый клик по ярлыку → контекстное меню (Открыть/Кабинет/Запустить · Удалить),
 // как в ОС. Управление живёт на столе — отдельные вкладки «Мои»/«Автоматизации» не нужны.
 var _dtReg=[];
+var _dtSys=[];   // ярлыки, спрятанные со стола как двойники системных плиток (их и открывают плитки)
 // Открыть Конструктор. Делаем ровно то же, что рабочая иконка Конструктора на столе: находим его
-// среди ярлыков (_dtReg) и вызываем его же действие открытия — id установленного плагина
+// среди ярлыков и вызываем его же действие открытия — id установленного плагина
 // может отличаться от 'extella_adoption_wizard' (тогда прямой notify приложение не узнаёт).
+// ВАЖНО: искать надо И в _dtSys — дедуп двойников прячет Конструктор именно туда,
+// и поиск только по _dtReg давал «Конструктор не установлен» на устройстве, где он стоит.
 function _openWizard(){
-  var w=null;
-  for(var i=0;i<_dtReg.length;i++){ var it=_dtReg[i]; var s=((it.lbl||'')+' '+(it.raw||'')+' '+(it.id||'')).toLowerCase();
+  var w=null, pool=_dtSys.concat(_dtReg);
+  for(var i=0;i<pool.length;i++){ var it=pool[i]; var s=((it.lbl||'')+' '+(it.raw||'')+' '+(it.id||'')).toLowerCase();
     if(/wizard|визард|конструктор|adoption|внедрен/.test(s)){ w=it; break; } }
   if(w){
     if(w.kind==='agent') openAgentCabinet(w.id);
@@ -4213,10 +4216,14 @@ function renderDesktop(){
   // Двойники системных ярлыков — вон со стола (по id плагина и по имени).
   var _sysIds={extella_adoption_wizard:1, workspace:1, copilot_ctl:1, extella_cspl_studio:1, extella_team:1, extella_composer_studio:1};
   var _sysRe=/^(визард( внедрения)?|wizard|workspace|воркспейс(ы|ес)?|композитор|composer|второй пилот|copilot|студия языков|language studio|команда|team)$/i;
+  var _sysHidden=[];
   icons=icons.filter(function(ic){
-    return !_sysIds[ic.id] && !_sysRe.test(String(ic.lbl||'').trim()) && !_sysRe.test(String(ic.raw||'').trim());
+    var sys = _sysIds[ic.id] || _sysRe.test(String(ic.lbl||'').trim()) || _sysRe.test(String(ic.raw||'').trim());
+    if(sys) _sysHidden.push(ic);   // системный двойник со стола убран, но НЕ потерян: см. _dtSys
+    return !sys;
   });
-  _dtReg=icons;  // реестр для правого клика (открыть/кабинет/удалить); системные сюда не входят
+  _dtReg=icons;      // реестр для правого клика (открыть/кабинет/удалить); системные сюда не входят
+  _dtSys=_sysHidden; // …а системные плитки открываются отсюда — иначе «Визард» считал сам себя неустановленным
 
   var sysHtml=SYS_APPS.map(function(s,i){
     return '<button class="dt_ico" style="animation-delay:'+Math.min(i*14,180)+'ms" title="'+esc(s.tip)+'" onclick="'+s.go+'" oncontextmenu="return false">'+
