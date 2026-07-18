@@ -379,7 +379,32 @@ def build_activity(
     _attach_scheduler_sources(public_tasks)
     public_tasks.sort(key=lambda task: task.get("startedAt") or "", reverse=True)
     active = [task for task in public_tasks if task["status"] == "running"]
-    history = [task for task in public_tasks if task["status"] != "running"][:40]
+    # Схлопывание ПОВТОРОВ: каждая проверка расписания / перечитывание реестра / повторный вызов
+    # одной и той же задачи шли отдельной строкой и забивали ленту сотнями одинаковых записей
+    # (расписание — 814 строк подряд). Держим самую свежую, число повторов дописываем в detail
+    # (фронт менять не нужно). Схлопываются только БУКВАЛЬНО одинаковые (та же функция + статус) —
+    # разные задачи остаются отдельными строками.
+    _hist_raw = [task for task in public_tasks if task["status"] != "running"]
+    _keep: dict[tuple[Any, ...], dict[str, Any]] = {}
+    _order: list[tuple[Any, ...]] = []
+    _history: list[dict[str, Any]] = []
+    for task in _hist_raw:   # public_tasks уже отсортированы по времени убыв. → первый = самый свежий
+        key = (task.get("function") or task.get("title"), task.get("status"))
+        if key in _keep:
+            _keep[key]["_repeat"] = _keep[key].get("_repeat", 1) + 1
+            continue
+        task["_repeat"] = 1
+        _keep[key] = task
+        _order.append(key)
+        _history.append(task)
+    for key in _order:
+        task = _keep[key]
+        repeats = task.pop("_repeat", 1)
+        if repeats > 1:
+            task["repeatCount"] = repeats
+            task["detail"] = ((task.get("detail") or "").rstrip() + " Повторов: %d." % repeats).strip()
+    _history.sort(key=lambda task: task.get("startedAt") or "", reverse=True)
+    history = _history[:40]
     if listener_info.get("orphaned", 0):
         headline = "Найдены лишние процессы Extella"
         health = "warning"
