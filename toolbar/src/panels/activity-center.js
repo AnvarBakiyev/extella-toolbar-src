@@ -620,17 +620,21 @@
     var data = state.data;
     var root = document.getElementById('_xtlac_root');
     if (!root) return;
-    var health = data ? data.health : (state.bridgeOnline ? 'ok' : 'warning');
+    // Нет данных ≠ тревога: у части устройств движка фоновых задач просто нет —
+    // чип остаётся спокойным, никакого вечного «подключаюсь…» с оранжевой точкой.
+    var health = data ? data.health : 'ok';
     root.setAttribute('data-health', health);
-    document.getElementById('_xtlac_text').textContent = data ? data.headline : 'Подключаюсь…';
+    document.getElementById('_xtlac_text').textContent = data ? data.headline : 'Фоновых задач нет';
     document.getElementById('_xtlac_count').textContent = data ? ('✓ ' + data.counts.completed) : '';
     var clear = document.getElementById('_xtlac_clear');
     if (clear) clear.classList.toggle('show', !!(data && data.history && data.history.length));
 
     var warning = document.getElementById('_xtlac_warning');
     var orphaned = data && data.listeners && data.listeners.orphaned || 0;
-    if (!state.bridgeOnline) {
-      warning.textContent = 'Не вижу, что делает Extella. Полностью перезапусти Extella (⌘Q и открой заново) — список вернётся.';
+    if (!state.bridgeOnline && !state.data) {
+      // Ни детального списка, ни базового статуса. Честно: перезапуск может и
+      // не помочь (движка задач на устройстве может не быть) — не обещаем.
+      warning.textContent = 'Не вижу фоновых задач. Если ты их не запускала — так и должно быть. Если запускала, а список пропал — перезапусти Extella (⌘Q и открой заново).';
       warning.classList.add('show');
     } else if (orphaned) {
       // Задание Анвара: не только предупреждать, но и чинить в один клик —
