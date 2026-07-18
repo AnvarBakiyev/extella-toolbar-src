@@ -308,7 +308,9 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);
 }
 
 /* ── Skills shelf (Навыки as an in-store category) ─────────────────────── */
-.sk_lead{grid-column:1/-1;font-size:13px;color:var(--tx2);line-height:1.5;margin:-2px 0 8px}
+/* Подводка полки (standfirst): проза, но с голосом — крупнее и темнее подписи,
+   при этом не заголовок (решение: лиды-предложения не набираем заголовочным) */
+.sk_lead{grid-column:1/-1;font-size:15px;color:var(--tx);line-height:1.55;margin:-2px 0 8px;max-width:68ch}
 .sk_howto{font-size:11.5px;color:var(--tx);opacity:.9;background:rgba(var(--ar),.07);
   border:1px solid rgba(var(--ar),.15);border-radius:5px;padding:8px 10px;line-height:1.4;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
