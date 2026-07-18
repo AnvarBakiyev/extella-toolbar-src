@@ -4188,7 +4188,23 @@ var CLI_ACC={'Документы и PDF':'#C57E33','Картинки и меди
 // Живой каталог: захардкоженная база + инструменты, добавленные фабрикой в KV
 // (_mkt_cli_catalog). Новый инструмент от wz_cli_capability_pack появляется сам,
 // без правки этого файла, «фабрика без разработчика».
-var _cliReg=null, _cliLoaded=false, _cliPending=0; // _cliPending: когда передали сборку инструмента — показать «⏳ ищу…» на полке
+var _cliReg=null, _cliLoaded=false;
+// _cliPending: статус фоновой сборки инструмента для баннера на полке
+// {t, status:'working'|'ok'|'fail', note} — note = ответ агента (или причина ошибки)
+var _cliPending=null;
+window.addEventListener('message', function(e){
+  if(!e.data || e.data.type!=='etb_agent_done') return;
+  if(!_cliPending || _cliPending.status!=='working') return;
+  if(e.data.ok){ _cliPending={t:Date.now(),status:'ok',note:String(e.data.answer||'')}; _cliLoaded=false; _cliReg=null; }
+  else { _cliPending={t:Date.now(),status:'fail',note:String(e.data.error||'')}; }
+  if(cur==='cli') renderCLI();
+  var _ov=document.getElementById('cliadd_ov'), _mm=document.getElementById('cliadd_msg');
+  if(_ov && _ov.style.display!=='none' && _mm){
+    _mm.innerHTML = e.data.ok
+      ? '✓ '+esc(String(e.data.answer||'Готово — нажми «Обновить каталог».').slice(0,220))
+      : '✗ Не получилось: '+esc(String(e.data.error||'нет ответа').slice(0,180));
+  }
+});
 function cliCatalog(){
   var byId={}; CLI_CATALOG.forEach(function(c){byId[c.id]=c;});
   (_cliReg||[]).forEach(function(c){ if(c&&c.id) byId[c.id]=Object.assign({}, byId[c.id]||{}, c); });
@@ -4204,8 +4220,14 @@ function renderCLI(){
   }
   var all=cliCatalog();
   var html='<div class="sk_lead" style="grid-column:1/-1">Обработка файлов прямо на твоём компьютере (инструменты командной строки, CLI).<br>Скажи агенту, что сделать с файлами, — он вызовет нужный.</div>'+
-    (_cliPending && (Date.now()-_cliPending < 10*60*1000)
-      ? '<div style="grid-column:1/-1;border:1px solid var(--bd2);border-radius:5px;padding:10px 14px;font-size:12.5px;color:var(--tx2);background:var(--s1)">⏳ Ищу и собираю новый инструмент — обычно минута-другая. Нажми «↻ Обновить каталог» внизу, чтобы проверить.</div>'
+    (_cliPending && _cliPending.t && (Date.now()-_cliPending.t < 10*60*1000)
+      ? '<div style="grid-column:1/-1;border:1px solid '+(_cliPending.status==='fail'?'rgba(220,80,60,.4)':'var(--bd2)')+';border-radius:5px;padding:10px 14px;font-size:12.5px;color:var(--tx2);background:var(--s1)">'+
+          (_cliPending.status==='ok'
+            ? '✓ '+esc((_cliPending.note||'Готово — проверь каталог ниже.').slice(0,240))
+            : _cliPending.status==='fail'
+            ? '✗ Не получилось добавить: '+esc((_cliPending.note||'нет ответа').slice(0,180).replace(/[.\s]+$/,''))+'. Попробуй описать задачу другими словами.'
+            : '⏳ Ищу и собираю новый инструмент — обычно минута-другая. Итог появится здесь же.')+
+        '</div>'
       : '')+
     '<div class="mshelf tf_skip"><div class="stile" style="--acc:var(--a);border-style:dashed;cursor:pointer" onclick="openCliAdd()">'+
       '<span class="st_chip">✦ Добавить</span>'+
@@ -4866,7 +4888,7 @@ function _dtWorkspaceSection(mode){
   var band='<div class="dt_hero dt_hero_ws" style="--hacc:var(--petrol,#2F6B66)" onclick="setc(\'workspace\')">'+
     '<div class="dt_hero_ic">'+ico+'</div>'+
     '<div class="dt_hero_tx">'+
-      '<div class="dt_hero_ttl">Workspace · компьютер под задачу</div>'+
+      '<div class="dt_hero_ttl">Workspace · рабочее место под проект</div>'+
       '<div class="dt_hero_sub">Покажи папку проекта — Extella поймёт, что за работа, подберёт инструменты и возьмёт рутину на себя.</div>'+
     '</div>'+
     '<div class="dt_hero_go">Открыть →</div>'+
@@ -5049,7 +5071,7 @@ function wsBuildDone(ws){
 }
 // Поллинг синхронного list, пока воркспейс по папке не появится (свежий, updated≥старта).
 function wsBuildPoll(folder, startMs, msg, btn, tries){
-  if(msg)msg.innerHTML='⏳ Собираю воркспейс… компьютер понимает проект (~30–45с)';
+  if(msg)msg.innerHTML='⏳ Собираю воркспейс: Extella изучает проект и подбирает инструменты (~30–45 с)';
   if(tries>24){ // ~75с
     if(btn)btn.disabled=false;
     if(msg)msg.innerHTML='▶ Сборка идёт дольше обычного. Загляни в список через минуту.';
@@ -5186,7 +5208,7 @@ function wsRenderCockpitV3(w){
   if(und)html+='<div class="wx-domain">'+und+'<a onclick="notify(\'mkt_win\')">открыть в отдельном окне ↗</a></div>';
   // ══ ОБЗОР ══
   html+='<section class="wx-view" id="wx-over"><div class="wx-panel"><h2>Панель воркспейса</h2>'+
-    '<p class="wx-sub">Компьютер понял проект и настроился под него. Ниже — цели, что делать дальше и что нужно от тебя. <b>Ничего не уходит наружу без твоего подтверждения.</b></p>'+
+    '<p class="wx-sub">Extella поняла проект и настроила workspace под него. Ниже — цели, что делать дальше и что нужно от тебя. <b>Ничего не уходит наружу без твоего подтверждения.</b></p>'+
     '<div class="wx-pills"><span class="wx-pill on"><span>🎯</span>Цели</span><span class="wx-pill"><span>📈</span>Прогресс</span>'+(openQ?'<span class="wx-pill"><span>📨</span>Вопросы · '+openQ+'</span>':'')+'</div>';
   if(goals.length){ html+=goals.map(function(gl,i){
     var pr=(gl.progress|0);
@@ -5536,7 +5558,7 @@ function submitCliAdd(){
     'вызови run_expert("wz_cli_capability_pack", {spec_json: <анкета>}). '+
     'Если инструмент проприетарный (Excel/Photoshop) или без открытого CLI, честно откажись и предложи альтернативу. После выпуска инструмент сам появится в разделе «Инструменты».';
   skRunAgent(prompt).then(function(){
-    _cliPending=Date.now();
+    _cliPending={t:Date.now(),status:'working'};
     if(m)m.innerHTML='✓ Ищу и собираю инструмент — минута-другая. Затем нажми «Обновить каталог».';
     b.textContent='Передано';
     if(!document.getElementById('cliadd_refresh')){

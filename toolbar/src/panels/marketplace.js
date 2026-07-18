@@ -417,12 +417,18 @@ ETB.marketplace = (function () {
                 .then(function (res) { _back({ type: 'etb_expert_result', reqId: _rid, ok: true, res: res }); })
                 .catch(function (er) { _back({ type: 'etb_expert_result', reqId: _rid, ok: false, error: (er && er.message) || 'expert failed' }); });
             } else if (_t === 'etb_run_agent') {
-              // «+ Добавить инструмент»: ask the Builder to compose a spec and call
-              // the factory. Agent runs take minutes → ack immediately (fire-and-
-              // forget) and let the storefront refresh its catalog once it lands.
+              // «Найти и добавить»: агент работает минуты. Ack уходит сразу, а по
+              // завершении шлём etb_agent_done с текстом ответа — витрина покажет
+              // человеку итог (или причину отказа) вместо тишины.
               try {
                 ETB.api.runAgentAsync(String(e.data.message || ''), { agent_id: e.data.agent_id, run_timeout: 600 })
-                  .catch(function () {});
+                  .then(function (r) {
+                    var txt = ''; try { txt = ETB.api.extractAgentText(r) || ''; } catch (_ex) {}
+                    _back({ type: 'etb_agent_done', reqId: _rid, ok: true, answer: String(txt).slice(0, 600) });
+                  })
+                  .catch(function (er) {
+                    _back({ type: 'etb_agent_done', reqId: _rid, ok: false, error: (er && er.message) || 'агент не ответил' });
+                  });
               } catch (_ea) {}
               _back({ type: 'etb_agent_result', reqId: _rid, ok: true, started: true });
             }

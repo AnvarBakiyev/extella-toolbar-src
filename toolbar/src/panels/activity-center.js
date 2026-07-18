@@ -714,8 +714,10 @@
           detail: 'Название задачи появится после перезапуска Extella.', category: 'action'
         }] : [];
         return {
-          health: active.length ? 'busy' : 'warning',
-          headline: active.length ? active[0].title : 'Нужен перезапуск Extella',
+          // Спокойный чип: без деталей журнала он всё равно знает счётчик задач.
+          // Про перезапуск объясняет предупреждение ВНУТРИ панели, чипу ныть не нужно.
+          health: active.length ? 'busy' : 'ok',
+          headline: active.length ? active[0].title : 'Фоновых задач нет',
           active: active, history: [],
           counts: { active: active.length, completed: status.tasksCompleted || 0, failed: status.tasksFailed || 0 },
           listeners: { count: status.running ? 1 : 0, orphaned: 0 }
