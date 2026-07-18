@@ -196,7 +196,7 @@
     var head = storefrontNode(doc, 'div', '_xtlac_srv_head');
     var copy = storefrontNode(doc, 'div', '_xtlac_srv_head_copy');
     copy.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_title', 'Что работает в фоне'));
-    copy.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_sub', 'Программы Extella, которые сейчас крутятся на этом компьютере. Здесь их можно выключить или снова включить — безопасно.'));
+    copy.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_sub', 'Программы Extella, запущенные на этом компьютере. Любую можно выключить и включить обратно — ничего не сломается.'));
     head.appendChild(copy);
     var summary = state.services
       ? serviceCountText(state.services)
@@ -207,7 +207,7 @@
     var message = storefrontNode(doc, 'div', '_xtlac_srv_message' + (state.serviceMessage ? ' show' : ''), state.serviceMessage);
     section.appendChild(message);
     if (!state.services) {
-      section.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_sub', state.servicesLoading ? 'Проверяю, что сейчас запущено…' : 'Extella ещё подключается к этому компьютеру. Загляни через минуту — если не появится, перезапусти приложение.'));
+      section.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_sub', state.servicesLoading ? 'Проверяю, что сейчас запущено…' : 'Пока пусто — фоновые программы появятся здесь, когда ты их запустишь. Если запускала, а их не видно — перезапусти Extella (⌘Q и открой заново).'));
       return;
     }
 
@@ -354,10 +354,10 @@
         state.services = Array.isArray(payload.services) ? payload.services : [];
         state.servicesToken = payload.controlToken || '';
         state.servicesUpdatedAt = Date.now();
-        if (state.serviceMessage === 'Список пока недоступен — Extella подключается.') state.serviceMessage = '';
+        if (state.serviceMessage === 'Пока не вижу запущенных программ на этом компьютере.') state.serviceMessage = '';
       })
       .catch(function () {
-        state.serviceMessage = 'Список пока недоступен — Extella подключается.';
+        state.serviceMessage = 'Пока не вижу запущенных программ на этом компьютере.';
       })
       .then(function () {
         state.servicesLoading = false;
@@ -576,7 +576,7 @@
       details.appendChild(el('div', { className: '_xtlac_hint' }, sourceIdHint(task)));
     }
     if (task.status === 'running') {
-      details.appendChild(el('div', { className: '_xtlac_hint' }, 'Если задача действительно выполняется и её нужно прервать, используйте красную кнопку Cancel в нижней панели Extella.'));
+      details.appendChild(el('div', { className: '_xtlac_hint' }, 'Прервать задачу можно красной кнопкой Cancel внизу панели Extella.'));
     } else {
       var remove = el('button', { className: '_xtlac_remove', type: 'button' }, state.taskBusy[task.id] ? 'Убираю…' : 'Убрать запись из ленты');
       remove.disabled = !!state.taskBusy[task.id];
@@ -715,7 +715,7 @@
         var active = status.isBusy ? [{
           id: status.currentTaskId || 'unknown', shortId: String(status.currentTaskId || '').slice(0, 8),
           status: 'running', title: 'Extella выполняет задачу',
-          detail: 'Название задачи появится после перезапуска Extella.', category: 'action'
+          detail: 'Что именно — в этом режиме не видно; обычно это установка или фоновая сборка.', category: 'action'
         }] : [];
         return {
           // Спокойный чип: без деталей журнала он всё равно знает счётчик задач.

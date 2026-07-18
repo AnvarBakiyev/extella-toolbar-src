@@ -5350,20 +5350,20 @@ function packAutomateRun(packId, btn){
 var FORGE_ROLES=[{id:'universal',n:'Универсальный помощник'}].concat((typeof CATALOG_AGENTS!=='undefined'?CATALOG_AGENTS:[]).map(function(a){return {id:a.id,n:a.emoji+' '+a.name};}));
 var FORGE_TOOLS=[
  {g:'Живые данные (сервисы)', items:[
-   {id:'svc_currency',n:'💱 Курсы валют'},{id:'svc_crypto',n:'🪙 Криптовалюты'},{id:'svc_weather',n:'🌤️ Погода'},
-   {id:'svc_translate',n:'🌐 Перевод'},{id:'svc_wiki',n:'📖 Википедия'},
-   {id:'svc_github',n:'🐙 GitHub'},
-   {id:'svc_ipgeo',n:'📍 Гео по IP'},{id:'svc_qr',n:'🔳 QR-код'}]},
+   {id:'svc_currency',n:'Курсы валют'},{id:'svc_crypto',n:'Криптовалюты'},{id:'svc_weather',n:'Погода'},
+   {id:'svc_translate',n:'Перевод'},{id:'svc_wiki',n:'Википедия'},
+   {id:'svc_github',n:'GitHub'},
+   {id:'svc_ipgeo',n:'Гео по IP'},{id:'svc_qr',n:'QR-код'}]},
  {g:'MCP-серверы (встроенные)', items:[
-   {id:'mcp_fetch',n:'🌍 Чтение веб-страниц'},{id:'mcp_time',n:'🕐 Точное время'},
-   {id:'mcp_git',n:'🔧 Git-репозитории'},{id:'mcp_files',n:'📁 Файлы (Downloads)'}]}
+   {id:'mcp_fetch',n:'Чтение веб-страниц'},{id:'mcp_time',n:'Точное время'},
+   {id:'mcp_git',n:'Git-репозитории'},{id:'mcp_files',n:'Файлы (Downloads)'}]}
 ];
 function agentForgeModal(){
   var old=document.getElementById('af_ov'); if(old)old.remove();
   var roleOpts=FORGE_ROLES.map(function(r){return '<option value="'+esc(r.id)+'">'+esc(r.n)+'</option>';}).join('');
   var groups=FORGE_TOOLS.slice();
   var dyn=mcpxGi();
-  if(dyn.length){ groups=groups.concat([{g:'Подключённые из каталога MCP', items:dyn.map(function(d){return {id:'mcpx:'+d.key, n:'🔌 '+(d.title||d.key)+' (инструментов: '+(d.count||'?')+')'};})}]); }
+  if(dyn.length){ groups=groups.concat([{g:'Подключённые из каталога MCP', items:dyn.map(function(d){return {id:'mcpx:'+d.key, n:(d.title||d.key)+' (инструментов: '+(d.count||'?')+')'};})}]); }
   var boxes=groups.map(function(gr){
     return '<div style="font-size:11px;letter-spacing:.02em;color:var(--tx3);margin:10px 0 6px">'+esc(gr.g)+'</div>'+
       '<div style="display:flex;flex-wrap:wrap;gap:6px">'+gr.items.map(function(t){
@@ -5410,7 +5410,7 @@ function svCard(s){
   var foot=on
     ? '<span class="sk_active">● подключено</span><button class="st_btn" data-svrun="'+esc(s.id)+'">▶ Проверить</button><button class="sk_del" data-svdisc="'+esc(s.id)+'" style="margin-left:6px">Убрать</button>'
     : '<button class="st_btn" data-svconn="'+esc(s.id)+'">Подключить</button><button class="st_btn" data-svrun="'+esc(s.id)+'" style="margin-left:6px;background:transparent;color:var(--tx2);border:1px solid var(--bd2)">Проверить</button>';
-  return '<div class="stile" style="--acc:'+esc(s.acc)+'"><span class="st_chip">'+s.emoji+' Сервис</span>'+
+  return '<div class="stile" style="--acc:'+esc(s.acc)+'"><span class="st_chip">Сервис</span>'+
     '<div class="st_title">'+esc(s.name)+'</div><div class="st_fact">'+esc(s.desc)+'</div>'+
     '<div class="st_foot" style="justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap">'+foot+'</div></div>';
 }
@@ -5421,7 +5421,7 @@ function svcRunModal(id){
      '<input id="sv_'+esc(p.k)+'" value="'+esc(p.def||'')+'" placeholder="'+esc(p.ph||'')+'" autocomplete="off" style="'+_KPINP+'"/>'; }).join('');
   var ov=document.createElement('div'); ov.id='sv_ov'; ov.style.cssText=_KPOV;
   ov.innerHTML='<div style="'+_KPMODAL+'">'+
-    '<div style="font-family:var(--serif);font-size:20px;margin-bottom:4px">'+s.emoji+' '+esc(s.name)+'</div>'+
+    '<div style="font-family:var(--serif);font-size:20px;margin-bottom:4px">'+esc(s.name)+'</div>'+
     '<div style="color:var(--tx2);font-size:13px;line-height:1.5;margin-bottom:2px">'+esc(s.desc)+'</div>'+
     inputs+
     '<div style="margin-top:14px;display:flex;gap:8px;align-items:center"><button class="st_btn" onclick="svcRun(\''+esc(id)+'\',this)">▶ Запустить</button>'+
@@ -5487,7 +5487,7 @@ function kpInstallReady(packId, name){
   document.body.appendChild(ov);
   var msg=document.getElementById('kpi_msg');
   var run=function(){
-    if(msg)msg.innerHTML=INF(28)+' Скачиваю официальный источник и собираю базу «'+esc(name)+'» локально… Большие кодексы, до нескольких минут.';
+    if(msg)msg.innerHTML=INF(28)+' Скачиваю официальный источник и собираю базу «'+esc(name)+'» локально… Большие кодексы — до нескольких минут. Окно можно закрыть: сборка продолжится, готовая база появится в «Мои базы знаний».';
     skBridge('etb_run_expert','etb_expert_result',{name:'kp_install_pack',params:{pack_id:packId}}, 900000).then(function(r){
       var out=_kpParse(r);
       if(out&&out.status==='success'){ kpAdd(out.name||name); if(msg)msg.innerHTML='✓ База «'+esc(out.name||name)+'» установлена: '+(out.chunks||0)+' фрагментов. Можешь спрашивать.'; setTimeout(function(){var o=document.getElementById('kpi_ov');if(o)o.remove();renderKnowledge();},1600); }
