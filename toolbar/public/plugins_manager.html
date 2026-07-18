@@ -4704,6 +4704,12 @@ window.addEventListener('message', function(e) {
   } else if (e.data.type === 'etb_install_result') {
     delete installingIds[e.data.pluginId];
     featuredError = e.data.ok ? '' : (e.data.message || 'unknown error');
+    // Итог установки — всегда вслух: что получилось и где искать результат
+    try {
+      var _nm = (CURATED_PROGRAMS[e.data.pluginId] || {}).name || e.data.pluginId;
+      if (e.data.ok) wsToast('✓ «' + esc(_nm) + '» установлена — ярлык на Рабочем столе', 'ok');
+      else wsToast('✗ «' + esc(_nm) + '» не установилась: ' + esc((e.data.message || 'попробуй ещё раз').slice(0, 120)), 'err');
+    } catch (_) {}
     renderGrid();
     rtabs();
   }
