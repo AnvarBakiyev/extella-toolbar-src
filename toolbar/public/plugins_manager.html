@@ -3437,7 +3437,7 @@ function _mkbLoad(){
     if(!unused.length && !stale.length){ slot.innerHTML=''; return; }
     var en=(typeof LANG!=='undefined'&&LANG==='en');
     var head='<div class="sect_hdr"><span class="sect_title">'+(en?'Installed — not yet in automations':'Установлено — ещё не в автоматизациях')+'</span><span class="sect_line"></span></div>'+
-      '<div class="sk_lead" style="grid-column:1/-1">'+(en?'Turn what you\'ve installed into a Composer block — one click, right here.':'Преврати установленное в блок Композитора — в один клик, прямо здесь.')+
+      '<div class="sk_lead" style="grid-column:1/-1">'+(en?'Turn what you\'ve installed into a block — the Composer Studio builds automations out of blocks.':'Преврати установленное в блок — из блоков Студия Композитора собирает автоматизации.')+
       (d.blocks!=null?' <span style="color:var(--tx3)">· '+(en?'blocks now: ':'блоков сейчас: ')+esc(String(d.blocks))+'</span>':'')+'</div>';
     var cards=unused.map(function(it,i){ return _mkbCard(it,i,en); }).join('');
     var staleLine=stale.length?'<div class="sk_lead" style="grid-column:1/-1;color:var(--tx3);font-size:12px">'+
@@ -3470,7 +3470,7 @@ function _mkbCard(it,i,en){
   var ready=(it.ready!==false);
   var btn=ready
     ? '<button class="st_btn" style="--acc:'+acc+'" onclick="_mkbMake(this,\''+_dtEsc(it.kind)+'\',\''+_dtEsc(it.ref)+'\',\''+_dtEsc(it.title||it.ref)+'\')">'+(en?'Make a block':'Сделать блоком')+'</button>'
-    : '<span style="font-size:11.5px;color:var(--tx3)">'+(en?'start it first':'сначала запустите')+'</span>';
+    : '<span style="font-size:11.5px;color:var(--tx3)">'+(en?'start it first':'сначала запусти')+'</span>';
   return '<div class="stile" style="--acc:'+acc+';animation-delay:'+Math.min(i*30,240)+'ms">'+
     '<span class="st_chip">'+esc(kindL)+'</span>'+
     '<div class="st_title">'+esc(it.title||it.ref)+'</div>'+
@@ -4257,7 +4257,7 @@ function renderDesktop(){
     [/подписк|subscription|forgotten|забыт|поиск|search|найти/, 'search'],
     [/png|jpg|фото|image|картинк|фон|изображен/, 'image'],
     [/pdf|скан|ocr|распозна/, 'docs'],
-    [/готовк|cook|рецепт|еда|кухн/, 'chef'],
+    [/приготов|cook|рецепт|кухн|\bеда\b/, 'chef'],  // НЕ «готовк»: ловило «План подГОТОВКи»
     [/редактор|editor|витрин|рисов|draw|excalidraw|дизайн/, 'pen'],
     [/встреч|meeting|созвон|заметк|расписан|календар|schedule/, 'calendar'],
     [/маркетинг|реклам|market|продаж|промо/, 'marketing'],
@@ -4268,6 +4268,7 @@ function renderDesktop(){
     for(var i=0;i<_DT_KW.length;i++){ if(_DT_KW[i][0].test(n)) return _DT_KW[i][1]; }
     if(kind==='cli')   return 'terminal';
     if(kind==='cap')   return 'globe';
+    if(kind==='app')   return 'monitor';  // приложение = окно, а не «</>» разработчика
     var catSym=(typeof ICO_SYM!=='undefined')&&ICO_SYM[cat];
     if(catSym) return catSym;       // агент/программа с осмысленной категорией
     if(kind==='agent') return 'bot';
@@ -4780,7 +4781,7 @@ function cabRename(id){
 function cabSetStatus(id, st){ _agSaveState(id,{status:st}).then(function(){ _cabRender(); }); }
 function cabEditViaBuilder(id){
   var p=_cabAgent(); var msg=document.getElementById('cab_edit_msg');
-  var m='Открой агента Extella (agent_FLYxB0v1qIY2phB5beVP5) и скажи: «измени агента '+(_agName(p))+' — …». Правка внесётся с записью решения в сессию.';
+  var m='Открой своего агента Extella в чате и скажи: «измени агента '+(_agName(p))+' — …». Правка внесётся с записью решения в сессию.';
   if(msg)msg.innerHTML=esc(m);
 }
 function cabRemove(id){
@@ -6382,8 +6383,16 @@ function wsUndo(ws_id){
   }).catch(function(e){ wsToast('⚠ '+esc((e&&e.message)||'ошибка'),'err'); });
 }
 
-var BUILDER_ID='agent_FLYxB0v1qIY2phB5beVP5';
-function skRunAgent(msg){return skBridge('etb_run_agent','etb_agent_result',{message:msg,agent_id:BUILDER_ID});}
+var BUILDER_ID='agent_FLYxB0v1qIY2phB5beVP5';  // агент-сборщик Эллы; у других пользователей его нет
+function skRunAgent(msg){
+  return skBridge('etb_run_agent','etb_agent_result',{message:msg,agent_id:BUILDER_ID})
+    .catch(function(e){
+      // Портируемость: сборщик недоступен (чужое устройство/удалён) — пробуем агента сессии
+      var sid=(window._etbSess&&window._etbSess.agentId)||'';
+      if(!sid || sid===BUILDER_ID) throw e;
+      return skBridge('etb_run_agent','etb_agent_result',{message:msg,agent_id:sid});
+    });
+}
 function openCliAdd(){
   var ov=document.getElementById('cliadd_ov');
   if(!ov){

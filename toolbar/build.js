@@ -318,6 +318,20 @@ function build() {
 
   writeFile(path.join(ROOT, 'dist_plugins_manager.html'), buildMarketplace(plugins));
 
+  // Страж синтаксиса: одна битая запятая в инлайн-скрипте = белый экран витрины
+  // у всех пользователей. Компилируем каждый <script> собранных страниц —
+  // ошибка валит сборку с точной строкой, а не молча уезжает в прод.
+  const vm = require('vm');
+  ['plugins_manager.html', 'plugin-chat.html', 'plugin-form.html'].forEach(function (f) {
+    const html = fs.readFileSync(path.join(OUT, f), 'utf8');
+    (html.match(/<script>[\s\S]*?<\/script>/g) || []).forEach(function (block, i) {
+      const code = block.slice('<script>'.length, -'</script>'.length);
+      try { new vm.Script(code, { filename: f + '#script' + i }); }
+      catch (e) { throw new Error('инлайн-скрипт сломан: ' + f + ' → ' + e.message); }
+    });
+  });
+  console.log('  ✓ Инлайн-скрипты страниц проверены (vm.Script)');
+
   console.log('\n✅ Build complete!');
 
   // When invoked by install.sh (which runs this build, then deploys), skip the
