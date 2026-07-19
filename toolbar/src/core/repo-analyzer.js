@@ -13,7 +13,11 @@ ETB.repoAnalyzer = (function () {
   var MANIFEST_FILES = [
     'package.json', 'pyproject.toml', 'requirements.txt', 'setup.py',
     'Cargo.toml', 'go.mod', 'Dockerfile', 'docker-compose.yml',
-    'composer.json', 'Gemfile', 'Makefile'
+    'composer.json', 'Gemfile', 'Makefile',
+    // Pinokio-приложения несут собственный рецепт — его надо ЧИТАТЬ, а не
+    // угадывать типовой python/node путь (кейс searxng.pinokio: репо без
+    // requirements.txt, весь сценарий в install.js)
+    'install.js', 'pinokio.js', 'pinokio.json'
   ];
 
   // Paths that add noise without signal — excluded from the tree digest
@@ -66,6 +70,13 @@ ETB.repoAnalyzer = (function () {
       return /^packages\//.test(p) || /^apps\//.test(p);
     }).length;
 
+    // Pinokio-рецепт — собственный формат установки; классифицируем ДО общих
+    // эвристик, чтобы установщик шёл детерминированным путём app_install,
+    // а не типовой догадкой «python-проект».
+    if (paths.indexOf('pinokio.js') !== -1 || paths.indexOf('pinokio.json') !== -1 ||
+        (paths.indexOf('install.js') !== -1 && paths.indexOf('package.json') === -1)) {
+      return 'pinokio_app';
+    }
     if (hasHomepage && (hasPages || hasIndex)) return 'web_app';
     if (pkgCount >= 3) return 'monorepo';
     if (hasMod || (hasCMake && lang === 'c++')) return 'desktop_app';
