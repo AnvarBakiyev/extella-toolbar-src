@@ -4038,6 +4038,40 @@ function _dtCss(){
 // _deskReady/_deskDeadline ОБЯЗАНЫ быть объявлены: гейт их читает до присваивания,
 // без var это ReferenceError и стол не открывается вовсе.
 var _deskT=null, _deskStLoading=false, _deskReady=false, _deskDeadline=0;
+// ── Мгновенный стол: снапшот источников в localStorage ─────────────────────
+// Хост переинжектит витрину при КАЖДОЙ полной навигации — все in-memory кэши
+// умирают, и стол всякий раз «собирался» заново по 3-8 секунд (жалоба Анвара
+// «постоянно туда-сюда ходишь»). Снапшот последней удачной сборки рисует стол
+// МГНОВЕННО, свежие данные доезжают фоном и перерисовывают (stale-while-revalidate).
+var DESK_SNAP_KEY='etb_desk_snap_v1', _deskSnapNames={};
+function _deskSnapSave(){
+  try{
+    var names={};
+    if(_appInstalled){ Object.keys(_appInstalled).forEach(function(aid){
+      if(aid.indexOf('/')<0)return;
+      var t=aid.split('/').pop();
+      if(_appReg&&_appReg.shelf){ var mm=_appReg.shelf.filter(function(a){return a.id===aid;})[0]; if(mm)t=mm.title||t; }
+      names[aid]=t;
+    });}
+    var s=JSON.stringify({v:1, ts:Date.now(), autoReg:_autoReg||[], agState:_agState||{},
+      capInstReg:_capInstReg||[], appInstalled:_appInstalled||{}, appNames:names});
+    if(s.length<400000) localStorage.setItem(DESK_SNAP_KEY, s);
+  }catch(_){}
+}
+function _deskSnapRestore(){
+  try{
+    var snap=JSON.parse(localStorage.getItem(DESK_SNAP_KEY)||'null');
+    if(!snap||snap.v!==1) return false;
+    if(_autoReg===null) _autoReg=snap.autoReg||[];
+    _agState=Object.assign({}, snap.agState||{}, _agState);   // живые правки главнее снапшота
+    if(_capInstReg===null) _capInstReg=snap.capInstReg||[];
+    // Живой опрос устройства уже запущен верхом renderDesktop — снапшот лишь
+    // подкладывает данные до его ответа, флаг _appInstLoaded НЕ трогаем.
+    if(!_appInstLoaded) _appInstalled=Object.assign({}, snap.appInstalled||{}, _appInstalled||{});
+    _deskSnapNames=snap.appNames||{};
+    return true;
+  }catch(_){ return false; }
+}
 function _deskRedraw(){
   if(cur!=='desktop') return;
   clearTimeout(_deskT);
@@ -4077,6 +4111,9 @@ function renderDesktop(){
   // ГЕЙТ ПЕРВОЙ СБОРКИ: пока источники едут — держим заглушку и НЕ рисуем стол.
   // Иначе каждый ответ достраивает экран заново, и это читается как тряска.
   // Заглушку ставим один раз (повторные заходы её не трогают → она не мигает).
+  if(!_deskReady && _deskSnapRestore()){
+    _deskReady = true;   // мгновенный стол из снапшота; свежие источники доедут фоном и перерисуют
+  }
   if(!_deskReady){
     if(!_deskDeadline) _deskDeadline = Date.now() + 8000;   // страховка: источник может не ответить вовсе
     if(_deskPending().length && Date.now() < _deskDeadline){
@@ -4197,6 +4234,7 @@ function renderDesktop(){
     if(aid.indexOf('/')<0)return;   // только полные id owner/name (не basename-дубли)
     var title=aid.split('/').pop();
     if(_appReg&&_appReg.shelf){ var mm=_appReg.shelf.filter(function(a){return a.id===aid;})[0]; if(mm)title=mm.title||title; }
+    if(title===aid.split('/').pop() && _deskSnapNames[aid]) title=_deskSnapNames[aid];   // имя из снапшота, пока каталог не приехал
     icons.push({kind:'app',cat:'tech',lbl:title,acc:_dtAcc('tech'),id:aid,
       go:"appStartOpen(null,'"+_dtEsc(aid)+"')"});
   }); }
@@ -4258,6 +4296,9 @@ function renderDesktop(){
         : '<div class="dt_hint">Пока пусто. Установи программы в «Сервисах» или собери агента в Визарде — они появятся здесь ярлыками.</div>')+
     '</div>';
   rtabs();
+  // Полная сборка (все источники ответили) → снапшот для мгновенного стола
+  // при следующей переинжекции витрины.
+  if(!_deskPending().length) _deskSnapSave();
 }
 
 function renderInstalled() {
