@@ -1602,13 +1602,13 @@ var I18N_EN = {
   'Мой компьютер · Конструктор':'My computer · Wizard',
   'Все установленные программы в одном месте: настраивай, соединяй в связки и запускай.':'All your installed programs in one place: set up, link into workflows, and run.',
   'Покажи папку проекта — Extella поймёт, что за работа, подберёт инструменты и возьмёт рутину на себя.':"Point it at a project folder — Extella understands the work, sets up the right tools, and takes the routine off your hands.",
-  'Визард':'Wizard','Воркспейс':'Workspace','Композитор':'Composer','Регулярные задачи':'Scheduled tasks','Второй пилот':'Copilot','Студия языков':'Language Studio','Команда':'Team',
+  'Конструктор':'Wizard','Воркспейс':'Workspace','Композитор':'Composer','Регулярные задачи':'Scheduled tasks','Второй пилот':'Copilot','Студия языков':'Language Studio','Команда':'Team',
   'Собрать процесс: интервью → план → стройка → запуск':'Build a process: interview → plan → build → launch',
   'Рабочие среды: компьютер понял проект и настроился':'Workspaces: the computer understood the project and set itself up',
-  'Студия Композитора — внутри Визарда: задача словами → готовая автоматизация':'Composer Studio — inside the Wizard: describe a task → get a working automation',
+  'Студия Композитора — внутри Конструктора: задача словами → готовая автоматизация':'Composer Studio — inside the Wizard: describe a task → get a working automation',
   'Автоматизации по расписанию':'Scheduled automations',
   'Пилот наблюдает экран и помогает':'The copilot watches your screen and helps',
-  'Пока пусто. Установи программы в «Сервисах» или собери агента в Визарде — они появятся здесь ярлыками.':'Nothing yet. Install programs in “Services” or build an agent in the Wizard — they will appear here as icons.',
+  'Пока пусто. Установи программы в «Каталоге» или собери агента в Конструкторе — они появятся здесь ярлыками.':'Nothing yet. Install programs in “Catalog” or build an agent in the Wizard — they will appear here as icons.',
   'Открыть →':'Open →','Открыть':'Open','Запустить':'Run','Кабинет':'Cabinet','Удалить':'Remove','Открыть источник':'Open source','↗ Открыть':'↗ Open','↗ Источник':'↗ Source','⚙ Кабинет':'⚙ Cabinet','▶ Запустить':'▶ Run',
   // Секции / подписи
   'Выбор Extella':'EXTELLA PICK','Выбор Extella':'Extella pick',
@@ -4298,9 +4298,9 @@ function renderDesktop(){
   // Их динамические двойники ниже отфильтровываются — иначе рядом появлялись
   // удаляемые копии, которые возвращались после синка с устройством (§4).
   var SYS_APPS=[
-    {lbl:'Визард',           ico:'wand',     acc:'#C67E34', go:"_openWizard()",                tip:'Собрать процесс: интервью → план → стройка → запуск'},
+    {lbl:'Конструктор',      ico:'wand',     acc:'#C67E34', go:"_openWizard()",                tip:'Собрать процесс: интервью → план → стройка → запуск'},
     {lbl:'Воркспейс',        ico:'home',     acc:'#2F6B66', go:"notify('open','workspace')",   tip:'Рабочие среды: компьютер понял проект и настроился'},
-    {lbl:'Композитор',       ico:'box',      acc:'#7C5CBF', go:"notify('open','extella_composer_studio')", tip:'Студия Композитора — внутри Визарда: задача словами → готовая автоматизация'},
+    {lbl:'Композитор',       ico:'box',      acc:'#7C5CBF', go:"notify('open','extella_composer_studio')", tip:'Студия Композитора — внутри Конструктора: задача словами → готовая автоматизация'},
     {lbl:'Регулярные задачи',ico:'calendar', acc:'#3E7C4F', go:"setc('automations')",          tip:'Автоматизации по расписанию'},
     {lbl:'Второй пилот',     ico:'bot',      acc:'#4C5FD5', go:"notify('open','copilot_ctl')", tip:'Пилот наблюдает экран и помогает'},
     {lbl:'Студия языков',    ico:'terminal', acc:'#2A6F77', go:"notify('open','extella_cspl_studio')", tip:'Свои предметные языки: программа словами дела → проверенный результат'},
@@ -4400,7 +4400,7 @@ function renderDesktop(){
       '<div class="dt_grid" style="margin-bottom:24px">'+sysHtml+'</div>'+
       (icons.length
         ? '<div class="dt_hint">Клик — открыть или запустить. Правый клик — кабинет, настройки, удалить.</div>'+grpHtml
-        : '<div class="dt_hint">Пока пусто. Установи программы в «Сервисах» или собери агента в Визарде — они появятся здесь ярлыками.</div>')+
+        : '<div class="dt_hint">Пока пусто. Установи программы в «Каталоге» или собери агента в Конструкторе — они появятся здесь ярлыками.</div>')+
     '</div>';
   rtabs();
   // Полная сборка (все источники ответили) → снапшот для мгновенного стола
