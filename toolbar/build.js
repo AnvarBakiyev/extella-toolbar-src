@@ -332,6 +332,26 @@ function build() {
   });
   console.log('  ✓ Инлайн-скрипты страниц проверены (vm.Script)');
 
+  // Страж канона имён: слова, которые уже переименовывали, не должны
+  // возвращаться в видимые тексты — мержи старых веток их воскрешают
+  // (случалось: «Визард» и «Сервисы» вернулись со слиянием ws-ui).
+  // Комментарии кода из проверки исключены. Список расширять по мере решений:
+  // «Фабрика»/«ассистент»/«бот» пока не включены — есть легитимные употребления.
+  const CANON_BANNED = [/Визард/, /Строител/, /крут[ия]тся/];
+  ['plugins_manager.html', 'plugin-chat.html', 'plugin-form.html'].forEach(function (f) {
+    const raw = fs.readFileSync(path.join(OUT, f), 'utf8');
+    const scrubbed = raw.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/[^\n]*/g, '$1');
+    CANON_BANNED.forEach(function (rx) {
+      const m = scrubbed.match(rx);
+      if (m) {
+        const idx = scrubbed.indexOf(m[0]);
+        const ctx = scrubbed.slice(Math.max(0, idx - 60), idx + 60).replace(/\s+/g, ' ');
+        throw new Error('канон имён нарушен: «' + m[0] + '» в ' + f + ' → …' + ctx + '…');
+      }
+    });
+  });
+  console.log('  ✓ Канон имён соблюдён (Визард/Строитель/«крутятся» не встречаются)');
+
   console.log('\n✅ Build complete!');
 
   // When invoked by install.sh (which runs this build, then deploys), skip the
