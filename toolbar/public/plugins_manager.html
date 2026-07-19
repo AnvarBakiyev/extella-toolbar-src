@@ -2456,7 +2456,7 @@ function appStartOpen(btn,id){
     if(btn){ btn.disabled=false; if(!msg)btn.textContent='▶ Открыть'; }
     var te=document.getElementById('app_start_toast'); if(te)te.style.display='none';
     // есть URL (success ИЛИ starting) → открываем; iframe сам подхватит, когда приложение догрузит модель
-    if(out&&out.url){ appEmbed(id,out.url,out.ready); }
+    if(out&&out.url){ appEmbed(id,out.url,out.ready); _mkbAutoWrap(id); }
     else if(out&&out.status==='error'){ say('⚠ '+esc(out.message||'не запустилось')); }
     else { say(INF(24)+' '+esc((out&&out.message)||'Приложение ещё поднимается — открою по клику через минуту.')); }
   }).catch(function(e){ _appStarting[id]=0; if(btn){btn.disabled=false; if(!msg)btn.textContent='▶ Открыть';} say(INF(24)+' Запуск идёт (долго для ML-приложений). Загляни через минуту.'); });
@@ -3444,6 +3444,24 @@ function _mkbLoad(){
       esc(String(stale.length))+' '+(en?'marked installed, but not found on disk':'помечены установленными, но на диске их нет')+' — '+esc(stale.slice(0,6).join(', '))+(stale.length>6?'…':'')+'</div>':'';
     slot.innerHTML=head+'<div class="mshelf">'+cards+'</div>'+staleLine;
   }).catch(function(){ slot.innerHTML=''; });   // мост спит / визарда нет — молчим
+}
+// Автозамыкание «поставил приложение → оно само стало кубиком Композитора».
+// Программы/MCP кубик получают сами (ветка cap_install визарда), а приложения
+// ставятся через app_install/app_start МИМО моста — поэтому после подтверждённого
+// старта (у нас есть url = порт подтверждён) один фоновый вызов /x/app_wrap.
+// Идемпотентно и дёшево (визард узнаёт готовый блок по origin/слагу, модель не
+// тратит) — можно звать при каждом старте. Fire-and-forget: не блокируем открытие.
+var _mkbWrapped={};
+function _mkbAutoWrap(app_id){
+  if(_mkbWrapped[app_id]) return; _mkbWrapped[app_id]=1;   // раз за сессию хватает
+  var purpose=String(app_id).split('/').pop().slice(0,40);
+  _mkbFetch('/x/app_wrap',{app_id:app_id,purpose:purpose},600000).then(function(d){
+    if(d&&d.status==='success'){
+      wsToast((LANG==='en'?'Now a Composer block: ':'Стало блоком Композитора: ')+esc(d.expert||purpose),'ok');
+      var slot=document.getElementById('_mkb_slot'); if(slot&&cur==='programs')_mkbLoad();   // обновить опись, если открыта
+    }
+    // error — молчим: приложение уже открылось, это главное; кубик можно сделать вручную кнопкой
+  }).catch(function(){ _mkbWrapped[app_id]=0; });   // сеть/мост упали — разрешаем повтор при следующем старте
 }
 var _MKB_ACC={app:'#7C5CBF',mcp:'#2A8C82',cli:'#C67E34'};
 function _mkbCard(it,i,en){
