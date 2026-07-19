@@ -99,6 +99,29 @@ ETB.router = (function () {
     document.head.appendChild(s);
   }
 
+  // Фирменный лоадер Extella — анимированная бесконечность (тот же приём, что в
+  // витрине и Workspace) вместо безликого спиннера, пока агент чинит/запускает.
+  var _infN = 0;
+  function _ensureInfStyles() {
+    if (document.getElementById('_etb_inf_styles')) return;
+    var s = document.createElement('style');
+    s.id = '_etb_inf_styles';
+    s.textContent = '@keyframes _etbinfrun{to{stroke-dashoffset:-200}}' +
+      '._etbinf .tr{fill:none;stroke:#E7D8C1;stroke-width:7;stroke-linecap:round;opacity:.55}' +
+      '._etbinf .run{fill:none;stroke-width:7;stroke-linecap:round;stroke-dasharray:46 154;animation:_etbinfrun 1.5s linear infinite}' +
+      '@media (prefers-reduced-motion:reduce){._etbinf .run{animation:none;stroke-dasharray:none}}';
+    document.head.appendChild(s);
+  }
+  function _infHTML(w) {
+    w = w || 56; _ensureInfStyles();
+    var gid = '_etbinfg' + (++_infN);   // свой id градиента на каждый экземпляр — иначе SVG-ссылки конфликтуют
+    var d = 'M25,25 C25,11 43,11 50,25 C57,39 75,39 75,25 C75,11 57,11 50,25 C43,39 25,39 25,25 Z';
+    return '<span class="_etbinf" style="display:inline-block;line-height:0"><svg viewBox="0 0 100 50" width="' + w + '" height="' + (w / 2) + '" aria-hidden="true">' +
+      '<defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#C67A22"/><stop offset="1" stop-color="#E8B36A"/></linearGradient></defs>' +
+      '<path class="tr" d="' + d + '" pathLength="200"/>' +
+      '<path class="run" stroke="url(#' + gid + ')" d="' + d + '" pathLength="200"/></svg></span>';
+  }
+
   // Slim, non-blocking progress strip pinned to the TOP of a panel's content
   // area. It overlays (does not replace) the live UI, so the agent run does not
   // feel like a separate popup window. Returns the bar element.
@@ -119,13 +142,12 @@ ETB.router = (function () {
       'animation:_etbv2_slide_in .18s ease;'
     ].join('');
     bar.innerHTML = [
-      '<div style="width:15px;height:15px;flex-shrink:0;border:2px solid #2a2a2a;',
-      'border-top-color:#C67E34;border-radius:50%;animation:_etbv2_spin .7s linear infinite;"></div>',
+      '<span style="flex-shrink:0;">', _infHTML(26), '</span>',
       '<div style="font-size:12px;font-weight:700;color:var(--etb-tx,#f0f0f0);flex-shrink:0;">',
-      'Agent</div>',
+      'Extella чинит</div>',
       '<div class="_etb_rep_phase" style="font-size:12px;color:var(--etb-tx2,#aaa);',
       'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">',
-      _esc(phase || 'Working'), '…</div>'
+      _esc(phase || 'Разбираюсь, что сломалось'), '…</div>'
     ].join('');
     content.appendChild(bar);
     return bar;
@@ -144,7 +166,7 @@ ETB.router = (function () {
     bar.innerHTML = [
       '<div style="font-size:14px;flex-shrink:0;">&#9888;</div>',
       '<div style="font-size:12px;color:#f0c9c9;flex:1;overflow:hidden;',
-      'text-overflow:ellipsis;white-space:nowrap;">Agent repair failed: ',
+      'text-overflow:ellipsis;white-space:nowrap;">Починка не удалась: ',
       _esc(String(msg || 'unknown error').slice(0, 140)), '</div>',
       retryBtn,
       '<button class="_etb_rep_close" style="background:none;border:none;color:#f0c9c9;',
@@ -418,14 +440,12 @@ ETB.router = (function () {
       '<div style="display:flex;align-items:center;justify-content:center;height:100%;',
       'padding:32px;font-family:-apple-system,system-ui,sans-serif;">',
       '<div style="max-width:360px;text-align:center;">',
-      '<div class="_etb_spin" style="width:30px;height:30px;margin:0 auto 18px;border-radius:50%;',
-      'border:3px solid var(--etb-bd2,#333);border-top-color:#C67E34;animation:_etb_spin 0.8s linear infinite;"></div>',
+      '<div style="margin-bottom:16px;">', _infHTML(84), '</div>',
       '<div style="font-size:15px;font-weight:700;color:var(--etb-tx,#f0f0f0);margin-bottom:6px;">',
-      'Starting ', _esc(plugin.name), '&#8230;</div>',
+      'Запускаю ', _esc(plugin.name), '&#8230;</div>',
       '<div style="font-size:12.5px;color:var(--etb-tx2,#888);line-height:1.55;">',
-      'This takes a few seconds the first time.</div>',
-      '</div></div>',
-      '<style>@keyframes _etb_spin{to{transform:rotate(360deg)}}</style>'
+      'Первый запуск занимает несколько секунд.</div>',
+      '</div></div>'
     ].join('');
   }
 
@@ -994,9 +1014,9 @@ ETB.router = (function () {
   // Returns a controller object: { setPhase, done, error, close }.
   function _showRepairStatusModal(plugin, opts) {
     opts = opts || {};
-    var pluginName = (plugin && plugin.name) || 'Plugin';
+    var pluginName = (plugin && plugin.name) || 'Плагин';
     var fullReset  = !!opts.fullReset;
-    var title      = fullReset ? 'Reinstalling Plugin' : 'Rebuilding Plugin UI';
+    var title      = fullReset ? 'Переустанавливаю плагин' : 'Пересобираю интерфейс плагина';
 
     // No backdrop-close — user must wait or explicitly close/retry.
     var bd = document.createElement('div');
@@ -1058,19 +1078,15 @@ ETB.router = (function () {
       _setCardContent([
         _headerHtml('#C67E34', title),
         '<div style="padding:24px 22px;">',
-          '<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">',
-            '<div style="width:18px;height:18px;flex-shrink:0;border:2px solid rgba(0,0,0,.08);',
-              'border-top-color:#C67E34;border-radius:50%;',
-              'animation:_etbv2_spin .7s linear infinite;"></div>',
-            '<div id="_etb_rsm_phase" style="font-size:13px;color:var(--etb-tx,#111);',
-              'font-weight:500;">' + _esc(phase || 'Working') + '...</div>',
-          '</div>',
+          '<div style="text-align:center;margin-bottom:6px;">', _infHTML(72), '</div>',
+          '<div id="_etb_rsm_phase" style="font-size:13px;color:var(--etb-tx,#111);',
+            'font-weight:500;text-align:center;margin-bottom:14px;">' + _esc(phase || 'Разбираюсь, что сломалось') + '…</div>',
           '<div style="font-size:12px;color:var(--etb-tx2,#6b6b6b);margin-bottom:4px;">',
-            'Plugin: <b style="color:var(--etb-tx,#111);">' + _esc(pluginName) + '</b>',
+            'Плагин: <b style="color:var(--etb-tx,#111);">' + _esc(pluginName) + '</b>',
           '</div>',
           _logHtml(),
           '<div style="font-size:11px;color:var(--etb-tx2,#aaa);margin-top:12px;">',
-            'This may take a few minutes. You can navigate away — this window will stay.',
+            'Обычно это несколько минут. Можно спокойно заниматься другим — окно останется и покажет результат.',
           '</div>',
         '</div>'
       ].join(''));
@@ -1091,24 +1107,23 @@ ETB.router = (function () {
         ].join('');
       }
       _setCardContent([
-        _headerHtml('#4caf50', 'Plugin Ready'),
+        _headerHtml('#4caf50', 'Плагин готов'),
         '<div style="padding:24px 22px;">',
           '<div style="font-size:13px;color:var(--etb-tx,#111);margin-bottom:6px;">',
-            '<b>' + _esc(pluginName) + '</b> has been ' +
-            (fullReset ? 'reinstalled' : 'rebuilt') + ' successfully.',
+            '<b>' + _esc(pluginName) + '</b> ' + (fullReset ? 'переустановлен' : 'пересобран') + ' — всё получилось.',
           '</div>',
           '<div style="font-size:12px;color:var(--etb-tx2,#6b6b6b);margin-bottom:' +
             (summaryHtml ? '12px' : '20px') + ';">',
-            'Open the plugin to verify everything is working.',
+            'Открой плагин и убедись, что всё работает.',
           '</div>',
           summaryHtml,
           '<div style="display:flex;gap:8px;justify-content:flex-end;">',
             '<button id="_etb_rsm_close" style="background:var(--etb-s3,#f7f7f9);',
               'border:1px solid var(--etb-bd2,rgba(0,0,0,.14));color:var(--etb-tx2,#6b6b6b);',
-              'border-radius:9px;padding:9px 18px;cursor:pointer;font-size:12px;">Close</button>',
+              'border-radius:9px;padding:9px 18px;cursor:pointer;font-size:12px;">Закрыть</button>',
             '<button id="_etb_rsm_open" style="background:#C67E34;border:none;color:#000;',
               'font-weight:700;border-radius:9px;padding:9px 22px;cursor:pointer;font-size:12px;">',
-              'Open Plugin</button>',
+              'Открыть плагин</button>',
           '</div>',
         '</div>'
       ].join(''));
@@ -1124,10 +1139,10 @@ ETB.router = (function () {
     // ── Error state ────────────────────────────────────────────────
     function renderError(msg, onRetry) {
       _setCardContent([
-        _headerHtml('rgba(180,50,50,.85)', 'Repair Failed'),
+        _headerHtml('rgba(180,50,50,.85)', 'Починить не удалось'),
         '<div style="padding:24px 22px;">',
           '<div style="font-size:13px;color:var(--etb-tx,#111);margin-bottom:6px;">',
-            'Plugin: <b>' + _esc(pluginName) + '</b>',
+            'Плагин: <b>' + _esc(pluginName) + '</b>',
           '</div>',
           '<div style="background:rgba(220,50,50,.06);border:1px solid rgba(220,50,50,.18);',
             'border-radius:9px;padding:10px 14px;font-size:12px;color:rgba(160,40,40,.9);',
@@ -1137,9 +1152,9 @@ ETB.router = (function () {
           '<div style="display:flex;gap:8px;justify-content:flex-end;">',
             '<button id="_etb_rsm_close2" style="background:var(--etb-s3,#f7f7f9);',
               'border:1px solid var(--etb-bd2,rgba(0,0,0,.14));color:var(--etb-tx2,#6b6b6b);',
-              'border-radius:9px;padding:9px 18px;cursor:pointer;font-size:12px;">Close</button>',
+              'border-radius:9px;padding:9px 18px;cursor:pointer;font-size:12px;">Закрыть</button>',
             onRetry
-              ? '<button id="_etb_rsm_retry" style="background:#C67E34;border:none;color:#000;font-weight:700;border-radius:9px;padding:9px 20px;cursor:pointer;font-size:12px;">Retry</button>'
+              ? '<button id="_etb_rsm_retry" style="background:#C67E34;border:none;color:#000;font-weight:700;border-radius:9px;padding:9px 20px;cursor:pointer;font-size:12px;">Ещё раз</button>'
               : '',
           '</div>',
         '</div>'
