@@ -3461,8 +3461,11 @@ function _mkbCard(it,i,en){
 }
 function _mkbMake(btn,kind,ref,purpose){
   var foot=btn.parentNode; if(!foot) return;
-  foot.innerHTML=INF(24)+' <span style="font-size:12px;color:var(--tx2)">'+(LANG==='en'?'Building a block… up to a minute':'Собираю блок… до минуты')+'</span>';
-  _mkbFetch('/x/make_block',{kind:kind,ref:ref,purpose:purpose},90000).then(function(d){
+  foot.innerHTML=INF(24)+' <span style="font-size:12px;color:var(--tx2)">'+(LANG==='en'?'Building a block… this can take a minute':'Собираю блок… это может занять минуту')+'</span>';
+  // make_block синхронный: проектирование вызова + живой прогон, до минуты, но
+  // соединение держится открытым. Клиентский таймаут с запасом (визард на этой
+  // кнопке держит 600с) — иначе лоадер оборвётся раньше ответа на медленном блоке.
+  _mkbFetch('/x/make_block',{kind:kind,ref:ref,purpose:purpose},600000).then(function(d){
     if(d&&d.status==='success'){
       var made=(d.made&&d.made.length)?d.made.join(', '):'';
       foot.innerHTML='<span style="font-size:12.5px;color:#2E7D5B;font-weight:600">✓ '+(LANG==='en'?'Now a Composer block':'Стало блоком Композитора')+'</span>';
