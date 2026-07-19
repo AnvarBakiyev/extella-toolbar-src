@@ -2425,20 +2425,41 @@ function appDoInstall(btn,repo,id){
     else { if(msg)msg.innerHTML='⚠ '+esc((out&&out.message)||'не удалось'); }
   }).catch(function(e){ if(btn)btn.disabled=false; if(msg)msg.innerHTML=(e&&e.message==='_timeout_')?'▶ Установка идёт (долго). Загляни в раздел через минуту.':('⚠ '+esc((e&&e.message)||'нет ответа')); });
 }
+// Один запуск за раз: с рабочего стола раньше клик не давал НИКАКОЙ обратной
+// связи (нет ни кнопки, ни #app_msg) — пользователь жал 5-6 раз и плодил
+// параллельные app_start (кейс Анвара с searxng). Теперь: гард на id + плашка.
+var _appStarting={};
+function _appToastEl(){
+  var t=document.getElementById('app_start_toast');
+  if(!t){ t=document.createElement('div'); t.id='app_start_toast';
+    t.style.cssText='position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:10001;'+
+      'background:var(--s1,#fff);border:1px solid var(--bd2);border-radius:11px;padding:10px 16px;'+
+      'font:500 13px var(--sans);color:var(--tx);box-shadow:0 10px 30px rgba(0,0,0,.16);display:flex;align-items:center;gap:9px';
+    document.body.appendChild(t); }
+  return t;
+}
+function _appToast(html,sticky){
+  var t=_appToastEl(); t.innerHTML=html; t.style.display='flex';
+  clearTimeout(t._h); if(!sticky) t._h=setTimeout(function(){ t.style.display='none'; },6000);
+}
 function appStartOpen(btn,id){
+  if(_appStarting[id]){ var _nm=String(id).split('/').pop().slice(0,28); _appToast(INF(24)+' Уже запускаю «'+esc(_nm)+'» — секунду, открою сам.',true); return; }
+  _appStarting[id]=1;
   var msg=document.getElementById('app_msg');
-  var say=function(t){ if(msg)msg.innerHTML=t; else if(btn)btn.textContent=t.replace(/<[^>]+>/g,''); };
+  var say=function(t,sticky){ if(msg)msg.innerHTML=t; else if(btn)btn.textContent=t.replace(/<[^>]+>/g,''); else _appToast(t,sticky); };
   if(btn){ btn.disabled=true; if(!msg)btn.textContent=INF(28)+' Запускаю…'; }
-  if(msg)msg.innerHTML=INF(28)+' Запускаю приложение… первый старт может занять до минуты.';
+  say(INF(24)+' Запускаю приложение… первый старт может занять до минуты.',true);
   skBridge('etb_run_expert','etb_expert_result',{name:'app_start',params:{app_id:id}},300000).then(function(r){
     var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
     if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}
+    _appStarting[id]=0;
     if(btn){ btn.disabled=false; if(!msg)btn.textContent='▶ Открыть'; }
+    var te=document.getElementById('app_start_toast'); if(te)te.style.display='none';
     // есть URL (success ИЛИ starting) → открываем; iframe сам подхватит, когда приложение догрузит модель
     if(out&&out.url){ appEmbed(id,out.url,out.ready); }
     else if(out&&out.status==='error'){ say('⚠ '+esc(out.message||'не запустилось')); }
-    else { say(INF(28)+' '+esc((out&&out.message)||'Приложение грузит модель — нажми ▶ Открыть ещё раз через минуту.')); }
-  }).catch(function(e){ if(btn){btn.disabled=false; if(!msg)btn.textContent='▶ Открыть';} say(INF(28)+' Запуск идёт (долго для ML-приложений). Загляни через минуту.'); });
+    else { say(INF(24)+' '+esc((out&&out.message)||'Приложение ещё поднимается — открою по клику через минуту.')); }
+  }).catch(function(e){ _appStarting[id]=0; if(btn){btn.disabled=false; if(!msg)btn.textContent='▶ Открыть';} say(INF(24)+' Запуск идёт (долго для ML-приложений). Загляни через минуту.'); });
 }
 function appEmbed(id,url,ready){
   var o=document.getElementById('app_ov'); if(o)o.remove();
