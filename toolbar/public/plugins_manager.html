@@ -1572,7 +1572,7 @@ var _T_DICT = {
   runStarted:   {ru:'Запускаю…',    en:'Starting…'},
   runOk:        {ru:'Готово ✓',     en:'Done ✓'},
   autoLoad:     {ru:'Загружаю…',    en:'Loading…'},
-  autoEmpty:    {ru:'Пока пусто.',  en:'Nothing yet.'}
+  autoEmpty:    {ru:'Пока пусто. Автоматизации появятся здесь: собери первую в Конструкторе — или преврати установленную программу в блок и собери в Студии Композитора.',  en:'Nothing yet. Automations will appear here: build your first one in the Wizard — or turn an installed program into a block and assemble it in the Composer Studio.'}
 };
 function _t(k){ var e=_T_DICT[k]; if(!e) return k; return (LANG==='en' && e.en!=null) ? e.en : e.ru; }
 function _lm(m, field){ if(LANG==='en' && m && m.en && m.en[field]!=null) return m.en[field]; return m ? m[field] : ''; }
@@ -4303,7 +4303,7 @@ function renderDesktop(){
     {lbl:'Конструктор',      ico:'wand',     acc:'#C67E34', go:"_openWizard()",                tip:'Собрать процесс: интервью → план → стройка → запуск'},
     {lbl:'Воркспейс',        ico:'home',     acc:'#2F6B66', go:"notify('open','workspace')",   tip:'Рабочие среды: компьютер понял проект и настроился'},
     {lbl:'Композитор',       ico:'box',      acc:'#7C5CBF', go:"notify('open','extella_composer_studio')", tip:'Студия Композитора — внутри Конструктора: задача словами → готовая автоматизация'},
-    {lbl:'Регулярные задачи',ico:'calendar', acc:'#3E7C4F', go:"setc('automations')",          tip:'Автоматизации по расписанию'},
+    {lbl:'Автоматизации',    ico:'calendar', acc:'#3E7C4F', go:"setc('automations')",          tip:'Регулярные задачи и то, что Extella делает сама'},
     {lbl:'Второй пилот',     ico:'bot',      acc:'#4C5FD5', go:"notify('open','copilot_ctl')", tip:'Пилот наблюдает экран и помогает'},
     {lbl:'Студия языков',    ico:'terminal', acc:'#2A6F77', go:"notify('open','extella_cspl_studio')", tip:'Свои предметные языки: программа словами дела → проверенный результат'},
     {lbl:'Команда',          ico:'users',    acc:'#C9A35C', go:"notify('open','extella_team')",        tip:'Пригласить в общий контур — именные ключи доступа'}

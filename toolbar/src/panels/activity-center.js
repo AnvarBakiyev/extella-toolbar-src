@@ -422,16 +422,16 @@
         var schedules = store.CATS.filter(function (category) { return category.id === 'automations'; })[0];
         if (!schedules) {
           var beforeAgents = store.CATS.findIndex(function (category) { return category.id === 'agents'; });
-          var entry = { id: 'automations', l: 'Расписания' };
+          var entry = { id: 'automations', l: 'Автоматизации' };
           if (beforeAgents >= 0) store.CATS.splice(beforeAgents, 0, entry);
           else store.CATS.push(entry);
           changed = true;
-        } else if (schedules.l !== 'Расписания') {
-          schedules.l = 'Расписания';
+        } else if (schedules.l !== 'Автоматизации') {
+          schedules.l = 'Автоматизации';
           changed = true;
         }
       }
-      if (store.I18N_EN) store.I18N_EN['Расписания'] = 'Schedules';
+      if (store.I18N_EN) store.I18N_EN['Автоматизации'] = 'Automations';
       if (changed && typeof store.rtabs === 'function') store.rtabs();
 
       if (!store.__xtlacDesktopObserver) {
