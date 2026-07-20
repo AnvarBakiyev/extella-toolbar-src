@@ -4199,7 +4199,10 @@ function _dtCss(){
     '.dt_ico{display:flex;flex-direction:column;align-items:center;gap:8px;background:transparent;border:1px solid transparent;'+
       'border-radius:6px;padding:12px 6px 10px;cursor:pointer;transition:background .12s,border-color .12s,transform .1s;animation:fiu .22s ease both}'+
     '.dt_ico:hover{background:var(--s2);border-color:var(--bd)}'+
-    '.dt_ico.dt_off{opacity:.4}'+  // системный плагин отсутствует на устройстве
+    '.dt_ico.dt_off{opacity:.5}'+  // системный плагин отсутствует / «скоро»
+    '.dt_ic_badge{position:relative}'+
+    '.dt_soon{position:absolute;top:-7px;right:-7px;background:#8A7A5C;color:#fff;font:700 8.5px var(--sans);'+
+      'letter-spacing:.04em;text-transform:uppercase;padding:2px 5px;border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,.2)}'+
     '.dt_ico:active{transform:scale(.95)}'+
     '.dt_ic_badge{width:56px;height:56px;border-radius:6px;display:flex;align-items:center;justify-content:center;'+
       'border:1px solid;box-shadow:0 2px 8px rgba(0,0,0,.06)}'+
@@ -4378,11 +4381,11 @@ function renderDesktop(){
   // удаляемые копии, которые возвращались после синка с устройством (§4).
   var SYS_APPS=[
     {lbl:'Конструктор',      ico:'wand',     acc:'#C67E34', go:"_openWizard()",                tip:'Собрать процесс: интервью → план → стройка → запуск'},
-    {lbl:'Воркспейс',        ico:'home',     acc:'#2F6B66', go:"setc('workspace')",           tip:'Рабочие среды: компьютер понял проект и настроился'},
+    {lbl:'Воркспейс',        ico:'home',     acc:'#2F6B66', soon:true, go:"setc('workspace')",           tip:'Рабочие среды: компьютер понял проект и настроился'},
     {lbl:'Композитор',       ico:'box',      acc:'#7C5CBF', req:'extella_composer_studio', go:"notify('open','extella_composer_studio')", tip:'Студия Композитора — внутри Конструктора: задача словами → готовая автоматизация'},
     {lbl:'Автоматизации',    ico:'calendar', acc:'#3E7C4F', go:"setc('automations')",          tip:'Регулярные задачи и «Что работает в фоне»'},
-    {lbl:'Второй пилот',     ico:'bot',      acc:'#4C5FD5', req:'copilot_ctl', go:"notify('open','copilot_ctl')", tip:'Пилот наблюдает экран и помогает'},
-    {lbl:'Студия языков',    ico:'terminal', acc:'#2A6F77', req:'extella_cspl_studio', go:"notify('open','extella_cspl_studio')", tip:'Свои предметные языки: программа словами дела → проверенный результат'},
+    {lbl:'Второй пилот',     ico:'bot',      acc:'#4C5FD5', soon:true, req:'copilot_ctl', go:"notify('open','copilot_ctl')", tip:'Пилот наблюдает экран и помогает'},
+    {lbl:'Студия языков',    ico:'terminal', acc:'#2A6F77', soon:true, req:'extella_cspl_studio', go:"notify('open','extella_cspl_studio')", tip:'Свои предметные языки: программа словами дела → проверенный результат'},
     {lbl:'Команда',          ico:'users',    acc:'#C9A35C', req:'extella_team', go:"notify('open','extella_team')",        tip:'Пригласить в общий контур — именные ключи доступа'}
   ];
   // Честность стола: если системного плагина нет в реестре устройства — ярлык
@@ -4396,6 +4399,7 @@ function renderDesktop(){
     catch(_){ return false; }
   }
   window._sysMissing=function(lbl){ wsToast('«'+lbl+'» ещё не установлена на этом компьютере — появится после полной установки Extella'); };
+  window._sysSoon=function(lbl){ wsToast(LANG==='en'?('«'+lbl+'» — coming soon, in one of the next updates'):('«'+lbl+'» — скоро, в одном из ближайших обновлений')); };
   // 1) Агенты, собранные Визардом → открыть кабинет
   // Показываем агента только когда его состояние уже прочитано: иначе убранный
   // со стола ярлык успевает мигнуть до того, как приедет флаг hidden.
@@ -4461,11 +4465,15 @@ function renderDesktop(){
   _dtSys=_sysHidden; // …а системные плитки открываются отсюда — иначе «Визард» считал сам себя неустановленным
 
   var sysHtml=SYS_APPS.map(function(s,i){
-    var missing = s.req && !_sysAvail(s.req);
-    var go  = missing ? "_sysMissing('"+esc(s.lbl)+"')" : s.go;
-    var tip = missing ? (s.lbl+' — ещё не установлена на этом компьютере') : s.tip;
-    return '<button type="button" aria-label="Открыть '+esc(s.lbl)+'" class="dt_ico'+(missing?' dt_off':'')+'" style="animation-delay:'+Math.min(i*14,180)+'ms" title="'+esc(tip)+'" onclick="'+go+'" oncontextmenu="return false">'+
-      '<span class="dt_ic_badge" style="background:'+s.acc+'14;border-color:'+s.acc+'40;color:'+s.acc+'">'+_icoSym(s.ico)+'</span>'+
+    // «Скоро» приоритетнее «не установлено»: возможность ещё не для пользователей —
+    // ярлык виден (чтобы обещал), но приглушён, с бейджем, клик объясняет, не открывает.
+    var soon = !!s.soon;
+    var missing = !soon && s.req && !_sysAvail(s.req);
+    var go  = soon ? "_sysSoon('"+esc(s.lbl)+"')" : (missing ? "_sysMissing('"+esc(s.lbl)+"')" : s.go);
+    var tip = soon ? (s.lbl+' — скоро') : (missing ? (s.lbl+' — ещё не установлена на этом компьютере') : s.tip);
+    var badge = soon ? '<span class="dt_soon">'+(LANG==='en'?'Soon':'Скоро')+'</span>' : '';
+    return '<button type="button" aria-label="'+esc(s.lbl)+'" class="dt_ico'+((soon||missing)?' dt_off':'')+'" style="animation-delay:'+Math.min(i*14,180)+'ms" title="'+esc(tip)+'" onclick="'+go+'" oncontextmenu="return false">'+
+      '<span class="dt_ic_badge" style="background:'+s.acc+'14;border-color:'+s.acc+'40;color:'+s.acc+'">'+_icoSym(s.ico)+badge+'</span>'+
       '<span class="dt_ic_lbl">'+esc(s.lbl)+'</span></button>';
   }).join('');
   // Группы стола (просьба Анвара «чтобы всё было видно и отличалось»):
