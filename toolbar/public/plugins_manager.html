@@ -707,7 +707,7 @@ body[data-theme="dark"] .inf .tr,html[data-theme="dark"] .inf .tr{stroke:var(--b
   <button class="bclose" onclick="notify('close')" title="Close">&#10005;</button>
 </div>
 <div class="cmdbar">
-  <input id="cmd_url" placeholder="🔍  Поиск по всем разделам — или вставь ссылку с GitHub / Hugging Face: программа, модель или навык встанут сами" spellcheck="false" autocomplete="off" onkeydown="if(event.key==='Enter')cmdInstall()"/>
+  <input id="cmd_url" placeholder="🔍  Поиск по всем разделам — или вставь ссылку с GitHub / Hugging Face: программа, модель или навык установятся" spellcheck="false" autocomplete="off" onkeydown="if(event.key==='Enter')cmdInstall()"/>
   <button class="cmdgo" onclick="cmdInstall()">Установить</button>
 </div>
 <div class="tabs" id="tabs"></div>
@@ -1588,15 +1588,14 @@ var I18N_EN = {
   'Навыки':'Skills','Инструменты':'Tools','Знания':'Knowledge','Агенты':'Agents','Сервисы':'Services','Каталог':'Catalog','Профи':'Pro','История':'History','Автозапуск':'Auto-run',
   'На Рабочий стол':'Back to Desktop',
   'Мини-программы Extella и приложения с GitHub: берёшь с полки — живут у тебя на компьютере.':'Extella mini-programs and apps from GitHub: pick one from the shelf — it lives on your computer.',
-  'Каталог популярных открытых инструментов — Extella ставит их сама, работают у тебя на компьютере. Обновляется каждую неделю.':'A catalog of popular open-source tools — Extella installs them for you, they run on your computer. Updated weekly.',
   'Готовые приложения с GitHub: клик — и Extella установит на твой компьютер. Работают локально.':'Ready-made apps from GitHub: one click and Extella installs them on your computer. They run locally.',
-  'Модели с Hugging Face: найди или вставь ссылку — Extella поставит сама. Локальные модели работают у тебя на компьютере, даже без интернета.':'Models from Hugging Face: search or paste a link — Extella installs it for you. Local models run on your computer, even offline.',
+  'Модели с Hugging Face: найди в каталоге или вставь ссылку. Локальные модели работают у тебя на компьютере, даже без интернета.':'Models from Hugging Face: search the catalog or paste a link. Local models run on your computer, even offline.',
   'Все программы':'All programs',
   'Обработка файлов прямо на твоём компьютере (инструменты командной строки, CLI).':'Works with files right on your computer (command-line tools, CLI).',
   'Скажи агенту, что сделать с файлами, — он вызовет нужный.':'Tell the agent what to do with the files — it calls the right tool.',
   // Шапка / командная строка
   'Установить':'Install','Для профи':'Pro','Для всех':'For everyone',
-  '🔍  Поиск по всем разделам — или вставь ссылку с GitHub / Hugging Face: программа, модель или навык встанут сами':'🔍  Search across all sections — or paste a GitHub / Hugging Face link: programs, models and skills install themselves',
+  '🔍  Поиск по всем разделам — или вставь ссылку с GitHub / Hugging Face: программа, модель или навык установятся':'🔍  Search across all sections — or paste a GitHub / Hugging Face link: the program, model or skill gets installed',
   'Свернуть':'Minimize','В окне / на весь экран':'Window / fullscreen','Светлая / тёмная тема':'Light / dark theme','Язык / Language':'Язык / Language',
   // Рабочий стол
   'Мой компьютер · Конструктор':'My computer · Wizard',
@@ -1636,7 +1635,7 @@ var I18N_EN = {
   'Для бизнеса':'For business','Для жизни':'For life','Работа':'Work','Программа':'Program','Навык':'Skill','Модель':'Model','Инструмент':'Tool','Сервис':'Service','Роль агента':'Agent role','Готовая база':'Ready base','База знаний':'Knowledge base',
   'Программа · Работа':'Program · Work','Живые данные · API':'Live data · API','Приватно · локально':'Private · local','Роли · Qwen':'Roles · Qwen',
   '+ Добавить программу':'+ Add program','Добавить':'Add','Не здесь?':'Not here?',
-  'Опиши задачу — Extella найдёт и добавит сама.':'Describe the task — Extella finds and adds it for you.',
+  'Опиши задачу — Extella найдёт и добавит.':'Describe the task — Extella finds and adds it.',
   'установлено':'installed','подключено':'connected','ставится…':'installing…','активен':'active','ещё не запускался':'never run',
   'Как запустить:':'How to run:','через агента':'via agent','Инструменты · через агента':'Tools · via agent','Из интернета · добавлено Extella':'From the internet · added by Extella',
   // Витринные карточки (TYPE_ED героев): авто-влито 17.07
@@ -2173,7 +2172,7 @@ var I18N_EN = {
   '+ Добавить инструмент':'+ Add tool',
   '+ Добавить модель':'+ Add model',
   '+ Добавить навык':'+ Add skill',
-  'Опиши задачу — Extella подберёт открытый инструмент, установит и добавит сама.':'Describe the task — Extella picks an open tool, installs and adds it for you.',
+  'Опиши задачу — Extella подберёт открытый инструмент, установит и добавит.':'Describe the task — Extella picks an open tool, installs and adds it.',
   '↻ Обновить каталог':'↻ Refresh catalog',
   '🔍 Искать ещё на Hugging Face':'🔍 Search more on Hugging Face',
   'Убрать из витрины':'Remove from storefront','Удалить навсегда':'Delete forever','Опасная зона':'Danger zone','Автоматизации':'Automations',
@@ -2550,7 +2549,7 @@ function _renderModelsCore() {
       '<div class="sk_lead" style="grid-column:1/-1;margin:-8px 0 12px;font-size:12px;color:var(--tx3)">поиск по Hugging Face — не проверено Extella</div>');
     return;
   }
-  g.innerHTML = '<div class="sk_lead" style="grid-column:1/-1">Модели с Hugging Face: найди или вставь ссылку — Extella поставит сама. Локальные модели работают у тебя на компьютере, даже без интернета.</div>' + modelsSpotlight() +
+  g.innerHTML = '<div class="sk_lead" style="grid-column:1/-1">Модели с Hugging Face: найди в каталоге или вставь ссылку. Локальные модели работают у тебя на компьютере, даже без интернета.</div>' + modelsSpotlight() +
     '<div style="grid-column:1/-1;text-align:center;margin:10px 0 0"><button class="cat_chip" onclick="_modHFset(true)">🔍 Искать ещё на Hugging Face</button></div>';
   [].forEach.call(g.querySelectorAll('[data-lminst]'),function(b){b.onclick=function(){installLocalModel(b.getAttribute('data-lminst'),b);};});
   _mountTabFilter('Поиск модели…');
@@ -4303,7 +4302,7 @@ function renderDesktop(){
     {lbl:'Конструктор',      ico:'wand',     acc:'#C67E34', go:"_openWizard()",                tip:'Собрать процесс: интервью → план → стройка → запуск'},
     {lbl:'Воркспейс',        ico:'home',     acc:'#2F6B66', go:"notify('open','workspace')",   tip:'Рабочие среды: компьютер понял проект и настроился'},
     {lbl:'Композитор',       ico:'box',      acc:'#7C5CBF', go:"notify('open','extella_composer_studio')", tip:'Студия Композитора — внутри Конструктора: задача словами → готовая автоматизация'},
-    {lbl:'Автоматизации',    ico:'calendar', acc:'#3E7C4F', go:"setc('automations')",          tip:'Регулярные задачи и то, что Extella делает сама'},
+    {lbl:'Автоматизации',    ico:'calendar', acc:'#3E7C4F', go:"setc('automations')",          tip:'Регулярные задачи и «Что работает в фоне»'},
     {lbl:'Второй пилот',     ico:'bot',      acc:'#4C5FD5', go:"notify('open','copilot_ctl')", tip:'Пилот наблюдает экран и помогает'},
     {lbl:'Студия языков',    ico:'terminal', acc:'#2A6F77', go:"notify('open','extella_cspl_studio')", tip:'Свои предметные языки: программа словами дела → проверенный результат'},
     {lbl:'Команда',          ico:'users',    acc:'#C9A35C', go:"notify('open','extella_team')",        tip:'Пригласить в общий контур — именные ключи доступа'}
@@ -5103,7 +5102,7 @@ function renderCLI(){
     '<div class="mshelf tf_skip"><div class="stile" style="--acc:var(--a);border-style:dashed;cursor:pointer" onclick="openCliAdd()">'+
       '<span class="st_chip">✦ Добавить</span>'+
       '<div class="st_title">+ Добавить инструмент</div>'+
-      '<div class="st_fact">Опиши задачу — Extella подберёт открытый инструмент, установит и добавит сама.</div>'+
+      '<div class="st_fact">Опиши задачу — Extella подберёт открытый инструмент, установит и добавит.</div>'+
       '<div class="st_foot"><span style="font-size:11px;color:var(--tx3)">из открытых источников</span></div></div></div>';
   var cats=[]; all.forEach(function(c){if(cats.indexOf(c.cat)<0)cats.push(c.cat);});
   cats.forEach(function(cn){
@@ -6450,7 +6449,7 @@ var ADD_KINDS={
 };
 // Плитка «Добавить…» — стоит в начале полки, БЕЗ заголовка-раздела и с tf_skip:
 // иначе фильтр категорий считал её отдельным разделом («Своего навыка нет? 1»)
-function addTileHTML(kind,label){return '<div class="mshelf tf_skip"><div class="stile" style="--acc:var(--a);border-style:dashed;cursor:pointer" onclick="openAddModal(\''+kind+'\')"><span class="st_chip">✦ Добавить</span><div class="st_title">+ '+esc(label)+'</div><div class="st_fact">Опиши задачу — Extella найдёт и добавит сама.</div><div class="st_foot"><span style="font-size:11px;color:var(--tx3)">из открытых источников</span></div></div></div>';}
+function addTileHTML(kind,label){return '<div class="mshelf tf_skip"><div class="stile" style="--acc:var(--a);border-style:dashed;cursor:pointer" onclick="openAddModal(\''+kind+'\')"><span class="st_chip">✦ Добавить</span><div class="st_title">+ '+esc(label)+'</div><div class="st_fact">Опиши задачу — Extella найдёт и добавит.</div><div class="st_foot"><span style="font-size:11px;color:var(--tx3)">из открытых источников</span></div></div></div>';}
 function etbFindInstall(btn){
   var q = (btn && btn.getAttribute('data-q')) || '';
   openAddModal('programs');
