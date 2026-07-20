@@ -6777,28 +6777,36 @@ function cliCard(c){
 // сбрасывается → повтор клика слал новый resolver (у Гульжан — ghostscript ×6
 // в логах, brew запускался параллельно). Держим состояние по tool, не по кнопке.
 var _cliInstalling={};
+// Установка инструмента = ставим программу + сразу оборачиваем в блок Композитора
+// + вносим в каталог, ОДНИМ вызовом /x/cap_install моста Конструктора (тот же путь,
+// что app_wrap для приложений). Так пред-раскладывать 68 cap_-обёрток на каждый
+// аккаунт больше не нужно — чистый аккаунт клиента, появляется только установленное.
 function installCLI(tool,btn){
   if(_cliInstalling[tool]){ return; }   // уже ставлю этот инструмент — второй клик игнор
   _cliInstalling[tool]=1;
   if(btn){btn.disabled=true;btn.textContent='Ставлю…';}
-  skBridge('etb_run_expert','etb_expert_result',{name:'cap_'+tool+'_resolver',params:{confirm_install:'yes'}},300000)  // первая установка тянет brew — 20с дефолта не хватало
-    .then(function(r){
-      _cliInstalling[tool]=0;
-      var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
-      if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}
-      var st=out&&out.status;
-      if(st==='already'||st==='installed'){
-        cliMarkInstalled(tool);
-        if(cur==='cli'){ renderCLI(); }         // перерисовать: карточка станет «установлено»
-        else if(btn){ btn.textContent='Готово ✓'; btn.style.opacity='.7'; }
-        return;
-      }
-      if(!btn)return;
-      // «installing» (большой пакет ещё ставится) — честный статус, не «Повторить»
-      if(st==='installing'){ btn.disabled=false; btn.textContent='Ещё ставится…'; btn.title=(out&&out.message)||''; return; }
-      btn.disabled=false;btn.textContent='Повторить';btn.title=(out&&out.message)||'не удалось поставить';
-    })
-    .catch(function(e){ _cliInstalling[tool]=0; if(btn){btn.disabled=false;btn.textContent='Ещё раз';btn.title=(e&&e.message)||'нет ответа';}});
+  var catMap={}; (typeof cliCatalog==='function'?cliCatalog():[]).forEach(function(c){catMap[c.id]=c;});
+  var c=catMap[tool]||{}; var title=c.name||tool, desc=c.desc||'';
+  _mkbFetch('/x/cap_install',{kind:'cli',install_ref:tool,title:title,desc:desc},600000).then(function(out){
+    _cliInstalling[tool]=0;
+    if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}
+    var st=out&&out.status;
+    if(st==='success'||st==='already'||st==='installed'){
+      cliMarkInstalled(tool);
+      if(cur==='cli'){ renderCLI(); }         // перерисовать: карточка станет «установлено»
+      else if(btn){ btn.textContent='Готово ✓'; btn.style.opacity='.7'; }
+      if(out&&out.expert) wsToast('Инструмент готов — стал блоком Композитора','ok');
+      return;
+    }
+    if(!btn)return;
+    if(st==='installing'){ btn.disabled=false; btn.textContent='Ещё ставится…'; btn.title=(out&&out.message)||''; return; }
+    btn.disabled=false;btn.textContent='Повторить';btn.title=(out&&out.message)||'не удалось поставить';
+  }).catch(function(e){
+    _cliInstalling[tool]=0;
+    // Мост Конструктора спит / Конструктор не установлен — честно, без сырого сбоя.
+    if(btn){btn.disabled=false;btn.textContent='Ещё раз';btn.title='Конструктор недоступен — открой его на столе, он поднимет мост, и повтори';}
+    wsToast('Не удалось поставить инструмент: открой Конструктор (он поднимет мост) и попробуй ещё раз','err');
+  });
 }
 
 // ── Storefront modes: «Для всех» (curated) vs «Для профи» (full/dev) ──────
