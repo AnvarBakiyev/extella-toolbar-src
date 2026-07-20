@@ -207,7 +207,7 @@
     var message = storefrontNode(doc, 'div', '_xtlac_srv_message' + (state.serviceMessage ? ' show' : ''), state.serviceMessage);
     section.appendChild(message);
     if (!state.services) {
-      section.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_sub', state.servicesLoading ? 'Проверяю, что сейчас запущено…' : 'Пока пусто — фоновые программы появятся здесь, когда ты их запустишь. Если запускала, а их не видно — перезапусти Extella (⌘Q и открой заново).'));
+      section.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_sub', state.servicesLoading ? 'Проверяю, что сейчас запущено…' : 'Список фоновых программ недоступен: служебная часть Extella на этом компьютере не запущена. Это не поломка — компонент ещё не установлен.'));
       return;
     }
 
@@ -354,10 +354,10 @@
         state.services = Array.isArray(payload.services) ? payload.services : [];
         state.servicesToken = payload.controlToken || '';
         state.servicesUpdatedAt = Date.now();
-        if (state.serviceMessage === 'Пока не вижу запущенных программ на этом компьютере.') state.serviceMessage = '';
+        if (state.serviceMessage === 'Служебная часть Extella на этом компьютере не запущена — список фоновых программ недоступен. Это не поломка: компонент ещё не установлен.') state.serviceMessage = '';
       })
       .catch(function () {
-        state.serviceMessage = 'Пока не вижу запущенных программ на этом компьютере.';
+        state.serviceMessage = 'Служебная часть Extella на этом компьютере не запущена — список фоновых программ недоступен. Это не поломка: компонент ещё не установлен.';
       })
       .then(function () {
         state.servicesLoading = false;
