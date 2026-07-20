@@ -19,6 +19,11 @@
     '#_xtlac_root{position:fixed;right:12px;bottom:12px;z-index:2147483638;font-family:-apple-system,system-ui,sans-serif;color:var(--etb-tx,#f0f0f0);pointer-events:auto}',
     '#_xtlac_pill{height:34px;display:flex;align-items:center;gap:8px;padding:0 12px;border:1px solid var(--etb-bd2,rgba(255,255,255,.13));border-radius:18px;background:var(--etb-s1,#111);color:var(--etb-tx,#f0f0f0);box-shadow:0 2px 20px rgba(0,0,0,.35);cursor:pointer;font:600 11px/1 -apple-system,system-ui,sans-serif;max-width:330px}',
     '#_xtlac_pill:hover{border-color:rgba(198,126,52,.55)}',
+    // Ручка перетаскивания: видимая аффорданса + курсор говорят «меня можно двигать»
+    '#_xtlac_grip{color:var(--etb-tx2,#888);font-size:10px;letter-spacing:1px;cursor:grab;user-select:none;margin-right:2px;flex:0 0 auto}',
+    '#_xtlac_pill:hover #_xtlac_grip{color:var(--etb-tx,#f0f0f0)}',
+    '#_xtlac_root.dragging #_xtlac_pill{cursor:grabbing}',
+    '#_xtlac_root.dragging #_xtlac_grip{cursor:grabbing}',
     '#_xtlac_dot{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 8px rgba(34,197,94,.45);flex:0 0 auto}',
     '#_xtlac_root[data-health="busy"] #_xtlac_dot{background:#c67e34;box-shadow:0 0 8px rgba(198,126,52,.5);animation:_xtlac_pulse 1.2s ease-in-out infinite}',
     '#_xtlac_root[data-health="warning"] #_xtlac_dot{background:#f59e0b;box-shadow:0 0 8px rgba(245,158,11,.5)}',
@@ -682,6 +687,7 @@
 
     var root = el('div', { id: '_xtlac_root', 'data-health': 'warning' });
     var pill = el('button', { id: '_xtlac_pill', type: 'button', 'aria-label': T('Что делает Extella — открыть список','What Extella is doing — open the list') });
+    pill.appendChild(el('span', { id: '_xtlac_grip', title: T('Перетащи, чтобы сдвинуть плашку','Drag to move this chip') }, '⠿'));
     pill.appendChild(el('span', { id: '_xtlac_dot' }));
     pill.appendChild(el('span', { id: '_xtlac_text' }, T('Подключаюсь…','Connecting…')));
     pill.appendChild(el('span', { id: '_xtlac_count' }));
@@ -705,7 +711,44 @@
       panel.classList.toggle('open', open);
       pill.setAttribute('aria-expanded', open ? 'true' : 'false');
     }
-    pill.addEventListener('click', function () { setOpen(!state.open); });
+    // Перетаскивание по горизонтали: плашка прибита к правому нижнему углу и в
+    // узких окнах перекрывала чат. Сдвиг хранится и переживает перезапуск.
+    var POS_KEY = '_xtlac_pos_x';
+    function _applyPos(x) {
+      var pw = pill.offsetWidth || 160;
+      var min = -(window.innerWidth - pw - 24);           // до левого края
+      x = Math.min(0, Math.max(min, x));                  // 0 = родной правый угол
+      root.style.transform = x ? ('translateX(' + x + 'px)') : '';
+      return x;
+    }
+    var _savedX = 0;
+    try { _savedX = parseInt(localStorage.getItem(POS_KEY) || '0', 10) || 0; } catch (e) {}
+    if (_savedX) _applyPos(_savedX);
+    var _drag = null, _dragged = false;
+    pill.addEventListener('pointerdown', function (ev) {
+      _drag = { startX: ev.clientX, baseX: _savedX };
+      _dragged = false;
+      try { pill.setPointerCapture(ev.pointerId); } catch (e) {}
+    });
+    pill.addEventListener('pointermove', function (ev) {
+      if (!_drag) return;
+      var dx = ev.clientX - _drag.startX;
+      if (Math.abs(dx) > 4) _dragged = true;
+      if (_dragged) {
+        root.classList.add('dragging');
+        _savedX = _applyPos(_drag.baseX + dx);
+      }
+    });
+    pill.addEventListener('pointerup', function () {
+      if (_dragged) { try { localStorage.setItem(POS_KEY, String(_savedX)); } catch (e) {} }
+      _drag = null;
+      root.classList.remove('dragging');
+    });
+    window.addEventListener('resize', function () { _savedX = _applyPos(_savedX); });
+    pill.addEventListener('click', function (ev) {
+      if (_dragged) { _dragged = false; ev.stopPropagation(); return; }  // конец перетаскивания ≠ клик
+      setOpen(!state.open);
+    });
     document.getElementById('_xtlac_close').addEventListener('click', closePanel);
     document.getElementById('_xtlac_clear').addEventListener('click', clearCompletedTasks);
     document.addEventListener('keydown', function (event) { if (event.key === 'Escape') closePanel(); });
