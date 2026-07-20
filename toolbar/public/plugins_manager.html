@@ -3460,7 +3460,12 @@ var _MKB='http://127.0.0.1:8765';
 function _mkbFetch(path,body,ms){
   var ctl=('AbortController' in window)?new AbortController():null;
   var t=ctl?setTimeout(function(){ctl.abort();},ms||8000):null;
-  var o={method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})};
+  // Content-Type: text/plain, НЕ application/json! Тулбар в HTTPS-контексте зовёт
+  // мост Конструктора на http://127.0.0.1:8765 — с application/json это «сложный»
+  // запрос, браузер шлёт CORS-preflight OPTIONS, а мост отвечает 501 без
+  // CORS-заголовков → браузер блокирует, fetch падает («открой Конструктор»).
+  // text/plain = «простой» запрос, без preflight; мост парсит тело как JSON сам.
+  var o={method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(body||{})};
   if(ctl)o.signal=ctl.signal;
   return fetch(_MKB+path,o).then(function(r){ if(t)clearTimeout(t); return r.json(); });
 }
