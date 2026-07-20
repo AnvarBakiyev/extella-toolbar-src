@@ -209,7 +209,11 @@
     var message = storefrontNode(doc, 'div', '_xtlac_srv_message' + (state.serviceMessage ? ' show' : ''), state.serviceMessage);
     section.appendChild(message);
     if (!state.services) {
-      section.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_sub', state.servicesLoading ? T('Проверяю, что сейчас запущено…','Checking what is running…') : T('Список фоновых программ недоступен: служебная часть Extella на этом компьютере не запущена. Это не поломка — компонент ещё не установлен.','The background program list is unavailable: the Extella service component is not running on this computer. Not a breakage — the component just is not installed yet.')));
+      if (state.servicesLoading) {
+        section.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_sub', T('Проверяю, что сейчас запущено…','Checking what is running…')));
+      } else if (!state.serviceMessage) {
+        section.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_sub', T('Список фоновых программ пока недоступен.','The background program list is currently unavailable.')));
+      }
       return;
     }
 
@@ -356,10 +360,10 @@
         state.services = Array.isArray(payload.services) ? payload.services : [];
         state.servicesToken = payload.controlToken || '';
         state.servicesUpdatedAt = Date.now();
-        if (state.serviceMessage === 'Служебная часть Extella на этом компьютере не запущена — список фоновых программ недоступен. Это не поломка: компонент ещё не установлен.') state.serviceMessage = '';
+        state.serviceMessage = '';
       })
       .catch(function () {
-        state.serviceMessage = 'Служебная часть Extella на этом компьютере не запущена — список фоновых программ недоступен. Это не поломка: компонент ещё не установлен.';
+        state.serviceMessage = T('Служебная часть Extella на этом компьютере не запущена — список фоновых программ недоступен. Это не поломка: компонент ещё не установлен.','The Extella service component is not running on this computer, so the background program list is unavailable. Nothing is broken — the component is not installed yet.');
       })
       .then(function () {
         state.servicesLoading = false;

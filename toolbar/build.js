@@ -23,7 +23,7 @@ const SRC     = path.join(ROOT, 'src');
 const PLUGINS = path.join(ROOT, 'plugins');
 const PUBLIC  = path.join(ROOT, 'public');
 const OUT     = path.join(ROOT, 'build');
-const STARTUP_LOGO = path.join(ROOT, 'assets', 'startup-logo.mp4');
+const DESKTOP_LOADER = path.join(ROOT, 'assets', 'desktop-loader.webm');
 const BRAND_LOGO = path.join(ROOT, 'assets', 'extella-x.png');
 
 // ── Module load order ──────────────────────────────────────────────────────
@@ -248,7 +248,7 @@ function buildMarketplace(plugins) {
   // expert code (regex patterns) as special patterns and corrupt the output.
   return template
     .replaceAll('__EXTELLA_LOGO_DATA__', getBrandLogoData())
-    .replaceAll('__EXTELLA_STARTUP_VIDEO_DATA__', getStartupLogoData())
+    .replaceAll('__EXTELLA_DESKTOP_LOADER_DATA__', getDesktopLoaderData())
     .replace('/* __BUILTIN_PLUGINS_DATA__ */', function () { return dataVar; })
     .replace('/* __PLUGIN_FORM_HTML__ */', function () { return 'var _PLUGIN_FORM_HTML = ' + JSON.stringify(_formHtml).replace(/<\/script/gi, '<\\/script') + ';'; })
     .replace('/* __PLUGIN_CHAT_HTML__ */', function () { return 'var _PLUGIN_CHAT_HTML = ' + JSON.stringify(_chatHtml).replace(/<\/script/gi, '<\\/script') + ';'; });
@@ -278,9 +278,9 @@ function getBrandLogoData() {
     : '';
 }
 
-function getStartupLogoData() {
-  return fs.existsSync(STARTUP_LOGO)
-    ? 'data:video/mp4;base64,' + fs.readFileSync(STARTUP_LOGO).toString('base64')
+function getDesktopLoaderData() {
+  return fs.existsSync(DESKTOP_LOADER)
+    ? 'data:video/webm;base64,' + fs.readFileSync(DESKTOP_LOADER).toString('base64')
     : '';
 }
 
