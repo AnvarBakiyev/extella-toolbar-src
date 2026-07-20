@@ -30,7 +30,6 @@ const BRAND_LOGO = path.join(ROOT, 'assets', 'extella-x.png');
 // Files are concatenated in this exact order inside the IIFE.
 const CORE_ORDER = [
   'brand.js',
-  'startup.js',
   'auth.js',
   'api.js',
   'install-prompt.js',
@@ -107,9 +106,6 @@ function buildToolbar(plugins) {
   const chatHtml        = buildChat(plugins);
   const formHtml        = buildForm(plugins);
   const libraryHtml     = buildLibrary();
-  const startupLogoVideo = fs.existsSync(STARTUP_LOGO)
-    ? 'data:video/mp4;base64,' + fs.readFileSync(STARTUP_LOGO).toString('base64')
-    : '';
   const brandLogoImage = getBrandLogoData();
 
   // ── Banner ─────────────────────────────────────────────────────
@@ -130,7 +126,6 @@ function buildToolbar(plugins) {
   parts.push(`  var _ETB_CHAT_HTML = ${JSON.stringify(chatHtml)};\n`);
   parts.push(`  var _ETB_FORM_HTML = ${JSON.stringify(formHtml)};\n`);
   parts.push(`  var _ETB_LIBRARY_HTML = ${JSON.stringify(libraryHtml)};\n`);
-  parts.push(`  var _ETB_STARTUP_LOGO_VIDEO = ${JSON.stringify(startupLogoVideo)};\n`);
   parts.push(`  var _ETB_BRAND_LOGO = ${JSON.stringify(brandLogoImage)};\n`);
 
   // ── Built-in plugins constant ──────────────────────────────────
@@ -189,7 +184,6 @@ function buildToolbar(plugins) {
     `      var el = document.querySelector(sel);`,
     `      if (el && el.parentNode) el.parentNode.removeChild(el);`,
     `    });`,
-    `    ETB.startup.show();`,
     `    // Acquire API token from the live Extella session (in-memory only)`,
     `    ETB.auth.initFromSession();`,
     `    ETB.shell.init();`,
@@ -254,6 +248,7 @@ function buildMarketplace(plugins) {
   // expert code (regex patterns) as special patterns and corrupt the output.
   return template
     .replaceAll('__EXTELLA_LOGO_DATA__', getBrandLogoData())
+    .replaceAll('__EXTELLA_STARTUP_VIDEO_DATA__', getStartupLogoData())
     .replace('/* __BUILTIN_PLUGINS_DATA__ */', function () { return dataVar; })
     .replace('/* __PLUGIN_FORM_HTML__ */', function () { return 'var _PLUGIN_FORM_HTML = ' + JSON.stringify(_formHtml).replace(/<\/script/gi, '<\\/script') + ';'; })
     .replace('/* __PLUGIN_CHAT_HTML__ */', function () { return 'var _PLUGIN_CHAT_HTML = ' + JSON.stringify(_chatHtml).replace(/<\/script/gi, '<\\/script') + ';'; });
@@ -280,6 +275,12 @@ function buildForm(plugins) {
 function getBrandLogoData() {
   return fs.existsSync(BRAND_LOGO)
     ? 'data:image/png;base64,' + fs.readFileSync(BRAND_LOGO).toString('base64')
+    : '';
+}
+
+function getStartupLogoData() {
+  return fs.existsSync(STARTUP_LOGO)
+    ? 'data:video/mp4;base64,' + fs.readFileSync(STARTUP_LOGO).toString('base64')
     : '';
 }
 
