@@ -37,3 +37,6 @@ modules/library/README.md
 
 # Dev/test scripts and one-off generators (not part of the shipped build)
 toolbar/scripts/
+
+# Личная инструкция ИИ-ассистента Эллы — локальный файл, не для общего репо
+AGENTS.md
