@@ -2456,7 +2456,7 @@ function appStartOpen(btn,id){
   _appStarting[id]=1;
   var msg=document.getElementById('app_msg');
   var say=function(t,sticky){ if(msg)msg.innerHTML=t; else if(btn)btn.textContent=t.replace(/<[^>]+>/g,''); else _appToast(t,sticky); };
-  if(btn){ btn.disabled=true; if(!msg)btn.textContent=INF(28)+' Запускаю…'; }
+  if(btn){ btn.disabled=true; if(!msg)btn.innerHTML=INF(20)+' Запускаю…'; }   // innerHTML: INF — HTML, textContent показывал сырой тег
   say(INF(24)+' Запускаю приложение… первый старт может занять до минуты.',true);
   skBridge('etb_run_expert','etb_expert_result',{name:'app_start',params:{app_id:id}},300000).then(function(r){
     var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
@@ -5515,11 +5515,20 @@ var MCPX_KEY='extella_mcp_connected';
 function mcpxGi(){ try{return JSON.parse(localStorage.getItem(MCPX_KEY)||'[]');}catch(_){return[];} }
 function mcpxSi(a){ try{localStorage.setItem(MCPX_KEY,JSON.stringify(a));}catch(_){} }
 function mcpxGet(id){ return mcpxGi().filter(function(x){return x.id===id;})[0]; }
+// Гард одного подключения на id: карточка перерисовывается (renderMcpCatalog),
+// btn.disabled на новой копии сбрасывается → повтор клика слал новый mcp_connect
+// (у Гульжан — серия дублей в логах). Держим состояние по id, не по кнопке.
+var _mcpConnecting={};
 function mcpConnectRun(id, btn){
   var c=(_mcpReg||[]).filter(function(x){return x.id===id;})[0];
   if(!c||!c.run)return;
-  if(btn){btn.disabled=true;btn.textContent=INF(28)+' подключаю…';}
+  if(_mcpConnecting[id]){ return; }   // уже подключаю этот сервер — второй клик игнор
+  _mcpConnecting[id]=1;
+  // innerHTML, НЕ textContent: INF() возвращает HTML — textContent показывал сырой
+  // «<span class=inf>…» на карточке (баг у Гульжан).
+  if(btn){btn.disabled=true;btn.innerHTML=INF(20)+' подключаю…';}
   skBridge('etb_run_expert','etb_expert_result',{name:'mcp_connect',params:{server_id:c.id,pkg_type:c.run.type,pkg:c.run.pkg,title:c.title||''}}, 300000).then(function(r){
+    _mcpConnecting[id]=0;
     var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
     if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}
     if(out&&out.status==='success'){
@@ -5528,10 +5537,10 @@ function mcpConnectRun(id, btn){
       _mcpConnFetched=false; _ensureMcpConn();   // перечитать правду с устройства
       if(cur==='services')renderMcpCatalog();
     } else {
-      if(btn){btn.disabled=false;btn.textContent='Подключить';}
+      if(btn){btn.disabled=false;btn.innerHTML='Подключить';}
       alert('Не удалось подключить: '+((out&&out.message)||(typeof out==='string'&&out.indexOf('deferred')>=0?'долгая установка — попробуй ещё раз через минуту':'ошибка')));
     }
-  }).catch(function(e){ if(btn){btn.disabled=false;btn.textContent='Подключить';} alert('Не удалось подключить: '+((e&&e.message==='_timeout_')?'долгая установка (первый запуск качает пакет) — попробуй ещё раз':(e&&e.message)||'ошибка')); });
+  }).catch(function(e){ _mcpConnecting[id]=0; if(btn){btn.disabled=false;btn.innerHTML='Подключить';} alert('Не удалось подключить: '+((e&&e.message==='_timeout_')?'долгая установка (первый запуск качает пакет) — попробуй ещё раз':(e&&e.message)||'ошибка')); });
 }
 // ── Пак «Разведчик конкурента» — делающий агент (цепочка mcp_call+svc_wiki+Qwen) ──
 function packScoutModal(){
@@ -6753,10 +6762,17 @@ function cliCard(c){
     (c.howto?'<div class="sk_howto"><b>Как запустить:</b> '+esc(c.howto)+'</div>':'')+
     '<div class="st_foot" style="justify-content:space-between;align-items:center;gap:8px">'+foot+'</div></div>';
 }
+// Гард одной установки на инструмент: карточка перерисовывается, btn.disabled
+// сбрасывается → повтор клика слал новый resolver (у Гульжан — ghostscript ×6
+// в логах, brew запускался параллельно). Держим состояние по tool, не по кнопке.
+var _cliInstalling={};
 function installCLI(tool,btn){
+  if(_cliInstalling[tool]){ return; }   // уже ставлю этот инструмент — второй клик игнор
+  _cliInstalling[tool]=1;
   if(btn){btn.disabled=true;btn.textContent='Ставлю…';}
   skBridge('etb_run_expert','etb_expert_result',{name:'cap_'+tool+'_resolver',params:{confirm_install:'yes'}},300000)  // первая установка тянет brew — 20с дефолта не хватало
     .then(function(r){
+      _cliInstalling[tool]=0;
       var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
       if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}
       var st=out&&out.status;
@@ -6767,9 +6783,11 @@ function installCLI(tool,btn){
         return;
       }
       if(!btn)return;
+      // «installing» (большой пакет ещё ставится) — честный статус, не «Повторить»
+      if(st==='installing'){ btn.disabled=false; btn.textContent='Ещё ставится…'; btn.title=(out&&out.message)||''; return; }
       btn.disabled=false;btn.textContent='Повторить';btn.title=(out&&out.message)||'не удалось поставить';
     })
-    .catch(function(e){if(btn){btn.disabled=false;btn.textContent='Ещё раз';btn.title=(e&&e.message)||'нет ответа';}});
+    .catch(function(e){ _cliInstalling[tool]=0; if(btn){btn.disabled=false;btn.textContent='Ещё раз';btn.title=(e&&e.message)||'нет ответа';}});
 }
 
 // ── Storefront modes: «Для всех» (curated) vs «Для профи» (full/dev) ──────
