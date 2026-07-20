@@ -708,6 +708,7 @@ body[data-theme="dark"] .inf .tr,html[data-theme="dark"] .inf .tr{stroke:var(--b
   <button class="iconbtn" onclick="notify('mkt_min')" title="Свернуть">&#8211;</button>
   <button class="iconbtn" onclick="notify('mkt_win')" title="В окне / на весь экран"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><rect x="3" y="8" width="13" height="13" rx="1.5"/><path d="M8 5h12a1 1 0 0 1 1 1v12"/></svg></button>
   <button class="iconbtn" id="langBtn" onclick="setLang(LANG==='en'?'ru':'en')" title="Язык / Language" style="font:600 11px var(--mono,monospace);width:auto;padding:0 8px">EN</button>
+  <button class="iconbtn" id="autoBtn" onclick="setc('automations')" title="Автоматизации — что Extella делает без тебя"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M8 2v4M16 2v4"/><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/></svg></button>
   <button class="iconbtn" id="updBtn" onclick="selfUpdate()" title="Обновить Extella из GitHub (свежий интерфейс + способности)">⟳</button>
   <button class="iconbtn" id="themeBtn" onclick="toggleTheme()" title="Светлая / тёмная тема">☾</button>
   <button class="bclose" onclick="notify('close')" title="Close">&#10005;</button>
@@ -2184,6 +2185,18 @@ var I18N_EN = {
   'Убрать из витрины':'Remove from storefront','Удалить навсегда':'Delete forever','Опасная зона':'Danger zone','Автоматизации':'Automations',
   '«Убрать из витрины» прячет карточку и ярлык у тебя. «Удалить навсегда» вычищает запись из каталога автоматизаций целиком. Эксперты и данные в Extella не трогаются.':'"Remove from storefront" hides the card and icon for you. "Delete forever" wipes the entry from the automations catalog entirely. Experts and data in Extella are untouched.',
   'Собрать базу компании':'Build a company base',
+  'Автоматизации — что Extella делает без тебя':'Automations — what Extella does without you',
+  'Мои агенты':'My agents',
+  '+ Собрать агента':'+ Build an agent',
+  'Роль + умения → твой агент. Модель остаётся Qwen.':'Role + skills → your agent. The model stays Qwen.',
+  'пара минут':'a couple of minutes',
+  'Конструктор агентов':'Agent Builder',
+  'Полноценная сборка агента в отдельном интерфейсе.':'Full agent assembly in a dedicated interface.',
+  'в разработке':'in development',
+  'Все мои агенты →':'All my agents →',
+  'Твои агенты — сотрудники: собери своего или найми готовую роль с полки.':'Your agents are your staff: build your own or hire a ready-made role off the shelf.',
+  'Конструктор агентов — готовится, появится здесь':'Agent Builder — in the works, will appear here',
+  '✦ Собрать':'✦ Build',
 };
 var I18N_RX = [
   [/^Программы на рабочем столе/, 'Programs on the desktop'],
@@ -4599,7 +4612,8 @@ function _ensureAuto() {
     _autoReg = (r && r.items) ? r.items : [];
     if (cur === 'automations') renderAutomations();
     else if (cur === 'desktop') _deskRedraw();
-  }).catch(function() { _autoReg = _autoReg || []; if (cur === 'automations') renderAutomations(); else if (cur === 'desktop') _deskRedraw(); });
+    else if (cur === 'agents') renderAgents();
+  }).catch(function() { _autoReg = _autoReg || []; if (cur === 'automations') renderAutomations(); else if (cur === 'desktop') _deskRedraw(); else if (cur === 'agents') renderAgents(); });
 }
 function autoRefresh() { _autoReg = null; _autoFetched = false; _ensureAuto(); }
 // ══════════════════════════════════════════════════════════════════════════
@@ -5351,7 +5365,27 @@ function agInstalled(id){ return !!agGi()[id]; }
 function agCount(){ try{return Object.keys(agGi()).length;}catch(_){return 0;} }
 function renderAgents(){
   var g=document.getElementById('grid'); if(!g)return;
-  var html='<div class="sk_lead" style="grid-column:1/-1">Готовые роли превращают базового агента в сотрудника: продажи, поддержка, финансы и другие.</div>'+
+  if(_autoReg===null){ _ensureAuto(); }
+  // «Мои агенты» — собранные автоматизации-агенты; фокус вкладки на агентах,
+  // роли/промпты — вторым планом (решение Эллы 20.07)
+  var mine=(_autoReg||[]).slice(0,8);
+  var mineHtml = mine.length
+    ? '<div class="sect_hdr"><span class="sect_title">Мои агенты</span><span class="sect_line"></span></div>'+
+      '<div class="mshelf">'+mine.map(function(p,i){return autoCardHTML(p,i);}).join('')+'</div>'+
+      ((_autoReg||[]).length>8 ? '<div style="grid-column:1/-1;text-align:right;margin:-2px 0 8px"><button onclick="setc(\'automations\')" style="border:1px solid var(--bd2);background:transparent;color:var(--tx2);border-radius:5px;padding:4px 10px;font-size:12px;cursor:pointer">Все мои агенты →</button></div>' : '')
+    : '';
+  var buildTiles='<div class="mshelf tf_skip">'+
+    '<div class="stile" style="--acc:var(--a);border-style:dashed;cursor:pointer" onclick="agentForgeModal()">'+
+      '<span class="st_chip">✦ Собрать</span><div class="st_title">+ Собрать агента</div>'+
+      '<div class="st_fact">Роль + умения → твой агент. Модель остаётся Qwen.</div>'+
+      '<div class="st_foot"><span style="font-size:11px;color:var(--tx3)">пара минут</span></div></div>'+
+    '<div class="stile" style="--acc:#7C5CBF;opacity:.45;cursor:default" title="Конструктор агентов — готовится, появится здесь">'+
+      '<span class="st_chip">Скоро</span><div class="st_title">Конструктор агентов</div>'+
+      '<div class="st_fact">Полноценная сборка агента в отдельном интерфейсе.</div>'+
+      '<div class="st_foot"><span style="font-size:11px;color:var(--tx3)">в разработке</span></div></div></div>';
+  var html='<div class="sk_lead" style="grid-column:1/-1">Твои агенты — сотрудники: собери своего или найми готовую роль с полки.</div>'+
+    buildTiles+
+    mineHtml+
     _bentoHTML(TYPE_ED.agents.heroes)+
     '<div class="sect"><h2>Роли агентов</h2></div>'+
     '<div class="sk_lead" style="grid-column:1/-1">Три шага: копия базового агента → её ID → выбери роль ниже.</div>'+

@@ -428,19 +428,14 @@
       var store = frame && frame.contentWindow;
       if (!store || !store.document || !store.document.getElementById('tabs')) return;
 
+      // Решение Эллы 20.07: «Автоматизации» — служебный пульт, а не полка магазина.
+      // Из основного ряда вкладок УБРАНО; входы: кнопка-календарь в шапке витрины
+      // и ярлык на Рабочем столе. Здесь только вычищаем вкладку, если её успела
+      // добавить старая версия этой панели.
       var changed = false;
       if (Array.isArray(store.CATS)) {
-        var schedules = store.CATS.filter(function (category) { return category.id === 'automations'; })[0];
-        if (!schedules) {
-          var beforeAgents = store.CATS.findIndex(function (category) { return category.id === 'agents'; });
-          var entry = { id: 'automations', l: 'Автоматизации' };
-          if (beforeAgents >= 0) store.CATS.splice(beforeAgents, 0, entry);
-          else store.CATS.push(entry);
-          changed = true;
-        } else if (schedules.l !== 'Автоматизации') {
-          schedules.l = 'Автоматизации';
-          changed = true;
-        }
+        var idx = store.CATS.findIndex(function (category) { return category.id === 'automations'; });
+        if (idx >= 0) { store.CATS.splice(idx, 1); changed = true; }
       }
       if (store.I18N_EN) store.I18N_EN['Автоматизации'] = 'Automations';
       if (changed && typeof store.rtabs === 'function') store.rtabs();
