@@ -3,6 +3,8 @@
   if (window.__xtlActivityCenterLoaded) return;
   window.__xtlActivityCenterLoaded = true;
 
+  // Язык панели = язык витрины (общий localStorage); живо при каждом рендере
+  function T(ru, en) { try { return localStorage.getItem('etb_lang') === 'en' ? en : ru; } catch (e) { return ru; } }
   var API_BASE = 'http://127.0.0.1:8799';
   var API = API_BASE + '/api/activity';
   var SERVICES_API = API_BASE + '/api/services';
@@ -75,9 +77,9 @@
   }
 
   function badge(category) {
-    if (category === 'background') return 'Фоновая';
-    if (category === 'system') return 'Системная';
-    return 'Задача';
+    if (category === 'background') return T('Фоновая','Background');
+    if (category === 'system') return T('Системная','System');
+    return T('Задача','Task');
   }
 
   function closePanel() {
@@ -183,7 +185,7 @@
   function serviceCountText(services) {
     var total = services.length;
     var running = services.filter(function (service) { return service.status === 'running'; }).length;
-    return running + ' из ' + total + ' работают';
+    return running + T(' из ',' of ') + total + T(' работают',' running');
   }
 
   function renderLocalServices(store) {
@@ -195,19 +197,19 @@
 
     var head = storefrontNode(doc, 'div', '_xtlac_srv_head');
     var copy = storefrontNode(doc, 'div', '_xtlac_srv_head_copy');
-    copy.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_title', 'Что работает в фоне'));
-    copy.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_sub', 'Программы Extella, запущенные на этом компьютере. Любую можно выключить и включить обратно — ничего не сломается.'));
+    copy.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_title', T('Что работает в фоне','Running in the background')));
+    copy.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_sub', T('Программы Extella, запущенные на этом компьютере. Любую можно выключить и включить обратно — ничего не сломается.','Extella programs running on this computer. Switch any off and back on — nothing will break.')));
     head.appendChild(copy);
     var summary = state.services
       ? serviceCountText(state.services)
-      : (state.servicesLoading ? 'проверяю…' : 'нет данных');
+      : (state.servicesLoading ? T('проверяю…','checking…') : T('нет данных','no data'));
     head.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_summary', summary));
     section.appendChild(head);
 
     var message = storefrontNode(doc, 'div', '_xtlac_srv_message' + (state.serviceMessage ? ' show' : ''), state.serviceMessage);
     section.appendChild(message);
     if (!state.services) {
-      section.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_sub', state.servicesLoading ? 'Проверяю, что сейчас запущено…' : 'Список фоновых программ недоступен: служебная часть Extella на этом компьютере не запущена. Это не поломка — компонент ещё не установлен.'));
+      section.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_sub', state.servicesLoading ? T('Проверяю, что сейчас запущено…','Checking what is running…') : T('Список фоновых программ недоступен: служебная часть Extella на этом компьютере не запущена. Это не поломка — компонент ещё не установлен.','The background program list is unavailable: the Extella service component is not running on this computer. Not a breakage — the component just is not installed yet.')));
       return;
     }
 
@@ -242,7 +244,7 @@
 
       var action = running ? 'stop' : 'start';
       var allowed = running ? service.canStop : service.canStart;
-      var button = storefrontNode(doc, 'button', '_xtlac_srv_btn ' + action, busy ? 'Подождите…' : (running ? 'Выключить' : 'Включить'));
+      var button = storefrontNode(doc, 'button', '_xtlac_srv_btn ' + action, busy ? T('Подождите…','Please wait…') : (running ? T('Выключить','Switch off') : T('Включить','Switch on')));
       button.type = 'button';
       button.disabled = busy || !allowed;
       button.addEventListener('click', function () { controlLocalService(store, service, action); });
@@ -262,11 +264,11 @@
     wrap.style.marginTop = '18px';
     var head = storefrontNode(doc, 'div', '_xtlac_srv_head');
     var copy = storefrontNode(doc, 'div', '_xtlac_srv_head_copy');
-    copy.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_title', 'Системные агенты (LaunchAgents)'));
-    copy.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_sub', 'Автозапускаемые фоновые агенты этого Мака. Семейство Dronor — не Extella: его активность может выглядеть как наша.'));
+    copy.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_title', T('Системные агенты (LaunchAgents)','System agents (LaunchAgents)')));
+    copy.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_sub', T('Автозапускаемые фоновые агенты этого Мака. Семейство Dronor — не Extella: его активность может выглядеть как наша.','Auto-started background agents on this Mac. The Dronor family is not Extella: its activity may look like ours.')));
     head.appendChild(copy);
     wrap.appendChild(head);
-    var body = storefrontNode(doc, 'div', '_xtlac_srv_sysagents_body', 'проверяю…');
+    var body = storefrontNode(doc, 'div', '_xtlac_srv_sysagents_body', T('проверяю…','checking…'));
     wrap.appendChild(body);
     section.appendChild(wrap);
     function bridgePost(url, payload) {
@@ -276,13 +278,13 @@
       if (!lp || !lp.orphans) return;
       var warn = doc.createElement('div');
       warn.style.cssText = 'margin:8px 0;padding:8px 12px;border:1px solid #C0392B;border-radius:8px;font-size:12.5px;display:flex;align-items:center;gap:10px';
-      warn.appendChild(doc.createTextNode('Лишние процессы listener: ' + lp.orphans + ' — забирают фоновые задачи параллельно.'));
+      warn.appendChild(doc.createTextNode(T('Лишние процессы listener: ','Extra listener processes: ') + lp.orphans + T(' — забирают фоновые задачи параллельно.',' — they may grab background tasks in parallel.')));
       var cbtn = doc.createElement('button');
       cbtn.type = 'button';
-      cbtn.textContent = 'Закрыть лишние';
+      cbtn.textContent = T('Закрыть лишние','Close extras');
       cbtn.addEventListener('click', function () {
         cbtn.disabled = true;
-        bridgePost('/x/listener_cleanup').then(function (res) { warn.textContent = (res && res.message) || 'готово'; });
+        bridgePost('/x/listener_cleanup').then(function (res) { warn.textContent = (res && res.message) || T('готово','done'); });
       });
       warn.appendChild(cbtn);
       wrap.insertBefore(warn, body);
@@ -290,8 +292,8 @@
     fetch('http://127.0.0.1:8765/x/launchagents').then(function (r) { return r.json(); }).then(function (d) {
       var agents = (d && d.agents) || [];
       body.textContent = '';
-      if (!agents.length) { body.textContent = 'агентов не найдено'; return; }
-      var famTitle = { extella: 'Extella', dronor: 'Dronor / personal AGI (не Extella)', other: 'Прочие' };
+      if (!agents.length) { body.textContent = T('агентов не найдено','no agents found'); return; }
+      var famTitle = { extella: 'Extella', dronor: T('Dronor / personal AGI (не Extella)','Dronor / personal AGI (not Extella)'), other: T('Прочие','Other') };
       ['extella', 'dronor', 'other'].forEach(function (fam) {
         var list = agents.filter(function (a) { return a.family === fam; });
         if (!list.length) return;
@@ -303,24 +305,24 @@
           var row = doc.createElement('div');
           row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px dashed rgba(128,128,128,.25);font-size:12.5px';
           var dot = a.running ? '\u{1F7E2}' : (a.enabled ? '⚪' : '⛔');
-          row.appendChild(doc.createTextNode(dot + ' ' + a.label + (a.pid ? ' · pid ' + a.pid : '') + (a.enabled ? '' : ' · автозапуск выключен')));
+          row.appendChild(doc.createTextNode(dot + ' ' + a.label + (a.pid ? ' · pid ' + a.pid : '') + (a.enabled ? '' : T(' · автозапуск выключен',' · autostart off'))));
           var b = doc.createElement('button');
           b.type = 'button';
           b.style.marginLeft = 'auto';
           var off = a.running || a.enabled;
-          b.textContent = off ? 'Выключить' : 'Включить';
+          b.textContent = off ? T('Выключить','Switch off') : T('Включить','Switch on');
           b.addEventListener('click', function () {
-            if (b.getAttribute('data-arm') !== '1') { b.setAttribute('data-arm', '1'); b.textContent = off ? 'Точно выключить?' : 'Точно включить?'; return; }
+            if (b.getAttribute('data-arm') !== '1') { b.setAttribute('data-arm', '1'); b.textContent = off ? T('Точно выключить?','Really switch off?') : T('Точно включить?','Really switch on?'); return; }
             b.disabled = true;
             bridgePost('/x/launchagent_action', { label: a.label, action: off ? 'disable' : 'enable' }).then(function (res) {
-              b.textContent = (res && res.status === 'success') ? (off ? 'выключен ✓' : 'включён ✓') : 'ошибка';
+              b.textContent = (res && res.status === 'success') ? (off ? T('выключен ✓','off ✓') : T('включён ✓','on ✓')) : T('ошибка','error');
             });
           });
           row.appendChild(b);
           body.appendChild(row);
         });
       });
-    }).catch(function () { body.textContent = 'Конструктор сейчас не отвечает — загляни через минуту.'; });
+    }).catch(function () { body.textContent = T('Конструктор сейчас не отвечает — загляни через минуту.','The Wizard is not responding — check back in a minute.'); });
   }
 
   function injectLocalServices(store) {
@@ -371,14 +373,14 @@
       refreshServices(store, true).then(function () {
         if (state.servicesToken) controlLocalService(store, service, action);
         else {
-          state.serviceMessage = 'Управление недоступно: локальный bridge не выдал разрешение.';
+          state.serviceMessage = T('Управление недоступно: локальный bridge не выдал разрешение.','Control unavailable: the local bridge did not grant permission.');
           renderLocalServices(store);
         }
       });
       return;
     }
     state.serviceBusy[service.id] = true;
-    state.serviceMessage = (action === 'stop' ? 'Выключаю: ' : 'Включаю: ') + service.name;
+    state.serviceMessage = (action === 'stop' ? T('Выключаю: ','Switching off: ') : T('Включаю: ','Switching on: ')) + service.name;
     renderLocalServices(store);
     fetch(SERVICES_API + '/' + encodeURIComponent(service.id) + '/' + action, {
       method: 'POST',
@@ -391,10 +393,10 @@
         });
       })
       .then(function () {
-        state.serviceMessage = (action === 'stop' ? 'Выключено: ' : 'Включено: ') + service.name;
+        state.serviceMessage = (action === 'stop' ? T('Выключено: ','Switched off: ') : T('Включено: ','Switched on: ')) + service.name;
       })
       .catch(function (error) {
-        state.serviceMessage = 'Не удалось изменить состояние: ' + (error.message || 'неизвестная ошибка');
+        state.serviceMessage = T('Не удалось изменить состояние: ','Could not change the state: ') + (error.message || T('неизвестная ошибка','unknown error'));
       })
       .then(function () {
         delete state.serviceBusy[service.id];
@@ -514,7 +516,7 @@
   }
 
   function taskAction(path) {
-    if (!state.activityToken) return Promise.reject(new Error('Список действий пока недоступен — перезапусти Extella'));
+    if (!state.activityToken) return Promise.reject(new Error(T('Список действий пока недоступен — перезапусти Extella','The action list is unavailable — restart Extella')));
     return fetch(API_BASE + path, {
       method: 'POST',
       headers: { 'X-Extella-Control': state.activityToken }
@@ -537,7 +539,7 @@
 
   function clearCompletedTasks() {
     if (!state.data || !state.data.history || !state.data.history.length) return;
-    if (!window.confirm('Убрать все завершённые записи из этой ленты?')) return;
+    if (!window.confirm(T('Убрать все завершённые записи из этой ленты?','Remove all completed entries from this feed?'))) return;
     taskAction('/api/tasks/clear-completed')
       .then(function () { return refresh(); })
       .catch(function () {});
@@ -561,13 +563,13 @@
 
     var details = el('div', { className: '_xtlac_details' });
     var meta = el('dl', { className: '_xtlac_meta' });
-    metaRow(meta, 'Источник', task.origin);
-    metaRow(meta, 'Для чего', task.purpose);
-    metaRow(meta, 'Режим', task.mode);
-    if (task.sourceIds && task.sourceIds.length) metaRow(meta, 'ID запуска', task.sourceIds[0]);
+    metaRow(meta, T('Источник','Source'), task.origin);
+    metaRow(meta, T('Для чего','Purpose'), task.purpose);
+    metaRow(meta, T('Режим','Mode'), task.mode);
+    if (task.sourceIds && task.sourceIds.length) metaRow(meta, T('ID запуска','Run ID'), task.sourceIds[0]);
     details.appendChild(meta);
     if (task.manageTarget === 'automations') {
-      var manage = el('button', { className: '_xtlac_manage', type: 'button' }, task.manageLabel || 'Открыть AI Автоматизации');
+      var manage = el('button', { className: '_xtlac_manage', type: 'button' }, task.manageLabel || T('Открыть AI Автоматизации','Open AI Automations'));
       manage.addEventListener('click', function (event) {
         event.stopPropagation();
         enterAutomations(task);
@@ -576,9 +578,9 @@
       details.appendChild(el('div', { className: '_xtlac_hint' }, sourceIdHint(task)));
     }
     if (task.status === 'running') {
-      details.appendChild(el('div', { className: '_xtlac_hint' }, 'Прервать задачу можно красной кнопкой Cancel внизу панели Extella.'));
+      details.appendChild(el('div', { className: '_xtlac_hint' }, T('Прервать задачу можно красной кнопкой Cancel внизу панели Extella.','To interrupt a task, use the red Cancel button at the bottom of the Extella panel.')));
     } else {
-      var remove = el('button', { className: '_xtlac_remove', type: 'button' }, state.taskBusy[task.id] ? 'Убираю…' : 'Убрать запись из ленты');
+      var remove = el('button', { className: '_xtlac_remove', type: 'button' }, state.taskBusy[task.id] ? T('Убираю…','Removing…') : T('Убрать запись из ленты','Remove from the feed'));
       remove.disabled = !!state.taskBusy[task.id];
       remove.addEventListener('click', function (event) {
         event.stopPropagation();
@@ -605,9 +607,9 @@
 
   function sourceIdHint(task) {
     if (task.sourceIds && task.sourceIds.length) {
-      return 'Откроется кабинет связанного процесса. На вкладке «Расписание» можно выбрать «вручную (без расписания)».';
+      return T('Откроется кабинет связанного процесса. На вкладке «Расписание» можно выбрать «вручную (без расписания)».','Opens the linked process cabinet. On the Schedule tab you can pick manual (no schedule).');
     }
-    return 'Откроется список процессов. В кабинете нужной автоматизации можно снять расписание.';
+    return T('Откроется список процессов. В кабинете нужной автоматизации можно снять расписание.','Opens the process list. In the automation cabinet you can remove its schedule.');
   }
 
   function section(body, title, tasks) {
@@ -624,10 +626,10 @@
     // чип остаётся спокойным, никакого вечного «подключаюсь…» с оранжевой точкой.
     var health = data ? data.health : 'ok';
     root.setAttribute('data-health', health);
-    document.getElementById('_xtlac_text').textContent = data ? data.headline : 'Фоновых задач нет';
+    document.getElementById('_xtlac_text').textContent = data ? data.headline : T('Фоновых задач нет','No background tasks');
     // Счётчик без подписи читался как противоречие («задач нет» + «✓ 3») —
     // подписываем, что это выполненные, и прячем ноль
-    document.getElementById('_xtlac_count').textContent = (data && data.counts.completed) ? ('✓ ' + data.counts.completed + ' выполнено') : '';
+    document.getElementById('_xtlac_count').textContent = (data && data.counts.completed) ? ('✓ ' + data.counts.completed + T(' выполнено',' done')) : '';
     var clear = document.getElementById('_xtlac_clear');
     if (clear) clear.classList.toggle('show', !!(data && data.history && data.history.length));
 
@@ -636,15 +638,15 @@
     if (!state.bridgeOnline && !state.data) {
       // Ни детального списка, ни базового статуса. Честно: перезапуск может и
       // не помочь (движка задач на устройстве может не быть) — не обещаем.
-      warning.textContent = 'Не вижу фоновых задач. Если ты их не запускала — так и должно быть. Если запускала, а список пропал — перезапусти Extella (⌘Q и открой заново).';
+      warning.textContent = T('Не вижу фоновых задач. Если ты их не запускала — так и должно быть. Если запускала, а список пропал — перезапусти Extella (⌘Q и открой заново).','No background tasks visible. If you have not started any — that is normal. If you did and the list vanished — restart Extella (⌘Q and open again).');
       warning.classList.add('show');
     } else if (orphaned) {
       // Задание Анвара: не только предупреждать, но и чинить в один клик —
       // POST /x/listener_cleanup закрывает только сирот, ответ показываем тут же.
       warning.replaceChildren(
-        el('span', {}, 'Обнаружено лишних процессов listener: ' + orphaned + '. Они могут забирать фоновые задачи параллельно. '),
+        el('span', {}, T('Обнаружено лишних процессов listener: ','Found extra listener processes: ') + orphaned + T('. Они могут забирать фоновые задачи параллельно. ','. They may grab background tasks in parallel. ')),
         (function () {
-          var btn = el('button', { id: '_xtlac_fix', className: '_xtlac_fixbtn', type: 'button' }, 'Закрыть лишние');
+          var btn = el('button', { id: '_xtlac_fix', className: '_xtlac_fixbtn', type: 'button' }, T('Закрыть лишние','Close extras'));
           btn.addEventListener('click', cleanupListeners);
           return btn;
         })()
@@ -657,13 +659,13 @@
     var body = document.getElementById('_xtlac_body');
     body.replaceChildren();
     if (!data) {
-      body.appendChild(el('div', { id: '_xtlac_empty' }, 'Жду первые события Extella.'));
+      body.appendChild(el('div', { id: '_xtlac_empty' }, T('Жду первые события Extella.','Waiting for the first Extella events.')));
       return;
     }
-    section(body, 'Сейчас', data.active);
-    section(body, 'Выполнено', data.history.slice(0, 15));
+    section(body, T('Сейчас','Now'), data.active);
+    section(body, T('Выполнено','Done'), data.history.slice(0, 15));
     if (!data.active.length && !data.history.length) {
-      body.appendChild(el('div', { id: '_xtlac_empty' }, 'Пока задач нет. Фоновые проверки и действия появятся здесь автоматически.'));
+      body.appendChild(el('div', { id: '_xtlac_empty' }, T('Пока задач нет. Фоновые проверки и действия появятся здесь автоматически.','No tasks yet. Background checks and actions will appear here automatically.')));
     }
   }
 
@@ -675,19 +677,19 @@
     document.head.appendChild(style);
 
     var root = el('div', { id: '_xtlac_root', 'data-health': 'warning' });
-    var pill = el('button', { id: '_xtlac_pill', type: 'button', 'aria-label': 'Что делает Extella — открыть список' });
+    var pill = el('button', { id: '_xtlac_pill', type: 'button', 'aria-label': T('Что делает Extella — открыть список','What Extella is doing — open the list') });
     pill.appendChild(el('span', { id: '_xtlac_dot' }));
-    pill.appendChild(el('span', { id: '_xtlac_text' }, 'Подключаюсь…'));
+    pill.appendChild(el('span', { id: '_xtlac_text' }, T('Подключаюсь…','Connecting…')));
     pill.appendChild(el('span', { id: '_xtlac_count' }));
     root.appendChild(pill);
 
     var panel = el('div', { id: '_xtlac_panel' });
     var head = el('div', { id: '_xtlac_head' });
     var heading = el('div');
-    heading.appendChild(el('h3', {}, 'Что делает Extella'));
+    heading.appendChild(el('h3', {}, T('Что делает Extella','What Extella is doing')));
     head.appendChild(heading);
-    head.appendChild(el('button', { id: '_xtlac_clear', type: 'button' }, 'Очистить выполненные'));
-    head.appendChild(el('button', { id: '_xtlac_close', type: 'button', 'aria-label': 'Закрыть' }, '×'));
+    head.appendChild(el('button', { id: '_xtlac_clear', type: 'button' }, T('Очистить выполненные','Clear completed')));
+    head.appendChild(el('button', { id: '_xtlac_close', type: 'button', 'aria-label': T('Закрыть','Close') }, '×'));
     panel.appendChild(head);
     panel.appendChild(el('div', { id: '_xtlac_warning' }));
     panel.appendChild(el('div', { id: '_xtlac_body' }));
@@ -716,14 +718,14 @@
         if (!status) return null;
         var active = status.isBusy ? [{
           id: status.currentTaskId || 'unknown', shortId: String(status.currentTaskId || '').slice(0, 8),
-          status: 'running', title: 'Extella выполняет задачу',
-          detail: 'Что именно — в этом режиме не видно; обычно это установка или фоновая сборка.', category: 'action'
+          status: 'running', title: T('Extella выполняет задачу','Extella is working on a task'),
+          detail: T('Что именно — в этом режиме не видно; обычно это установка или фоновая сборка.','What exactly is not visible in this mode; usually an install or a background build.'), category: 'action'
         }] : [];
         return {
           // Спокойный чип: без деталей журнала он всё равно знает счётчик задач.
           // Про перезапуск объясняет предупреждение ВНУТРИ панели, чипу ныть не нужно.
           health: active.length ? 'busy' : 'ok',
-          headline: active.length ? active[0].title : 'Сейчас ничего не выполняется',
+          headline: active.length ? active[0].title : T('Сейчас ничего не выполняется','Nothing running right now'),
           active: active, history: [],
           counts: { active: active.length, completed: status.tasksCompleted || 0, failed: status.tasksFailed || 0 },
           listeners: { count: status.running ? 1 : 0, orphaned: 0 }
@@ -734,7 +736,7 @@
 
   function cleanupListeners() {
     var btn = document.getElementById('_xtlac_fix');
-    if (btn) { btn.disabled = true; btn.textContent = 'Закрываю…'; }
+    if (btn) { btn.disabled = true; btn.textContent = T('Закрываю…','Closing…'); }
     var w = document.getElementById('_xtlac_warning');
     fetch(API_BASE + '/x/listener_cleanup', { method: 'POST' })
       .then(function (r) { return r.json(); })
@@ -745,7 +747,7 @@
       })
       .catch(function () {
         if (w) w.textContent = 'Не получилось закрыть: Extella не отвечает. Попробуй ещё раз через минуту.';
-        if (btn) { btn.disabled = false; btn.textContent = 'Закрыть лишние'; }
+        if (btn) { btn.disabled = false; btn.textContent = T('Закрыть лишние','Close extras'); }
       });
   }
 
