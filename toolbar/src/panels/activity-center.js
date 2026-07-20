@@ -625,7 +625,9 @@
     var health = data ? data.health : 'ok';
     root.setAttribute('data-health', health);
     document.getElementById('_xtlac_text').textContent = data ? data.headline : 'Фоновых задач нет';
-    document.getElementById('_xtlac_count').textContent = data ? ('✓ ' + data.counts.completed) : '';
+    // Счётчик без подписи читался как противоречие («задач нет» + «✓ 3») —
+    // подписываем, что это выполненные, и прячем ноль
+    document.getElementById('_xtlac_count').textContent = (data && data.counts.completed) ? ('✓ ' + data.counts.completed + ' выполнено') : '';
     var clear = document.getElementById('_xtlac_clear');
     if (clear) clear.classList.toggle('show', !!(data && data.history && data.history.length));
 
@@ -721,7 +723,7 @@
           // Спокойный чип: без деталей журнала он всё равно знает счётчик задач.
           // Про перезапуск объясняет предупреждение ВНУТРИ панели, чипу ныть не нужно.
           health: active.length ? 'busy' : 'ok',
-          headline: active.length ? active[0].title : 'Фоновых задач нет',
+          headline: active.length ? active[0].title : 'Сейчас ничего не выполняется',
           active: active, history: [],
           counts: { active: active.length, completed: status.tasksCompleted || 0, failed: status.tasksFailed || 0 },
           listeners: { count: status.running ? 1 : 0, orphaned: 0 }
