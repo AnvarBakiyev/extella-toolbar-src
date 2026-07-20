@@ -518,8 +518,7 @@ ETB.router = (function () {
     }
 
     hdr.innerHTML = [
-      '<div style="width:8px;height:8px;border-radius:50%;background:#C67E34;',
-      'box-shadow:0 0 8px rgba(198,126,52,.4);"></div>',
+      ETB.brand.icon(18),
       '<span style="font-size:13px;font-weight:600;color:var(--etb-tx,#f0f0f0);">',
       _esc(plugin.name), '</span>',
       '<span style="font-size:11px;color:var(--etb-tx2,#888);">', _esc(plugin.tagline || ''), '</span>',
@@ -841,7 +840,7 @@ ETB.router = (function () {
       sh.card.innerHTML = [
         '<div style="display:flex;align-items:center;gap:10px;padding:18px 22px 16px;',
           'border-bottom:1px solid var(--etb-bd,rgba(0,0,0,.07));">',
-          '<div style="width:8px;height:8px;border-radius:50%;background:#C67E34;flex-shrink:0;"></div>',
+          ETB.brand.icon(18),
           '<span style="flex:1;font-size:15px;font-weight:700;color:var(--etb-tx,#111);">Repair Plugin</span>',
           '<button id="_etb_rm_close" style="background:none;border:none;color:var(--etb-tx2,#888);',
             'cursor:pointer;font-size:18px;padding:4px 6px;border-radius:5px;">&#10005;</button>',
@@ -893,7 +892,7 @@ ETB.router = (function () {
       sh.card.innerHTML = [
         '<div style="display:flex;align-items:center;gap:10px;padding:18px 22px 16px;',
           'border-bottom:1px solid var(--etb-bd,rgba(0,0,0,.07));">',
-          '<div style="width:8px;height:8px;border-radius:50%;background:#C67E34;flex-shrink:0;"></div>',
+          ETB.brand.icon(18),
           '<span style="flex:1;font-size:15px;font-weight:700;color:var(--etb-tx,#111);">Confirm Repair</span>',
         '</div>',
         '<div style="padding:22px;">',
@@ -969,7 +968,7 @@ ETB.router = (function () {
     sh.card.innerHTML = [
       '<div style="display:flex;align-items:center;gap:10px;padding:18px 22px 16px;',
         'border-bottom:1px solid var(--etb-bd,rgba(0,0,0,.07));">',
-        '<div style="width:8px;height:8px;border-radius:50%;background:#C67E34;flex-shrink:0;"></div>',
+        ETB.brand.icon(18),
         '<span style="flex:1;font-size:15px;font-weight:700;color:var(--etb-tx,#111);">',
           _esc(title || 'Configure Plugin'),
         '</span>',
@@ -1050,7 +1049,8 @@ ETB.router = (function () {
       return [
         '<div style="display:flex;align-items:center;gap:10px;padding:18px 22px 16px;',
           'border-bottom:1px solid var(--etb-bd,rgba(0,0,0,.07));">',
-          '<div style="width:8px;height:8px;border-radius:50%;background:' + dot + ';flex-shrink:0;"></div>',
+          (String(dot).toLowerCase() === '#c67e34' ? ETB.brand.icon(18) :
+            '<div style="width:8px;height:8px;border-radius:50%;background:' + dot + ';flex-shrink:0;"></div>'),
           '<span style="font-size:15px;font-weight:700;color:var(--etb-tx,#111);">' + _esc(titleText) + '</span>',
         '</div>'
       ].join('');

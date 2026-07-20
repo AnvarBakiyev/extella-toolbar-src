@@ -412,8 +412,7 @@ ETB.githubAdd = (function () {
     var modal = ov.querySelector('#_etbv2_gh_modal');
     modal.innerHTML = [
       '<div id="_etbv2_gh_hdr">',
-      '<div style="width:8px;height:8px;border-radius:50%;background:#C67E34;',
-      'box-shadow:0 0 8px rgba(198,126,52,.4);flex-shrink:0;"></div>',
+      ETB.brand.icon(18),
       '<h3>Add GitHub Resource</h3>',
       '<button id="_etbv2_gh_x">&#10005;</button>',
       '</div>',

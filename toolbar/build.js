@@ -23,10 +23,14 @@ const SRC     = path.join(ROOT, 'src');
 const PLUGINS = path.join(ROOT, 'plugins');
 const PUBLIC  = path.join(ROOT, 'public');
 const OUT     = path.join(ROOT, 'build');
+const STARTUP_LOGO = path.join(ROOT, 'assets', 'startup-logo.mp4');
+const BRAND_LOGO = path.join(ROOT, 'assets', 'extella-x.png');
 
 // ── Module load order ──────────────────────────────────────────────────────
 // Files are concatenated in this exact order inside the IIFE.
 const CORE_ORDER = [
+  'brand.js',
+  'startup.js',
   'auth.js',
   'api.js',
   'install-prompt.js',
@@ -103,6 +107,10 @@ function buildToolbar(plugins) {
   const chatHtml        = buildChat(plugins);
   const formHtml        = buildForm(plugins);
   const libraryHtml     = buildLibrary();
+  const startupLogoVideo = fs.existsSync(STARTUP_LOGO)
+    ? 'data:video/mp4;base64,' + fs.readFileSync(STARTUP_LOGO).toString('base64')
+    : '';
+  const brandLogoImage = getBrandLogoData();
 
   // ── Banner ─────────────────────────────────────────────────────
   parts.push([
@@ -122,6 +130,8 @@ function buildToolbar(plugins) {
   parts.push(`  var _ETB_CHAT_HTML = ${JSON.stringify(chatHtml)};\n`);
   parts.push(`  var _ETB_FORM_HTML = ${JSON.stringify(formHtml)};\n`);
   parts.push(`  var _ETB_LIBRARY_HTML = ${JSON.stringify(libraryHtml)};\n`);
+  parts.push(`  var _ETB_STARTUP_LOGO_VIDEO = ${JSON.stringify(startupLogoVideo)};\n`);
+  parts.push(`  var _ETB_BRAND_LOGO = ${JSON.stringify(brandLogoImage)};\n`);
 
   // ── Built-in plugins constant ──────────────────────────────────
   parts.push(`  // Built-in plugins (injected by build.js from plugins/*.json)\n`);
@@ -179,6 +189,7 @@ function buildToolbar(plugins) {
     `      var el = document.querySelector(sel);`,
     `      if (el && el.parentNode) el.parentNode.removeChild(el);`,
     `    });`,
+    `    ETB.startup.show();`,
     `    // Acquire API token from the live Extella session (in-memory only)`,
     `    ETB.auth.initFromSession();`,
     `    ETB.shell.init();`,
@@ -242,6 +253,7 @@ function buildMarketplace(plugins) {
   // Function replacer required: string replacements treat `$'` / `$&` in plugin
   // expert code (regex patterns) as special patterns and corrupt the output.
   return template
+    .replaceAll('__EXTELLA_LOGO_DATA__', getBrandLogoData())
     .replace('/* __BUILTIN_PLUGINS_DATA__ */', function () { return dataVar; })
     .replace('/* __PLUGIN_FORM_HTML__ */', function () { return 'var _PLUGIN_FORM_HTML = ' + JSON.stringify(_formHtml).replace(/<\/script/gi, '<\\/script') + ';'; })
     .replace('/* __PLUGIN_CHAT_HTML__ */', function () { return 'var _PLUGIN_CHAT_HTML = ' + JSON.stringify(_chatHtml).replace(/<\/script/gi, '<\\/script') + ';'; });
@@ -251,14 +263,24 @@ function buildMarketplace(plugins) {
 function buildChat(plugins) {
   const template = readFile(path.join(PUBLIC, 'plugin-chat.html'));
   const dataVar = `var BUILTIN_PLUGINS_DATA = ${JSON.stringify(plugins, null, 2)};`;
-  return template.replace('/* __BUILTIN_PLUGINS_DATA__ */', function () { return dataVar; });
+  return template
+    .replaceAll('__EXTELLA_LOGO_DATA__', getBrandLogoData())
+    .replace('/* __BUILTIN_PLUGINS_DATA__ */', function () { return dataVar; });
 }
 
 // ── Step 4b: Build plugin-form.html (inject plugin data) ──────────────────
 function buildForm(plugins) {
   const template = readFile(path.join(PUBLIC, 'plugin-form.html'));
   const dataVar = `var BUILTIN_PLUGINS_DATA = ${JSON.stringify(plugins, null, 2)};`;
-  return template.replace('/* __BUILTIN_PLUGINS_DATA__ */', function () { return dataVar; });
+  return template
+    .replaceAll('__EXTELLA_LOGO_DATA__', getBrandLogoData())
+    .replace('/* __BUILTIN_PLUGINS_DATA__ */', function () { return dataVar; });
+}
+
+function getBrandLogoData() {
+  return fs.existsSync(BRAND_LOGO)
+    ? 'data:image/png;base64,' + fs.readFileSync(BRAND_LOGO).toString('base64')
+    : '';
 }
 
 // ── Step 5: Build the embedded Library SPA ─────────────────────────────────
