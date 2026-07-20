@@ -4502,7 +4502,7 @@ function renderDesktop(){
 
   g.innerHTML = _dtCss() +
     '<div class="dt_wrap">'+
-      '<div class="dt_sect">Extella</div>'+
+      '<div class="dt_sect" style="display:flex;align-items:center;min-height:15px"><img src="__EXTELLA_LOGO_DATA__" alt="Extella" style="height:15px;width:auto;display:block" onerror="this.outerHTML=\'Extella\'"></div>'+
       '<div class="dt_grid" style="margin-bottom:24px">'+sysHtml+'</div>'+
       (icons.length
         ? '<div class="dt_hint">Клик — открыть или запустить. Правый клик — кабинет, настройки, удалить.</div>'+grpHtml
