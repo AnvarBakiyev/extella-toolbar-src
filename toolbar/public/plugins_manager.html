@@ -3464,21 +3464,30 @@ function _mkbFetch(path,body,ms){
   if(ctl)o.signal=ctl.signal;
   return fetch(_MKB+path,o).then(function(r){ if(t)clearTimeout(t); return r.json(); });
 }
+// Единая картина устройства (Wizard-чат /x/device_status, одобрено Анваром):
+// «установлено» считается по НАШИМ источникам (реестр приложений + mcp-аллоулист
+// + указатели программ), «работает/не упадёт» — проверка здоровья визарда поверх.
+// Одно состояние на способность → рисуем по state, action-строки заметно, фон тихо.
 function _mkbLoad(){
   var slot=document.getElementById('_mkb_slot'); if(!slot) return;
-  _mkbFetch('/x/installed',{},8000).then(function(d){
+  _mkbFetch('/x/device_status',{},8000).then(function(d){
     if(!d||d.status!=='success'){ slot.innerHTML=''; return; }
-    var unused=(d.unused||[]).filter(function(x){return x&&x.ref;});
-    var stale=(d.stale||[]);
-    if(!unused.length && !stale.length){ slot.innerHTML=''; return; }
+    var rows=(d.rows||[]).filter(function(x){return x&&x.ref;});
     var en=(typeof LANG!=='undefined'&&LANG==='en');
-    var head='<div class="sect_hdr"><span class="sect_title">'+(en?'Installed — not yet in automations':'Установлено — ещё не в автоматизациях')+'</span><span class="sect_line"></span></div>'+
-      '<div class="sk_lead" style="grid-column:1/-1">'+(en?'Turn what you\'ve installed into a block — the Composer Studio builds automations out of blocks.':'Преврати установленное в блок — из блоков Студия Композитора собирает автоматизации.')+
+    var by={working:[],installable:[],not_running:[],broken:[],missing:[]};
+    rows.forEach(function(r){ (by[r.state]||(by.missing)).push(r); });
+    var action=by.installable.concat(by.not_running).concat(by.broken);  // требуют клика — карточками
+    if(!action.length && !by.working.length && !by.missing.length){ slot.innerHTML=''; return; }
+    var head='<div class="sect_hdr"><span class="sect_title">'+(en?'Installed & automations':'Установлено и автоматизации')+'</span><span class="sect_line"></span></div>'+
+      '<div class="sk_lead" style="grid-column:1/-1">'+(en?'What you\'ve installed and whether it\'s wired into automations — turn the rest into Composer blocks right here.':'Что установлено и участвует ли в автоматизациях — остальное превращается в блоки Композитора прямо здесь.')+
       (d.blocks!=null?' <span style="color:var(--tx3)">· '+(en?'blocks now: ':'блоков сейчас: ')+esc(String(d.blocks))+'</span>':'')+'</div>';
-    var cards=unused.map(function(it,i){ return _mkbCard(it,i,en); }).join('');
-    var staleLine=stale.length?'<div class="sk_lead" style="grid-column:1/-1;color:var(--tx3);font-size:12px">'+
-      esc(String(stale.length))+' '+(en?'marked installed, but not found on disk':'помечены установленными, но на диске их нет')+' — '+esc(stale.slice(0,6).join(', '))+(stale.length>6?'…':'')+'</div>':'';
-    slot.innerHTML=head+'<div class="mshelf">'+cards+'</div>'+staleLine;
+    var cards=action.map(function(it,i){ return _mkbCard(it,i,en); }).join('');
+    var workLine=by.working.length?'<div class="sk_lead" style="grid-column:1/-1;color:#2E7D5B;font-size:12.5px">✓ '+
+      esc(String(by.working.length))+' '+(en?'already working in automations':'уже работают в автоматизациях')+'</div>':'';
+    var miss=by.missing.map(function(r){return r.title||r.ref;});
+    var missLine=miss.length?'<div class="sk_lead" style="grid-column:1/-1;color:var(--tx3);font-size:12px">'+
+      esc(String(miss.length))+' '+(en?'listed as installed, but not found':'числятся установленными, но их нет')+' — '+esc(miss.slice(0,6).join(', '))+(miss.length>6?'…':'')+'</div>':'';
+    slot.innerHTML=head+workLine+(cards?'<div class="mshelf">'+cards+'</div>':'')+missLine;
   }).catch(function(){ slot.innerHTML=''; });   // мост спит / визарда нет — молчим
 }
 // Автозамыкание «поставил приложение → оно само стало кубиком Композитора».
@@ -3501,17 +3510,32 @@ function _mkbAutoWrap(app_id){
 }
 var _MKB_ACC={app:'#7C5CBF',mcp:'#2A8C82',cli:'#C67E34'};
 function _mkbCard(it,i,en){
-  var acc=_MKB_ACC[it.kind]||'#2F6B66';
+  var broken=(it.state==='broken'), acc=broken?'#B23A2E':(_MKB_ACC[it.kind]||'#2F6B66');
   var kindL=en?({app:'App',mcp:'MCP',cli:'Tool'}[it.kind]||it.kind):({app:'Приложение',mcp:'MCP',cli:'Инструмент'}[it.kind]||it.kind);
-  var ready=(it.ready!==false);
-  var btn=ready
-    ? '<button class="st_btn" style="--acc:'+acc+'" onclick="_mkbMake(this,\''+_dtEsc(it.kind)+'\',\''+_dtEsc(it.ref)+'\',\''+_dtEsc(it.title||it.ref)+'\')">'+(en?'Make a block':'Сделать блоком')+'</button>'
-    : '<span style="font-size:11.5px;color:var(--tx3)">'+(en?'start it first':'сначала запусти')+'</span>';
+  var foot;
+  if(it.state==='not_running')
+    foot='<span style="font-size:11.5px;color:var(--tx3)">'+(en?'start it first':'сначала запустите')+'</span>';
+  else if(broken)
+    // осиротевший кубик: способность под ним исчезла — предложить убрать блок
+    foot='<span style="font-size:11px;color:#B23A2E;margin-right:8px">'+(en?'capability gone — reinstall':'способность пропала — переустановите')+'</span>'+
+      (it.block?'<button class="st_btn" style="background:transparent;color:#B23A2E;border:1px solid rgba(178,58,46,.5)" onclick="_mkbRemoveBlock(this,\''+_dtEsc(it.block)+'\')">'+(en?'Remove block':'Убрать блок')+'</button>':'');
+  else  // installable
+    foot='<button class="st_btn" style="--acc:'+acc+'" onclick="_mkbMake(this,\''+_dtEsc(it.kind)+'\',\''+_dtEsc(it.ref)+'\',\''+_dtEsc(it.title||it.ref)+'\')">'+(en?'Make a block':'Сделать блоком')+'</button>';
   return '<div class="stile" style="--acc:'+acc+';animation-delay:'+Math.min(i*30,240)+'ms">'+
     '<span class="st_chip">'+esc(kindL)+'</span>'+
     '<div class="st_title">'+esc(it.title||it.ref)+'</div>'+
-    (it.note?'<div class="st_fact">'+esc(it.note)+'</div>':'')+
-    '<div class="st_foot">'+btn+'</div></div>';
+    (it.detail?'<div class="st_fact">'+esc(it.detail)+'</div>':'')+
+    '<div class="st_foot">'+foot+'</div></div>';
+}
+// Убрать осиротевший кубик Композитора (broken: программа под ним снесена).
+function _mkbRemoveBlock(btn,block){
+  var foot=btn.parentNode; if(!foot) return;
+  if(!confirm((LANG==='en'?'Remove the block «':'Убрать блок «')+block+(LANG==='en'?'»? Its capability is gone; the block would fail if run.':'»? Способность под ним исчезла, при запуске он упадёт.'))) return;
+  foot.innerHTML=INF(24);
+  _mkbFetch('/x/block_remove',{block:block},30000).then(function(d){
+    if(d&&d.status==='success'){ wsToast((LANG==='en'?'Block removed':'Блок убран')+' · '+esc(block),'ok'); _mkbLoad(); }
+    else { foot.innerHTML='<span style="font-size:12px;color:#c0392b">⚠ '+esc((d&&d.message)||(LANG==='en'?'could not remove':'не удалось убрать'))+'</span>'; }
+  }).catch(function(){ foot.innerHTML='<span style="font-size:12px;color:var(--tx3)">'+(LANG==='en'?'bridge busy — try again':'мост занят — попробуй ещё')+'</span>'; });
 }
 function _mkbMake(btn,kind,ref,purpose){
   var foot=btn.parentNode; if(!foot) return;
@@ -3524,6 +3548,7 @@ function _mkbMake(btn,kind,ref,purpose){
       var made=(d.made&&d.made.length)?d.made.join(', '):'';
       foot.innerHTML='<span style="font-size:12.5px;color:#2E7D5B;font-weight:600">✓ '+(LANG==='en'?'Now a Composer block':'Стало блоком Композитора')+'</span>';
       wsToast((LANG==='en'?'Block ready':'Блок готов')+(made?' · '+esc(made):''),'ok');
+      setTimeout(_mkbLoad,800);   // перечитать картину: способность ушла в working, счётчик блоков вырос
     } else {
       var m=(d&&d.message)||(LANG==='en'?'could not build a block':'не удалось собрать блок');
       foot.innerHTML='<span style="font-size:12px;color:#c0392b">⚠ '+esc(m)+'</span>'+
