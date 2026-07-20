@@ -8,6 +8,9 @@
 ETB.registry = (function () {
   var INSTALLED_KEY = 'etb_plugins_installed_v1';
   var CUSTOM_KEY    = 'etb_plugins_custom_v1';
+  // Надгробия удалённых плагинов: константа отсутствовала → ReferenceError в
+  // try/catch → tombstone НЕ персистился и удалённые плагины воскресали при синке
+  var REMOVED_KEY   = 'etb_plugins_removed_v1';
   var REMOVING_KEY  = 'etb_removing_v1';  // tombstone: id помечен на удаление, пока файл реестра на устройстве ещё есть — не возвращаем при syncFromDevice
   function _loadRemoving(){ try { return JSON.parse(localStorage.getItem(REMOVING_KEY) || '[]'); } catch(e){ return []; } }
   function _saveRemoving(a){ try { localStorage.setItem(REMOVING_KEY, JSON.stringify(a)); } catch(e){} }

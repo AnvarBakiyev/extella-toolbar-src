@@ -391,8 +391,14 @@ ETB.marketplace = (function () {
               // карточки/ярлыка агента молча не сохранялось и он возвращался.
               var _isMkt = _key.indexOf('_mkt_') === 0;
               var _isAgSt = _key.indexOf('agent_state:') === 0;
-              if (!_isMkt && !_isAgSt) { _kerr('key not allowed'); return; }
-              var _scope = _isMkt ? { global: true } : {};
+              // agent_runs:<id> — история запусков в кабинете агента; cap_<id>_manifest —
+              // операции динамических CLI-инструментов. Оба префикса витрина читает/пишет
+              // штатно, но гейт их отбрасывал → «Запусков пока нет» и «Операции не
+              // найдены» были враньём по конструкции у ВСЕХ пользователей.
+              var _isAgRuns = _key.indexOf('agent_runs:') === 0;
+              var _isCapMan = /^cap_[A-Za-z0-9_-]+_manifest$/.test(_key);
+              if (!_isMkt && !_isAgSt && !_isAgRuns && !_isCapMan) { _kerr('key not allowed'); return; }
+              var _scope = (_isMkt || _isCapMan) ? { global: true } : {};
               if (_t === 'etb_kv_get') {
                 ETB.api.kvGet(_key, _scope)
                   .then(function (r) { _back({ type: 'etb_kv_result', reqId: _rid, ok: true, value: (r && r.value != null) ? r.value : null }); })

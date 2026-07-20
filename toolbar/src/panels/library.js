@@ -116,8 +116,15 @@ ETB.library = (function () {
       _mountFrame(iframe, initial);
       return;
     }
+    // Честный таймаут: «Connecting…» не должен висеть вечно без токена
+    var _libTmr = setTimeout(function () {
+      if (loaderEl && loaderEl.parentNode) {
+        loaderEl.innerHTML = '<span>Не удалось подключиться к аккаунту. Перезапусти Extella (⌘Q) и открой Library снова. / Could not connect — restart Extella and reopen Library.</span>';
+      }
+    }, 45000);
     ETB.auth.onToken(function (token) {
       if (!token || !iframe.isConnected) return;
+      clearTimeout(_libTmr);
       if (loaderEl && loaderEl.parentNode) loaderEl.parentNode.removeChild(loaderEl);
       _mountFrame(iframe, token);
     });

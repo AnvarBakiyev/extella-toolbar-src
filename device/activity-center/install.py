@@ -7,6 +7,7 @@ import json
 import os
 import plistlib
 import shutil
+import sys
 import subprocess
 from glob import glob
 from pathlib import Path
@@ -50,7 +51,7 @@ def install_launch_agent(support_dir: Path) -> Path:
     state_dir.mkdir(parents=True, exist_ok=True)
     payload = {
         "Label": LABEL,
-        "ProgramArguments": ["/usr/bin/python3", str(support_dir / "server.py")],
+        "ProgramArguments": [sys.executable or shutil.which("python3") or "/usr/bin/python3", str(support_dir / "server.py")],
         "RunAtLoad": True,
         "KeepAlive": True,
         "ProcessType": "Background",

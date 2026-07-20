@@ -69,17 +69,27 @@ fi
 
 # ── Step 1: Check Node.js ─────────────────────────────────
 echo -e "${AMBER}[1/5] Checking Node.js...${NC}"
+USE_PREBUILT=""
 if ! command -v node &> /dev/null; then
-    echo -e "  ${RED}✗ Node.js not found. Install from https://nodejs.org (v16+)${NC}"
-    echo ""
-    echo "  Falling back to pre-built files if available..."
-    if [ ! -f "$BUILD_DIR/toolbar.js" ]; then
-        echo -e "  ${RED}✗ No pre-built files found. Please install Node.js and re-run.${NC}"
+    echo -e "  ${AMBER}⚠ Node.js not found — using the pre-built toolbar from HANDOFF/ (no build needed).${NC}"
+    echo    "    For source builds install Node.js 18+ from https://nodejs.org"
+    if [ -f "$SCRIPT_DIR/HANDOFF/toolbar.js" ]; then
+        mkdir -p "$BUILD_DIR"
+        cp "$SCRIPT_DIR/HANDOFF/toolbar.js" "$BUILD_DIR/toolbar.js"
+        USE_PREBUILT=1
+        echo -e "  ${GREEN}✓ Pre-built toolbar.js ready${NC}"
+    else
+        echo -e "  ${RED}✗ HANDOFF/toolbar.js missing from the repo. Install Node.js 18+ and re-run.${NC}"
         exit 1
     fi
-    echo -e "  ${AMBER}⚠ Using pre-built files${NC}"
 else
     NODE_VER=$(node -v)
+    NODE_MAJOR=$(node -p 'process.versions.node.split(".")[0]')
+    if [ "$NODE_MAJOR" -lt 18 ]; then
+        echo -e "  ${RED}✗ Node.js $NODE_VER is too old — the build (vite 6) needs 18+.${NC}"
+        echo    "    Either upgrade Node, or delete/rename node to use the pre-built HANDOFF path."
+        exit 1
+    fi
     echo -e "  ${GREEN}✓ Node.js $NODE_VER found${NC}"
 
     # ── Step 2: Build the whole suite (library module + toolbar) ─
@@ -174,8 +184,8 @@ fi
 if [ -d "$HV_DIR" ] && [ -n "$ANTHROPIC_KEY" ]; then
     echo ""
     echo -e "${AMBER}Starting HTML to Video Studio...${NC}"
-    lsof -ti :3071 | xargs kill -9 2>/dev/null || true
-    lsof -ti :3072 | xargs kill -9 2>/dev/null || true
+    # Убиваем ТОЛЬКО свои прежние html-video процессы, не чужие на этих портах
+    pgrep -f "html-video" | xargs kill 2>/dev/null || true
     cd "$HV_DIR"
     ANTHROPIC_API_KEY="$ANTHROPIC_KEY" \
     ELEVENLABS_API_KEY="$ELEVENLABS_KEY" \

@@ -59,7 +59,16 @@ ETB.api = (function () {
   // (alibaba default vs the Qwen id). We can't reliably detect which at runtime,
   // so a Skill installs its rule on BOTH — whichever the chat uses, it's there.
   // Writing under the user's own token only affects that user's chat.
-  var CHAT_AGENTS = ['agent_extella_alibaba_default', 'agent_XwZBKvd8dD70jKvW4WrZm'];
+  // Портируемость: второй элемент раньше был личным ID с одного устройства
+  // (agent_XwZ…) — у остальных пользователей правило навыка молча не ложилось
+  // на их чат-агента. Теперь второй адресат — динамически определённый агент
+  // аккаунта (_resolveAgent), дедуп на случай совпадения ниже по месту записи.
+  var CHAT_AGENTS = ['agent_extella_alibaba_default'];
+  function _chatAgents() {
+    var out = CHAT_AGENTS.slice();
+    try { var a = _agent(); if (a && out.indexOf(a) < 0) out.push(a); } catch (e) {}
+    return out;
+  }
 
   // ── Install agent override ──────────────────────────────────────────────
   // Which backend agent executes plugin install / repair / auto-provision
@@ -107,11 +116,16 @@ ETB.api = (function () {
   }
 
   function _post(path, body, extraHdrs, _retried) {
+    // Таймаут: зависшая платформа раньше вешала всё, что не идёт через skBridge
+    // (у того свои 20с). 90с — с запасом на длинные агентные ответы.
+    var ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    var tmr = ctl ? setTimeout(function () { try { ctl.abort(); } catch (e) {} }, 90000) : null;
     return fetch(BASE + path, {
       method: 'POST',
       headers: extraHdrs ? Object.assign(_hdrs(), extraHdrs) : _hdrs(),
-      body: JSON.stringify(body)
-    }).then(function (r) {
+      body: JSON.stringify(body),
+      signal: ctl ? ctl.signal : undefined
+    }).finally(function () { if (tmr) clearTimeout(tmr); }).then(function (r) {
       if (r.status === 401) {
         // Absent/stale iframe session token (blob: origin has no cookies). Ask the
         // parent host for the live token AND try a session refresh, wait briefly for
@@ -486,7 +500,7 @@ ETB.api = (function () {
     // back to the chat-agent candidates. Resolves to an array of { agent, ruleId }
     // refs (skipping failures) so uninstall can remove exactly what was added.
     rulesAdd: function (rule, agents) {
-      var targets = (agents && agents.length) ? agents : CHAT_AGENTS;
+      var targets = (agents && agents.length) ? agents : _chatAgents();
       return Promise.all(targets.map(function (ag) {
         return _post('/api/rules/add', { rule: rule }, { 'X-Agent-Id': ag })
           .then(function (r) {

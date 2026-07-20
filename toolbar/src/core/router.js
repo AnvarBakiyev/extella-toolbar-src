@@ -691,17 +691,24 @@ ETB.router = (function () {
         var reqId2 = e.data.reqId;
         var key = String(e.data.key || '');
         function reply2(msg) { if (src2 && src2.contentWindow) { try { src2.contentWindow.postMessage(msg, '*'); } catch (_) {} } }
-        if (key.indexOf('_mkt_') !== 0) {
+        // + agent_runs:/cap_*_manifest: раньше гейт отбрасывал собственные данные
+        // витрины — история запусков агентов и операции динамических CLI-тулов
+        // были мертвы по конструкции у всех пользователей.
+        var okMkt = key.indexOf('_mkt_') === 0;
+        var okRuns = key.indexOf('agent_runs:') === 0;
+        var okCapM = /^cap_[A-Za-z0-9_-]+_manifest$/.test(key);
+        if (!okMkt && !okRuns && !okCapM) {
           reply2({ type: 'etb_kv_result', reqId: reqId2, ok: false, error: 'key not allowed' });
           return;
         }
+        var scope2 = okRuns ? {} : { global: true };
         try {
           if (e.data.type === 'etb_kv_get') {
-            ETB.api.kvGet(key, { global: true })
+            ETB.api.kvGet(key, scope2)
               .then(function (r) { reply2({ type: 'etb_kv_result', reqId: reqId2, ok: true, value: (r && r.value != null) ? r.value : null }); })
               .catch(function (err) { reply2({ type: 'etb_kv_result', reqId: reqId2, ok: false, error: (err && err.message) || 'kv get failed' }); });
           } else {
-            ETB.api.kvSet(key, e.data.value, e.data.description || 'Marketplace merch (toolbar editor)', { global: true })
+            ETB.api.kvSet(key, e.data.value, e.data.description || 'Marketplace merch (toolbar editor)', scope2)
               .then(function () { reply2({ type: 'etb_kv_result', reqId: reqId2, ok: true }); })
               .catch(function (err) { reply2({ type: 'etb_kv_result', reqId: reqId2, ok: false, error: (err && err.message) || 'kv set failed' }); });
           }

@@ -265,7 +265,7 @@
     var head = storefrontNode(doc, 'div', '_xtlac_srv_head');
     var copy = storefrontNode(doc, 'div', '_xtlac_srv_head_copy');
     copy.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_title', T('Системные агенты (LaunchAgents)','System agents (LaunchAgents)')));
-    copy.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_sub', T('Автозапускаемые фоновые агенты этого Мака. Семейство Dronor — не Extella: его активность может выглядеть как наша.','Auto-started background agents on this Mac. The Dronor family is not Extella: its activity may look like ours.')));
+    copy.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_sub', T('Автозапускаемые фоновые агенты этого Мака. Агенты Extella — отдельной группой, остальные — не наши.','Auto-started background agents on this Mac. Extella agents are grouped separately; the rest are not ours.')));
     head.appendChild(copy);
     wrap.appendChild(head);
     var body = storefrontNode(doc, 'div', '_xtlac_srv_sysagents_body', T('проверяю…','checking…'));
@@ -293,7 +293,7 @@
       var agents = (d && d.agents) || [];
       body.textContent = '';
       if (!agents.length) { body.textContent = T('агентов не найдено','no agents found'); return; }
-      var famTitle = { extella: 'Extella', dronor: T('Dronor / personal AGI (не Extella)','Dronor / personal AGI (not Extella)'), other: T('Прочие','Other') };
+      var famTitle = { extella: 'Extella', dronor: T('Не Extella','Not Extella'), other: T('Прочие','Other') };
       ['extella', 'dronor', 'other'].forEach(function (fam) {
         var list = agents.filter(function (a) { return a.family === fam; });
         if (!list.length) return;

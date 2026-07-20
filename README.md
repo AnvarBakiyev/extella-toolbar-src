@@ -42,9 +42,17 @@ install path is required.
 
 ### Prerequisites
 
-- **Node.js** v16+ (`node -v`)
-- **Extella Desktop** installed
+- **Node.js** v18+ (`node -v`) — vite 6 in the library workspace requires it.
+  **No Node at all?** That's fine: `./install.sh` falls back to the pre-built
+  `HANDOFF/toolbar.js`, or copy it yourself:
+  `cp HANDOFF/toolbar.js ~/Library/Application\ Support/extella-desktop/toolbar.js`
+- **Extella Desktop** installed and signed in at least once
 - Repo checked out on branch `main`
+
+> Heads-up: on macOS `./install.sh` additionally installs a background
+> LaunchAgent (`ai.extella.activity-center`, port 8799) and clones the
+> optional `html-video` studio into `~/Downloads`. Remove the agent later
+> with `python3 device/activity-center/uninstall.py`.
 
 ### One-command install (recommended)
 

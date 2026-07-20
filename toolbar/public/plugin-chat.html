@@ -1497,6 +1497,14 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
       messages.push({ role: 'assistant', note: true, content: T('Подключаюсь к аккаунту Extella… Сообщение отправится само через пару секунд.', 'Connecting to your Extella account… Your message will send automatically in a couple of seconds.') });
       renderMessages();
       saveHistory();
+      // Честный таймаут: раньше «отправится само» висело вечно, если токен так и не пришёл
+      clearTimeout(window._pendTmr);
+      window._pendTmr = setTimeout(function () {
+        if (!_pendingSend || apiToken) return;
+        _pendingSend = null;
+        messages.push({ role: 'assistant', note: true, content: T('⚠ Не получилось подключиться к аккаунту. Перезапусти Extella (⌘Q и открой заново) и отправь сообщение ещё раз.', '⚠ Could not connect to your account. Restart Extella (⌘Q and reopen) and send the message again.') });
+        renderMessages();
+      }, 30000);
       return;
     }
     _abort = (typeof AbortController !== 'undefined') ? new AbortController() : null;

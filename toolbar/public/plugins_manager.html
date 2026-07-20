@@ -2289,7 +2289,11 @@ function installLocalModel(model, btn){
       else if(st==='pulling'){btn.disabled=false;btn.textContent='Качается… ⟳';btn.title=(out&&out.message)||'Скачивается в фоне, нажми позже';}
       else {btn.disabled=false;btn.textContent='Ещё раз';btn.title=(out&&out.message)||'не удалось';}
     })
-    .catch(function(e){ if(btn){btn.disabled=false;btn.textContent='Качается… ⟳';btn.title='Скачивание идёт в фоне, загляни позже';} });
+    .catch(function(e){ if(btn){btn.disabled=false;
+      // Честность: раньше ЛЮБАЯ ошибка (включая отсутствие эксперта) рисовала «Качается…»
+      if(e&&e.message==='_timeout_'){ btn.textContent='Качается… ⟳'; btn.title='Скачивание идёт в фоне, загляни позже'; }
+      else { btn.textContent='Ещё раз'; btn.title='Не получилось начать установку: '+((e&&e.message)||'нет ответа'); }
+    } });
 }
 function modelsSpotlight(){
   _ensureMod();
@@ -2521,9 +2525,11 @@ function selfDoUpdate(btn){
     if(out&&out.status==='success'){ if(msg)msg.innerHTML='✓ '+esc(out.message||'Обновлено. Перезапусти Extella (Cmd+Q).'); }
     else { if(msg)msg.innerHTML='⚠ '+esc((out&&out.message)||'не удалось обновить'); }
   }).catch(function(e){
-    // мост мог отвалиться по таймауту, а обновление продолжается
     if(btn)btn.disabled=false;
-    if(msg)msg.innerHTML='▶ Обновление идёт в фоне. Через минуту перезапусти Extella (Cmd+Q) — увидишь свежий интерфейс.';
+    // Честность: «идёт в фоне» — только про таймаут; прочие ошибки говорим как есть
+    if(msg)msg.innerHTML=(e&&e.message==='_timeout_')
+      ? '▶ Обновление идёт в фоне. Через минуту перезапусти Extella (Cmd+Q) — увидишь свежий интерфейс.'
+      : '⚠ Не получилось запустить обновление: '+esc((e&&e.message)||'нет ответа');
   });
 }
 function appEmbedReload(url,ready){
@@ -6395,14 +6401,16 @@ function wsUndo(ws_id){
   }).catch(function(e){ wsToast('⚠ '+esc((e&&e.message)||'ошибка'),'err'); });
 }
 
-var BUILDER_ID='agent_FLYxB0v1qIY2phB5beVP5';  // агент-сборщик Эллы; у других пользователей его нет
+var BUILDER_ID='agent_FLYxB0v1qIY2phB5beVP5';  // спец-сборщик (есть не у всех) — теперь только запасной
 function skRunAgent(msg){
-  return skBridge('etb_run_agent','etb_agent_result',{message:msg,agent_id:BUILDER_ID})
+  // Портируемость: сначала агент СЕССИИ пользователя (есть у каждого),
+  // BUILDER_ID — только как запасной, если сессионный недоступен
+  var sid=(window._etbSess&&window._etbSess.agentId)||'';
+  var first=sid||BUILDER_ID, second=(sid&&sid!==BUILDER_ID)?BUILDER_ID:'';
+  return skBridge('etb_run_agent','etb_agent_result',{message:msg,agent_id:first})
     .catch(function(e){
-      // Портируемость: сборщик недоступен (чужое устройство/удалён) — пробуем агента сессии
-      var sid=(window._etbSess&&window._etbSess.agentId)||'';
-      if(!sid || sid===BUILDER_ID) throw e;
-      return skBridge('etb_run_agent','etb_agent_result',{message:msg,agent_id:sid});
+      if(!second) throw e;
+      return skBridge('etb_run_agent','etb_agent_result',{message:msg,agent_id:second});
     });
 }
 function openCliAdd(){
@@ -6639,7 +6647,7 @@ function cliCard(c){
 }
 function installCLI(tool,btn){
   if(btn){btn.disabled=true;btn.textContent='Ставлю…';}
-  skBridge('etb_run_expert','etb_expert_result',{name:'cap_'+tool+'_resolver',params:{confirm_install:'yes'}})
+  skBridge('etb_run_expert','etb_expert_result',{name:'cap_'+tool+'_resolver',params:{confirm_install:'yes'}},300000)  // первая установка тянет brew — 20с дефолта не хватало
     .then(function(r){
       var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
       if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}

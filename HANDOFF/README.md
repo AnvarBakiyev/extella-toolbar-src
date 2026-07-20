@@ -7,6 +7,8 @@ cp HANDOFF/toolbar.js ~/Library/Application\ Support/extella-desktop/toolbar.js
 # затем полностью перезапустить Extella Desktop (Cmd+Q → открыть заново)
 ```
 
-Либо канонический путь: `./install.sh` из корня репо (соберёт из исходников и задеплоит).
+Либо канонический путь: `./install.sh` из корня репо (соберёт из исходников и задеплоит;
+без Node.js установщик сам возьмёт эту готовую сборку).
 
-Сборка от: 2026-07-17 08:32, коммит 4909c64.
+Версия файла = последний коммит, тронувший `HANDOFF/toolbar.js`:
+`git log -1 --format='%h %ad' -- HANDOFF/toolbar.js`
