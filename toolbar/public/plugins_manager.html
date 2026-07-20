@@ -6440,8 +6440,11 @@ function wsRefreshPoll(ws_id, before, tries){
 function wsPlural(n){ n=n%100; if(n>=11&&n<=14)return'ов'; n=n%10; if(n===1)return''; if(n>=2&&n<=4)return'а'; return'ов'; }
 // --- Действия кокпита (контракт ws-v1.1) ---
 function wsToast(msg,kind){
+  // Пустое сообщение раньше рисовало чёрную полосу-плашку без текста (жалоба
+  // Анвара). Нечего показать — прячем тост, а не пустую подложку.
+  var s=(msg==null?'':String(msg)); if(!s.replace(/<[^>]*>/g,'').trim()){ var e=document.getElementById('ws_toast'); if(e)e.style.opacity='0'; return; }
   var t=document.getElementById('ws_toast'); if(!t){ t=document.createElement('div'); t.id='ws_toast'; document.body.appendChild(t); }
-  t.className='ws_toast'+(kind?(' '+kind):''); t.innerHTML=msg; t.style.opacity='1';
+  t.className='ws_toast'+(kind?(' '+kind):''); t.innerHTML=s; t.style.opacity='1';
   clearTimeout(t._h); t._h=setTimeout(function(){ t.style.opacity='0'; },3200);
 }
 function wsSetAutopilot(ws_id,enabled){
