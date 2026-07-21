@@ -3972,7 +3972,7 @@ function _dtDo(i, act){
 function _dtCss(){
   return '<style>'+
     '.dt_wrap{grid-column:1/-1;padding:6px 2px 24px}'+
-    '.dt_sect{font:700 12px var(--sans);text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin:2px 0 14px}'+
+    '.dt_sect{font:600 12.5px var(--mono);letter-spacing:.05em;color:var(--tx3);margin:2px 0 14px}'+
     '.dt_grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(94px,1fr));gap:10px}'+
     '.dt_ico{display:flex;flex-direction:column;align-items:center;gap:8px;background:transparent;border:1px solid transparent;'+
       'border-radius:6px;padding:12px 6px 10px;cursor:pointer;transition:background .12s,border-color .12s,transform .1s;animation:fiu .22s ease both}'+
@@ -4663,7 +4663,7 @@ function _cabSettings(p){
       '<div style="font-size:13px;color:var(--tx2);line-height:1.55;margin-bottom:10px">Инструкция и логика меняются через <b>чат с Extella</b>, каждое решение записывается — так рабочие агенты защищены от случайных правок.</div>'+
       '<button class="st_btn" style="background:transparent;color:var(--tx2);border:1px solid var(--bd2)" onclick="cabEditViaBuilder(\''+esc(id)+'\')">✎ Изменить через чат</button>'+
       '<div id="cab_edit_msg" style="font-size:12.5px;color:var(--tx2);margin-top:10px;min-height:16px"></div>')+
-    _cabCard('<div style="font:700 13px var(--sans);color:#e0533d;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Опасная зона</div>'+
+    _cabCard('<div style="font:700 13px var(--sans);color:#e0533d;letter-spacing:.02em;margin-bottom:8px">Опасная зона</div>'+
       '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
         '<button class="sk_del" onclick="cabRemove(\''+esc(id)+'\')">Убрать из витрины</button>'+
         '<button class="sk_del" style="border-color:rgba(224,83,61,.55);color:#e0533d" onclick="cabDeleteForever(\''+esc(id)+'\')">Удалить навсегда</button>'+
