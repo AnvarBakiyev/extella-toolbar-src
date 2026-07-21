@@ -1551,7 +1551,7 @@ var I18N_EN = {
   'Мои агенты · собраны Конструктором':'My agents · built by the Wizard',
   'Роли агентов':'Agent roles','Роли для базового агента':'Roles for the base agent','Готовая профессия для твоего агента':'A ready profession for your agent',
   'Роль — это профессия: продажи, поддержка, аналитика':'A role is a profession: sales, support, analytics','Назначается на твою копию агента за минуту':'Assigned to your agent copy in a minute','Модель Qwen уже в Extella — ключи не нужны':'Qwen is built into Extella — no keys needed',
-  'Разберёт входящие заявки и напишет ответы':'Sorts inbound requests and drafts replies','Выбери роль и отметь умения — получишь своего агента в чате Extella.':'Pick a role, check the skills — get your own agent in Extella chat.',
+  'Разберёт входящие заявки и напишет ответы':'Sorts inbound requests and drafts replies',
   'Готовые профессии для твоего агента. Назначаются в три шага:':'Ready professions for your agent. Assigned in three steps:',
   'Сервисы':'Services','Внешние сервисы':'External services','Живые данные для агента: курсы, погода, справки. Проверь здесь и отметь, что дать агенту.':'Live data for your agent: rates, weather, references. Test here and pick what your agent gets.',
   'Твои документы и готовые справочники: агент отвечает по ним, а не по памяти. Возьми готовую базу — или собери свою из папки.':'Your documents and ready-made references: the agent answers from them, not from memory. Pick a ready base — or build your own from a folder.',
@@ -2126,9 +2126,11 @@ var I18N_EN = {
   'Полноценная сборка агента в отдельном интерфейсе.':'Full agent assembly in a dedicated interface.',
   'в разработке':'in development',
   'Все мои агенты →':'All my agents →',
-  'Твои агенты — сотрудники: собери своего или найми готовую роль с полки.':'Your agents are your staff: build your own or hire a ready-made role off the shelf.',
+  'Твои агенты — сотрудники: создай своего в Конструкторе или найми готовую роль с полки.':'Your agents are your staff: create your own in the Wizard or hire a ready-made role off the shelf.',
   'Конструктор агентов — готовится, появится здесь':'Agent Builder — in the works, will appear here',
-  '✦ Собрать':'✦ Build',
+  '✦ Создать':'✦ Create','+ Создать агента':'+ Create an agent','Откроется Конструктор: опиши задачу — он соберёт и запустит агента.':'The Wizard will open: describe the task — it will build and launch the agent.','Конструктор · есть на Рабочем столе':'Wizard · on the Desktop',
+  'Универсальная':'Universal','Роль без специализации — сам выбираешь, какие живые умения ей дать.':'A role without a specialty — you choose which live skills to give it.','Умения на выбор':'Skills of your choice','Курсы, погода, перевод и другие':'Rates, weather, translation and more','Настроить роль':'Set up the role',
+  'Отметь умения — роль с ними назначится на твою копию агента. Модель остаётся Qwen.':'Check the skills — the role and skills will be assigned to your agent copy. The model stays Qwen.','Назначить роль':'Assign role',
 };
 var I18N_RX = [
   [/^Программы на рабочем столе/, 'Programs on the desktop'],
@@ -5108,14 +5110,15 @@ function renderAgents(){
       '<div class="mshelf">'+mine.map(function(p,i){return autoCardHTML(p,i);}).join('')+'</div>'+
       ((_autoReg||[]).length>8 ? '<div style="grid-column:1/-1;text-align:right;margin:-2px 0 8px"><button onclick="setc(\'automations\')" style="border:1px solid var(--bd2);background:transparent;color:var(--tx2);border-radius:5px;padding:4px 10px;font-size:12px;cursor:pointer">Все мои агенты →</button></div>' : '')
     : '';
-  // Плитки «Конструктор агентов · Скоро» больше нет (решение Эллы 21.07):
-  // она дублировала «+ Собрать агента», а настоящий Конструктор уже на Рабочем столе.
+  // Разделение (решение Эллы 21.07): СОЗДАНИЕ агента = Конструктор (плитка ведёт
+  // в него), НАЗНАЧЕНИЕ роли = каталог ролей ниже; «роль + умения» (agentForgeModal)
+  // живёт карточкой «Универсальный помощник» в каталоге ролей.
   var buildTiles='<div class="mshelf tf_skip">'+
-    '<div class="stile" style="--acc:var(--a);border-style:dashed;cursor:pointer" onclick="agentForgeModal()">'+
-      '<span class="st_chip">✦ Собрать</span><div class="st_title">+ Собрать агента</div>'+
-      '<div class="st_fact">Выбери роль и отметь умения — получишь своего агента в чате Extella.</div>'+
-      '<div class="st_foot"><span style="font-size:11px;color:var(--tx3)">пара минут</span></div></div></div>';
-  var html='<div class="sk_lead" style="grid-column:1/-1">Твои агенты — сотрудники: собери своего или найми готовую роль с полки.</div>'+
+    '<div class="stile" style="--acc:var(--a);border-style:dashed;cursor:pointer" onclick="_openWizard()">'+
+      '<span class="st_chip">✦ Создать</span><div class="st_title">+ Создать агента</div>'+
+      '<div class="st_fact">Откроется Конструктор: опиши задачу — он соберёт и запустит агента.</div>'+
+      '<div class="st_foot"><span style="font-size:11px;color:var(--tx3)">Конструктор · есть на Рабочем столе</span></div></div></div>';
+  var html='<div class="sk_lead" style="grid-column:1/-1">Твои агенты — сотрудники: создай своего в Конструкторе или найми готовую роль с полки.</div>'+
     buildTiles+
     mineHtml+
     _bentoHTML(TYPE_ED.agents.heroes)+
@@ -5126,6 +5129,12 @@ function renderAgents(){
       '<div class="step"><span class="step_n">2</span><div>Скопируй её <b>ID</b>, он начинается с <code>agent_</code></div></div>' +
       '<div class="step"><span class="step_n">3</span><div>Выбери роль ниже и вставь ID. Модель останется Qwen</div></div>' +
     '</div>';
+  // Универсальная роль с выбором умений — тем же рядом, что и остальные роли.
+  html+='<div class="sect_hdr"><span class="sect_title">Универсальная</span><span class="sect_line"></span></div><div class="mshelf">'+
+    '<div class="stile" style="--acc:#3E7CAD"><span class="st_chip">🧰 Роль агента</span>'+
+    '<div class="st_title">Универсальный помощник</div><div class="st_fact">Роль без специализации — сам выбираешь, какие живые умения ей дать.</div>'+
+    '<div style="margin:8px 0 2px"><span style="display:inline-block;font-size:11px;color:var(--tx2);background:var(--bg);border:1px solid var(--bd2);border-radius:5px;padding:2px 7px;margin:0 4px 4px 0">Умения на выбор</span><span style="display:inline-block;font-size:11px;color:var(--tx2);background:var(--bg);border:1px solid var(--bd2);border-radius:5px;padding:2px 7px;margin:0 4px 4px 0">Курсы, погода, перевод и другие</span></div>'+
+    '<div class="st_foot" style="justify-content:space-between;align-items:center;gap:6px"><button class="st_btn" onclick="agentForgeModal()">Настроить роль</button></div></div></div>';
   var cats=[]; CATALOG_AGENTS.forEach(function(a){if(cats.indexOf(a.cat)<0)cats.push(a.cat);});
   cats.forEach(function(cn){
     html+='<div class="sect_hdr"><span class="sect_title">'+esc(cn)+'</span><span class="sect_line"></span></div><div class="mshelf">'+
@@ -5322,7 +5331,8 @@ function mcpConnectRun(id, btn){
   }).catch(function(e){ _mcpConnecting[id]=0; if(btn){btn.disabled=false;btn.innerHTML='Подключить';} alert('Не удалось подключить: '+((e&&e.message==='_timeout_')?'долгая установка (первый запуск качает пакет) — попробуй ещё раз':(e&&e.message)||'ошибка')); });
 }
 // ── Конструктор агента: роль + галочки умений → agent_forge ──
-var FORGE_ROLES=[{id:'universal',n:'Универсальный помощник'}].concat((typeof CATALOG_AGENTS!=='undefined'?CATALOG_AGENTS:[]).map(function(a){return {id:a.id,n:a.emoji+' '+a.name};}));
+// FORGE_ROLES больше нет: модалка назначает только «Универсальный помощник»,
+// именные роли назначаются карточками каталога (agentInstallModal).
 // Только реально существующие эксперты. Группа «MCP-серверы (встроенные)»
 // (mcp_fetch/time/git/files) удалена 21.07: таких экспертов нет на платформе —
 // галочки были фикцией. Подключённые MCP-серверы едут отдельной группой (mcpx:*).
@@ -5335,7 +5345,6 @@ var FORGE_TOOLS=[
 ];
 function agentForgeModal(){
   var old=document.getElementById('af_ov'); if(old)old.remove();
-  var roleOpts=FORGE_ROLES.map(function(r){return '<option value="'+esc(r.id)+'">'+esc(r.n)+'</option>';}).join('');
   var groups=FORGE_TOOLS.slice();
   var dyn=mcpxGi();
   if(dyn.length){ groups=groups.concat([{g:'Подключённые из каталога MCP', items:dyn.map(function(d){return {id:'mcpx:'+d.key, n:(d.title||d.key)+' (инструментов: '+(d.count||'?')+')'};})}]); }
@@ -5350,15 +5359,13 @@ function agentForgeModal(){
   }).join('');
   var ov=document.createElement('div'); ov.id='af_ov'; ov.style.cssText=_KPOV;
   ov.innerHTML='<div style="'+_KPMODAL+';max-width:640px">'+
-    '<div style="font-family:var(--serif);font-size:20px;margin-bottom:4px">🛠 Собрать своего агента</div>'+
-    '<div style="color:var(--tx2);font-size:13px;line-height:1.5;margin-bottom:10px">Выбери роль и умения — они назначатся на твою копию агента. Модель остаётся Qwen.</div>'+
-    '<label style="display:block;font-size:12px;color:var(--tx3);margin:8px 0 3px">Роль</label>'+
-    '<select id="af_role" style="'+_KPINP+'">'+roleOpts+'</select>'+
+    '<div style="font-family:var(--serif);font-size:20px;margin-bottom:4px">🧰 Универсальный помощник</div>'+
+    '<div style="color:var(--tx2);font-size:13px;line-height:1.5;margin-bottom:10px">Отметь умения — роль с ними назначится на твою копию агента. Модель остаётся Qwen.</div>'+
     boxes+
     '<div style="margin-top:10px;font-size:12px;color:var(--tx2);background:var(--bg);border:1px dashed var(--bd2);border-radius:8px;padding:8px 10px;line-height:1.5">💡 Нужно больше умений? Во вкладке <b>«Сервисы»</b> подключи готовый MCP-сервер кнопкой «Подключить» — он появится здесь галочкой.</div>'+
     '<label style="display:block;font-size:12px;color:var(--tx3);margin:12px 0 3px">ID копии агента (создай копию базового в Extella — 2 клика)</label>'+
     '<input id="af_aid" placeholder="agent_XXXXXXXX" autocomplete="off" style="'+_KPINP+'"/>'+
-    '<div style="margin-top:14px;display:flex;gap:8px;align-items:center"><button class="st_btn" onclick="agentForgeRun(this)">🛠 Собрать агента</button>'+
+    '<div style="margin-top:14px;display:flex;gap:8px;align-items:center"><button class="st_btn" onclick="agentForgeRun(this)">Назначить роль</button>'+
     '<button onclick="var o=document.getElementById(\'af_ov\');if(o)o.remove()" style="'+_KPBTN+'">Закрыть</button></div>'+
     '<div id="af_msg" style="font-size:13px;color:var(--tx2);line-height:1.55;margin-top:12px;min-height:18px"></div></div>';
   document.body.appendChild(ov);
@@ -5371,16 +5378,16 @@ function agentForgeRun(btn){
   if(!aid||aid.indexOf('agent_')!==0){ if(msg)msg.innerHTML='⚠ Вставь ID копии агента (начинается с <code>agent_</code>).'; return; }
   if(!tools.length){ if(msg)msg.innerHTML='⚠ Отметь хотя бы одно умение.'; return; }
   if(btn)btn.disabled=true;
-  if(msg)msg.innerHTML=INF(28)+' Собираю: прошиваю роль и подключаю '+tools.length+' умений… (до минуты)';
+  if(msg)msg.innerHTML=INF(28)+' Назначаю роль и подключаю '+tools.length+' умений… (до минуты)';
   skBridge('etb_run_expert','etb_expert_result',{name:'agent_forge',params:{agent_id:aid,role_id:role,tools_csv:tools.join(',')}}, 300000).then(function(r){
     if(btn)btn.disabled=false;
     var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
     if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}
     if(!msg)return;
     if(out&&out.status==='success'){
-      msg.innerHTML='✓ Готово! Агент собран: роль «'+esc(out.role||role)+'», умений подключено: '+(out.tools||tools.length)+'. Открой его в чате Extella и дай задачу — он будет вызывать инструменты сам.';
-    } else if(typeof out==='string'&&out.indexOf('deferred')>=0){ msg.innerHTML=INF(28)+' Сборка идёт дольше обычного — подожди минуту и попробуй ещё раз.'; }
-    else { msg.innerHTML='⚠ '+esc((out&&out.message)||'не удалось собрать'); }
+      msg.innerHTML='✓ Готово! Роль «'+esc(out.role||role)+'» назначена, умений подключено: '+(out.tools||tools.length)+'. Открой агента в чате Extella и дай задачу — он будет вызывать инструменты сам.';
+    } else if(typeof out==='string'&&out.indexOf('deferred')>=0){ msg.innerHTML=INF(28)+' Назначение идёт дольше обычного — подожди минуту и попробуй ещё раз.'; }
+    else { msg.innerHTML='⚠ '+esc((out&&out.message)||'не удалось назначить роль'); }
   }).catch(function(e){ if(btn)btn.disabled=false; if(msg)msg.innerHTML='⚠ '+esc((e&&e.message==='_timeout_')?'нет ответа от устройства — попробуй ещё раз':((e&&e.message)||'ошибка')); });
 }
 function svCard(s){
