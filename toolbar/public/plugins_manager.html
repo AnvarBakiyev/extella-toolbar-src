@@ -1620,7 +1620,7 @@ var I18N_EN = {
   'Выбор Extella':'EXTELLA PICK','Выбор Extella':'Extella pick',
   'Мои агенты · собраны Конструктором':'My agents · built by the Wizard',
   'Роли агентов':'Agent roles','Роли для базового агента':'Roles for the base agent','Больше пользы без смены модели':'More value, same model',
-  'Сервисы':'Services','Внешние сервисы':'External services','Живые данные из интернета для агента: курсы, погода, справки. Проверить можно прямо здесь.':'Live data from the internet for your agent: rates, weather, references. Test it right here.',
+  'Сервисы':'Services','Внешние сервисы':'External services','Живые данные для агента: курсы, погода, справки. Проверь здесь и отметь, что дать агенту.':'Live data for your agent: rates, weather, references. Test here and pick what your agent gets.',
   'Твои документы и готовые справочники: агент отвечает по ним, а не по памяти. Возьми готовую базу — или собери свою из папки.':'Your documents and ready-made references: the agent answers from them, not from memory. Pick a ready base — or build your own from a folder.',
   'Готовые роли превращают базового агента в сотрудника: продажи, поддержка, финансы и другие.':'Ready-made roles turn the base agent into an employee: sales, support, finance and more.',
   'Знания':'Knowledge','Своя база из документов':'Your own base from documents','+ Создать базу знаний':'+ Create knowledge base','Новая база':'New base','Мои базы знаний':'My knowledge bases',
@@ -1732,7 +1732,8 @@ var I18N_EN = {
   'Погода, перевод текста, статьи — на лету':'Weather, translation, articles — on the fly',
   'Погода, переводы, вики':'Weather, translation, wiki',
   'Поддержка':'Support',
-  'Подключил, проверил, дальше пользуется агент':'Connect it, test it — then your agent uses it',
+  'Проверь здесь — агент получит это при сборке':'Test it here — your agent gets it when assembled',
+  'Проверить курс':'Test rates','Проверить погоду':'Test weather','+ Для агента':'+ For agent','● для агента':'● for agent',
   'Подставит данные и соберёт целую пачку':'Fills in the data and builds a whole batch',
   'Понимает десятки языков, включая русский':'Understands dozens of languages, including Russian',
   'Примерка одежды на своём фото':'Try clothes on your own photo',
@@ -3013,14 +3014,14 @@ var TYPE_ED = {
       { label:'Живые данные', acc:'#2E8B57', source:'Сервисы',
         title:'Внешние сервисы', accent:'Курсы валют, погода и новости для агента',
         go:"_jumpSect('Сервисы')", btn:'Смотреть сервисы',
-        facts:['Курсы валют, погода, справки, переводы, новости — вживую','Агент запрашивает живые данные вместо выдумок','Подключил, проверил, дальше пользуется агент'] },
+        facts:['Курсы валют, погода, справки, переводы, новости — вживую','Агент запрашивает живые данные вместо выдумок','Проверь здесь — агент получит это при сборке'] },
       { label:'Финансы', acc:'#2F6B66', source:'Сервис · Деньги',
         title:'Курсы и котировки', accent:'Валюты и крипто в реальном времени',
-        go:"_jumpSect('Сервисы')", btn:'Смотреть',
+        go:"svcRunModal('svc_currency')", btn:'Проверить курс',
         facts:['USD, EUR, KZT, биткоин — свежие цифры'] },
       { label:'Справки', acc:'#C57E33', source:'Сервис · Данные',
         title:'Погода, переводы, вики', accent:'Факты по запросу агента',
-        go:"_jumpSect('Сервисы')", btn:'Смотреть',
+        go:"svcRunModal('svc_weather')", btn:'Проверить погоду',
         facts:['Погода, перевод текста, статьи — на лету'] }
     ]
   },
@@ -5476,7 +5477,7 @@ function svConnect(id){ var a=svGi(); if(a.indexOf(id)<0){a.push(id);svSi(a);} i
 function svDisc(id){ var a=svGi(); var i=a.indexOf(id); if(i>=0){a.splice(i,1);svSi(a);} if(cur==='services')renderServices(); }
 function renderServices(){
   var g=document.getElementById('grid'); if(!g)return;
-  var html='<div class="sk_lead" style="grid-column:1/-1">Живые данные из интернета для агента: курсы, погода, справки. Проверить можно прямо здесь.</div>'+
+  var html='<div class="sk_lead" style="grid-column:1/-1">Живые данные для агента: курсы, погода, справки. Проверь здесь и отметь, что дать агенту.</div>'+
     _bentoHTML(TYPE_ED.services.heroes);
   html+='<div class="sect"><h2>Сервисы</h2></div>';
   var cats=[]; CATALOG_SERVICES.forEach(function(s){if(cats.indexOf(s.cat)<0)cats.push(s.cat);});
@@ -5682,10 +5683,13 @@ function agentForgeModal(){
   var groups=FORGE_TOOLS.slice();
   var dyn=mcpxGi();
   if(dyn.length){ groups=groups.concat([{g:'Подключённые из каталога MCP', items:dyn.map(function(d){return {id:'mcpx:'+d.key, n:(d.title||d.key)+' (инструментов: '+(d.count||'?')+')'};})}]); }
+  // Сервисы, отмеченные «+ Для агента» во вкладке «Сервисы», приходят сюда
+  // уже с галочками — это и есть обещание той кнопки.
+  var _pre=svGi();
   var boxes=groups.map(function(gr){
     return '<div style="font-size:11px;letter-spacing:.02em;color:var(--tx3);margin:10px 0 6px">'+esc(gr.g)+'</div>'+
       '<div style="display:flex;flex-wrap:wrap;gap:6px">'+gr.items.map(function(t){
-        return '<label style="display:inline-flex;align-items:center;gap:5px;font-size:12.5px;color:var(--tx);background:var(--bg);border:1px solid var(--bd2);border-radius:8px;padding:5px 9px;cursor:pointer"><input type="checkbox" class="af_tool" value="'+esc(t.id)+'" style="accent-color:var(--a)"/>'+esc(t.n)+'</label>';
+        return '<label style="display:inline-flex;align-items:center;gap:5px;font-size:12.5px;color:var(--tx);background:var(--bg);border:1px solid var(--bd2);border-radius:8px;padding:5px 9px;cursor:pointer"><input type="checkbox" class="af_tool" value="'+esc(t.id)+'"'+(_pre.indexOf(t.id)>=0?' checked':'')+' style="accent-color:var(--a)"/>'+esc(t.n)+'</label>';
       }).join('')+'</div>';
   }).join('');
   var ov=document.createElement('div'); ov.id='af_ov'; ov.style.cssText=_KPOV;
@@ -5695,7 +5699,7 @@ function agentForgeModal(){
     '<label style="display:block;font-size:12px;color:var(--tx3);margin:8px 0 3px">Роль</label>'+
     '<select id="af_role" style="'+_KPINP+'">'+roleOpts+'</select>'+
     boxes+
-    '<div style="margin-top:10px;font-size:12px;color:var(--tx2);background:var(--bg);border:1px dashed var(--bd2);border-radius:8px;padding:8px 10px;line-height:1.5">💡 Нужно больше умений? Во вкладке <b>«Сервисы»</b> подключи любой из <b>200</b> готовых MCP-серверов кнопкой «Подключить» — он появится здесь галочкой.</div>'+
+    '<div style="margin-top:10px;font-size:12px;color:var(--tx2);background:var(--bg);border:1px dashed var(--bd2);border-radius:8px;padding:8px 10px;line-height:1.5">💡 Нужно больше умений? Во вкладке <b>«Сервисы»</b> подключи готовый MCP-сервер кнопкой «Подключить» — он появится здесь галочкой.</div>'+
     '<label style="display:block;font-size:12px;color:var(--tx3);margin:12px 0 3px">ID копии агента (создай копию базового в Extella — 2 клика)</label>'+
     '<input id="af_aid" placeholder="agent_XXXXXXXX" autocomplete="off" style="'+_KPINP+'"/>'+
     '<div style="margin-top:14px;display:flex;gap:8px;align-items:center"><button class="st_btn" onclick="agentForgeRun(this)">🛠 Собрать агента</button>'+
@@ -5725,9 +5729,12 @@ function agentForgeRun(btn){
 }
 function svCard(s){
   var on=svOn(s.id);
+  // Честность: «Для агента» — это отметка для сборки агента (галочка в «Собрать
+  // агента»), НЕ подключение. Настоящее подключение MCP — ниже, в каталоге MCP.
+  var _tip='Отметится галочкой в «Собрать агента» (вкладка «Агенты»)';
   var foot=on
-    ? '<span class="sk_active">● подключено</span><button class="st_btn" data-svrun="'+esc(s.id)+'">▶ Проверить</button><button class="sk_del" data-svdisc="'+esc(s.id)+'" style="margin-left:6px">Убрать</button>'
-    : '<button class="st_btn" data-svconn="'+esc(s.id)+'">Подключить</button><button class="st_btn" data-svrun="'+esc(s.id)+'" style="margin-left:6px;background:transparent;color:var(--tx2);border:1px solid var(--bd2)">Проверить</button>';
+    ? '<span class="sk_active" title="'+esc(_tip)+'">● для агента</span><button class="st_btn" data-svrun="'+esc(s.id)+'">▶ Проверить</button><button class="sk_del" data-svdisc="'+esc(s.id)+'" style="margin-left:6px">Убрать</button>'
+    : '<button class="st_btn" data-svrun="'+esc(s.id)+'">▶ Проверить</button><button class="st_btn" data-svconn="'+esc(s.id)+'" title="'+esc(_tip)+'" style="margin-left:6px;background:transparent;color:var(--tx2);border:1px solid var(--bd2)">+ Для агента</button>';
   return '<div class="stile" style="--acc:'+esc(s.acc)+'"><span class="st_chip">Сервис</span>'+
     '<div class="st_title">'+esc(s.name)+'</div><div class="st_fact">'+esc(s.desc)+'</div>'+
     '<div class="st_foot" style="justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap">'+foot+'</div></div>';
@@ -5758,21 +5765,44 @@ function svcRun(id, btn){
     var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
     if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}
     if(msg)msg.innerHTML=_svcResultHTML(id,out);
-    if(out&&out.status==='success'&&!svOn(id)){ var a=svGi(); a.push(id); svSi(a); }
   }).catch(function(e){ if(btn)btn.disabled=false; if(msg)msg.innerHTML='⚠ '+esc((e&&e.message==='_timeout_')?'нет ответа, попробуй ещё раз':((e&&e.message)||'ошибка')); });
+}
+// Подписи полей результата по-русски: сервер отдаёт технические ключи (temp_c,
+// humidity_pct…) — пользователю показываем человеческие. Ключ «to» значит разное
+// у валют и перевода, поэтому словарь — по сервисам.
+var _SVC_LBL={
+  svc_currency:{base:'Из валюты',to:'В валюту',rate:'Курс',amount:'Сумма',converted:'Итого',updated:'Курс от'},
+  svc_crypto:{coin:'Монета',vs:'Валюта',price:'Цена'},
+  svc_weather:{city:'Город',country:'Страна',temp_c:'Температура, °C',humidity_pct:'Влажность, %',wind_ms:'Ветер, м/с'},
+  svc_ipgeo:{ip:'IP-адрес',country:'Страна',city:'Город',region:'Регион',isp:'Провайдер'},
+  svc_wiki:{title:'Статья',summary:'Кратко',url:'Ссылка'},
+  svc_github:{repo:'Репозиторий',stars:'Звёзды',forks:'Форки',language:'Язык',desc:'Описание',url:'Ссылка'},
+  svc_translate:{src:'С языка',to:'На язык',original:'Исходный текст',translated:'Перевод'}
+};
+// Сырые HTTP-ошибки источников → понятный текст с подсказкой, что делать.
+function _svcErrText(id,m){
+  m=String(m||'не удалось выполнить');
+  if(/HTTP Error 404/i.test(m)){
+    if(id==='svc_wiki') return 'статья не найдена — проверь название темы';
+    if(id==='svc_github') return 'репозиторий не найден — нужен формат owner/name, например torvalds/linux';
+    return 'источник не нашёл ответ — проверь введённые данные';
+  }
+  if(/HTTP Error|timed? ?out|urlopen|SSL/i.test(m)) return 'источник не отвечает — попробуй ещё раз через минуту';
+  return m;
 }
 function _svcResultHTML(id,out){
   if(!out||typeof out!=='object') return '⚠ '+esc(String(out||'нет ответа'));
-  if(out.status!=='success') return '⚠ '+esc(out.message||'не удалось выполнить');
+  if(out.status!=='success') return '⚠ '+esc(_svcErrText(id,out.message));
   if(id==='svc_qr'&&out.image_url) return '✓ QR готов:<br><img src="'+esc(out.image_url)+'" alt="QR" style="margin-top:8px;width:150px;height:150px;border-radius:5px;border:1px solid var(--bd2)"/>';
+  var _lbl=_SVC_LBL[id]||{};
   var rows=Object.keys(out).filter(function(k){return k!=='status';}).map(function(k){
-    var v=out[k];
+    var v=out[k], lbl=_lbl[k]||k;
     if(Array.isArray(v)){
       var parts=v.slice(0,8).map(function(it){ var t=(it&&typeof it==='object')?Object.keys(it).map(function(kk){return it[kk];}).join(' · '):String(it); return esc(t); });
-      return '<div style="padding:3px 0"><div style="color:var(--tx3);margin-bottom:2px">'+esc(k)+'</div><div style="color:var(--tx);font-size:12px;line-height:1.5">'+parts.join('<br>')+'</div></div>';
+      return '<div style="padding:3px 0"><div style="color:var(--tx3);margin-bottom:2px">'+esc(lbl)+'</div><div style="color:var(--tx);font-size:12px;line-height:1.5">'+parts.join('<br>')+'</div></div>';
     }
     if(v&&typeof v==='object') v=JSON.stringify(v);
-    return '<div style="display:flex;gap:8px;padding:2px 0"><span style="color:var(--tx3);min-width:96px;flex-shrink:0">'+esc(k)+'</span><span style="color:var(--tx)">'+esc(String(v))+'</span></div>';
+    return '<div style="display:flex;gap:8px;padding:2px 0"><span style="color:var(--tx3);min-width:110px;flex-shrink:0">'+esc(lbl)+'</span><span style="color:var(--tx)">'+esc(String(v))+'</span></div>';
   }).join('');
   return '<div style="background:var(--bg);border:1px solid var(--bd2);border-radius:5px;padding:10px;margin-top:4px;max-height:230px;overflow:auto">'+rows+'</div>';
 }
