@@ -13,8 +13,9 @@ class ToolbarIntegrationTests(unittest.TestCase):
     def test_activity_panel_is_part_of_modular_build(self) -> None:
         self.assertIn("'activity-center.js'", BUILD.read_text(encoding="utf-8"))
         source = PANEL.read_text(encoding="utf-8")
-        self.assertIn("{ id: 'automations', l: 'Автоматизации' }", source)
+        self.assertIn("store.setc('automations')", source)
         self.assertIn("Регулярные задачи", source)
+        self.assertIn("Что работает в фоне", source)
         self.assertIn("X-Extella-Control", source)
         self.assertIn("Очистить выполненные", source)
         self.assertIn("Убрать запись из ленты", source)
