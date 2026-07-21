@@ -36,7 +36,10 @@
     '#_xtlac_clear{display:none;margin-left:auto;border:1px solid var(--etb-bd2,rgba(255,255,255,.13));border-radius:7px;background:transparent;color:var(--etb-tx2,#888);padding:5px 8px;font:600 9.5px/1 -apple-system,system-ui,sans-serif;cursor:pointer}',
     '#_xtlac_clear.show{display:block}',
     '#_xtlac_clear:hover{color:var(--etb-tx,#f0f0f0)}',
-    '#_xtlac_close{border:0;background:transparent;color:var(--etb-tx2,#888);font-size:18px;cursor:pointer}',
+    '#_xtlac_head{display:flex;align-items:center;gap:10px}',
+    '#_xtlac_head h3{margin-right:auto}',
+    '#_xtlac_close{border:0;background:transparent;color:var(--etb-tx2,#888);font-size:17px;line-height:1;cursor:pointer;padding:6px 9px;border-radius:5px}',
+    '#_xtlac_close:hover{background:rgba(0,0,0,.06);color:var(--etb-tx,#222)}',
     '#_xtlac_warning{display:none;margin:10px 12px 0;padding:9px 10px;border-radius:6px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);color:#f59e0b;font-size:11px;line-height:1.45}',
     '#_xtlac_warning.show{display:block}',
     '#_xtlac_body{overflow:auto;padding:10px 12px 14px;scrollbar-width:thin}',
@@ -669,6 +672,8 @@
     section(body, T('Сейчас','Now'), data.active);
     section(body, T('Выполнено','Done'), data.history.slice(0, 15));
     if (!data.active.length && !data.history.length) {
+      var _h3=document.querySelector('#_xtlac_head h3'); if(_h3)_h3.textContent=T('Что делает Extella','What Extella is doing');
+      var _clr=document.getElementById('_xtlac_clear'); if(_clr)_clr.textContent=T('Очистить выполненные','Clear completed');
       body.appendChild(el('div', { id: '_xtlac_empty' }, T('Пока пусто. Когда Extella что-то делает — ставит программу, запускает процесс, проверяет данные, — здесь видна каждая задача и её статус.','Quiet for now. When Extella is doing something — installing a program, running a process, checking data — every task and its status shows up here.')));
     }
   }
