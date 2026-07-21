@@ -6,6 +6,7 @@
   "type": "commonjs",
   "scripts": {
     "build": "node build.js",
+    "build:release": "node build.js --release-artifacts",
     "watch": "node build.js --watch"
   }
 }

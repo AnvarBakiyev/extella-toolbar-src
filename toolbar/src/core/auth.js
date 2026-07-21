@@ -27,13 +27,18 @@ ETB.auth = (function () {
   var _sessionChangeCallbacks = window.__etbSessionCbs;
 
   var API_BASE = 'https://api.extella.ai';
+  // Token bootstrap happens before the account's agents can be listed. The API
+  // currently requires the header syntactically but does not scope token
+  // operations by its value. Keep that protocol placeholder visibly non-real;
+  // all account-scoped runtime calls resolve an actual agent in api.js.
+  var BOOTSTRAP_AGENT_SCOPE = 'agent_XXXXXXXX';
 
   function _userIdHeaders(userId) {
     return {
       'Content-Type': 'application/json',
       'X-User-Id': userId,
       'X-Profile-Id': 'default',
-      'X-Agent-Id': 'agent_extella_default'
+      'X-Agent-Id': BOOTSTRAP_AGENT_SCOPE
     };
   }
 
@@ -157,7 +162,7 @@ ETB.auth = (function () {
         'Content-Type': 'application/json',
         'X-Auth-Token': token,
         'X-Profile-Id': 'default',
-        'X-Agent-Id': 'agent_extella_default'
+        'X-Agent-Id': BOOTSTRAP_AGENT_SCOPE
       },
       body: '{}'
     }).then(function (r) { return r.status; }).catch(function () { return -1; });

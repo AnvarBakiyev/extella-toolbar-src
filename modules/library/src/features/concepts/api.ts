@@ -25,6 +25,7 @@
 import { mbPost } from '@/lib/api';
 import { normalizeConcept, paginate } from '@/lib/normalize';
 import { SEARCH_SIMILARITY_THRESHOLD, SEARCH_RESULT_LIMIT } from '@/lib/constants';
+import { getCurrentAccountFallbackPair } from '@/lib/runtime';
 import type { Concept, TopologyPair } from '@/lib/types';
 import type { ConceptsListResponse, ListConceptsParams } from './schemas';
 
@@ -155,8 +156,7 @@ function buildScopedPairs(
   agentId?: string,
 ): TopologyPair[] {
   if (!pairs.length) {
-    // Fallback to default pair
-    return [{ profile_id: 'default', profile_name: 'Default', agent_id: 'agent_extella_default', agent_name: 'Default agent' }];
+    return getCurrentAccountFallbackPair();
   }
   if (profileId && agentId) {
     const match = pairs.find((p) => p.profile_id === profileId && p.agent_id === agentId);

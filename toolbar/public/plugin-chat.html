@@ -292,9 +292,8 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
   var pluginId = null;
   var apiToken = '';
   var _pendingSend = null; // сообщение, ждущее токена: уйдёт само при подключении
-  // Личный агент вошедшего пользователя; приходит от тулбара вместе с токеном.
-  // Фолбэк — общий платформенный агент (есть у всех аккаунтов).
-  var agentId = 'agent_extella_default';
+  // Current-account agent arrives from the toolbar together with the token.
+  var agentId = '';
   var _mmdSeq = 0;
   var _mmdQueue = [];
   var _mmdReady = false;
@@ -325,7 +324,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
       if (e.data && e.data.type === 'etb_session') {
         if (e.data.token) apiToken = e.data.token;
         if (e.data.agentId) agentId = e.data.agentId;
-        if (apiToken && _pendingSend) {
+        if (apiToken && agentId && _pendingSend) {
           var p = _pendingSend; _pendingSend = null;
           // убрать заметку «Подключаюсь…» и своё же сообщение из очереди,
           // sendMessage добавит их заново — без дублей
@@ -1491,7 +1490,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
     renderMessages();
     document.getElementById('inp').value = '';
     resizeInp();
-    if (!apiToken) {
+    if (!apiToken || !agentId) {
       isTyping = false;
       _pendingSend = { text: text, qa: qa };
       messages.push({ role: 'assistant', note: true, content: T('Подключаюсь к аккаунту Extella… Сообщение отправится само через пару секунд.', 'Connecting to your Extella account… Your message will send automatically in a couple of seconds.') });
@@ -1500,7 +1499,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
       // Честный таймаут: раньше «отправится само» висело вечно, если токен так и не пришёл
       clearTimeout(window._pendTmr);
       window._pendTmr = setTimeout(function () {
-        if (!_pendingSend || apiToken) return;
+        if (!_pendingSend || (apiToken && agentId)) return;
         _pendingSend = null;
         messages.push({ role: 'assistant', note: true, content: T('⚠ Не получилось подключиться к аккаунту. Перезапусти Extella (⌘Q и открой заново) и отправь сообщение ещё раз.', '⚠ Could not connect to your account. Restart Extella (⌘Q and reopen) and send the message again.') });
         renderMessages();

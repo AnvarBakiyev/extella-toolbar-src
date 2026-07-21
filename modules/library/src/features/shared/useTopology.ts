@@ -24,8 +24,9 @@
  *        ∪ (team.profile_id, A) for each team, for each A in team.agent_ids
  *      Disjoint per pair — no deduplication needed beyond natural membership.
  *
- *   5. Fallback: when enumeration returns nothing at all, seed one default pair
- *      (DEFAULT_PROFILE_ID / DEFAULT_AGENT_ID) so the UI works offline.
+ *   5. Fallback: when enumeration returns nothing, seed only the account agent
+ *      supplied by the host. With no host agent, remain empty rather than
+ *      issuing cross-account calls under a fabricated id.
  *
  * Also exports:
  *  - `useTopology()` — the canonical nested topology.
@@ -64,20 +65,24 @@ export interface AgentTopologyData {
 
 /* ─── fallback ──────────────────────────────────────────────────── */
 
+const FALLBACK_AGENTS: RawAgent[] = DEFAULT_AGENT_ID
+  ? [{ agent_id: DEFAULT_AGENT_ID, agent_name: 'Current account agent' }]
+  : [];
+
 const FALLBACK_TOPOLOGY: Topology = {
   profiles: [
     {
       profile_id: DEFAULT_PROFILE_ID,
       profile_name: 'Default',
-      agents: [{ agent_id: DEFAULT_AGENT_ID, agent_name: 'Default agent' }],
+      agents: FALLBACK_AGENTS,
     },
   ],
 };
 
 const FALLBACK_AGENT_TOPOLOGY: AgentTopologyData = {
   teams: [],
-  agents: [{ agent_id: DEFAULT_AGENT_ID, agent_name: 'Default agent' }],
-  agentMap: new Map([[DEFAULT_AGENT_ID, 'Default agent']]),
+  agents: FALLBACK_AGENTS,
+  agentMap: new Map(FALLBACK_AGENTS.map((agent) => [agent.agent_id, agent.agent_name])),
 };
 
 /* ─── defensive field normalization ────────────────────────────── */
@@ -169,8 +174,8 @@ async function fetchCombined(): Promise<{ topology: Topology; raw: AgentTopology
 
   // If the default agent isn't in the list, add it to the map so entity
   // fan-out still works for pre-existing data under that id.
-  if (!agentMap.has(DEFAULT_AGENT_ID)) {
-    agentMap.set(DEFAULT_AGENT_ID, 'Default agent');
+  if (DEFAULT_AGENT_ID && !agentMap.has(DEFAULT_AGENT_ID)) {
+    agentMap.set(DEFAULT_AGENT_ID, 'Current account agent');
   }
 
   // Build the nested topology:
@@ -183,7 +188,7 @@ async function fetchCombined(): Promise<{ topology: Topology; raw: AgentTopology
     agents:
       agents.length > 0
         ? agents
-        : [{ agent_id: DEFAULT_AGENT_ID, agent_name: 'Default agent' }],
+        : FALLBACK_AGENTS,
   };
 
   const teamProfiles = teams.map((team) => ({
@@ -254,8 +259,7 @@ export function useAgentTopology() {
  * profiles[0].agents gives (default, every_agent) naturally. The team profiles
  * list only member agents, giving the team pairs.
  *
- * Empty fallback (no topology at all): single default pair so the UI doesn't
- * go dark before topology resolves.
+ * Empty fallback uses the host-provided current-account agent only.
  */
 export function usePairs(): TopologyPair[] {
   const { data } = useTopology();
@@ -274,14 +278,14 @@ export function usePairs(): TopologyPair[] {
   // AND placeholder didn't fire), still return the default pair so fan-out
   // does not skip all entities.
   if (pairs.length === 0) {
-    return [
+    return DEFAULT_AGENT_ID ? [
       {
         profile_id: DEFAULT_PROFILE_ID,
         profile_name: 'Default',
         agent_id: DEFAULT_AGENT_ID,
-        agent_name: 'Default agent',
+        agent_name: 'Current account agent',
       },
-    ];
+    ] : [];
   }
 
   return pairs;

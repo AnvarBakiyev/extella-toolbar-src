@@ -5,12 +5,12 @@
 
 ETB.api = (function () {
   var BASE = 'https://api.extella.ai';
-  // Агент НЕ зашивается: у каждого пользователя свой. Определяем динамически
-  // из /api/agent/list (правило: платформенный Qwen/alibaba, при нескольких —
-  // с пометкой DEFAULT; иначе первый в списке). Фолбэк — общий платформенный
-  // агент, который есть у всех аккаунтов. Значение X-Agent-Id обязано
-  // присутствовать в заголовках, но сервером не валидируется (проверено).
-  var FALLBACK_AGENT = 'agent_extella_alibaba_default';  // платформенный Qwen (канон: клиентам Qwen, НЕ Claude); доступен любому аккаунту, проверено
+  // The list call happens before an account agent is known. The API requires an
+  // X-Agent-Id header syntactically for that bootstrap request, but does not
+  // scope /api/agent/list by its value. Never use this non-real placeholder for
+  // expert, KV, rule, or agent runs.
+  var BOOTSTRAP_AGENT_SCOPE = 'agent_XXXXXXXX';
+  var _agentResolvePromise = null;
   // Кандидаты ранжируются, а не выбирается один: пометка DEFAULT не гарантирует
   // рабочий ключ (проверено: у DEFAULT-копии ключ может быть битым, 401). Если
   // текущий агент отвечает ошибкой ключа, advanceAgent() переключает на
@@ -28,22 +28,28 @@ ETB.api = (function () {
         else plain.push(id);
       } else rest.push(id);
     }
-    // платформенный Qwen: свежие копии → обычные → помеченные DEFAULT → фолбэк
-    return newer.concat(plain, marked, [FALLBACK_AGENT]);
+    // Prefer account-local Qwen, then any other account-local agent. No
+    // cross-account/global fallback: every returned id came from this token.
+    return newer.concat(plain, marked, rest);
   }
   function _resolveAgent() {
     if (window.__etbAgentId) return Promise.resolve(window.__etbAgentId);
-    return _post('/api/agent/list', {}).then(function (d) {
+    if (_agentResolvePromise) return _agentResolvePromise;
+    _agentResolvePromise = _post('/api/agent/list', {}).then(function (d) {
       var cands = _rankAgents((d && d.agents) || []);
+      if (!cands.length) {
+        throw new Error('No runnable agent exists in the current Extella account');
+      }
       window.__etbAgentCands = cands;
       window.__etbAgentIdx = 0;
-      window.__etbAgentId = cands[0] || FALLBACK_AGENT;
+      window.__etbAgentId = cands[0];
       console.log('[ETB:api] agent resolved: ' + window.__etbAgentId +
         ' (кандидатов: ' + cands.length + ')');
       return window.__etbAgentId;
-    }).catch(function () { return FALLBACK_AGENT; });
+    }).finally(function () { _agentResolvePromise = null; });
+    return _agentResolvePromise;
   }
-  function _agent() { return window.__etbAgentId || FALLBACK_AGENT; }
+  function _agent() { return window.__etbAgentId || ''; }
   // Переключить на следующего кандидата (зовётся при ошибке ключа текущего).
   function _advanceAgent() {
     var cands = window.__etbAgentCands || [];
@@ -54,20 +60,11 @@ ETB.api = (function () {
     console.log('[ETB:api] agent advanced → ' + cands[i]);
     return cands[i];
   }
-  // Agents the user actually chats with. Rules are scoped per (account, agent),
-  // and the desktop chat resolves to a default Qwen agent whose exact id varies
-  // (alibaba default vs the Qwen id). We can't reliably detect which at runtime,
-  // so a Skill installs its rule on BOTH — whichever the chat uses, it's there.
-  // Writing under the user's own token only affects that user's chat.
-  // Портируемость: второй элемент раньше был личным ID с одного устройства
-  // (agent_XwZ…) — у остальных пользователей правило навыка молча не ложилось
-  // на их чат-агента. Теперь второй адресат — динамически определённый агент
-  // аккаунта (_resolveAgent), дедуп на случай совпадения ниже по месту записи.
-  var CHAT_AGENTS = ['agent_extella_alibaba_default'];
+  // Rules are scoped per (account, agent). Target only the agent resolved from
+  // the current account; never mirror rules into a hard-coded global scope.
   function _chatAgents() {
-    var out = CHAT_AGENTS.slice();
-    try { var a = _agent(); if (a && out.indexOf(a) < 0) out.push(a); } catch (e) {}
-    return out;
+    var a = _agent();
+    return a ? [a] : [];
   }
 
   // ── Install agent override ──────────────────────────────────────────────
@@ -107,15 +104,25 @@ ETB.api = (function () {
   }
 
   function _hdrs() {
+    var agent = _agent() || BOOTSTRAP_AGENT_SCOPE;
     return {
       'Content-Type': 'application/json',
       'X-Auth-Token': ETB.auth.getToken(),
       'X-Profile-Id': 'default',
-      'X-Agent-Id': _agent()
+      'X-Agent-Id': agent
     };
   }
 
   function _post(path, body, extraHdrs, _retried) {
+    // Apart from the list request itself, no account-scoped operation may run
+    // against the bootstrap placeholder. Resolve once and retry transparently.
+    if (!_agent() && path !== '/api/agent/list') {
+      return _resolveAgent().then(function () {
+        return _post(path, body, extraHdrs, _retried);
+      }).catch(function (e) {
+        return { status: 'error', message: e && e.message ? e.message : 'Unable to resolve current account agent' };
+      });
+    }
     // Таймаут: зависшая платформа раньше вешала всё, что не идёт через skBridge
     // (у того свои 20с). 90с — с запасом на длинные агентные ответы.
     var ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
@@ -491,7 +498,7 @@ ETB.api = (function () {
     },
 
     // Текущий агент пользователя (динамический) и его принудительное
-    // определение. currentAgent() до резолва отдаёт платформенный фолбэк.
+    // определение. currentAgent() до резолва возвращает пустую строку.
     currentAgent: _agent,
     resolveAgent: _resolveAgent,
     advanceAgent: _advanceAgent,
@@ -511,9 +518,9 @@ ETB.api = (function () {
       })).then(function (refs) { return refs.filter(Boolean); });
     },
     // Remove by the refs returned from rulesAdd (array of {agent, ruleId}).
-    // Back-compat: a bare ruleId removes from the first candidate.
+    // Back-compat: a bare ruleId removes from the current account agent.
     rulesRemove: function (refs) {
-      if (!Array.isArray(refs)) refs = [{ agent: CHAT_AGENTS[0], ruleId: refs }];
+      if (!Array.isArray(refs)) refs = [{ agent: _agent(), ruleId: refs }];
       return Promise.all(refs.map(function (ref) {
         if (!ref || ref.ruleId == null) return Promise.resolve();
         return _post('/api/rules/remove', { rule_id: ref.ruleId }, { 'X-Agent-Id': ref.agent })
@@ -521,7 +528,7 @@ ETB.api = (function () {
       }));
     },
     rulesList: function () {
-      return _post('/api/rules/list', {}, { 'X-Agent-Id': CHAT_AGENTS[0] });
+      return _post('/api/rules/list', {});
     },
 
     // Существует ли эксперт (глобальный скоуп). Пост-проверка установщика:
@@ -551,5 +558,10 @@ ETB.api = (function () {
 })();
 
 // Определить агента, как только появился токен; при смене аккаунта — заново.
-ETB.auth.onToken(function () { ETB.api.resolveAgent(); });
-ETB.auth.onSessionChange(function () { window.__etbAgentId = null; if (ETB.auth.getToken()) ETB.api.resolveAgent(); });
+ETB.auth.onToken(function () { ETB.api.resolveAgent().catch(function () {}); });
+ETB.auth.onSessionChange(function () {
+  window.__etbAgentId = null;
+  window.__etbAgentCands = [];
+  window.__etbAgentIdx = 0;
+  if (ETB.auth.getToken()) ETB.api.resolveAgent().catch(function () {});
+});

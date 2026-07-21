@@ -25,6 +25,7 @@ const PUBLIC  = path.join(ROOT, 'public');
 const OUT     = path.join(ROOT, 'build');
 const DESKTOP_LOADER = path.join(ROOT, 'assets', 'desktop-loader.webm');
 const BRAND_LOGO = path.join(ROOT, 'assets', 'extella-x.png');
+const RELEASE_ARTIFACTS = process.argv.slice(2).includes('--release-artifacts');
 
 // ── Module load order ──────────────────────────────────────────────────────
 // Files are concatenated in this exact order inside the IIFE.
@@ -333,12 +334,20 @@ function build() {
   const plugins = loadPlugins();
 
   console.log('\n📦 Writing output files:');
-  writeFile(path.join(OUT, 'toolbar.js'), buildToolbar(plugins));
+  const toolbarArtifact = buildToolbar(plugins);
+  writeFile(path.join(OUT, 'toolbar.js'), toolbarArtifact);
   writeFile(path.join(OUT, 'plugins_manager.html'), buildMarketplace(plugins));
   writeFile(path.join(OUT, 'plugin-chat.html'), buildChat(plugins));
   writeFile(path.join(OUT, 'plugin-form.html'), buildForm(plugins));
 
   writeFile(path.join(ROOT, 'dist_plugins_manager.html'), buildMarketplace(plugins));
+
+  // Checked-in distribution copies are updated only by an explicit release
+  // build, so source edits cannot silently diverge from the Node-free handoff.
+  if (RELEASE_ARTIFACTS) {
+    writeFile(path.join(ROOT, 'toolbar.js'), toolbarArtifact);
+    writeFile(path.join(ROOT, '..', 'HANDOFF', 'toolbar.js'), toolbarArtifact);
+  }
 
   // Страж синтаксиса: одна битая запятая в инлайн-скрипте = белый экран витрины
   // у всех пользователей. Компилируем каждый <script> собранных страниц —
