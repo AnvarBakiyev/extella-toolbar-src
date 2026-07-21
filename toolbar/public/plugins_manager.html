@@ -4501,6 +4501,13 @@ function autoCardHTML(p, i){
 
 function renderAutomations() {
   var g = document.getElementById('grid'); if (!g) return;
+  // Мост: в Конструкторе живут ВСЕ сборки устройства (и неопубликованные) — честно
+  // показываем их количество, чтобы «Автоматизации» не выглядели неполными.
+  _mkbFetch('/x/automations',{},4000).then(function(d){
+    var n=(d&&d.automations&&d.automations.length)||0; if(!n) return;
+    var g2=document.getElementById('grid'); if(!g2||cur!=='automations'||document.getElementById('wzAutoLink')) return;
+    g2.insertAdjacentHTML('beforeend','<div id="wzAutoLink" class="sk_lead" style="grid-column:1/-1;font-size:12px;color:var(--tx3)">В Конструкторе собрано процессов: '+n+' — управление, расписание и прогоны там. <a href="#" onclick="_openWizard();return false" style="color:var(--a)">Открыть Конструктор</a></div>');
+  }).catch(function(){});
   if (_autoReg === null) {
     _ensureAuto();
     g.innerHTML = _loadingHTML(_t('autoLoad'));

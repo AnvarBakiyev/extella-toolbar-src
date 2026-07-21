@@ -267,7 +267,7 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
   <h1>Опиши задачу — получи работающий процесс</h1>
   <div style="max-width:660px">
     <div style="font-size:14px;color:var(--silver,#889);line-height:1.55;margin:10px 0 16px">Мастер расспросит о задаче и построит процесс: откуда брать данные, по какому расписанию, кому слать готовый отчёт. Час разговора — и дальше процесс работает без тебя.</div>
-    <button class="btn gold" style="padding:12px 22px;font-size:15px" onclick="setMode('wizard');newSession()">Пройти интервью с Мастером →</button>
+    <button class="btn gold" style="padding:12px 22px;font-size:15px" onclick="agentGate().then(()=>{setMode('wizard');newSession();})">Пройти интервью с Мастером →</button>
     <div style="display:flex;flex-wrap:wrap;gap:6px;margin:16px 0 4px">
       <span class="chip-ex" onclick="buildProcessFromTask(this.textContent)">дебиторка 28 филиалов каждый понедельник директору</span>
       <span class="chip-ex" onclick="buildProcessFromTask(this.textContent)">отвечать клиентам в Telegram 24/7</span>
@@ -276,7 +276,6 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
     <div style="margin-top:20px;padding-top:14px;border-top:1px solid var(--cream-dark,#e7e2d8);font-size:13px;color:var(--silver,#889)">
       Нужно разовое дело, а не постоянный процесс? Открой <a href="#" onclick="openCompStudio();return false" style="color:var(--gold,#a97e35);font-weight:600;text-decoration:none">🧩 Композитор</a> — соберёт из готовых блоков за минуту.
     </div>
-    <div style="margin-top:10px"><a href="#" onclick="goalLoop();return false" style="color:var(--silver,#889);font-size:12.5px;text-decoration:none">🔁 Контур (эксперимент): поставь цель — процесс дойдёт до неё по шагам →</a></div>
   </div>
 </div>
 
@@ -6097,10 +6096,9 @@ function setStatus(id, html){ el(id).innerHTML = html; }
   // Мастер (интервью-чат) — только когда работаем над сессией в Мастере;
   // на экране «Создать» он не к месту (там свой вход) — не открываем.
   if(deep && !el("chat").classList.contains("open")) toggleChat();
-  // Шаг 1 — агент. Ставим ПОСЛЕДНИМ в загрузке: экран уже отрисован, и окно выбора
-  // ложится поверх готового интерфейса, а не задерживает его показ. Если агент выбран
-  // и отвечает — окно не появится вовсе.
-  try{ await agentGate(); }catch(e){}
+  // Гейт агента при входе УБРАН (решение Эллы 21.07): человек сначала свободно
+  // смотрит экран, а «Шаг 1: выбери агента» появляется при первом действии —
+  // клике «Пройти интервью» / чипе примера / открытии чата (agentGate зовут они).
 })();
 </script>
 </body>
