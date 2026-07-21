@@ -142,34 +142,6 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);
   letter-spacing:.02em;text-transform:none;color:var(--a);
   border:1px solid rgba(var(--ar),.4);border-radius:5px;padding:2px 6px}
 
-/* ── Merch hero: the story slot, fed from the cloud (_mkt_merch) ──────── */
-.mhero{grid-column:1/-1;position:relative;overflow:hidden;border:1px solid var(--bd);
-  border-radius:var(--r);padding:16px 22px;
-  background:linear-gradient(157deg,
-    color-mix(in srgb, var(--acc,var(--a)) 12%, var(--s2)) 0%,
-    var(--s2) 62%);
-  display:flex;flex-direction:column;gap:9px;animation:fiu .18s ease both}
-.mhero::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;
-  background:var(--acc,var(--a))}
-.mh_promo{align-self:flex-start;font:700 9.5px var(--mono);letter-spacing:.01em;
-  color:#fff;background:var(--a);border-radius:5px;padding:3px 9px;text-transform:none}
-.mh_src{font:600 10.5px var(--mono);letter-spacing:.01em;color:var(--tx2);text-transform:none}
-.mh_title{font:600 20px/1.22 var(--serif);color:var(--tx);max-width:34ch;letter-spacing:0}
-.mh_title i{font-style:normal;color:inherit}
-.mh_facts{list-style:none;display:flex;flex-direction:column;gap:4px;margin:2px 0;padding:0}
-.mh_facts li{font-size:13.5px;font-weight:500;color:var(--tx);opacity:.85;line-height:1.45;
-  padding-left:20px;position:relative}
-.mh_facts li::before{content:"→";position:absolute;left:0;color:var(--a);font-weight:700}
-.mh_row{display:flex;align-items:center;gap:14px;margin-top:4px}
-
-/* ── Hero carousel: rotating banners (heroes[]) ───────────────────────── */
-.mhero-car{grid-column:1/-1;position:relative}
-.mhero-car .mhslide{display:none}
-.mhero-car .mhslide.on{display:block}
-.mhdots{display:flex;gap:6px;justify-content:center;margin-top:11px}
-.mhdot{width:7px;height:7px;padding:0;border:none;border-radius:50%;background:var(--bd2);
-  cursor:pointer;transition:width .2s,background .2s}
-.mhdot.on{background:var(--a);width:18px;border-radius:5px}
 
 /* ── "Выбор Extella": the living tile shelf (shelf[]) ───────────────── */
 .mshelf{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(232px,1fr));gap:14px}
@@ -184,34 +156,6 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);
 [data-lm] .stile:hover{box-shadow:none}
 .st_chip{align-self:flex-start;font:600 8px var(--mono);letter-spacing:.01em;color:var(--tx3);text-transform:none}
 .st_top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
-.home_intro{grid-column:1/-1;text-align:center;max-width:640px;margin:0 auto;padding:6px 0 16px}
-.hi_eye{font:700 10px var(--mono);letter-spacing:.01em;color:var(--a);text-transform:none;margin-bottom:12px}
-.hi_h{font:600 27px/1.04 var(--serif);color:var(--tx);letter-spacing:-.01em;margin:0 0 7px;text-wrap:balance}
-.hi_sub{font-size:13.5px;line-height:1.5;color:var(--tx2);margin:0 auto 14px;max-width:560px}
-.hi_prompt{display:flex;align-items:center;gap:10px;width:100%;max-width:560px;margin:0 auto;
-  background:var(--s2);border:1px solid var(--bd2);border-radius:5px;padding:8px 8px 8px 18px;
-  transition:border-color .14s,box-shadow .14s}
-.hi_prompt:focus-within{border-color:var(--a);box-shadow:none}
-.hi_prompt_ic{font-size:14px;opacity:.75;flex-shrink:0}
-.hi_inp{flex:1;min-width:0;background:transparent;border:none;outline:none;font-size:14px;color:var(--tx)}
-.hi_inp::placeholder{color:var(--tx3)}
-.hi_go{background:var(--a);color:#fff;border:none;border-radius:5px;font-size:13px;font-weight:700;
-  padding:10px 18px;cursor:pointer;flex-shrink:0}
-.hi_go:hover{opacity:.9}
-.hi_chips{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:16px}
-.hi_chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);border-radius:5px;
-  --lico-sz:15px;
-  padding:7px 15px;font-size:13px;font-weight:600;cursor:pointer;transition:border-color .14s,color .14s,transform .14s}
-.hi_chip:hover{border-color:var(--a);color:var(--a);transform:translateY(-1px)}
-.hi_chip .lico{width:15px;height:15px}
-.hi_exlbl{font:600 12px var(--sans);color:var(--tx3);margin:14px 0 8px}
-.hi_ex{display:flex;flex-wrap:wrap;justify-content:center;gap:7px}
-.hi_ex_card{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--bd);background:var(--s1);color:var(--tx);
-  border-radius:var(--r);padding:7px 10px;cursor:pointer;font:600 12px var(--sans);white-space:nowrap;
-  transition:border-color .12s,color .12s,transform .12s}
-.hi_ex_card:hover{border-color:var(--a);color:var(--a);transform:translateY(-1px)}
-.hi_ex_card .lico{width:16px;height:16px;color:var(--tx3);flex-shrink:0}
-.hi_ex_card:hover .lico{color:var(--a)}
 .catbar{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:flex-start;gap:8px;padding:0 0 14px}
 .adm_seg{display:flex;background:var(--s2);border:1px solid var(--bd);border-radius:5px;padding:2px;gap:2px}
 .adm_seg button{border:none;background:transparent;color:var(--tx2);font:600 12.5px var(--sans);padding:6px 13px;border-radius:4px;cursor:pointer}
@@ -252,9 +196,8 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);
 .st_btn:hover{transform:translateY(-1px)}
 .stile.catalog_added{border-color:var(--a);box-shadow:0 0 0 3px rgba(var(--ar),.16);animation:catalogAdded 1.1s ease 2}
 @keyframes catalogAdded{50%{transform:translateY(-2px);box-shadow:0 0 0 5px rgba(var(--ar),.2)}}
-.st_btn,.cbtn,.cget,.hi_go,.mci_btn{border-radius:5px}
-.st_btn:hover,.cbtn:hover,.cget:hover,.hi_go:hover{background:var(--petrol);opacity:1}
-.mci_btn:hover{background:var(--petrol);border-color:var(--petrol);color:#fff}
+.st_btn,.cbtn,.cget{border-radius:5px}
+.st_btn:hover,.cbtn:hover,.cget:hover{background:var(--petrol);opacity:1}
 .cat_back{grid-column:1/-1;padding:0 0 2px}
 .cb_btn{border:none;background:transparent;color:var(--tx2);font:600 13px var(--sans);cursor:pointer;padding:4px 0}
 .cb_btn:hover{color:var(--a)}
@@ -355,22 +298,6 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);
 .ap_load{padding:14px 13px;font-size:13px;color:var(--tx3)}
 .apick_foot{padding:10px 16px 14px;display:flex;justify-content:flex-end;border-top:1px solid var(--bd)}
 
-/* ── Merch collections: editorial banner cards, cloud-managed ─────────── */
-.mcoll{position:relative;overflow:hidden;border:1px solid var(--bd);border-radius:var(--r);
-  background:var(--s2);padding:16px;display:flex;flex-direction:column;gap:8px;animation:fiu .18s ease both}
-.mcoll::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;
-  background:var(--acc,var(--a))}
-.mc_eye{font:600 8.5px var(--mono);letter-spacing:.02em;color:var(--a);text-transform:none;opacity:.9}
-.mc_title{font:600 19px/1.25 var(--serif);color:var(--tx)}
-.mc_desc{font-size:12.5px;font-weight:500;color:var(--tx);opacity:.75;line-height:1.45}
-.mc_items{display:flex;flex-direction:column;margin-top:2px}
-.mci{display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--bd)}
-.mci_nm{flex:1;font-size:12.5px;font-weight:650;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mci_ic{display:inline-flex;vertical-align:-3px;margin-right:7px;color:var(--acc,var(--a))}
-.mci_ic .lico{width:14px;height:14px}
-.mci_btn{border:1px solid rgba(var(--ar),.5);border-radius:5px;background:transparent;color:var(--a);
-  font:700 11px -apple-system,sans-serif;padding:4px 12px;cursor:pointer;flex-shrink:0}
-.mci_btn:hover{background:var(--a);color:#fff}
 /* промо-ярлык на карточке каталога (слот из облачной выкладки) */
 .rc_promochip{font:700 8.5px var(--mono);letter-spacing:.02em;color:#fff;
   background:var(--a);border-radius:5px;padding:2.5px 7px;text-transform:none;flex-shrink:0}
@@ -1530,10 +1457,9 @@ function syncHFFilterBar() {
 // ── Grid dispatcher ───────────────────────────────────────────────────────
 function renderGrid() {
   var _cb = document.querySelector('.cmdbar');
-  if (_cb) _cb.style.display = (cur === 'home' || cur === 'desktop') ? 'none' : 'flex';
+  if (_cb) _cb.style.display = (cur === 'desktop') ? 'none' : 'flex';
   _ensureLoc();   // слой переводов (_mkt_loc) — грузится один раз, перерисовывает вкладку сам
   if (cur === 'desktop') renderDesktop();
-  else if (cur === 'home') renderHome();
   else if (cur === 'programs') renderPrograms();
   else if (cur === 'apps') renderApps();
   else if (cur === 'models') renderModels();
@@ -1546,7 +1472,7 @@ function renderGrid() {
   else if (cur === 'automations') renderAutomations();
   else if (cur === 'mine') renderInstalled();
   else if (cur === 'admin') renderAdmin();
-  else renderHome();
+  else renderDesktop();
   if (LANG === 'en') applyLang();
 }
 
@@ -1594,7 +1520,7 @@ function _lm(m, field){ if(LANG==='en' && m && m.en && m.en[field]!=null) return
 try { if (localStorage.getItem('etb_lang') === 'en') LANG = 'en'; } catch (_) {}
 var I18N_EN = {
   // Вкладки
-  'Рабочий стол':'Desktop','Витрина':'Storefront','Программы':'Programs','Модели':'Models',
+  'Рабочий стол':'Desktop','Программы':'Programs','Модели':'Models',
   'Навыки':'Skills','Инструменты':'Tools','Знания':'Knowledge','Агенты':'Agents','Сервисы':'Services','Каталог':'Catalog','Профи':'Pro','История':'History','Автозапуск':'Auto-run',
   'На Рабочий стол':'Back to Desktop',
   'Мини-программы Extella и приложения с GitHub: берёшь с полки — живут у тебя на компьютере.':'Extella mini-programs and apps from GitHub: pick one from the shelf — it lives on your computer.',
@@ -2128,7 +2054,6 @@ var I18N_EN = {
   'в работе':'in progress',
   'Скоро':'Soon',
   'локально · офлайн':'local · offline',
-  'Стоит поставить':'Worth installing',
   'Хит недели':'Pick of the week',
   'Рецепты из продуктов, которые уже дома':'Recipes from what\'s already at home',
   'Напиши, что есть дома, получи варианты ужина':'List what\'s in the fridge — get dinner options',
@@ -2590,61 +2515,6 @@ function _renderModelsCore() {
   _mountTabFilter('Поиск модели…');
 }
 
-// Витрина, editorial cross-type front (bento hero + свежак + подборки).
-function hiGo() {
-  var i = document.getElementById('hi_inp');
-  var v = i ? i.value.trim() : '';
-  if (!v) { notify('github_add'); return; }
-  var isLink = /^https?:\/\//i.test(v) || /^[\w.-]+\.[a-z]{2,}\//i.test(v);
-  if (isLink) { notify('github_add_url', '', v); }
-  else {
-    openAddModal('programs');
-    setTimeout(function(){ var t = document.getElementById('add_txt'); if (t) { t.value = v; } }, 60);
-  }
-  i.value = '';
-}
-function goCat(k) {
-  _featCat = k;
-  setc('programs');
-}
-// Примеры-подсказки: показывают ширину каталога (агент · программа · модель ·
-// сервис · инструмент). Клик ведёт туда, где это живёт: что есть — в раздел,
-// чего нет — в Композитора, который соберёт.
-function hiEx(action, arg) {
-  if (action === 'tab') { setc(arg); return; }
-  if (action === 'find') {
-    openAddModal('programs');
-    setTimeout(function(){ var t = document.getElementById('add_txt'); if (t) { t.value = arg; } }, 60);
-  }
-}
-function renderHomeIntro() {
-  var ex = [
-    { t:'Агент поддержки',   ic:'chat', a:'tab',  v:'agents' },
-    { t:'Отчёт по продажам', ic:'data', a:'find', v:'отчёт по продажам из выгрузки' },
-    { t:'Qwen3 локально',    ic:'tech', a:'tab',  v:'models' },
-    { t:'Подключить Stripe', ic:'money',a:'find', v:'подключить приём платежей Stripe' },
-    { t:'Удаление фона',     ic:'box',  a:'find', v:'удаление фона с фото' }
-  ].map(function(e){
-    return '<button class="hi_ex_card" onclick="hiEx(\'' + e.a + '\',\'' + esc(e.v) + '\')">' +
-      '<svg class="lico"><use href="#ic-' + e.ic + '"/></svg>' + esc(e.t) + '</button>';
-  }).join('');
-  return '<div class="home_intro">' +
-    '<h1 class="hi_h">Что тебе нужно?</h1>' +
-    '<p class="hi_sub">Опиши задачу своими словами — Extella найдёт готовое решение или&nbsp;соберёт новое. Репозитории GitHub, модели Hugging Face и&nbsp;навыки можно добавить по&nbsp;ссылке.</p>' +
-    '<div class="hi_prompt">' +
-      '<span class="hi_prompt_ic" aria-hidden="true">🔍</span>' +
-      '<input id="hi_inp" class="hi_inp" placeholder="Опиши задачу или вставь ссылку" spellcheck="false" autocomplete="off" onkeydown="if(event.key===\'Enter\')hiGo()">' +
-      '<button class="hi_go" onclick="hiGo()">Продолжить</button></div>' +
-    '<div class="hi_exlbl">Попробуй, например:</div>' +
-    '<div class="hi_ex">' + ex + '</div>' +
-  '</div>';
-}
-function renderHome() {
-  var g = document.getElementById('grid'); if (!g) return;
-  var html = renderHomeIntro() + renderMerchHero() + renderMerchShelf() + renderMerchCollections();
-  if (!html) html = '<div class="sk_lead" style="padding:34px 0">Витрина наполняется. Загляни на «Программы», «Модели» или «Навыки».</div>';
-  g.innerHTML = html;
-}
 
 // ── Featured (curated, bundled at build time) ─────────────────────────────
 var installingIds = {};  // pluginId -> true while provisioning
@@ -2870,26 +2740,6 @@ function _toggleOther() {
 }
 
 // ── Discover (Featured on top + GitHub results under "Other") ─────────────
-// ── Merch hero: story-of-the-week slot, re-merchandised from the cloud ──
-// Payload arrives via postMessage {type:'etb_merch'} from the toolbar
-// (which reads KV '_mkt_merch'), so the storefront changes without releases.
-function _heroInner(h) {
-  var facts = (h.facts || []).slice(0, 4).map(function (f) {
-    return '<li>' + esc(f) + '</li>';
-  }).join('');
-  var btn = h.repoUrl
-    ? '<button class="rc_btn" onclick="installRepo(\'' + esc(h.repoUrl) + '\',this)">+ Install</button>'
-    : '';
-  return '<div class="mhero" style="--acc:' + esc(h.acc || '#C57E33') + '">' +
-    '<span class="mh_promo">' + esc(h.label || 'Trending this week') + '</span>' +
-    (h.source ? '<div class="mh_src">' + esc(h.source) + '</div>' : '') +
-    '<div class="mh_title">' + esc(h.title || '') + (h.accent ? '<i class="acc_sub">' + esc(h.accent) + '</i>' : '') + '</div>' +
-    (facts ? '<ul class="mh_facts">' + facts + '</ul>' : '') +
-    '<div class="mh_row">' + btn +
-      (h.stats ? '<span class="rc_info">' + esc(h.stats) + '</span>' : '') +
-    '</div>' +
-  '</div>';
-}
 
 // One install button for any editorial card, routes by kind: skill → agent
 // picker, HF model → HF installer, else a repo URL.
@@ -3260,121 +3110,6 @@ function _heroMini(h) {
       (desc ? '<div class="mini_desc">' + esc(desc) + '</div>' : '') +
       '<div class="mini_foot">' + (h.stats ? '<span class="cstat">' + esc(h.stats) + '</span>' : '<span></span>') + btn + '</div>' +
     '</div></div>';
-}
-// Витрина по умолчанию: живёт в папке, облачная выкладка (_mkt_merch) её перекрывает.
-var DEFAULT_MERCH = {
-  heroes: [
-    { label:'Хит недели', acc:'#C57E33', source:'Программа · Работа', pluginId:'legal-simplifier',
-      title:'Юрист на минималках', accent:'договор простым языком',
-      facts:['Вставь договор, получишь понятное объяснение','Отметит риски и скрытые условия','Работает прямо в чате'] },
-    { label:'Работа', acc:'#2F6E7E', source:'Программа · Работа', pluginId:'meeting-notes',
-      title:'Итоги встречи', accent:'Запись созвона превращается в список задач',
-      facts:['Кто делает, что и к какому сроку'] },
-    { label:'Для жизни', acc:'#3D8078', source:'Программа · Жизнь', pluginId:'recipe-suggester',
-      title:'Что приготовить', accent:'Рецепты из продуктов, которые уже дома',
-      facts:['Напиши, что есть дома, получи варианты ужина'] }
-  ],
-  shelf: [
-    { label:'Деньги', acc:'#2F6E7E', pluginId:'budget-advisor', title:'Личный бюджет', facts:['Куда уходят деньги, спокойно и без укоров'] },
-    { label:'Работа', acc:'#C57E33', pluginId:'brainstorm', title:'Мозговой штурм', facts:['Накидает идей, пока кофе не остыл'] },
-    { label:'Жизнь', acc:'#3D8078', pluginId:'fitness-coach', title:'Фитнес-план', facts:['Тренировки под твой уровень, без фанатизма'] },
-    { label:'Жизнь', acc:'#3D8078', pluginId:'travel-planner', title:'План поездки', facts:['Маршрут и список вещей, ничего не забыть'] },
-    { label:'Работа', acc:'#C57E33', pluginId:'marketing-copy', title:'Тексты для рекламы', facts:['Заголовки, которые не стыдно показать клиенту'] },
-    { label:'Работа', acc:'#C57E33', pluginId:'resume-builder', title:'Резюме под вакансию', facts:['Усилит так, что дочитают до конца'] }
-  ],
-  collections: [
-    { eyebrow:'Для работы', title:'Рабочий набор', desc:'Письма, встречи, резюме — и день короче', acc:'#C57E33',
-      items:[{id:'email-composer'},{id:'meeting-notes'},{id:'resume-builder'}] },
-    { eyebrow:'Для специалистов', title:'Бухгалтеру', desc:'Налоги, курсы и зарплата — каждый день', acc:'#2F6E7E',
-      items:[{id:'sales-tax'},{id:'net-pay'},{id:'exchange-historical'}] },
-    { eyebrow:'Для жизни', title:'На каждый день', desc:'Мелочи, которые выручают', acc:'#3D8078',
-      items:[{id:'recipe-suggester'},{id:'weather-lookup'},{id:'fitness-coach'}] }
-  ]
-};
-function _merchData() { return window._merch || DEFAULT_MERCH; }
-function renderMerchHero() {
-  var m = _merchData();
-  if (!m) return '';
-  var heroes = (m.heroes && m.heroes.length) ? m.heroes : (m.hero ? [m.hero] : []);
-  if (!heroes.length) return '';
-  var html = '<div class="sect"><h2>Стоит поставить</h2></div>' +
-    '<div class="bento' + (heroes.length === 1 ? ' bento_solo' : '') + '">' + _heroBig(heroes[0]);
-  heroes.slice(1, 3).forEach(function (h) { html += _heroMini(h); });
-  html += '</div>';
-  return html;
-}
-
-// Show slide idx; toggles slide + dot. Called by dots and the auto-rotate
-// timer. Reads the carousel fresh from the DOM so it survives grid re-renders.
-function setHeroSlide(idx) {
-  var car = document.getElementById('mhero_car');
-  if (!car) return;
-  var slides = car.querySelectorAll('.mhslide');
-  var dots = car.querySelectorAll('.mhdot');
-  if (!slides.length) return;
-  idx = ((idx % slides.length) + slides.length) % slides.length;
-  for (var i = 0; i < slides.length; i++) slides[i].classList.toggle('on', i === idx);
-  for (var j = 0; j < dots.length; j++) dots[j].classList.toggle('on', j === idx);
-  car.dataset.idx = idx;
-}
-
-// Living tile shelf: every approved-but-not-hero card, kept forever. This is
-// where great finds accumulate so nothing is ever lost when new merch lands.
-function renderMerchShelf() {
-  var m = _merchData();
-  if (!m || !m.shelf || !m.shelf.length) return '';
-  var tiles = m.shelf.map(function (h, i) {
-    var fact = (h.facts && h.facts[0]) ? '<div class="st_fact">' + esc(h.facts[0]) + '</div>' : '';
-    var btn = _cardBtn(h, 'st_btn');
-    var mico = h.icon || (h.pluginId && (CURATED_PROGRAMS[h.pluginId] || {}).icon) || '';
-    return '<div class="stile" style="--acc:' + esc(h.acc || '#C57E33') + ';animation-delay:' + Math.min(i * 30, 240) + 'ms">' +
-      '<div class="st_top">' +
-        '<span class="st_ico" aria-hidden="true">' + _ico(_cardCat(h)) + '</span>' +
-        '<span class="st_chip">' + esc(h.label || 'Выбор Extella') + '</span>' +
-      '</div>' +
-      '<div class="st_title">' + esc(h.title || '') + (h.accent ? '<i class="acc_sub">' + esc(h.accent) + '</i>' : '') + '</div>' +
-      fact +
-      (h.source ? '<div class="st_src">' + esc(h.source) + '</div>' : '') +
-      '<div class="st_foot">' + btn + '</div>' +
-    '</div>';
-  }).join('');
-  return '<div class="sect"><h2>Выбор Extella</h2></div>' +
-    '<div class="mshelf">' + tiles + '</div>';
-}
-
-// Collections: banner cards with up to 3 inline items each. Items reference
-// featured plugins by id or external repos by URL, both install in place.
-function renderMerchCollections() {
-  var m = _merchData();
-  if (!m || !m.collections || !m.collections.length) return '';
-  var inst = gi();
-  return m.collections.slice(0, 3).map(function (c, ci) {
-    var items = (c.items || []).slice(0, 3).map(function (it) {
-      var nm = '', act = '';
-      if (it.id) {
-        var p = null;
-        for (var i = 0; i < BUILTIN_PLUGINS_DATA.length; i++) {
-          if (BUILTIN_PLUGINS_DATA[i].id === it.id) { p = BUILTIN_PLUGINS_DATA[i]; break; }
-        }
-        if (!p) return '';
-        var cur = CURATED_PROGRAMS[it.id] || {};
-        nm = '<span class="mci_ic">' + _ico(cur.biz || normalizeCategory(p)) + '</span>' + esc(cur.name || p.name);
-        act = inst.indexOf(it.id) >= 0
-          ? '<button class="mci_btn" onclick="notify(\'open\',\'' + esc(it.id) + '\')">Открыть</button>'
-          : '<button class="mci_btn" onclick="installFeatured(\'' + esc(it.id) + '\',this)">+ Поставить</button>';
-      } else if (it.repoUrl) {
-        nm = esc(it.name || it.repoUrl.split('/').slice(-1)[0]);
-        act = '<button class="mci_btn" onclick="installRepo(\'' + esc(it.repoUrl) + '\',this)">+ Поставить</button>';
-      } else { return ''; }
-      return '<div class="mci"><span class="mci_nm">' + nm + '</span>' + act + '</div>';
-    }).join('');
-    return '<div class="mcoll" style="--acc:' + esc(c.acc || '#C57E33') + ';animation-delay:' + (ci * 40) + 'ms">' +
-      (c.eyebrow ? '<div class="mc_eye">' + esc(c.eyebrow) + '</div>' : '') +
-      '<div class="mc_title">' + esc(c.title || '') + '</div>' +
-      (c.desc ? '<div class="mc_desc">' + esc(c.desc) + '</div>' : '') +
-      '<div class="mc_items">' + items + '</div>' +
-    '</div>';
-  }).join('');
 }
 
 // Программы-спотлайт: живой каталог (KV _mkt_programs) поверх честного фолбэка
@@ -4982,7 +4717,7 @@ window.addEventListener('message', function(e) {
   if (!e.data) return;
   if (e.data.type === 'etb_merch') {
     window._merch = e.data.data || null;
-    if (cur === 'home') renderGrid();
+    if (cur === 'programs') renderPrograms();
   } else if (e.data.type === 'etb_reload_plugins') {
     renderGrid();
     rtabs();
@@ -5000,17 +4735,6 @@ window.addEventListener('message', function(e) {
   }
 });
 
-// Auto-rotate the hero carousel. One global timer that re-reads the carousel
-// from the DOM each tick, so it keeps working across the grid's innerHTML
-// re-renders without piling up duplicate intervals.
-if (!window._heroTimer) {
-  window._heroTimer = setInterval(function () {
-    var car = document.getElementById('mhero_car');
-    if (!car) return;
-    if ((+(car.dataset.n || 0)) < 2) return;
-    setHeroSlide((+(car.dataset.idx || 0)) + 1);
-  }, 6500);
-}
 
 // ══ Skills category, the Навыки aisle, rendered inside the same store ════
 var SKILLS_CATALOG=[
@@ -5596,81 +5320,6 @@ function mcpConnectRun(id, btn){
       alert('Не удалось подключить: '+((out&&out.message)||(typeof out==='string'&&out.indexOf('deferred')>=0?'долгая установка — попробуй ещё раз через минуту':'ошибка')));
     }
   }).catch(function(e){ _mcpConnecting[id]=0; if(btn){btn.disabled=false;btn.innerHTML='Подключить';} alert('Не удалось подключить: '+((e&&e.message==='_timeout_')?'долгая установка (первый запуск качает пакет) — попробуй ещё раз':(e&&e.message)||'ошибка')); });
-}
-// ── Пак «Разведчик конкурента» — делающий агент (цепочка mcp_call+svc_wiki+Qwen) ──
-function packScoutModal(){
-  var old=document.getElementById('ps_ov'); if(old)old.remove();
-  var ov=document.createElement('div'); ov.id='ps_ov'; ov.style.cssText=_KPOV;
-  ov.innerHTML='<div style="'+_KPMODAL+'">'+
-    '<div style="font-family:var(--serif);font-size:20px;margin-bottom:4px">🕵️ Разведчик конкурента</div>'+
-    '<div style="color:var(--tx2);font-size:13px;line-height:1.5;margin-bottom:8px">Прочитаю сайт конкурента, соберу справку и выдам разведсводку. Займёт 1–2 минуты.</div>'+
-    '<label style="display:block;font-size:12px;color:var(--tx3);margin:8px 0 3px">Сайт конкурента</label>'+
-    '<input id="ps_url" placeholder="напр.: zapier.com" autocomplete="off" style="'+_KPINP+'"/>'+
-    '<label style="display:block;font-size:12px;color:var(--tx3);margin:8px 0 3px">Название (необязательно)</label>'+
-    '<input id="ps_name" placeholder="напр.: Zapier" autocomplete="off" style="'+_KPINP+'"/>'+
-    '<div style="margin-top:14px;display:flex;gap:8px;align-items:center"><button class="st_btn" onclick="packScoutRun(this)">▶ Разведать</button>'+
-    '<button onclick="var o=document.getElementById(\'ps_ov\');if(o)o.remove()" style="'+_KPBTN+'">Закрыть</button></div>'+
-    '<div id="ps_msg" style="font-size:13px;color:var(--tx2);line-height:1.6;margin-top:12px;min-height:18px;max-height:340px;overflow:auto"></div></div>';
-  document.body.appendChild(ov);
-}
-function packScoutRun(btn){
-  var url=((document.getElementById('ps_url')||{}).value||'').trim();
-  var name=((document.getElementById('ps_name')||{}).value||'').trim();
-  var msg=document.getElementById('ps_msg');
-  if(!url){ if(msg)msg.innerHTML='⚠ Укажи адрес сайта.'; return; }
-  if(btn)btn.disabled=true;
-  if(msg)msg.innerHTML=INF(28)+' Работаю: читаю сайт → собираю справку → пишу сводку… (1–2 минуты)';
-  skBridge('etb_run_expert','etb_expert_result',{name:'pack_scout_run',params:{url:url,name:name}}, 300000).then(function(r){
-    if(btn)btn.disabled=false;
-    var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
-    if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}
-    if(!msg)return;
-    if(out&&out.status==='success'){
-      var steps=(out.steps||[]).map(function(s){return (s.ok?'✓':'✗')+' '+s.step;}).join(' · ');
-      var rep=esc(out.report||'').replace(/\n/g,'<br>');
-      msg.innerHTML='<div style="font-size:11px;color:var(--tx3);margin-bottom:8px">'+esc(steps)+'</div>'+
-        '<div style="background:var(--bg);border:1px solid var(--bd2);border-radius:10px;padding:12px;color:var(--tx)">'+rep+'</div>';
-    } else if(typeof out==='string'&&out.indexOf('deferred')>=0){ msg.innerHTML=INF(28)+' Задача выполняется на устройстве дольше обычного — подожди минуту и нажми «Разведать» ещё раз.'; }
-    else { msg.innerHTML='⚠ '+esc((out&&out.message)||'не удалось выполнить'); }
-  }).catch(function(e){ if(btn)btn.disabled=false; if(msg)msg.innerHTML='⚠ '+esc((e&&e.message==='_timeout_')?'долгая обработка — попробуй ещё раз через минуту':((e&&e.message)||'ошибка')); });
-}
-// ── Автоматизация пака: заморозить с параметрами → каталог AI Автоматизаций → перейти туда ──
-var PACK_CFG={scout:{title:'🕵️ Разведчик конкурента',fields:[{k:'url',label:'Сайт конкурента (что мониторить)',ph:'zapier.com'},{k:'name',label:'Название (необязательно)',ph:'Zapier'}]}};
-function packAutomateModal(packId){
-  var cfg=PACK_CFG[packId]; if(!cfg)return;
-  var old=document.getElementById('pa_ov'); if(old)old.remove();
-  var inputs=cfg.fields.map(function(f){ return '<label style="display:block;font-size:12px;color:var(--tx3);margin:8px 0 3px">'+esc(f.label)+'</label>'+
-    '<input id="pa_'+esc(f.k)+'" placeholder="'+esc(f.ph||'')+'" autocomplete="off" style="'+_KPINP+'"/>'; }).join('');
-  var ov=document.createElement('div'); ov.id='pa_ov'; ov.style.cssText=_KPOV;
-  ov.innerHTML='<div style="'+_KPMODAL+'">'+
-    '<div style="font-family:var(--serif);font-size:20px;margin-bottom:4px">⏰ Автоматизировать: '+esc(cfg.title)+'</div>'+
-    '<div style="color:var(--tx2);font-size:13px;line-height:1.5;margin-bottom:6px">Зафиксирую параметры и опубликую как автоматизацию. Дальше в «Автоматизациях» (значок календаря в шапке) настроишь расписание и канал доставки (Telegram/Email).</div>'+
-    inputs+
-    '<div style="margin-top:14px;display:flex;gap:8px;align-items:center"><button class="st_btn" onclick="packAutomateRun(\''+esc(packId)+'\',this)">Опубликовать в автоматизации</button>'+
-    '<button onclick="var o=document.getElementById(\'pa_ov\');if(o)o.remove()" style="'+_KPBTN+'">Закрыть</button></div>'+
-    '<div id="pa_msg" style="font-size:13px;color:var(--tx2);line-height:1.55;margin-top:12px;min-height:18px"></div></div>';
-  document.body.appendChild(ov);
-}
-function packAutomateRun(packId, btn){
-  var cfg=PACK_CFG[packId]; if(!cfg)return;
-  var conf={}, name='';
-  cfg.fields.forEach(function(f){ var v=((document.getElementById('pa_'+f.k)||{}).value||'').trim(); if(v)conf[f.k]=v; });
-  var first=cfg.fields[0];
-  if(!conf[first.k]){ var m0=document.getElementById('pa_msg'); if(m0)m0.innerHTML='⚠ Заполни: '+esc(first.label); return; }
-  name=conf.name||conf[first.k];
-  var msg=document.getElementById('pa_msg');
-  if(btn)btn.disabled=true;
-  if(msg)msg.innerHTML=INF(28)+' Публикую автоматизацию…';
-  skBridge('etb_run_expert','etb_expert_result',{name:'pack_automate',params:{pack_id:packId,config_json:JSON.stringify(conf),display_name:'Мониторинг '+name}}, 120000).then(function(r){
-    if(btn)btn.disabled=false;
-    var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
-    if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}
-    if(out&&out.status==='success'){
-      if(msg)msg.innerHTML='✓ Опубликовано! Перехожу в «Автоматизации» — там задай расписание и канал.';
-      setTimeout(function(){ var o=document.getElementById('pa_ov'); if(o)o.remove(); _autoReg=null; _autoFetched=false; cur='automations'; renderGrid(); rtabs(); },1400);
-    } else if(typeof out==='string'&&out.indexOf('deferred')>=0){ if(msg)msg.innerHTML=INF(28)+' Публикация идёт — подожди минуту и попробуй ещё раз.'; }
-    else { if(msg)msg.innerHTML='⚠ '+esc((out&&out.message)||'не удалось опубликовать'); }
-  }).catch(function(e){ if(btn)btn.disabled=false; if(msg)msg.innerHTML='⚠ '+esc((e&&e.message)||'ошибка'); });
 }
 // ── Конструктор агента: роль + галочки умений → agent_forge ──
 var FORGE_ROLES=[{id:'universal',n:'Универсальный помощник'}].concat((typeof CATALOG_AGENTS!=='undefined'?CATALOG_AGENTS:[]).map(function(a){return {id:a.id,n:a.emoji+' '+a.name};}));
