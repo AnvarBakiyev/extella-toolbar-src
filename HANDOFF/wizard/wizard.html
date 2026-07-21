@@ -55,7 +55,7 @@ body.chat-open .topbar{padding-right:412px}
 body.chat-open .stepper{padding-right:412px}
 h1{font-family:var(--serif);font-size:26px;font-weight:600;letter-spacing:-.01em;margin-bottom:6px}
 .lede{color:var(--nav);font-size:14.5px;margin-bottom:28px;max-width:640px}
-.kicker{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:8px}
+.kicker{font-size:11px;letter-spacing:.14em;color:var(--gold);font-weight:700;margin-bottom:8px}
 
 /* ---------- cards ---------- */
 .card{background:var(--paper);border:1px solid var(--cream-dark);border-radius:6px;padding:20px 22px;margin-bottom:14px}
@@ -105,7 +105,7 @@ h1{font-family:var(--serif);font-size:26px;font-weight:600;letter-spacing:-.01em
 .score{width:86px;height:86px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:conic-gradient(var(--gold) calc(var(--v)*1%), var(--cream-dark) 0);position:relative}
 .score::before{content:"";position:absolute;inset:7px;background:var(--paper);border-radius:50%}
 .score b{position:relative;font-size:22px}
-.score span{position:relative;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--silver)}
+.score span{position:relative;font-size:9.5px;letter-spacing:.1em;color:var(--silver)}
 .badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 .badge{font-size:11.5px;font-weight:600;padding:4px 10px;border-radius:8px;background:var(--cream);border:1px solid var(--cream-dark)}
 .badge.ok{color:var(--ok)} .badge.warn{color:var(--warn)} .badge.bad{color:var(--bad)}
@@ -143,7 +143,7 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
 .schema .node{flex:0 0 auto;min-width:130px;max-width:190px;background:var(--paper);border:1.5px solid var(--cream-dark);border-radius:6px;padding:10px 12px}
 .schema .node.src{border-color:var(--silver-light);background:var(--cream)}
 .schema .node.out{border-color:var(--gold);background:var(--gold-bg)}
-.schema .node .nh{font-size:11px;color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+.schema .node .nh{font-size:11px;color:var(--gold);font-weight:700;letter-spacing:.08em}
 .schema .node .nt{font-weight:700;font-size:13px;margin:3px 0}
 .schema .node .nd{font-size:11.5px;color:var(--silver);line-height:1.35}
 .schema .arrow{flex:0 0 auto;display:flex;align-items:center;color:var(--gold);font-size:20px;padding:0 8px}
@@ -382,7 +382,7 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
 .cmp-dot{width:8px;height:8px;border-radius:50%;background:var(--gold,#c60);flex:0 0 auto}
 .cap-card{border:1px solid var(--cream-dark,#e0dccf);border-radius:6px;padding:12px 14px;margin:8px 0;background:#fff;display:flex;gap:12px;align-items:flex-start}
 .cap-card .cc-body{flex:1;min-width:0}
-.cap-kind{display:inline-block;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:2px 7px;border-radius:6px;background:#f2ede4;color:#7a6a4a;margin-right:7px}
+.cap-kind{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.4px;padding:2px 7px;border-radius:6px;background:#f2ede4;color:#7a6a4a;margin-right:7px}
 .cap-title{font-weight:700;font-size:14px}
 .cap-desc{color:var(--nav,#6b665f);font-size:12.5px;margin:3px 0}
 .cap-meta{color:var(--silver,#a49c8c);font-size:11.5px}
@@ -2586,7 +2586,7 @@ async function loadMyLibrary(){
   var order=['model','mcp','skill','cli','service','api'];
   var rank=function(k){var i=order.indexOf(k);return i<0?99:i;};
   var html=Object.keys(groups).sort(function(a,b){return rank(a)-rank(b);}).map(function(k){
-    return '<div style="font-size:12px;color:var(--silver,#889);margin:12px 0 4px;text-transform:uppercase;letter-spacing:.4px">'+esc(CAP_KIND_LABEL[k]||k)+' · '+groups[k].length+'</div>'+
+    return '<div style="font-size:12px;color:var(--silver,#889);margin:12px 0 4px;letter-spacing:.4px">'+esc(CAP_KIND_LABEL[k]||k)+' · '+groups[k].length+'</div>'+
       groups[k].map(function(it){
         var badge = it.status==='installed' ? '<span style="color:var(--ok,#2a2);font-size:11.5px;font-weight:600">● установлено</span>' : (it.status==='installing' ? '<span style="color:var(--gold,#C67E34);font-size:11.5px;font-weight:600">◐ ставится…</span>' : '<span style="color:var(--gold,#C67E34);font-size:11.5px;font-weight:600">● подключено</span>');
         var t = it.url ? '<a class="cap-src" href="'+esc(it.url)+'" target="_blank" rel="noopener noreferrer">'+esc(it.title||it.id)+'</a>' : esc(it.title||it.id);
@@ -2869,7 +2869,7 @@ function renderBlueprint(){
       var CX={source:'Источник данных',capability:'Добыча способности — модель/репо/навык',knowledge_voice:'Знание компании и голос',trust:'Доверие к суждению',action:'Действие и общение',artifact:'Оформление результата (Excel/PPT/док)',orchestration:'Оркестрация процесса'};
       var nm=CX[bp.crux_layer.layer]||bp.crux_layer.layer;
       return '<div style="background:var(--gold-bg);border:1px solid #eddfc4;border-left:3px solid var(--gold);border-radius:6px;padding:12px 16px;margin-top:16px">'+
-        '<div style="font:600 11px var(--mono,monospace);letter-spacing:.08em;text-transform:uppercase;color:var(--gold)">🎯 Главное в этой задаче</div>'+
+        '<div style="font:600 11px var(--mono,monospace);letter-spacing:.08em;color:var(--gold)">🎯 Главное в этой задаче</div>'+
         '<div style="font-size:15px;font-weight:700;margin:4px 0 2px">'+esc(nm)+'</div>'+
         (bp.crux_layer.why?'<div style="font-size:13px;color:var(--ink-soft)">'+esc(bp.crux_layer.why)+'</div>':'')+
         '<div style="font-size:12px;color:var(--silver);margin-top:6px">Сюда визард вложит стройку в первую очередь — остальное леса.</div>'+
@@ -4268,7 +4268,7 @@ async function cabApply(){
   }
 }
 function _wzCard(inner){ return '<div style="max-width:720px;background:var(--paper);border:1px solid var(--cream-dark);border-radius:6px;padding:18px 20px;margin-bottom:14px">'+inner+'</div>'; }
-function _wzH(t){ return '<div style="font:700 12px var(--sans);color:var(--nav);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">'+t+'</div>'; }
+function _wzH(t){ return '<div style="font:700 12px var(--sans);color:var(--nav);letter-spacing:.06em;margin-bottom:10px">'+t+'</div>'; }
 // Карточка доводки: сомнительные по смыслу шаги, найденные при сборке. Ведёт к чату кабинета
 // («Скажи, что поменять» внизу) — там доводка словами и есть. Идея Анвара: доделать процесс тут.
 function _wzCabReviewCard(a){
@@ -4468,7 +4468,7 @@ async function _wzDigestLoad(sid){
   window._wzLastDigest=d.digest;
   var prev=String(d.digest).split('\n').slice(0,10).join('\n');
   box.innerHTML='<div style="border-top:1px dashed var(--cream-dark);padding-top:10px;margin-top:2px">'+
-    '<div style="font-size:11px;color:var(--silver);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Бриф последнего прогона</div>'+
+    '<div style="font-size:11px;color:var(--silver);letter-spacing:.05em;margin-bottom:6px">Бриф последнего прогона</div>'+
     '<div style="font-size:12.5px;color:var(--ink-soft);white-space:pre-wrap;max-height:150px;overflow:hidden">'+esc(prev)+'</div>'+
     '<button class="btn ghost sm" style="margin-top:8px" onclick="showBrief(window._wzLastDigest,{kicker:\'Extella · Отчёт прогона\',title:(AUTOS[_wzCabI]&&(AUTOS[_wzCabI].process_name||AUTOS[_wzCabI].client_name))||\'Отчёт прогона\'})">📄 Открыть бриф целиком</button></div>';
 }
@@ -4761,7 +4761,7 @@ async function _saveRecipients(a,list){
   else toast('Ошибка: '+((r&&r.message)||''),'err');
 }
 function _wzSectionLabel(txt){
-  return '<div style="font:700 11px var(--sans);letter-spacing:.09em;text-transform:uppercase;color:var(--silver);margin:22px 0 8px;max-width:720px">'+esc(txt)+'</div>';
+  return '<div style="font:700 11px var(--sans);letter-spacing:.09em;color:var(--silver);margin:22px 0 8px;max-width:720px">'+esc(txt)+'</div>';
 }
 function _wzCabSettings(a){
   // #2 ленивая подгрузка «куда шлём» (dest получателей) — один раз, потом перерисовать с адресами
@@ -4831,7 +4831,7 @@ function _wzCabSettings(a){
      (a.can_rollback?'<div style="margin-top:10px"><button class="btn ghost sm" onclick="rollbackProcess('+_wzCabI+')">↩ Откатить последнюю правку</button>'+
        '<span style="font-size:11.5px;color:var(--silver);margin-left:8px">процесс пересоберётся по прежней версии</span></div>':''));
   var dangerCard = _wzCard(
-     '<div style="font:700 12px var(--sans);color:#c0392b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Опасная зона</div>'+
+     '<div style="font:700 12px var(--sans);color:#c0392b;letter-spacing:.06em;margin-bottom:8px">Опасная зона</div>'+
      '<div style="font-size:12.5px;color:var(--silver);margin-bottom:10px">Убрать автоматизацию из списка. Уходит в архив (можно вернуть), расписание снимается.</div>'+
      '<button class="btn ghost sm" style="color:#c0392b;border-color:#e0a0a0" onclick="deleteAutomation('+_wzCabI+')">🗑 Удалить автоматизацию</button>');
   // Настройка = один связный ответ на вопрос «как это устроено»: ЧТО процесс ест,
@@ -5220,7 +5220,7 @@ function showBrief(md, opts){
       '<b>⚠ Ran with '+warns.length+' warning'+(warns.length===1?'':'s')+':</b><ul style="margin:6px 0 0;padding-left:18px">'+
       warns.map(function(w){return '<li>'+esc(String(w))+'</li>';}).join("")+'</ul></div>'
     : '';
-  m.innerHTML='<style>#briefModal .bb h2{font-size:18px;margin:22px 0 8px;color:#1c1a17}#briefModal .bb h3{font-size:15px;margin:16px 0 6px;color:#1c1a17}#briefModal .bb ol{padding-left:20px}#briefModal .bb ol li{margin:5px 0}#briefModal .bb table{border-collapse:collapse;width:100%;font-size:13px;margin:6px 0}#briefModal .bb th{text-align:left;background:#faf7f2;border-bottom:2px solid #ece4d7;padding:8px 9px;color:#7a7264;font-size:11px;text-transform:uppercase;letter-spacing:.3px}#briefModal .bb td{border-bottom:1px solid #f0eae0;padding:8px 9px;vertical-align:top}#briefModal .bb a{color:#C67E34;text-decoration:none}#briefModal .bb ul{padding-left:18px}#briefModal .bb li{margin:5px 0}#briefModal .bb code{background:#f2ede4;border-radius:4px;padding:1px 4px;font-size:12.5px}#briefModal .bb hr{border:none;border-top:1px solid #eee6da;margin:18px 0}#briefModal .bb p{margin:8px 0}</style>'+
+  m.innerHTML='<style>#briefModal .bb h2{font-size:18px;margin:22px 0 8px;color:#1c1a17}#briefModal .bb h3{font-size:15px;margin:16px 0 6px;color:#1c1a17}#briefModal .bb ol{padding-left:20px}#briefModal .bb ol li{margin:5px 0}#briefModal .bb table{border-collapse:collapse;width:100%;font-size:13px;margin:6px 0}#briefModal .bb th{text-align:left;background:#faf7f2;border-bottom:2px solid #ece4d7;padding:8px 9px;color:#7a7264;font-size:11px;letter-spacing:.3px}#briefModal .bb td{border-bottom:1px solid #f0eae0;padding:8px 9px;vertical-align:top}#briefModal .bb a{color:#C67E34;text-decoration:none}#briefModal .bb ul{padding-left:18px}#briefModal .bb li{margin:5px 0}#briefModal .bb code{background:#f2ede4;border-radius:4px;padding:1px 4px;font-size:12.5px}#briefModal .bb hr{border:none;border-top:1px solid #eee6da;margin:18px 0}#briefModal .bb p{margin:8px 0}</style>'+
     '<div style="max-width:920px;width:100%;background:#fff;border-radius:8px;padding:26px 30px;box-shadow:0 14px 50px rgba(0,0,0,.28);color:#1c1a17;font:15px/1.6 -apple-system,Segoe UI,Roboto,sans-serif">'+
     '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><div>'+
     '<div style="color:#C67E34;font-weight:800;font-size:12.5px;letter-spacing:.5px;text-transform:uppercase">'+esc(kicker)+'</div>'+
