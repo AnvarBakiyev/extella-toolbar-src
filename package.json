@@ -11,6 +11,7 @@
     "dev:library": "npm run dev -w @extella/library",
     "build:library": "npm run build -w @extella/library",
     "build:toolbar": "npm run build -w @extella/toolbar",
-    "build": "npm run build:library && npm run build:toolbar"
+    "build": "npm run build:library && npm run build:toolbar",
+    "test:reproducible": "node scripts/check-reproducible-build.js"
   }
 }
