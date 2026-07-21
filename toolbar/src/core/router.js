@@ -476,7 +476,7 @@ ETB.router = (function () {
     var openFileBtn = '';
     if (ui.filePath) {
       var escapedPath = _esc(String(ui.filePath || ''));
-      openFileBtn = '<button id="_etb_open_file_btn" title="Copy file path: ' + escapedPath + '" style="' +
+      openFileBtn = '<button id="_etb_open_file_btn" title="Скопировать путь к файлу: ' + escapedPath + '" style="' +
         'background:none;border:none;color:var(--etb-tx2,#888);cursor:pointer;' +
         'font-size:14px;padding:4px 8px;border-radius:6px;transition:background .1s;">' +
         '&#128193;</button>';
@@ -486,8 +486,10 @@ ETB.router = (function () {
     var browserBtn = '';
     if (ui.type === 'local_server' || plugin.service) {
       var bpid = plugin.id ? plugin.id.replace(/'/g, '') : '';
+      var _bLang = 'ru';
+      try { _bLang = localStorage.getItem('etb_lang') || 'ru'; } catch (e) {}
       browserBtn = '<button onclick="ETB.router._openExternal(\'' + _esc(bpid) + '\')" ' +
-        'title="Open this tool in your browser" style="' +
+        'title="' + (_bLang === 'en' ? 'Open in your browser' : 'Открыть в браузере') + '" style="' +
         'background:none;border:none;color:var(--etb-tx2,#888);cursor:pointer;' +
         'font-size:14px;padding:4px 8px;border-radius:6px;transition:background .1s;">' +
         '&#127759;</button>';
@@ -528,7 +530,7 @@ ETB.router = (function () {
       openFileBtn,
       '<button class="_etbv2_panel_close" style="background:none;border:none;',
       'color:var(--etb-tx2,#888);cursor:pointer;font-size:18px;padding:4px 8px;',
-      'border-radius:6px;transition:background .1s;" title="Close">&#10005;</button>'
+      'border-radius:6px;transition:background .1s;" title="Закрыть">&#10005;</button>'
     ].join('');
     panel.appendChild(hdr);
 
@@ -1211,7 +1213,7 @@ ETB.router = (function () {
     ].join('');
     fab.innerHTML = [
       '<button onclick="ETB.router._showRepairModal(\'' + pid + '\',\'\')"',
-        ' title="Repair or reconfigure this plugin"',
+        ' title="Починить или перенастроить этот плагин"',
         ' style="background:var(--etb-s1,#fff);border:1px solid var(--etb-bd2,rgba(0,0,0,.14));',
         'color:var(--etb-tx2,#6b6b6b);border-radius:20px;padding:5px 13px;cursor:pointer;',
         'font-size:11px;font-family:-apple-system,system-ui,sans-serif;',
