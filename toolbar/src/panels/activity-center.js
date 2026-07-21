@@ -669,7 +669,7 @@
     section(body, T('Сейчас','Now'), data.active);
     section(body, T('Выполнено','Done'), data.history.slice(0, 15));
     if (!data.active.length && !data.history.length) {
-      body.appendChild(el('div', { id: '_xtlac_empty' }, T('Пока задач нет. Фоновые проверки и действия появятся здесь автоматически.','No tasks yet. Background checks and actions will appear here automatically.')));
+      body.appendChild(el('div', { id: '_xtlac_empty' }, T('Пока пусто. Когда Extella что-то делает — ставит программу, запускает процесс, проверяет данные, — здесь видна каждая задача и её статус.','Quiet for now. When Extella is doing something — installing a program, running a process, checking data — every task and its status shows up here.')));
     }
   }
 
