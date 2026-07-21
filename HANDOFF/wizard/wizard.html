@@ -233,8 +233,8 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
   <button class="btn ghost" id="agentBadge" onclick="openAgentManager()" title="Для какого агента строим (концепты, правила, память — в его мозг)">🤖 Агент…</button>
   <button class="btn ghost" id="brainBtn" onclick="openBrain()" title="Мозг агента: знания, правила, голос, умения" style="display:none">🧠 Мозг</button>
   <select class="sess-select" id="sessSelect" onchange="loadSession(this.value)"></select>
-  <button class="btn ghost" id="wDelSess" onclick="deleteSession()" title="Убрать выбранную сессию в архив" style="padding:6px 9px">🗑</button>
-  <button class="btn ghost" id="wNewSess" onclick="newSession()">+ Новая сессия</button>
+  <button class="btn ghost" id="wDelSess" onclick="deleteSession()" title="Убрать выбранный проект в архив" style="padding:6px 9px">🗑</button>
+  <button class="btn ghost" id="wNewSess" onclick="newSession()">+ Новый проект</button>
   <button class="btn ghost" id="wLangBtn" onclick="toggleWLang()" title="Language / Язык">EN</button>
   <button class="btn gold" id="chatToggle" onclick="toggleChat()">💬 Мастер</button>
 </div>
@@ -243,8 +243,8 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
 
 <div class="main" id="mainAuto" style="display:none">
   <div class="kicker" id="autoKicker">Мои автоматизации</div>
-  <h1 id="autoH1">Автоматизации бизнес-процессов</h1>
-  <p class="lede" id="autoLede">Собранные процессы: логика в виде схемы, запуск сейчас или по расписанию, логи и результаты прогонов, продовый агент, публикация.</p>
+  <h1 id="autoH1">Твои собранные процессы</h1>
+  <p class="lede" id="autoLede">Каждый процесс: схема работы, запуск сейчас или по расписанию, история прогонов и результаты, публикация в витрину.</p>
   <div id="connBar"></div>
   <div id="monitorBar"></div>
   <div id="autoList"></div>
@@ -260,9 +260,9 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
        Визард делает СВОЁ: интервью → проект → стройка процесса, который работает сам.
        Быстрая сборка разовой задачи из блоков — это Композитор, туда и отправляем. -->
   <div class="kicker">Конструктор</div>
-  <h1>Соберите процесс, который работает сам</h1>
+  <h1>Собери процесс, который работает сам</h1>
   <div style="max-width:660px">
-    <div style="font-size:14px;color:var(--silver,#889);line-height:1.55;margin:10px 0 16px">Мастер расспросит о задаче, спроектирует процесс и построит его: источник данных, расписание, получатели, готовый отчёт. Это занимает около часа — и дальше процесс работает без вас.</div>
+    <div style="font-size:14px;color:var(--silver,#889);line-height:1.55;margin:10px 0 16px">Мастер расспросит о задаче и построит процесс: откуда брать данные, по какому расписанию, кому слать готовый отчёт. Час разговора — и дальше процесс работает без тебя.</div>
     <button class="btn gold" style="padding:12px 22px;font-size:15px" onclick="setMode('wizard');newSession()">Пройти интервью с Мастером →</button>
     <div style="display:flex;flex-wrap:wrap;gap:6px;margin:16px 0 4px">
       <span class="chip-ex" onclick="buildProcessFromTask(this.textContent)">дебиторка 28 филиалов каждый понедельник директору</span>
@@ -270,9 +270,9 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
       <span class="chip-ex" onclick="buildProcessFromTask(this.textContent)">ежедневная сводка по заявкам из Google Sheets</span>
     </div>
     <div style="margin-top:20px;padding-top:14px;border-top:1px solid var(--cream-dark,#e7e2d8);font-size:13px;color:var(--silver,#889)">
-      Нужна разовая задача, а не постоянный процесс? Это <a href="#" onclick="openCompStudio();return false" style="color:var(--gold,#a97e35);font-weight:600;text-decoration:none">🧩 Композитор</a> — соберёт из готовых блоков за минуту.
+      Нужно разовое дело, а не постоянный процесс? Открой <a href="#" onclick="openCompStudio();return false" style="color:var(--gold,#a97e35);font-weight:600;text-decoration:none">🧩 Композитор</a> — соберёт из готовых блоков за минуту.
     </div>
-    <div style="margin-top:10px"><a href="#" onclick="goalLoop();return false" style="color:var(--silver,#889);font-size:12.5px;text-decoration:none">🔁 Контур (эксперимент): поставьте цель — система сама доведёт её пошагово →</a></div>
+    <div style="margin-top:10px"><a href="#" onclick="goalLoop();return false" style="color:var(--silver,#889);font-size:12.5px;text-decoration:none">🔁 Контур (эксперимент): поставь цель — процесс дойдёт до неё по шагам →</a></div>
   </div>
 </div>
 
@@ -355,9 +355,9 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
 </div>
 
 <div class="main" id="mainMy" style="display:none">
-  <div class="kicker">📦 Моя библиотека</div>
+  <div class="kicker">🔎 Найти и поставить</div>
   <h1>Найди что угодно. Extella поставит.</h1>
-  <p class="lede">Ищи способности по всему интернету — локальные модели (HuggingFace), MCP-серверы (npm), CLI-инструменты (GitHub), навыки (Smithery). Ставится по клику; установленное появляется здесь.</p>
+  <p class="lede">Ищи умения по всему интернету: модели, инструменты, подключения, навыки. Ставятся одним кликом — установленное появится здесь.</p>
   <div style="display:flex;gap:8px;margin:14px 0 6px">
     <input id="mySearchInput" placeholder="напр. перевести документы · распознать речь · MCP для Slack"
       style="flex:1;padding:14px 16px;border:1px solid var(--cream-dark,#d8d2c8);border-radius:12px;background:#fff;color:var(--ink,#0a0a0a);font-size:15px"
@@ -619,10 +619,10 @@ function _agentGateRender(list, broken, why){
       (a.id===broken?' <span style="color:#c0392b;font-size:11.5px">— не отвечает</span>':'')+'</button>';
   }).join('');
   resetModInput();
-  el("modTitle").textContent = broken ? "Агент не отвечает" : "Шаг 1: выберите агента";
+  el("modTitle").textContent = broken ? "Агент не отвечает" : "Шаг 1: выбери агента";
   el("modHint").innerHTML = broken
     ? esc(why)
-    : "Агент — это «мозг» ваших автоматизаций: он ведёт интервью, проектирует процессы и копит знания о вашей компании. Без него Мастер не сможет ответить.";
+    : "Агент — мозг твоих автоматизаций: ведёт интервью, проектирует процессы и копит знания о твоей компании. Без него Мастер не сможет ответить.";
   // Поле ВСТРОЕНО в шлюз: браузерный prompt() в приложении Extella (Electron) не работает —
   // возвращает пустоту молча, и кнопка «Создать агента» выглядела мёртвой (Гульжан, 20.07).
   el("modInput").outerHTML = '<input id="modInput" type="text" autocomplete="off" '
@@ -631,9 +631,9 @@ function _agentGateRender(list, broken, why){
     + 'onkeydown="if(event.key===\'Enter\')agentGateCreate()">'
     + (rows ? '<div style="margin:12px 0 4px;font-size:12px;color:var(--silver)">Или выберите существующего:</div>'+rows : '')
     + '<div style="display:flex;gap:8px;margin-top:12px">'
-    + '<button class="btn gold" style="flex:1" onclick="agentGateCreate()">＋ Создать агента (копия Qwen)</button>'
-    + '<button class="btn ghost" style="flex:0 0 40%" onclick="agentGateLink()">🔗 Привязать по id</button></div>'
-    + '<div id="agentGateMsg" style="font-size:12.5px;color:var(--silver);margin-top:10px">Впишите имя выше и нажмите «Создать».</div>';
+    + '<button class="btn gold" style="flex:1" onclick="agentGateCreate()">＋ Создать агента (Qwen)</button>'
+    + '<button class="btn ghost" style="flex:0 0 40%" onclick="agentGateLink()">🔗 Вставить ID агента</button></div>'
+    + '<div id="agentGateMsg" style="font-size:12.5px;color:var(--silver);margin-top:10px">Впиши имя выше и нажми «Создать».</div>';
   el("modBack").classList.add("open");
   var ob=el("modOkBtn"); if(ob) ob.textContent="Позже";
   _modCb=null;
@@ -661,7 +661,7 @@ async function agentGateCreate(){
   var inp=el('modInput');
   var nm=(inp&&inp.value||'').trim();
   if(!nm){                                   // без prompt(): просим заполнить встроенное поле
-    if(m) m.innerHTML='<span style="color:#a97e35">Впишите имя агента в поле выше.</span>';
+    if(m) m.innerHTML='<span style="color:#a97e35">Впиши имя агента в поле выше.</span>';
     if(inp) inp.focus();
     return;
   }
@@ -723,7 +723,7 @@ async function openAgentManager(){
   el("modInput").outerHTML='<input id="modInput" type="hidden">'+list+
     '<div style="display:flex;gap:8px;margin-top:12px">'+
     '<button class="btn gold" style="flex:1" onclick="agentCreate()">＋ Создать агента (Qwen)</button>'+
-    '<button class="btn ghost" style="flex:1" onclick="agentLink()">🔗 Привязать по id</button></div>';
+    '<button class="btn ghost" style="flex:1" onclick="agentLink()">🔗 Вставить ID агента</button></div>';
   el("modBack").classList.add("open");
   const ob=el("modOkBtn"); if(ob) ob.textContent="Закрыть";
   _modCb=null;
@@ -731,7 +731,7 @@ async function openAgentManager(){
 async function agentCreate(){
   modCancel();
   ask("Имя нового агента","Создам keyless-Qwen агента (копию платформенной Qwen 3.7). В его мозг пойдут концепты и правила этого клиента.","",async (nm)=>{
-    if(!nm) return; busy("Создаю агента (копия Qwen)…");
+    if(!nm) return; busy("Создаю агента (Qwen)…");
     const r=await jpost("/x/agent_create",{name:nm}); busyOff();
     if(r.status==="success"){ toast("✓ Агент создан и выбран","ok"); await refreshAgentBadge(); openAgentManager(); }
     else toast("Не удалось: "+(r.message||"ошибка"),"err");
@@ -918,9 +918,9 @@ function resetModInput(){ _modClearExtras(); var ob=el("modOkBtn"); if(ob) ob.te
 var WLANG = (function(){ try { return localStorage.getItem('wz_lang') || 'ru'; } catch(e){ return 'ru'; } })();
 var WT = {
   navWizard:{ru:'Мастер',en:'Wizard'}, navAuto:{ru:'🗂 Автоматизации',en:'🗂 Automations'}, navCore:{ru:'🧬 Процессное ядро',en:'🧬 Process core'},
-  newSess:{ru:'+ Новая сессия',en:'+ New session'}, assistant:{ru:'💬 Мастер',en:'💬 Assistant'},
-  kicker:{ru:'Мои автоматизации',en:'My automations'}, h1:{ru:'Автоматизации бизнес-процессов',en:'Business process automations'},
-  lede:{ru:'Собранные процессы: логика в виде схемы, запуск сейчас или по расписанию, логи и результаты прогонов, продовый агент, публикация.',en:'Composed processes: logic as a flow, run now or on a schedule, logs and run results, a production agent, publishing.'},
+  newSess:{ru:'+ Новый проект',en:'+ New session'}, assistant:{ru:'💬 Мастер',en:'💬 Assistant'},
+  kicker:{ru:'Мои автоматизации',en:'My automations'}, h1:{ru:'Твои собранные процессы',en:'Business process automations'},
+  lede:{ru:'Каждый процесс: схема работы, запуск сейчас или по расписанию, история прогонов и результаты, публикация в витрину.',en:'Composed processes: logic as a flow, run now or on a schedule, logs and run results, a production agent, publishing.'},
   run:{ru:'▶ Запустить сейчас',en:'▶ Run now'}, configure:{ru:'⚙ Настроить словами',en:'⚙ Configure in words'},
   deployAg:{ru:'🤖 Развернуть агента',en:'🤖 Deploy agent'}, updateAg:{ru:'🤖 Обновить агента',en:'🤖 Update agent'},
   share:{ru:'🔗 Поделиться',en:'🔗 Publish'}, edit:{ru:'✎ Изменить',en:'✎ Edit'},
@@ -999,12 +999,12 @@ var _I18N_DICT = {
   "Мастер": "Wizard",
   "🗂 Автоматизации": "🗂 Automations",
   "🧬 Процессное ядро": "🧬 Process core",
-  "+ Новая сессия": "+ New session",
+  "+ Новый проект": "+ New session",
   "Language / Язык": "Language",
   "💬 Мастер": "💬 Assistant",
   "Мои автоматизации": "My automations",
-  "Автоматизации бизнес-процессов": "Business process automations",
-  "Собранные процессы: логика в виде схемы, запуск сейчас или по расписанию, логи и результаты прогонов, продовый агент, публикация.": "Assembled processes: logic as a diagram, run now or on a schedule, logs and run results, a production agent, publishing.",
+  "Твои собранные процессы": "Business process automations",
+  "Каждый процесс: схема работы, запуск сейчас или по расписанию, история прогонов и результаты, публикация в витрину.": "Assembled processes: logic as a diagram, run now or on a schedule, logs and run results, a production agent, publishing.",
   "Создать автоматизацию": "Create automation",
   "Что хотите поручить Extella?": "What do you want to hand off to Extella?",
   "⚡ Собрать задачу из готовых блоков": "⚡ Assemble a task from ready-made blocks",
@@ -1015,14 +1015,14 @@ var _I18N_DICT = {
   "опишите задачу одной фразой…": "describe the task in one phrase…",
   "Собрать": "Assemble",
   "🏢 Спроектировать бизнес-процесс": "🏢 Design a business process",
-  "Процесс, который живёт в компании постоянно: данные из ваших систем, расписание, получатели, продовый агент 24/7. Мастер проведёт интервью и построит под вас.": "A process that lives in the company permanently: data from your systems, a schedule, recipients, a production agent 24/7. The Wizard runs the interview and builds it for you.",
+  "Процесс, который живёт в компании постоянно: данные из твоих систем, расписание, получатели, рабочий агент 24/7. Мастер проведёт интервью и построит под тебя.": "A process that lives in the company permanently: data from your systems, a schedule, recipients, a production agent 24/7. The Wizard runs the interview and builds it for you.",
   "дебиторка 28 филиалов каждый понедельник директору": "receivables for 28 branches every Monday to the director",
   "сводка заявок на закуп из 1С": "summary of purchase requests from 1C",
   "отвечать клиентам в Telegram 24/7": "answer customers in Telegram 24/7",
   "Пройти интервью с Мастером →": "Take the Wizard interview →",
-  "📦 Моя библиотека": "📦 My library",
+  "🔎 Найти и поставить": "📦 My library",
   "Найди что угодно. Extella поставит.": "Find anything. Extella installs it.",
-  "Ищи способности по всему интернету — локальные модели (HuggingFace), MCP-серверы (npm), CLI-инструменты (GitHub), навыки (Smithery). Ставится по клику; установленное появляется здесь.": "Search for capabilities across the whole internet — local models (HuggingFace), MCP servers (npm), CLI tools (GitHub), skills (Smithery). Installs with one click; what's installed appears here.",
+  "Ищи умения по всему интернету: модели, инструменты, подключения, навыки. Ставятся одним кликом — установленное появится здесь.": "Search for capabilities across the whole internet — local models (HuggingFace), MCP servers (npm), CLI tools (GitHub), skills (Smithery). Installs with one click; what's installed appears here.",
   "напр. перевести документы · распознать речь · MCP для Slack": "e.g. translate documents · transcribe speech · MCP for Slack",
   "🔎 Искать": "🔎 Search",
   "Установлено": "Installed",
@@ -1134,11 +1134,11 @@ var _I18N_DICT = {
   "просрочено": "overdue",
   "нет расписания/прогонов": "no schedule / runs",
   "прогон": "run",
-  "— выбрать сессию —": "— select session —",
+  "— выбрать проект —": "— select session —",
   "Новая сессия": "New session",
   "Название клиента или процесса — как в договоре/чате": "Client or process name — as in the contract/chat",
-  "Не удалось создать сессию: ": "Failed to create session: ",
-  "✓ Сессия создана — расскажите Мастеру о задаче": "✓ Session created — tell the Assistant about your task",
+  "Не удалось создать проект: ": "Failed to create session: ",
+  "✓ Проект создан — расскажи Мастеру о задаче": "✓ Session created — tell the Assistant about your task",
   "Данные клиента": "Client data",
   "файл / выгрузка": "file / export",
   " · результат": " · result",
@@ -1699,7 +1699,7 @@ var _I18N_DICT = {
 };
 var _I18N_RULES = [
   ["· ответов (\\d+)", "· answers $1"],
-  ["Создаю сессию «(.+?)» — обычно 5–15 секунд", "Creating session «$1» — usually 5–15 seconds"],
+  ["Создаю проект «(.+?)» — обычно 5–15 секунд", "Creating session «$1» — usually 5–15 seconds"],
   ["Создаю проект «(.+?)»…", "Creating project «$1»…"],
   ["Шаг (\\d+)", "Step $1"],
   ["Хочу автоматизацию: ([\\s\\S]+?)\\.\\nКомпозитор собрал почти всё из библиотеки, но не хватает: ([\\s\\S]+?)\\. Помоги достроить именно недостающую часть — расспроси по ней и соберём её как новый блок\\.", "I want an automation: $1.\nThe Composer assembled almost everything from the library, but it's missing: $2. Help me build exactly the missing part — ask me about it and we'll assemble it as a new block."],
@@ -1847,21 +1847,21 @@ async function refreshSessions(keep){
   const sel = el("sessSelect");
   // мусор не показываем: битые записи без имени/ид («· null · ответов 0») захламляли селектор
   const list = (d.sessions||[]).filter(s=>s && s.session_id && s.session_id!=="null" && s.client_name && s.client_name!=="null");
-  sel.innerHTML = '<option value="">— выбрать сессию —</option>' +
+  sel.innerHTML = '<option value="">— выбрать проект —</option>' +
     list.map(s=>`<option value="${s.session_id}">${esc(s.client_name)} · ${s.stage} · ответов ${s.answers_count}${s.agent_name?(' · 🤖 '+esc(s.agent_name)):''}</option>`).join("");
   if(keep) sel.value = keep;
 }
 function newSession(){
-  ask("Новая сессия", "Название клиента или процесса — как в договоре/чате", "", async (name)=>{
+  ask("Новый проект", "Название клиента или процесса — как в договоре/чате", "", async (name)=>{
     if(!name) return;
-    busy("Создаю сессию «"+name+"» — обычно 5–15 секунд");
+    busy("Создаю проект «"+name+"» — обычно 5–15 секунд");
     const r = await jpost("/x/expert",{expert_name:"wz_session",params:{action:"create",client_name:name}});
     const sid = r.session && r.session.session_id;
-    if(!sid){ busyOff(); toast("Не удалось создать сессию: "+(r.message||JSON.stringify(r).slice(0,150)), "err"); return; }
+    if(!sid){ busyOff(); toast("Не удалось создать проект: "+(r.message||JSON.stringify(r).slice(0,150)), "err"); return; }
     await refreshSessions(sid);
     await loadSession(sid);
     busyOff();
-    toast("✓ Сессия создана — расскажите Мастеру о задаче", "ok");
+    toast("✓ Проект создан — расскажи Мастеру о задаче", "ok");
     if(!el("chat").classList.contains("open")) toggleChat();
   });
 }
@@ -1871,9 +1871,9 @@ function newSession(){
 // Удаление = АРХИВ: файлы уезжают в sessions_archive, возврат — через «Архив» в Автоматизациях.
 async function deleteSession(){
   var sid = (el("sessSelect")||{}).value || S.sessionId;
-  if(!sid){ toast("Сначала выберите сессию в списке","err"); return; }
+  if(!sid){ toast("Сначала выбери проект в списке","err"); return; }
   // Имя берём по ЗНАЧЕНИЮ, а не по выделению: сессия, открытая по прямой ссылке, в списке может
-  // отсутствовать — тогда selectedOptions[0] это «— выбрать сессию —», и диалог удаления предложил бы
+  // отсутствовать — тогда selectedOptions[0] это «— выбрать проект —», и диалог удаления предложил бы
   // убрать заглушку. В окне подтверждения удаления такой текст недопустим.
   var opt = Array.prototype.find.call((el("sessSelect")||{options:[]}).options,
                                       function(o){ return o.value === sid; });
@@ -1902,7 +1902,7 @@ async function loadSession(sid){
   S.demoRunId = null; S.demoDone = false;
   S.sessionId = sid;
   // Селектор в шапке — единственный указатель «где я сейчас». При заходе не из него (карточка рабочего
-  // стола, deep-link, «Открыть в Мастере») он оставался на «— выбрать сессию —»: процесс открыт, а шапка
+  // стола, deep-link, «Открыть в Мастере») он оставался на «— выбрать проект —»: процесс открыт, а шапка
   // говорит, что ничего не выбрано. Синхронизируем всегда — иначе и 🗑 непонятно, что удалит.
   var _ss = el("sessSelect");
   if(_ss && _ss.value !== sid) _ss.value = sid;
