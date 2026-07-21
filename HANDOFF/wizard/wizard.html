@@ -260,7 +260,7 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
        Визард делает СВОЁ: интервью → проект → стройка процесса, который работает сам.
        Быстрая сборка разовой задачи из блоков — это Композитор, туда и отправляем. -->
   <div class="kicker">Конструктор</div>
-  <h1>Собери процесс, который работает сам</h1>
+  <h1>Опиши задачу — получи работающий процесс</h1>
   <div style="max-width:660px">
     <div style="font-size:14px;color:var(--silver,#889);line-height:1.55;margin:10px 0 16px">Мастер расспросит о задаче и построит процесс: откуда брать данные, по какому расписанию, кому слать готовый отчёт. Час разговора — и дальше процесс работает без тебя.</div>
     <button class="btn gold" style="padding:12px 22px;font-size:15px" onclick="setMode('wizard');newSession()">Пройти интервью с Мастером →</button>
@@ -307,7 +307,7 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
       <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#2a6f77,#14171e);display:flex;align-items:center;justify-content:center;font-size:26px">📜</div>
       <div>
         <div style="font:700 20px var(--sans);color:var(--ink,#0a0a0a)">Студия языков</div>
-        <div style="font-size:12.5px;color:var(--silver,#889)">предметные языки вашего аккаунта: программа словами дела → проверенный исполняемый результат</div>
+        <div style="font-size:12.5px;color:var(--silver,#889)">предметные языки твоего аккаунта: программа словами дела → проверенный исполняемый результат</div>
       </div>
       <button class="btn ghost" style="margin-left:auto;padding:8px 16px" onclick="closeCsplStudio()">✕ Закрыть</button>
     </div>
@@ -394,16 +394,16 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
 </div>
 
 <div class="main" id="main">
-  <div id="noSession" class="empty">Создайте новую сессию или выберите существующую, чтобы начать.</div>
+  <div id="noSession" class="empty">Создайте новую сессию или выбери существующую, чтобы начать.</div>
 
   <!-- ИНТЕРВЬЮ -->
   <section id="view-interview" class="hide">
     <div class="kicker">Шаг 1 · Интервью</div>
-    <h1>Расскажите о вашем процессе</h1>
-    <p class="lede">Главный способ — разговор с Мастером справа: он проведёт интервью и сам заполнит конспект ниже. Любой пункт конспекта можно поправить руками — кликните по нему. Приложите файлы-образцы (выгрузки, шаблоны) — это сильно ускоряет проектирование.</p>
+    <h1>Расскажи о своём процессе</h1>
+    <p class="lede">Главный способ — разговор с Мастером справа: он проведёт интервью и сам заполнит конспект ниже. Любой пункт конспекта можно поправить руками — кликните по нему. Приложи файлы-образцы (выгрузки, шаблоны) — это сильно ускорит проектирование.</p>
     <!-- P2: адаптивный конспект — вопросы генерируются Qwen под конкретную задачу -->
     <div class="card">
-      <div class="kicker">Вопросы под вашу задачу</div>
+      <div class="kicker">Вопросы под твою задачу</div>
       <div style="font-size:12.5px;color:var(--silver);margin:-4px 0 8px">Опишите задачу одной фразой — конспект перестроится под неё (вместо стандартного списка).</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <input id="qtask" class="sess-select" style="flex:1;max-width:none;min-width:240px" placeholder="напр.: контроль дебиторки 28 филиалов из 1С с еженедельной сводкой директору">
@@ -432,7 +432,7 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
   <!-- ПЛАН (Blueprint) -->
   <section id="view-blueprint" class="hide">
     <div class="kicker">Шаг 2 · План процесса</div>
-    <h1>План вашего процесса</h1>
+    <h1>План твоего процесса</h1>
     <p class="lede">План собирается ИИ-архитектором строго из каталога возможностей Extella: ничего выдуманного. Всё, чего платформе не хватает, честно показано в «Разрывах».</p>
     <div class="toolbar" style="margin-top:0">
       <button class="btn gold" id="genBtn" onclick="generateBlueprint()">⚙ Собрать план</button>
@@ -452,7 +452,7 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
   <section id="view-spec" class="hide">
     <div class="kicker">Шаг 3 · Техзадание</div>
     <h1>Техзадание проекта</h1>
-    <p class="lede">Живой документ: собирается из всего, что накоплено в сессии — интервью, план, решения, комментарии. Наведите на раздел, чтобы оставить комментарий; правки — через Мастера («изменить в ТЗ…») или комментарием, команда внесёт.</p>
+    <p class="lede">Живой документ: собирается из всего, что накоплено в сессии — интервью, план, решения, комментарии. Наведи на раздел, чтобы оставить комментарий; правки — через Мастера («изменить в ТЗ…») или комментарием.</p>
     <div class="toolbar" style="margin-top:0">
       <button class="btn gold" id="specBtn" onclick="regenerateSpec()">⟳ Обновить ТЗ</button>
       <button class="btn ghost" onclick="askAssistant('Хочу внести изменение в техзадание: ')">💬 Попросить изменение</button>
@@ -498,7 +498,7 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
     <button class="cbtn" onclick="toggleChat()">✕</button>
   </div>
   <div class="chat-log" id="chatLog">
-    <div class="msg bot">Здравствуйте! Я помогу спроектировать ваш ИИ-процесс на Extella. Расскажите своими словами, какая задача или боль привела вас сюда — остальное я спрошу сам, а конспект слева буду заполнять по ходу разговора. Руками его править не нужно (но можно — если хотите уточнить).</div>
+    <div class="msg bot">Привет! Помогу спроектировать твой ИИ-процесс на Extella. Расскажи своими словами, какая задача или боль привела тебя сюда — остальное я спрошу сам, а конспект слева буду заполнять по ходу разговора. Руками его править не нужно (но можно — если хочешь уточнить).</div>
   </div>
   <div class="chat-form">
     <label class="attach" title="Приложить файл">📎<input type="file" multiple style="display:none" onchange="uploadFiles(this.files)"></label>
@@ -551,7 +551,7 @@ async function genQuestions(){
   var r=await jpost('/x/gen_questions',{session_id:S.sessionId, task:t});
   if(r&&r.status==='success'){
     await reloadSession();
-    el('stQGen').textContent='✓ конспект перестроен: '+r.count+' вопросов под вашу задачу';
+    el('stQGen').textContent='✓ конспект перестроен: '+r.count+' вопросов под твою задачу';
     render();
   } else {
     el('stQGen').textContent='не вышло: '+((r&&r.message)||'')+' — остался стандартный конспект';
@@ -578,7 +578,7 @@ const jpost = async (u,b,timeoutMs)=>{
     r = await fetch(u,{method:"POST",headers:{"Content-Type":"application/json","X-Bridge-CSRF":t},body:JSON.stringify(b),signal:_ac?_ac.signal:undefined}).then(x=>x.json());
   }catch(e){
     if(_to) clearTimeout(_to);
-    if(e && e.name==="AbortError") return {status:"error", timeout:true, message:"источник отвечает слишком долго — проверьте подключение и данные (доступ, лист/диапазон)"};
+    if(e && e.name==="AbortError") return {status:"error", timeout:true, message:"источник отвечает слишком долго — проверь подключение и данные (доступ, лист/диапазон)"};
     return {status:"error", message:"нет связи с мостом: "+((e&&e.message)||e)};
   }
   if(_to) clearTimeout(_to);
@@ -629,7 +629,7 @@ function _agentGateRender(list, broken, why){
     + 'placeholder="Имя нового агента (например: «Мой агент»)" '
     + 'style="width:100%;box-sizing:border-box;padding:10px 12px;margin-top:10px;border:1px solid var(--cream-dark,#e5e0d5);border-radius:9px;font-size:13.5px" '
     + 'onkeydown="if(event.key===\'Enter\')agentGateCreate()">'
-    + (rows ? '<div style="margin:12px 0 4px;font-size:12px;color:var(--silver)">Или выберите существующего:</div>'+rows : '')
+    + (rows ? '<div style="margin:12px 0 4px;font-size:12px;color:var(--silver)">Или выбери существующего:</div>'+rows : '')
     + '<div style="display:flex;gap:8px;margin-top:12px">'
     + '<button class="btn gold" style="flex:1" onclick="agentGateCreate()">＋ Создать агента (Qwen)</button>'
     + '<button class="btn ghost" style="flex:0 0 40%" onclick="agentGateLink()">🔗 Вставить ID агента</button></div>'
@@ -679,8 +679,8 @@ async function agentGateLink(){
   var id=(inp&&inp.value||'').trim();
   // Для привязки в то же поле вставляют id (agent_…). Если поле под имя — подсказываем.
   if(!id){
-    if(inp){ inp.placeholder='Вставьте id агента: agent_…'; inp.focus(); }
-    if(m) m.innerHTML='<span style="color:#a97e35">Вставьте id агента (agent_…) в поле выше и нажмите «Привязать».</span>';
+    if(inp){ inp.placeholder='Вставь ID агента: agent_…'; inp.focus(); }
+    if(m) m.innerHTML='<span style="color:#a97e35">Вставь ID агента (agent_…) в поле выше и нажми «Привязать».</span>';
     return;
   }
   if(id.indexOf('agent_')!==0){
@@ -739,7 +739,7 @@ async function agentCreate(){
 }
 async function agentLink(){
   modCancel();
-  ask("Привязать агента по id","Вставьте agent_… существующего агента Extella (напр. UI-копию Qwen). Проверю и привяжу.","",async (id)=>{
+  ask("Привязать агента по id","Вставь agent_… существующего агента Extella (например, копию Qwen). Проверю и привяжу.","",async (id)=>{
     if(!id) return; busy("Привязываю…");
     const r=await jpost("/x/agent_link",{agent_id:id.trim()}); busyOff();
     if(r.status==="success"){ toast("✓ Агент привязан и выбран","ok"); await refreshAgentBadge(); openAgentManager(); }
@@ -811,7 +811,7 @@ async function openBrain(){
     // Объясняем, ЧТО такое мозг и почему он пока пуст, а не выдаём «Мозг недоступен».
     resetModInput();
     el("modTitle").textContent="🧠 Мозг агента";
-    el("modHint").innerHTML="Мозг — это память вашего агента: <b>знания</b> о компании, <b>правила</b> работы, освоенные <b>умения</b> и <b>голос</b>. Всё, что визард узнаёт при проектировании и прогонах, копится сюда.";
+    el("modHint").innerHTML="Мозг — память твоего агента: <b>знания</b> о компании, <b>правила</b> работы, освоенные <b>умения</b> и <b>голос</b>. Всё, что визард узнаёт при проектировании и прогонах, копится сюда.";
     el("modInput").outerHTML='<input id="modInput" type="hidden">'+
       '<div style="font-size:13.5px;color:var(--ink-soft);margin:12px 0 6px">Мозг принадлежит агенту — а агент пока не выбран, поэтому копить знания некуда.</div>'+
       '<div style="display:flex;gap:8px;margin-top:12px">'+
@@ -836,7 +836,7 @@ async function brainDel(op,id){
   if(r.status==="success"){ _brainRender(r); } else toast("Не удалось удалить","err");
 }
 async function voiceLearn(){
-  askBig("🎙 Примеры голоса клиента","Вставьте 2–4 реальных сообщения/письма, как пишет клиент (каждое с новой строки, разделяйте пустой строкой). Агент выучит стиль.","",async (txt)=>{
+  askBig("🎙 Примеры голоса клиента","Вставь 2–4 реальных сообщения или письма, как пишет клиент (разделяй пустой строкой). Агент выучит стиль.","",async (txt)=>{
     if(!txt||!txt.trim()) return;
     const samples=txt.split(/\n\s*\n/).map(s=>s.trim()).filter(Boolean);
     busy("Учу голос по примерам…");
@@ -858,7 +858,7 @@ async function voiceTry(){
   });
 }
 async function knowledgeLearn(){
-  askBig("📚 Знание компании","Вставьте текст: FAQ, прайс, регламент, описание продукта/услуги, правила доставки и т.п. Агент разберёт его на факты и запомнит.","",async (txt)=>{
+  askBig("📚 Знание компании","Вставь текст: FAQ, прайс, регламент, описание продукта или услуги, правила доставки. Агент разберёт его на факты и запомнит.","",async (txt)=>{
     if(!txt||!txt.trim()) return; busy("Разбираю знание на факты…");
     const r=await jpost("/x/knowledge_learn",{text:txt}); busyOff();
     const res=(r&&r.result)||{};
@@ -985,7 +985,7 @@ var _I18N_DICT = {
   "✨ Спроектировать и зарегистрировать": "✨ Design and register",
   "Опишите, какой отчётный язык нужен: какие колонки обязательны, какой фильтр по умолчанию, что считать итогом. Проектировщик соберёт спецификацию поверх проверенного ядра и зарегистрирует язык ТОЛЬКО после контрольных прогонов.": "Describe the reporting language you need: which columns are mandatory, the default filter, what counts as the total. The designer builds a specification on top of the verified core and registers the language ONLY after control runs.",
   "свои предметные языки": "your own domain languages",
-  "предметные языки вашего аккаунта: программа словами дела → проверенный исполняемый результат": "your account's domain languages: a program in business terms → a verified executable result",
+  "предметные языки твоего аккаунта: программа словами дела → проверенный исполняемый результат": "your account's domain languages: a program in business terms → a verified executable result",
   "Создание нового языка словами (генеративный builder) — следующий этап Студии; сегодня языки регистрируются с обязательными контрольными прогонами (fixtures-гейт).": "Creating a new language in words (generative builder) is the Studio's next stage; today languages are registered with mandatory control runs (fixtures gate).",
   "задачи из готовых блоков": "tasks from ready-made blocks",
   "бизнес-процессы под ключ": "turnkey business processes",
@@ -1008,7 +1008,7 @@ var _I18N_DICT = {
   "Создать автоматизацию": "Create automation",
   "Что хотите поручить Extella?": "What do you want to hand off to Extella?",
   "⚡ Собрать задачу из готовых блоков": "⚡ Assemble a task from ready-made blocks",
-  "Разбор файлов, дайджесты, поиск, отчёты. Композитор подберёт блоки из вашей библиотеки, доустановит недостающее — и сразу запустит.": "File parsing, digests, search, reports. The Composer picks blocks from your library, installs what's missing — and runs it right away.",
+  "Разбор файлов, дайджесты, поиск, отчёты. Композитор подберёт блоки из твоей библиотеки, доустановит недостающее — и сразу запустит.": "File parsing, digests, search, reports. The Composer picks blocks from your library, installs what's missing — and runs it right away.",
   "найти забытые подписки в банковских выписках": "find forgotten subscriptions in bank statements",
   "следить за конкурентами и слать дайджест": "monitor competitors and send a digest",
   "превратить папку PDF в базу знаний": "turn a PDF folder into a knowledge base",
@@ -1031,10 +1031,10 @@ var _I18N_DICT = {
   "Ров продукта": "Product moat",
   "Процессное ядро": "Process core",
   "Мы строим шесть универсальных процессных модулей один раз — каждая отрасль переиспользует их, добавляя лишь тонкий регуляторный слой. Продаём отраслью, строим процессами.": "We build six universal process modules once — each industry reuses them, adding only a thin regulatory layer. We sell by industry, build by process.",
-  "Создайте новую сессию или выберите существующую, чтобы начать.": "Create a new session or select an existing one to get started.",
+  "Создайте новую сессию или выбери существующую, чтобы начать.": "Create a new session or select an existing one to get started.",
   "Шаг 1 · Интервью": "Step 1 · Interview",
-  "Расскажите о вашем процессе": "Tell us about your process",
-  "Главный способ — разговор с Мастером справа: он проведёт интервью и сам заполнит конспект ниже. Любой пункт конспекта можно поправить руками — кликните по нему. Приложите файлы-образцы (выгрузки, шаблоны) — это сильно ускоряет проектирование.": "The main way is a conversation with the Assistant on the right: it runs the interview and fills in the notes below itself. Any item in the notes can be edited by hand — click on it. Attach sample files (exports, templates) — it greatly speeds up the design.",
+  "Расскажи о своём процессе": "Tell us about your process",
+  "Главный способ — разговор с Мастером справа: он проведёт интервью и сам заполнит конспект ниже. Любой пункт конспекта можно поправить руками — кликните по нему. Приложи файлы-образцы (выгрузки, шаблоны) — это сильно ускорит проектирование.": "The main way is a conversation with the Assistant on the right: it runs the interview and fills in the notes below itself. Any item in the notes can be edited by hand — click on it. Attach sample files (exports, templates) — it greatly speeds up the design.",
   "Конспект интервью": "Interview notes",
   "Заполняется сам по ходу разговора с Мастером. Руками правьте, когда хотите уточнить формулировку или добавить то, о чём он не спросил.": "Fills in by itself as you talk with the Assistant. Edit by hand when you want to refine the wording or add something it didn't ask about.",
   "Файлы-образцы": "Sample files",
@@ -1043,13 +1043,13 @@ var _I18N_DICT = {
   "Сохранить конспект": "Save notes",
   "Завершить интервью → План": "Finish interview → Plan",
   "Шаг 2 · План процесса": "Step 2 · Process plan",
-  "План вашего процесса": "Your process plan",
+  "План твоего процесса": "Your process plan",
   "План собирается ИИ-архитектором строго из каталога возможностей Extella: ничего выдуманного. Всё, чего платформе не хватает, честно показано в «Разрывах».": "The plan is assembled by an AI architect strictly from Extella's capability catalog: nothing made up. Everything the platform lacks is shown honestly in 'Gaps'.",
   "⚙ Собрать план": "⚙ Assemble plan",
   "Дальше: техзадание →": "Next: spec →",
   "Шаг 3 · Техзадание": "Step 3 · Spec",
   "Техзадание проекта": "Project spec",
-  "Живой документ: собирается из всего, что накоплено в сессии — интервью, план, решения, комментарии. Наведите на раздел, чтобы оставить комментарий; правки — через Мастера («изменить в ТЗ…») или комментарием, команда внесёт.": "A living document: assembled from everything gathered in the session — interview, plan, decisions, comments. Hover over a section to leave a comment; edits go through the Assistant ('change in the spec…') or via a comment, and the team applies them.",
+  "Живой документ: собирается из всего, что накоплено в сессии — интервью, план, решения, комментарии. Наведи на раздел, чтобы оставить комментарий; правки — через Мастера («изменить в ТЗ…») или комментарием.": "A living document: assembled from everything gathered in the session — interview, plan, decisions, comments. Hover over a section to leave a comment; edits go through the Assistant ('change in the spec…') or via a comment, and the team applies them.",
   "⟳ Обновить ТЗ": "⟳ Update spec",
   "Хочу внести изменение в техзадание: ": "I want to make a change to the spec: ",
   "💬 Попросить изменение": "💬 Request a change",
@@ -1065,7 +1065,7 @@ var _I18N_DICT = {
   "Запуск процесса": "Process launch",
   "Мастер Extella": "Extella Assistant",
   "ведёт интервью · заполняет конспект сам": "runs the interview · fills in the notes itself",
-  "Здравствуйте! Я помогу спроектировать ваш ИИ-процесс на Extella. Расскажите своими словами, какая задача или боль привела вас сюда — остальное я спрошу сам, а конспект слева буду заполнять по ходу разговора. Руками его править не нужно (но можно — если хотите уточнить).": "Hello! I'll help you design your AI process on Extella. Tell me in your own words what task or pain point brought you here — I'll ask about the rest myself, and I'll fill in the notes on the left as we talk. You don't need to edit it by hand (but you can — if you want to refine something).",
+  "Привет! Помогу спроектировать твой ИИ-процесс на Extella. Расскажи своими словами, какая задача или боль привела тебя сюда — остальное я спрошу сам, а конспект слева буду заполнять по ходу разговора. Руками его править не нужно (но можно — если хочешь уточнить).": "Hello! I'll help you design your AI process on Extella. Tell me in your own words what task or pain point brought you here — I'll ask about the rest myself, and I'll fill in the notes on the left as we talk. You don't need to edit it by hand (but you can — if you want to refine something).",
   "Приложить файл": "Attach file",
   "Сообщение… (Shift+Enter — новая строка)": "Message… (Shift+Enter — new line)",
   "Отмена": "Cancel",
@@ -1143,21 +1143,21 @@ var _I18N_DICT = {
   "файл / выгрузка": "file / export",
   " · результат": " · result",
   "Не удалось создать проект: ": "Failed to create project: ",
-  "Проект создан — отправьте сообщение Мастеру, чтобы начать интервью по пробелу": "Project created — send a message to the Assistant to start the interview about the gap",
+  "Проект создан — отправь сообщение Мастеру, чтобы начать интервью по пробелу": "Project created — send a message to the Assistant to start the interview about the gap",
   "🏢 Похоже на бизнес-процесс": "🏢 Looks like a business process",
   " — такие надёжнее строить через интервью с Мастером.": " — these are more reliably built through an interview with the Wizard.",
   "Пройти интервью →": "Take the interview →",
   "по смыслу задачи": "based on the task's meaning",
   "Разбираю задачу…": "Parsing the task…",
-  "подбираю блоки, модели и навыки из вашей библиотеки": "selecting blocks, models and skills from your library",
+  "подбираю блоки, модели и навыки из твоей библиотеки": "selecting blocks, models and skills from your library",
   "⬇ доустановлено под задачу: ": "⬇ installed for the task: ",
   "модель": "model",
   "модели": "models",
-  "Не всё нашлось в вашей библиотеке — можно доустановить или достроить:": "Not everything was found in your library — you can install what's missing or build it:",
+  "Не всё нашлось в твоей библиотеке — можно доустановить или достроить:": "Not everything was found in your library — you can install what's missing or build it:",
   "🌐 Найти в интернете": "🌐 Find online",
   "🧩 Достроить Мастером": "🧩 Build the rest with the Wizard",
   "⚙ Технические детали (для любопытных)": "⚙ Technical details (for the curious)",
-  "Собрано из ваших блоков:": "Assembled from your blocks:",
+  "Собрано из твоих блоков:": "Assembled from your blocks:",
   "＋ Сохранить как автоматизацию": "＋ Save as automation",
   "«Запустить» — прогнать разово, результат покажу здесь. «Сохранить» — добавить в «Мои», чтобы ставить на расписание и слать в Telegram/почту.": "«Run» — run it once, I'll show the result here. «Save» — add it to «Mine» to schedule it and send it to Telegram/email.",
   "Уже сохранено — открой «Автоматизации»": "Already saved — open «Automations»",
@@ -1193,17 +1193,17 @@ var _I18N_DICT = {
   "Комментарий для команды…": "Comment for the team…",
   "Добавить": "Add",
   "✓ Сохранить": "✓ Save",
-  "конспект пуст — поговорите с Мастером или заполните пункт": "the outline is empty — talk to the Assistant or fill in an item",
+  "конспект пуст — поговори с Мастером или заполни пункт": "the outline is empty — talk to the Assistant or fill in an item",
   "сохраняю через платформу…": "saving via the platform…",
   "ошибка: ": "error: ",
-  "Конспект пуст. Пройдите интервью с Мастером справа ИЛИ заполните пункты конспекта вручную и нажмите «Сохранить» — иначе план собрать не из чего.": "The outline is empty. Take the interview with the Assistant on the right OR fill in the outline items manually and click «Save» — otherwise there's nothing to assemble the plan from.",
+  "Конспект пуст. Пройди интервью с Мастером справа ИЛИ заполни пункты конспекта вручную и нажми «Сохранить» — иначе план собрать не из чего.": "The outline is empty. Take the interview with the Assistant on the right OR fill in the outline items manually and click «Save» — otherwise there's nothing to assemble the plan from.",
   "гость": "Guest",
   "Ваше имя": "Your name",
   "Подпись для комментариев (запомним)": "Signature for comments (we'll remember)",
   "Сначала создайте сессию": "Create a session first",
   "ИИ-архитектор собирает план (≈20–60 с)…": "The AI architect is assembling the plan (≈20–60 s)…",
   "Проверка данных": "Data check",
-  "Проверю, поддерживает ли ваш файл описанный процесс.": "I'll check whether your file supports the described process.",
+  "Проверю, поддерживает ли твой файл описанный процесс.": "I'll check whether your file supports the described process.",
   "🔎 Проверить данные": "🔎 Check data",
   "файл поддерживает процесс": "the file supports the process",
   "файл не поддерживает процесс": "the file doesn't support the process",
@@ -1214,7 +1214,7 @@ var _I18N_DICT = {
   "Не хватает полей:": "Missing fields:",
   "↻ Перепроверить": "↻ Re-check",
   "сверяю файл с процессом…": "checking the file against the process…",
-  "План ещё не собран. Завершите интервью и нажмите «Собрать план».": "The plan isn't assembled yet. Finish the interview and click «Assemble plan».",
+  "План ещё не собран. Завершите интервью и нажми «Собрать план».": "The plan isn't assembled yet. Finish the interview and click «Assemble plan».",
   "низкий риск": "low risk",
   "средний риск": "medium risk",
   "высокий риск": "high risk",
@@ -1237,7 +1237,7 @@ var _I18N_DICT = {
   "✓ Техзадание обновлено": "✓ Spec updated",
   "собираю ТЗ из сессии…": "assembling the spec from the session…",
   "Текст ТЗ ещё не собран. Нажмите «Обновить ТЗ» — документ соберётся из интервью, плана и решений сессии.": "The spec text isn't assembled yet. Click «Update spec» — the document will be assembled from the interview, the plan and the session's decisions.",
-  "Дополните фразу в чате и нажмите →": "Complete the phrase in the chat and press →",
+  "Дополните фразу в чате и нажми →": "Complete the phrase in the chat and press →",
   "Биллинг / платежи": "Billing / payments",
   "Возвраты / компенсации": "Refunds / compensation",
   "Юридические претензии": "Legal claims",
@@ -1252,9 +1252,9 @@ var _I18N_DICT = {
   "Диагностика технической проблемы": "Diagnosing a technical problem",
   "Загрузка ядра…": "Loading the core…",
   "отраслевые надстройки: ": "industry add-ons: ",
-  "— выберите отрасль —": "— choose an industry —",
-  "отрасль не определена — выберите вручную": "industry not detected — choose manually",
-  "Отрасль процесса не определяется автоматически (в плане нет явного домена) — выберите её из списка, и библиотека покажет отраслевой чек-лист, таксономию и регуляторику. Без выбора демо-прогон идёт на базовом чек-листе из 9 критериев.": "The process industry is not detected automatically (the plan has no explicit domain) — choose it from the list, and the library will show the industry checklist, taxonomy and regulations. Without a choice, the demo run uses the base checklist of 9 criteria.",
+  "— выбери отрасль —": "— choose an industry —",
+  "отрасль не определена — выбери вручную": "industry not detected — choose manually",
+  "Отрасль процесса не определяется автоматически (в плане нет явного домена) — выбери её из списка — покажу отраслевой чек-лист, таксономию и регуляторику. Без выбора демо-прогон идёт на базовом чек-листе из 9 критериев.": "The process industry is not detected automatically (the plan has no explicit domain) — choose it from the list, and the library will show the industry checklist, taxonomy and regulations. Without a choice, the demo run uses the base checklist of 9 criteria.",
   "работает во всех отраслях как есть": "works across all industries as is",
   "процессных модулей": "process modules",
   "критериев-заготовок в ядре": "template criteria in the core",
@@ -1262,7 +1262,7 @@ var _I18N_DICT = {
   "отраслей засеяно": "industries seeded",
   "Шесть процессных модулей — строим один раз": "Six process modules — built once",
   "Переиспользование по отраслям": "Reuse across industries",
-  "Пока не засеяна ни одна отрасль. Запустите wz_seed_library.": "No industry seeded yet. Run wz_seed_library.",
+  "Пока не засеяна ни одна отрасль. Запусти wz_seed_library.": "No industry seeded yet. Run wz_seed_library.",
   " — не засеяна": " — not seeded",
   "Отраслевая библиотека": "Industry library",
   "Отрасль": "Industry",
@@ -1324,7 +1324,7 @@ var _I18N_DICT = {
   "требуется эскалация": "escalation required",
   "пройдена с замечаниями": "passed with remarks",
   "Процесс ещё не построен.": "The process isn't built yet.",
-  "Вернитесь на шаг «Стройка» и нажмите «Построить процесс».": "Go back to the \"Build\" step and click \"Build process\".",
+  "Вернитесь на шаг «Стройка» и нажми «Построить процесс».": "Go back to the \"Build\" step and click \"Build process\".",
   "✓ Проверка безопасности пройдена — можно запускать.": "✓ Safety check passed — you can launch.",
   "❌ Проверка требует вмешательства команды Extella — запуск заблокирован.": "❌ The check requires the Extella team's intervention — launch is blocked.",
   "⚠️ Проверка пройдена с замечаниями — подтвердите перед запуском.": "⚠️ Check passed with remarks — confirm before launching.",
@@ -1332,7 +1332,7 @@ var _I18N_DICT = {
   "✓ Процесс запущен.": "✓ Process launched.",
   "Компоненты собраны и одобрены. Для работы 24/7 по расписанию команда Extella один раз настроит машину-исполнитель (Listener) — это последний технический шаг вне вашего пути.": "Components are assembled and approved. For 24/7 scheduled operation, the Extella team sets up the executor machine (Listener) once — the last technical step outside your journey.",
   "🚀 Запустить процесс": "🚀 Launch process",
-  "📊 Результат на ваших данных (пробный прогон)": "📊 Result on your data (trial run)",
+  "📊 Результат на твоих данных (пробный прогон)": "📊 Result on your data (trial run)",
   "позиций": "items",
   "общая сумма": "total sum",
   "Оркестратор процесса:": "Process orchestrator:",
@@ -1369,13 +1369,13 @@ var _I18N_DICT = {
   "токен бота (создаётся у @BotFather за минуту)": "a bot token (created via @BotFather in a minute)",
   "Отчёты приходят письмом на почту": "Reports arrive by email",
   "SMTP-доступ почты: хост, логин, пароль приложения": "mailbox SMTP access: host, login, app password",
-  "Сообщения в канал вашей команды": "Messages to your team's channel",
+  "Сообщения в канал твоей команды": "Messages to your team's channel",
   "Incoming Webhook URL из настроек Slack": "Incoming Webhook URL from Slack settings",
   "Сообщения клиентам в WhatsApp": "Messages to clients on WhatsApp",
   "GreenAPI: idInstance + apiToken (кабинет green-api.com)": "GreenAPI: idInstance + apiToken (green-api.com account)",
   "SMS-уведомления на телефон": "SMS notifications to your phone",
   "ключ SMS-провайдера": "SMS provider key",
-  "Берёт данные из ваших Google-таблиц": "Pulls data from your Google Sheets",
+  "Берёт данные из твоих Google-таблиц": "Pulls data from your Google Sheets",
   "JSON-ключ сервис-аккаунта Google": "Google service account JSON key",
   "Сделки и контакты из Битрикс24": "Deals and contacts from Bitrix24",
   "входящий вебхук Битрикс24": "Bitrix24 inbound webhook",
@@ -1386,7 +1386,7 @@ var _I18N_DICT = {
   "домен и долгосрочный токен": "domain and long-lived token",
   "Читает выгрузку из 1С (файл)": "Reads a 1C export (file)",
   "путь к файлу выгрузки": "path to the export file",
-  "Прямо из 1С на вашем сервере": "Straight from 1C on your server",
+  "Прямо из 1С на твоём сервере": "Straight from 1C on your server",
   "адрес сервера и логин WinRM": "server address and WinRM login",
   "✓ подключено": "✓ connected",
   "найдено в Travel-паке": "found in the Travel pack",
@@ -1446,14 +1446,14 @@ var _I18N_DICT = {
   "выполнено": "done",
   "Настройки процесса": "Process settings",
   "пересобрать поля": "rebuild fields",
-  "Сгенерированы Мастером под ваш процесс. Влияют на то, как собирается результат.": "Generated by the Wizard for your process. They affect how the result is assembled.",
+  "Сгенерированы Мастером под твой процесс. Влияют на то, как собирается результат.": "Generated by the Wizard for your process. They affect how the result is assembled.",
   "Сохранить настройки": "Save settings",
   "Мастер может выделить настройки этого процесса (пороги, имена, период) — чтобы менять их прямо тут.": "The Wizard can surface this process's settings (thresholds, names, period) — so you can change them right here.",
   "✨ Сгенерировать настройки": "✨ Generate settings",
   "Что делает": "What it does",
   "Собранный процесс.": "Assembled process.",
   "Как проходит процесс": "How the process works",
-  "Шаги собраны Мастером под вашу задачу. Правки данных/получателей — во вкладках; переделать шаги — «Открыть в Мастере».": "Steps assembled by the Wizard for your task. Edit data/recipients in the tabs; to redo the steps — \"Open in Wizard\".",
+  "Шаги собраны Мастером под твою задачу. Правки данных/получателей — во вкладках; переделать шаги — «Открыть в Мастере».": "Steps assembled by the Wizard for your task. Edit data/recipients in the tabs; to redo the steps — \"Open in Wizard\".",
   "Пересобираю поля процесса…": "Rebuilding process fields…",
   "Мастер выделяет настройки процесса…": "The Wizard is surfacing the process settings…",
   "✓ Поля готовы": "✓ Fields ready",
@@ -1498,8 +1498,8 @@ var _I18N_DICT = {
   "Изменить": "Change",
   "⏰ Настроить расписание и канал": "⏰ Set up schedule and channel",
   "Реальный крон на устройстве/VPS 24/7 (sched-тик).": "Real cron on the device/VPS 24/7 (sched tick).",
-  "Нет свободных подключённых каналов. Подключите канал в блоке <b>🔌 Подключения</b> вверху страницы.": "No free connected channels. Connect a channel in the <b>🔌 Connections</b> block at the top of the page.",
-  "Выберите подключённый канал:": "Select a connected channel:",
+  "Нет свободных подключённых каналов. Подключи канал в блоке <b>🔌 Подключения</b> вверху страницы.": "No free connected channels. Connect a channel in the <b>🔌 Connections</b> block at the top of the page.",
+  "Выбери подключённый канал:": "Select a connected channel:",
   "Сохраняю получателей…": "Saving recipients…",
   "✓ Получатели обновлены": "✓ Recipients updated",
   "Убрать получателя": "Remove recipient",
@@ -1580,7 +1580,7 @@ var _I18N_DICT = {
   "Приём входящих сообщений": "Receiving inbound messages",
   "Процесс сможет запускаться по входящему сообщению и отвечать в тот же чат — сотрудник на связи 24/7.": "The process can be triggered by an inbound message and reply in the same chat — like a live 24/7 assistant.",
   "Для приёма входящих нужен подключённый канал (пока — Telegram).": "Receiving inbound messages needs a connected channel (Telegram for now).",
-  "Подключите <b>Telegram</b> в блоке <b>🔌 Подключения</b> вверху страницы, затем вернитесь сюда и включите опрос.": "Connect <b>Telegram</b> in the <b>🔌 Connections</b> block at the top of the page, then come back here and enable polling.",
+  "Подключи <b>Telegram</b> в блоке <b>🔌 Подключения</b> вверху страницы, потом вернись сюда и включи опрос.": "Connect <b>Telegram</b> in the <b>🔌 Connections</b> block at the top of the page, then come back here and enable polling.",
   "Канал приёма:": "Receiving channel:",
   "Как принимать входящие:": "How to receive inbound:",
   "<b>Опрос</b> — проще, в канале ничего не настраивать, работает даже за фаерволом. Небольшая задержка (до одного тика).": "<b>Polling</b> — simpler, nothing to configure in the channel, works even behind a firewall. Small delay (up to one tick).",
@@ -1599,7 +1599,7 @@ var _I18N_DICT = {
   "🌐 Найти блок в интернете": "🌐 Find a block online",
   "🧩 Достроить Мастером": "🧩 Finish with the Wizard",
   "⚙ Технические детали (для любопытных)": "⚙ Technical details (for the curious)",
-  "Собрано из ваших блоков:": "Assembled from your blocks:",
+  "Собрано из твоих блоков:": "Assembled from your blocks:",
   "▶ Запустить сейчас": "▶ Run now",
   "＋ Сохранить как автоматизацию": "＋ Save as automation",
   "«Запустить» — прогнать разово. «Сохранить» — в «Мои», чтобы ставить на расписание и слать в Telegram/почту.": "«Run» does a one-off run. «Save» puts it in «Mine» so you can schedule it and send to Telegram/email.",
@@ -1641,7 +1641,7 @@ var _I18N_DICT = {
   "напр.: убери шаг X · шли только топ-5 · поменяй источник": "e.g.: remove step X · send only top-5 · change the source",
   "Эта сборка может стать паком-продуктом — публикация композиций появится позже.": "This build can become a product pack — publishing compositions is coming later.",
   "Публикация композиции как пака — в разработке; сейчас паком издаются процессы Мастера.": "Publishing a composition as a pack is in development; packs are currently published from Wizard processes.",
-  "шаги не записаны (композиция старой версии — отправьте любую доводку, состав запишется)": "steps not recorded (an older composition — send any refinement and the makeup will be saved)",
+  "шаги не записаны (композиция старой версии — отправь любую доводку, состав запишется)": "steps not recorded (an older composition — send any refinement and the makeup will be saved)",
   "Стройка прервана перезапуском сервиса — прежняя версия работает. Повторите правку.": "The build was interrupted by a service restart — the previous version keeps working. Repeat the change.",
   "Откат прерван перезапуском сервиса — повторите откат.": "The rollback was interrupted by a service restart — repeat the rollback.",
   "Применяются при каждом прогоне: стадии процесса получают правила и поля владельца (контракт параметров).": "Applied on every run: the process stages receive the owner's rules and fields (params contract).",
@@ -1653,7 +1653,7 @@ var _I18N_DICT = {
   "Откатить последнюю правку? Процесс будет пересобран по прежней версии (1–3 мин).": "Roll back the last change? The process will be rebuilt from the previous version (1-3 min).",
   "откатываю и пересобираю…": "rolling back and rebuilding…",
   "Откат-пересборка упала — прежняя версия продолжает работать.": "The rollback rebuild failed — the previous version keeps working.",
-  "Вопросы под вашу задачу": "Questions tailored to your task",
+  "Вопросы под твою задачу": "Questions tailored to your task",
   "Опишите задачу одной фразой — конспект перестроится под неё (вместо стандартного списка).": "Describe the task in one phrase — the brief will be rebuilt around it (instead of the standard list).",
   "напр.: контроль дебиторки 28 филиалов из 1С с еженедельной сводкой директору": "e.g.: receivables control for 28 branches from 1C with a weekly summary to the director",
   "⚡ Подобрать вопросы": "⚡ Tailor the questions",
@@ -1684,7 +1684,7 @@ var _I18N_DICT = {
   "✓ Расписание снято": "✓ Schedule removed",
   "⏸ На паузе": "⏸ Paused",
   "▶ Возобновлено": "▶ Resumed",
-  "Задание Строителю набрано — отправьте сообщение Мастеру": "The Builder task is drafted — send the message to the Assistant",
+  "Задание Строителю набрано — отправь сообщение Мастеру": "The Builder task is drafted — send the message to the Assistant",
   "🔧 Пересобрать Строителем": "🔧 Rebuild with the Builder",
   "стройка идёт…": "building…",
   "Строитель принимает правку…": "The Builder is taking the change…",
@@ -1705,7 +1705,7 @@ var _I18N_RULES = [
   ["Хочу автоматизацию: ([\\s\\S]+?)\\.\\nКомпозитор собрал почти всё из библиотеки, но не хватает: ([\\s\\S]+?)\\. Помоги достроить именно недостающую часть — расспроси по ней и соберём её как новый блок\\.", "I want an automation: $1.\nThe Composer assembled almost everything from the library, but it's missing: $2. Help me build exactly the missing part — ask me about it and we'll assemble it as a new block."],
   ["Хочу автоматизировать процесс: ([\\s\\S]+?)\\. Расспроси меня и спроектируй\\.", "I want to automate a process: $1. Ask me questions and design it."],
   ["Нашёл (\\d+) — установка по клику \\(внешнее ставится после подтверждения\\):", "Found $1 — one-click install (external is installed after confirmation):"],
-  ["Это скачает и запустит код на вашем устройстве \\((.+?)\\)\\.", "This will download and run code on your device ($1)."],
+  ["Это скачает и запустит код на твоём устройстве \\((.+?)\\)\\.", "This will download and run code on your device ($1)."],
   ["Установить «(.+?)» \\((.+?)\\)\\?", "Install «$1» ($2)?"],
   ["Удалить «(.+?)»\\?", "Delete «$1»?"],
   ["заполнено (\\d+) из (\\d+)", "$1 of $2 filled"],
@@ -1745,7 +1745,7 @@ var _I18N_RULES = [
   ["шагу «(.+?)» нужен вход: источник данных — укажите его словами \\(напр\\. «файлы в ~/Папка»\\) или уберите шаг", "step «$1» needs an input: a data source — specify it in words (e.g. «files in ~/Folder») or remove the step"],
   ["шагу «(.+?)» нужен вход: (.+?) — укажите его словами \\(напр\\. «файлы в ~/Папка»\\) или уберите шаг", "step «$1» needs an input: $2 — specify it in words (e.g. «files in ~/Folder») or remove the step"],
   ["шаг «(.+?)» ждёт данные «(.+?)» с предыдущего шага — их нет; уточните порядок словами", "step «$1» expects data «$2» from the previous step — it's missing; clarify the order in words"],
-  ["блок «(.+?)» не в вашей библиотеке — доустановите или достройте Мастером", "block «$1» isn't in your library — install it or finish with the Wizard"],
+  ["блок «(.+?)» не в твоей библиотеке — доустановите или достройте Мастером", "block «$1» isn't in your library — install it or finish with the Wizard"],
   ["не удалось поставить модель: ([\\s\\S]+)", "couldn't install the model: $1"],
   ["след\\. запуск (.+)", "next run $1"],
   ["токен Tourvisor истекает через (\\d+) дн\\.", "Tourvisor token expires in $1 days"],
@@ -2037,7 +2037,7 @@ async function renderInstalled(){
     H+='<div style="border:1px solid var(--cream-dark,#d8d2c8);border-radius:14px;padding:16px 18px;background:var(--paper,#fff)">'
       +'<div style="font:700 14px var(--sans);margin-bottom:4px">Установлено, можно подключить к автоматизациям</div>'
       +'<div style="font-size:12.5px;color:var(--silver,#889);margin-bottom:12px">'
-      +'Это ваш набор. Что вы ставите через Extella — подключается само; это осталось с прошлого. '
+      +'Это твой набор. Что ставишь через Extella — подключается само; это осталось с прошлого. '
       +'«Сделать блоком»: разберёмся, что умеет, проверим живым запуском, добавим. Не выйдет — скажем, почему.</div>'
       +actionable.map(function(r){
         var ri=rows.indexOf(r);
@@ -2257,7 +2257,7 @@ async function buildGapWithWizard(){
   if(!el("chat").classList.contains("open")) toggleChat();
   var seed = "Хочу автоматизацию: "+task+".\nКомпозитор собрал почти всё из библиотеки, но не хватает: "+gaps+". Помоги достроить именно недостающую часть — расспроси по ней и соберём её как новый блок.";
   var ci=el("chatInput"); if(ci){ ci.value=seed; ci.focus(); }
-  toast("Проект создан — отправьте сообщение Мастеру, чтобы начать интервью по пробелу","ok");
+  toast("Проект создан — отправь сообщение Мастеру, чтобы начать интервью по пробелу","ok");
 }
 // известные русские сообщения композитора -> English для US-аудитории (WLANG==='en')
 var CMP_ERR_MAP=[
@@ -2346,7 +2346,7 @@ async function firstWin(btn, example){
 function _emptyShowcase(){
   var chips=['сводка по заявкам каждое утро','найти забытые подписки в выписках','сверить счета-фактуры с актами'];
   return '<div style="max-width:680px;background:linear-gradient(135deg,#c9a35c18,var(--paper,#fff));border:1px solid var(--gold,#c9a35c);border-radius:16px;padding:24px 26px">'+
-    '<div class="kicker" style="color:var(--gold,#a97e35)">✨ Здесь появятся ваши автоматизации</div>'+
+    '<div class="kicker" style="color:var(--gold,#a97e35)">✨ Здесь появятся твои автоматизации</div>'+
     '<div style="font-size:20px;font-weight:800;color:var(--ink,#0a0a0a);margin:6px 0 8px">Пока их нет — но результат можно увидеть прямо сейчас</div>'+
     '<div style="font-size:13.5px;color:var(--ink-soft);line-height:1.55;margin-bottom:16px">'+
       'Автоматизация — это процесс, который работает сам: берёт данные, считает и присылает готовый отчёт. '+
@@ -2392,7 +2392,7 @@ async function composeNow(){
   const procHint = procHits ? _procHintHTML(procHits.join(', ')) : '';   // мгновенная эвристика
   _composing=true; if(cbtn) cbtn.disabled=true;
   // подсказка намерения — в стабильном боксе (Qwen уточнит асинхронно, не мешая компоновке)
-  out.innerHTML = '<div id="procHintBox">'+procHint+'</div><div id="composeBody"><div class="cmp-step"><span class="spin"></span> <b>Разбираю задачу…</b> подбираю блоки, модели и навыки из вашей библиотеки</div></div>';
+  out.innerHTML = '<div id="procHintBox">'+procHint+'</div><div id="composeBody"><div class="cmp-step"><span class="spin"></span> <b>Разбираю задачу…</b> подбираю блоки, модели и навыки из твоей библиотеки</div></div>';
   const _body = ()=> el("composeBody") || out;
   classifyIntent(task);   // fire-and-forget: Qwen-вердикт обновит #procHintBox
   let r;
@@ -2463,7 +2463,7 @@ function _composeWorkbench(r){
     '<div style="border:1px solid var(--cream-dark,#d8d2c8);border-radius:14px;padding:16px 18px;background:var(--paper,#fff);margin-bottom:12px">'+
       '<div style="display:flex;align-items:center;gap:10px"><span style="font-size:26px">'+em+'</span><div style="font:700 17px var(--sans)">'+nm+'</div></div>'+
       '<div style="font-size:13.5px;color:var(--ink-soft);line-height:1.5;margin:8px 0 12px">'+desc+'</div>'+
-      '<div style="font-size:12px;color:var(--silver,#889);margin-bottom:6px">Собрано из ваших блоков:</div>'+chips+inst+
+      '<div style="font-size:12px;color:var(--silver,#889);margin-bottom:6px">Собрано из твоих блоков:</div>'+chips+inst+
     '</div>'+ miss +
     '<div style="margin-top:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
     '<button class="btn gold" style="padding:10px 22px;font-size:15px" onclick="runComposed(\''+esc(r.flow_id)+'\',this)">▶ Запустить сейчас</button>'+
@@ -2557,7 +2557,7 @@ async function capInstall(mountId,i,btn){
   var c=(CAP_RESULTS[mountId]||[])[i]; if(!c) return;
   if(btn && btn.disabled) return;
   var runs = (c.install&&(c.install.method==='ollama'||c.install.method==='mcp_connect'||c.install.method==='brew'));
-  var warn = runs ? '\n\nЭто скачает и запустит код на вашем устройстве ('+(CAP_SRC[c.source]||c.source)+').' : '';
+  var warn = runs ? '\n\nЭто скачает и запустит код на твоём устройстве ('+(CAP_SRC[c.source]||c.source)+').' : '';
   if(!confirm('Установить «'+c.title+'» ('+(CAP_KIND_LABEL[c.kind]||c.kind)+')?'+warn)) return;
   if(btn){ btn.disabled=true; btn.innerHTML='<span class="spin"></span> ставлю…'; }
   var inst=c.install||{};
@@ -2728,7 +2728,7 @@ async function saveAnswers(){
     const v=(S.drafts[id]!==undefined ? S.drafts[id] : (t ? t.value : (typeof prev==="string"?prev:(prev||{}).answer))||"").trim();
     if(v) payload[id]={question:(prev&&typeof prev==="object"&&prev.question)||String(id).replace(/_/g," "), answer:v};
   });
-  if(!Object.keys(payload).length){ setStatus("stInterview","конспект пуст — поговорите с Мастером или заполните пункт"); return; }
+  if(!Object.keys(payload).length){ setStatus("stInterview","конспект пуст — поговори с Мастером или заполни пункт"); return; }
   setStatus("stInterview","<span class='spin'></span>сохраняю через платформу…");
   const r = await jpost("/x/expert",{expert_name:"wz_session",params:{action:"save_answers",session_id:S.sessionId,payload_json:JSON.stringify(payload)}});
   if(r.status==="success") S.drafts = {};
@@ -2741,7 +2741,7 @@ async function finishInterview(){
   await reloadSession();
   const nAns = Object.keys((S.session&&S.session.answers)||{}).length;
   if(nAns === 0){   // guard: без ответов blueprint собрать не из чего («no answers»)
-    toast("Конспект пуст. Пройдите интервью с Мастером справа ИЛИ заполните пункты конспекта вручную и нажмите «Сохранить» — иначе план собрать не из чего.", "err");
+    toast("Конспект пуст. Пройди интервью с Мастером справа ИЛИ заполни пункты конспекта вручную и нажми «Сохранить» — иначе план собрать не из чего.", "err");
     return;
   }
   await jpost("/x/expert",{expert_name:"wz_session",params:{action:"set_stage",session_id:S.sessionId,stage:"blueprint"}});
@@ -2808,7 +2808,7 @@ function dataCheckHTML(){
   if(!files.length) return "";
   if(!dc){
     return `<div class="card"><div class="kicker">Проверка данных</div>
-      <div style="font-size:13.5px;color:var(--nav)">Проверю, поддерживает ли ваш файл описанный процесс.</div>
+      <div style="font-size:13.5px;color:var(--nav)">Проверю, поддерживает ли твой файл описанный процесс.</div>
       <div style="margin-top:8px"><button class="btn ghost sm" id="dcBtn" onclick="runDataCheck()">🔎 Проверить данные</button> <span class="statusline" id="stDC"></span></div></div>`;
   }
   const v = dc.verdict;
@@ -2840,7 +2840,7 @@ function renderBlueprint(){
   if(S.session && (S.session.files||[]).length && !S.session.data_check && !S._dcAuto){
     S._dcAuto = true; setTimeout(runDataCheck, 300);
   }
-  if(!S.blueprint){ el("bpArea").innerHTML = dcCard + `<div class="empty">План ещё не собран. Завершите интервью и нажмите «Собрать план».</div>`; return; }
+  if(!S.blueprint){ el("bpArea").innerHTML = dcCard + `<div class="empty">План ещё не собран. Завершите интервью и нажми «Собрать план».</div>`; return; }
   const bp = S.blueprint.blueprint, su = bp.suitability||{};
   const risk = {low:["ok","низкий риск"],medium:["warn","средний риск"],high:["bad","высокий риск"]}[su.risk_level]||["warn",su.risk_level];
   el("bpArea").innerHTML = dcCard + `
@@ -2984,7 +2984,7 @@ function renderSpec(){
   } else {
     // #15: ТЗ мог отстать от плана (blueprint менялся после сборки ТЗ) — честно предупреждаем
     var _stale = (S._specStamp!==undefined) && (S._specStamp !== _bpStamp());
-    var _warn = _stale ? `<div class="card gap-card" style="margin-bottom:10px">⚠ План процесса менялся после сборки этого ТЗ — нажмите «Обновить ТЗ», чтобы пересобрать по свежему плану.</div>` : "";
+    var _warn = _stale ? `<div class="card gap-card" style="margin-bottom:10px">⚠ План процесса менялся после сборки этого ТЗ — нажми «Обновить ТЗ», чтобы пересобрать по свежему плану.</div>` : "";
     el("specArea").innerHTML = _warn + `<div class="spec-doc">${mdToHtml(S.spec)}</div>`;
   }
   el("specComments").innerHTML = threadHTML("spec:doc");
@@ -3006,7 +3006,7 @@ function askAssistant(prefill){
   i.scrollIntoView({block:"center"});
   i.style.transition="none"; i.style.boxShadow="0 0 0 3px var(--gold)";
   setTimeout(()=>{ i.style.transition="box-shadow .8s"; i.style.boxShadow="none"; }, 100);
-  toast("Дополните фразу в чате и нажмите →","ok");
+  toast("Дополните фразу в чате и нажми →","ok");
 }
 
 /* ================= процессное ядро (визуализация рва) ================= */
@@ -3074,7 +3074,7 @@ async function renderProcessCore(){
           <div style="flex:0 0 150px;color:var(--silver)">из ядра ${r.core} · отраслевых ${r.ind}</div>
           ${bar(r.reuse, r.reuse>=90?"var(--ok)":"var(--gold)")}
           <div style="flex:0 0 46px;text-align:right;font-weight:700;color:var(--gold)">${r.reuse}%</div>
-        </div>`).join(""):`<div class="empty">Пока не засеяна ни одна отрасль. Запустите wz_seed_library.</div>`}
+        </div>`).join(""):`<div class="empty">Пока не засеяна ни одна отрасль. Запусти wz_seed_library.</div>`}
       ${notSeeded.length?`<div style="font-size:12px;color:var(--silver);margin-top:8px">Ещё не засеяны: ${notSeeded.map(i=>esc(i.title)).join(", ")} — соберутся от того же ядра.</div>`:""}
     </div>
 
@@ -3100,7 +3100,7 @@ async function renderLibraryPanel(){
     try{ d = await jget("/x/library?industry="+encodeURIComponent(S.libIndustry)); }catch(e){ d = null; }
   }
   S.libData = d;
-  const opts = (S.libIndustry?"":`<option value="" selected>— выберите отрасль —</option>`)
+  const opts = (S.libIndustry?"":`<option value="" selected>— выбери отрасль —</option>`)
     + inds.map(it=>`<option value="${esc(it.id)}" ${it.id===S.libIndustry?"selected":""}>${esc(it.title)}${it.available?"":" — не засеяна"}</option>`).join("");
   const head = `
     <div class="kicker" style="margin-top:26px">Отраслевая библиотека</div>
@@ -3109,7 +3109,7 @@ async function renderLibraryPanel(){
         <label style="font-size:12px;color:var(--nav)">Отрасль
           <select id="libIndustry" class="sess-select" style="max-width:200px;margin-left:6px"
             onchange="S.libIndustry=this.value; renderLibraryPanel();">${opts}</select></label>
-        ${!S.libIndustry?`<span class="badge warn">отрасль не определена — выберите вручную</span>`
+        ${!S.libIndustry?`<span class="badge warn">отрасль не определена — выбери вручную</span>`
           :d&&d.available?`<span class="badge ok">библиотека засеяна · ${esc(d.validated_on||"")}</span>
           ${d.reuse_from_core_pct?`<span class="badge">переиспользование ядра ${d.reuse_from_core_pct}%</span>`:""}`
           :`<span class="badge warn">библиотека ещё не засеяна</span>`}
@@ -3117,7 +3117,7 @@ async function renderLibraryPanel(){
   if(!S.libIndustry){
     host.innerHTML = head + `
       <div style="font-size:13.5px;color:var(--silver);margin-top:10px">
-        Отрасль процесса не определяется автоматически (в плане нет явного домена) — выберите её из списка,
+        Отрасль процесса не определяется автоматически (в плане нет явного домена) — выбери её из списка,
         и библиотека покажет отраслевой чек-лист, таксономию и регуляторику. Без выбора демо-прогон идёт
         на базовом чек-листе из 9 критериев.
       </div></div>`;
@@ -3458,7 +3458,7 @@ function renderLaunch(){
   const lastRunAt = runs.length ? String(runs[runs.length-1].at||"").slice(0,16).replace("T"," ") : "";
   let gate;
   if(!lb){
-    gate = `<div class="card gap-card"><b>Процесс ещё не построен.</b> Вернитесь на шаг «Стройка» и нажмите «Построить процесс».</div>`;
+    gate = `<div class="card gap-card"><b>Процесс ещё не построен.</b> Вернитесь на шаг «Стройка» и нажми «Построить процесс».</div>`;
   } else {
     const aud = lb.audit||{}; const v = aud.verdict;
     const vtext = v==="allow" ? "✓ Проверка безопасности пройдена — можно запускать."
@@ -3474,7 +3474,7 @@ function renderLaunch(){
       ${launched ? `<div class="card pack-card">
           ${runs.length
             ? `<b>✓ Готово — автоматизация работает.</b> Первый прогон сделан${lastRunAt?(" ("+esc(lastRunAt)+")"):""}. Дальше она живёт в кабинете: расписание, повторные прогоны, пауза и результаты во времени.`
-            : `<b>✓ Процесс одобрен и готов.</b> Компоненты собраны, состав зафиксирован. Одобрение — не запуск: сделайте первый прогон, чтобы увидеть результат на ваших данных.`}
+            : `<b>✓ Процесс одобрен и готов.</b> Компоненты собраны, состав зафиксирован. Одобрение — не запуск: сделай первый прогон, чтобы увидеть результат на твоих данных.`}
           ${!(S.session.source&&S.session.source.kind) ? `<div style="background:#fdf6e7;border:1px solid #f0d9a0;border-radius:8px;padding:9px 12px;margin-top:10px;font-size:12.5px;color:#7a5b1a">⚠ Данные пока загружаются <b>вручную файлом</b>. Чтобы процесс работал сам 24/7 — откройте кабинет → «Настройка» → «Привязать источник» → «✨ Любой источник» (своё API / CRM / рекламный кабинет).</div>` : ""}
           <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
             ${runs.length
@@ -3495,7 +3495,7 @@ function renderLaunch(){
     const breakdowns = Object.entries(sm).filter(([k,v])=>k.startsWith("by_") && v && typeof v==="object" && Object.keys(v).length && Object.keys(v).length<=8);
     summaryCard = `
     <div class="card pack-card">
-      <div class="kicker">📊 Результат на ваших данных (пробный прогон)</div>
+      <div class="kicker">📊 Результат на твоих данных (пробный прогон)</div>
       <div style="display:flex;gap:26px;flex-wrap:wrap;margin:6px 0 10px">
         ${sm.total_count!=null?`<div><div style="font-size:24px;font-weight:700">${fmt(sm.total_count)}</div><div style="font-size:12px;color:var(--silver)">позиций</div></div>`:""}
         ${sm.total_sum!=null?`<div><div style="font-size:24px;font-weight:700;color:var(--gold)">${fmt(sm.total_sum)}</div><div style="font-size:12px;color:var(--silver)">общая сумма</div></div>`:""}
@@ -3610,7 +3610,7 @@ function pushMsg(cls, text){
   log.appendChild(d); log.scrollTop = log.scrollHeight;
   return d;
 }
-const GREETING_HTML = '<div class="msg bot">Здравствуйте! Я помогу спроектировать ваш ИИ-процесс на Extella. Расскажите своими словами, какая задача или боль привела вас сюда — остальное я спрошу сам, а конспект слева буду заполнять по ходу разговора. Руками его править не нужно (но можно — если хотите уточнить).</div>';
+const GREETING_HTML = '<div class="msg bot">Привет! Помогу спроектировать твой ИИ-процесс на Extella. Расскажи своими словами, какая задача или боль привела тебя сюда — остальное я спрошу сам, а конспект слева буду заполнять по ходу разговора. Руками его править не нужно (но можно — если хочешь уточнить).</div>';
 async function loadChatHistory(sid){
   // Один непрерывный чат на сессию: подгружаем сохранённую стенограмму (память держит мост, не платформа).
   const log = el("chatLog");
@@ -3725,16 +3725,16 @@ async function ensureConn(){
 const CONN_META = {
   telegram:    {e:'✈️', what:'Сводки и ответы приходят в чат Telegram', need:'токен бота (создаётся у @BotFather за минуту)'},
   email:       {e:'✉️', what:'Отчёты приходят письмом на почту',        need:'SMTP-доступ почты: хост, логин, пароль приложения'},
-  slack:       {e:'💬', what:'Сообщения в канал вашей команды',          need:'Incoming Webhook URL из настроек Slack'},
+  slack:       {e:'💬', what:'Сообщения в канал твоей команды',          need:'Incoming Webhook URL из настроек Slack'},
   whatsapp:    {e:'🟢', what:'Сообщения клиентам в WhatsApp',            need:'GreenAPI: idInstance + apiToken (кабинет green-api.com)'},
   sms:         {e:'📱', what:'SMS-уведомления на телефон',               need:'ключ SMS-провайдера'},
-  src_gsheets: {e:'📊', what:'Берёт данные из ваших Google-таблиц',      need:'JSON-ключ сервис-аккаунта Google'},
+  src_gsheets: {e:'📊', what:'Берёт данные из твоих Google-таблиц',      need:'JSON-ключ сервис-аккаунта Google'},
   src_bitrix24:{e:'🄱',  what:'Сделки и контакты из Битрикс24',           need:'входящий вебхук Битрикс24'},
   src_postgres:{e:'🐘', what:'Данные напрямую из PostgreSQL',            need:'строка подключения к базе'},
   src_mysql:   {e:'🐬', what:'Данные напрямую из MySQL',                 need:'строка подключения к базе'},
   src_amocrm:  {e:'🄰',  what:'Лиды и сделки из amoCRM / Kommo',          need:'домен и долгосрочный токен'},
   src_1c_file: {e:'🗄', what:'Читает выгрузку из 1С (файл)',             need:'путь к файлу выгрузки'},
-  src_1c_winrm:{e:'🖥', what:'Прямо из 1С на вашем сервере',             need:'адрес сервера и логин WinRM'}
+  src_1c_winrm:{e:'🖥', what:'Прямо из 1С на твоём сервере',             need:'адрес сервера и логин WinRM'}
 };
 async function renderConnections(){
   // «Подключения»: подключаешь ОДИН раз — дальше во всех автоматизациях просто выбираешь из подключённого.
@@ -3874,7 +3874,7 @@ async function renderMonitor(){
   if(exc.length){
     excHtml = '<div class="card" style="border-left:3px solid #C0392B;margin-bottom:10px">'
       + '<div style="font-weight:700;font-size:13.5px;margin-bottom:6px">⚠️ '
-      + (WLANG==='en'?('Needs your decision ('+exc.length+')'):('Требуют вашего решения ('+exc.length+')'))+'</div>'
+      + (WLANG==='en'?('Needs your decision ('+exc.length+')'):('Ждут твоего решения ('+exc.length+')'))+'</div>'
       + exc.map(function(p){
           var nr = p.last_run && p.last_run.needs_review_reason;
           var why = (p.reasons||[]).join("; ") + (nr?(" — "+nr):"");
@@ -4261,7 +4261,7 @@ async function cabApply(){
     if(!el('chat').classList.contains('open')) toggleChat();
     var ci=el('chatInput');
     if(ci){ ci.value='Прошу изменить процесс «'+(a.process_name||a.client_name||'')+'»: '+task+'. Пересобери соответствующую стадию и запиши решение в сессию.'; ci.focus(); }
-    toast('Задание Строителю набрано — отправьте сообщение Мастеру','ok');
+    toast('Задание Строителю набрано — отправь сообщение Мастеру','ok');
   }
 }
 function _wzCard(inner){ return '<div style="max-width:720px;background:var(--paper);border:1px solid var(--cream-dark);border-radius:12px;padding:18px 20px;margin-bottom:14px">'+inner+'</div>'; }
@@ -4335,7 +4335,7 @@ async function _wzComposeLoad(a){
 function _wzComposeMakeupHTML(f){
   var steps=(f.steps||[]).map(function(s,i){
     return '<div style="font-size:13px;padding:5px 0;border-bottom:1px dashed var(--cream-dark)">'+(i+1)+'. <code>'+esc(s.expert||'')+'</code> <span style="font-size:11.5px;color:var(--silver)">'+esc(JSON.stringify(s.params||{}).slice(0,90))+'</span></div>';
-  }).join('') || '<div style="color:var(--silver);font-size:13px">шаги не записаны (композиция старой версии — отправьте любую доводку, состав запишется)</div>';
+  }).join('') || '<div style="color:var(--silver);font-size:13px">шаги не записаны (композиция старой версии — отправь любую доводку, состав запишется)</div>';
   var inst=(f.installed||[]).map(function(x){
     return '<span style="display:inline-block;font-size:11.5px;background:var(--cream);border:1px solid var(--cream-dark);border-radius:999px;padding:3px 10px;margin:6px 6px 0 0">⬇ '+esc(String(x.model||x.name||''))+' · '+esc(String(x.status||''))+'</span>';
   }).join('');
@@ -4390,7 +4390,7 @@ function _wzCabHow(a){
     '<div style="margin-top:8px">'+
     _wzCard(_wzH('Что делает')+'<div style="font-size:14px;line-height:1.6;color:var(--ink-soft)">'+esc(a.goal||a.process_name||'Собранный процесс.')+'</div>')+
     (st?_wzCard(_wzH('Шаги процесса')+
-       '<div style="font-size:12.5px;color:var(--silver);margin-bottom:4px">Собраны Мастером под вашу задачу. Данные, правила и получатели — во вкладке «Настройка»; переделать шаги — «Открыть в Мастере».</div>'+st):'')+
+       '<div style="font-size:12.5px;color:var(--silver);margin-bottom:4px">Собраны Мастером под твою задачу. Данные, правила и получатели — во вкладке «Настройка»; переделать шаги — «Открыть в Мастере».</div>'+st):'')+
     _wzCabOverview(a)+
     '</div></details>';
 }
@@ -4414,7 +4414,7 @@ function _wzCabPanelFields(a){
     return _wzCard(
       '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'+_wzH('Настройки процесса')+
       '<a href="#" onclick="genPanel('+i+',true);return false" style="font-size:11.5px;color:var(--silver)">пересобрать поля</a></div>'+
-      '<div style="font-size:12px;color:var(--silver);margin-bottom:12px">Сгенерированы Мастером под ваш процесс. Влияют на то, как собирается результат.</div>'+
+      '<div style="font-size:12px;color:var(--silver);margin-bottom:12px">Сгенерированы Мастером под твой процесс. Влияют на то, как собирается результат.</div>'+
       inputs+
       '<button class="btn gold sm" style="margin-top:4px" onclick="savePanelFields('+i+')">Сохранить настройки</button>');
   }
@@ -4482,7 +4482,7 @@ function _wzSourceBanner(a, i){
   return '<div style="background:#fdf6e7;border:1px solid #f0d9a0;border-radius:10px;padding:12px 14px;margin-bottom:14px">'+
     '<div style="font-size:13px;color:#7a5b1a;margin-bottom:8px">Данные пока берутся из <b>приложенного файла</b>.</div>'+
     '<div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-soft)">'+
-      '<div style="flex:1;min-width:200px"><b>Чтобы попробовать сейчас</b> — подключать ничего не нужно: нажмите «Сделать первый прогон» ниже, процесс отработает на файле.</div>'+
+      '<div style="flex:1;min-width:200px"><b>Чтобы попробовать сейчас</b> — подключать ничего не нужно: нажми «Сделать первый прогон» ниже, процесс отработает на файле.</div>'+
       '<div style="flex:1;min-width:200px"><b>Чтобы работал сам 24/7</b> — подключите живой источник (своё API / CRM / рекламный кабинет).<br>'+
         '<button class="btn ghost sm" style="font-size:12px;margin-top:6px;white-space:nowrap" onclick="sourceProcess('+i+')">✨ Подключить источник</button></div>'+
     '</div></div>';
@@ -4503,7 +4503,7 @@ var ARCH_UI={
   document_processing: {noun:['документ','документа','документов'], zeroGood:false, briefFirst:false,
                         nudge:'Документы обработаны. Проверьте получателей, чтобы результат уходил сразу.'},
   monitoring_alerts:   {noun:['срабатывание','срабатывания','срабатываний'], zeroGood:true, briefFirst:false,
-                        nudge:'Мониторинг работает в фоне. Подключите оповещения, чтобы узнавать сразу.'},
+                        nudge:'Мониторинг работает в фоне. Подключи оповещения, чтобы узнавать сразу.'},
   research_digest:     {noun:['находка','находки','находок'], zeroGood:false, briefFirst:true,
                         nudge:'Главное — в брифе. Настройте, кому его отправлять.'},
   flow_quality_control:{noun:['запись проверена','записи проверены','записей проверено'], zeroGood:false, briefFirst:false,
@@ -4734,8 +4734,8 @@ async function addRecipient(i){
   var conn=await ensureConn();
   var cur=(a.recipients||[]);
   var avail=_RCPT_CH.filter(function(c){return conn.includes(c[0]) && cur.indexOf(c[0])<0;});
-  if(!avail.length){ slot.innerHTML='<div style="font-size:12.5px;color:#888;margin-top:8px">Нет свободных подключённых каналов. Подключите канал в блоке <b>🔌 Подключения</b> вверху страницы.</div>'; return; }
-  slot.innerHTML='<div style="font-size:12.5px;color:var(--silver);margin:10px 0 6px">Выберите подключённый канал:</div><div style="display:flex;flex-wrap:wrap;gap:6px">'+avail.map(function(c){
+  if(!avail.length){ slot.innerHTML='<div style="font-size:12.5px;color:#888;margin-top:8px">Нет свободных подключённых каналов. Подключи канал в блоке <b>🔌 Подключения</b> вверху страницы.</div>'; return; }
+  slot.innerHTML='<div style="font-size:12.5px;color:var(--silver);margin:10px 0 6px">Выбери подключённый канал:</div><div style="display:flex;flex-wrap:wrap;gap:6px">'+avail.map(function(c){
      return '<button class="btn ghost sm" onclick="pickRecipient('+i+',\''+c[0]+'\')">'+chEmoji(c[0])+' '+c[1]+'</button>';
   }).join('')+'</div>';
 }
@@ -5072,7 +5072,7 @@ async function renderAutomations(){
       if(lr.total_count!=null){
         parts.push(lr.total_count===0
           ? (AR.zeroGood ? '<span style="color:#2f9e56">без срабатываний ✓</span>'
-                         : '<span style="color:#C57E33">пусто — проверьте источник</span>')
+                         : '<span style="color:#C57E33">пусто — проверь источник</span>')
           : `<b>${fmt(lr.total_count)}</b> ${esc(_wzPlural(lr.total_count, AR.noun))}`);
       }
       if(lr.total_sum!=null && Number(lr.total_sum)!==0) parts.push(`<b>${fmt(lr.total_sum)}</b>`);
@@ -5123,7 +5123,7 @@ async function openArchive(){
   }).join(''):'<div style="color:var(--silver);font-size:13px;padding:10px 0">Архив пуст.</div>';
   resetModInput();
   el("modTitle").textContent="🗄 Архив автоматизаций";
-  el("modHint").innerHTML="Удалённые процессы не пропадают. Возвращаются <b>на паузе</b> — расписание и приём входящих не включаются сами, чтобы вернувшийся процесс не начал слать письма клиенту без вашего ведома.";
+  el("modHint").innerHTML="Удалённые процессы не пропадают. Возвращаются <b>на паузе</b> — расписание и приём входящих не включаются сами, чтобы вернувшийся процесс не начал слать письма клиенту без твоего ведома.";
   el("modInput").outerHTML='<input id="modInput" type="hidden"><div style="max-height:340px;overflow-y:auto">'+rows+'</div>';
   el("modBack").classList.add("open");
   var ob=el("modOkBtn"); if(ob) ob.textContent="Закрыть";
@@ -5207,7 +5207,7 @@ function showBrief(md, opts){
   var _mdTitle = ((String(md||'').match(/^#{1,3}\s+(.+?)\s*$/m)||[])[1]||'').trim();
   var kicker  = (custom && opts.kicker)   || 'Extella · Результат процесса';
   var title   = (custom && opts.title)    || _mdTitle || 'Результат процесса';
-  var subtitle= (custom && opts.subtitle) || 'Собрано вашим процессом · работает на вашем Qwen, в вашем контуре.';
+  var subtitle= (custom && opts.subtitle) || 'Собрано твоим процессом · работает на твоём Qwen, в твоём контуре.';
   var chipList= (custom && opts.chips && opts.chips.length) ? opts.chips : [];
   var chips=chipList.map(function(c){
     return '<span style="background:#faf7f2;border:1px solid #e4ded5;border-radius:999px;padding:4px 11px;font-size:12px;color:#48423a">'+esc(c)+'</span>';}).join("");
@@ -5325,7 +5325,7 @@ async function inboundProcess(i){
     el("modInput").outerHTML =
         `<input id="modInput" type="hidden">`
       + `<div style="font-size:13px;color:#888;text-align:left;margin-bottom:6px">Для приёма входящих нужен подключённый канал (пока — Telegram).</div>`
-      + `<div style="font-size:12.5px;text-align:left">Подключите <b>Telegram</b> в блоке <b>🔌 Подключения</b> вверху страницы, затем вернитесь сюда и включите опрос.</div>`;
+      + `<div style="font-size:12.5px;text-align:left">Подключи <b>Telegram</b> в блоке <b>🔌 Подключения</b> вверху страницы, потом вернись сюда и включи опрос.</div>`;
     el("modBack").classList.add("open");
     _modCb = async ()=>{ modCancel(); };
     return;
@@ -5378,7 +5378,7 @@ async function sourceProcess(i){
           + (curKind?`<label class="opt" style="color:#999"><input type="radio" name="srcAct" value="off"><span>Отвязать источник (вернуться к загрузке файла)</span></label>`:``);
   } else {
     body += `<div style="font-size:13px;color:#888;text-align:left;margin-bottom:6px">Пока не подключён ни один источник данных.</div>`
-          + `<div style="font-size:12.5px;text-align:left">Подключите источник в блоке <b>🔌 Подключения</b> вверху страницы (Google Sheets — просто по ссылке), затем вернитесь сюда и выберите его.</div>`;
+          + `<div style="font-size:12.5px;text-align:left">Подключи источник в блоке <b>🔌 Подключения</b> вверху страницы (Google Sheets — просто по ссылке), потом вернись сюда и выбери его.</div>`;
     if(curKind) body += `<label class="opt" style="color:#999;margin-top:6px"><input type="radio" name="srcAct" value="off"><span>Отвязать текущий источник</span></label>`;
   }
   body += `<div style="margin-top:12px;border-top:1px dashed var(--cream-dark);padding-top:10px">`
@@ -5440,7 +5440,7 @@ async function checkSheetLink(){
   out.innerHTML = (r.columns||[]).length
     ? '<div style="color:#2f9e56;margin-bottom:4px">✓ Нашёл: строк '+esc(String(r.rows))+', колонки:</div>'+
       '<div style="font-weight:600;margin-bottom:4px">'+esc(head)+'</div>'+prevRows+
-      '<div style="color:var(--silver);margin-top:4px">Это ваши данные? Тогда нажмите OK — привяжу этот лист.</div>'
+      '<div style="color:var(--silver);margin-top:4px">Это твои данные? Тогда нажми OK — привяжу этот лист.</div>'
     : '<span style="color:#C57E33">'+esc(r.warning||'в листе нет заголовков — укажите ссылку на лист с данными')+'</span>';
 }
 // Рецепты площадок: как получить токен СЕЙЧАС (до Composio) + преднастройка полей
@@ -5449,9 +5449,9 @@ async function checkSheetLink(){
 // сбивали с толку («причём тут реклама?», Гульжан 20.07).
 var GEN_RECIPES = {
   custom:{label:"Свой API (ключ/токен) — подходит большинству", group:"Общее", endpoint:"", auth:"bearer", token_url:"",
-    recipe:"Любой REST API с ключом или токеном — CRM, учётная система, ваш сервис. Вставьте адрес и ключ ниже."},
+    recipe:"Любой REST API с ключом или токеном — CRM, учётная система, твой сервис. Вставь адрес и ключ ниже."},
   meta:{label:"Meta Ads (Facebook)", group:"Рекламные кабинеты", endpoint:"https://graph.facebook.com/v19.0/act_ВАШ_ID/insights?fields=campaign_name,spend,impressions,clicks&date_preset=yesterday", auth:"bearer", token_url:"",
-    recipe:"Meta Business Settings → «Системные пользователи» → создайте системного пользователя, дайте доступ к рекламному аккаунту, сгенерируйте токен со scope <b>ads_read</b>. Такой токен не истекает. Вставьте его ниже и укажите act_&lt;ваш ID&gt; в адресе."},
+    recipe:"Meta Business Settings → «Системные пользователи» → создайте системного пользователя, дайте доступ к рекламному аккаунту, сгенерируйте токен со scope <b>ads_read</b>. Такой токен не истекает. Вставь его ниже и укажи act_&lt;ваш ID&gt; в адресе."},
   google_ads:{label:"Google Ads", group:"Рекламные кабинеты", endpoint:"https://googleads.googleapis.com/v16/customers/ВАШ_ID/googleAds:search", auth:"oauth_refresh", token_url:"https://oauth2.googleapis.com/token",
     recipe:"Один раз получите <b>refresh_token</b> через OAuth Playground (scope adwords) + <b>client_id/secret</b> из Google Cloud + <b>developer_token</b> из Google Ads API Center. Access-токен система обновит сама. developer_token допишите в описании."},
   yandex:{label:"Яндекс Директ", group:"Рекламные кабинеты", endpoint:"https://api.direct.yandex.com/json/v5/reports", auth:"bearer", token_url:"",
@@ -5494,7 +5494,7 @@ function genSource(i){
       `<input id="modInput" type="hidden">`
     + `<select id="genPreset" ${st} onchange="genPreset()">${opts}</select>`
     + `<div id="genRecipe" style="font-size:11.5px;color:#7a5b1a;background:var(--gold-bg);border:1px solid #eddfc4;border-radius:8px;padding:8px 10px;margin-bottom:8px"></div>`
-    + `<input id="genUrl" ${st} placeholder="Адрес API, напр. https://api.вашсервис.kz/orders">`
+    + `<input id="genUrl" ${st} placeholder="Адрес API, напр. https://api.твойсервис.kz/orders">`
     + `<textarea id="genDesc" ${st.replace('margin-bottom:8px','height:60px;margin-bottom:8px')} placeholder="Что это и какие поля нужны. Напр.: расход по кампаниям; поля кампания, показы, клики, расход"></textarea>`
     + `<select id="genAuthKind" ${st} onchange="genAuthToggle()"><option value="none">Без авторизации</option><option value="bearer" selected>Bearer-токен</option><option value="header">Ключ в заголовке (X-Api-Key)</option><option value="query">Ключ в параметре URL</option><option value="oauth_refresh">OAuth (refresh-токен — Meta/Google/Яндекс)</option></select>`
     + `<div id="genKeyWrap"><input id="genAuth" type="password" autocomplete="new-password" ${st} placeholder="Ключ/токен (хранится в сейфе)"></div>`
@@ -5625,7 +5625,7 @@ function trustGolden(){
   }).join('');
   resetModInput();
   el("modTitle").textContent="✓ Эталон — как правильно";
-  el("modHint").innerHTML="Впишите ПРАВИЛЬНЫЙ ответ там, где знаете (можно не для всех строк). Сверим ответ модели с вашим — это согласие с человеком поверх воспроизводимости.";
+  el("modHint").innerHTML="Впиши ПРАВИЛЬНЫЙ ответ там, где знаешь (можно не для всех строк). Сверим ответ модели с твоим — это согласие с человеком поверх воспроизводимости.";
   el("modInput").outerHTML='<input id="modInput" type="hidden"><div style="max-height:300px;overflow:auto">'+rows+'</div>';
   el("modBack").classList.add("open");
   var ob=el("modOkBtn"); if(ob) ob.textContent="Сверить →";
@@ -5637,7 +5637,7 @@ function trustGolden(){
       if(Object.keys(obj).length) golden[String(i+1)]=obj;
     });
     if(!Object.keys(golden).length){ toast("Впишите хотя бы один правильный ответ","err"); return; }
-    busy("Сверяю ответ модели с вашим эталоном… (до ~2 минут)");
+    busy("Сверяю ответ модели с твоим эталоном… (до ~2 минут)");
     var r=await jpost("/x/trust_check",{task:ctx.task, fields:ctx.fields, sample:ctx.sample, runs:3, golden:golden});
     busyOff();
     var res=(r&&r.result)||{};
@@ -5745,7 +5745,7 @@ function connectEmail(){
 }
 function connectTelegram(){
   el("modTitle").textContent = "Подключить Telegram";
-  el("modHint").innerHTML = "Выберите способ подключения.";
+  el("modHint").innerHTML = "Выбери способ подключения.";
   el("modInput").outerHTML = `<select id="modInput" class="sess-select" style="width:100%;max-width:none;margin-bottom:8px"><option value="bot">Бот (BotFather) — уведомления в чат/канал</option><option value="mtproto">Аккаунт (сессия) — слать как пользователь</option></select><div style="font-size:12px;color:#888;margin-bottom:6px">Бот — проще и безопаснее для уведомлений. Аккаунт — когда нужно писать людям в ЛС / читать входящие.</div>`;
   el("modBack").classList.add("open");
   _modCb = ()=>{ const m = (el("modInput")||{}).value; if(m==="mtproto") connectTelegramSession(); else connectTelegramBot(); };
@@ -5765,7 +5765,7 @@ function connectTelegramBot(){
       busyOff();
       const res=(t&&t.result)||{};
       if(res.ok) toast("✓ Telegram подключён — проверьте: в чат пришло приветствие","ok");
-      else toast("Не удалось отправить в чат: "+(res.err||"проверьте токен и chat_id (нужен числовой id вашего чата с ботом)"),"err");
+      else toast("Не удалось отправить в чат: "+(res.err||"проверь токен и chat_id (нужен числовой id твоего чата с ботом)"),"err");
     });
   });
 }
@@ -5912,7 +5912,7 @@ function connectAmocrm(){
     let base=((el("amoBase")||{}).value||"").trim();
     const tk=el("amoTok"); const token=((tk||{}).value||"").trim(); if(tk) tk.value="";
     const entity=(el("amoEnt")||{}).value||"leads";
-    if(!base||!token){ toast("Укажите адрес и токен","err"); return; }
+    if(!base||!token){ toast("Укажи адрес и токен","err"); return; }
     const creds={token:token, entity:entity};
     if(/^https?:\/\//i.test(base)) creds.base_url=base.replace(/\/+$/,"");
     else { creds.subdomain=base.split(".")[0]; if(/\./.test(base)) creds.domain=base.split(".").slice(1).join("."); }
@@ -5977,7 +5977,7 @@ function connect1cWinrm(){
 }
 function connectWhatsapp(){
   el("modTitle").textContent = "Подключить WhatsApp";
-  el("modHint").innerHTML = "Выберите провайдера.";
+  el("modHint").innerHTML = "Выбери провайдера.";
   el("modInput").outerHTML = `<select id="modInput" class="sess-select" style="width:100%;max-width:none;margin-bottom:8px"><option value="green">GREEN-API — обычный номер по QR (проще, популярно в СНГ)</option><option value="meta">Meta Cloud API — официальный Business API</option></select>`;
   el("modBack").classList.add("open");
   _modCb = ()=>{ const p=(el("modInput")||{}).value; if(p==="meta") connectWhatsappMeta(); else connectWhatsappGreen(); };
