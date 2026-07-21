@@ -105,6 +105,10 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);
 .seg button{border:none;background:transparent;color:var(--tx3);font:600 12.5px var(--sans);padding:6px 15px;border-radius:5px;cursor:pointer}
 .seg button.on{background:rgba(var(--ar),.16);color:var(--amber)}
 .iconbtn{border:1px solid var(--bd);background:var(--s2);color:var(--tx);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:14px;line-height:1;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;padding:0}
+/* Поповер-подсказка при наведении (data-tip): заголовок жирным первой строкой через \A */
+.iconbtn[data-tip]{position:relative}
+.iconbtn[data-tip]:hover::after{content:attr(data-tip);position:absolute;top:calc(100% + 8px);right:-6px;z-index:1200;width:230px;white-space:pre-line;background:var(--s1);color:var(--tx);border:1px solid var(--bd);border-radius:6px;padding:9px 11px;font:400 12px/1.5 var(--sans);text-align:left;pointer-events:none;box-shadow:0 4px 14px rgba(0,0,0,.08)}
+.iconbtn[data-tip]:hover::before{content:'';position:absolute;top:calc(100% + 3px);right:8px;z-index:1201;width:9px;height:9px;background:var(--s1);border-left:1px solid var(--bd);border-top:1px solid var(--bd);transform:rotate(45deg);pointer-events:none}
 .iconbtn:hover{border-color:var(--bd2)}
 
 .cmdbar{display:flex;gap:10px;padding:18px 18px 6px;background:var(--s1);flex-shrink:0}
@@ -708,7 +712,7 @@ body[data-theme="dark"] .inf .tr,html[data-theme="dark"] .inf .tr{stroke:var(--b
   <button class="iconbtn" onclick="notify('mkt_min')" title="Свернуть">&#8211;</button>
   <button class="iconbtn" onclick="notify('mkt_win')" title="В окне / на весь экран"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><rect x="3" y="8" width="13" height="13" rx="1.5"/><path d="M8 5h12a1 1 0 0 1 1 1v12"/></svg></button>
   <button class="iconbtn" id="langBtn" onclick="setLang(LANG==='en'?'ru':'en')" title="Язык / Language" style="font:600 11px var(--mono,monospace);width:auto;padding:0 8px">EN</button>
-  <button class="iconbtn" id="autoBtn" onclick="setc('automations')" title="Автоматизации — что Extella делает без тебя"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M8 2v4M16 2v4"/><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/></svg></button>
+  <button class="iconbtn" id="autoBtn" onclick="setc('automations')" data-tip="Автоматизации&#10;Задачи, которые Extella делает сама по расписанию: отчёты, проверки, рассылки. Клик — открыть список и настроить."><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M8 2v4M16 2v4"/><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/></svg></button>
   <button class="iconbtn" id="themeBtn" onclick="toggleTheme()" title="Светлая / тёмная тема">☾</button>
   <button class="bclose" onclick="notify('close')" title="Close">&#10005;</button>
 </div>
@@ -1618,7 +1622,10 @@ var I18N_EN = {
   // Секции / подписи
   'Выбор Extella':'EXTELLA PICK','Выбор Extella':'Extella pick',
   'Мои агенты · собраны Конструктором':'My agents · built by the Wizard',
-  'Роли агентов':'Agent roles','Роли для базового агента':'Roles for the base agent','Больше пользы без смены модели':'More value, same model',
+  'Роли агентов':'Agent roles','Роли для базового агента':'Roles for the base agent','Готовая профессия для твоего агента':'A ready profession for your agent',
+  'Роль — это профессия: продажи, поддержка, аналитика':'A role is a profession: sales, support, analytics','Назначается на твою копию агента за минуту':'Assigned to your agent copy in a minute','Модель Qwen уже в Extella — ключи не нужны':'Qwen is built into Extella — no keys needed',
+  'Разберёт входящие заявки и напишет ответы':'Sorts inbound requests and drafts replies','Выбери роль и отметь умения — получишь своего агента в чате Extella.':'Pick a role, check the skills — get your own agent in Extella chat.',
+  'Готовые профессии для твоего агента. Назначаются в три шага:':'Ready professions for your agent. Assigned in three steps:',
   'Сервисы':'Services','Внешние сервисы':'External services','Живые данные для агента: курсы, погода, справки. Проверь здесь и отметь, что дать агенту.':'Live data for your agent: rates, weather, references. Test here and pick what your agent gets.',
   'Твои документы и готовые справочники: агент отвечает по ним, а не по памяти. Возьми готовую базу — или собери свою из папки.':'Your documents and ready-made references: the agent answers from them, not from memory. Pick a ready base — or build your own from a folder.',
   'Готовые роли превращают базового агента в сотрудника: продажи, поддержка, финансы и другие.':'Ready-made roles turn the base agent into an employee: sales, support, finance and more.',
@@ -3030,13 +3037,13 @@ var TYPE_ED = {
   agents: {
     heroes: [
       { label:'Роли · Qwen', acc:'#C57E33', source:'Агенты',
-        title:'Роли для базового агента', accent:'Больше пользы без смены модели',
+        title:'Роли для базового агента', accent:'Готовая профессия для твоего агента',
         go:"_jumpSect('Роли агентов')", btn:'Выбрать роль',
-        facts:['Выбери роль и вставь ID копии базового агента','Модель остаётся Qwen — честный тест','Готовые роли: продажи, поддержка, аналитика и другие'] },
+        facts:['Роль — это профессия: продажи, поддержка, аналитика','Назначается на твою копию агента за минуту','Модель Qwen уже в Extella — ключи не нужны'] },
       { label:'Продажи', acc:'#2F6B66', source:'Роль · Продажи',
         title:'Агент продаж', accent:'Квалифицирует лиды и пишет ответы',
         go:"agentInstallModal('sdr')", btn:'Установить роль',
-        facts:['SDR-роль: работа с входящими за тебя'] },
+        facts:['Разберёт входящие заявки и напишет ответы'] },
       { label:'Поддержка', acc:'#3D8078', source:'Роль · Поддержка',
         title:'Агент поддержки', accent:'Отвечает клиентам по базе знаний',
         go:"agentInstallModal('support')", btn:'Установить роль',
@@ -5380,7 +5387,7 @@ function renderAgents(){
   var buildTiles='<div class="mshelf tf_skip">'+
     '<div class="stile" style="--acc:var(--a);border-style:dashed;cursor:pointer" onclick="agentForgeModal()">'+
       '<span class="st_chip">✦ Собрать</span><div class="st_title">+ Собрать агента</div>'+
-      '<div class="st_fact">Роль + умения → твой агент. Модель остаётся Qwen.</div>'+
+      '<div class="st_fact">Выбери роль и отметь умения — получишь своего агента в чате Extella.</div>'+
       '<div class="st_foot"><span style="font-size:11px;color:var(--tx3)">пара минут</span></div></div>'+
     '<div class="stile" style="--acc:#7C5CBF;opacity:.45;cursor:default" title="Конструктор агентов — готовится, появится здесь">'+
       '<span class="st_chip">Скоро</span><div class="st_title">Конструктор агентов</div>'+
@@ -5391,7 +5398,7 @@ function renderAgents(){
     mineHtml+
     _bentoHTML(TYPE_ED.agents.heroes)+
     '<div class="sect"><h2>Роли агентов</h2></div>'+
-    '<div class="sk_lead" style="grid-column:1/-1">Три шага: копия базового агента → её ID → выбери роль ниже.</div>'+
+    '<div class="sk_lead" style="grid-column:1/-1">Готовые профессии для твоего агента. Назначаются в три шага:</div>'+
     '<div class="steps">' +
       '<div class="step"><span class="step_n">1</span><div>Создай в Extella <b>копию базового агента</b>, это два клика</div></div>' +
       '<div class="step"><span class="step_n">2</span><div>Скопируй её <b>ID</b>, он начинается с <code>agent_</code></div></div>' +
@@ -5432,7 +5439,7 @@ function agentInstallModal(roleId){
       '<div class="step" style="max-width:none"><span class="step_n">2</span><div>Скопируй <b>ID копии</b>, начинается с <code>agent_</code></div></div>'+
       '<div class="step" style="max-width:none"><span class="step_n">3</span><div>Вставь ID ниже и нажми «Назначить роль»</div></div>'+
     '</div>'+
-    '<div style="font-size:12px;color:var(--tx3);line-height:1.5;margin-bottom:12px">Вместе с ролью агент получит 13 живых сервисов: курсы валют, погода, перевод, новости.</div>'+
+    '<div style="font-size:12px;color:var(--tx3);line-height:1.5;margin-bottom:12px">Вместе с ролью агент получит живые сервисы: курсы валют, погоду, перевод, справки.</div>'+
     '<div style="border:1px solid var(--a);border-radius:5px;padding:9px 12px;font-size:12.5px;line-height:1.5;color:var(--tx2);margin-bottom:12px"><b>Важно:</b> если на этом агенте уже есть правила, концепты или эксперты, они сохранятся, роль добавится поверх. Это удобно, чтобы дообучить рабочего агента. Для чистого старта сначала сделай новую копию агента.</div>'+
     '<input id="ag_aid" value="'+esc(prev)+'" placeholder="agent_XXXXXXXX, ID копии агента" autocomplete="off" style="'+_KPINP+'"/>'+
     '<div style="margin-top:14px;display:flex;gap:8px;align-items:center"><button class="st_btn" onclick="agentFlash(\''+esc(roleId)+'\',this)">Назначить роль</button>'+
@@ -5697,7 +5704,7 @@ function agentForgeModal(){
   var ov=document.createElement('div'); ov.id='af_ov'; ov.style.cssText=_KPOV;
   ov.innerHTML='<div style="'+_KPMODAL+';max-width:640px">'+
     '<div style="font-family:var(--serif);font-size:20px;margin-bottom:4px">🛠 Собрать своего агента</div>'+
-    '<div style="color:var(--tx2);font-size:13px;line-height:1.5;margin-bottom:10px">Роль + умения → в твою копию агента. Модель остаётся Qwen.</div>'+
+    '<div style="color:var(--tx2);font-size:13px;line-height:1.5;margin-bottom:10px">Выбери роль и умения — они назначатся на твою копию агента. Модель остаётся Qwen.</div>'+
     '<label style="display:block;font-size:12px;color:var(--tx3);margin:8px 0 3px">Роль</label>'+
     '<select id="af_role" style="'+_KPINP+'">'+roleOpts+'</select>'+
     boxes+
