@@ -6236,17 +6236,12 @@ function wsUndo(ws_id){
   }).catch(function(e){ wsToast('⚠ '+esc((e&&e.message)||'ошибка'),'err'); });
 }
 
-var BUILDER_ID='agent_FLYxB0v1qIY2phB5beVP5';  // спец-сборщик (есть не у всех) — теперь только запасной
 function skRunAgent(msg){
-  // Портируемость: сначала агент СЕССИИ пользователя (есть у каждого),
-  // BUILDER_ID — только как запасной, если сессионный недоступен
+  // Портируемость: агент берётся только из текущей сессии пользователя.
+  // Чужой account-specific ID нельзя вшивать даже как fallback.
   var sid=(window._etbSess&&window._etbSess.agentId)||'';
-  var first=sid||BUILDER_ID, second=(sid&&sid!==BUILDER_ID)?BUILDER_ID:'';
-  return skBridge('etb_run_agent','etb_agent_result',{message:msg,agent_id:first})
-    .catch(function(e){
-      if(!second) throw e;
-      return skBridge('etb_run_agent','etb_agent_result',{message:msg,agent_id:second});
-    });
+  if(!sid) return Promise.reject(new Error('Extella не передала agent ID текущей сессии'));
+  return skBridge('etb_run_agent','etb_agent_result',{message:msg,agent_id:sid});
 }
 function openCliAdd(){
   var ov=document.getElementById('cliadd_ov');
