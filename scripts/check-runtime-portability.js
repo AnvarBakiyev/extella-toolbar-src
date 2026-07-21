@@ -21,6 +21,9 @@ const forbidden = [
   'os.kill(',
   'ETB.installPrompt =',
   'CRITICAL — ACT IMMEDIATELY',
+  'raw.githubusercontent.com/AnvarBakiyev/extella-marketplace-pack/main',
+  "label:'Работает'",
+  "label:'С GitHub'",
 ];
 
 const failures = [];

@@ -3899,10 +3899,9 @@ function _openWizard(){
 }
 function _wizardMissing(){
   var en=(LANG==='en');
-  var mac='bash <(curl -fsSL https://raw.githubusercontent.com/AnvarBakiyev/extella-marketplace-pack/main/toolbar/install-all.sh)';
-  var win='irm https://raw.githubusercontent.com/AnvarBakiyev/extella-marketplace-pack/main/toolbar/install-all.ps1 | iex';
-  alert((en?'Wizard is not installed on this device.\n\nRun the installer (toolbar + Wizard):':'Конструктор не установлен на этом устройстве.\n\nЗапусти единый установщик (тулбар + Конструктор):')+
-    '\n\nmacOS (Terminal):\n'+mac+'\n\nWindows (PowerShell):\n'+win);
+  alert(en
+    ? 'Wizard is not installed on this device.\n\nUse the published Extella Client release instructions. The installer must receive the exact versioned bundle URL, SHA-256 and byte size; raw main installers are intentionally unsupported.'
+    : 'Конструктор не установлен на этом устройстве.\n\nИспользуй инструкцию опубликованного релиза Extella Client. Установщику нужны точные URL версионированного пакета, SHA-256 и размер; установка из raw main намеренно запрещена.');
 }
 function _dtCloseMenu(){ var m=document.getElementById('dt_menu'); if(m)m.remove(); }
 function _dtCtx(e, i){
@@ -6395,7 +6394,8 @@ function _bFindProgramEn(q,originalQuery){
       return { repoUrl: it.html_url, title: it.name,
         facts: [ 'Подходит для задачи: «'+String(originalQuery||q).slice(0,90)+'». Перед установкой Extella проверит репозиторий.' ],
         repoDescription: (it.description||'').slice(0,180), requestedByUser:true,
-        source: 'github.com/'+it.owner.login+' · ★ '+stars, acc:'#2F6B66', label:'С GitHub' };
+        source: 'github.com/'+it.owner.login+' · ★ '+stars, acc:'#2F6B66',
+        label:'Стороннее · не проверено', classification:'third_party_unverified', hidden:false };
     });
 }
 function _bFindModel(q0){ return _bTryQueries(q0, _bFindModelEn); }
@@ -6418,7 +6418,8 @@ function _bFindModelEn(q){
     .then(function(sp){
       return { hfId: sp.id, title: (sp.id.split('/')[1]||sp.id).replace(/[-_]/g,' '),
         facts: [ 'Найдено по запросу: '+q ],
-        source: 'huggingface.co/'+sp.id.split('/')[0]+' · ♥ '+(sp.likes||0), acc:'#2E7D5B', label:'Работает' };
+        source: 'huggingface.co/'+sp.id.split('/')[0]+' · ♥ '+(sp.likes||0), acc:'#2E7D5B',
+        label:'Стороннее · не проверено', classification:'third_party_unverified', hidden:false };
     });
 }
 function _bAddToShelf(kvKey, entry, matchField){
