@@ -1543,6 +1543,10 @@ var I18N_EN = {
   'Студия Композитора — внутри Конструктора: задача словами → готовая автоматизация':'Composer Studio — inside the Wizard: describe a task → get a working automation',
   'Автоматизации по расписанию':'Scheduled automations',
   'Пилот наблюдает экран и помогает':'The copilot watches your screen and helps',
+  '⚠ Не смог проверить, какие приложения уже установлены — отметки могут быть неточными.':'⚠ Could not check which apps are already installed — the marks may be off.',
+  '⚠ Не смог проверить «Мои агенты» — облако не ответило.':'⚠ Could not check “My agents” — the cloud did not answer.',
+  '⚠ Не смог проверить, какие серверы уже подключены — отметки могут быть неточными.':'⚠ Could not check which servers are already connected — the marks may be off.',
+  'Проверить ещё раз':'Try again',
   'Задачи по расписанию: отчёты, проверки, рассылки':'Scheduled tasks: reports, checks, mailouts',
   'Пока пусто. Установи программы в «Каталоге» или собери агента в Конструкторе — они появятся здесь ярлыками.':'Nothing yet. Install programs in “Catalog” or build an agent in the Wizard — they will appear here as icons.',
   'Открыть →':'Open →','Открыть':'Open','Запустить':'Run','Кабинет':'Cabinet','Удалить':'Remove','Открыть источник':'Open source','↗ Открыть':'↗ Open','↗ Источник':'↗ Source','⚙ Кабинет':'⚙ Cabinet','▶ Запустить':'▶ Run',
@@ -2273,15 +2277,17 @@ function _ensureApps(){ if(_appFetched)return; _appFetched=true;
   _loadSharded('_mkt_apps').then(function(r){ if(r&&r.shelf){_appReg=r; if(cur==='programs')renderPrograms(); else if(cur==='desktop')_deskRedraw();} }).catch(function(){ _appReg={shelf:[]}; if(cur==='programs')renderPrograms(); else if(cur==='desktop')_deskRedraw(); }); }
 var _appInstalled=null;   // Set установленных app_id (и их basename)
 var _appInstLoaded=false; // ответ app_list получен (пустой список — тоже ответ, отличаем от «ещё едет»)
+var _appInstErr=false;    // app_list НЕ ответил: «не смог проверить» ≠ «ничего не установлено»
 function _refreshInstalledApps(){
   skBridge('etb_run_expert','etb_expert_result',{name:'app_list',params:{}},30000).then(function(r){
     var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
     if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}
     var s={}; ((out&&out.apps)||[]).forEach(function(a){ s[a.app_id]=1; var b=a.app_id.split('/').pop(); s[b]=1; });
-    _appInstalled=s; _appInstLoaded=true;
+    _appInstalled=s; _appInstLoaded=true; _appInstErr=false;
     if(cur==='programs')renderPrograms(); else if(cur==='desktop')_deskRedraw();   // перерисовать с отметками
-  }).catch(function(){ _appInstalled={}; _appInstLoaded=true; if(cur==='desktop')_deskRedraw(); });
+  }).catch(function(){ _appInstalled={}; _appInstLoaded=true; _appInstErr=true; if(cur==='programs')renderPrograms(); else if(cur==='desktop')_deskRedraw(); });
 }
+function _appInstRetry(){ _appInstErr=false; _appInstalled=null; _appInstLoaded=false; _refreshInstalledApps(); if(cur==='programs')renderPrograms(); }
 function _curOS(){
   var p=(navigator.platform||'')+' '+(navigator.userAgent||'');
   if(/Mac/i.test(p))return'darwin'; if(/Win/i.test(p))return'win32'; return'linux';
@@ -2320,7 +2326,11 @@ function _appsShelvesHTML(){
   // Ни своего <h2>, ни своего лида: приложения — часть общего каталога раздела,
   // их полки просто продолжают полки, которые идут сверху. Строка про совместимость
   // остаётся (она рабочая), но уходит в хвост и приглушена.
-  return (shelves||'<div class="sk_lead" style="grid-column:1/-1">Нет приложений для твоей системы.</div>')+toggle;
+  // «Не смог проверить» ≠ «не установлено»: без этой строки после отказа app_list
+  // установленные приложения выглядели неустановленными (кнопки «Установить»).
+  var instWarn=_appInstErr?('<div class="sk_lead" style="grid-column:1/-1;font-size:12px;color:#A5632A">⚠ Не смог проверить, какие приложения уже установлены — отметки могут быть неточными. '+
+    '<a href="#" onclick="_appInstRetry();return false" style="color:var(--a)">Проверить ещё раз</a></div>'):'';
+  return instWarn+(shelves||'<div class="sk_lead" style="grid-column:1/-1">Нет приложений для твоей системы.</div>')+toggle;
 }
 // Приложения слиты в «Программы» — стрелка сюда ведёт туда же.
 function renderApps(){ setc('programs'); }
@@ -4353,16 +4363,25 @@ function renderInstalled() {
 // ── AI Автоматизации (Process Packs) ──────────────────────────────────────
 // Живые процессы-паки из KV-каталога _mkt_automations (его пишет wz_publish_pack при Publish).
 var _autoReg = null, _autoFetched = false;
+var _autoErr = false;  // KV не ответил: «не смог проверить» ≠ «автоматизаций нет»
+function _autoErrHTML(){
+  var en=(typeof LANG!=='undefined'&&LANG==='en');
+  return '<div class="empty" style="grid-column:1/-1;padding:34px 20px;text-align:center">'+
+    '<div style="font-size:26px;margin-bottom:8px">⚠</div>'+
+    '<p style="margin:0 0 12px;color:var(--tx2)">'+(en?'Could not check your automations — the cloud did not answer.':'Не смог проверить твои автоматизации — облако не ответило.')+'</p>'+
+    '<button class="st_btn" onclick="autoRefresh()">'+(en?'Try again':'Проверить ещё раз')+'</button></div>';
+}
 function _ensureAuto() {
   if (_autoFetched) return; _autoFetched = true;
   skKvGet('_mkt_automations').then(function(r) {
     _autoReg = (r && r.items) ? r.items : [];
+    _autoErr = false;
     if (cur === 'automations') renderAutomations();
     else if (cur === 'desktop') _deskRedraw();
     else if (cur === 'agents') renderAgents();
-  }).catch(function() { _autoReg = _autoReg || []; if (cur === 'automations') renderAutomations(); else if (cur === 'desktop') _deskRedraw(); else if (cur === 'agents') renderAgents(); });
+  }).catch(function() { _autoErr = true; _autoReg = _autoReg || []; if (cur === 'automations') renderAutomations(); else if (cur === 'desktop') _deskRedraw(); else if (cur === 'agents') renderAgents(); });
 }
-function autoRefresh() { _autoReg = null; _autoFetched = false; _ensureAuto(); }
+function autoRefresh() { _autoErr = false; _autoReg = null; _autoFetched = false; _ensureAuto(); }
 // ══════════════════════════════════════════════════════════════════════════
 //  АГЕНТ КАК УПРАВЛЯЕМЫЙ ОБЪЕКТ (кабинет агента)
 //  Каждый собранный Конструктором агент = богатая карточка + полный кабинет.
@@ -4488,7 +4507,7 @@ function renderAutomations() {
     rtabs(); return;
   }
   if (!_autoReg.length) {
-    g.innerHTML = _emptyHTML('⚙️', _t('autoEmpty'));
+    g.innerHTML = _autoErr ? _autoErrHTML() : _emptyHTML('⚙️', _t('autoEmpty'));
     rtabs(); return;
   }
   // Подтягиваем клиентское состояние всех агентов один раз, потом рисуем.
@@ -4500,7 +4519,7 @@ function renderAutomations() {
   }
   var visible = _autoReg.filter(function(p){ var st=_agState[_agId(p)]; return !(st && st.hidden); });
   if (!visible.length) {
-    g.innerHTML = _emptyHTML('⚙️', _t('autoEmpty'));
+    g.innerHTML = _autoErr ? _autoErrHTML() : _emptyHTML('⚙️', _t('autoEmpty'));
     rtabs(); return;
   }
   var html = '<div class="sect_hdr" style="grid-column:1/-1"><span class="sect_title">Мои агенты · собраны Конструктором</span><span class="sect_line"></span></div>'+
@@ -5109,7 +5128,7 @@ function renderAgents(){
     ? '<div class="sect_hdr"><span class="sect_title">Мои агенты</span><span class="sect_line"></span></div>'+
       '<div class="mshelf">'+mine.map(function(p,i){return autoCardHTML(p,i);}).join('')+'</div>'+
       ((_autoReg||[]).length>8 ? '<div style="grid-column:1/-1;text-align:right;margin:-2px 0 8px"><button onclick="setc(\'automations\')" style="border:1px solid var(--bd2);background:transparent;color:var(--tx2);border-radius:5px;padding:4px 10px;font-size:12px;cursor:pointer">Все мои агенты →</button></div>' : '')
-    : '';
+    : (_autoErr ? '<div class="sk_lead" style="grid-column:1/-1;font-size:12px;color:#A5632A">⚠ Не смог проверить «Мои агенты» — облако не ответило. <a href="#" onclick="autoRefresh();return false" style="color:var(--a)">Проверить ещё раз</a></div>' : '');
   // Разделение (решение Эллы 21.07): СОЗДАНИЕ агента = Конструктор (плитка ведёт
   // в него), НАЗНАЧЕНИЕ роли = каталог ролей ниже; «роль + умения» (agentForgeModal)
   // живёт карточкой «Универсальный помощник» в каталоге ролей.
@@ -5242,17 +5261,18 @@ var MCP_CATL={data:'Базы данных',web:'Веб и браузер',search
 // списка ['fetch','time','git','filesystem'] — тот врал в обе стороны: рисовал
 // «подключён» неподключённым и предлагал подключить уже работающие. Спрашиваем
 // устройство экспертом mcp_list и сопоставляем по pkg (точное совпадение).
-var _mcpConn=null, _mcpConnFetched=false;
+var _mcpConn=null, _mcpConnFetched=false, _mcpConnErr=false;
 function _ensureMcpConn(){
   if(_mcpConnFetched) return; _mcpConnFetched=true;
   skBridge('etb_run_expert','etb_expert_result',{name:'mcp_list',params:{}},30000).then(function(r){
     var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
     if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}
     var m={}; ((out&&out.servers)||[]).forEach(function(s){ if(s.pkg) m[s.pkg]=s; });
-    _mcpConn=m;
+    _mcpConn=m; _mcpConnErr=false;
     if(cur==='services')renderMcpCatalog();
-  }).catch(function(){ _mcpConn={}; });   // не ответило — молчим, кнопка «Подключить» остаётся
+  }).catch(function(){ _mcpConn={}; _mcpConnErr=true; if(cur==='services')renderMcpCatalog(); });   // «не смог проверить» — честная строка в лиде каталога
 }
+function _mcpConnRetry(){ _mcpConnErr=false; _mcpConnFetched=false; _ensureMcpConn(); if(cur==='services')renderMcpCatalog(); }
 function _mcpConnOf(c){ var p=(c.run||{}).pkg; return (_mcpConn&&p&&_mcpConn[p])||null; }
 function renderMcpCatalog(){
   _ensureMcpConn();
@@ -5261,7 +5281,8 @@ function renderMcpCatalog(){
     if(!items||!items.length){ host.innerHTML=''; return; }
     var order=['web','search','dev','data','files','comm','finance','ai','other'];
     var html='<div class="sect"><span class="eyebrow">MCP</span><h2>Каталог MCP-серверов <i>— тысячи готовых умений</i></h2></div>'+
-      '<div class="sk_lead" style="grid-column:1/-1">Готовые подключения для агента — из официального каталога MCP ('+items.length+' проверенных, все — без ключей). Помеченные «✓ подключён» уже работают; остальные подключим по запросу.</div>';
+      '<div class="sk_lead" style="grid-column:1/-1">Готовые подключения для агента — из официального каталога MCP ('+items.length+' проверенных, все — без ключей). Помеченные «✓ подключён» уже работают; остальные подключим по запросу.</div>'+
+      (_mcpConnErr?'<div class="sk_lead" style="grid-column:1/-1;font-size:12px;color:#A5632A">⚠ Не смог проверить, какие серверы уже подключены — отметки могут быть неточными. <a href="#" onclick="_mcpConnRetry();return false" style="color:var(--a)">Проверить ещё раз</a></div>':'');
     order.forEach(function(ck){
       var part=items.filter(function(c){return (c.cat||'other')===ck;});
       if(!part.length)return;
