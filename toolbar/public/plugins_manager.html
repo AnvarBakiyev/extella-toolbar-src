@@ -1486,7 +1486,8 @@ var MODELS_CURATED = [
   { id:'baidu/Unlimited-OCR', name:'OCR, распознавание документов', desc:'Достаёт текст из PDF, фото и сканов.', acc:'#C57E33' }
 ];
 // Модели-спотлайт: живой каталог (KV _mkt_models) поверх честного фолбэка. Геро —
-// всегда наши проверенные модели; полку «свежак» кормит харвестер РАБОТАЮЩИМИ
+// встроенная редакционная подборка; внешнюю полку харвестера всегда маркируем
+// как стороннюю и непроверенную текущим релизом Extella.
 // (RUNNING) пространствами HuggingFace. «Обновить» перечитывает.
 var _modReg=null, _modFetched=false;
 function _ensureMod(){
@@ -2251,12 +2252,14 @@ function installLocalModel(model, btn){
 function modelsSpotlight(){
   _ensureMod();
   var mh=(_modReg&&_modReg.heroes&&_modReg.heroes.length)?_modReg.heroes:TYPE_ED.models.heroes;
-  var liveShelf=!!(_modReg&&_modReg.shelf&&_modReg.shelf.length);
-  // Полный каталог работающих моделей по разделам (как Навыки), не тизер.
+  var modelShelf=(_modReg&&_modReg.shelf)?_modReg.shelf.filter(_releaseVisible):[];
+  var liveShelf=!!modelShelf.length;
+  // Внешние HuggingFace-карточки меняются независимо от релиза Extella и
+  // поэтому всегда показываются как сторонние непроверенные, а не «работающие».
   var catalog=liveShelf
-    ? catalogByCatHTML(_modReg.shelf, modelCat, MODEL_ORDER, MODEL_LABEL, MODEL_ACC,
-        'Работающие модели', 'ИИ-модели по разделам',
-        'Живой каталог работающих демо HuggingFace: запускаются в облаке, своя видеокарта не нужна. Обновляется каждую неделю.', 'Работает')
+    ? catalogByCatHTML(modelShelf, modelCat, MODEL_ORDER, MODEL_LABEL, MODEL_ACC,
+        'Сторонние модели', 'ИИ-модели по разделам',
+        'Сторонние демо HuggingFace меняются без релиза Extella и не входят в гарантированную поставку.', 'Стороннее · не проверено')
     : _shelfHTML(TYPE_ED.models.shelf, 'Модели', 'ИИ-модели: облачные и локальные');
   return addTileHTML('models','Добавить модель')+
     _bentoHTML(mh)+
@@ -2264,7 +2267,7 @@ function modelsSpotlight(){
     '<div class="sect_hdr"><span class="sect_title">Локальные модели, на твоём устройстве</span><span class="sect_line"></span></div>'+
     '<div class="sk_lead" style="grid-column:1/-1">Для русского лучше всего «Приватная модель».</div>'+
     '<div class="mshelf">'+LOCAL_MODELS.map(localModelCard).join('')+'</div>'+
-    '<div style="grid-column:1/-1;text-align:right;margin:-2px 0 8px"><span style="font-size:11px;color:var(--tx3);margin-right:8px">'+(liveShelf?'живой каталог с HuggingFace':'проверенные модели')+'</span>'+
+    '<div style="grid-column:1/-1;text-align:right;margin:-2px 0 8px"><span style="font-size:11px;color:var(--tx3);margin-right:8px">'+(liveShelf?'сторонний каталог HuggingFace · не проверено':'встроенная подборка')+'</span>'+
     '<button onclick="_modReg=null;_modFetched=false;renderModels()" style="border:1px solid var(--bd2);background:transparent;color:var(--tx2);border-radius:5px;padding:4px 10px;font-size:12px;cursor:pointer">↻ Обновить</button></div>';
 }
 // ===== Приложения (Pinokio-совместимые рецепты, детерминированная установка) =====
@@ -2287,6 +2290,7 @@ function _curOS(){
   if(/Mac/i.test(p))return'darwin'; if(/Win/i.test(p))return'win32'; return'linux';
 }
 function _appOk(a){ var c=a.compat; return !c||!c.platforms||c.platforms.indexOf(_curOS())>=0; }
+function _releaseVisible(item){ return !(item&&item.hidden===true); }
 var _appOnlyCompat=true;
 var APP_CATL={image:'Картинки',audio:'Аудио и музыка',video:'Видео',avatar:'Аватары','3d':'3D',llm:'Модели и чат',code:'Код и разработка',text:'Текст и документы',data:'Данные и аналитика',other:'Другое'};
 var APP_CATL_EN={image:'Images',audio:'Audio & music',video:'Video',avatar:'Avatars','3d':'3D',llm:'Models & chat',code:'Code & development',text:'Text & documents',data:'Data & analytics',other:'Other'};
@@ -2299,7 +2303,7 @@ function _appToggleCompat(){ _appOnlyCompat=!_appOnlyCompat; _appToggleRedraw();
 function _appsShelvesHTML(){
   if(!_appReg){ _ensureApps(); return _loadingHTML('Загружаю приложения…'); }
   if(_appInstalled===null){ _appInstalled={}; _refreshInstalledApps(); }
-  var all=_appReg.shelf||[];
+  var all=(_appReg.shelf||[]).filter(_releaseVisible);
   var osName={darwin:'macOS',win32:'Windows',linux:'Linux'}[_curOS()]||_curOS();
   var hidden=all.filter(function(a){return !_appOk(a);}).length;
   var apps=_appOnlyCompat?all.filter(_appOk):all;
@@ -2329,8 +2333,7 @@ function appCard(a){
   var repo=(a.run&&a.run.repo)||''; var stars=a.stars?('★'+a.stars):'';
   var inst=_appInstalled&&_appInstalled[a.id];
   var ok=_appOk(a); var c=a.compat||{};
-  var badge=''; if(c.gpu==='nvidia')badge=' · 🖥 NVIDIA'; else if(c.gpu==='cpu')badge=' · 💻 лёгкое'; else if(c.gpu==='unknown')badge=' · ⚠ не проверено';
-  if(c.verified===true)badge+=' · ✓ проверено';
+  var badge=' · ⚠ стороннее · не проверено'; if(c.gpu==='nvidia')badge+=' · 🖥 NVIDIA'; else if(c.gpu==='cpu')badge+=' · 💻 лёгкое';
   var btn;
   if(!ok){
     btn='<button class="st_btn" disabled title="'+esc(c.note||'несовместимо с твоей системой')+'" style="opacity:.5;cursor:not-allowed">🖥 не для твоей системы</button>';
@@ -3176,7 +3179,7 @@ function programCardIsUseful(c){
 function programsSpotlight(){
   _ensureProg();
   // Геро, всегда наши проверенные плагины. Полный каталог репо, в progToolsHTML.
-  var liveHeroes=(_progReg&&_progReg.heroes)?_progReg.heroes.filter(programCardIsUseful):[];
+  var liveHeroes=(_progReg&&_progReg.heroes)?_progReg.heroes.filter(_releaseVisible).filter(programCardIsUseful):[];
   var ph=liveHeroes.length?liveHeroes:TYPE_ED.programs.heroes;
   return _bentoHTML(ph);
 }
@@ -3188,14 +3191,14 @@ function progToolsHTML(extra){
   extra=extra||'';
   if(document.body.getAttribute('data-mode')==='pro')return '';
   _ensureProg();
-  var liveShelf=(_progReg&&_progReg.shelf)?_progReg.shelf.filter(programCardIsUseful):[];
+  var liveShelf=(_progReg&&_progReg.shelf)?_progReg.shelf.filter(_releaseVisible).filter(programCardIsUseful):[];
   var live=!!liveShelf.length;
   if(!live&&!extra)return '';
   // Ни шапки, ни лида: каталог продолжает то, что идёт сверху, одним полотном.
   // Границы задают только полки категорий — отдельный заголовок читается как разделитель.
   var cat=live?catalogByCatHTML(liveShelf, repoCat, REPO_ORDER, REPO_LABEL, REPO_ACC,
-      '', '', '', '🔧 Инструмент'):'';
-  var refresh=live?('<div style="grid-column:1/-1;text-align:right;margin:-2px 0 8px"><span style="font-size:11px;color:var(--tx3);margin-right:8px">проверенный каталог с GitHub · '+liveShelf.length+'</span>'+
+      '', '', '', '⚠ Стороннее · не проверено'):'';
+  var refresh=live?('<div style="grid-column:1/-1;text-align:right;margin:-2px 0 8px"><span style="font-size:11px;color:var(--tx3);margin-right:8px">сторонний каталог GitHub · не проверено · '+liveShelf.length+'</span>'+
     '<button onclick="_progReg=null;_progFetched=false;renderPrograms()" style="border:1px solid var(--bd2);background:transparent;color:var(--tx2);border-radius:5px;padding:4px 10px;font-size:12px;cursor:pointer">↻ Обновить</button></div>'):'';
   return cat+extra+refresh;
 }
@@ -3470,7 +3473,7 @@ function _gsearch(query){
   if(!_progReg&&!_progFetched){_progFetched=true;_loadSharded('_mkt_programs').then(function(r){if(r&&r.shelf){_progReg=r;}}).catch(function(){});}
   if(!_mcpReg){try{_loadSharded('_mkt_mcp','items').then(function(r){_mcpReg=r;}).catch(function(){});}catch(e){}}
   var res=[];
-  function add(items,type,tab,gn,gd,gc){ (items||[]).forEach(function(it){ var nm=(gn(it)||''); var ds=(gd(it)||''); if((nm+' '+ds).toLowerCase().indexOf(q)>=0) res.push({nm:nm,ds:ds,type:type,tab:tab,cat:gc?(gc(it)||''):''}); }); }
+  function add(items,type,tab,gn,gd,gc){ (items||[]).filter(_releaseVisible).forEach(function(it){ var nm=(gn(it)||''); var ds=(gd(it)||''); if((nm+' '+ds).toLowerCase().indexOf(q)>=0) res.push({nm:nm,ds:ds,type:type,tab:tab,cat:gc?(gc(it)||''):''}); }); }
   add(typeof CATALOG_SERVICES!=='undefined'?CATALOG_SERVICES:[],'Сервис','services',function(x){return x.name;},function(x){return x.desc;},function(x){return x.cat;});
   add(typeof cliCatalog==='function'?cliCatalog():[],'Инструмент','cli',function(x){return x.name;},function(x){return x.howto||x.desc;},function(x){return x.cat;});
   add(typeof skCatalog==='function'?skCatalog():[],'Навык','skills',function(x){return x.name;},function(x){return x.desc||x.rule;},function(x){return x.cat;});
@@ -5258,10 +5261,11 @@ function renderMcpCatalog(){
   _ensureMcpConn();
   var host=document.getElementById('mcp_cat'); if(!host)return;
   var draw=function(items){
+    items=(items||[]).filter(_releaseVisible);
     if(!items||!items.length){ host.innerHTML=''; return; }
     var order=['web','search','dev','data','files','comm','finance','ai','other'];
-    var html='<div class="sect"><span class="eyebrow">MCP</span><h2>Каталог MCP-серверов <i>— тысячи готовых умений</i></h2></div>'+
-      '<div class="sk_lead" style="grid-column:1/-1">Готовые подключения для агента — из официального каталога MCP ('+items.length+' проверенных, все — без ключей). Помеченные «✓ подключён» уже работают; остальные подключим по запросу.</div>';
+    var html='<div class="sect"><span class="eyebrow">MCP</span><h2>Каталог MCP-серверов <i>— сторонние подключения</i></h2></div>'+
+      '<div class="sk_lead" style="grid-column:1/-1">Эти '+items.length+' сторонних пакетов меняются независимо от Extella и не входят в гарантированную поставку. «✓ подключён» означает только подтверждённый локальный процесс.</div>';
     order.forEach(function(ck){
       var part=items.filter(function(c){return (c.cat||'other')===ck;});
       if(!part.length)return;
@@ -5281,7 +5285,7 @@ function renderMcpCatalog(){
           var mL=_locOf(c)||{};
           var mfunc=(LANG==='en'?(c.func_en||mL.func_en||c.func):(c.func_ru||mL.func_ru||c.func))||'';
           var mdsc=(LANG==='en'?(c.desc_en||mL.desc_en||c.desc):(c.desc_ru||mL.desc_ru||c.desc))||'';
-          return '<div class="stile" style="--acc:'+(CAT_ACC[c.cat]||TYPE_ACC.mcp)+'"><span class="st_chip">🔌 MCP · '+esc(MCP_CATL[c.cat]||c.cat||'')+'</span>'+
+          return '<div class="stile" style="--acc:'+(CAT_ACC[c.cat]||TYPE_ACC.mcp)+'"><span class="st_chip">🔌 MCP · ⚠ стороннее · не проверено · '+esc(MCP_CATL[c.cat]||c.cat||'')+'</span>'+
             '<div class="st_title">'+(mfunc?esc(mfunc):esc(c.title||short))+'</div>'+(mfunc?'<div class="st_name">'+esc(c.title||short)+'</div>':'')+'<div class="st_fact">'+esc(mdsc)+'</div>'+
             '<div class="st_foot" style="justify-content:space-between;align-items:center;gap:8px">'+foot+'</div></div>';
         }).join('')+'</div>';
@@ -5294,7 +5298,7 @@ function renderMcpCatalog(){
   };
   if(_mcpReg){ draw(_mcpReg); return; }
   _loadSharded('_mkt_mcp','items').then(function(r){
-    _mcpReg=(r&&r.items)||[];
+    _mcpReg=((r&&r.items)||[]).filter(_releaseVisible);
     if(cur==='services')draw(_mcpReg);
   }).catch(function(){ host.innerHTML=''; });
 }
@@ -6292,8 +6296,8 @@ function submitCliAdd(){
 // Обобщённая кнопка «+ Добавить» для Программ/Моделей/Навыков, передаёт Композитору
 // (Qwen) типовую задачу; после он добавляет карточку в живой каталог соответствующего раздела.
 var ADD_KINDS={
-  programs:{where:'Программы, полка «Инструменты с GitHub»',title:'Найти программу',action:'Найти программу',sub:'Опиши задачу — Extella найдёт подходящую открытую программу и покажет её карточку. Установка начнётся только после нажатия «Установить».',ph:'напр.: планировщик задач · трекер времени · генератор счетов',refresh:function(){_progReg=null;_progFetched=false;if(cur==='programs')renderPrograms();},prompt:function(v){return 'Пользователь просит добавить ПРОГРАММУ (плагин/приложение/MCP-сервер) в магазин Extella: «'+v+'». Найди подходящий ОТКРЫТЫЙ репозиторий и добавь карточку в живой каталог программ: kv_get "_mkt_programs" (global), добавь в .shelf объект {repoUrl,title,facts:[кратко по-русски],source:"github.com/<owner> · ★ N",acc:"#2F6B66",label:"MCP-инструмент"}, kv_set global. Если открытого нет, честно откажись.';}},
-  models:{where:'Модели, полка новинок',title:'Добавить модель',sub:'Опиши, какая ИИ-модель нужна, — Extella подберёт работающую и добавит в магазин.',ph:'напр.: генерация музыки · распознавание речи · перевод',refresh:function(){_modReg=null;_modFetched=false;if(cur==='models')renderModels();},prompt:function(v){return 'Пользователь просит добавить ИИ-МОДЕЛЬ в магазин Extella: «'+v+'». Подбери РАБОТАЮЩЕЕ пространство HuggingFace (RUNNING) под задачу и добавь карточку: kv_get "_mkt_models" (global), добавь в .shelf {hfId,title,facts:[кратко по-русски],source:"huggingface.co/<owner> · ♥ N",acc:"#2E7D5B",label:"Работает"}, kv_set global.';}},
+  programs:{where:'Программы, полка «Инструменты с GitHub»',title:'Найти программу',action:'Найти программу',sub:'Опиши задачу — Extella найдёт открытый сторонний проект и честно пометит его как непроверенный. Установка начнётся только после подтверждения.',ph:'напр.: планировщик задач · трекер времени · генератор счетов',refresh:function(){_progReg=null;_progFetched=false;if(cur==='programs')renderPrograms();},prompt:function(v){return 'Пользователь просит добавить СТОРОННЮЮ ПРОГРАММУ в магазин Extella: «'+v+'». Найди открытый репозиторий и добавь карточку в _mkt_programs.shelf с полями {repoUrl,title,facts:[кратко по-русски],source:"github.com/<owner> · ★ N",acc:"#2F6B66",label:"Стороннее · не проверено",classification:"third_party_unverified",hidden:false}. Не называй проект проверенным или гарантированно рабочим. Если открытого нет, честно откажись.';}},
+  models:{where:'Модели, полка новинок',title:'Добавить модель',sub:'Опиши задачу — Extella найдёт стороннее демо и пометит его как непроверенное текущим релизом.',ph:'напр.: генерация музыки · распознавание речи · перевод',refresh:function(){_modReg=null;_modFetched=false;if(cur==='models')renderModels();},prompt:function(v){return 'Пользователь просит добавить СТОРОННЮЮ ИИ-МОДЕЛЬ: «'+v+'». Найди доступное сейчас пространство HuggingFace и добавь карточку в _mkt_models.shelf с {hfId,title,facts:[кратко по-русски],source:"huggingface.co/<owner> · ♥ N",acc:"#2E7D5B",label:"Стороннее · не проверено",classification:"third_party_unverified",hidden:false}. Не обещай, что оно будет работать у всех.';}},
   skills:{where:'Навыки',title:'Добавить навык',sub:'Опиши поведение для агента — Extella составит навык и добавит в каталог.',ph:'напр.: всегда предлагать сроки · проверять цифры дважды',refresh:function(){_skLoaded=false;_skCatReg=null;if(cur==='skills')renderSkillsShelf();},prompt:function(v){return 'Пользователь просит добавить НАВЫК (правило поведения) в магазин Extella: «'+v+'». Составь один навык: {id:"skill_<латиница>",cat:"Бизнес" или "Работа и продуктивность" или "Стиль и общение" или "Разработка",emoji,name:"<рус 2-3 слова>",desc:"<рус фраза>",rule:"[skill:Имя] <конкретное правило на русском>",howto:"<рус>"}. Добавь: kv_get "_mkt_skills_catalog" (global) {items:[...]}, dedup по id и name, append, kv_set global. Подтверди.';}}
 };
 // Плитка «Добавить…» — стоит в начале полки, БЕЗ заголовка-раздела и с tf_skip:
