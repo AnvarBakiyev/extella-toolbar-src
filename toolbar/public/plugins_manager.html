@@ -5323,15 +5323,15 @@ function mcpConnectRun(id, btn){
 }
 // ── Конструктор агента: роль + галочки умений → agent_forge ──
 var FORGE_ROLES=[{id:'universal',n:'Универсальный помощник'}].concat((typeof CATALOG_AGENTS!=='undefined'?CATALOG_AGENTS:[]).map(function(a){return {id:a.id,n:a.emoji+' '+a.name};}));
+// Только реально существующие эксперты. Группа «MCP-серверы (встроенные)»
+// (mcp_fetch/time/git/files) удалена 21.07: таких экспертов нет на платформе —
+// галочки были фикцией. Подключённые MCP-серверы едут отдельной группой (mcpx:*).
 var FORGE_TOOLS=[
  {g:'Живые данные (сервисы)', items:[
    {id:'svc_currency',n:'Курсы валют'},{id:'svc_crypto',n:'Криптовалюты'},{id:'svc_weather',n:'Погода'},
    {id:'svc_translate',n:'Перевод'},{id:'svc_wiki',n:'Википедия'},
    {id:'svc_github',n:'GitHub'},
-   {id:'svc_ipgeo',n:'Гео по IP'},{id:'svc_qr',n:'QR-код'}]},
- {g:'MCP-серверы (встроенные)', items:[
-   {id:'mcp_fetch',n:'Чтение веб-страниц'},{id:'mcp_time',n:'Точное время'},
-   {id:'mcp_git',n:'Git-репозитории'},{id:'mcp_files',n:'Файлы (Downloads)'}]}
+   {id:'svc_ipgeo',n:'Гео по IP'},{id:'svc_qr',n:'QR-код'}]}
 ];
 function agentForgeModal(){
   var old=document.getElementById('af_ov'); if(old)old.remove();
