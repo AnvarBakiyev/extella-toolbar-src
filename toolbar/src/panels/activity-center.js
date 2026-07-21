@@ -37,7 +37,7 @@
     '#_xtlac_clear.show{display:block}',
     '#_xtlac_clear:hover{color:var(--etb-tx,#f0f0f0)}',
     '#_xtlac_head{display:flex;align-items:center;gap:10px}',
-    '#_xtlac_head h3{margin-right:auto}',
+    '#_xtlac_head>div:first-child{margin-right:auto}',
     '#_xtlac_close{border:0;background:transparent;color:var(--etb-tx2,#888);font-size:17px;line-height:1;cursor:pointer;padding:6px 9px;border-radius:5px}',
     '#_xtlac_close:hover{background:rgba(0,0,0,.06);color:var(--etb-tx,#222)}',
     '#_xtlac_warning{display:none;margin:10px 12px 0;padding:9px 10px;border-radius:6px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);color:#f59e0b;font-size:11px;line-height:1.45}',
