@@ -514,7 +514,7 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
     <div class="mhint" id="modHint"></div>
     <input id="modInput" onkeydown="if(event.key==='Enter')modOk()">
     <div class="mrow">
-      <button class="btn ghost" onclick="modCancel()">Отмена</button>
+      <button class="btn ghost" id="modCancelBtn" onclick="modCancel()">Отмена</button>
       <button class="btn gold" id="modOkBtn" onclick="modOk()">OK</button>
     </div>
   </div>
@@ -725,7 +725,7 @@ async function openAgentManager(){
     '<button class="btn gold" style="flex:1" onclick="agentCreate()">＋ Создать агента (Qwen)</button>'+
     '<button class="btn ghost" style="flex:1" onclick="agentLink()">🔗 Вставить ID агента</button></div>';
   el("modBack").classList.add("open");
-  const ob=el("modOkBtn"); if(ob) ob.textContent="Закрыть";
+  const ob=el("modOkBtn"); if(ob) ob.textContent="Закрыть"; var _cb2=el("modCancelBtn"); if(_cb2) _cb2.style.display="none";
   _modCb=null;
 }
 async function agentCreate(){
@@ -802,7 +802,7 @@ function _brainRender(res){
           '<div style="font-size:12px;color:var(--silver,#889)">пока нет процессов у этого агента — умения появятся, когда соберёте для него автоматизацию</div>')+'</div>';
     })();
   el("modBack").classList.add("open");
-  const ob=el("modOkBtn"); if(ob) ob.textContent="Закрыть";
+  const ob=el("modOkBtn"); if(ob) ob.textContent="Закрыть"; var _cb2=el("modCancelBtn"); if(_cb2) _cb2.style.display="none";
   _modCb=null;
 }
 async function openBrain(){
@@ -817,7 +817,7 @@ async function openBrain(){
       '<div style="display:flex;gap:8px;margin-top:12px">'+
       '<button class="btn gold" style="flex:1" onclick="modCancel();openAgentManager()">Выбрать или создать агента →</button></div>';
     el("modBack").classList.add("open");
-    var ob=el("modOkBtn"); if(ob) ob.textContent="Закрыть";
+    var ob=el("modOkBtn"); if(ob) ob.textContent="Закрыть"; var _cb3=el("modCancelBtn"); if(_cb3) _cb3.style.display="none";
     _modCb=null;
     return;
   }
@@ -913,7 +913,7 @@ function _modClearExtras(){
   inp.setAttribute("onkeydown", "if(event.key==='Enter')modOk()");
   hint.after(inp);
 }
-function resetModInput(){ _modClearExtras(); var ob=el("modOkBtn"); if(ob) ob.textContent="OK"; }   // чистый инпут + дефолтная кнопка
+function resetModInput(){ _modClearExtras(); var ob=el("modOkBtn"); if(ob) ob.textContent="OK"; var cb=el("modCancelBtn"); if(cb) cb.style.display=""; }   // чистый инпут + дефолтные кнопки
 /* ================= EN/RU (демо на английский) ================= */
 var WLANG = (function(){ try { return localStorage.getItem('wz_lang') || 'ru'; } catch(e){ return 'ru'; } })();
 var WT = {
@@ -1829,8 +1829,8 @@ function ask(title, hint, def, cb, opts){
   _modCb = cb;
   setTimeout(()=>mi.focus(), 50);
 }
-function modOk(){ const mi = el("modInput"); const v = (mi && mi.value != null) ? String(mi.value).trim() : ""; if(mi) mi.value=""; el("modBack").classList.remove("open"); const cb=_modCb; _modCb=null; if(cb) cb(v); }
-function modCancel(){ el("modBack").classList.remove("open"); _modCb = null; _modClearExtras(); }
+function modOk(){ const mi = el("modInput"); const v = (mi && mi.value != null) ? String(mi.value).trim() : ""; if(mi) mi.value=""; el("modBack").classList.remove("open"); var ob=el("modOkBtn"); if(ob) ob.textContent="OK"; var cbtn=el("modCancelBtn"); if(cbtn) cbtn.style.display=""; const cb=_modCb; _modCb=null; if(cb) cb(v); }
+function modCancel(){ el("modBack").classList.remove("open"); _modCb = null; _modClearExtras(); var ob=el("modOkBtn"); if(ob) ob.textContent="OK"; var cb=el("modCancelBtn"); if(cb) cb.style.display=""; }
 function busy(text){ el("busyText").textContent = text; el("busyBack").classList.add("open"); }
 function busyOff(){ el("busyBack").classList.remove("open"); }
 function toast(text, kind){
@@ -5748,6 +5748,7 @@ function connectTelegram(){
   el("modHint").innerHTML = "Выбери способ подключения.";
   el("modInput").outerHTML = `<select id="modInput" class="sess-select" style="width:100%;max-width:none;margin-bottom:8px"><option value="bot">Бот (BotFather) — уведомления в чат/канал</option><option value="mtproto">Аккаунт (сессия) — слать как пользователь</option></select><div style="font-size:12px;color:#888;margin-bottom:6px">Бот — проще и безопаснее для уведомлений. Аккаунт — когда нужно писать людям в ЛС / читать входящие.</div>`;
   el("modBack").classList.add("open");
+  var _tgOk=el("modOkBtn"); if(_tgOk) _tgOk.textContent="Продолжить →";
   _modCb = ()=>{ const m = (el("modInput")||{}).value; if(m==="mtproto") connectTelegramSession(); else connectTelegramBot(); };
 }
 function connectTelegramBot(){
