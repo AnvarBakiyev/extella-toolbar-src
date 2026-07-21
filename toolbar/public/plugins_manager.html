@@ -1582,7 +1582,7 @@ var _T_DICT = {
   runStarted:   {ru:'Запускаю…',    en:'Starting…'},
   runOk:        {ru:'Готово ✓',     en:'Done ✓'},
   autoLoad:     {ru:'Загружаю…',    en:'Loading…'},
-  autoEmpty:    {ru:'Пока пусто. Автоматизации появятся здесь: собери первую в Конструкторе — или преврати установленную программу в блок и собери в Студии Композитора.',  en:'Nothing yet. Automations will appear here: build your first one in the Wizard — or turn an installed program into a block and assemble it in the Composer Studio.'}
+  autoEmpty:    {ru:'Пока пусто. Собери первую автоматизацию в Конструкторе — ярлык на Рабочем столе.',  en:'Nothing yet. Build your first automation in the Wizard — its shortcut is on the Desktop.'}
 };
 function _t(k){ var e=_T_DICT[k]; if(!e) return k; return (LANG==='en' && e.en!=null) ? e.en : e.ru; }
 function _lm(m, field){ if(LANG==='en' && m && m.en && m.en[field]!=null) return m.en[field]; return m ? m[field] : ''; }
@@ -1617,6 +1617,7 @@ var I18N_EN = {
   'Студия Композитора — внутри Конструктора: задача словами → готовая автоматизация':'Composer Studio — inside the Wizard: describe a task → get a working automation',
   'Автоматизации по расписанию':'Scheduled automations',
   'Пилот наблюдает экран и помогает':'The copilot watches your screen and helps',
+  'Задачи по расписанию: отчёты, проверки, рассылки':'Scheduled tasks: reports, checks, mailouts',
   'Пока пусто. Установи программы в «Каталоге» или собери агента в Конструкторе — они появятся здесь ярлыками.':'Nothing yet. Install programs in “Catalog” or build an agent in the Wizard — they will appear here as icons.',
   'Открыть →':'Open →','Открыть':'Open','Запустить':'Run','Кабинет':'Cabinet','Удалить':'Remove','Открыть источник':'Open source','↗ Открыть':'↗ Open','↗ Источник':'↗ Source','⚙ Кабинет':'⚙ Cabinet','▶ Запустить':'▶ Run',
   // Секции / подписи
@@ -4410,7 +4411,7 @@ function renderDesktop(){
     {lbl:'Конструктор',      ico:'wand',     acc:'#C67E34', go:"_openWizard()",                tip:'Собрать процесс: интервью → план → стройка → запуск'},
     {lbl:'Воркспейс',        ico:'home',     acc:'#2F6B66', soon:true, go:"setc('workspace')",           tip:'Рабочие среды: компьютер понял проект и настроился'},
     {lbl:'Композитор',       ico:'box',      acc:'#7C5CBF', req:'extella_composer_studio', go:"notify('open','extella_composer_studio')", tip:'Студия Композитора — внутри Конструктора: задача словами → готовая автоматизация'},
-    {lbl:'Автоматизации',    ico:'calendar', acc:'#3E7C4F', go:"setc('automations')",          tip:'Регулярные задачи и «Что работает в фоне»'},
+    {lbl:'Автоматизации',    ico:'calendar', acc:'#3E7C4F', go:"setc('automations')",          tip:'Задачи по расписанию: отчёты, проверки, рассылки'},
     {lbl:'Второй пилот',     ico:'bot',      acc:'#4C5FD5', soon:true, req:'copilot_ctl', go:"notify('open','copilot_ctl')", tip:'Пилот наблюдает экран и помогает'},
     {lbl:'Студия языков',    ico:'terminal', acc:'#2A6F77', soon:true, req:'extella_cspl_studio', go:"notify('open','extella_cspl_studio')", tip:'Свои предметные языки: программа словами дела → проверенный результат'},
     {lbl:'Команда',          ico:'users',    acc:'#C9A35C', req:'extella_team', go:"notify('open','extella_team')",        tip:'Пригласить в общий контур — именные ключи доступа'}
@@ -5383,15 +5384,13 @@ function renderAgents(){
       '<div class="mshelf">'+mine.map(function(p,i){return autoCardHTML(p,i);}).join('')+'</div>'+
       ((_autoReg||[]).length>8 ? '<div style="grid-column:1/-1;text-align:right;margin:-2px 0 8px"><button onclick="setc(\'automations\')" style="border:1px solid var(--bd2);background:transparent;color:var(--tx2);border-radius:5px;padding:4px 10px;font-size:12px;cursor:pointer">Все мои агенты →</button></div>' : '')
     : '';
+  // Плитки «Конструктор агентов · Скоро» больше нет (решение Эллы 21.07):
+  // она дублировала «+ Собрать агента», а настоящий Конструктор уже на Рабочем столе.
   var buildTiles='<div class="mshelf tf_skip">'+
     '<div class="stile" style="--acc:var(--a);border-style:dashed;cursor:pointer" onclick="agentForgeModal()">'+
       '<span class="st_chip">✦ Собрать</span><div class="st_title">+ Собрать агента</div>'+
       '<div class="st_fact">Выбери роль и отметь умения — получишь своего агента в чате Extella.</div>'+
-      '<div class="st_foot"><span style="font-size:11px;color:var(--tx3)">пара минут</span></div></div>'+
-    '<div class="stile" style="--acc:#7C5CBF;opacity:.45;cursor:default" title="Конструктор агентов — готовится, появится здесь">'+
-      '<span class="st_chip">Скоро</span><div class="st_title">Конструктор агентов</div>'+
-      '<div class="st_fact">Полноценная сборка агента в отдельном интерфейсе.</div>'+
-      '<div class="st_foot"><span style="font-size:11px;color:var(--tx3)">в разработке</span></div></div></div>';
+      '<div class="st_foot"><span style="font-size:11px;color:var(--tx3)">пара минут</span></div></div></div>';
   var html='<div class="sk_lead" style="grid-column:1/-1">Твои агенты — сотрудники: собери своего или найми готовую роль с полки.</div>'+
     buildTiles+
     mineHtml+
@@ -5645,7 +5644,7 @@ function packAutomateModal(packId){
   var ov=document.createElement('div'); ov.id='pa_ov'; ov.style.cssText=_KPOV;
   ov.innerHTML='<div style="'+_KPMODAL+'">'+
     '<div style="font-family:var(--serif);font-size:20px;margin-bottom:4px">⏰ Автоматизировать: '+esc(cfg.title)+'</div>'+
-    '<div style="color:var(--tx2);font-size:13px;line-height:1.5;margin-bottom:6px">Зафиксирую параметры и опубликую как автоматизацию. Дальше во вкладке «AI Автоматизации» настроишь расписание и канал доставки (Telegram/Email).</div>'+
+    '<div style="color:var(--tx2);font-size:13px;line-height:1.5;margin-bottom:6px">Зафиксирую параметры и опубликую как автоматизацию. Дальше в «Автоматизациях» (значок календаря в шапке) настроишь расписание и канал доставки (Telegram/Email).</div>'+
     inputs+
     '<div style="margin-top:14px;display:flex;gap:8px;align-items:center"><button class="st_btn" onclick="packAutomateRun(\''+esc(packId)+'\',this)">Опубликовать в автоматизации</button>'+
     '<button onclick="var o=document.getElementById(\'pa_ov\');if(o)o.remove()" style="'+_KPBTN+'">Закрыть</button></div>'+
@@ -5667,7 +5666,7 @@ function packAutomateRun(packId, btn){
     var out=r.res; if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
     if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}
     if(out&&out.status==='success'){
-      if(msg)msg.innerHTML='✓ Опубликовано! Перехожу в «AI Автоматизации» — там задай расписание и канал.';
+      if(msg)msg.innerHTML='✓ Опубликовано! Перехожу в «Автоматизации» — там задай расписание и канал.';
       setTimeout(function(){ var o=document.getElementById('pa_ov'); if(o)o.remove(); _autoReg=null; _autoFetched=false; cur='automations'; renderGrid(); rtabs(); },1400);
     } else if(typeof out==='string'&&out.indexOf('deferred')>=0){ if(msg)msg.innerHTML=INF(28)+' Публикация идёт — подожди минуту и попробуй ещё раз.'; }
     else { if(msg)msg.innerHTML='⚠ '+esc((out&&out.message)||'не удалось опубликовать'); }
