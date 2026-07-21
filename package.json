@@ -14,6 +14,7 @@
     "build:toolbar-release": "npm run build:release -w @extella/toolbar",
     "build": "npm run build:library && npm run build:toolbar",
     "test:reproducible": "node scripts/check-reproducible-build.js",
-    "test:account-scope": "node scripts/check-account-scope.js"
+    "test:account-scope": "node scripts/check-account-scope.js",
+    "test:runtime-portability": "node scripts/check-runtime-portability.js"
   }
 }

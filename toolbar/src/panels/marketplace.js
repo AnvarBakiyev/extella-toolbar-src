@@ -6,30 +6,13 @@ ETB.marketplace = (function () {
   var _msgHandler = null;
   var _blobUrl = null;
 
-  // Full removal of an agent-installed plugin: delete every artifact the agent
-  // created (experts, KV keys, on-device files + running server, registry file)
-  // plus the local registry entry. Driven by the manifest's `artifacts`, with
-  // safe deterministic fallbacks when the manifest is missing. Fire-and-forget —
-  // cleanup errors must never surface in the UI.
+  // Remove Extella-owned registrations for an agent-installed plugin. The
+  // shared Activity Center is the only process controller; third-party files
+  // are intentionally preserved because their data ownership is unknown.
   function _removeAgentPlugin(pluginId, plugin) {
     plugin = plugin || ETB.registry.getById(pluginId);
     var safeId = pluginId.replace(/[^a-z0-9]/gi, '_');
     var art = (plugin && plugin.artifacts) || {};
-
-    var rootPath = art.rootPath || (plugin && plugin.ui && plugin.ui.rootPath) || ('~/extella-plugins/' + safeId);
-    var registryFile = art.registryFile || ('~/extella-plugins/_registry/' + safeId + '.json');
-
-    // Collect every pid file the agent may have written (static server + real
-    // service), deduped, so Remove tears the running app down too.
-    var pidFiles = [];
-    function _addPid(p) { if (p && pidFiles.indexOf(p) === -1) pidFiles.push(p); }
-    _addPid(art.pidFile);
-    (art.pidFiles || []).forEach(_addPid);
-    if (plugin && plugin.service && plugin.service.pidFile) _addPid(plugin.service.pidFile);
-    _addPid('/tmp/etb_srv_' + safeId + '.pid');
-    var pidListPy = '[' + pidFiles.map(function (p) {
-      return '"' + String(p).replace(/"/g, '\\"') + '"';
-    }).join(', ') + ']';
 
     // 1) Delete saved experts (start expert + any plugin experts). Include the
     //    start expert from ui as a fallback when artifacts is incomplete.
@@ -50,44 +33,22 @@ ETB.marketplace = (function () {
     });
     ETB.api.kvSet('_server_port_' + safeId, '').catch(function () {});
 
-    // 3) On-device cleanup: stop server, remove files, build status, registry file.
+    // 3) Ask the central runtime to stop an owned service and remove only its
+    // registration. Never kill an arbitrary PID or recursively delete files.
     var fnName = '_etb_cleanup_' + safeId;
     var code = [
       'def ' + fnName + '() -> str:',
-      '    import os, signal, shutil, json, glob',
-      '    removed = []',
-      '    for pid_file in ' + pidListPy + ':',
-      '        if os.path.exists(pid_file):',
-      '            try: os.kill(int(open(pid_file).read().strip()), signal.SIGTERM)',
-      '            except Exception: pass',
-      '            try: os.remove(pid_file)',
-      '            except Exception: pass',
-      '    root = os.path.expanduser("' + rootPath + '")',
-      '    try:',
-      '        if os.path.isdir(root): shutil.rmtree(root); removed.append(root)',
-      '    except Exception: pass',
-      '    for f in ["/tmp/etb_build_' + safeId + '.json", os.path.expanduser("' + registryFile + '")]:',
-      '        try:',
-      '            if os.path.exists(f): os.remove(f); removed.append(f)',
-      '        except Exception: pass',
-      '    reg_dir = os.path.expanduser("~/extella-plugins/_registry")',
-      '    if os.path.isdir(reg_dir):',
-      '        for rf in glob.glob(os.path.join(reg_dir, "*.json")):',
-      '            try:',
-      '                with open(rf, "r", encoding="utf-8") as _fh: _m = json.load(_fh)',
-      '                if isinstance(_m, dict) and _m.get("id") == ' + JSON.stringify(pluginId) + ':',
-      '                    os.remove(rf); removed.append(rf)',
-      '            except Exception: pass',
-      '    return json.dumps({"status": "ok", "removed": removed})'
+      '    import json',
+      '    from extella_expert_bridge import plugin_registration_remove',
+      '    return json.dumps(plugin_registration_remove(' + JSON.stringify(pluginId) + '), ensure_ascii=False)'
     ].join('\n');
 
     ETB.api.kvGet('_device_id')
       .then(function (res) { return (res && res.value) || null; })
       .catch(function () { return null; })
       .then(function (deviceId) {
-        // Без deviceId чистку НЕ пропускаем: гоним на текущем устройстве без target —
-        // зеркало фолбэка syncFromDevice. Иначе файл реестра выживал и синк
-        // возвращал карточку (баг «Remove не держится»).
+        // Without a device id, run on the current device. The bridge still
+        // applies ownership checks before changing any process state.
         return ETB.api.saveExpert({
           name: fnName,
           description: 'Cleanup plugin ' + pluginId,

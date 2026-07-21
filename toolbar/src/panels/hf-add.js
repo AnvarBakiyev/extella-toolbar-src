@@ -638,6 +638,11 @@ ETB.hfAdd = (function () {
 
   // ── Install pipeline ───────────────────────────────────────────
   function _startInstall() {
+    _state.step = 'error';
+    _state.errorMsg = 'This Hugging Face project is third-party and has not passed the Extella release gate. ' +
+      'The supported client does not run autonomous local installers for unverified projects.';
+    _render();
+    return;
     _getDeviceId().then(function (deviceId) {
       if (!deviceId) {
         _state.step = 'device_id_input';

@@ -882,6 +882,12 @@ ETB.githubAdd = (function () {
 
   // Device resolution → install. Local/normal → agent; hosted → deterministic.
   function _proceedInstall() {
+    _state.step = 'analysis_error';
+    _state.errorMsg = 'This GitHub project is third-party and has not passed the Extella release gate. ' +
+      'The supported client does not run autonomous local installers for unverified repositories. ' +
+      'You can review the source now; verified on-demand projects will appear in the supported catalog.';
+    _render();
+    return;
     if (_state.runMode === 'remote') return _hostedInstall();
     return _getDeviceId().then(function (deviceId) {
       if (!deviceId) {

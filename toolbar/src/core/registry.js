@@ -142,32 +142,18 @@ ETB.registry = (function () {
     },
 
     // ── Local file registry sync ──────────────────────────────────
-    // Agent-installed plugins write their manifest to a local file:
-    //   ~/extella-plugins/_registry/<id>.json
-    // The renderer cannot read local files directly, so we read them through a
-    // tiny fython expert executed on the device. Each manifest is merged into
-    // the custom registry (which caches in localStorage for instant/offline UI).
+    // The renderer cannot read the native registry directly, so a tiny device
+    // expert calls the shared bridge. The bridge owns path resolution and
+    // strips credentials before manifests enter renderer storage.
     // Best-effort: resolves to the array of synced manifests, never rejects.
     syncFromDevice: function (deviceId, onlyId) {
       var self = this;
       var fnName = '_etb_registry_read';
       var code = [
         'def ' + fnName + '(only_id: str = "") -> str:',
-        '    import os, json, glob',
-        '    d = os.path.expanduser("~/extella-plugins/_registry")',
-        '    out = []',
-        '    if os.path.isdir(d):',
-        '        if only_id:',
-        '            files = [os.path.join(d, only_id + ".json")]',
-        '        else:',
-        '            files = sorted(glob.glob(os.path.join(d, "*.json")))',
-        '        for fp in files:',
-        '            try:',
-        '                with open(fp, "r", encoding="utf-8") as f:',
-        '                    out.append(json.load(f))',
-        '            except Exception:',
-        '                pass',
-        '    return json.dumps(out)'
+        '    import json',
+        '    from extella_expert_bridge import plugin_registry_list',
+        '    return json.dumps(plugin_registry_list(only_id), ensure_ascii=False)'
       ].join('\n');
 
       function ingest(res) {
