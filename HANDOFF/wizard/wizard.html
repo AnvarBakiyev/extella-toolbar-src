@@ -4,15 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Extella — Конструктор</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=Source+Sans+3:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
-  --cream:#F5F3EE; --cream-dark:#EBE8E1; --paper:#FAFAF8;
+  --cream:#FAF9F5; --cream-dark:#EBE8E1; --paper:#FAFAF8;
   --ink:#0A0A0A; --ink-soft:#1A1A1A; --ink-medium:#2A2A2A;
   --nav:#555; --silver:#8C8C8C; --silver-light:#AAA;
   --gold:#C57E33; --gold-light:#d4984f; --gold-bg:#FBF4E8;
   --ok:#3d7a4a; --warn:#a8631f; --bad:#9c3a2e;
-  --sans:"DM Sans",ui-sans-serif,system-ui,-apple-system,sans-serif;
-  --mono:ui-monospace,Menlo,monospace;
+  --sans:'Source Sans 3',ui-sans-serif,system-ui,-apple-system,sans-serif;
+  --serif:'Source Serif 4','Lora',Georgia,serif;
+  --mono:'JetBrains Mono',ui-monospace,Menlo,monospace;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--sans);background:var(--cream);color:var(--ink-soft);font-size:15px;line-height:1.55}
@@ -25,8 +29,8 @@ textarea,input,select{font-family:var(--sans);font-size:14px}
 .wordmark .dot{color:var(--gold)}
 .topbar .sub{color:var(--nav);font-size:13px;border-left:1px solid var(--cream-dark);padding-left:20px}
 .topbar .spacer{flex:1}
-.sess-select{padding:7px 10px;border:1px solid var(--cream-dark);border-radius:8px;background:#fff;max-width:280px}
-.btn{border:1px solid var(--ink);background:var(--ink);color:#fff;border-radius:8px;padding:8px 16px;font-size:13.5px;font-weight:600;transition:.15s}
+.sess-select{padding:7px 10px;border:1px solid var(--cream-dark);border-radius:5px;background:#fff;max-width:280px}
+.btn{border:1px solid var(--ink);background:var(--ink);color:#fff;border-radius:5px;padding:8px 16px;font-size:13.5px;font-weight:600;transition:.15s}
 .btn:hover{background:var(--ink-medium)}
 .btn.gold{background:var(--gold);border-color:var(--gold)}
 .btn.gold:hover{background:var(--gold-light);border-color:var(--gold-light)}
@@ -49,12 +53,12 @@ textarea,input,select{font-family:var(--sans);font-size:14px}
 .main.chat-open{margin-right:400px}
 body.chat-open .topbar{padding-right:412px}
 body.chat-open .stepper{padding-right:412px}
-h1{font-size:26px;font-weight:700;letter-spacing:-.01em;margin-bottom:6px}
+h1{font-family:var(--serif);font-size:26px;font-weight:600;letter-spacing:-.01em;margin-bottom:6px}
 .lede{color:var(--nav);font-size:14.5px;margin-bottom:28px;max-width:640px}
 .kicker{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:8px}
 
 /* ---------- cards ---------- */
-.card{background:var(--paper);border:1px solid var(--cream-dark);border-radius:12px;padding:20px 22px;margin-bottom:14px}
+.card{background:var(--paper);border:1px solid var(--cream-dark);border-radius:6px;padding:20px 22px;margin-bottom:14px}
 .card-foot{display:flex;align-items:center;gap:10px;margin-top:10px}
 
 /* ---------- конспект интервью ---------- */
@@ -68,7 +72,7 @@ h1{font-size:26px;font-weight:700;letter-spacing:-.01em;margin-bottom:6px}
 .brief-head .prev.empty{color:var(--silver-light);font-style:italic}
 .brief-edit{display:none;margin:8px 0 4px 30px}
 .brief-item.open .brief-edit{display:block}
-.brief-edit textarea{width:100%;min-height:64px;border:1px solid var(--cream-dark);border-radius:8px;padding:10px 12px;background:#fff;resize:vertical}
+.brief-edit textarea{width:100%;min-height:64px;border:1px solid var(--cream-dark);border-radius:5px;padding:10px 12px;background:#fff;resize:vertical}
 .brief-edit textarea:focus{outline:none;border-color:var(--gold)}
 
 /* ---------- files ---------- */
@@ -103,15 +107,15 @@ h1{font-size:26px;font-weight:700;letter-spacing:-.01em;margin-bottom:6px}
 .score b{position:relative;font-size:22px}
 .score span{position:relative;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--silver)}
 .badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-.badge{font-size:11.5px;font-weight:600;padding:4px 10px;border-radius:20px;background:var(--cream);border:1px solid var(--cream-dark)}
+.badge{font-size:11.5px;font-weight:600;padding:4px 10px;border-radius:8px;background:var(--cream);border:1px solid var(--cream-dark)}
 .badge.ok{color:var(--ok)} .badge.warn{color:var(--warn)} .badge.bad{color:var(--bad)}
 .flow{display:flex;flex-direction:column;gap:0;margin:8px 0}
-.stage{background:var(--paper);border:1px solid var(--cream-dark);border-left:3px solid var(--gold);border-radius:10px;padding:16px 20px;position:relative}
+.stage{background:var(--paper);border:1px solid var(--cream-dark);border-left:3px solid var(--gold);border-radius:6px;padding:16px 20px;position:relative}
 .stage+.stage-arrow{width:2px;height:18px;background:var(--cream-dark);margin-left:38px}
 .stage .stitle{font-weight:700;font-size:15px}
 .stage .sdesc{color:var(--ink-medium);font-size:13.5px;margin:5px 0 8px}
 .chips{display:flex;gap:6px;flex-wrap:wrap}
-.chip{font-size:11.5px;background:var(--gold-bg);color:var(--gold);border:1px solid #eddfc4;padding:3px 9px;border-radius:14px;font-weight:600}
+.chip{font-size:11.5px;background:var(--gold-bg);color:var(--gold);border:1px solid #eddfc4;padding:3px 9px;border-radius:6px;font-weight:600}
 .io{font-size:12px;color:var(--silver);margin-top:7px}
 .gap-card{border-left:3px solid var(--warn);background:#FBF6ED}
 .pack-card{border:1.5px solid var(--gold);background:var(--gold-bg)}
@@ -119,7 +123,7 @@ ul.plain{list-style:none} ul.plain li{padding:4px 0 4px 18px;position:relative}
 ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
 
 /* ---------- ТЗ (spec) ---------- */
-.spec-doc{background:var(--paper);border:1px solid var(--cream-dark);border-radius:12px;padding:34px 40px;font-size:14.5px}
+.spec-doc{background:var(--paper);border:1px solid var(--cream-dark);border-radius:6px;padding:34px 40px;font-size:14.5px}
 .spec-doc h1{font-size:22px;margin:0 0 14px}
 .spec-doc h2{font-size:17px;margin:26px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--cream-dark)}
 .spec-doc h3{font-size:15px;margin:18px 0 8px}
@@ -129,14 +133,14 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
 .spec-doc code{font-family:var(--mono);font-size:12.5px;background:var(--cream);padding:1px 5px;border-radius:4px}
 .spec-doc hr{border:none;border-top:1px solid var(--cream-dark);margin:18px 0}
 .spec-doc strong{font-weight:700}
-.spec-sec{position:relative;border-radius:8px;padding:2px 8px;margin:0 -8px}
+.spec-sec{position:relative;border-radius:5px;padding:2px 8px;margin:0 -8px}
 .spec-sec:hover{background:var(--gold-bg)}
 .spec-sec .seccomment{position:absolute;top:4px;right:6px;opacity:0;transition:.15s}
 .spec-sec:hover .seccomment{opacity:1}
 
 /* ---------- схема процесса (flow) ---------- */
 .schema{display:flex;align-items:stretch;gap:0;overflow-x:auto;padding:10px 2px 4px}
-.schema .node{flex:0 0 auto;min-width:130px;max-width:190px;background:var(--paper);border:1.5px solid var(--cream-dark);border-radius:10px;padding:10px 12px}
+.schema .node{flex:0 0 auto;min-width:130px;max-width:190px;background:var(--paper);border:1.5px solid var(--cream-dark);border-radius:6px;padding:10px 12px}
 .schema .node.src{border-color:var(--silver-light);background:var(--cream)}
 .schema .node.out{border-color:var(--gold);background:var(--gold-bg)}
 .schema .node .nh{font-size:11px;color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:.08em}
@@ -146,10 +150,10 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
 .schema .chip.sm{font-size:10px;padding:2px 6px;margin:2px 2px 0 0;display:inline-block}
 
 /* ---------- автоматизации ---------- */
-.auto-card{background:var(--paper);border:1px solid var(--cream-dark);border-radius:12px;padding:18px 20px;margin-bottom:14px;overflow:hidden}
+.auto-card{background:var(--paper);border:1px solid var(--cream-dark);border-radius:6px;padding:18px 20px;margin-bottom:14px;overflow:hidden}
 /* витрина автоматизаций: сетка компактных плиток, вся плитка = вход в кабинет */
 .auto-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
-.auto-tile{background:var(--paper);border:1px solid var(--cream-dark);border-radius:12px;padding:14px 16px;overflow:hidden;cursor:pointer;transition:transform .12s ease,box-shadow .12s ease;display:flex;flex-direction:column}
+.auto-tile{background:var(--paper);border:1px solid var(--cream-dark);border-radius:6px;padding:14px 16px;overflow:hidden;cursor:pointer;transition:transform .12s ease,box-shadow .12s ease;display:flex;flex-direction:column}
 .auto-tile:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,0,0,.09)}
 .auto-tile .wz-hero{margin:-14px -16px 12px;padding:14px 16px 12px}
 .auto-tile .wz-hero-nm{font-size:15px}
@@ -184,7 +188,7 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
 .chat-head b{font-size:13.5px}
 .chat-head .sub{font-size:11.5px;color:var(--silver)}
 .chat-log{flex:1;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:12px}
-.msg{max-width:88%;padding:10px 13px;border-radius:12px;font-size:13.5px;white-space:pre-wrap}
+.msg{max-width:88%;padding:10px 13px;border-radius:6px;font-size:13.5px;white-space:pre-wrap}
 .msg.user{align-self:flex-end;background:var(--ink);color:#fff;border-bottom-right-radius:4px}
 .msg.bot{align-self:flex-start;background:var(--cream);border:1px solid var(--cream-dark);border-bottom-left-radius:4px}
 .msg .apply{margin-top:8px}
@@ -195,15 +199,15 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
 .chat-form .attach{border:1px solid var(--cream-dark);background:#fff;color:var(--nav);border-radius:9px;padding:0 11px;font-size:16px}
 .empty{color:var(--silver);font-size:13.5px;text-align:center;padding:40px 20px}
 .hide{display:none!important}
-.notice{background:var(--gold-bg);border:1px solid #eddfc4;border-radius:10px;padding:12px 16px;font-size:13.5px;margin-bottom:16px}
+.notice{background:var(--gold-bg);border:1px solid #eddfc4;border-radius:6px;padding:12px 16px;font-size:13.5px;margin-bottom:16px}
 
 /* ---------- modal + toasts (замена prompt/alert: работают и внутри Extella) ---------- */
 .mod-back{position:fixed;inset:0;background:rgba(10,10,10,.35);display:none;align-items:center;justify-content:center;z-index:100000}/* #3 выше оверлея кабинета (wz_cab z-index:99998) — иначе диалоги «Привязать источник»/«Входящие» открывались ПОД кабинетом */
 .mod-back.open{display:flex}
-.mod{background:var(--paper);border-radius:14px;padding:24px 26px;width:min(430px,92vw);box-shadow:0 18px 60px rgba(0,0,0,.25)}
+.mod{background:var(--paper);border-radius:6px;padding:24px 26px;width:min(430px,92vw);box-shadow:0 18px 60px rgba(0,0,0,.25)}
 .mod h3{font-size:16px;margin-bottom:6px}
 .mod .mhint{color:var(--silver);font-size:12.5px;margin-bottom:12px}
-.mod input:not([type=radio]):not([type=checkbox]){width:100%;border:1px solid var(--cream-dark);border-radius:8px;padding:10px 12px;background:#fff;margin-bottom:14px}
+.mod input:not([type=radio]):not([type=checkbox]){width:100%;border:1px solid var(--cream-dark);border-radius:5px;padding:10px 12px;background:#fff;margin-bottom:14px}
 .mod input:not([type=radio]):not([type=checkbox]):focus{outline:none;border-color:var(--gold)}
 .mod input[type=radio],.mod input[type=checkbox]{width:auto;margin:0;padding:0;border:0;background:none;accent-color:var(--gold)}
 .mod label.opt{display:flex;align-items:flex-start;gap:9px;text-align:left;cursor:pointer;margin-bottom:10px;font-size:12.5px;line-height:1.45}
@@ -212,7 +216,7 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
 .mod label.opt:hover{color:var(--gold)}
 .mod .mrow{display:flex;gap:10px;justify-content:flex-end}
 .toasts{position:fixed;left:50%;transform:translateX(-50%);bottom:26px;display:flex;flex-direction:column;gap:8px;z-index:100050;align-items:center}/* #3 выше модалок (.mod-back 100000), чтобы тосты не прятались за диалогом */
-.toast{background:var(--ink);color:#fff;border-radius:10px;padding:10px 18px;font-size:13.5px;box-shadow:0 8px 30px rgba(0,0,0,.3);animation:tin .2s ease}
+.toast{background:var(--ink);color:#fff;border-radius:6px;padding:10px 18px;font-size:13.5px;box-shadow:0 8px 30px rgba(0,0,0,.3);animation:tin .2s ease}
 .toast.err{background:var(--bad)}
 .toast.ok{background:var(--ok)}
 @keyframes tin{from{opacity:0;transform:translateY(8px)}to{opacity:1}}
@@ -280,7 +284,7 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
 <div id="team_studio" style="display:none;position:fixed;inset:0;z-index:9990;background:var(--cream,#f4f1ea);overflow:auto">
   <div style="max-width:820px;margin:0 auto;padding:26px 28px 70px">
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
-      <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#c9a35c,#3f4b52);display:flex;align-items:center;justify-content:center;font-size:26px">👥</div>
+      <div style="width:52px;height:52px;border-radius:6px;background:linear-gradient(135deg,#c9a35c,#3f4b52);display:flex;align-items:center;justify-content:center;font-size:26px">👥</div>
       <div>
         <div style="font:700 20px var(--sans);color:var(--ink,#0a0a0a)">Команда</div>
         <div style="font-size:12.5px;color:var(--silver,#889)">общий контур: процессы, витрина и кабинеты — одни на всех участников. Роли и права — на подходе.</div>
@@ -304,7 +308,7 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
 <div id="cspl_studio" style="display:none;position:fixed;inset:0;z-index:9990;background:var(--cream,#f4f1ea);overflow:auto">
   <div style="max-width:980px;margin:0 auto;padding:26px 28px 70px">
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
-      <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#2a6f77,#14171e);display:flex;align-items:center;justify-content:center;font-size:26px">📜</div>
+      <div style="width:52px;height:52px;border-radius:6px;background:linear-gradient(135deg,#2a6f77,#14171e);display:flex;align-items:center;justify-content:center;font-size:26px">📜</div>
       <div>
         <div style="font:700 20px var(--sans);color:var(--ink,#0a0a0a)">Студия языков</div>
         <div style="font-size:12.5px;color:var(--silver,#889)">предметные языки твоего аккаунта: программа словами дела → проверенный исполняемый результат</div>
@@ -314,7 +318,7 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
     <div class="card" style="border-left:3px solid var(--gold,#c9a35c);margin-bottom:14px">
       <div style="font-weight:700;font-size:13.5px;margin-bottom:6px">✨ Создать язык словами</div>
       <div style="font-size:12px;color:var(--silver);margin-bottom:8px">Опишите, какой отчётный язык нужен: какие колонки обязательны, какой фильтр по умолчанию, что считать итогом. Проектировщик соберёт спецификацию поверх проверенного ядра и зарегистрирует язык ТОЛЬКО после контрольных прогонов.</div>
-      <textarea id="csplCreateDesc" placeholder="например: язык отчёта по просроченной дебиторке — обязательны колонки Филиал, Сумма долга, Дней просрочки; по умолчанию показывать только строки с просрочкой больше 30 дней; итог — сумма долга; группировать по филиалу" style="width:100%;height:72px;font-size:13px;border:1px solid var(--cream-dark);border-radius:8px;padding:8px"></textarea>
+      <textarea id="csplCreateDesc" placeholder="например: язык отчёта по просроченной дебиторке — обязательны колонки Филиал, Сумма долга, Дней просрочки; по умолчанию показывать только строки с просрочкой больше 30 дней; итог — сумма долга; группировать по филиалу" style="width:100%;height:72px;font-size:13px;border:1px solid var(--cream-dark);border-radius:5px;padding:8px"></textarea>
       <div style="margin-top:8px"><button class="btn gold sm" onclick="csplCreate()">✨ Спроектировать и зарегистрировать</button><span class="statusline" id="csplCreateSt"></span></div>
       <div id="csplCreateOut" style="margin-top:8px;font-size:12.5px"></div>
     </div>
@@ -327,14 +331,14 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
 <div id="comp_studio" style="display:none;position:fixed;inset:0;z-index:9990;background:var(--cream,#f4f1ea);overflow:auto">
   <div style="max-width:980px;margin:0 auto;padding:26px 28px 70px">
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
-      <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#c9a35c,#a97e35);display:flex;align-items:center;justify-content:center;font-size:26px">🧩</div>
+      <div style="width:52px;height:52px;border-radius:6px;background:linear-gradient(135deg,#c9a35c,#a97e35);display:flex;align-items:center;justify-content:center;font-size:26px">🧩</div>
       <div>
         <div style="font:700 20px var(--sans);color:var(--ink,#0a0a0a)">Студия Композитора</div>
         <div style="font-size:12.5px;color:var(--silver,#889)">задача словами → сборка из блоков → результат</div>
       </div>
       <button class="btn ghost" style="margin-left:auto;padding:8px 16px" onclick="closeCompStudio()">✕ Закрыть</button>
     </div>
-    <div style="border:1px solid var(--cream-dark,#d8d2c8);border-radius:14px;padding:18px 20px;background:var(--paper,#fff)">
+    <div style="border:1px solid var(--cream-dark,#d8d2c8);border-radius:6px;padding:18px 20px;background:var(--paper,#fff)">
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">
         <span class="chip-ex" onclick="composerFill(this)">найти забытые подписки в банковских выписках</span>
         <span class="chip-ex" onclick="composerFill(this)">следить за конкурентами и слать дайджест</span>
@@ -342,7 +346,7 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
       </div>
       <div style="display:flex;gap:8px">
         <input id="composerInput" placeholder="опишите задачу одной фразой…"
-          style="flex:1;padding:12px 14px;border:1px solid var(--cream-dark,#d8d2c8);border-radius:10px;background:#fff;color:var(--ink,#0a0a0a);font-size:14px"
+          style="flex:1;padding:12px 14px;border:1px solid var(--cream-dark,#d8d2c8);border-radius:6px;background:#fff;color:var(--ink,#0a0a0a);font-size:14px"
           onkeydown="if(event.key==='Enter')composeNow()">
         <button id="composeBtn" class="btn gold" style="padding:0 18px;font-size:14px" onclick="composeNow()">Собрать</button>
       </div>
@@ -360,7 +364,7 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
   <p class="lede">Ищи умения по всему интернету: модели, инструменты, подключения, навыки. Ставятся одним кликом — установленное появится здесь.</p>
   <div style="display:flex;gap:8px;margin:14px 0 6px">
     <input id="mySearchInput" placeholder="напр. перевести документы · распознать речь · MCP для Slack"
-      style="flex:1;padding:14px 16px;border:1px solid var(--cream-dark,#d8d2c8);border-radius:12px;background:#fff;color:var(--ink,#0a0a0a);font-size:15px"
+      style="flex:1;padding:14px 16px;border:1px solid var(--cream-dark,#d8d2c8);border-radius:6px;background:#fff;color:var(--ink,#0a0a0a);font-size:15px"
       onkeydown="if(event.key==='Enter')capSearch(this.value,'mySearchOut')">
     <button class="btn gold" style="padding:0 22px;font-size:15px" onclick="capSearch(el('mySearchInput').value,'mySearchOut')">🔎 Искать</button>
   </div>
@@ -375,9 +379,9 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
 <style>
 .chip-ex{cursor:pointer;font-size:12px;color:var(--silver,#889);background:#fff;border:1px solid var(--cream-dark,#e0dccf);border-radius:999px;padding:5px 11px}
 .chip-ex:hover{color:var(--gold,#c60);border-color:var(--gold,#c60)}
-.cmp-step{display:flex;align-items:center;gap:9px;padding:8px 12px;border:1px solid var(--cream-dark,#e0dccf);border-radius:10px;margin:6px 0;font-size:13.5px;background:#fff}
+.cmp-step{display:flex;align-items:center;gap:9px;padding:8px 12px;border:1px solid var(--cream-dark,#e0dccf);border-radius:6px;margin:6px 0;font-size:13.5px;background:#fff}
 .cmp-dot{width:8px;height:8px;border-radius:50%;background:var(--gold,#c60);flex:0 0 auto}
-.cap-card{border:1px solid var(--cream-dark,#e0dccf);border-radius:12px;padding:12px 14px;margin:8px 0;background:#fff;display:flex;gap:12px;align-items:flex-start}
+.cap-card{border:1px solid var(--cream-dark,#e0dccf);border-radius:6px;padding:12px 14px;margin:8px 0;background:#fff;display:flex;gap:12px;align-items:flex-start}
 .cap-card .cc-body{flex:1;min-width:0}
 .cap-kind{display:inline-block;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:2px 7px;border-radius:6px;background:#f2ede4;color:#7a6a4a;margin-right:7px}
 .cap-title{font-weight:700;font-size:14px}
@@ -1807,7 +1811,7 @@ function askBig(title, hint, def, cb){
   resetModInput();
   el("modTitle").textContent = title;
   el("modHint").textContent = hint||"";
-  el("modInput").outerHTML='<textarea id="modInput" style="width:100%;min-height:120px;border:1px solid var(--cream-dark,#e5e0d5);border-radius:8px;padding:10px 12px;font:13px/1.5 var(--sans);resize:vertical"></textarea>';
+  el("modInput").outerHTML='<textarea id="modInput" style="width:100%;min-height:120px;border:1px solid var(--cream-dark,#e5e0d5);border-radius:5px;padding:10px 12px;font:13px/1.5 var(--sans);resize:vertical"></textarea>';
   el("modInput").value=def||"";
   el("modBack").classList.add("open");
   _modCb = cb;
@@ -2018,7 +2022,7 @@ async function renderInstalled(){
 
   // 1) требуют внимания — битые кубики (способность исчезла)
   if(broken.length){
-    H+='<div style="border:1px solid #e0b48a;border-radius:14px;padding:16px 18px;background:rgba(224,168,94,.08);margin-bottom:14px">'
+    H+='<div style="border:1px solid #e0b48a;border-radius:6px;padding:16px 18px;background:rgba(224,168,94,.08);margin-bottom:14px">'
       +'<div style="font:700 14px var(--sans);margin-bottom:4px">Требуют внимания</div>'
       +'<div style="font-size:12.5px;color:var(--silver,#889);margin-bottom:12px">'
       +'Кубик остался в сборке, а программа или сервис под ним исчезли — в процессе он упадёт. '
@@ -2034,7 +2038,7 @@ async function renderInstalled(){
   // 2) можно подключить + не запущенные
   var actionable=inst.concat(notrun);
   if(actionable.length){
-    H+='<div style="border:1px solid var(--cream-dark,#d8d2c8);border-radius:14px;padding:16px 18px;background:var(--paper,#fff)">'
+    H+='<div style="border:1px solid var(--cream-dark,#d8d2c8);border-radius:6px;padding:16px 18px;background:var(--paper,#fff)">'
       +'<div style="font:700 14px var(--sans);margin-bottom:4px">Установлено, можно подключить к автоматизациям</div>'
       +'<div style="font-size:12.5px;color:var(--silver,#889);margin-bottom:12px">'
       +'Это твой набор. Что ставишь через Extella — подключается само; это осталось с прошлого. '
@@ -2129,9 +2133,9 @@ async function teamInvite(){
   var r; try{ r=await jpost('/x/team_invite',{name:name}); }catch(e){ r={status:'error',message:String(e)}; }
   if(!out) return;
   if(r&&r.status==='success'){
-    out.innerHTML='<div style="background:rgba(201,163,92,.12);border:1px solid var(--gold);border-radius:10px;padding:12px">'
+    out.innerHTML='<div style="background:rgba(201,163,92,.12);border:1px solid var(--gold);border-radius:6px;padding:12px">'
       +'✓ '+(WLANG==='en'?'Invite for':'Приглашение для')+' <b>'+esc(r.name)+'</b> '+(WLANG==='en'?'created. The key is shown ONCE:':'создано. Ключ показывается ОДИН раз:')
-      +'<div style="font:600 13px var(--mono,monospace);word-break:break-all;background:var(--paper);border-radius:8px;padding:10px;margin:8px 0" onclick="navigator.clipboard&&navigator.clipboard.writeText(this.textContent)" title="клик — скопировать">'+esc(r.token)+'</div>'
+      +'<div style="font:600 13px var(--mono,monospace);word-break:break-all;background:var(--paper);border-radius:5px;padding:10px;margin:8px 0" onclick="navigator.clipboard&&navigator.clipboard.writeText(this.textContent)" title="клик — скопировать">'+esc(r.token)+'</div>'
       +'<div style="font-size:12px;color:var(--silver)">'+(WLANG==='en'
         ?'Hand it over personally. The invitee enters it in their Extella app (token sign-in) — and works in this shared workspace.'
         :'Передайте лично. Приглашённый вводит его в своём приложении Extella (вход по токену) — и работает в этом общем контуре: те же процессы, витрина и кабинеты.')+'</div></div>';
@@ -2163,9 +2167,9 @@ async function renderCsplStudio(){
       +'<div style="font-size:12.5px;color:var(--ink-medium);margin:6px 0 10px">'+esc(c.description||'')+'</div>'
       +'<details><summary style="cursor:pointer;font-size:12.5px;color:var(--nav)">'+(WLANG==='en'?'▸ Try it (program + data → compile)':'▸ Попробовать (программа + данные → компиляция)')+'</summary>'
       +'<div style="margin-top:10px"><div style="font-size:11px;color:var(--silver)">'+(WLANG==='en'?'Program (JSON)':'Программа (JSON)')+'</div>'
-      +'<textarea id="cspl_prog_'+i+'" style="width:100%;height:110px;font:12px var(--mono,monospace);border:1px solid var(--cream-dark);border-radius:8px;padding:8px"></textarea>'
+      +'<textarea id="cspl_prog_'+i+'" style="width:100%;height:110px;font:12px var(--mono,monospace);border:1px solid var(--cream-dark);border-radius:5px;padding:8px"></textarea>'
       +'<div style="font-size:11px;color:var(--silver);margin-top:6px">'+(WLANG==='en'?'Records (JSON list) — for report languages':'Данные (JSON-список) — для отчётных языков')+'</div>'
-      +'<textarea id="cspl_recs_'+i+'" style="width:100%;height:64px;font:12px var(--mono,monospace);border:1px solid var(--cream-dark);border-radius:8px;padding:8px"></textarea>'
+      +'<textarea id="cspl_recs_'+i+'" style="width:100%;height:64px;font:12px var(--mono,monospace);border:1px solid var(--cream-dark);border-radius:5px;padding:8px"></textarea>'
       +'<div style="margin-top:8px"><button class="btn gold sm" onclick="csplTry('+i+',\''+esc(c.capability_id)+'\')">'+(WLANG==='en'?'Compile':'Компилировать')+'</button>'
       +'<span class="statusline" id="cspl_st_'+i+'"></span></div><div id="cspl_out_'+i+'" style="margin-top:8px;font-size:12.5px"></div></div></details></div>';
   }).join('');
@@ -2345,7 +2349,7 @@ async function firstWin(btn, example){
 // Вынесено в функцию, чтобы состояние можно было проверить, а не только увидеть случайно.
 function _emptyShowcase(){
   var chips=['сводка по заявкам каждое утро','найти забытые подписки в выписках','сверить счета-фактуры с актами'];
-  return '<div style="max-width:680px;background:linear-gradient(135deg,#c9a35c18,var(--paper,#fff));border:1px solid var(--gold,#c9a35c);border-radius:16px;padding:24px 26px">'+
+  return '<div style="max-width:680px;background:linear-gradient(135deg,#c9a35c18,var(--paper,#fff));border:1px solid var(--gold,#c9a35c);border-radius:8px;padding:24px 26px">'+
     '<div class="kicker" style="color:var(--gold,#a97e35)">✨ Здесь появятся твои автоматизации</div>'+
     '<div style="font-size:20px;font-weight:800;color:var(--ink,#0a0a0a);margin:6px 0 8px">Пока их нет — но результат можно увидеть прямо сейчас</div>'+
     '<div style="font-size:13.5px;color:var(--ink-soft);line-height:1.55;margin-bottom:16px">'+
@@ -2455,12 +2459,12 @@ function _composeWorkbench(r){
   var desc = esc(card.description || st.task);
   COMPOSED[r.flow_id] = { kicker:'Extella · Composed automation', title:card.name||st.task, subtitle:card.description||st.task, chips:comps.map(compChip) };
   var bubble = function(m){ return m.role==='user'
-    ? '<div style="text-align:right;margin:6px 0"><span style="display:inline-block;background:var(--gold-bg,#f3e6d5);color:#7a4a12;border-radius:12px 12px 2px 12px;padding:6px 11px;font-size:13px;max-width:82%">'+esc(m.text)+'</span></div>'
-    : '<div style="margin:6px 0"><span style="display:inline-block;background:var(--cream);border:1px solid var(--cream-dark);border-radius:12px 12px 12px 2px;padding:6px 11px;font-size:13px;max-width:82%">'+esc(m.text)+'</span></div>'; };
+    ? '<div style="text-align:right;margin:6px 0"><span style="display:inline-block;background:var(--gold-bg,#f3e6d5);color:#7a4a12;border-radius:6px 12px 2px 12px;padding:6px 11px;font-size:13px;max-width:82%">'+esc(m.text)+'</span></div>'
+    : '<div style="margin:6px 0"><span style="display:inline-block;background:var(--cream);border:1px solid var(--cream-dark);border-radius:6px 12px 12px 2px;padding:6px 11px;font-size:13px;max-width:82%">'+esc(m.text)+'</span></div>'; };
   var thread = (st.chat||[]).map(bubble).join('');
   (el('composeBody')||el('composerOut')).innerHTML =
     '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="font-size:11.5px;background:rgba(128,128,128,.12);color:var(--silver);border-radius:999px;padding:3px 10px">черновик · не сохранён</span><a href="#" onclick="resetCompose();return false" style="font-size:12px;color:var(--silver);margin-left:auto">✕ начать заново</a></div>'+
-    '<div style="border:1px solid var(--cream-dark,#d8d2c8);border-radius:14px;padding:16px 18px;background:var(--paper,#fff);margin-bottom:12px">'+
+    '<div style="border:1px solid var(--cream-dark,#d8d2c8);border-radius:6px;padding:16px 18px;background:var(--paper,#fff);margin-bottom:12px">'+
       '<div style="display:flex;align-items:center;gap:10px"><span style="font-size:26px">'+em+'</span><div style="font:700 17px var(--sans)">'+nm+'</div></div>'+
       '<div style="font-size:13.5px;color:var(--ink-soft);line-height:1.5;margin:8px 0 12px">'+desc+'</div>'+
       '<div style="font-size:12px;color:var(--silver,#889);margin-bottom:6px">Собрано из твоих блоков:</div>'+chips+inst+
@@ -2483,7 +2487,7 @@ async function composeChat(){
   var inp = el('cmp_chat_in'); var msg = (inp&&inp.value||'').trim(); if(!msg) return;
   inp.value=''; inp.disabled=true;
   var th = el('cmp_thread');
-  if(th) th.innerHTML += '<div style="text-align:right;margin:6px 0"><span style="display:inline-block;background:var(--gold-bg,#f3e6d5);color:#7a4a12;border-radius:12px 12px 2px 12px;padding:6px 11px;font-size:13px;max-width:82%">'+esc(msg)+'</span></div><div id="cmp_wait" style="margin:6px 0;color:var(--silver);font-size:13px"><span class="spin"></span> пересобираю…</div>';
+  if(th) th.innerHTML += '<div style="text-align:right;margin:6px 0"><span style="display:inline-block;background:var(--gold-bg,#f3e6d5);color:#7a4a12;border-radius:6px 12px 2px 12px;padding:6px 11px;font-size:13px;max-width:82%">'+esc(msg)+'</span></div><div id="cmp_wait" style="margin:6px 0;color:var(--silver);font-size:13px"><span class="spin"></span> пересобираю…</div>';
   var r = await jpost('/x/compose_chat',{task:st.task, refinements:st.refinements, message:msg});
   if(r && r.status==='success'){
     st.refinements.push(msg);
@@ -2865,7 +2869,7 @@ function renderBlueprint(){
     ${bp.crux_layer && bp.crux_layer.layer ? (()=>{
       var CX={source:'Источник данных',capability:'Добыча способности — модель/репо/навык',knowledge_voice:'Знание компании и голос',trust:'Доверие к суждению',action:'Действие и общение',artifact:'Оформление результата (Excel/PPT/док)',orchestration:'Оркестрация процесса'};
       var nm=CX[bp.crux_layer.layer]||bp.crux_layer.layer;
-      return '<div style="background:var(--gold-bg);border:1px solid #eddfc4;border-left:3px solid var(--gold);border-radius:10px;padding:12px 16px;margin-top:16px">'+
+      return '<div style="background:var(--gold-bg);border:1px solid #eddfc4;border-left:3px solid var(--gold);border-radius:6px;padding:12px 16px;margin-top:16px">'+
         '<div style="font:600 11px var(--mono,monospace);letter-spacing:.08em;text-transform:uppercase;color:var(--gold)">🎯 Главное в этой задаче</div>'+
         '<div style="font-size:15px;font-weight:700;margin:4px 0 2px">'+esc(nm)+'</div>'+
         (bp.crux_layer.why?'<div style="font-size:13px;color:var(--ink-soft)">'+esc(bp.crux_layer.why)+'</div>':'')+
@@ -3312,7 +3316,7 @@ async function showDemoResult(runId){
       <div class="card" style="border-left:3px solid var(--gold)">
         <div style="display:flex;gap:8px;align-items:center"><b>${esc(f.title)}</b><span class="badge ${sev(f.severity)}">${esc(f.severity)}</span></div>
         <div style="font-size:13.5px;margin:6px 0">${esc(f.body)}</div>
-        ${(f.evidence||[]).map(e=>`<div style="font-size:12.5px;background:var(--gold-bg);border-radius:8px;padding:8px 12px;margin:4px 0">«${esc(e.quote)}» <span class="badge ${e.verified?"ok":"warn"}" style="margin-left:6px">${e.verified?"цитата подтверждена":"не подтверждена"}</span></div>`).join("")}
+        ${(f.evidence||[]).map(e=>`<div style="font-size:12.5px;background:var(--gold-bg);border-radius:5px;padding:8px 12px;margin:4px 0">«${esc(e.quote)}» <span class="badge ${e.verified?"ok":"warn"}" style="margin-left:6px">${e.verified?"цитата подтверждена":"не подтверждена"}</span></div>`).join("")}
         ${f.recommendation?`<div style="font-size:13px;color:var(--nav);margin-top:6px"><b>Рекомендация:</b> ${esc(f.recommendation)}</div>`:""}
         ${threadHTML("demo:finding:"+i)}
       </div>`).join("")}`:""}
@@ -3391,7 +3395,7 @@ async function pollBuild(){
       el("buildProgress").innerHTML += '<div class="card gap-card">'+
         '<b>Сборка прервалась: '+esc(es.message||p.error||"см. лог")+'</b>'+
         (es.detail?'<div style="font-size:13px;color:var(--ink-soft);margin-top:6px">'+esc(es.detail)+'</div>':'')+
-        (es.remedy?'<div style="font-size:13.5px;margin-top:10px;padding:10px 12px;background:var(--cream);border-radius:8px">'+
+        (es.remedy?'<div style="font-size:13.5px;margin-top:10px;padding:10px 12px;background:var(--cream);border-radius:5px">'+
                    '<b>Что делать:</b> '+esc(es.remedy)+'</div>':'')+
         (es.code?'<div style="font-size:11px;color:var(--silver);margin-top:8px">код: '+esc(es.code)+'</div>':'')+
         '</div>';
@@ -3426,7 +3430,7 @@ function renderBuildResult(lb){
       <div class="kicker">Процесс собран ${(lb.needs_review&&lb.needs_review.length)?"— есть шаги на доводку":"✓"}</div>
       <div style="margin-bottom:8px">Построено компонентов: <b>${experts.length}</b> ${vbadge}</div>
       <div style="font-size:13px;color:var(--nav)">${experts.map(e=>`<code style="background:var(--cream);padding:1px 6px;border-radius:4px;margin:2px;display:inline-block">${esc(e)}</code>`).join(" ")}</div>
-      ${(lb.needs_review&&lb.needs_review.length)?`<div style="font-size:13px;margin-top:10px;padding:10px 12px;border:1px solid #e0b48a;border-radius:10px;background:rgba(224,168,94,.08)"><b>⚠ Требуют доводки (${lb.needs_review.length}):</b> собраны и запустились, но результат по смыслу сомнителен — проверьте и поправьте словами в кабинете.<ul class="plain" style="margin-top:6px">${lb.needs_review.map(r=>`<li><b>${esc(r.title||r.expert)}</b> — ${esc(r.why||'')}</li>`).join("")}</ul></div>`:""}
+      ${(lb.needs_review&&lb.needs_review.length)?`<div style="font-size:13px;margin-top:10px;padding:10px 12px;border:1px solid #e0b48a;border-radius:6px;background:rgba(224,168,94,.08)"><b>⚠ Требуют доводки (${lb.needs_review.length}):</b> собраны и запустились, но результат по смыслу сомнителен — проверьте и поправьте словами в кабинете.<ul class="plain" style="margin-top:6px">${lb.needs_review.map(r=>`<li><b>${esc(r.title||r.expert)}</b> — ${esc(r.why||'')}</li>`).join("")}</ul></div>`:""}
       ${(aud.issues&&aud.issues.length)?`<div style="font-size:13px;color:var(--warn);margin-top:8px"><b>На подтверждение:</b><ul class="plain">${aud.issues.map(i=>`<li>${esc(i)}</li>`).join("")}</ul></div>`:`<div style="font-size:13px;color:var(--ok);margin-top:8px">Проверка безопасности замечаний не нашла.</div>`}
       <!-- #4: после сборки человек не понимал, что дальше. Явный следующий шаг — кабинет, где живёт
            чат доводки («Скажи, что поменять») и запуск. Идея Анвара: доводить и запускать словами там. -->
@@ -3475,7 +3479,7 @@ function renderLaunch(){
           ${runs.length
             ? `<b>✓ Готово — автоматизация работает.</b> Первый прогон сделан${lastRunAt?(" ("+esc(lastRunAt)+")"):""}. Дальше она живёт в кабинете: расписание, повторные прогоны, пауза и результаты во времени.`
             : `<b>✓ Процесс одобрен и готов.</b> Компоненты собраны, состав зафиксирован. Одобрение — не запуск: сделай первый прогон, чтобы увидеть результат на твоих данных.`}
-          ${!(S.session.source&&S.session.source.kind) ? `<div style="background:#fdf6e7;border:1px solid #f0d9a0;border-radius:8px;padding:9px 12px;margin-top:10px;font-size:12.5px;color:#7a5b1a">⚠ Данные пока загружаются <b>вручную файлом</b>. Чтобы процесс работал сам 24/7 — откройте кабинет → «Настройка» → «Привязать источник» → «✨ Любой источник» (своё API / CRM / рекламный кабинет).</div>` : ""}
+          ${!(S.session.source&&S.session.source.kind) ? `<div style="background:#fdf6e7;border:1px solid #f0d9a0;border-radius:5px;padding:9px 12px;margin-top:10px;font-size:12.5px;color:#7a5b1a">⚠ Данные пока загружаются <b>вручную файлом</b>. Чтобы процесс работал сам 24/7 — откройте кабинет → «Настройка» → «Привязать источник» → «✨ Любой источник» (своё API / CRM / рекламный кабинет).</div>` : ""}
           <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
             ${runs.length
               ? `<button class="btn gold" onclick="openWzCabinetBySid('${esc(S.sessionId)}')">Открыть кабинет →</button><button class="btn ghost" onclick="openReport()">📄 Открыть отчёт</button><button class="btn ghost" onclick="doFirstRun()">↻ Прогон ещё раз</button>`
@@ -3766,7 +3770,7 @@ async function renderConnections(){
       : (ext
         ? `<button class="btn gold sm" style="font-size:12px;padding:5px 12px" onclick="adoptConn('${key}')">Сделать общим</button>`
         : `<button class="btn ghost sm" style="font-size:12px;padding:5px 12px" onclick="${fn}()">Подключить</button>`);
-    return `<div style="background:var(--paper);border:1px solid var(--cream-dark,#d8d2c8);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:6px">
+    return `<div style="background:var(--paper);border:1px solid var(--cream-dark,#d8d2c8);border-radius:6px;padding:12px 14px;display:flex;flex-direction:column;gap:6px">
       <div style="display:flex;align-items:center;gap:8px"><span style="font-size:17px">${m.e}</span><b style="font-size:13.5px;flex:1">${esc(label)}</b>${status}</div>
       <div style="font-size:12px;color:var(--silver,#889);line-height:1.45;flex:1">${esc(m.what)}${(!on&&!ext&&m.need)?'<br><span style="opacity:.8">Понадобится: '+esc(m.need)+'</span>':''}</div>
       <div style="margin-top:2px">${act}</div>
@@ -3790,7 +3794,7 @@ async function renderConnections(){
     }
     tvCard = `<div style="font-size:12px;color:var(--silver,#889);margin:14px 0 6px">Отраслевые сервисы</div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px">
-      <div style="background:var(--paper);border:1px solid var(--cream-dark,#d8d2c8);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:6px">
+      <div style="background:var(--paper);border:1px solid var(--cream-dark,#d8d2c8);border-radius:6px;padding:12px 14px;display:flex;flex-direction:column;gap:6px">
         <div style="display:flex;align-items:center;gap:8px"><span style="font-size:17px">🧳</span><b style="font-size:13.5px;flex:1">Tourvisor (туры)</b>${st}</div>
         <div style="font-size:12px;color:var(--silver,#889);line-height:1.45;flex:1">Поиск туров и подборки для клиентов турагентства${tv?'':'<br><span style="opacity:.8">Понадобится: JWT из кабинета pro.tourvisor.ru → Настройки → Интеграции</span>'}</div>
         <div style="margin-top:2px" id="tvTestOut">${act}</div>
@@ -3802,7 +3806,7 @@ async function renderConnections(){
   const sumTxt = onNames.length
     ? `${onNames.join(', ')}${found.length?` · <span style=\"color:#C57E33\">＋ найдено: WhatsApp</span>`:''}${tvWarn?` · <span style=\"color:#C57E33\">⚠ токен Tourvisor истекает</span>`:''}`
     : (WLANG==='en'?'nothing connected yet':'пока ничего не подключено');
-  bar.innerHTML = `<details style="border:1px solid rgba(128,128,128,.25);border-radius:12px;padding:10px 14px;margin:0 0 16px"${(found.length||tvWarn)?' open':''}>
+  bar.innerHTML = `<details style="border:1px solid rgba(128,128,128,.25);border-radius:6px;padding:10px 14px;margin:0 0 16px"${(found.length||tvWarn)?' open':''}>
     <summary style="cursor:pointer;list-style:none;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap">${_wt('connHdr')} <span style="font-weight:400;font-size:12.5px;color:var(--silver,#889)">— ${sumTxt}</span></summary>
     <div style="margin-top:12px">
       <div style="font-size:12px;color:var(--silver,#889);margin-bottom:6px">${_wt('connOut')}</div>
@@ -3915,7 +3919,7 @@ async function renderMonitor(){
     const why=(p.reasons&&p.reasons.length)?`<div style="font-size:11.5px;color:var(--bad,#c33);margin-top:2px">${p.reasons.map(esc).join(" · ")}</div>`:"";
     return `<div style="display:flex;gap:8px;padding:6px 0;border-top:1px solid rgba(128,128,128,.15)"><span>${dot(p.health)}</span><div style="flex:1;min-width:0"><b style="font-size:13px">${esc(p.process_name||p.session_id)}</b><div style="font-size:12px;color:var(--silver,#889)">${bits.join(" &nbsp;·&nbsp; ")}</div>${why}</div></div>`;
   }).join("");
-  bar.innerHTML = excHtml + `<details style="border:1px solid rgba(128,128,128,.25);border-radius:10px;padding:10px 14px;margin:0 0 16px"${allOk?"":" open"}>${head}${credRow}<div style="margin-top:8px">${rows}</div></details>`;
+  bar.innerHTML = excHtml + `<details style="border:1px solid rgba(128,128,128,.25);border-radius:6px;padding:10px 14px;margin:0 0 16px"${allOk?"":" open"}>${head}${credRow}<div style="margin-top:8px">${rows}</div></details>`;
 }
 /* ── Личность агента (обложка) + Кабинет — самодостаточный вид Визарда ── */
 var _WZ_PAL=['#3A6EA5','#8F4E1E','#57A773','#8E4AA8','#C57E33','#2E7D5B','#D65CA8','#4E8FDB'];
@@ -3972,16 +3976,16 @@ function _wzLifeRow(a){
   if(L.k==='active'&&a.next_due_ts){ var t=String(a.next_due_ts).slice(5,16).replace('T',' '); bits.push('<span style="color:rgba(255,255,255,.75)">след. запуск '+esc(t)+'</span>'); }
   var canPause=(a.schedule&&a.schedule.period)||a.inbound;
   if(canPause||a.paused){
-    bits.push('<button onclick="pauseProcess(_wzCabI)" style="border:1px solid rgba(255,255,255,.45);background:rgba(255,255,255,.14);color:#fff;border-radius:8px;padding:3px 12px;cursor:pointer;font:600 11.5px var(--sans)">'+(a.paused?'▶ Возобновить':'⏸ Пауза')+'</button>');
+    bits.push('<button onclick="pauseProcess(_wzCabI)" style="border:1px solid rgba(255,255,255,.45);background:rgba(255,255,255,.14);color:#fff;border-radius:5px;padding:3px 12px;cursor:pointer;font:600 11.5px var(--sans)">'+(a.paused?'▶ Возобновить':'⏸ Пауза')+'</button>');
   }
   var html='<div id="wz_cab_life" style="margin-top:8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;font:600 12px var(--sans)">'+bits.join('<span style="opacity:.5">·</span>')+'</div>';
   if(L.k==='attention'&&L.reason){
     var act='';
-    if(/tourvisor|токен/i.test(L.reason)) act='<button onclick="closeWzCabinet();setMode(\'automations\');setTimeout(function(){var e=document.querySelector(\'#connBar details\');if(e){e.open=true;e.scrollIntoView({block:\'center\'});}},400)" style="border:none;background:rgba(255,255,255,.92);color:#7a5b1a;border-radius:8px;padding:3px 12px;cursor:pointer;font:700 11.5px var(--sans)">Обновить токен</button>';
+    if(/tourvisor|токен/i.test(L.reason)) act='<button onclick="closeWzCabinet();setMode(\'automations\');setTimeout(function(){var e=document.querySelector(\'#connBar details\');if(e){e.open=true;e.scrollIntoView({block:\'center\'});}},400)" style="border:none;background:rgba(255,255,255,.92);color:#7a5b1a;border-radius:5px;padding:3px 12px;cursor:pointer;font:700 11.5px var(--sans)">Обновить токен</button>';
     // Кнопка называлась «Запустить снова», а только переключала вкладку — ничего не запускала.
     // Хуже немого отказа: кнопка обещает действие и не делает его, а владелец решает, что система висит.
-    else if(/прогон/i.test(L.reason)) act='<button onclick="wzCabTab(\'overview\');runProcess(_wzCabI)" style="border:none;background:rgba(255,255,255,.92);color:#7a5b1a;border-radius:8px;padding:3px 12px;cursor:pointer;font:700 11.5px var(--sans)">Запустить снова</button>';
-    html+='<div style="margin-top:7px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:rgba(0,0,0,.22);border-radius:10px;padding:7px 12px;font:600 12px var(--sans);color:#FFE9C2">⚠ '+esc(L.reason)+' '+act+'</div>';
+    else if(/прогон/i.test(L.reason)) act='<button onclick="wzCabTab(\'overview\');runProcess(_wzCabI)" style="border:none;background:rgba(255,255,255,.92);color:#7a5b1a;border-radius:5px;padding:3px 12px;cursor:pointer;font:700 11.5px var(--sans)">Запустить снова</button>';
+    html+='<div style="margin-top:7px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:rgba(0,0,0,.22);border-radius:6px;padding:7px 12px;font:600 12px var(--sans);color:#FFE9C2">⚠ '+esc(L.reason)+' '+act+'</div>';
   }
   return html;
 }
@@ -4011,7 +4015,7 @@ function _wzCabRender(){
   // появления способностей и развели ОДНО действие по трём местам: «Собрать сейчас»,
   // «Запустить сейчас» и кнопка в «Прогонах» были одним и тем же запуском.
   var tabs=domainTab.concat([['overview','Обзор'],['settings','Настройка'],['runs','История']]);
-  var tabBar=tabs.map(function(t){var on=_wzCabTab===t[0];return '<button onclick="wzCabTab(\''+t[0]+'\')" style="border:none;background:'+(on?'var(--gold-bg)':'transparent')+';color:'+(on?'var(--gold)':'var(--nav)')+';font:600 13px var(--sans);padding:8px 16px;border-radius:8px;cursor:pointer">'+t[1]+'</button>';}).join('');
+  var tabBar=tabs.map(function(t){var on=_wzCabTab===t[0];return '<button onclick="wzCabTab(\''+t[0]+'\')" style="border:none;background:'+(on?'var(--gold-bg)':'transparent')+';color:'+(on?'var(--gold)':'var(--nav)')+';font:600 13px var(--sans);padding:8px 16px;border-radius:5px;cursor:pointer">'+t[1]+'</button>';}).join('');
   o.innerHTML=
     '<div style="'+_wzHeroStyle(acc)+';padding:20px 26px 18px;position:relative;flex-shrink:0">'+
       '<div style="position:absolute;right:22px;top:0;font-size:96px;line-height:1;opacity:.16;pointer-events:none">'+em+'</div>'+
@@ -4020,7 +4024,7 @@ function _wzCabRender(){
         '<div style="min-width:0;flex:1">'+
           '<div style="font:700 21px/1.25 var(--sans);color:#fff;text-shadow:0 1px 5px rgba(0,0,0,.32)">'+nm+'</div>'+
           (tag?'<div style="font-size:13px;color:rgba(255,255,255,.94);margin-top:4px;text-shadow:0 1px 4px rgba(0,0,0,.3)">'+esc(tag)+'</div>':'')+
-          (_wzArchTitle(a)?'<div style="display:inline-block;margin-top:6px;padding:2px 10px;border-radius:20px;background:rgba(255,255,255,.2);font:600 11px var(--sans);color:#fff">'+esc(_wzArchTitle(a))+'</div>':'')+
+          (_wzArchTitle(a)?'<div style="display:inline-block;margin-top:6px;padding:2px 10px;border-radius:8px;background:rgba(255,255,255,.2);font:600 11px var(--sans);color:#fff">'+esc(_wzArchTitle(a))+'</div>':'')+
           _wzLifeRow(a)+
           '<div style="margin-top:6px;font:500 10px var(--mono,monospace);color:rgba(255,255,255,.55)">'+esc(a.orchestrator||a.session_id||'')+'</div>'+
         '</div>'+
@@ -4241,7 +4245,7 @@ async function cabApply(){
           var ss=pr.slice_summary||{}, lr=(AUTOS[_wzCabI]||{}).last_run||null;
           var fmtN=function(n){ return (typeof n==='number')?n.toLocaleString('ru-RU'):(n==null?'—':esc(String(n))); };
           if(ss && (ss.total_count!=null || ss.total_sum!=null)){
-            sdiff='<div style="background:rgba(128,128,128,.07);border-radius:8px;padding:8px 10px;margin:6px 0;font-size:12.5px">'+
+            sdiff='<div style="background:rgba(128,128,128,.07);border-radius:5px;padding:8px 10px;margin:6px 0;font-size:12.5px">'+
               '📊 <b>Что изменится</b> (срез новой версии на файле-образце):<br>'+
               'позиций: '+(lr?fmtN(lr.total_count)+' → ':'')+fmtN(ss.total_count)+
               (ss.total_sum!=null||lr&&lr.total_sum!=null?' · сумма: '+(lr?fmtN(lr.total_sum)+' → ':'')+fmtN(ss.total_sum):'')+
@@ -4264,7 +4268,7 @@ async function cabApply(){
     toast('Задание Строителю набрано — отправь сообщение Мастеру','ok');
   }
 }
-function _wzCard(inner){ return '<div style="max-width:720px;background:var(--paper);border:1px solid var(--cream-dark);border-radius:12px;padding:18px 20px;margin-bottom:14px">'+inner+'</div>'; }
+function _wzCard(inner){ return '<div style="max-width:720px;background:var(--paper);border:1px solid var(--cream-dark);border-radius:6px;padding:18px 20px;margin-bottom:14px">'+inner+'</div>'; }
 function _wzH(t){ return '<div style="font:700 12px var(--sans);color:var(--nav);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">'+t+'</div>'; }
 // Карточка доводки: сомнительные по смыслу шаги, найденные при сборке. Ведёт к чату кабинета
 // («Скажи, что поменять» внизу) — там доводка словами и есть. Идея Анвара: доделать процесс тут.
@@ -4272,7 +4276,7 @@ function _wzCabReviewCard(a){
   var nr=(a&&a.needs_review)||[];
   if(!nr.length) return '';
   window._cabReview=nr;                          // для кнопок «Поправить словами» (по индексу)
-  return '<div style="border:1px solid #e0b48a;border-radius:14px;padding:16px 18px;background:rgba(224,168,94,.09);margin-bottom:14px">'
+  return '<div style="border:1px solid #e0b48a;border-radius:6px;padding:16px 18px;background:rgba(224,168,94,.09);margin-bottom:14px">'
     +'<div style="font:700 14px var(--sans);margin-bottom:4px">⚠ Шаги, которые стоит довести ('+nr.length+')</div>'
     +'<div style="font-size:12.5px;color:var(--ink-soft);margin-bottom:10px">Они собрались и запускаются, но результат по смыслу сомнителен. Поправьте словами в чате внизу — например: «в поиске поставщиков ищи по названиям товаров, не по суммам».</div>'
     +nr.map(function(r,i){
@@ -4296,7 +4300,7 @@ function _wzCabBody(a){
     return '<div style="display:flex;flex-direction:column;height:calc(100vh - 200px)">'+
       '<div style="font-size:12px;color:var(--silver);margin:-8px 0 8px;display:flex;align-items:center;gap:10px">Доменная работа этого пака — лиды, подборки, рассылки, договоры.'+
       '<a href="'+esc(a.panel_url)+'" target="_blank" style="color:#c60;margin-left:auto">открыть в отдельном окне ↗</a></div>'+
-      '<iframe src="'+esc(a.panel_url)+'" style="flex:1;width:100%;border:1px solid var(--cream-dark);border-radius:12px;background:#fff"></iframe></div>';
+      '<iframe src="'+esc(a.panel_url)+'" style="flex:1;width:100%;border:1px solid var(--cream-dark);border-radius:6px;background:#fff"></iframe></div>';
   if(_wzCabTab==='compose' && a.flow_id) return _wzCabComposeTab(a);
   // Слой 1 честный статус: если живого источника нет — предупреждающий баннер на ЛЮБОЙ содержательной вкладке
   var _sb = ((a.source&&a.source.kind)||a.panel_url) ? "" : _wzSourceBanner(a, _wzCabI);
@@ -4341,7 +4345,7 @@ function _wzComposeMakeupHTML(f){
   }).join('');
   var miss=(f.missing_human||[]);
   var missBlock = miss.length
-    ? '<div style="margin-top:10px;background:rgba(197,126,51,.08);border:1px solid rgba(197,126,51,.3);border-radius:10px;padding:9px 13px;font-size:12.5px;color:#7a5b1a"><b>Чтобы заработало, осталось:</b><ul style="margin:4px 0 0 18px">'+miss.map(function(m){return '<li>'+esc(m)+'</li>';}).join('')+'</ul></div>'
+    ? '<div style="margin-top:10px;background:rgba(197,126,51,.08);border:1px solid rgba(197,126,51,.3);border-radius:6px;padding:9px 13px;font-size:12.5px;color:#7a5b1a"><b>Чтобы заработало, осталось:</b><ul style="margin:4px 0 0 18px">'+miss.map(function(m){return '<li>'+esc(m)+'</li>';}).join('')+'</ul></div>'
     : '';
   return _wzCard(_wzH('Состав — из чего собрано')+steps+(inst?'<div>'+inst+'</div>':'')+missBlock+
     '<div style="font-size:11px;color:var(--silver);margin-top:10px">Эта сборка может стать паком-продуктом: «Настройка → Публикация → В витрину» издаёт блоки + план + восстановление.</div>');
@@ -4351,11 +4355,11 @@ async function cabComposeChat(){
   var inp=el('cabcmp_in'); var msg=(inp&&inp.value||'').trim(); if(!msg) return;
   inp.value=''; inp.disabled=true;
   var th=el('cabcmp_thread');
-  if(th) th.innerHTML += '<div style="text-align:right;margin:6px 0"><span style="display:inline-block;background:var(--gold-bg,#f3e6d5);color:#7a4a12;border-radius:12px 12px 2px 12px;padding:6px 11px;font-size:13px;max-width:82%">'+esc(msg)+'</span></div><div id="cabcmp_wait" style="margin:6px 0;color:var(--silver);font-size:13px"><span class="spin"></span> пересобираю… (до 2 мин)</div>';
+  if(th) th.innerHTML += '<div style="text-align:right;margin:6px 0"><span style="display:inline-block;background:var(--gold-bg,#f3e6d5);color:#7a4a12;border-radius:6px 12px 2px 12px;padding:6px 11px;font-size:13px;max-width:82%">'+esc(msg)+'</span></div><div id="cabcmp_wait" style="margin:6px 0;color:var(--silver);font-size:13px"><span class="spin"></span> пересобираю… (до 2 мин)</div>';
   var r=await jpost('/x/compose_chat',{flow_id:a.flow_id, session_id:a.session_id, message:msg});
   var w=el('cabcmp_wait');
   if(r&&r.status==='success'){
-    if(w) w.outerHTML='<div style="margin:6px 0"><span style="display:inline-block;background:var(--cream);border:1px solid var(--cream-dark);border-radius:12px 12px 12px 2px;padding:6px 11px;font-size:13px;max-width:82%">'+esc(r.reply||'Готово.')+'</span></div>';
+    if(w) w.outerHTML='<div style="margin:6px 0"><span style="display:inline-block;background:var(--cream);border:1px solid var(--cream-dark);border-radius:6px 12px 12px 2px;padding:6px 11px;font-size:13px;max-width:82%">'+esc(r.reply||'Готово.')+'</span></div>';
     var card=r.card||{};
     if(card.name){ a.client_name=card.name; a.process_name=card.name; }
     if(card.description) a.goal=card.description;
@@ -4474,12 +4478,12 @@ function _wzSourceBanner(a, i){
   var hasLive = (a.source && a.source.kind) || a.panel_url;
   if(hasLive){
     var nm = (a.source&&a.source.kind) ? _srcName(a.source.kind) : 'входящие каналы';
-    return '<div style="background:rgba(47,158,86,.10);border:1px solid rgba(47,158,86,.35);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#237a44">✓ Источник данных подключён: <b>'+esc(nm)+'</b> — процесс тянет свежие данные сам.</div>';
+    return '<div style="background:rgba(47,158,86,.10);border:1px solid rgba(47,158,86,.35);border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#237a44">✓ Источник данных подключён: <b>'+esc(nm)+'</b> — процесс тянет свежие данные сам.</div>';
   }
   // #7 (Гульжан 20.07): раньше банер вёл только в «Подключить источник» (OAuth/refresh-токены —
   // «круги мучений»), а для ТЕСТА подключать ничего не нужно. Разводим два пути явно: тест на
   // приложенном файле (сейчас, без подключения) и живой источник (для автономной работы 24/7).
-  return '<div style="background:#fdf6e7;border:1px solid #f0d9a0;border-radius:10px;padding:12px 14px;margin-bottom:14px">'+
+  return '<div style="background:#fdf6e7;border:1px solid #f0d9a0;border-radius:6px;padding:12px 14px;margin-bottom:14px">'+
     '<div style="font-size:13px;color:#7a5b1a;margin-bottom:8px">Данные пока берутся из <b>приложенного файла</b>.</div>'+
     '<div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-soft)">'+
       '<div style="flex:1;min-width:200px"><b>Чтобы попробовать сейчас</b> — подключать ничего не нужно: нажми «Сделать первый прогон» ниже, процесс отработает на файле.</div>'+
@@ -4602,7 +4606,7 @@ function _wzCabLaunch(a){
   var _needSched = !(a.schedule&&a.schedule.period) && !a.inbound;
   var _needRcpt = !((a.recipients||[]).length);
   var nudge = (AR.nudge && (_needSched || _needRcpt))
-      ? '<div style="font-size:12.5px;color:var(--ink-soft);margin-top:12px;padding:9px 12px;background:var(--cream);border-radius:8px">'+esc(AR.nudge)+
+      ? '<div style="font-size:12.5px;color:var(--ink-soft);margin-top:12px;padding:9px 12px;background:var(--cream);border-radius:5px">'+esc(AR.nudge)+
         ' <a href="#" onclick="wzCabTab(\'settings\');return false" style="color:#c60">Настроить →</a></div>' : '';
   return panelCard + _wzCard(
       _wzH('Готовность')+'<div>'+ready+'</div>'+
@@ -4765,7 +4769,7 @@ function _wzCabSettings(a){
   if(window.CONN_DEST===undefined){ window.CONN_DEST=null; jget('/x/secrets').then(function(sc){ var m={}; (sc.secrets||[]).forEach(function(x){ if(x.dest) m[x.connector]=x.dest; }); window.CONN_DEST=m; if(_wzCabI>=0 && Object.keys(m).length) _wzCabRender(); }).catch(function(){ window.CONN_DEST={}; }); }
   var sid=a.session_id, rc=(a.recipients||[]);
   var recRows = rc.length ? rc.map(function(ch){
-     return '<div style="display:flex;align-items:center;gap:8px;background:var(--cream);border:1px solid var(--cream-dark);border-radius:8px;padding:8px 12px;margin-bottom:6px">'+
+     return '<div style="display:flex;align-items:center;gap:8px;background:var(--cream);border:1px solid var(--cream-dark);border-radius:5px;padding:8px 12px;margin-bottom:6px">'+
        '<span style="font-size:16px">'+chEmoji(ch)+'</span>'+
        '<span style="font-size:14px;flex:1">'+esc(chName(ch))+((window.CONN_DEST&&window.CONN_DEST[ch])?' <span style="color:var(--silver);font-size:12px">→ '+esc(window.CONN_DEST[ch])+'</span>':' <span style="color:var(--silver);font-size:12px">→ в подключённый чат/адрес</span>')+'</span>'+
        '<button onclick="removeRecipient('+_wzCabI+',\''+ch+'\')" title="Убрать получателя" style="border:none;background:transparent;color:var(--silver);cursor:pointer;font-size:16px;line-height:1">✕</button>'+
@@ -4952,13 +4956,13 @@ function _wzCabRules(a){
        ? 'Применяются при каждом прогоне: стадии процесса получают правила и поля владельца (контракт параметров).'
        : '⚠ Сохраняются, но НА ПРОГОНЫ ПОКА НЕ ВЛИЯЮТ: процесс собран до контракта параметров. Любая пересборка (чат внизу → Строитель) обновит его — после этого правила заработают сразу.');
   var ruleRows = rules.length ? rules.map(function(r,ri){
-    return '<div style="display:flex;align-items:center;gap:8px;background:var(--cream);border:1px solid var(--cream-dark);border-radius:8px;padding:8px 12px;margin-bottom:6px">'+
+    return '<div style="display:flex;align-items:center;gap:8px;background:var(--cream);border:1px solid var(--cream-dark);border-radius:5px;padding:8px 12px;margin-bottom:6px">'+
       '<span style="font-size:14px;flex:1">'+esc(r)+'</span>'+
       '<button onclick="removeRule('+i+','+ri+')" title="убрать правило" style="border:none;background:transparent;color:var(--silver);cursor:pointer;font-size:16px;line-height:1">✕</button></div>';
   }).join('') : '<div style="color:var(--silver);font-size:13px;margin-bottom:8px">Правил пока нет. Например: «не предлагать варианты дороже бюджета», «сводку начинать с итога», «писать только по-русски».</div>';
   var fieldRows = Object.keys(fields).length ? Object.keys(fields).map(function(k,fi){
     // ключ НЕ встраиваем в onclick (esc не экранирует \\ → JS-инъекция): передаём индекс, ключ берём из данных
-    return '<div style="display:flex;align-items:center;gap:8px;background:var(--cream);border:1px solid var(--cream-dark);border-radius:8px;padding:8px 12px;margin-bottom:6px">'+
+    return '<div style="display:flex;align-items:center;gap:8px;background:var(--cream);border:1px solid var(--cream-dark);border-radius:5px;padding:8px 12px;margin-bottom:6px">'+
       '<b style="font-size:13px">'+esc(k)+'</b><span style="font-size:13px;color:var(--ink-soft);flex:1">'+esc(fields[k])+'</span>'+
       '<button onclick="removeField('+i+','+fi+')" title="убрать поле" style="border:none;background:transparent;color:var(--silver);cursor:pointer;font-size:16px;line-height:1">✕</button></div>';
   }).join('') : '<div style="color:var(--silver);font-size:13px;margin-bottom:8px">Полей пока нет. Например: «валюта — тенге», «директор — Рустам», «филиалов — 28».</div>';
@@ -5025,7 +5029,7 @@ function _wzCabTemplate(a){
     '<textarea id="wz_tpl-'+_wzCabI+'" class="sess-select" style="width:100%;max-width:none;min-height:120px;font:13px/1.5 var(--mono,monospace);padding:10px" oninput="previewTemplate('+_wzCabI+')" placeholder="'+esc(_TPL_DEFAULT)+'">'+esc(tpl)+'</textarea>'+
     '<div style="display:flex;gap:8px;margin-top:10px"><button class="btn gold sm" onclick="saveTemplate('+_wzCabI+')">Сохранить шаблон</button></div>'+
     '<div style="font-size:12px;color:var(--silver);margin:12px 0 4px">Так увидит получатель:</div>'+
-    '<div id="wz_tplprev-'+_wzCabI+'" style="white-space:pre-wrap;background:var(--cream);border:1px solid var(--cream-dark);border-radius:8px;padding:10px 12px;font-size:13px">'+esc(_renderTplLocal(tpl,a))+'</div>');
+    '<div id="wz_tplprev-'+_wzCabI+'" style="white-space:pre-wrap;background:var(--cream);border:1px solid var(--cream-dark);border-radius:5px;padding:10px 12px;font-size:13px">'+esc(_renderTplLocal(tpl,a))+'</div>');
 }
 function previewTemplate(i){
   var a=AUTOS[i]; if(!a) return;
@@ -5053,7 +5057,7 @@ async function renderAutomations(){
   const fmt = n => (typeof n==="number") ? n.toLocaleString("ru-RU") : esc(n);
   const SRCNAME = k=>({src_gsheets:"Google Sheets",src_bitrix24:"Bitrix24",src_postgres:"PostgreSQL",src_mysql:"MySQL",src_amocrm:"amoCRM",src_1c_file:"1С (файл)",src_1c_winrm:"1С (сервер)"}[k]||k);
   const CHNAME = k=>({telegram:"Telegram",email:"Email",slack:"Slack",whatsapp:"WhatsApp",sms:"SMS"}[k]||k);
-  const tile = (lbl,val,ok,fn)=>`<div style="background:rgba(128,128,128,.08);border-radius:8px;padding:7px 10px;min-width:0"><div style="font-size:11px;color:var(--silver,#889)">${lbl}</div><div style="font-size:12.5px;display:flex;align-items:center;gap:5px"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${val}${ok?' <span style="color:#2fa86a">✓</span>':''}</span><a href="#" onclick="${fn};return false" style="margin-left:auto;color:#c60;font-size:11.5px;flex:none">изменить</a></div></div>`;
+  const tile = (lbl,val,ok,fn)=>`<div style="background:rgba(128,128,128,.08);border-radius:5px;padding:7px 10px;min-width:0"><div style="font-size:11px;color:var(--silver,#889)">${lbl}</div><div style="font-size:12.5px;display:flex;align-items:center;gap:5px"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${val}${ok?' <span style="color:#2fa86a">✓</span>':''}</span><a href="#" onclick="${fn};return false" style="margin-left:auto;color:#c60;font-size:11.5px;flex:none">изменить</a></div></div>`;
   // ВИТРИНА: сетка компактных плиток; вся плитка — вход в кабинет (там запуск/настройка/шаблон/прогоны).
   box.innerHTML = '<div class="auto-grid">' + AUTOS.map((a,i)=>{
     const lr = a.last_run;
@@ -5213,17 +5217,17 @@ function showBrief(md, opts){
     return '<span style="background:#faf7f2;border:1px solid #e4ded5;border-radius:999px;padding:4px 11px;font-size:12px;color:#48423a">'+esc(c)+'</span>';}).join("");
   var warns=(custom && opts.warnings && opts.warnings.length) ? opts.warnings : [];
   var warnBox = warns.length
-    ? '<div style="background:#fdf6e7;border:1px solid #f0d9a0;border-radius:10px;padding:10px 14px;margin:0 0 16px;font-size:12.5px;color:#7a5b1a">'+
+    ? '<div style="background:#fdf6e7;border:1px solid #f0d9a0;border-radius:6px;padding:10px 14px;margin:0 0 16px;font-size:12.5px;color:#7a5b1a">'+
       '<b>⚠ Ran with '+warns.length+' warning'+(warns.length===1?'':'s')+':</b><ul style="margin:6px 0 0;padding-left:18px">'+
       warns.map(function(w){return '<li>'+esc(String(w))+'</li>';}).join("")+'</ul></div>'
     : '';
   m.innerHTML='<style>#briefModal .bb h2{font-size:18px;margin:22px 0 8px;color:#1c1a17}#briefModal .bb h3{font-size:15px;margin:16px 0 6px;color:#1c1a17}#briefModal .bb ol{padding-left:20px}#briefModal .bb ol li{margin:5px 0}#briefModal .bb table{border-collapse:collapse;width:100%;font-size:13px;margin:6px 0}#briefModal .bb th{text-align:left;background:#faf7f2;border-bottom:2px solid #ece4d7;padding:8px 9px;color:#7a7264;font-size:11px;text-transform:uppercase;letter-spacing:.3px}#briefModal .bb td{border-bottom:1px solid #f0eae0;padding:8px 9px;vertical-align:top}#briefModal .bb a{color:#C67E34;text-decoration:none}#briefModal .bb ul{padding-left:18px}#briefModal .bb li{margin:5px 0}#briefModal .bb code{background:#f2ede4;border-radius:4px;padding:1px 4px;font-size:12.5px}#briefModal .bb hr{border:none;border-top:1px solid #eee6da;margin:18px 0}#briefModal .bb p{margin:8px 0}</style>'+
-    '<div style="max-width:920px;width:100%;background:#fff;border-radius:16px;padding:26px 30px;box-shadow:0 14px 50px rgba(0,0,0,.28);color:#1c1a17;font:15px/1.6 -apple-system,Segoe UI,Roboto,sans-serif">'+
+    '<div style="max-width:920px;width:100%;background:#fff;border-radius:8px;padding:26px 30px;box-shadow:0 14px 50px rgba(0,0,0,.28);color:#1c1a17;font:15px/1.6 -apple-system,Segoe UI,Roboto,sans-serif">'+
     '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><div>'+
     '<div style="color:#C67E34;font-weight:800;font-size:12.5px;letter-spacing:.5px;text-transform:uppercase">'+esc(kicker)+'</div>'+
     '<div style="font-size:26px;font-weight:800;margin:4px 0 2px">'+esc(title)+'</div>'+
     '<div style="color:#6b665f;font-size:13.5px">'+esc(subtitle)+'</div></div>'+
-    '<button onclick="closeBrief()" style="border:none;background:#f2ede4;border-radius:8px;width:34px;height:34px;font-size:19px;cursor:pointer;flex:0 0 auto">×</button></div>'+
+    '<button onclick="closeBrief()" style="border:none;background:#f2ede4;border-radius:5px;width:34px;height:34px;font-size:19px;cursor:pointer;flex:0 0 auto">×</button></div>'+
     '<div style="display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 18px">'+chips+'</div>'+
     warnBox+
     '<div class="bb">'+mdToHtml(md)+'</div></div>';
@@ -5244,10 +5248,10 @@ async function runProcess(i){
     // результата» и не понимал: чинить логику, данные или звать нас.
     var e=r.error||{};
     out.innerHTML =
-      '<div style="max-width:640px;border:1px solid #e0b4b4;background:#fff6f6;border-radius:10px;padding:12px 14px">'+
+      '<div style="max-width:640px;border:1px solid #e0b4b4;background:#fff6f6;border-radius:6px;padding:12px 14px">'+
         '<div style="color:#c0392b;font-weight:700;font-size:14px">'+esc(e.message||r.message||'Прогон не дал результата')+'</div>'+
         (e.stage?'<div style="font-size:12px;color:var(--silver);margin-top:3px">шаг: <code>'+esc(e.stage)+'</code></div>':'')+
-        (e.remedy?'<div style="font-size:13px;margin-top:9px;padding:9px 11px;background:#fff;border-radius:8px"><b>Что делать:</b> '+esc(e.remedy)+'</div>':'')+
+        (e.remedy?'<div style="font-size:13px;margin-top:9px;padding:9px 11px;background:#fff;border-radius:5px"><b>Что делать:</b> '+esc(e.remedy)+'</div>':'')+
         (e.code==='no_input'?'<div style="margin-top:9px"><button class="btn gold sm" onclick="wzCabTab(\'settings\')">Открыть «Источник данных» →</button></div>':'')+
       '</div>';
     return; }
@@ -5493,7 +5497,7 @@ function genSource(i){
   el("modInput").outerHTML =
       `<input id="modInput" type="hidden">`
     + `<select id="genPreset" ${st} onchange="genPreset()">${opts}</select>`
-    + `<div id="genRecipe" style="font-size:11.5px;color:#7a5b1a;background:var(--gold-bg);border:1px solid #eddfc4;border-radius:8px;padding:8px 10px;margin-bottom:8px"></div>`
+    + `<div id="genRecipe" style="font-size:11.5px;color:#7a5b1a;background:var(--gold-bg);border:1px solid #eddfc4;border-radius:5px;padding:8px 10px;margin-bottom:8px"></div>`
     + `<input id="genUrl" ${st} placeholder="Адрес API, напр. https://api.твойсервис.kz/orders">`
     + `<textarea id="genDesc" ${st.replace('margin-bottom:8px','height:60px;margin-bottom:8px')} placeholder="Что это и какие поля нужны. Напр.: расход по кампаниям; поля кампания, показы, клики, расход"></textarea>`
     + `<select id="genAuthKind" ${st} onchange="genAuthToggle()"><option value="none">Без авторизации</option><option value="bearer" selected>Bearer-токен</option><option value="header">Ключ в заголовке (X-Api-Key)</option><option value="query">Ключ в параметре URL</option><option value="oauth_refresh">OAuth (refresh-токен — Meta/Google/Яндекс)</option></select>`
@@ -5597,7 +5601,7 @@ function renderTrustReport(res, delta){
     var flaky=(f.flaky||[]).length? '<div style="font-size:12px;color:var(--silver);margin-top:5px;line-height:1.5">'+f.flaky.map(function(fl){return '⚠ «'+esc(fl.item)+'» → '+esc((fl.answers||[]).join(' · '));}).join('<br>')+'</div>':'';
     var refine=(f.light==='red'||f.light==='amber')?'<button class="btn ghost sm" style="font-size:11.5px;padding:3px 10px;margin-top:6px" onclick="refineField('+fi+')">✏ Уточнить определение</button>':'';
     var agr=(f.agreement!=null)?'<span style="font-size:12px;color:var(--silver);margin-left:8px">согласие с эталоном '+f.agreement+'%</span>':'';
-    return '<div style="border:1px solid var(--cream-dark);border-radius:10px;padding:10px 14px;margin-bottom:8px">'+
+    return '<div style="border:1px solid var(--cream-dark);border-radius:6px;padding:10px 14px;margin-bottom:8px">'+
       '<div style="display:flex;align-items:center;gap:8px"><span style="font-size:16px">'+lg[0]+'</span>'+
       '<b style="flex:1;font-size:14px">'+esc(f.field)+agr+'</b>'+
       '<span style="font-weight:700;color:'+lg[1]+'">'+(f.reproducibility==null?'неопр.':f.reproducibility+'%')+'</span></div>'+flaky+refine+'</div>';
@@ -5605,7 +5609,7 @@ function renderTrustReport(res, delta){
   window._tcFields=res.fields||[];
   var hasGold=(res.fields||[]).some(function(f){return f.agreement!=null;});
   var ov=(res.overall==null?'':' · общая '+res.overall+'%');
-  var deltaNote=delta?'<div style="background:rgba(47,158,86,.10);border:1px solid rgba(47,158,86,.3);border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:12.5px;color:#237a44">✎ Уточнено «'+esc(delta.field)+'»: воспроизводимость '+esc(delta.before)+'% → <b>'+esc(delta.after)+'%</b></div>':'';
+  var deltaNote=delta?'<div style="background:rgba(47,158,86,.10);border:1px solid rgba(47,158,86,.3);border-radius:5px;padding:8px 12px;margin-bottom:10px;font-size:12.5px;color:#237a44">✎ Уточнено «'+esc(delta.field)+'»: воспроизводимость '+esc(delta.before)+'% → <b>'+esc(delta.after)+'%</b></div>':'';
   resetModInput();
   el("modTitle").textContent="Где суждению можно доверять";
   el("modHint").innerHTML="Прогонов: "+esc(res.runs)+ov+" · "+(hasGold?"воспроизводимость + согласие с эталоном":"без эталона")+". 🟢 стабильно · 🟡 шатко · 🔴 размыто.";
@@ -5702,14 +5706,14 @@ function renderGoalJournal(res){
   var mem=res.memory||{}, mc=mem.concepts||[], mr=mem.rules||[];
   var sv=res.saved_to_agent;
   var savedLine=(sv&&(sv.concepts||sv.rules))?'<div style="margin-top:5px;padding-top:5px;border-top:1px dashed var(--cream-dark,#e5e0d5);color:var(--petrol,#2a6b6b);font-weight:600">💾 Сохранено в мозг агента «'+esc(sv.name||sv.id)+'»: '+(sv.concepts||0)+' концепт., '+(sv.rules||0)+' правил → пригодится в след. процессах</div>':'';
-  var memPanel=(mc.length||mr.length)?'<div style="background:var(--cream);border-radius:8px;padding:9px 12px;margin-bottom:10px;font-size:12px">'+
+  var memPanel=(mc.length||mr.length)?'<div style="background:var(--cream);border-radius:5px;padding:9px 12px;margin-bottom:10px;font-size:12px">'+
     '<div style="font-weight:600;margin-bottom:4px">🧠 Память контура (накоплена по ходу)</div>'+
     (mc.length?'<div style="color:var(--ink-soft)"><b>Концепты:</b> '+esc(mc.map(function(c){return c.k+'='+c.v}).join(' · ').slice(0,300))+'</div>':'')+
     (mr.length?'<div style="color:var(--ink-soft);margin-top:2px"><b>Правила:</b> '+esc(mr.join(' · ').slice(0,300))+'</div>':'')+
     savedLine+'</div>':'';
   var SM={done:['✅','Цель достигнута (после проверки доверием)'],need_human:['🙋','Контур честно остановился — нужен человек'],max_iters:['⏹','Дошёл до предела итераций']};
   var sm=SM[res.status]||['·',String(res.status)];
-  var q=res.question?'<div style="background:#fdf6e7;border:1px solid #f0d9a0;border-radius:8px;padding:9px 12px;margin-bottom:10px;font-size:13px;color:#7a5b1a">🙋 '+esc(res.question)+'</div>':'';
+  var q=res.question?'<div style="background:#fdf6e7;border:1px solid #f0d9a0;border-radius:5px;padding:9px 12px;margin-bottom:10px;font-size:13px;color:#7a5b1a">🙋 '+esc(res.question)+'</div>':'';
   resetModInput();
   el("modTitle").textContent=sm[0]+' '+sm[1];
   el("modHint").innerHTML="Журнал контура · итераций: "+esc(res.iters)+". Каждый шаг: план → выполнение → трас-гейт завершения.";
