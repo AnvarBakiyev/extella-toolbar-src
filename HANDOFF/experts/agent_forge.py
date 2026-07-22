@@ -1,84 +1,85 @@
 # expert: agent_forge
-# description: «Собрать агента» (вкладка Агенты): роль + выбранные умения → в UI-копию агента. Роль universal собирает инструкцию сама; именные роли прошиваются через agent_flash_role. Выбранные сервисы svc_* провижинятся в скоуп агента; подключённые MCP-серверы (mcpx:*) получают mcp_call. Параметры: agent_id, role_id, tools_csv
+# description: Собирает агента из роли и выбранных сервисов. Параметры: agent_id, role_id, tools_csv
 
 def agent_forge(agent_id="", role_id="universal", tools_csv="") -> str:
-    import json, os, ssl, urllib.request, urllib.error
-    def err(m): return json.dumps({"status": "error", "message": m}, ensure_ascii=False)
+    import json, ssl, urllib.error, urllib.request
+    def err(message):
+        return json.dumps({"status":"error","message":message}, ensure_ascii=False)
     agent_id = "" if (not agent_id or str(agent_id).startswith("{{")) else str(agent_id).strip()
     role_id = "universal" if (not role_id or str(role_id).startswith("{{")) else str(role_id).strip()
     tools_csv = "" if (not tools_csv or str(tools_csv).startswith("{{")) else str(tools_csv).strip()
     if not agent_id.startswith("agent_"):
         return err("нужен ID агента-копии (agent_...). Создайте копию базового агента в Extella и вставьте её ID.")
+    try:
+        from extella_expert_bridge import account_config
+        token = account_config().get("auth_token", "")
+    except Exception:
+        token = ""
+    if not token:
+        return err("нет токена текущего аккаунта (config.json)")
 
-    SVC_DESC = {
-        "svc_currency":  "курсы валют и пересчёт сумм (USD, EUR, KZT, RUB и другие)",
-        "svc_crypto":    "текущие цены криптовалют",
-        "svc_weather":   "погода в любом городе прямо сейчас",
-        "svc_translate": "перевод текста между языками",
-        "svc_wiki":      "короткая справка по теме из Википедии",
-        "svc_github":    "данные о репозитории GitHub (звёзды, язык, описание)",
-        "svc_ipgeo":     "страна, город и провайдер по IP-адресу",
-        "svc_qr":        "QR-код из ссылки или текста",
+    services = {
+        "svc_currency":"курсы валют и пересчёт сумм",
+        "svc_crypto":"текущие цены криптовалют",
+        "svc_weather":"погода в любом городе",
+        "svc_translate":"перевод текста между языками",
+        "svc_wiki":"справка из Википедии",
+        "svc_github":"данные о репозитории GitHub",
+        "svc_ipgeo":"страна, город и провайдер по IP-адресу",
+        "svc_qr":"QR-код из ссылки или текста",
     }
-    raw = [t.strip() for t in tools_csv.split(",") if t.strip()]
-    svc_tools = [t for t in raw if t in SVC_DESC]
-    mcpx_keys = [t.split(":", 1)[1] for t in raw if t.startswith("mcpx:") and ":" in t]
-    if not svc_tools and not mcpx_keys and role_id == "universal":
+    selected = [item.strip() for item in tools_csv.split(",") if item.strip()]
+    service_names = [item for item in selected if item in services]
+    mcp_keys = [item.split(":", 1)[1] for item in selected if item.startswith("mcpx:") and ":" in item]
+    if role_id == "universal" and not service_names and not mcp_keys:
         return err("отметьте хотя бы одно умение")
 
-    tok = ""
-    try: tok = json.load(open(os.path.expanduser("~/extella_wizard/app/config.json"))).get("auth_token", "")
-    except Exception: pass
-    if not tok: return err("нет токена (config.json)")
-    ctx = ssl.create_default_context(); ctx.check_hostname = False; ctx.verify_mode = ssl.CERT_NONE
-
-    def api(path, payload, aid):
-        H = {"Content-Type": "application/json", "X-Auth-Token": tok, "X-Profile-Id": "default", "X-Agent-Id": aid}
-        req = urllib.request.Request("https://api.extella.ai" + path, data=json.dumps(payload).encode(), headers=H)
+    context = ssl.create_default_context()
+    def api(path, payload, scope="__EXTELLA_AGENT__"):
+        headers = {"Content-Type":"application/json","X-Auth-Token":token,"X-Profile-Id":"default","X-Agent-Id":scope}
+        request = urllib.request.Request("https://api.extella.ai"+path, data=json.dumps(payload).encode(), headers=headers)
         try:
-            return json.loads(urllib.request.urlopen(req, timeout=60, context=ctx).read())
-        except urllib.error.HTTPError as he:
-            return {"_http": he.code}
-        except Exception as e:
-            return {"_err": str(e)[:100]}
+            return json.loads(urllib.request.urlopen(request, timeout=60, context=context).read())
+        except urllib.error.HTTPError as error:
+            return {"_http":error.code}
+        except Exception as error:
+            return {"_err":str(error)[:100]}
 
     role_name = "Универсальный помощник"
     if role_id != "universal":
-        # Именная роль: инструкцию и её сервисы прошивает проверенный agent_flash_role.
-        fr = api("/api/expert/run", {"name": "agent_flash_role", "params": {"agent_id": agent_id, "role_id": role_id}, "global": True}, "agent_extella_default")
-        out = fr.get("result") or fr.get("output") or fr
-        if isinstance(out, str):
-            try: out = json.loads(out)
+        response = api("/api/expert/run", {"expert_name":"agent_flash_role","params":{"agent_id":agent_id,"role_id":role_id},"global":True})
+        output = response.get("result") or response.get("output") or response
+        if isinstance(output, str):
+            try: output = json.loads(output)
             except Exception: pass
-        if not (isinstance(out, dict) and out.get("status") == "success"):
-            m = (isinstance(out, dict) and out.get("message")) or "не удалось назначить роль"
-            return err(m)
-        role_name = out.get("name") or role_id
+        if not (isinstance(output, dict) and output.get("status") == "success"):
+            return err((output.get("message") if isinstance(output, dict) else "") or "не удалось назначить роль")
+        role_name = output.get("name") or role_id
     else:
-        lines = ["- " + SVC_DESC[t] for t in svc_tools]
-        if mcpx_keys:
-            lines.append("- вызов инструментов подключённых MCP-серверов (" + ", ".join(mcpx_keys) + ") через эксперта mcp_call")
+        abilities = ["- "+services[name] for name in service_names]
+        if mcp_keys:
+            abilities.append("- инструменты подключённых MCP-серверов ("+", ".join(mcp_keys)+") через mcp_call")
         instruction = (
-            "Ты — универсальный AI-помощник на платформе Extella (модель Qwen). "
-            "Помогаешь по-русски: деловым, спокойным и уважительным тоном, без воды и выдумок.\n\n"
-            "У тебя подключены живые инструменты (эксперты). Когда вопрос касается их области — "
-            "вызывай эксперта и отвечай по его данным, а не по памяти:\n" + "\n".join(lines) + "\n\n"
-            "Если данных не хватает или инструмент не отвечает — честно скажи об этом и предложи, "
-            "что уточнить. Не придумывай цифры и факты."
+            "Ты — универсальный AI-помощник на платформе Extella. Помогаешь по-русски: "
+            "деловым, спокойным и уважительным тоном, без воды и выдумок.\n\n"
+            "Используй подключённые инструменты только когда они подходят задаче и отвечай по "
+            "их фактическим данным. Если данных не хватает или инструмент не отвечает — честно "
+            "скажи об этом.\n"+"\n".join(abilities)
         )
-        upd = api("/api/agent/update", {"agent_id": agent_id, "instructions": instruction}, "agent_extella_default")
-        if isinstance(upd, dict) and upd.get("_http") == 404:
+        updated = api("/api/agent/update", {"agent_id":agent_id,"instructions":instruction})
+        if isinstance(updated, dict) and updated.get("_http") == 404:
             return err("агент с таким ID не найден — проверьте ID копии агента")
-        if isinstance(upd, dict) and (upd.get("_err") or upd.get("_http")):
-            return err("не удалось настроить агента (" + str(upd.get("_err") or upd.get("_http")) + ")")
+        if isinstance(updated, dict) and (updated.get("_err") or updated.get("_http")):
+            return err("не удалось настроить агента ("+str(updated.get("_err") or updated.get("_http"))+")")
 
-    prov = 0
-    to_copy = list(svc_tools)
-    if mcpx_keys: to_copy.append("mcp_call")
-    for nm in to_copy:
-        g = api("/api/expert/get", {"name": nm}, "agent_extella_default")
-        code = g.get("expert_code") if isinstance(g, dict) else None
-        if not code: continue
-        sv = api("/api/expert/save", {"name": nm, "description": g.get("expert_description", nm), "code": code, "kwargs": {}, "cspl": "fython"}, agent_id)
-        if isinstance(sv, dict) and sv.get("status") == "success": prov += 1
-    return json.dumps({"status": "success", "agent_id": agent_id, "role": role_name, "tools": prov}, ensure_ascii=False)
+    provisioned = 0
+    to_copy = list(service_names) + (["mcp_call"] if mcp_keys else [])
+    for name in to_copy:
+        source = api("/api/expert/get", {"name":name,"global":True})
+        code = source.get("expert_code") if isinstance(source, dict) else None
+        if not code:
+            continue
+        saved = api("/api/expert/save", {"name":name,"description":source.get("expert_description",name),"code":code,"kwargs":{},"cspl":"fython"}, agent_id)
+        if isinstance(saved, dict) and saved.get("status") == "success":
+            provisioned += 1
+    return json.dumps({"status":"success","agent_id":agent_id,"role":role_name,"tools":provisioned}, ensure_ascii=False)

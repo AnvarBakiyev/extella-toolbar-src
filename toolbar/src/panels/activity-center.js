@@ -17,7 +17,7 @@
 
   var css = [
     '#_xtlac_root{position:fixed;right:12px;bottom:12px;z-index:2147483638;font-family:-apple-system,system-ui,sans-serif;color:var(--etb-tx,#f0f0f0);pointer-events:auto}',
-    '#_xtlac_pill{height:34px;display:flex;align-items:center;gap:8px;padding:0 12px;border:1px solid var(--etb-bd2,rgba(255,255,255,.13));border-radius:18px;background:var(--etb-s1,#111);color:var(--etb-tx,#f0f0f0);box-shadow:0 2px 20px rgba(0,0,0,.35);cursor:pointer;font:600 11px/1 -apple-system,system-ui,sans-serif;max-width:330px}',
+    '#_xtlac_pill{height:34px;display:flex;align-items:center;gap:8px;padding:0 12px;border:1px solid var(--etb-bd2,rgba(255,255,255,.13));border-radius:8px;background:var(--etb-s1,#111);color:var(--etb-tx,#f0f0f0);box-shadow:0 2px 20px rgba(0,0,0,.35);cursor:pointer;font:600 11px/1 -apple-system,system-ui,sans-serif;max-width:330px}',
     '#_xtlac_pill:hover{border-color:rgba(198,126,52,.55)}',
     // Ручка перетаскивания: видимая аффорданса + курсор говорят «меня можно двигать»
     '#_xtlac_grip{color:var(--etb-tx2,#888);font-size:10px;letter-spacing:1px;cursor:grab;user-select:none;margin-right:2px;flex:0 0 auto}',
@@ -29,19 +29,22 @@
     '#_xtlac_root[data-health="warning"] #_xtlac_dot{background:#f59e0b;box-shadow:0 0 8px rgba(245,158,11,.5)}',
     '#_xtlac_text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
     '#_xtlac_count{color:var(--etb-tx2,#888);font-weight:500;white-space:nowrap}',
-    '#_xtlac_panel{position:absolute;right:0;bottom:42px;width:410px;max-height:min(660px,calc(100vh - 64px));display:none;flex-direction:column;overflow:hidden;background:var(--etb-s1,#111);border:1px solid var(--etb-bd2,rgba(255,255,255,.13));border-radius:16px;box-shadow:0 18px 60px rgba(0,0,0,.5)}',
+    '#_xtlac_panel{position:absolute;right:0;bottom:42px;width:410px;max-height:min(660px,calc(100vh - 64px));display:none;flex-direction:column;overflow:hidden;background:var(--etb-s1,#111);border:1px solid var(--etb-bd2,rgba(255,255,255,.13));border-radius:8px;box-shadow:0 18px 60px rgba(0,0,0,.5)}',
     '#_xtlac_panel.open{display:flex;animation:_xtlac_in .16s ease}',
     '#_xtlac_head{display:flex;align-items:flex-start;gap:10px;padding:15px 16px 12px;border-bottom:1px solid var(--etb-bd,rgba(255,255,255,.07))}',
     '#_xtlac_head h3{margin:0;font-size:14px;line-height:1.25}',
     '#_xtlac_clear{display:none;margin-left:auto;border:1px solid var(--etb-bd2,rgba(255,255,255,.13));border-radius:7px;background:transparent;color:var(--etb-tx2,#888);padding:5px 8px;font:600 9.5px/1 -apple-system,system-ui,sans-serif;cursor:pointer}',
     '#_xtlac_clear.show{display:block}',
     '#_xtlac_clear:hover{color:var(--etb-tx,#f0f0f0)}',
-    '#_xtlac_close{border:0;background:transparent;color:var(--etb-tx2,#888);font-size:18px;cursor:pointer}',
-    '#_xtlac_warning{display:none;margin:10px 12px 0;padding:9px 10px;border-radius:10px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);color:#f59e0b;font-size:11px;line-height:1.45}',
+    '#_xtlac_head{display:flex;align-items:center;gap:10px}',
+    '#_xtlac_head>div:first-child{margin-right:auto}',
+    '#_xtlac_close{border:0;background:transparent;color:var(--etb-tx2,#888);font-size:17px;line-height:1;cursor:pointer;padding:6px 9px;border-radius:5px}',
+    '#_xtlac_close:hover{background:rgba(0,0,0,.06);color:var(--etb-tx,#222)}',
+    '#_xtlac_warning{display:none;margin:10px 12px 0;padding:9px 10px;border-radius:6px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);color:#f59e0b;font-size:11px;line-height:1.45}',
     '#_xtlac_warning.show{display:block}',
     '#_xtlac_body{overflow:auto;padding:10px 12px 14px;scrollbar-width:thin}',
     '._xtlac_section{margin:2px 2px 7px;color:var(--etb-tx2,#888);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}',
-    '._xtlac_task{display:grid;grid-template-columns:22px 1fr auto;gap:9px;align-items:start;padding:10px;border-radius:11px;border:1px solid transparent;margin-bottom:5px;cursor:pointer;outline:none}',
+    '._xtlac_task{display:grid;grid-template-columns:22px 1fr auto;gap:9px;align-items:start;padding:10px;border-radius:6px;border:1px solid transparent;margin-bottom:5px;cursor:pointer;outline:none}',
     '._xtlac_task:hover{background:var(--etb-s3,#1c1c1c);border-color:var(--etb-bd,rgba(255,255,255,.07))}',
     '._xtlac_task:focus-visible{border-color:rgba(198,126,52,.65)}',
     '._xtlac_task.expanded{background:var(--etb-s3,#1c1c1c);border-color:var(--etb-bd2,rgba(255,255,255,.13))}',
@@ -103,7 +106,7 @@
       '#_xtlac_schedule_shortcut{position:relative;width:100%;display:flex;align-items:center;gap:14px;margin:12px 0 4px;padding:15px 17px;border:1px solid var(--bd2);border-radius:var(--r);background:linear-gradient(135deg,color-mix(in srgb,var(--a) 10%,var(--s2)),var(--s2));color:var(--tx);text-align:left;cursor:pointer;overflow:hidden;font-family:var(--sans)}',
       '#_xtlac_schedule_shortcut::before{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:var(--a)}',
       '#_xtlac_schedule_shortcut:hover{border-color:var(--a);transform:translateY(-1px)}',
-      '._xtlac_desk_icon{width:42px;height:42px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;border-radius:10px;background:rgba(var(--ar),.14);font-size:21px}',
+      '._xtlac_desk_icon{width:42px;height:42px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;border-radius:6px;background:rgba(var(--ar),.14);font-size:21px}',
       '._xtlac_desk_copy{min-width:0;flex:1}',
       '._xtlac_desk_title{display:block;font-size:15px;font-weight:750;line-height:1.3}',
       '._xtlac_desk_sub{display:block;margin-top:3px;color:var(--tx2);font-size:12px;line-height:1.4}',
@@ -118,7 +121,7 @@
       '._xtlac_srv_message{display:none;margin:0 0 10px;padding:8px 10px;border-radius:8px;background:rgba(var(--ar),.1);color:var(--a);font-size:11px}',
       '._xtlac_srv_message.show{display:block}',
       '._xtlac_srv_grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}',
-      '._xtlac_srv_card{display:grid;grid-template-columns:9px minmax(0,1fr) auto;gap:9px;align-items:start;padding:11px;border:1px solid var(--bd);border-radius:10px;background:var(--bg)}',
+      '._xtlac_srv_card{display:grid;grid-template-columns:9px minmax(0,1fr) auto;gap:9px;align-items:start;padding:11px;border:1px solid var(--bd);border-radius:6px;background:var(--bg)}',
       '._xtlac_srv_dot{width:8px;height:8px;margin-top:5px;border-radius:50%;background:var(--tx3)}',
       '._xtlac_srv_card.running ._xtlac_srv_dot{background:#2f9e56;box-shadow:0 0 7px rgba(47,158,86,.4)}',
       '._xtlac_srv_name{font-size:12px;font-weight:700;line-height:1.35;color:var(--tx)}',
@@ -684,7 +687,9 @@
     section(body, T('Сейчас','Now'), data.active);
     section(body, T('Выполнено','Done'), data.history.slice(0, 15));
     if (!data.active.length && !data.history.length) {
-      body.appendChild(el('div', { id: '_xtlac_empty' }, T('Пока задач нет. Фоновые проверки и действия появятся здесь автоматически.','No tasks yet. Background checks and actions will appear here automatically.')));
+      var _h3=document.querySelector('#_xtlac_head h3'); if(_h3)_h3.textContent=T('Что делает Extella','What Extella is doing');
+      var _clr=document.getElementById('_xtlac_clear'); if(_clr)_clr.textContent=T('Очистить выполненные','Clear completed');
+      body.appendChild(el('div', { id: '_xtlac_empty' }, T('Пока пусто. Когда Extella что-то делает — ставит программу, запускает процесс, проверяет данные, — здесь видна каждая задача и её статус.','Quiet for now. When Extella is doing something — installing a program, running a process, checking data — every task and its status shows up here.')));
     }
   }
 
