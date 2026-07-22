@@ -10,6 +10,16 @@ const artifacts = [
   path.join(root, 'toolbar', 'toolbar.js'),
   path.join(root, 'HANDOFF', 'toolbar.js'),
 ];
+const retiredInstaller = path.join(root, 'install.sh');
+const retiredInstallerMarker = 'EXTELLA_STANDALONE_INSTALLER_RETIRED=1';
+const retiredPaths = [
+  'device/activity-center/bridge',
+  'device/activity-center/instrumentation',
+  'device/activity-center/install.py',
+  'device/activity-center/uninstall.py',
+  'device/boot',
+  'toolbar/src/core/install-prompt.js',
+];
 const forbidden = [
   '~/extella-plugins',
   '/tmp/etb_',
@@ -35,6 +45,32 @@ for (const file of artifacts) {
   const source = fs.readFileSync(file, 'utf8');
   for (const value of forbidden) {
     if (source.includes(value)) failures.push(`${path.relative(root, file)}: ${value}`);
+  }
+}
+
+if (!fs.existsSync(retiredInstaller)) {
+  failures.push('install.sh: retirement stub is missing');
+} else {
+  const source = fs.readFileSync(retiredInstaller, 'utf8');
+  if (!source.includes(retiredInstallerMarker)) {
+    failures.push('install.sh: standalone installer is not fail-closed');
+  }
+  for (const value of [
+    'api_token.txt',
+    'device/activity-center/install.py',
+    'device/boot',
+    'npm install -g',
+    'git clone',
+    'read -p',
+    'shell=True',
+  ]) {
+    if (source.includes(value)) failures.push(`install.sh: retired installer contains ${value}`);
+  }
+}
+
+for (const value of retiredPaths) {
+  if (fs.existsSync(path.join(root, value))) {
+    failures.push(`${value}: duplicate device runtime or installer must not exist`);
   }
 }
 

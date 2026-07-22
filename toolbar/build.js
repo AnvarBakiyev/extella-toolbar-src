@@ -384,16 +384,8 @@ function build() {
 
   console.log('\n✅ Build complete!');
 
-  // When invoked by install.sh (which runs this build, then deploys), skip the
-  // deploy hints — the installer prints its own next steps, and pointing the
-  // user back at the installer they're already inside would be circular.
-  if (process.env.ETB_FROM_INSTALLER) return;
-
-  console.log('\nDeploy — run ./install.sh from the repo root to build + deploy in one step,');
-  console.log('or copy toolbar.js manually (plugin UIs are embedded — no ~/.extella/plugins):');
-  console.log('  cp "' + path.join(OUT, 'toolbar.js') + '" \\');
-  console.log('     ~/Library/Application\\ Support/extella-desktop/toolbar.js');
-  console.log('  then Cmd+Q and reopen Extella Desktop.\n');
+  console.log('\nPackaging — toolbar/build/toolbar.js is a build input for the signed');
+  console.log('Extella Client release. Do not deploy this file directly to a user profile.\n');
 }
 
 // ── Watch mode ─────────────────────────────────────────────────────────────
