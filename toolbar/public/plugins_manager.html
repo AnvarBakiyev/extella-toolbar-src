@@ -3907,10 +3907,12 @@ function _openWizard(){
   _mkbFetch('/x/health',{},2500).then(function(){ notify('open','extella_adoption_wizard'); })
     .catch(function(){ _wizardMissing(); });
 }
+// Адрес дистрибутива Конструктора — одна константа, не зашитые ссылки по коду.
+var WIZARD_DIST_BASE='https://raw.githubusercontent.com/AnvarBakiyev/extella-marketplace-pack/main/toolbar';
 function _wizardMissing(){
   var en=(LANG==='en');
-  var mac='bash <(curl -fsSL https://raw.githubusercontent.com/AnvarBakiyev/extella-marketplace-pack/main/toolbar/install-all.sh)';
-  var win='irm https://raw.githubusercontent.com/AnvarBakiyev/extella-marketplace-pack/main/toolbar/install-all.ps1 | iex';
+  var mac='bash <(curl -fsSL '+WIZARD_DIST_BASE+'/install-all.sh)';
+  var win='irm '+WIZARD_DIST_BASE+'/install-all.ps1 | iex';
   alert((en?'Wizard is not installed on this device.\n\nRun the installer (toolbar + Wizard):':'Конструктор не установлен на этом устройстве.\n\nЗапусти единый установщик (тулбар + Конструктор):')+
     '\n\nmacOS (Terminal):\n'+mac+'\n\nWindows (PowerShell):\n'+win);
 }
