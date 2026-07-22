@@ -385,7 +385,7 @@ ETB.router = (function () {
         // doesn't come up. We poll on our OWN bounded timer (not the start expert's
         // promise, which may be a long/deferred task that never resolves) so the
         // spinner can never hang forever, and escalate to a friendly card on timeout.
-        if (lui.startExpert && (_autoTries[plugin.id] || 0) < 2) {
+        if ((lui.startExpert || plugin.mode === 'managed_runtime') && (_autoTries[plugin.id] || 0) < 2) {
           _autoTries[plugin.id] = (_autoTries[plugin.id] || 0) + 1;
           _autoStartAndWatch(content, plugin, serverUrl);
         } else {
@@ -1231,8 +1231,14 @@ ETB.router = (function () {
     // Must run with target: deviceId so the server starts on the user's device.
     _startServer: function (pluginId, opts) {
       var plugin = ETB.registry.getById(pluginId);
-      if (!plugin || !plugin.ui || !plugin.ui.startExpert) return;
+      if (!plugin || !plugin.ui) return;
       var _noRetry = !!(opts && opts.noRetry);
+      if (plugin.mode === 'managed_runtime' && ETB.plugins && ETB.plugins.controlManaged) {
+        return ETB.plugins.controlManaged(plugin, 'start')
+          .then(function () { if (!_noRetry) ETB.router._retryServer(pluginId); })
+          .catch(function (e) { console.warn('[ETB.router] Failed to start managed service:', e && e.message); });
+      }
+      if (!plugin.ui.startExpert) return;
       var startExpert = plugin.ui.startExpert;
       var port = plugin.ui.port;
       var rootPath = plugin.ui.rootPath;
@@ -1282,6 +1288,15 @@ ETB.router = (function () {
     _repairWithAgent: function (pluginId, description) {
       var plugin = ETB.registry.getById(pluginId);
       if (!plugin) return;
+      if (plugin.mode === 'managed_runtime' && ETB.plugins && ETB.plugins.provision) {
+        ETB.plugins.provision(plugin, 'install')
+          .then(function () { ETB.router._retryServer(pluginId); })
+          .catch(function (error) {
+            window.alert('Extella Client Repair не завершил установку: ' +
+              String((error && error.message) || error || 'unknown error').slice(0, 180));
+          });
+        return;
+      }
       window.alert('Automatic repair is unavailable for this unverified third-party plugin. ' +
         'Its files were not changed. Open Activity Center to inspect or stop its registered service.');
     },
@@ -1291,6 +1306,10 @@ ETB.router = (function () {
     _cleanRebuildWithAgent: function (pluginId, fullReset, description) {
       var plugin = ETB.registry.getById(pluginId);
       if (!plugin) return;
+      if (plugin.mode === 'managed_runtime') {
+        ETB.router._repairWithAgent(pluginId, description || 'Repair managed runtime');
+        return;
+      }
       window.alert('Automatic rebuild is unavailable for this unverified third-party plugin. ' +
         'Its files and user data were preserved.');
     },

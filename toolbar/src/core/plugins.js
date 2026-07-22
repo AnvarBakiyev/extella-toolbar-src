@@ -19,9 +19,95 @@
 //   → addConcept x M (conceptTexts)
 //   → ETB.registry.install(id)  |  ETB.registry.addCustom(manifest)
 //
-// Exposes: ETB.plugins.provision(manifest, registryAction)
+// Release-managed runtimes are different: the toolbar never creates their
+// experts or process itself. It asks the token-protected Activity Center to run
+// the signed shared lifecycle, and marks the card installed only after that
+// lifecycle proves account smoke tests and a healthy owned PID.
+//
+// Exposes: ETB.plugins.provision(), unprovision(), syncManaged()
 
 ETB.plugins = (function () {
+
+  var ACTIVITY_BASE = 'http://127.0.0.1:8799';
+
+  function _json(response) {
+    return response.json().catch(function () { return {}; }).then(function (payload) {
+      if (!response.ok) {
+        throw new Error((payload && payload.message) || ('Activity Center HTTP ' + response.status));
+      }
+      return payload || {};
+    });
+  }
+
+  function _managedId(manifest) {
+    var id = String((manifest && manifest.supportedPluginId) || '');
+    if (!/^[a-z0-9][a-z0-9._-]{1,79}$/.test(id) || id !== String(manifest && manifest.id || '')) {
+      throw new Error('Invalid supported plugin identity');
+    }
+    return id;
+  }
+
+  function _managedAction(manifest, action) {
+    var id;
+    try { id = _managedId(manifest); }
+    catch (error) { return Promise.reject(error); }
+    if (action !== 'install' && action !== 'uninstall') {
+      return Promise.reject(new Error('Unsupported plugin action'));
+    }
+    return fetch(ACTIVITY_BASE + '/api/services', { cache: 'no-store' })
+      .then(_json)
+      .then(function (services) {
+        var token = String(services.controlToken || '');
+        if (!token) throw new Error('Activity Center control is unavailable; run Extella Client Repair');
+        return fetch(
+          ACTIVITY_BASE + '/api/plugins/' + encodeURIComponent(id) + '/' + action,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Extella-Control': token
+            },
+            body: '{}'
+          }
+        ).then(_json);
+      })
+      .then(function (result) {
+        var expected = action === 'install' ? 'installed' : 'uninstalled';
+        if (!result || result.status !== expected) {
+          throw new Error((result && result.message) || ('Plugin was not ' + expected));
+        }
+        return result;
+      });
+  }
+
+  function _managedServiceAction(manifest, action) {
+    var id;
+    try { id = _managedId(manifest); }
+    catch (error) { return Promise.reject(error); }
+    if (['start', 'stop', 'restart'].indexOf(action) === -1) {
+      return Promise.reject(new Error('Unsupported service action'));
+    }
+    return fetch(ACTIVITY_BASE + '/api/services', { cache: 'no-store' })
+      .then(_json)
+      .then(function (services) {
+        var token = String(services.controlToken || '');
+        if (!token) throw new Error('Activity Center control is unavailable; run Extella Client Repair');
+        return fetch(
+          ACTIVITY_BASE + '/api/services/' + encodeURIComponent(id) + '/' + action,
+          {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-Extella-Control': token},
+            body: '{}'
+          }
+        ).then(_json);
+      })
+      .then(function (result) {
+        if (!result || result.status !== 'ok' || !result.service) {
+          throw new Error((result && result.message) || 'Service control failed');
+        }
+        return result.service;
+      });
+  }
 
   // ── Auto-provision via agent ────────────────────────────────────
   // Called when expert_defs is empty.  Asks the Extella agent to design
@@ -78,6 +164,12 @@ ETB.plugins = (function () {
   return {
     provision: function (manifest, registryAction) {
       var action = registryAction || 'install';
+      if (manifest && manifest.mode === 'managed_runtime') {
+        return _managedAction(manifest, 'install').then(function (result) {
+          ETB.registry.install(manifest.id);
+          return { installed: true, errors: [], lifecycle: result };
+        });
+      }
       // Support both new (expert_defs) and legacy (expertDefs) field names
       var defs = manifest.expert_defs || manifest.expertDefs || [];
       var errors = [];
@@ -141,6 +233,46 @@ ETB.plugins = (function () {
         }
         return { installed: true, errors: errors };
       });
+    },
+
+    unprovision: function (manifest) {
+      if (!manifest || manifest.mode !== 'managed_runtime') {
+        return Promise.reject(new Error('Plugin is not managed by the supported lifecycle'));
+      }
+      if (ETB.registry.markRemoving) ETB.registry.markRemoving(manifest.id);
+      return _managedAction(manifest, 'uninstall').then(function (result) {
+        ETB.registry.removeCustom(manifest.id);
+        if (ETB.router && ETB.router.evict) ETB.router.evict(manifest.id);
+        return result;
+      }).catch(function (error) {
+        if (ETB.registry.clearRemoving) ETB.registry.clearRemoving(manifest.id);
+        throw error;
+      });
+    },
+
+    syncManaged: function () {
+      return fetch(ACTIVITY_BASE + '/api/plugins', { cache: 'no-store' })
+        .then(_json)
+        .then(function (payload) {
+          var items = Array.isArray(payload.plugins) ? payload.plugins : [];
+          var known = {};
+          items.forEach(function (item) {
+            if (!item || !item.id) return;
+            var manifest = ETB.registry.getById(item.id);
+            if (!manifest || manifest.mode !== 'managed_runtime' || manifest.supportedPluginId !== item.id) return;
+            known[item.id] = true;
+            if (item.installed) ETB.registry.install(item.id);
+            else ETB.registry.uninstall(item.id);
+          });
+          return items;
+        });
+    },
+
+    controlManaged: function (manifest, action) {
+      if (!manifest || manifest.mode !== 'managed_runtime') {
+        return Promise.reject(new Error('Plugin is not a release-managed runtime'));
+      }
+      return _managedServiceAction(manifest, action);
     }
   };
 })();

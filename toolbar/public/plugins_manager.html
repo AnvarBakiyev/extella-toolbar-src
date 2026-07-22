@@ -2627,6 +2627,9 @@ var BIZ_ORDER_ALL = ['work','marketing','money','study','home','travel','health'
 // humanize-plugins (Claude): dev/техно-утилиты помечены audience=pro и в «Для всех»
 // НЕ показываются (они в «Для профи»). Выбор Extella-200 (MCP-репо), тоже «Для профи».
 var CURATED_PROGRAMS = {
+  'extella_adoption_wizard': { biz:'work', icon:'∞', name:'Конструктор', tagline:'Процессы, расписания и рабочие пространства Extella' },
+  'extella_contract_agent': { biz:'docs', icon:'§', name:'Агент по договорам', tagline:'Проверка и согласование договоров с контролем человека' },
+  'extella_travel_agency': { biz:'travel', icon:'✈', name:'Турагентство', tagline:'Заявки, предложения, документы и сообщения клиентам' },
   'legal-simplifier': { biz:'docs', icon:'⚖️', name:'Договор простым языком', tagline:'Объяснит по-человечески и покажет, на что смотреть перед подписью' },
   'meeting-notes': { biz:'work', icon:'📝', name:'Итоги встречи', tagline:'Был созвон, будут задачи: кто, что и к какому сроку' },
   'email-composer': { biz:'work', icon:'✉️', name:'Деловые письма', tagline:'Вежливо, по делу и без «доброго времени суток»' },
@@ -2665,7 +2668,9 @@ function programCard(p) {
   // сигналов доверия за линией (Figma): курировано / источник + категория.
   var sig = (p.trust_tier === 'verified')
     ? ('Проверено Extella · ' + (BIZ_LABEL[cat]||''))
-    : ('Стороннее · не проверено · ' + (owner || BIZ_LABEL[cat] || ''));
+    : (p.trust_tier === 'candidate')
+      ? ('Кандидат Extella · проверяется · ' + (BIZ_LABEL[cat]||''))
+      : ('Стороннее · не проверено · ' + (owner || BIZ_LABEL[cat] || ''));
   return '<div class="stile" style="--acc:' + acc + '">' +
     '<div class="st_head">' +
       '<span class="st_ico" aria-hidden="true">' + ico + '</span>' +
@@ -4746,6 +4751,19 @@ function uninst(id) {
   // causing CSPL cleanup to be skipped and the device registry file to persist,
   // which makes the plugin reappear on next boot (syncFromDevice reads it back).
   var pluginData = (getCustom().filter(function(p) { return p.id === id; })[0]) || null;
+  var builtin = BUILTIN_PLUGINS_DATA.filter(function(p) { return p && p.id === id; })[0] || null;
+  if (builtin && builtin.mode === 'managed_runtime' && builtin.supportedPluginId === id) {
+    if (installingIds[id]) return;
+    installingIds[id] = true;
+    try {
+      window.parent.postMessage({
+        type: 'etb_plugin_action', action: 'uninstall', pluginId: id,
+        url: '', pluginData: builtin
+      }, '*');
+    } catch (_) {}
+    renderGrid();
+    return;
+  }
 
   // Remove from installed IDs and custom list
   si(gi().filter(function(x){ return x !== id; }));
@@ -4791,6 +4809,16 @@ window.addEventListener('message', function(e) {
       var _nm = (CURATED_PROGRAMS[e.data.pluginId] || {}).name || e.data.pluginId;
       if (e.data.ok) wsToast('✓ «' + esc(_nm) + '» установлена — ярлык на Рабочем столе', 'ok');
       else wsToast('✗ «' + esc(_nm) + '» не установилась: ' + esc((e.data.message || 'попробуй ещё раз').slice(0, 120)), 'err');
+    } catch (_) {}
+    renderGrid();
+    rtabs();
+  } else if (e.data.type === 'etb_uninstall_result') {
+    delete installingIds[e.data.pluginId];
+    featuredError = e.data.ok ? '' : (e.data.message || 'unknown error');
+    try {
+      var _unm = (CURATED_PROGRAMS[e.data.pluginId] || {}).name || e.data.pluginId;
+      if (e.data.ok) wsToast('✓ «' + esc(_unm) + '» удалена; пользовательские данные сохранены', 'ok');
+      else wsToast('✗ Не удалось удалить «' + esc(_unm) + '»: ' + esc((e.data.message || 'попробуй ещё раз').slice(0, 120)), 'err');
     } catch (_) {}
     renderGrid();
     rtabs();

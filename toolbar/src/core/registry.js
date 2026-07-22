@@ -103,6 +103,12 @@ ETB.registry = (function () {
     },
 
     install: function (id) {
+      // An explicit reinstall is allowed to reverse a prior user removal.
+      _untombstone(id);
+      var removing = _loadRemoving();
+      if (removing.indexOf(id) !== -1) {
+        _saveRemoving(removing.filter(function (item) { return item !== id; }));
+      }
       var arr = _loadInstalled();
       if (arr.indexOf(id) === -1) {
         arr.push(id);
@@ -117,6 +123,9 @@ ETB.registry = (function () {
     // Пометить плагин удаляемым: syncFromDevice не вернёт его, пока файл реестра на устройстве не исчезнет.
     markRemoving: function (id) {
       var a = _loadRemoving(); if (a.indexOf(id) === -1) { a.push(id); _saveRemoving(a); }
+    },
+    clearRemoving: function (id) {
+      _saveRemoving(_loadRemoving().filter(function (item) { return item !== id; }));
     },
     isRemoving: function (id) { return _loadRemoving().indexOf(id) !== -1; },
 

@@ -32,13 +32,33 @@ const manifests = fs.readdirSync(pluginRoot)
   .map((name) => ({ name, value: JSON.parse(fs.readFileSync(path.join(pluginRoot, name), 'utf8')) }));
 const byId = new Map();
 const expertNames = new Set();
+const managedIds = new Set();
+const managedPorts = new Set();
+const expectedManaged = [
+  'extella_adoption_wizard',
+  'extella_contract_agent',
+  'extella_travel_agency'
+];
 for (const { name, value } of manifests) {
   if (!value.id || value.id !== name.slice(0, -5)) fail(`${name}: id must match filename`);
   if (byId.has(value.id)) fail(`${name}: duplicate plugin id ${value.id}`);
   byId.set(value.id, value);
-  if (!['llm_driven', 'form_driven'].includes(value.mode)) fail(`${name}: unsupported mode ${value.mode}`);
-  if (!['verified', 'unverified'].includes(value.trust_tier)) fail(`${name}: trust_tier is required`);
-  if (!Array.isArray(value.conceptTexts) || !value.conceptTexts.length) fail(`${name}: conceptTexts are required`);
+  if (!['llm_driven', 'form_driven', 'managed_runtime'].includes(value.mode)) fail(`${name}: unsupported mode ${value.mode}`);
+  if (!['verified', 'unverified', 'candidate'].includes(value.trust_tier)) fail(`${name}: trust_tier is required`);
+  if (value.mode !== 'managed_runtime' && (!Array.isArray(value.conceptTexts) || !value.conceptTexts.length)) fail(`${name}: conceptTexts are required`);
+  if (value.mode === 'managed_runtime') {
+    if (value.supportedPluginId !== value.id) fail(`${name}: supportedPluginId must match id`);
+    if (value.classification !== 'supported_on_demand') fail(`${name}: managed runtime must be supported_on_demand`);
+    if (value.trust_tier !== 'candidate') fail(`${name}: managed runtime must remain candidate until the external matrix passes`);
+    if (!value.releaseState || value.releaseState.advertised !== false || value.releaseState.verification !== 'pending') fail(`${name}: candidate release state must be explicit`);
+    if (!value.ui || value.ui.type !== 'local_server' || !Number.isInteger(value.ui.port)) fail(`${name}: managed runtime must declare a local_server port`);
+    else if (managedPorts.has(value.ui.port)) fail(`${name}: duplicate managed runtime port ${value.ui.port}`);
+    else managedPorts.add(value.ui.port);
+    if ((value.expert_defs || []).length || (value.conceptTexts || []).length) fail(`${name}: toolbar must not provision managed runtime account resources`);
+    managedIds.add(value.id);
+  } else if (value.trust_tier === 'candidate') {
+    fail(`${name}: candidate trust tier is reserved for release-managed runtimes`);
+  }
   const defs = value.expert_defs || [];
   if (value.mode === 'form_driven' && !defs.length) fail(`${name}: form-driven card has no authored expert`);
   for (const def of defs) {
@@ -56,8 +76,9 @@ if (!curatedIds.length) fail('curated program catalogue is empty');
 for (const id of curatedIds) {
   const manifest = byId.get(id);
   if (!manifest) fail(`curated program has no bundled manifest: ${id}`);
-  else if (manifest.trust_tier !== 'verified') fail(`curated program is not verified: ${id}`);
+  else if (manifest.trust_tier !== 'verified' && manifest.mode !== 'managed_runtime') fail(`curated program is not verified: ${id}`);
 }
+if (JSON.stringify(Array.from(managedIds).sort()) !== JSON.stringify(expectedManaged.slice().sort())) fail(`managed runtime allowlist changed: ${Array.from(managedIds).sort().join(',')}`);
 
 const cli = block('var CLI_CATALOG=[', '\n];\nvar CLI_ACC');
 const cliIds = idsFrom(cli);
@@ -82,12 +103,16 @@ if (installCli.includes("/x/cap_install") || installCli.includes('_mkbFetch(')) 
 if (!html.includes("name:'cap_localmodel_install'")) fail('local models have no bundled installer route');
 if (!html.includes("name: expert, params: params") || !html.includes("catalog_capability_uninstall")) fail('catalog removal route is missing');
 if (!html.includes('Стороннее · не проверено')) fail('unverified catalogue cards are not labelled');
+if (!html.includes('Кандидат Extella · проверяется')) fail('managed candidate cards are not honestly labelled');
 if (!bridge.includes("action === 'install_featured'") || !bridge.includes("ETB.plugins.provision(plugin, 'install')")) fail('curated plugin provisioning bridge is missing');
+const pluginsSource = fs.readFileSync(path.join(root, 'toolbar', 'src', 'core', 'plugins.js'), 'utf8');
+if (!pluginsSource.includes("'/api/plugins/'") || !pluginsSource.includes("'X-Extella-Control'") || !pluginsSource.includes("manifest.mode === 'managed_runtime'")) fail('managed runtime install bridge is missing');
+if (!bridge.includes('ETB.plugins.unprovision(managedPlugin)') || !html.includes("e.data.type === 'etb_uninstall_result'")) fail('managed runtime uninstall confirmation bridge is missing');
 
 if (failures.length) {
   process.stderr.write(`toolbar catalog contract failed:\n${failures.join('\n')}\n`);
   process.exit(1);
 }
 process.stdout.write(
-  `toolbar catalog contract: passed (${curatedIds.length} verified programs, ${cliIds.length} tools, ${modelIds.length} local models, ${skillIds.length} skills; ${manifests.length} bundled manifests)\n`
+  `toolbar catalog contract: passed (${curatedIds.length} curated programs, ${managedIds.size} managed runtimes, ${cliIds.length} tools, ${modelIds.length} local models, ${skillIds.length} skills; ${manifests.length} bundled manifests)\n`
 );

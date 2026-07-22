@@ -144,6 +144,16 @@ ETB.marketplace = (function () {
           } catch (e) {}
         }
         _sendSession();
+        // Reconcile release-managed cards with the signed device lifecycle.
+        // LocalStorage is only a UI cache; Activity Center is authoritative.
+        if (ETB.plugins && ETB.plugins.syncManaged) {
+          ETB.plugins.syncManaged().then(function () {
+            if (iframe.contentWindow) {
+              iframe.contentWindow.postMessage({ type: 'etb_reload_plugins' }, '*');
+            }
+            ETB.tabs.refresh();
+          }).catch(function () {});
+        }
       }, { once: true });
 
       // Сессия текущего пользователя (токен + его агент) — витрине, чтобы окна
@@ -449,6 +459,31 @@ ETB.marketplace = (function () {
           // Prefer the manifest snapshot passed by the iframe (captured before localStorage
           // was cleared) so CSPL cleanup has the correct artifact paths and pid files.
           var unPlugin = e.data.pluginData || ETB.registry.getById(pluginId);
+          var managedPlugin = (ETB.registry.getBuiltin ? ETB.registry.getBuiltin() : [])
+            .filter(function (item) {
+              return item && item.id === pluginId && item.mode === 'managed_runtime' &&
+                item.supportedPluginId === pluginId;
+            })[0] || null;
+          if (managedPlugin) {
+            var _unreply = function (ok, message) {
+              var frame = document.getElementById('_etbv2_mkt_frame');
+              if (frame && frame.contentWindow) {
+                frame.contentWindow.postMessage({
+                  type: 'etb_uninstall_result',
+                  pluginId: pluginId,
+                  ok: ok,
+                  message: message || ''
+                }, '*');
+              }
+            };
+            ETB.plugins.unprovision(managedPlugin).then(function () {
+              ETB.tabs.refresh();
+              _unreply(true);
+            }).catch(function (err) {
+              _unreply(false, (err && err.message) || 'uninstall failed');
+            });
+            return;
+          }
           var hasArtifacts = !!(unPlugin && unPlugin.artifacts);
           // Любая запись из custom-реестра синхронизирована с устройства (syncFromDevice),
           // поэтому её надо чистить ПОЛНОСТЬЮ — иначе файл реестра на устройстве остаётся
