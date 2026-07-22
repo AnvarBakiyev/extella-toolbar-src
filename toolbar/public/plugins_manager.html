@@ -2227,13 +2227,17 @@ var LOCAL_MODELS = [
    name:'Финансы (англоязычный)', desc:'Разбирает англоязычные финансы и отчёты приватно. На английском сильно, на русском слабее.', frame:'не инвест-совет, проверяет человек'}
 ];
 function localModelCard(m){
+  var item=capInstFind('model',m.model);
+  var installed=item&&item.status==='installed';
+  var action=installed
+    ? '<button class="st_btn" onclick="capInstRemove(\'model\',\''+_dtEsc(m.model)+'\',\'ollama\')">Удалить</button>'
+    : '<button class="st_btn" data-lminst="'+esc(m.model)+'">'+(item&&item.status==='installing'?'Проверить':'Установить')+'</button>';
   return '<div class="stile" style="--acc:'+TYPE_ACC.model+'">'+
     '<span class="st_chip">'+_catIco(m.domain)+esc(_lm(m,'domain'))+'</span>'+
     '<div class="st_title">'+esc(_lm(m,'name'))+'</div>'+
     '<div class="st_fact">'+esc(_lm(m,'desc'))+'</div>'+
     '<div class="sk_howto"><b>'+_t('lmFrame')+'</b> '+esc(_lm(m,'frame'))+'</div>'+
-    '<div class="st_foot" style="justify-content:space-between;align-items:center;gap:8px"><span style="font-size:11px;color:var(--tx3)">'+_t('lmLocal')+esc(LANG==='en'?String(m.size).replace('ГБ','GB'):m.size)+'</span>'+
-    '<button class="st_btn" data-lminst="'+esc(m.model)+'">'+_t('lmInstall')+'</button></div></div>';
+    '<div class="st_foot" style="justify-content:space-between;align-items:center;gap:8px"><span style="font-size:11px;color:var(--tx3)">'+_t('lmLocal')+esc(LANG==='en'?String(m.size).replace('ГБ','GB'):m.size)+'</span>'+action+'</div></div>';
 }
 function installLocalModel(model, btn){
   if(btn){btn.disabled=true;btn.textContent=_t('lmInstalling');}
@@ -2243,8 +2247,14 @@ function installLocalModel(model, btn){
       if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}
       var st=out&&out.status;
       if(!btn)return;
-      if(st==='already'||st==='installed'){btn.textContent='Готово ✓';btn.style.opacity='.7';}
-      else if(st==='pulling'){btn.disabled=false;btn.textContent='Качается… ⟳';btn.title=(out&&out.message)||'Скачивается в фоне, нажми позже';}
+      if(st==='already'||st==='installed'){
+        _capInstUpsert({kind:'model',id:model,title:model,status:'installed',method:'ollama',desc:'Локальная модель Ollama'});
+        btn.textContent='Готово ✓';btn.style.opacity='.7';
+      }
+      else if(st==='pulling'){
+        _capInstUpsert({kind:'model',id:model,title:model,status:'installing',method:'ollama',desc:(out&&out.message)||'Скачивается локально'});
+        btn.disabled=false;btn.textContent='Качается… ⟳';btn.title=(out&&out.message)||'Скачивается в фоне, нажми позже';
+      }
       else {btn.disabled=false;btn.textContent='Ещё раз';btn.title=(out&&out.message)||'не удалось';}
     })
     .catch(function(e){ if(btn){btn.disabled=false;
@@ -2655,7 +2665,7 @@ function programCard(p) {
   // сигналов доверия за линией (Figma): курировано / источник + категория.
   var sig = (p.trust_tier === 'verified')
     ? ('Проверено Extella · ' + (BIZ_LABEL[cat]||''))
-    : (p._biz ? ('Отобрано Extella · ' + (BIZ_LABEL[cat]||'')) : (owner || BIZ_LABEL[cat] || ''));
+    : ('Стороннее · не проверено · ' + (owner || BIZ_LABEL[cat] || ''));
   return '<div class="stile" style="--acc:' + acc + '">' +
     '<div class="st_head">' +
       '<span class="st_ico" aria-hidden="true">' + ico + '</span>' +
@@ -3825,22 +3835,40 @@ function _capInstDropRecord(kind, id){
     return skKvSet('_mkt_installed', cat);
   }).catch(function(){ capInstRefresh(); });   // KV не записался — честно перечитываем (карточка вернётся)
 }
+function capInstFind(kind,id){
+  return (_capInstReg||[]).filter(function(it){return it&&it.kind===kind&&it.id===id;})[0]||null;
+}
+function _capInstUpsert(item){
+  if(!item||!item.kind||!item.id)return Promise.resolve();
+  _capInstReg=(_capInstReg||[]).filter(function(it){return !(it.kind===item.kind&&it.id===item.id);});
+  _capInstReg.push(item);
+  return skKvGet('_mkt_installed').then(function(r){
+    var cat=(r&&r.items)?r:{items:[]};
+    cat.items=(cat.items||[]).filter(function(it){return !(it.kind===item.kind&&it.id===item.id);});
+    cat.items.push(item);
+    return skKvSet('_mkt_installed',cat);
+  }).then(function(){rtabs();}).catch(function(){capInstRefresh();});
+}
 function capInstRemove(kind, id, method){
   var en = (typeof LANG !== 'undefined' && LANG === 'en');
-  var device = (kind === 'model' || kind === 'mcp' || method === 'brew' || method === 'ollama' || method === 'mcp_connect');
+  var device = (kind === 'model' || kind === 'mcp' || method === 'brew' || method === 'catalog_tool' || method === 'ollama' || method === 'mcp_connect');
   var what = kind === 'model' ? (en ? 'The model will be DELETED from this device (frees space; re-downloadable).' : 'Модель будет УДАЛЕНА с устройства (освободит место; скачать можно заново).')
     : kind === 'mcp' ? (en ? 'The MCP server will be disconnected (removed from the device allowlist).' : 'Подключение будет отключено от агента и убрано с этого компьютера.')
-    : method === 'brew' ? (en ? 'The tool will be uninstalled from this device (brew uninstall).' : 'Инструмент будет удалён с устройства (brew uninstall).')
+    : (method === 'brew' || method === 'catalog_tool') ? (en ? 'The tool will be removed only if Extella installed it; an existing user installation is preserved.' : 'Инструмент удалится только если его ставила Extella; ранее установленную пользователем программу сохраним.')
     : (en ? 'The entry will be removed from My.' : 'Запись будет убрана из «Мои».');
   if (!confirm((en ? 'Remove "' : 'Удалить «') + id + (en ? '"?\n\n' : '»?\n\n') + what)) return;
   if (!device) { _capInstDropRecord(kind, id); return; }
   // сначала РЕАЛЬНО удаляем с устройства; запись трём только после успеха — без свалки и без вранья
+  var toolManaged=method==='catalog_tool';
+  var expert=toolManaged?'catalog_tool_manage':'catalog_capability_uninstall';
+  var params=toolManaged?{action:'uninstall',tool:id}:{kind:kind,ref:id,method:method||''};
   skBridge('etb_run_expert', 'etb_expert_result',
-           { name: 'wz_capability_uninstall', params: { kind: kind, ref: id, method: method || '' } }, 180000)
+           { name: expert, params: params }, 180000)
     .then(function(r){
       var out = r.res; if (out && typeof out === 'object' && (out.result || out.output)) out = out.result || out.output;
       if (typeof out === 'string') { try { out = JSON.parse(out); } catch(e){} }
       if (out && out.device_removed) {
+        if(toolManaged)cliUnmark(id);
         _capInstDropRecord(kind, id);
         // MCP отключается вычёркиванием из аллоулиста устройства — перечитать правду,
         // иначе карточка так и останется «✓ подключён».
@@ -4923,15 +4951,15 @@ var CLI_CATALOG=[
    desc:'Собирает Word и HTML из шаблона и данных пачкой.',
    ops:['Markdown → Word','Markdown → HTML','папкой'],
    howto:'Скажи: «собери договоры из этих шаблонов», получишь готовые .docx.'},
-  {id:'ocr',cat:'Документы и PDF',emoji:'🔎',name:'Поиск по сканам (OCR)',live:true,batch:['cap_ocr_searchable_batch'],
+  {id:'ocr',cat:'Документы и PDF',emoji:'🔎',name:'Поиск по сканам (OCR)',live:true,platforms:['darwin'],batch:['cap_ocr_searchable_batch'],
    desc:'Превращает сканы и фото-PDF в документы с полнотекстовым поиском, русский и английский.',
    ops:['Скан → PDF с поиском','Папкой'],
    howto:'Скажи: «добавь в эти сканы текстовый слой» — вернёт PDF, по которому работает поиск.'},
-  {id:'libreoffice',cat:'Документы и PDF',emoji:'🗂️',name:'Office → PDF',live:true,batch:['cap_libreoffice_to_pdf_batch'],
+  {id:'libreoffice',cat:'Документы и PDF',emoji:'🗂️',name:'Office → PDF',live:true,platforms:['darwin'],batch:['cap_libreoffice_to_pdf_batch'],
    desc:'Конвертирует Word, Excel и PowerPoint в PDF, целыми папками.',
    ops:['Office → PDF','папкой'],
    howto:'Скажи: «переведи все документы в этой папке в PDF», обработает пачкой.'},
-  {id:'qpdf',cat:'Документы и PDF',emoji:'🔗',name:'Повернуть и оптимизировать PDF',live:true,batch:['cap_qpdf_optimize_batch','cap_qpdf_rotate_batch'],
+  {id:'qpdf',cat:'Документы и PDF',emoji:'🔗',name:'Повернуть и оптимизировать PDF',live:true,platforms:['darwin'],batch:['cap_qpdf_optimize_batch','cap_qpdf_rotate_batch'],
    desc:'Поворачивает и оптимизирует PDF для веба, без потери качества, пачкой.',
    ops:['Оптимизировать','Повернуть'],
    howto:'Скажи: «поверни сканы в этой папке на 90°», вызовет способность.'},
@@ -4969,7 +4997,7 @@ window.addEventListener('message', function(e){
 function cliCatalog(){
   var byId={}; CLI_CATALOG.forEach(function(c){byId[c.id]=c;});
   (_cliReg||[]).forEach(function(c){ if(c&&c.id) byId[c.id]=Object.assign({}, byId[c.id]||{}, c); });
-  return Object.keys(byId).map(function(k){return byId[k];});
+  return Object.keys(byId).map(function(k){return byId[k];}).filter(function(c){return !c.platforms||c.platforms.indexOf(_curOS())>=0;});
 }
 function renderCLI(){
   var g=document.getElementById('grid'); if(!g)return;
@@ -5013,11 +5041,17 @@ function renderCLI(){
   _svcPrependBar();
 }
 function cliUninstall(id){
-  // не только галочка: сносим и сам инструмент с устройства (brew uninstall), чтобы не копить свалку.
-  // Имя формулы = id способности (так их ставила фабрика); "нет такого пакета" эксперт считает успехом.
-  cliUnmark(id); if(cur==='cli')renderCLI();
+  var c=cliGet(id)||{name:id};
+  if(!confirm('Удалить «'+(c.name||id)+'»? Программа будет удалена только если её установила Extella.'))return;
   skBridge('etb_run_expert','etb_expert_result',
-           {name:'wz_capability_uninstall',params:{kind:'cli',ref:id,method:'brew'}},180000).catch(function(){});
+           {name:'catalog_tool_manage',params:{action:'uninstall',tool:id}},300000).then(function(r){
+    var out=r.res;if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
+    if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}
+    if(out&&out.status==='success'){
+      cliUnmark(id);_capInstDropRecord('cli',id);if(cur==='cli')renderCLI();
+      wsToast(out.message||'Инструмент удалён','ok');
+    }else wsToast('Не удалось удалить: '+((out&&out.message)||'нет ответа'),'err');
+  }).catch(function(e){wsToast('Не удалось удалить: '+((e&&e.message)||'нет ответа'),'err');});
 }
 
 // «Запустить», прямой вызов способности через тулбар (Дверь 1), без чат-ассистента.
@@ -6541,25 +6575,27 @@ function cliCard(c){
 // сбрасывается → повтор клика слал новый resolver (у Гульжан — ghostscript ×6
 // в логах, brew запускался параллельно). Держим состояние по tool, не по кнопке.
 var _cliInstalling={};
-// Установка инструмента = ставим программу + сразу оборачиваем в блок Композитора
-// + вносим в каталог, ОДНИМ вызовом /x/cap_install моста Конструктора (тот же путь,
-// что app_wrap для приложений). Так пред-раскладывать 68 cap_-обёрток на каждый
-// аккаунт больше не нужно — чистый аккаунт клиента, появляется только установленное.
+// Установка инструмента не зависит от Конструктора и его localhost. Системный
+// эксперт каталога ставит только выбранную программу, проверяет бинарь и помечает,
+// принадлежит ли установка Extella (чужую программу при удалении сохраняем).
 function installCLI(tool,btn){
   if(_cliInstalling[tool]){ return; }   // уже ставлю этот инструмент — второй клик игнор
   _cliInstalling[tool]=1;
   if(btn){btn.disabled=true;btn.textContent='Ставлю…';}
   var catMap={}; (typeof cliCatalog==='function'?cliCatalog():[]).forEach(function(c){catMap[c.id]=c;});
   var c=catMap[tool]||{}; var title=c.name||tool, desc=c.desc||'';
-  _mkbFetch('/x/cap_install',{kind:'cli',install_ref:tool,title:title,desc:desc},600000).then(function(out){
+  skBridge('etb_run_expert','etb_expert_result',
+           {name:'catalog_tool_manage',params:{action:'install',tool:tool}},600000).then(function(r){
     _cliInstalling[tool]=0;
+    var out=r.res;if(out&&typeof out==='object'&&(out.result||out.output))out=out.result||out.output;
     if(typeof out==='string'){try{out=JSON.parse(out);}catch(e){}}
     var st=out&&out.status;
     if(st==='success'||st==='already'||st==='installed'){
       cliMarkInstalled(tool);
+      _capInstUpsert({kind:'cli',id:tool,title:title,status:'installed',method:'catalog_tool',managed:!!(out&&out.managed),desc:desc});
       if(cur==='cli'){ renderCLI(); }         // перерисовать: карточка станет «установлено»
       else if(btn){ btn.textContent='Готово ✓'; btn.style.opacity='.7'; }
-      if(out&&out.expert) wsToast('Инструмент готов — стал блоком Композитора','ok');
+      wsToast('Инструмент установлен и проверен','ok');
       return;
     }
     if(!btn)return;
@@ -6567,9 +6603,8 @@ function installCLI(tool,btn){
     btn.disabled=false;btn.textContent='Повторить';btn.title=(out&&out.message)||'не удалось поставить';
   }).catch(function(e){
     _cliInstalling[tool]=0;
-    // Мост Конструктора спит / Конструктор не установлен — честно, без сырого сбоя.
-    if(btn){btn.disabled=false;btn.textContent='Ещё раз';btn.title='Конструктор недоступен — открой его на столе, он поднимет мост, и повтори';}
-    wsToast('Не удалось поставить инструмент: открой Конструктор (он поднимет мост) и попробуй ещё раз','err');
+    if(btn){btn.disabled=false;btn.textContent='Ещё раз';btn.title='Не удалось поставить инструмент: '+((e&&e.message)||'нет ответа');}
+    wsToast('Не удалось поставить инструмент: '+((e&&e.message)||'нет ответа'),'err');
   });
 }
 
