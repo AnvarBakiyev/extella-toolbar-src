@@ -6387,7 +6387,10 @@ var _B_CANON=[
   [/суммариз|краткое содержан|пересказ/i,'text summarization'],
   [/распознаван.*(текст|скан|документ)|\bocr\b/i,'ocr document'],
   [/сжат.*(pdf|пдф)/i,'pdf compression'],
-  [/перевод|переводчик/i,'translation']
+  [/перевод|переводчик/i,'translation'],
+  [/стем|раздел.*(аудио|музык|трек|дорожк)|(убрать|отдел|извлеч).*(вокал|голос из)|минусовк/i,'music source separation'],
+  [/(убрать|очист|удал).*шум|шумодав|denoise/i,'audio noise reduction'],
+  [/(нарезк|обрезк|склейк|конверт).*(аудио|видео)|из видео в аудио/i,'ffmpeg audio video']
 ];
 function _bCanonical(q){
   for(var i=0;i<_B_CANON.length;i++){ if(_B_CANON[i][0].test(q)) return _B_CANON[i][1]; }
@@ -6425,7 +6428,7 @@ function _bFindProgramEn(q,originalQuery){
     .then(function(r){return r.json();})
     .then(function(d){
       var it=((d&&d.items)||[]).filter(function(r){return !r.archived && !r.fork && r.description;})[0];
-      if(!it) throw new Error('на GitHub не нашлось живого открытого инструмента');
+      if(!it) throw new Error('живой открытый инструмент под это не нашёлся — попробуй сказать иначе, без скобок и уточнений');
       var stars=it.stargazers_count>=1000 ? (Math.round(it.stargazers_count/100)/10+'k') : String(it.stargazers_count);
       return { repoUrl: it.html_url, title: it.name,
         facts: [ 'Подходит для задачи: «'+String(originalQuery||q).slice(0,90)+'». Перед установкой Extella проверит репозиторий.' ],
