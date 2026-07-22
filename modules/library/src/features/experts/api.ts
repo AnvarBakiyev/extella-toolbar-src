@@ -2,6 +2,7 @@ import { mbPost, mbPostAs, type ScopeOverride } from '@/lib/api';
 import type { TopologyPair } from '@/lib/types';
 import { normalizeExpert, paginate } from '@/lib/normalize';
 import { SEARCH_SIMILARITY_THRESHOLD, SEARCH_RESULT_LIMIT } from '@/lib/constants';
+import { getCurrentAccountFallbackPair } from '@/lib/runtime';
 import type { ExpertRow } from '@/lib/types';
 import {
   paginatedExpertsSchema,
@@ -100,7 +101,7 @@ function buildScopedPairs(
   agentId?: string,
 ): TopologyPair[] {
   if (!pairs.length) {
-    return [{ profile_id: 'default', profile_name: 'Default', agent_id: 'agent_extella_default', agent_name: 'Default agent' }];
+    return getCurrentAccountFallbackPair();
   }
   if (profileId && agentId) {
     const match = pairs.find((p) => p.profile_id === profileId && p.agent_id === agentId);

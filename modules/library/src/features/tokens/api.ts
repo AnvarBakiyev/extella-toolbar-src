@@ -8,6 +8,7 @@
 import axios from 'axios';
 import { api, mbPost } from '@/lib/api';
 import { normalizeToken, paginate } from '@/lib/normalize';
+import { getCurrentAccountFallbackPair } from '@/lib/runtime';
 import type { Token, TopologyPair } from '@/lib/types';
 import type { TokenListResponse, ListTokensParams, GenerateTokenResponse } from './schemas';
 
@@ -36,7 +37,7 @@ function buildScopedPairs(
   agentId?: string,
 ): TopologyPair[] {
   if (!pairs.length) {
-    return [{ profile_id: 'default', profile_name: 'Default', agent_id: 'agent_extella_default', agent_name: 'Default agent' }];
+    return getCurrentAccountFallbackPair();
   }
   if (profileId && agentId) {
     const match = pairs.find((p) => p.profile_id === profileId && p.agent_id === agentId);

@@ -7,7 +7,7 @@ def kp_install_pack(pack_id="") -> str:
         # --- Право и налоги (adilet.zan.kz) ---
         "nalog_rk":  {"name": "Налоговый кодекс РК", "adilet": ["K1700000120"]},
         "trud_rk":   {"name": "Трудовой кодекс РК",  "adilet": ["K1500000414"]},
-        "grazhd_rk": {"name": "Гражданский кодекс РК","adilet": ["K940001000_"]},
+        "grazhd_rk": {"name": "Гражданский кодекс РК","adilet": ["K940001000_", "K990000409_"]},
         "admin_rk":  {"name": "Кодекс об админправонарушениях РК","adilet": ["K1400000235"]},
         "pred_rk":   {"name": "Предпринимательский кодекс РК","adilet": ["K1500000375"]},
         "ugol_rk":   {"name": "Уголовный кодекс РК", "adilet": ["K1400000226"]},
@@ -34,22 +34,27 @@ def kp_install_pack(pack_id="") -> str:
     }
     p = PACKS.get(pack_id)
     if not p: return json.dumps({"status":"error","message":"неизвестный пак: "+str(pack_id)}, ensure_ascii=False)
+    try:
+        from extella_expert_bridge import knowledge_path, path_or_error
+        ollama, ollama_state = path_or_error("ollama", repair=False)
+    except Exception:
+        return json.dumps({"status":"error","message":"Системный runtime Extella не установлен. Запустите Repair Extella Client."}, ensure_ascii=False)
     def serve():
         try: urllib.request.urlopen("http://localhost:11434/api/version", timeout=3); return True
         except Exception: pass
-        for ob in ["/usr/local/bin/ollama","/opt/homebrew/bin/ollama"]:
-            if os.path.exists(ob): subprocess.Popen([ob,"serve"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL); break
+        if ollama:
+            subprocess.Popen([ollama,"serve"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         time.sleep(3)
         try: urllib.request.urlopen("http://localhost:11434/api/version", timeout=5); return True
         except Exception: return False
     if not serve(): return json.dumps({"status":"error","message":"движок знаний не запущен (Ollama)"}, ensure_ascii=False)
-    ctx = ssl.create_default_context(); ctx.check_hostname=False; ctx.verify_mode=ssl.CERT_NONE
+    ctx = ssl.create_default_context()
     def fetch_adilet(docid):
         req=urllib.request.Request("https://adilet.zan.kz/rus/docs/"+docid, headers={"User-Agent":"Mozilla/5.0"})
         h=urllib.request.urlopen(req, timeout=90, context=ctx).read().decode("utf-8","ignore")
         t=re.sub(r"(?is)<(script|style|nav|header|footer).*?</\1>"," ",h)
         t=re.sub(r"(?s)<[^>]+>"," ",t); t=html.unescape(t); t=re.sub(r"[ \t]+"," ",t)
-        m=re.search(r"(РАЗДЕЛ 1|Статья 1[.\s]|Общая часть)", t)
+        m=re.search(r"Статья\s+\d+[.\s]", t)
         if m: t=t[m.start():]
         return t.strip()
     def fetch_wiki(title):
@@ -105,14 +110,5 @@ def kp_install_pack(pack_id="") -> str:
                 if j < len(embs) and embs[j]: store.append({"text":part[j][0],"src":part[j][1],"emb":embs[j]})
         except Exception as e: last_err=str(e)[:110]
     if not store: return json.dumps({"status":"error","message":"векторизация не сработала: "+(last_err or "нет ответа")}, ensure_ascii=False)
-    d=os.path.expanduser("~/.extella_kp"); os.makedirs(d, exist_ok=True)
-    # Имя файла: ASCII + короткий хэш (раньше кириллица затирала соседние базы).
-    import hashlib
-    _pl=re.sub(r"[^a-zA-Z0-9_]","_",p["name"])
-    fp_new=os.path.join(d,_pl[:40]+"_"+hashlib.md5(p["name"].encode("utf-8")).hexdigest()[:8]+".json")
-    fp_old=os.path.join(d,_pl+".json")
-    json.dump({"name":p["name"],"count":len(store),"chunks":store}, open(fp_new,"w"), ensure_ascii=False)
-    try:
-        if fp_old!=fp_new and os.path.exists(fp_old) and json.load(open(fp_old)).get("name")==p["name"]: os.remove(fp_old)
-    except Exception: pass
+    json.dump({"name":p["name"],"count":len(store),"chunks":store}, open(knowledge_path(p["name"]),"w"), ensure_ascii=False)
     return json.dumps({"status":"success","name":p["name"],"chunks":len(store)}, ensure_ascii=False)

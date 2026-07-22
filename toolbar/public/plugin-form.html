@@ -109,7 +109,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
   var API_BASE = 'https://api.extella.ai';
   var plugin = null;
   var apiToken = '';
-  var agentId = 'agent_extella_default'; // личный агент приходит от тулбара
+  var agentId = ''; // current-account agent arrives from the toolbar
   // Язык окна = язык витрины: приходит в etb_init, фолбэк — общий localStorage (same-origin)
   var LANG = (function () { try { return localStorage.getItem('etb_lang') === 'en' ? 'en' : 'ru'; } catch (e) { return 'ru'; } })();
   function T(ru, en) { return LANG === 'en' ? en : ru; }
@@ -442,7 +442,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
         if (e.data && e.data.type === 'etb_session') {
           if (e.data.token) apiToken = e.data.token;
           if (e.data.agentId) agentId = e.data.agentId;
-          if (apiToken && _pendingRun) {
+          if (apiToken && agentId && _pendingRun) {
             var p = _pendingRun; _pendingRun = null;
             runCapability(p.cap, p.btn);
           }
@@ -675,7 +675,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
       return;
     }
 
-    if (!apiToken) {
+    if (!apiToken || !agentId) {
       _pendingRun = { cap: cap, btn: btn };
       var _ra = document.getElementById('result_area');
       _ra.classList.add('show');

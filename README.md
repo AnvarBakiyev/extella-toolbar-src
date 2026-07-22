@@ -33,96 +33,31 @@ npm run build                # both, in order
 The toolbar build reads each module's `dist/index.html`, so **build the
 module(s) before the toolbar**. `npm run build` does this in order.
 
-## Deploy to Extella Desktop (local)
+## Package and deploy
 
-Extella Desktop loads `toolbar.js` from Application Support and injects it into
-the web view on every page load. Marketplace, plugin chat, and plugin forms are
-**embedded inside `toolbar.js`** at build time (blob iframes) — no separate
-install path is required.
+Extella Desktop loads `toolbar.js` from its user-data directory and injects it
+into the web view. Marketplace, plugin chat, and plugin forms are embedded in
+that artifact at build time.
 
-### Prerequisites
+This repository deliberately does **not** provide a standalone installer.
+`install.sh` is a fail-closed compatibility stub so old instructions cannot
+silently deploy only part of the product. A release must be assembled and
+installed by the signed, versioned Extella Client transaction, which installs
+the toolbar, verified Catalog payload, Activity Center runtime, and account
+state together and can roll the whole change back.
 
-- **Node.js** v18+ (`node -v`) — vite 6 in the library workspace requires it.
-  **No Node at all?** That's fine: `./install.sh` falls back to the pre-built
-  `HANDOFF/toolbar.js`, or copy it yourself:
-  `cp HANDOFF/toolbar.js ~/Library/Application\ Support/extella-desktop/toolbar.js`
-- **Extella Desktop** installed and signed in at least once
-- Repo checked out on branch `main`
+Supported release targets are exactly:
 
-> Heads-up: on macOS `./install.sh` additionally installs a background
-> LaunchAgent (`ai.extella.activity-center`, port 8799) and clones the
-> optional `html-video` studio into `~/Downloads`. Remove the agent later
-> with `python3 device/activity-center/uninstall.py`.
+- macOS Intel (`x86_64`)
+- macOS Apple Silicon (`arm64`)
+- Windows 11 x64 (`x86_64`)
 
-### One-command install (recommended)
+Linux and Windows on ARM are not release targets. A source checkout is a build
+input and must not be copied into an end user's Extella data directory.
 
-From the repo root:
-
-```sh
-chmod +x install.sh   # once
-./install.sh
-```
-
-The installer detects your OS, runs `npm run build` (library module + toolbar),
-backs up the previous `toolbar.js`, copies artifacts to the correct paths, then
-prompts for optional API keys.
-
-**Restart Extella** after install.
-
-### Install paths by OS
-
-| OS | Deploy target |
-|----|---------------|
-| macOS | `~/Library/Application Support/extella-desktop/toolbar.js` |
-| Linux | `~/.config/extella-desktop/toolbar.js` |
-
-`toolbar/build/*.html` files are build artifacts for debugging only; the running
-app does not read `~/.extella/plugins/` (legacy — removed by `./install.sh`).
-
-### Manual install (macOS)
-
-```sh
-npm install           # once
-npm run build         # library → modules/library/dist, then toolbar/build/
-
-cp toolbar/build/toolbar.js \
-   ~/Library/Application\ Support/extella-desktop/toolbar.js
-```
-
-Then `Cmd+Q` → reopen Extella Desktop.
-
-### Manual install (Linux)
-
-```sh
-npm install
-npm run build
-
-mkdir -p ~/.config/extella-desktop
-cp toolbar/build/toolbar.js ~/.config/extella-desktop/toolbar.js
-```
-
-Close and reopen Extella Desktop.
-
-#### Linux: token authentication
-
-On Linux, Electron requires **libsecret** to access session cookies used for
-automatic token acquisition. Install it before running Extella:
-
-```sh
-# Debian / Ubuntu
-sudo apt install libsecret-1-0
-
-# Fedora / RHEL
-sudo dnf install libsecret
-```
-
-If libsecret is unavailable or the session cookie is still inaccessible,
-the toolbar will automatically show a **manual token prompt** after ~30 s.
-Get your token at [api.extella.ai](https://api.extella.ai) → **Token → Generate**
-and paste it into the prompt. The token is kept in memory for the session.
-
-You can also launch Extella with `--password-store=basic` to bypass the keyring
-entirely (disables cookie encryption; not recommended on shared machines).
+The release integrator must pin the toolbar commit, build it reproducibly, put
+the generated artifact into the Extella Client bundle, and publish the client
+archive only with its exact SHA-256 and byte size.
 
 ### Rebuild after editing sources
 
@@ -132,7 +67,8 @@ cd toolbar && node build.js          # toolbar only
 npm run build                        # full suite
 ```
 
-Copy `toolbar.js` again (or re-run `./install.sh`).
+Run the repository checks and rebuild the signed Extella Client candidate. Do
+not copy `toolbar.js` directly into a user profile.
 
 ### Verify
 
@@ -144,11 +80,10 @@ Copy `toolbar.js` again (or re-run `./install.sh`).
 
 | Problem | Fix |
 |---------|-----|
-| Old toolbar after install | Quit Extella fully and reopen |
+| Old toolbar after install | Run Extella Client doctor; do not overwrite one file manually |
 | Library tab blank | Run `npm run build` from repo root (needs library dist) |
-| Plugins tab blank | Re-copy `toolbar.js` and restart Extella (UI is embedded in toolbar.js) |
-| Changes not picked up | Re-copy `toolbar.js` and restart Extella |
-| Authorization failed (Linux) | Install `libsecret-1-0` or launch Extella with `--password-store=basic` |
+| Plugins tab blank | Rebuild and install a complete Extella Client candidate |
+| Changes not picked up | Verify the installed client release revision and restart Extella |
 | Token prompt never appears | Toolbar retries auth for 60 s, then shows a prompt automatically |
 | Wrong account in Library after switch | Toolbar auto-refreshes token on account change; re-open Library if it was closed on logout |
 
@@ -177,58 +112,19 @@ or falls back to `localStorage.dtd_last_user_id`) and hands it to each module
 through the iframe URL hash, which a synchronous `<head>` shim lifts into
 `window.__MB_TOKEN__` before the SPA boots.
 
-## GitHub plugins — agent-driven install
+## External GitHub and Hugging Face projects
 
-Adding a plugin from **Plugins → Add GitHub repo** no longer runs a hardcoded
-decision tree in the toolbar. Instead the toolbar hands the repository to an
-**autonomous Extella agent** that does the whole installation end to end on the
-user's own device, and reports back through a local file registry.
+The toolbar may inspect a pasted GitHub or Hugging Face link and show its public
+metadata. An arbitrary external project is **unverified**: the supported client
+does not generate or run an autonomous local installer for it, does not display
+an installation success state, and does not create a localhost service.
 
-### Principle
-
-1. **One standard prompt.** The toolbar fetches a light repo digest (tree +
-   README) and builds a single instruction prompt
-   ([`toolbar/src/core/install-prompt.js`](toolbar/src/core/install-prompt.js)).
-   It contains only **deterministic identifiers** both sides must agree on —
-   `plugin_id`, install dir, HTTP `port`, `start_expert` name, pid file, and the
-   `registry_file` path — plus the rules, ordered steps, and a CSPL guide.
-2. **No device id baked in.** `device_id = my` is passed as the literal word
-   **`my`**: the agent resolves the *current user's own* device automatically.
-   Nothing user-specific is hardcoded into the prompt. (The agent authenticates
-   with its own Extella credentials via request headers — no token in the prompt.)
-3. **Three categories, agent picks one.**
-   - **repo_ui** — repo already has a web UI → reuse it (download static/dist, or
-     clone + install toolchain + build, or embed a published component via UMD).
-   - **generated_ui** — repo is functional only (library/SDK) → generate one
-     self-contained `index.html` that drives the real capabilities, backed by
-     Extella experts where server-side code is needed.
-   - **generated_ui (functions)** — small repo / a few functions → wrap each as an
-     expert and generate a UI on top.
-4. **Serve + validate.** The agent puts the entry at
-   `~/extella-plugins/<id>/index.html`, starts a detached `python3 -m http.server`
-   via the `start_expert` (so the toolbar can restart it later), then **validates
-   the live render** at `http://localhost:<port>/` and fixes it until it actually
-   loads — HTTP 200 alone is not treated as success.
-5. **Manifest as source of truth.** The agent writes a manifest JSON to
-   `~/extella-plugins/_registry/<id>.json` describing the plugin, its `ui`
-   (`local_server` + port + start expert), `conceptTexts`, and an `artifacts`
-   block listing **every** expert, file, pid file, and KV key it created.
-6. **Toolbar reads it back.** `ETB.registry.syncFromDevice()`
-   ([`toolbar/src/core/registry.js`](toolbar/src/core/registry.js)) runs a small
-   `fython` expert on the local device (device id resolved automatically via the
-   desktop bridge — never prompted) to read the registry files and surface the new
-   plugin under **Plugins**. This sync is gated on a valid session token so it
-   never triggers a token prompt at boot.
-
-### Removal cleans up everything
-
-Removing an agent-installed plugin uses the manifest's `artifacts` to fully tear
-down what the agent created
-([`toolbar/src/panels/marketplace.js`](toolbar/src/panels/marketplace.js)):
-deletes the saved experts (`ETB.api.deleteExpert`), clears KV keys, runs an
-on-device cleanup expert that stops the server and `rmtree`s the install dir +
-pid file + registry entry, then drops the local registry record and evicts the
-cached panel.
+To become installable, a project must first receive a declarative manifest,
+explicit artifact ownership, bounded lifecycle actions, functional smoke tests,
+and all applicable platform evidence in the Extella Client release gate. Once
+verified, it is shipped as a pinned Catalog item through the same atomic client
+transaction as the toolbar. This keeps “can inspect” separate from “supported
+and installed”.
 
 ## Adding a module
 
@@ -244,6 +140,7 @@ cached panel.
 The modular build includes a bottom-right, human-readable feed of listener
 activity. It also exposes recurring task management through
 **Plugins → Расписания** and a **Регулярные задачи** shortcut on the marketplace
-desktop. The companion macOS observer lives in
-[`device/activity-center`](device/activity-center/README.md) and is installed by
-`./install.sh`.
+desktop. The device runtime is owned by the Extella Client package and sourced
+from the canonical `extella-marketplace-pack/device/activity-center` tree. This
+repository owns only the toolbar panel and its integration contract; see
+[`device/activity-center`](device/activity-center/README.md).

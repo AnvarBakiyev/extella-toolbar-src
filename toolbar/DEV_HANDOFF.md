@@ -20,6 +20,7 @@
 ```
 cd toolbar
 node build.js                       # → build/toolbar.js (единый артефакт)
+node build.js --release-artifacts   # ещё идентично обновит toolbar/toolbar.js и HANDOFF/toolbar.js
 # ЛОКАЛЬНАЯ проверка (build.js НЕ деплоит сам!):
 cp build/toolbar.js "$HOME/Library/Application Support/extella-desktop/toolbar.js"
 # затем Cmd+Q приложения Extella и открыть заново

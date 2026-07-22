@@ -11,6 +11,12 @@
     "dev:library": "npm run dev -w @extella/library",
     "build:library": "npm run build -w @extella/library",
     "build:toolbar": "npm run build -w @extella/toolbar",
-    "build": "npm run build:library && npm run build:toolbar"
+    "build:toolbar-release": "npm run build:release -w @extella/toolbar",
+    "build": "npm run build:library && npm run build:toolbar",
+    "test:reproducible": "node scripts/check-reproducible-build.js",
+    "test:account-scope": "node scripts/check-account-scope.js",
+    "test:runtime-portability": "node scripts/check-runtime-portability.js",
+    "test:catalog-contract": "node scripts/check-catalog-contract.js",
+    "test:managed-runtime": "node scripts/check-managed-runtime-lifecycle.js"
   }
 }

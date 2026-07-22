@@ -34,16 +34,20 @@ declare global {
 export const DEFAULT_MB_BASE_URL = 'https://api.extella.ai';
 
 /**
- * Default `X-Profile-Id` / `X-Agent-Id` — same values the admin-panel
- * backend uses by default (`MAIN_BACKEND_PROFILE_ID`, `MAIN_BACKEND_AGENT_ID`
- * in the root `.env`). The Electron host can override via window globals.
+ * The profile has a protocol default. The agent never does: production gets
+ * the current-account agent from the toolbar's pre-boot credential shim, while
+ * local development may provide VITE_MB_AGENT_ID.
  */
 export const DEFAULT_PROFILE_ID = 'default';
-export const DEFAULT_AGENT_ID = 'agent_extella_default';
+export const DEFAULT_AGENT_ID =
+  (typeof window !== 'undefined' && window.__MB_AGENT_ID__) ||
+  (import.meta.env.DEV ? (import.meta.env.VITE_MB_AGENT_ID as string | undefined) : undefined) ||
+  '';
 
 /**
  * Resolution order: `window.__MB_*` (Electron preload) → Vite env var
- * (`VITE_MB_*` from `.env.local`, dev convenience only) → hardcoded default.
+ * (`VITE_MB_*` from `.env.local`, dev convenience only) → protocol default
+ * for the profile or an empty value for the account-specific agent.
  *
  * Production Electron builds rely on the preload bridge; the env-var fallback
  * exists so `npm run dev` can pick up credentials from `_standalone/.env.local`
@@ -95,9 +99,28 @@ export function getAgentId(): string {
   if (typeof window !== 'undefined' && window.__MB_AGENT_ID__) {
     return window.__MB_AGENT_ID__;
   }
-  const envAgent = import.meta.env.VITE_MB_AGENT_ID as string | undefined;
-  if (envAgent) return envAgent;
+  if (import.meta.env.DEV) {
+    const envAgent = import.meta.env.VITE_MB_AGENT_ID as string | undefined;
+    if (envAgent) return envAgent;
+  }
   return DEFAULT_AGENT_ID;
+}
+
+export function getCurrentAccountFallbackPair(): {
+  profile_id: string;
+  profile_name: string;
+  agent_id: string;
+  agent_name: string;
+}[] {
+  const agentId = getAgentId();
+  return agentId
+    ? [{
+        profile_id: DEFAULT_PROFILE_ID,
+        profile_name: 'Default',
+        agent_id: agentId,
+        agent_name: 'Current account agent',
+      }]
+    : [];
 }
 
 export function hasMainBackendCredentials(): boolean {

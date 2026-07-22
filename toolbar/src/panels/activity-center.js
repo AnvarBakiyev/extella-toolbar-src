@@ -133,7 +133,9 @@
       '._xtlac_srv_btn{min-width:78px;border:1px solid var(--bd2);border-radius:7px;background:transparent;color:var(--tx2);padding:6px 8px;font:650 10px var(--sans);cursor:pointer}',
       '._xtlac_srv_btn.stop{border-color:rgba(181,66,62,.38);color:#c96b67}',
       '._xtlac_srv_btn.start{border-color:rgba(47,158,86,.4);color:#57a773}',
+      '._xtlac_srv_btn.restart{border-color:rgba(var(--ar),.4);color:var(--a)}',
       '._xtlac_srv_btn:disabled{opacity:.45;cursor:default}',
+      '._xtlac_srv_actions{display:flex;flex-direction:column;gap:6px}',
       '._xtlac_srv_blocked{grid-column:2/4;margin-top:1px;color:#c67e34;font-size:9.5px;line-height:1.35}',
       '@media(max-width:680px){._xtlac_srv_grid{grid-template-columns:1fr}}'
     ].join('');
@@ -254,13 +256,22 @@
       info.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_source', service.source + (service.project ? ' · ' + service.project : '')));
       card.appendChild(info);
 
+      var actions = storefrontNode(doc, 'div', '_xtlac_srv_actions');
+      if (running) {
+        var restart = storefrontNode(doc, 'button', '_xtlac_srv_btn restart', busy ? T('Подождите…','Please wait…') : T('Перезапустить','Restart'));
+        restart.type = 'button';
+        restart.disabled = busy || !service.canRestart;
+        restart.addEventListener('click', function () { controlLocalService(store, service, 'restart'); });
+        actions.appendChild(restart);
+      }
       var action = running ? 'stop' : 'start';
       var allowed = running ? service.canStop : service.canStart;
       var button = storefrontNode(doc, 'button', '_xtlac_srv_btn ' + action, busy ? T('Подождите…','Please wait…') : (running ? T('Выключить','Switch off') : T('Включить','Switch on')));
       button.type = 'button';
       button.disabled = busy || !allowed;
       button.addEventListener('click', function () { controlLocalService(store, service, action); });
-      card.appendChild(button);
+      actions.appendChild(button);
+      card.appendChild(actions);
       if (service.controlBlockedReason) {
         card.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_blocked', service.controlBlockedReason));
       }
@@ -392,7 +403,9 @@
       return;
     }
     state.serviceBusy[service.id] = true;
-    state.serviceMessage = (action === 'stop' ? T('Выключаю: ','Switching off: ') : T('Включаю: ','Switching on: ')) + service.name;
+    state.serviceMessage = (action === 'stop'
+      ? T('Выключаю: ','Switching off: ')
+      : (action === 'restart' ? T('Перезапускаю: ','Restarting: ') : T('Включаю: ','Switching on: '))) + service.name;
     renderLocalServices(store);
     fetch(SERVICES_API + '/' + encodeURIComponent(service.id) + '/' + action, {
       method: 'POST',
@@ -405,7 +418,9 @@
         });
       })
       .then(function () {
-        state.serviceMessage = (action === 'stop' ? T('Выключено: ','Switched off: ') : T('Включено: ','Switched on: ')) + service.name;
+        state.serviceMessage = (action === 'stop'
+          ? T('Выключено: ','Switched off: ')
+          : (action === 'restart' ? T('Перезапущено: ','Restarted: ') : T('Включено: ','Switched on: '))) + service.name;
       })
       .catch(function (error) {
         state.serviceMessage = T('Не удалось изменить состояние: ','Could not change the state: ') + (error.message || T('неизвестная ошибка','unknown error'));

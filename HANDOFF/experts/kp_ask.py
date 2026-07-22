@@ -5,19 +5,11 @@ def kp_ask(name="", question="") -> str:
     import os, re, json, math, urllib.request
     if not name or name.startswith("{{"): return json.dumps({"status":"error","message":"нужно имя базы"}, ensure_ascii=False)
     if not question or question.startswith("{{"): return json.dumps({"status":"error","message":"нужен вопрос"}, ensure_ascii=False)
-    d=os.path.expanduser("~/.extella_kp")
-    import hashlib
-    _pl=re.sub(r"[^a-zA-Z0-9_]","_",name)
-    fp=os.path.join(d,_pl[:40]+"_"+hashlib.md5(name.encode("utf-8")).hexdigest()[:8]+".json")
-    fp_old=os.path.join(d,_pl+".json")
-    # Старый файл (до починки коллизий): используем, только если это ТА ЖЕ база
-    # (внутри лежит имя), и сразу переносим на новую схему.
-    if not os.path.exists(fp) and os.path.exists(fp_old):
-        try:
-            _leg=json.load(open(fp_old))
-            if _leg.get("name")==name:
-                json.dump(_leg, open(fp,"w"), ensure_ascii=False); os.remove(fp_old)
-        except Exception: pass
+    try:
+        from extella_expert_bridge import account_config, knowledge_path
+    except Exception:
+        return json.dumps({"status":"error","message":"Системный runtime Extella не установлен. Запустите Repair Extella Client."}, ensure_ascii=False)
+    fp=knowledge_path(name)
     if not os.path.exists(fp): return json.dumps({"status":"error","message":"база не найдена — сначала загрузи документы"}, ensure_ascii=False)
     store=json.load(open(fp))["chunks"]
     def embed(t):
@@ -28,17 +20,26 @@ def kp_ask(name="", question="") -> str:
     def cos(a,b):
         s=sum(x*y for x,y in zip(a,b)); na=math.sqrt(sum(x*x for x in a)); nb=math.sqrt(sum(y*y for y in b))
         return s/(na*nb) if na and nb else 0.0
-    ranked=sorted(store, key=lambda c: cos(qe,c["emb"]), reverse=True)[:8]
+    _qtok=[w for w in re.findall(r"[а-яёa-z]{4,}", question.lower())]
+    _bg=[_qtok[k]+" "+_qtok[k+1] for k in range(len(_qtok)-1)]
+    _df={w: sum(1 for c in store if w in c["text"].lower()) for w in set(_qtok)}
+    def _lex(c):
+        ct=c["text"].lower()
+        return sum(100000 for b in _bg if b in ct) + sum(ct.count(w)*(len(store)/(1.0+_df[w])) for w in _qtok)
+    _dense=sorted(store, key=lambda c: cos(qe,c["emb"]), reverse=True)[:10]
+    _lexed=sorted([c for c in store if _lex(c)>0], key=_lex, reverse=True)[:8]
+    _seen=set(); ranked=[]
+    for c in _dense+_lexed:
+        _k=c["text"][:80]
+        if _k not in _seen: _seen.add(_k); ranked.append(c)
+    ranked=ranked[:16]
     ctx="\n\n".join("["+c["src"]+"] "+c["text"] for c in ranked)
     prompt="Ответь на вопрос ТОЛЬКО по этим фрагментам документов. Если ответа в них нет — честно скажи, что в документах этого нет. Кратко.\n\nФРАГМЕНТЫ:\n"+ctx+"\n\nВОПРОС: "+question
-    _cfg={}
-    try: _cfg=json.load(open(os.path.expanduser("~/extella_wizard/app/config.json")))
-    except Exception: pass
-    tok=_cfg.get("auth_token","")
+    tok=account_config().get("auth_token","")
     if not tok: return json.dumps({"status":"error","message":"нет токена для синтеза (config.json)"}, ensure_ascii=False)
-    H={"Content-Type":"application/json","X-Auth-Token":tok,"X-Profile-Id":"default","X-Agent-Id":"agent_extella_default"}
+    H={"Content-Type":"application/json","X-Auth-Token":tok,"X-Profile-Id":"default","X-Agent-Id":"__EXTELLA_AGENT__"}
     try:
-        req=urllib.request.Request("https://api.extella.ai/api/agent/run", data=json.dumps({"input":prompt,"agent_id":(_cfg.get("agent_id") or "agent_extella_alibaba_default"),"run_timeout":120}).encode(), headers=H)
+        req=urllib.request.Request("https://api.extella.ai/api/agent/run", data=json.dumps({"input":prompt,"agent_id":"__EXTELLA_AGENT__","run_timeout":120}).encode(), headers=H)
         r=json.loads(urllib.request.urlopen(req, timeout=150).read())
         parts=[]
         for it in (r.get("output") or []):
