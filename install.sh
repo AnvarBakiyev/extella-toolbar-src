@@ -42,7 +42,9 @@ elif [ "$OS" = "Linux" ]; then
   # Linux. Without it the toolbar falls back to a 30-second retry + manual
   # token prompt. We auto-install it here so the primary auth flow works.
   if ! ldconfig -p 2>/dev/null | grep -q libsecret-1; then
-    echo -e "  ${AMBER}→ libsecret not found — installing automatically...${NC}"
+    read -p "  Install libsecret via sudo (needed for auto-auth)? [Y/n]: " LS_OK
+    if [[ "$LS_OK" =~ ^[Nn]$ ]]; then echo "  → Skipped; auth will use the fallback token prompt."; else
+    echo -e "  ${AMBER}→ libsecret not found — installing...${NC}"
     INSTALLED_LIBSECRET=0
     if command -v apt-get &>/dev/null; then
       sudo apt-get install -y libsecret-1-0 2>/dev/null && INSTALLED_LIBSECRET=1
@@ -59,6 +61,7 @@ elif [ "$OS" = "Linux" ]; then
       echo -e "  ${AMBER}⚠ Could not install libsecret automatically.${NC}"
       echo    "    Auth will still work via a fallback token prompt after ~30 s."
       echo    "    To fix manually: sudo apt install libsecret-1-0  (or dnf/pacman equivalent)"
+    fi
     fi
     echo ""
   fi
@@ -129,7 +132,12 @@ if [ -d "$LEGACY_PLUGINS_DIR" ]; then
     echo -e "  ${GREEN}✓ Removed legacy $LEGACY_PLUGINS_DIR (UI is embedded in toolbar.js)${NC}"
 fi
 
-# ── Step 4: Install HTML to Video Studio ────────────────
+# ── Step 4: Install HTML to Video Studio (optional, asks first) ─────
+echo ""
+read -p "  Install HTML-to-Video Studio? Clones a repo to ~/Downloads/html-video, asks for API keys, starts a local server. [y/N]: " HV_CONSENT
+if [[ ! "$HV_CONSENT" =~ ^[Yy]$ ]]; then
+  echo -e "  ${AMBER}→ Skipped (re-run installer anytime to add it).${NC}"
+else
 echo -e "${AMBER}[4/5] Installing HTML to Video Studio...${NC}"
 
 if ! command -v node &> /dev/null; then
@@ -198,6 +206,8 @@ if [ -d "$HV_DIR" ] && [ -n "$ANTHROPIC_KEY" ]; then
         echo -e "  ${RED}✗ Failed to start. Check /tmp/html-video.log${NC}"
     fi
 fi
+
+fi  # HV_CONSENT
 
 # ── Done ──────────────────────────────────────────────────
 echo ""
