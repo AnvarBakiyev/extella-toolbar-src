@@ -635,6 +635,15 @@ ETB.router = (function () {
       // show a clean card with an external-open button instead of a dead iframe.
       if (ui.openInBrowser) {
         _renderOpenExternalCard(content, plugin);
+      } else if (ui.url) {
+        // Хостинговый плагин: сервер на нашем VPS, открываем прямо в панели.
+        // Без localhost-health и автостарта — состояние сервера не зависит от
+        // устройства пользователя (первый пример: Бага, общая история команды).
+        var hostedIframe = document.createElement('iframe');
+        hostedIframe.style.cssText = 'width:100%;height:100%;border:none;display:block;';
+        hostedIframe.setAttribute('allow', 'clipboard-read;clipboard-write');
+        hostedIframe.src = ui.url;
+        content.appendChild(hostedIframe);
       } else {
         var mainFile = (ui.mainFile && ui.mainFile !== 'index.html') ? ui.mainFile : '';
         var serverUrl = 'http://localhost:' + ui.port + (mainFile ? '/' + mainFile : '');
