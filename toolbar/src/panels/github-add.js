@@ -913,6 +913,7 @@ ETB.githubAdd = (function () {
     var rd = _state.repoData || {};
     var pluginId = 'gh_' + _slug(rd.full_name.replace('/', '_')) + '_hf';
     _state.pluginId = pluginId;
+    if (ETB.registry.clearDeviceTombstone) ETB.registry.clearDeviceTombstone(null, pluginId);
     _state.step = 'installing';
     _state.installStartedAt = Date.now();
     _state.statusMsg = 'Подключаем модель через HuggingFace…';
@@ -1013,6 +1014,10 @@ ETB.githubAdd = (function () {
     if (_state.customName) ctx.displayName = _state.customName;
     _state.pluginId = ctx.pluginId;
     _state.deviceId = deviceId;
+    // Переустановка после удаления: снять девайсный тумбстоун, иначе джанитор
+    // синка удалит свежий манифест как позднюю запись зомби. Fire-and-forget:
+    // установка идёт минуты, тумбстоун успевает сняться до finalize-синка.
+    if (ETB.registry.clearDeviceTombstone) ETB.registry.clearDeviceTombstone(deviceId, ctx.pluginId);
     _state.step = 'installing';
     _state.installStartedAt = Date.now();
     _state.installLongMode = false;

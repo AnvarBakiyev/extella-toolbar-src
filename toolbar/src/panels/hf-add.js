@@ -663,6 +663,9 @@ ETB.hfAdd = (function () {
     var ctx = ETB.installPrompt.contextHF(h, _state.runMode, _state.hfToken);
     _state.pluginId = ctx.pluginId;
     _state.deviceId = deviceId;
+    // Снять девайсный тумбстоун прошлого удаления (см. github-add) — иначе
+    // джанитор синка удалит свежий манифест.
+    if (ETB.registry.clearDeviceTombstone) ETB.registry.clearDeviceTombstone(deviceId, ctx.pluginId);
     _state.step = 'installing';
     _state.installStartedAt = Date.now();
     _state.installAgentText = '';

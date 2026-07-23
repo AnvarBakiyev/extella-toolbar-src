@@ -78,6 +78,19 @@ ETB.marketplace = (function () {
       '                if isinstance(_m, dict) and _m.get("id") == ' + JSON.stringify(pluginId) + ':',
       '                    os.remove(rf); removed.append(rf)',
       '            except Exception: pass',
+      // Тумбстоун удаления: зомби-хвост оборванного рана установки может
+      // дописать манифест ПОСЛЕ этой чистки — по тумбстоуну джанитор
+      // syncFromDevice его проигнорирует и удалит. Снимается при переустановке
+      // (registry.clearDeviceTombstone).
+      '    try:',
+      '        import time',
+      '        t_dir = os.path.join(reg_dir, "_removed")',
+      '        os.makedirs(t_dir, exist_ok=True)',
+      '        t_fp = os.path.join(t_dir, ' + JSON.stringify(safeId) + ' + ".json")',
+      '        with open(t_fp, "w", encoding="utf-8") as _tf:',
+      '            json.dump({"id": ' + JSON.stringify(pluginId) + ', "removed_at": time.time()}, _tf)',
+      '        removed.append(t_fp)',
+      '    except Exception: pass',
       '    return json.dumps({"status": "ok", "removed": removed})'
     ].join('\n');
 

@@ -119,6 +119,9 @@ ETB.registry = (function () {
       var a = _loadRemoving(); if (a.indexOf(id) === -1) { a.push(id); _saveRemoving(a); }
     },
     isRemoving: function (id) { return _loadRemoving().indexOf(id) !== -1; },
+    clearRemoving: function (id) {
+      _saveRemoving(_loadRemoving().filter(function (x) { return x !== id; }));
+    },
 
     // Adds a user-created plugin (e.g. from GitHub URL) and installs it
     addCustom: function (plugin) {
@@ -151,10 +154,24 @@ ETB.registry = (function () {
     syncFromDevice: function (deviceId, onlyId) {
       var self = this;
       var fnName = '_etb_registry_read';
+      // Девайсные тумбстоуны (_registry/_removed/*.json, пишет чистка удаления):
+      // зомби-хвост первого оборванного рана установки может дописать манифест
+      // ПОСЛЕ удаления плагина — тогда карточка воскресала. Читатель работает
+      // джанитором: манифест с затумбстоуненным id не отдаётся и удаляется с
+      // диска. Переустановка сначала снимает тумбстоун (clearDeviceTombstone).
       var code = [
         'def ' + fnName + '(only_id: str = "") -> str:',
         '    import os, json, glob',
         '    d = os.path.expanduser("~/extella-plugins/_registry")',
+        '    dead = set()',
+        '    t_dir = os.path.join(d, "_removed")',
+        '    if os.path.isdir(t_dir):',
+        '        for tp in glob.glob(os.path.join(t_dir, "*.json")):',
+        '            try:',
+        '                with open(tp, "r", encoding="utf-8") as tf: tm = json.load(tf)',
+        '                if isinstance(tm, dict) and tm.get("id"): dead.add(tm["id"])',
+        '            except Exception:',
+        '                pass',
         '    out = []',
         '    if os.path.isdir(d):',
         '        if only_id:',
@@ -164,13 +181,18 @@ ETB.registry = (function () {
         '        for fp in files:',
         '            try:',
         '                with open(fp, "r", encoding="utf-8") as f:',
-        '                    out.append(json.load(f))',
+        '                    m = json.load(f)',
+        '                if isinstance(m, dict) and m.get("id") in dead:',
+        '                    try: os.remove(fp)',
+        '                    except Exception: pass',
+        '                    continue',
+        '                out.append(m)',
         '            except Exception:',
         '                pass',
         '    return json.dumps(out)'
       ].join('\n');
 
-      function ingest(res) {
+      function ingest(res, onlyKnown) {
         var raw = (res && (res.result || res.output)) || '[]';
         var list;
         try { list = typeof raw === 'string' ? JSON.parse(raw) : raw; }
@@ -179,6 +201,11 @@ ETB.registry = (function () {
         var added = [], deviceIds = {}, removing = _loadRemoving();
         list.forEach(function (m) {
           if (!m || !m.id) return;
+          // Без-target ран уходит на дефолтный таргет АККАУНТА — на общем
+          // аккаунте (invite-токены) это устройство ВЛАДЕЛЬЦА, и коллегам
+          // приезжали его личные карточки. Фолбэк вправе только восстановить
+          // карточки, уже известные ЭТОМУ устройству, — не импортировать чужие.
+          if (onlyKnown && !self.getById(m.id)) return;
           deviceIds[m.id] = true;
           if (removing.indexOf(m.id) !== -1) return;   // помечен на удаление, файл ещё жив — НЕ возвращаем
           self.addCustom(m); added.push(m);
@@ -205,13 +232,53 @@ ETB.registry = (function () {
       }).then(ingest).then(function (added) {
         // A stale/unavailable target id yields nothing — retry on the CURRENT
         // device (no target). Robust to device re-registration (id changes).
+        // onlyKnown: без-target ран может исполниться на устройстве владельца
+        // аккаунта — восстанавливаем только свои карточки, чужие не импортируем.
         if (!added.length && deviceId) {
-          return run(false).then(ingest).catch(function () { return added; });
+          return run(false).then(function (r) { return ingest(r, true); })
+            .catch(function () { return added; });
         }
         return added;
       }).catch(function () {
-        return run(false).then(ingest).catch(function () { return []; });
+        return run(false).then(function (r) { return ingest(r, true); })
+          .catch(function () { return []; });
       });
+    },
+
+    // Снять девайсный тумбстоун перед (пере)установкой: иначе джанитор
+    // syncFromDevice примет свежий манифест за позднюю запись зомби и удалит.
+    // Best-effort, зеркалит фолбэк syncFromDevice (target → без target).
+    clearDeviceTombstone: function (deviceId, pluginId) {
+      if (!pluginId) return Promise.resolve();
+      var fnName = '_etb_tombstone_clear';
+      var code = [
+        'def ' + fnName + '(plugin_id: str = "") -> str:',
+        '    import os, json, glob',
+        '    t_dir = os.path.expanduser("~/extella-plugins/_registry/_removed")',
+        '    removed = []',
+        '    if plugin_id and os.path.isdir(t_dir):',
+        '        for fp in glob.glob(os.path.join(t_dir, "*.json")):',
+        '            try:',
+        '                with open(fp, "r", encoding="utf-8") as f: m = json.load(f)',
+        '                if isinstance(m, dict) and m.get("id") == plugin_id:',
+        '                    os.remove(fp); removed.append(fp)',
+        '            except Exception:',
+        '                pass',
+        '    return json.dumps(removed)'
+      ].join('\n');
+      return ETB.api.saveExpert({
+        name: fnName,
+        description: 'Remove plugin removal tombstone before reinstall',
+        code: code,
+        kwargs: { plugin_id: '' },
+        cspl: 'fython'
+      }).then(function () {
+        var opts = { timeout: 20 };
+        if (deviceId) opts.target = deviceId;
+        return ETB.api.runExpert(fnName, { plugin_id: pluginId }, opts).catch(function () {
+          if (deviceId) return ETB.api.runExpert(fnName, { plugin_id: pluginId }, { timeout: 20 });
+        });
+      }).catch(function () {});
     }
   };
 })();

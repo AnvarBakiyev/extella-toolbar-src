@@ -115,11 +115,16 @@ ETB.api = (function () {
     };
   }
 
-  function _post(path, body, extraHdrs, _retried) {
+  function _post(path, body, extraHdrs, opts) {
     // Таймаут: зависшая платформа раньше вешала всё, что не идёт через skBridge
     // (у того свои 20с). 90с — с запасом на длинные агентные ответы.
+    // opts.timeoutMs поднимает лимит для запросов, которые сервер легитимно
+    // держит дольше (agent/run): обрыв клиента НЕ останавливает ран на
+    // устройстве — получается «зомби»-ран при ошибке в UI.
+    opts = opts || {};
+    var timeoutMs = opts.timeoutMs || 90000;
     var ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
-    var tmr = ctl ? setTimeout(function () { try { ctl.abort(); } catch (e) {} }, 90000) : null;
+    var tmr = ctl ? setTimeout(function () { try { ctl.abort(); } catch (e) {} }, timeoutMs) : null;
     return fetch(BASE + path, {
       method: 'POST',
       headers: extraHdrs ? Object.assign(_hdrs(), extraHdrs) : _hdrs(),
@@ -131,7 +136,7 @@ ETB.api = (function () {
         // parent host for the live token AND try a session refresh, wait briefly for
         // the token postMessage to land, then retry the request ONCE (guarded).
         // Fixes GitHub install → "Unauthorized — token required" from the storefront.
-        if (_retried) {
+        if (opts.retried) {
           return { status: 'error', message: 'Unauthorized — token required' };
         }
         try {
@@ -141,7 +146,7 @@ ETB.api = (function () {
         } catch (e) {}
         return new Promise(function (resolve) {
           Promise.resolve(ETB.auth.refreshSession('401-retry')).catch(function () {}).then(function () {
-            setTimeout(function () { resolve(_post(path, body, extraHdrs, true)); }, 500);
+            setTimeout(function () { resolve(_post(path, body, extraHdrs, Object.assign({}, opts, { retried: true }))); }, 500);
           });
         });
       }
@@ -284,9 +289,13 @@ ETB.api = (function () {
     // otherwise the account default. The backend reads the agent from both
     // the body and the X-Agent-Id header — keep them in sync.
     var agent = body.agent_id || _getInstallAgent() || _agent();
-    return _post('/api/agent/run',
-      Object.assign({ run_timeout: 600 }, body, { agent_id: agent }),
-      { 'X-Agent-Id': agent });
+    var full = Object.assign({ run_timeout: 600 }, body, { agent_id: agent });
+    // Клиентский таймаут ≥ серверного run_timeout: платформа может держать
+    // agent/run открытым (даже с async:true) дольше 90с. Дефолтный 90с-abort
+    // ронял установку в UI («signal is aborted»), а ран на устройстве
+    // продолжался — источник зомби-хвостов, дописывающих манифест после Retry.
+    return _post('/api/agent/run', full, { 'X-Agent-Id': agent },
+      { timeoutMs: ((full.run_timeout || 600) + 60) * 1000 });
   }
 
   function runAgent(message, opts) {
