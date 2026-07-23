@@ -6510,8 +6510,17 @@ function submitAddModal(){
       if(kind==='programs')_focusCatalogCard(res.entry.repoUrl);
       setTimeout(function(){ ov.style.display='none'; },kind==='programs'?700:1600);
     }).catch(function(e){
-      b.disabled=false; b.textContent='Ещё раз';
-      m.textContent='Не нашлось: '+((e&&e.message)||'попробуй описать иначе.');
+      // Фолбэк на агента (решение Эллы 22.07): быстрый детерминированный поиск
+      // не нашёл — задача с исходной формулировкой уходит агенту сессии.
+      // Быстро и бесплатно, когда можно; умно, когда нельзя.
+      if(!cfg.prompt){ b.disabled=false; b.textContent='Ещё раз'; m.textContent='Не нашлось: '+((e&&e.message)||'попробуй описать иначе.'); return; }
+      b.textContent='Ищу агентом…';
+      m.textContent='Быстрым поиском не нашлось — передаю агенту, он ищет умнее. Минута-другая.';
+      skRunAgent(cfg.prompt(v)).then(function(){
+        m.innerHTML='✓ Агент ищет и сам добавит карточку в раздел: <b>'+esc(cfg.where||'')+'</b>. Нажми «Обновить», чтобы проверить.';
+        b.textContent='Передано';
+        _addShowRefresh(cfg, ov);
+      }).catch(function(e2){ b.disabled=false; b.textContent='Ещё раз'; m.textContent='Не нашлось и через агента: '+((e2&&e2.message)||'нет ответа')+' — попробуй сказать иначе.'; });
     });
     return;
   }
@@ -6519,13 +6528,15 @@ function submitAddModal(){
   skRunAgent(cfg.prompt(v)).then(function(){
     m.innerHTML='✓ Ищу и добавляю — минута-другая. Результат появится в разделе: <b>'+esc(cfg.where||'')+'</b>. Нажми «Обновить», чтобы проверить.';
     b.textContent='Передано';
-    if(!document.getElementById('add_refresh')){
-      var rb=document.createElement('button'); rb.id='add_refresh'; rb.textContent='Обновить';
-      rb.style.cssText='border:1px solid var(--bd2);background:transparent;color:var(--tx);border-radius:5px;padding:8px 14px;cursor:pointer;margin-right:auto;font-family:var(--sans)';
-      rb.onclick=function(){cfg.refresh();ov.style.display='none';};
-      var f=document.getElementById('add_foot'); f.insertBefore(rb,f.firstChild);
-    }
+    _addShowRefresh(cfg, ov);
   }).catch(function(e){b.disabled=false;b.textContent='Ещё раз';m.textContent='Не удалось передать: '+((e&&e.message)||'нет ответа');});
+}
+function _addShowRefresh(cfg, ov){
+  if(document.getElementById('add_refresh')) return;
+  var rb=document.createElement('button'); rb.id='add_refresh'; rb.textContent='Обновить';
+  rb.style.cssText='border:1px solid var(--bd2);background:transparent;color:var(--tx);border-radius:5px;padding:8px 14px;cursor:pointer;margin-right:auto;font-family:var(--sans)';
+  rb.onclick=function(){cfg.refresh();ov.style.display='none';};
+  var f=document.getElementById('add_foot'); f.insertBefore(rb,f.firstChild);
 }
 function cliCard(c){
   var ops=(c.ops||[]).map(function(o){return '<span style="display:inline-block;font-size:11px;padding:2px 8px;border:1px solid var(--border);border-radius:5px;color:var(--text-secondary);margin:2px 4px 0 0">'+esc(o)+'</span>';}).join('');
