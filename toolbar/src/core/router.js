@@ -657,6 +657,10 @@ ETB.router = (function () {
 
     } else {
       content.innerHTML = _renderInfoCard(plugin);
+      var infoBtn = content.querySelector('[data-info-open]');
+      if (infoBtn) infoBtn.onclick = function () {
+        _openUrlExternal(infoBtn.getAttribute('data-info-open'));
+      };
     }
 
     panel.appendChild(content);
@@ -791,17 +795,35 @@ ETB.router = (function () {
   }
 
   function _renderInfoCard(plugin) {
+    // mode:"info" — карточка-указатель (пример: Агент 1С у коллег): описание +
+    // кнопка на инструкцию во внешнем браузере. Приватный репо честно
+    // подписываем — без доступа кнопка откроет 404, человек должен знать почему.
+    var src = String(plugin.source || '');
+    var isLink = /^https?:\/\//.test(src);
+    var isPrivateRepo = /github\.com\//.test(src);
     return [
       '<div style="display:flex;align-items:center;justify-content:center;',
       'height:100%;padding:32px;font-family:-apple-system,system-ui,sans-serif;">',
-      '<div style="max-width:420px;text-align:center;">',
+      '<div style="max-width:440px;text-align:center;">',
       '<div style="margin-bottom:16px;color:#C67E34"><svg class="lico" style="width:40px;height:40px"><use href="#ic-box"/></svg></div>',
       '<div style="font-size:18px;font-weight:700;color:var(--etb-tx,#f0f0f0);margin-bottom:8px;">',
       _esc(plugin.name), '</div>',
       '<div style="font-size:13px;color:var(--etb-tx2,#888);line-height:1.6;margin-bottom:24px;">',
       _esc(plugin.description || ''), '</div>',
-      '<div style="font-size:11px;color:#C67E34;">',
-      _L('Плагин загружен. Работай с ним через чат Extella.</div>','Plugin loaded. Use Extella chat to interact with this plugin.</div>'),
+      isLink ? [
+        '<button data-info-open="', _esc(src), '" style="min-height:40px;padding:10px 18px;',
+        'background:#C67E34;color:#000;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;">',
+        _L('Открыть инструкцию', 'Open the guide'), '</button>',
+        isPrivateRepo ? [
+          '<div style="font-size:11px;color:var(--etb-tx2,#888);margin-top:12px;line-height:1.5;">',
+          _L('Репозиторий приватный: если увидите 404 — запросите доступ у Анвара.',
+             'The repository is private: if you see a 404, ask Anvar for access.'), '</div>'
+        ].join('') : ''
+      ].join('') : [
+        '<div style="font-size:11px;color:#C67E34;">',
+        _L('Плагин загружен. Работай с ним через чат Extella.', 'Plugin loaded. Use Extella chat to interact with this plugin.'),
+        '</div>'
+      ].join(''),
       '</div></div>'
     ].join('');
   }

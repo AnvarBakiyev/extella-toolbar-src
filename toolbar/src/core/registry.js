@@ -186,6 +186,16 @@ ETB.registry = (function () {
         '                    try: os.remove(fp)',
         '                    except Exception: pass',
         '                    continue',
+        // Мёртвые чужие карточки: local_server с rootPath, которого нет на ЭТОМ
+        // устройстве (напр. абсолютный путь с чужого Мака, приехавший старым
+        // синком) — не отдаём и удаляем файл. Hosted (ui.url) и info не трогаем.
+        '                ui = m.get("ui") or {}',
+        '                if isinstance(ui, dict) and ui.get("type") == "local_server" and not ui.get("url"):',
+        '                    rp = ui.get("rootPath") or (m.get("artifacts") or {}).get("rootPath") or ""',
+        '                    if rp and not os.path.exists(os.path.expanduser(str(rp))):',
+        '                        try: os.remove(fp)',
+        '                        except Exception: pass',
+        '                        continue',
         '                out.append(m)',
         '            except Exception:',
         '                pass',
