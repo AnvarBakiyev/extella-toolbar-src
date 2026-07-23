@@ -189,6 +189,9 @@ ETB.router = (function () {
   // Resolve the live URL for a service/local_server plugin.
   function _serviceUrl(plugin) {
     var ui = plugin.ui || {};
+    // Хостинговые плагины: сервер живёт не на устройстве, а на нашем VPS —
+    // карточка несёт готовый https-URL (первый пример: Бага на baga.*.sslip.io).
+    if (ui.url) return ui.url;
     var port = ui.port || (plugin.service && plugin.service.port);
     if (!port) return '';
     var mainFile = (ui.mainFile && ui.mainFile !== 'index.html') ? ui.mainFile : '';
