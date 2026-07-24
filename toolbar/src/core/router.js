@@ -794,13 +794,57 @@ ETB.router = (function () {
     return { panel: panel, blobUrl: blobUrl };
   }
 
+  // Мини-рендер markdown для завендоренных инструкций (guide): заголовки,
+  // списки, жирный, `код`. Без внешних библиотек; всё экранируется.
+  function _renderGuideMd(md) {
+    var out = [], inList = false;
+    String(md || '').split('\n').forEach(function (line) {
+      var t = line.trim();
+      var h = t.match(/^(#{1,3})\s+(.*)$/);
+      var li = t.match(/^[-*]\s+(.*)$/);
+      function fmt(s) {
+        return _esc(s)
+          .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')
+          .replace(/`([^`]+)`/g, '<code style="background:rgba(140,140,140,.18);padding:1px 5px;border-radius:4px;font-size:12px;">$1</code>')
+          .replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" style="color:#C67E34;word-break:break-all;">$1</a>');
+      }
+      if (!li && inList) { out.push('</ul>'); inList = false; }
+      if (h) {
+        var lvl = h[1].length;
+        out.push('<div style="font-size:' + (lvl === 1 ? 16 : 14) + 'px;font-weight:700;color:var(--etb-tx,#f0f0f0);margin:' + (lvl === 1 ? '0 0 10px' : '18px 0 8px') + ';">' + fmt(h[2]) + '</div>');
+      } else if (li) {
+        if (!inList) { out.push('<ul style="margin:0 0 10px;padding-left:20px;">'); inList = true; }
+        out.push('<li style="margin:3px 0;">' + fmt(li[1]) + '</li>');
+      } else if (t) {
+        out.push('<div style="margin:0 0 10px;">' + fmt(t) + '</div>');
+      }
+    });
+    if (inList) out.push('</ul>');
+    return out.join('');
+  }
+
   function _renderInfoCard(plugin) {
     // mode:"info" — карточка-указатель (пример: Агент 1С у коллег): описание +
-    // кнопка на инструкцию во внешнем браузере. Приватный репо честно
-    // подписываем — без доступа кнопка откроет 404, человек должен знать почему.
+    // кнопка на инструкцию во внешнем браузере. Если в карточке есть guide
+    // (завендоренный текст) — инструкция рендерится ПРЯМО в панели, без
+    // GitHub-доступа; внешняя ссылка остаётся второй кнопкой.
     var src = String(plugin.source || '');
     var isLink = /^https?:\/\//.test(src);
     var isPrivateRepo = /github\.com\//.test(src);
+    if (plugin.guide) {
+      return [
+        '<div style="height:100%;overflow:auto;padding:28px 32px;font-family:-apple-system,system-ui,sans-serif;">',
+        '<div style="max-width:640px;margin:0 auto;font-size:13px;line-height:1.65;color:var(--etb-tx2,#bbb);">',
+        _renderGuideMd(plugin.guide),
+        isLink ? [
+          '<div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(140,140,140,.25);">',
+          '<button data-info-open="', _esc(src), '" style="min-height:36px;padding:8px 14px;',
+          'background:transparent;color:var(--etb-tx,#f0f0f0);border:1px solid rgba(140,140,140,.45);border-radius:9px;font-size:12px;cursor:pointer;">',
+          _L('Открыть в GitHub (нужен доступ)', 'Open on GitHub (access required)'), '</button></div>'
+        ].join('') : '',
+        '</div></div>'
+      ].join('');
+    }
     return [
       '<div style="display:flex;align-items:center;justify-content:center;',
       'height:100%;padding:32px;font-family:-apple-system,system-ui,sans-serif;">',
