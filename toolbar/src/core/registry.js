@@ -199,7 +199,7 @@ ETB.registry = (function () {
         '                out.append(m)',
         '            except Exception:',
         '                pass',
-        '    return json.dumps(out)'
+        '    return json.dumps({"m": out, "t": sorted(dead)})'
       ].join('\n');
 
       function ingest(res, onlyKnown) {
@@ -207,7 +207,23 @@ ETB.registry = (function () {
         var list;
         try { list = typeof raw === 'string' ? JSON.parse(raw) : raw; }
         catch (e) { list = []; }
+        // Новый формат ридера: {m: манифесты, t: id из девайсных тумбстоунов}.
+        // Тумбстоун доносит «снято с раздачи» до КЭША витрины: файл карточки
+        // уже удалён, но localStorage иначе показывал бы её вечно (класс
+        // «выключили hosted — карточка осталась у всех»).
+        var tombstoned = [];
+        if (list && !Array.isArray(list) && typeof list === 'object') {
+          tombstoned = Array.isArray(list.t) ? list.t : [];
+          list = Array.isArray(list.m) ? list.m : [];
+        }
         if (!Array.isArray(list)) list = [];
+        tombstoned.forEach(function (id) {
+          if (!id) return;
+          if (self.getById(id)) {
+            self.removeCustom(id);
+            if (ETB.router && ETB.router.evict) ETB.router.evict(id);
+          }
+        });
         var added = [], deviceIds = {}, removing = _loadRemoving();
         list.forEach(function (m) {
           if (!m || !m.id) return;
