@@ -98,9 +98,16 @@ ETB.marketplace = (function () {
       .then(function (res) { return (res && res.value) || null; })
       .catch(function () { return null; })
       .then(function (deviceId) {
-        // Без deviceId чистку НЕ пропускаем: гоним на текущем устройстве без target —
-        // зеркало фолбэка syncFromDevice. Иначе файл реестра выживал и синк
-        // возвращал карточку (баг «Remove не держится»).
+        // КОРЕНЬ бага «удаляется и снова появляется»: KV _device_id пуст у всех,
+        // а без target global-эксперт уходит на СЛУЧАЙНОЕ устройство контура
+        // (например VPS) — там файла нет, ран «успешен», файл здесь жив.
+        // Фолбэк на локальный ID устройства — как в syncFromDevice.
+        if (!deviceId) {
+          try {
+            deviceId = (window.extellaDesktop && typeof window.extellaDesktop.getDeviceID === 'function')
+              ? window.extellaDesktop.getDeviceID() : null;
+          } catch (e) { deviceId = null; }
+        }
         return ETB.api.saveExpert({
           name: fnName,
           description: 'Cleanup plugin ' + pluginId,
