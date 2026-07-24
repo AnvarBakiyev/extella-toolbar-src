@@ -110,9 +110,25 @@ ETB.marketplace = (function () {
         }).then(function () {
           var opts = { timeout: 20 };
           if (deviceId) opts.target = deviceId;
-          return ETB.api.runExpert(fnName, {}, opts).catch(function () {
-            // stale/недоступный target → ретрай на текущем устройстве
-            if (deviceId) return ETB.api.runExpert(fnName, {}, { timeout: 20 });
+          // Чистка обязана закрепиться: один тихо упавший облачный ран оставлял
+          // файл карточки живым, и синк воскрешал её («удаляется и снова
+          // появляется»). Ретраим с паузой; removing-метка прячет карточку,
+          // пока файл жив, поэтому повтор безопасен и идемпотентен.
+          function runCleanup() {
+            return ETB.api.runExpert(fnName, {}, opts).then(function (r) {
+              if (r && r.status === 'error') throw new Error(r.message || 'cleanup error');
+              return r;
+            }).catch(function (e) {
+              if (deviceId) return ETB.api.runExpert(fnName, {}, { timeout: 20 }).then(function (r2) {
+                if (r2 && r2.status === 'error') throw new Error(r2.message || 'cleanup error');
+                return r2;
+              });
+              throw e;
+            });
+          }
+          return runCleanup().catch(function () {
+            return new Promise(function (resolve) { setTimeout(resolve, 8000); })
+              .then(runCleanup);
           });
         }).then(function () {
           // Remove the throwaway cleanup expert itself.
