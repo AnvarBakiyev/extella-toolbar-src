@@ -529,7 +529,12 @@ ETB.marketplace = (function () {
           // поэтому её надо чистить ПОЛНОСТЬЮ — иначе файл реестра на устройстве остаётся
           // и модель/плагин возвращается на следующем syncFromDevice (баг «Remove не держится»).
           var isCustom = !!(ETB.registry.getCustom && ETB.registry.getCustom().some(function (p) { return p && p.id === pluginId; }));
-          if (/^(?:gh_|hf_)/.test(pluginId) || hasArtifacts || isCustom) {
+          // pluginData приходит ТОЛЬКО для карточек из custom-реестра витрины —
+          // это самодостаточный признак «чистить устройство». Хост-кэш сразу
+          // после рестарта мог ещё не досинкаться (гонка) — isCustom тогда
+          // ложно false, чистка не запускалась, файл жил и карточка возвращалась.
+          var hasSnapshot = !!e.data.pluginData;
+          if (/^(?:gh_|hf_)/.test(pluginId) || hasArtifacts || isCustom || hasSnapshot) {
             // Agent-installed / GitHub / HuggingFace / device-synced plugin: full cleanup of every
             // artifact + on-device registry file + custom entry + evict cached panel.
             if (ETB.registry.markRemoving) ETB.registry.markRemoving(pluginId);
