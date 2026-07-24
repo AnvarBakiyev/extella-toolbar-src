@@ -4167,7 +4167,9 @@ function renderDesktop(){
     {lbl:'Автоматизации',    ico:'calendar', acc:'#3E7C4F', go:"setc('automations')",          tip:'Задачи по расписанию: отчёты, проверки, рассылки'},
     {lbl:'Второй пилот',     ico:'bot',      acc:'#4C5FD5', soon:true, req:'copilot_ctl', go:"notify('open','copilot_ctl')", tip:'Пилот наблюдает экран и помогает'},
     {lbl:'Студия языков',    ico:'terminal', acc:'#2A6F77', soon:true, req:'extella_cspl_studio', go:"notify('open','extella_cspl_studio')", tip:'Свои предметные языки: программа словами дела → проверенный результат'},
-    {lbl:'Команда',          ico:'users',    acc:'#C9A35C', req:'extella_team', go:"notify('open','extella_team')",        tip:'Пригласить в общий контур — именные ключи доступа'}
+    {lbl:'Команда',          ico:'users',    acc:'#C9A35C', req:'extella_team', go:"notify('open','extella_team')",        tip:'Пригласить в общий контур — именные ключи доступа'},
+    {lbl:'Подключения',      ico:'globe',    acc:'#2F6B66', req:'extella_connectors', go:"notify('open','extella_connectors')", tip:'Свои сервисы, CRM и кабинеты — один контур доступа'},
+    {lbl:'Псевдоанонимизация',ico:'docs',    acc:'#6B7280', req:'extella_anon', go:"notify('open','extella_anon')",         tip:'Файлы с ПДн → безопасные копии: локально, без ИИ-моделей'}
   ];
   // Честность стола: если системного плагина нет в реестре устройства — ярлык
   // приглушён, а клик объясняет причину (раньше клик молча умирал на хосте).
@@ -4234,7 +4236,7 @@ function renderDesktop(){
   icons=_out;
   icons.forEach(function(ic){ ic.dups=_dups[ic._k]||[ic]; });
   // Двойники системных ярлыков — вон со стола (по id плагина и по имени).
-  var _sysIds={extella_adoption_wizard:1, workspace:1, copilot_ctl:1, extella_cspl_studio:1, extella_team:1, extella_composer_studio:1};
+  var _sysIds={extella_adoption_wizard:1, workspace:1, copilot_ctl:1, extella_cspl_studio:1, extella_team:1, extella_composer_studio:1, extella_connectors:1, extella_anon:1};
   var _sysRe=/^(визард( внедрения)?|wizard|workspace|воркспейс(ы|ес)?|композитор|composer|второй пилот|copilot|студия языков|language studio|команда|team)$/i;
   var _sysHidden=[];
   icons=icons.filter(function(ic){
