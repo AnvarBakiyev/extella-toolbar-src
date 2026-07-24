@@ -1,0 +1,71 @@
+{
+  "id": "profit-growth-scenario",
+  "mode": "scenario",
+  "featured": true,
+  "name": "Студия способностей",
+  "tagline": "Все доказанные способности Extella и работающие сценарии в одном месте",
+  "description": "Единый продуктовый интерфейс доказанных способностей Extella: карта покрытия, доказательства и безопасные исполняемые сценарии для общей прибыльности и межагентной governance-памяти.",
+  "category": "business",
+  "type": "application",
+  "version": "0.2.0",
+  "eye": "Extella Scenarios",
+  "pills": [
+    "30 доказано",
+    "2 live-сценария",
+    "Проверяемые evidence"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "",
+  "owned_experts": true,
+  "experts": [
+    "xtl_capability_studio_profitability_v1"
+  ],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "html",
+    "htmlFile": "profit-growth.html",
+    "tokenless": true,
+    "expectsHealth": true
+  },
+  "capabilities": [
+    {
+      "id": "profitability_calculation",
+      "name": "Единый расчёт прибыльности",
+      "expert_name": "xtl_capability_studio_profitability_v1",
+      "version": "CALC_V1",
+      "external_writes": false
+    },
+    {
+      "id": "profitability_gate",
+      "name": "Общее правило прибыльного роста",
+      "versions": [
+        "POLICY_V1",
+        "POLICY_V2"
+      ],
+      "consumers": 2,
+      "external_writes": false
+    }
+  ],
+  "expert_defs": [
+    {
+      "name": "xtl_capability_studio_profitability_v1",
+      "description": "Deterministically calculates contribution profit and margin after COGS, returns, commission, logistics and advertising. Returns canonical hashes and never performs external writes.",
+      "cspl": "fython",
+      "global": true,
+      "kwargs": {
+        "revenue": 1000000,
+        "cogs": 500000,
+        "returns_loss": 20000,
+        "commission": 50000,
+        "logistics": 30000,
+        "ad_spend": 200000
+      },
+      "codeFile": "profit-growth-expert.py"
+    }
+  ],
+  "conceptTexts": [],
+  "hidden": false,
+  "trust_tier": "verified"
+}

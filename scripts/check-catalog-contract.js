@@ -26,10 +26,43 @@ function idsFrom(blockText) {
   return Array.from(blockText.matchAll(/\bid\s*:\s*'([^']+)'/g), (match) => match[1]);
 }
 
-const manifests = fs.readdirSync(pluginRoot)
-  .filter((name) => name.endsWith('.json'))
+function collectJsonFiles(dir) {
+  const files = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const file = path.join(dir, entry.name);
+    if (entry.isDirectory()) files.push(...collectJsonFiles(file));
+    else if (entry.isFile() && entry.name.endsWith('.json')) files.push(file);
+  }
+  return files;
+}
+
+function readManifestAsset(manifestFile, relativePath, label) {
+  const resolved = path.resolve(path.dirname(manifestFile), String(relativePath || ''));
+  const rootPrefix = path.resolve(pluginRoot) + path.sep;
+  const rootRealPrefix = fs.realpathSync(pluginRoot) + path.sep;
+  if (!resolved.startsWith(rootPrefix)) {
+    fail(`${path.relative(pluginRoot, manifestFile)}: ${label} escapes toolbar/plugins`);
+    return '';
+  }
+  if (!fs.existsSync(resolved)) {
+    fail(`${path.relative(pluginRoot, manifestFile)}: ${label} is missing`);
+    return '';
+  }
+  const real = fs.realpathSync(resolved);
+  if (!real.startsWith(rootRealPrefix)) {
+    fail(`${path.relative(pluginRoot, manifestFile)}: ${label} symlink escapes toolbar/plugins`);
+    return '';
+  }
+  return fs.readFileSync(real, 'utf8');
+}
+
+const manifests = collectJsonFiles(pluginRoot)
   .sort()
-  .map((name) => ({ name, value: JSON.parse(fs.readFileSync(path.join(pluginRoot, name), 'utf8')) }));
+  .map((file) => ({
+    file,
+    name: path.relative(pluginRoot, file),
+    value: JSON.parse(fs.readFileSync(file, 'utf8'))
+  }));
 const byId = new Map();
 const expertNames = new Set();
 const managedIds = new Set();
@@ -39,13 +72,15 @@ const expectedManaged = [
   'extella_contract_agent',
   'extella_travel_agency'
 ];
-for (const { name, value } of manifests) {
-  if (!value.id || value.id !== name.slice(0, -5)) fail(`${name}: id must match filename`);
+for (const { file, name, value } of manifests) {
+  const basename = path.basename(name, '.json');
+  const expectedId = value.mode === 'scenario' ? `${basename}-scenario` : basename;
+  if (!value.id || value.id !== expectedId) fail(`${name}: id must match filename and mode`);
   if (byId.has(value.id)) fail(`${name}: duplicate plugin id ${value.id}`);
   byId.set(value.id, value);
-  if (!['llm_driven', 'form_driven', 'managed_runtime'].includes(value.mode)) fail(`${name}: unsupported mode ${value.mode}`);
+  if (!['llm_driven', 'form_driven', 'managed_runtime', 'scenario'].includes(value.mode)) fail(`${name}: unsupported mode ${value.mode}`);
   if (!['verified', 'unverified', 'candidate'].includes(value.trust_tier)) fail(`${name}: trust_tier is required`);
-  if (value.mode !== 'managed_runtime' && (!Array.isArray(value.conceptTexts) || !value.conceptTexts.length)) fail(`${name}: conceptTexts are required`);
+  if (!['managed_runtime', 'scenario'].includes(value.mode) && (!Array.isArray(value.conceptTexts) || !value.conceptTexts.length)) fail(`${name}: conceptTexts are required`);
   if (value.mode === 'managed_runtime') {
     if (value.supportedPluginId !== value.id) fail(`${name}: supportedPluginId must match id`);
     if (value.classification !== 'supported_on_demand') fail(`${name}: managed runtime must be supported_on_demand`);
@@ -59,13 +94,31 @@ for (const { name, value } of manifests) {
   } else if (value.trust_tier === 'candidate') {
     fail(`${name}: candidate trust tier is reserved for release-managed runtimes`);
   }
+  if (value.mode === 'scenario') {
+    if (!value.featured || value.trust_tier !== 'verified') fail(`${name}: scenario must be a verified featured program`);
+    if (!value.ui || value.ui.type !== 'html' || value.ui.tokenless !== true) fail(`${name}: scenario must use tokenless reviewed HTML`);
+    if (value.owned_experts !== true) fail(`${name}: scenario must declare ownership of its namespaced Experts`);
+    const html = value.ui && value.ui.htmlFile
+      ? readManifestAsset(file, value.ui.htmlFile, 'ui.htmlFile')
+      : String(value.ui && value.ui.html || '');
+    if (!html || !html.includes('etb_ui_health')) fail(`${name}: scenario UI has no toolbar health marker`);
+    if (!(value.capabilities || []).length) fail(`${name}: scenario has no declared capabilities`);
+    if ((value.capabilities || []).some((capability) => capability.external_writes !== false)) {
+      fail(`${name}: scenario capability must explicitly disable external writes`);
+    }
+  }
   const defs = value.expert_defs || [];
-  if (value.mode === 'form_driven' && !defs.length) fail(`${name}: form-driven card has no authored expert`);
+  if (['form_driven', 'scenario'].includes(value.mode) && !defs.length) fail(`${name}: executable card has no authored expert`);
   for (const def of defs) {
     if (!def.name || !/^[A-Za-z_][A-Za-z0-9_]{1,127}$/.test(def.name)) fail(`${name}: invalid expert name`);
     if (expertNames.has(def.name)) fail(`${name}: duplicate authored expert ${def.name}`);
     expertNames.add(def.name);
-    const code = Array.isArray(def.code) ? def.code.join('\n') : String(def.code || '');
+    if (value.mode === 'scenario' && !def.name.startsWith('xtl_capability_studio_')) {
+      fail(`${name}: scenario Expert must use the Capability Studio namespace`);
+    }
+    const code = def.codeFile
+      ? readManifestAsset(file, def.codeFile, 'expert_defs[].codeFile')
+      : (Array.isArray(def.code) ? def.code.join('\n') : String(def.code || ''));
     if (!code.includes(`def ${def.name}(`)) fail(`${name}: expert ${def.name} has no matching entrypoint`);
   }
 }

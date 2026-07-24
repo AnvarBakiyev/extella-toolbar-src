@@ -474,6 +474,14 @@ ETB.api = (function () {
       return _post('/api/expert/save', def);
     },
 
+    getExpert: function (name, opts) {
+      opts = opts || {};
+      return _post('/api/expert/get', {
+        name: name,
+        global: opts.global === true
+      });
+    },
+
     deleteExpert: function (name) {
       return _post('/api/expert/delete', { name: name });
     },
@@ -488,6 +496,57 @@ ETB.api = (function () {
 
     searchConcepts: function (query, limit) {
       return _post('/api/concept/search', { query: query, limit: limit || 5 });
+    },
+
+    // Narrow scoped primitives used by the built-in Capability Studio.
+    // Agent ID is accepted only for an explicit cross-agent visibility probe;
+    // the account credential and Profile remain in the toolbar context.
+    conceptAddScoped: function (text, opts) {
+      opts = opts || {};
+      return _post('/api/concept/add', {
+        text: text,
+        global: opts.global === true
+      }, opts.agentId ? { 'X-Agent-Id': opts.agentId } : null);
+    },
+    conceptListScoped: function (opts) {
+      opts = opts || {};
+      return _post('/api/concept/list', {
+        global: opts.global === true,
+        limit: Math.min(Number(opts.limit || 500), 500),
+        offset: Math.max(0, Number(opts.offset || 0))
+      }, opts.agentId ? { 'X-Agent-Id': opts.agentId } : null);
+    },
+    conceptDeleteScoped: function (conceptId, opts) {
+      opts = opts || {};
+      return _post('/api/concept/delete', {
+        concept_id: Number(conceptId)
+      }, opts.agentId ? { 'X-Agent-Id': opts.agentId } : null);
+    },
+    ruleAddScoped: function (rule, opts) {
+      opts = opts || {};
+      return _post('/api/rules/add', {
+        rule: rule,
+        global: opts.global === true
+      }, opts.agentId ? { 'X-Agent-Id': opts.agentId } : null);
+    },
+    ruleListScoped: function (opts) {
+      opts = opts || {};
+      return _post('/api/rules/list', {
+        global: opts.global === true
+      }, opts.agentId ? { 'X-Agent-Id': opts.agentId } : null);
+    },
+    ruleUpdateScoped: function (ruleId, rule, opts) {
+      opts = opts || {};
+      return _post('/api/rules/update', {
+        rule_id: String(ruleId),
+        rule: rule
+      }, opts.agentId ? { 'X-Agent-Id': opts.agentId } : null);
+    },
+    ruleDeleteScoped: function (ruleId, opts) {
+      opts = opts || {};
+      return _post('/api/rules/delete', {
+        rule_id: String(ruleId)
+      }, opts.agentId ? { 'X-Agent-Id': opts.agentId } : null);
     },
 
     // Rules = always-on behavioral instructions injected into every agent turn.

@@ -8,6 +8,10 @@
 
 ETB.router = (function () {
   var CACHE_MAX = 5; // max live panels in DOM simultaneously
+  var STUDIO_GOV_SESSION_KEY = 'etb_capability_studio_governance_v1';
+  var STUDIO_HOST_INSTANCE = Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+  var _studioCleanupTimer = null;
+  var _studioOperationChains = {};
 
   // cache entry: { panel, blobUrl, lastUsed (ms timestamp) }
   var _cache = {};
@@ -16,11 +20,241 @@ ETB.router = (function () {
   // (a start expert is a deferred task; re-triggering it in a cycle would spam it).
   var _autoTries = {};
 
+  function _studioMarkerValid(marker) {
+    return /^XTL-STUDIO-GOV-[A-Z0-9_-]{8,64}$/.test(String(marker || '').toUpperCase());
+  }
+
+  function _studioBoundedNumber(value, fallback, minimum, maximum) {
+    var parsed = Number(value);
+    if (!Number.isFinite(parsed)) return fallback;
+    return Math.max(minimum, Math.min(parsed, maximum));
+  }
+
+  function _studioCurrentUserId() {
+    try { return String(ETB.auth.getUserId() || ''); } catch (_) { return ''; }
+  }
+
+  function _studioSessionAccountValid(session) {
+    var currentUserId = _studioCurrentUserId();
+    return Boolean(
+      session &&
+      session.userId &&
+      currentUserId &&
+      String(session.userId) === currentUserId
+    );
+  }
+
+  function _studioSessionLoad() {
+    try {
+      var session = JSON.parse(localStorage.getItem(STUDIO_GOV_SESSION_KEY) || 'null');
+      if (!session || !_studioMarkerValid(session.marker) || !session.ownerAgentId || !session.userId) return null;
+      return session;
+    } catch (_) { return null; }
+  }
+
+  function _studioSessionSave(session) {
+    try { localStorage.setItem(STUDIO_GOV_SESSION_KEY, JSON.stringify(session)); } catch (_) {}
+    if (_studioCleanupTimer) clearTimeout(_studioCleanupTimer);
+    _studioCleanupTimer = setTimeout(function () {
+      var current = _studioSessionLoad();
+      if (current) _studioConfirmedCleanup(current).catch(function () {});
+    }, 10 * 60 * 1000);
+  }
+
+  function _studioSessionClear(marker) {
+    try {
+      var current = _studioSessionLoad();
+      var shouldClear = !current || !marker || current.marker === marker;
+      if (shouldClear) localStorage.removeItem(STUDIO_GOV_SESSION_KEY);
+      if (shouldClear && _studioCleanupTimer) {
+        clearTimeout(_studioCleanupTimer);
+        _studioCleanupTimer = null;
+      }
+    } catch (_) {}
+  }
+
+  function _studioApiOk(response, label) {
+    if (!response || response.detail || response.error ||
+        response.status === 'error' || response.status === 'not_found' ||
+        response.status === 'failed') {
+      var detail = response && response.detail;
+      if (Array.isArray(detail)) detail = detail.map(function (row) {
+        return row && (row.msg || row.message) || String(row);
+      }).join('; ');
+      throw new Error(detail || (response && (response.message || response.error)) || (label + ' failed'));
+    }
+    return response;
+  }
+
+  function _studioConceptRows(response) {
+    return (response && (response.results || response.concepts)) || [];
+  }
+
+  function _studioRuleRows(response) {
+    return (response && (response.results || response.rules)) || [];
+  }
+
+  function _studioConceptText(row) {
+    return String((row && (row.text || row.concept_text)) || '');
+  }
+
+  function _studioRuleText(row) {
+    return String((row && row.rule) || '');
+  }
+
+  function _studioObjectId(row) {
+    return row && (row.id != null ? row.id : (row.concept_id != null ? row.concept_id : row.rule_id));
+  }
+
+  // Serialize every governance mutation and cleanup for a marker. Closing the
+  // panel while an operation is in flight must not leave a late global object.
+  function _studioSerialize(marker, task) {
+    var key = String(marker || '').toUpperCase();
+    if (!_studioMarkerValid(key)) return Promise.reject(new Error('invalid studio operation marker'));
+    var previous = _studioOperationChains[key] || Promise.resolve();
+    var operation = previous.catch(function () {}).then(task);
+    var tail = operation.catch(function () {});
+    _studioOperationChains[key] = tail;
+    tail.then(function () {
+      if (_studioOperationChains[key] === tail) delete _studioOperationChains[key];
+    });
+    return operation;
+  }
+
+  // Absence is security-sensitive: scan every page instead of treating the
+  // first 500 Concepts as the complete account-global namespace.
+  function _studioListAllConcepts(opts) {
+    opts = opts || {};
+    var limit = 500;
+    var maxPages = 200;
+    function readPage(offset, collected, page) {
+      if (page >= maxPages) return Promise.reject(new Error('concept pagination safety limit reached'));
+      return ETB.api.conceptListScoped({
+        agentId: opts.agentId,
+        global: opts.global === true,
+        limit: limit,
+        offset: offset
+      }).then(function (response) {
+        _studioApiOk(response, 'concept list');
+        var rows = _studioConceptRows(response);
+        var next = offset + rows.length;
+        var reportedTotal = Number(
+          response && (response.total != null ? response.total :
+            (response.total_count != null ? response.total_count : response.count))
+        );
+        var totalHasMore = Number.isFinite(reportedTotal) && reportedTotal > next;
+        if (!rows.length) {
+          if (totalHasMore) throw new Error('concept pagination ended before reported total');
+          return collected;
+        }
+        var combined = collected.concat(rows);
+        if (rows.length === limit || totalHasMore) return readPage(next, combined, page + 1);
+        return combined;
+      });
+    }
+    return readPage(0, [], 0);
+  }
+
+  function _studioReadObjects(session) {
+    var marker = String(session.marker || '').toUpperCase();
+    return Promise.all([
+      _studioListAllConcepts({ agentId: session.ownerAgentId, global: true }),
+      ETB.api.ruleListScoped({ agentId: session.ownerAgentId, global: true })
+    ]).then(function (responses) {
+      _studioApiOk(responses[1], 'rule list');
+      return {
+        concepts: responses[0].filter(function (row) {
+          return _studioConceptText(row).indexOf(marker) === 0;
+        }),
+        rules: _studioRuleRows(responses[1]).filter(function (row) {
+          return _studioRuleText(row).indexOf(marker) === 0;
+        })
+      };
+    });
+  }
+
+  function _studioConfirmedCleanupNow(session) {
+    if (!session || !_studioMarkerValid(session.marker) || !session.ownerAgentId ||
+        !_studioSessionAccountValid(session)) {
+      return Promise.reject(new Error('invalid studio cleanup session'));
+    }
+    var before;
+    return _studioReadObjects(session).then(function (rows) {
+      before = rows;
+      var deletes = [];
+      rows.concepts.forEach(function (row) {
+        var id = _studioObjectId(row);
+        if (id == null) return;
+        deletes.push(ETB.api.conceptDeleteScoped(id, { agentId: session.ownerAgentId }).then(function (response) {
+          _studioApiOk(response, 'concept delete');
+          if (response.deleted !== true) throw new Error('concept delete not confirmed');
+        }));
+      });
+      rows.rules.forEach(function (row) {
+        var id = _studioObjectId(row);
+        if (id == null) return;
+        deletes.push(ETB.api.ruleDeleteScoped(id, { agentId: session.ownerAgentId }).then(function (response) {
+          _studioApiOk(response, 'rule delete');
+          if (response.deleted !== true) throw new Error('rule delete not confirmed');
+        }));
+      });
+      return Promise.all(deletes);
+    }).then(function () {
+      return _studioReadObjects(session);
+    }).then(function (after) {
+      if (after.concepts.length || after.rules.length) {
+        throw new Error('studio cleanup verification failed');
+      }
+      _studioSessionClear(session.marker);
+      return {
+        agentId: session.ownerAgentId,
+        marker: session.marker,
+        deletedConcepts: before.concepts.length,
+        deletedRules: before.rules.length,
+        verifiedAbsent: true
+      };
+    });
+  }
+
+  function _studioConfirmedCleanup(session) {
+    if (!session || !_studioMarkerValid(session.marker) || !session.ownerAgentId ||
+        !_studioSessionAccountValid(session)) {
+      return Promise.reject(new Error('invalid studio cleanup session'));
+    }
+    return _studioSerialize(session.marker, function () {
+      return _studioConfirmedCleanupNow(session);
+    });
+  }
+
+  // A crash or Desktop restart must not leave a temporary account-global Rule
+  // behind. The host owns the recovery marker and retries confirmed cleanup.
+  function _recoverStudioGovernance(attempt) {
+    var session = _studioSessionLoad();
+    if (!session) return;
+    // Never prove absence against a different account. Keep the marker so a
+    // later switch back to its owner can retry with the correct credential.
+    if (!_studioSessionAccountValid(session)) return;
+    if (session.hostInstanceId === STUDIO_HOST_INSTANCE &&
+        _activeId === 'profit-growth-scenario') return;
+    _studioConfirmedCleanup(session).catch(function () {
+      if ((attempt || 0) < 11) {
+        setTimeout(function () {
+          _recoverStudioGovernance((attempt || 0) + 1);
+        }, Math.min(60000, 5000 * Math.pow(2, Math.min((attempt || 0), 4))));
+      }
+    });
+  }
+  setTimeout(function () { _recoverStudioGovernance(0); }, 3500);
+
   if (!window.__etbRouterSessionHook) {
     window.__etbRouterSessionHook = true;
     ETB.auth.onSessionChange(function (ev) {
-      if (!ev.token || ev.cleared || !window.__etbResendInit) return;
-      window.__etbResendInit(ev.token);
+      if (ev.token && !ev.cleared && window.__etbResendInit) {
+        window.__etbResendInit(ev.token);
+      }
+      if (ev.token && ev.userId && !ev.cleared) {
+        setTimeout(function () { _recoverStudioGovernance(0); }, 0);
+      }
     });
   }
 
@@ -63,11 +297,17 @@ ETB.router = (function () {
     };
   }
 
+  function _beforePanelHidden(panel) {
+    if (!panel || typeof panel.__etbBeforeHide !== 'function') return;
+    try { panel.__etbBeforeHide(); } catch (_) {}
+  }
+
   // Destroy a cached entry: remove from DOM, revoke blob URL.
   function _evict(pluginId) {
     var entry = _cache[pluginId];
     if (!entry) return;
     if (entry.panel) {
+      _beforePanelHidden(entry.panel);
       if (entry.panel.__etbPmHandler) {
         window.removeEventListener('message', entry.panel.__etbPmHandler);
         entry.panel.__etbPmHandler = null;
@@ -567,21 +807,28 @@ ETB.router = (function () {
       var htmlBlob = new Blob([ui.html], { type: 'text/html' });
       blobUrl = URL.createObjectURL(htmlBlob);
       var iframe = document.createElement('iframe');
+      // The Studio is bridge-only. An opaque sandboxed origin prevents its
+      // scripts from reading host globals such as window._extellaApiToken.
+      if (_isBuiltinCapabilityStudio()) {
+        iframe.setAttribute('sandbox', 'allow-scripts');
+      }
       iframe.src = blobUrl;
       iframe.style.cssText = 'width:100%;height:100%;border:none;display:block;';
       iframe.setAttribute('allow', 'clipboard-read;clipboard-write');
       iframe.addEventListener('load', function () {
         _wireIframeToken(iframe, function (token) {
           try {
-            iframe.contentWindow.postMessage({
+            var initPayload = {
               type: 'etb_init',
               pluginId: plugin.id,
-              token: token,
               apiBase: 'https://api.extella.ai',
               experts: plugin.experts || [],
               theme: _currentTheme(),
               lang: _currentLang()
-            }, '*');
+            };
+            // Bridge-only apps never receive the account credential.
+            if (!ui.tokenless) initPayload.token = token;
+            iframe.contentWindow.postMessage(initPayload, '*');
             _postThemeToIframe(iframe);
           } catch (e) {}
         });
@@ -674,7 +921,22 @@ ETB.router = (function () {
       for (var i = 0; i < iframes.length; i++) {
         try { if (iframes[i].contentWindow === e.source) return iframes[i]; } catch (_) {}
       }
-      return iframes.length === 1 ? iframes[0] : null;
+      // Never fall back to an unrelated iframe. Every open plugin has its own
+      // listener, so a fallback would duplicate privileged bridge calls.
+      return null;
+    }
+    function _isBuiltinCapabilityStudio() {
+      var builtins = ETB.registry && ETB.registry.getBuiltin ? ETB.registry.getBuiltin() : [];
+      var canonical = builtins.filter(function (item) {
+        return item && item.id === 'profit-growth-scenario';
+      })[0];
+      return Boolean(
+        canonical &&
+        plugin === canonical &&
+        plugin.trust_tier === 'verified' &&
+        ui.type === 'html' &&
+        ui.tokenless === true
+      );
     }
     var _pmHandler = function (e) {
       if (!e.data || typeof e.data.type !== 'string') return;
@@ -688,8 +950,14 @@ ETB.router = (function () {
         // expert here in the toolbar context, which has API access, and post
         // the result back. The iframe never holds the token or hits the API.
         var src = _srcIframe(e);
+        if (!src) return;
         var reqId = e.data.reqId;
         function reply(msg) { if (src && src.contentWindow) { try { src.contentWindow.postMessage(msg, '*'); } catch (_) {} } }
+        if (_isBuiltinCapabilityStudio() &&
+            (plugin.experts || []).indexOf(String(e.data.name || '')) === -1) {
+          reply({ type: 'etb_expert_result', reqId: reqId, ok: false, error: 'expert is not allowed for Capability Studio' });
+          return;
+        }
         try {
           ETB.api.runExpert(e.data.name, e.data.params || {}, { global: true })
             .then(function (res) { reply({ type: 'etb_expert_result', reqId: reqId, ok: true, res: res }); })
@@ -705,6 +973,7 @@ ETB.router = (function () {
         // allowed, so a plugin can never read secrets (huggingface_token, …)
         // or write outside the merch surface.
         var src2 = _srcIframe(e);
+        if (!src2) return;
         var reqId2 = e.data.reqId;
         var key = String(e.data.key || '');
         function reply2(msg) { if (src2 && src2.contentWindow) { try { src2.contentWindow.postMessage(msg, '*'); } catch (_) {} } }
@@ -738,6 +1007,7 @@ ETB.router = (function () {
         // the user's own credential. Skill rules carry a marker prefix so they
         // are identifiable; the plugin manages only what it added.
         var src3 = _srcIframe(e);
+        if (!src3) return;
         var reqId3 = e.data.reqId;
         function reply3(msg) { if (src3 && src3.contentWindow) { try { src3.contentWindow.postMessage(msg, '*'); } catch (_) {} } }
         try {
@@ -756,18 +1026,293 @@ ETB.router = (function () {
       } else if (e.data.type === 'etb_agents_list') {
         // Agents bridge: let the Skills UI ask which agent to install a skill on.
         var src4 = _srcIframe(e);
+        if (!src4) return;
         var reqId4 = e.data.reqId;
         function reply4(msg) { if (src4 && src4.contentWindow) { try { src4.contentWindow.postMessage(msg, '*'); } catch (_) {} } }
         try {
           ETB.api.agentsList()
             .then(function (r) {
               var list = (r && r.agents) || [];
-              var slim = list.map(function (a) { return { id: a.id, name: a.name, model: a.model }; });
+              var slim = list.map(function (a) {
+                return {
+                  id: a.id || a.agent_id,
+                  name: a.name,
+                  model: a.model,
+                  provider: a.provider,
+                  category: a.category
+                };
+              });
               reply4({ type: 'etb_agents_result', reqId: reqId4, ok: true, agents: slim });
             })
             .catch(function (err) { reply4({ type: 'etb_agents_result', reqId: reqId4, ok: false, error: (err && err.message) || 'agents list failed' }); });
         } catch (err) {
           reply4({ type: 'etb_agents_result', reqId: reqId4, ok: false, error: (err && err.message) || 'agents failed' });
+        }
+      } else if (e.data.type === 'etb_governance_probe') {
+        // Capability Studio's bounded governance lab. It may manage only
+        // temporary objects carrying its own high-entropy marker.
+        var src6 = _srcIframe(e);
+        if (!src6) return;
+        var reqId6 = e.data.reqId;
+        var marker6 = String(e.data.marker || '').toUpperCase();
+        var action6 = String(e.data.action || '');
+        var version6 = e.data.version === 'V2' ? 'V2' : 'V1';
+        var owner6 = String(e.data.ownerAgentId || '');
+        var viewer6 = String(e.data.viewerAgentId || owner6);
+        function reply6(msg) {
+          if (src6 && src6.contentWindow) {
+            try { src6.contentWindow.postMessage(msg, '*'); } catch (_) {}
+          }
+        }
+        if (!_isBuiltinCapabilityStudio()) {
+          reply6({ type: 'etb_governance_result', reqId: reqId6, ok: false, error: 'bridge not granted to this plugin' });
+          return;
+        }
+        if (!/^XTL-STUDIO-GOV-[A-Z0-9_-]{8,64}$/.test(marker6)) {
+          reply6({ type: 'etb_governance_result', reqId: reqId6, ok: false, error: 'invalid studio marker' });
+          return;
+        }
+        if (!owner6 || !viewer6 || owner6 === viewer6) {
+          reply6({ type: 'etb_governance_result', reqId: reqId6, ok: false, error: 'two distinct agent ids required' });
+          return;
+        }
+        var threshold6 = version6 === 'V2' ? 2500 : 1500;
+        var conceptText6 = marker6 + ' CONCEPT: contribution margin includes COGS, returns, commission, logistics and advertising. This is temporary Capability Studio evidence.';
+        var ruleText6 = marker6 + ' POLICY_' + version6 + ': margin_bps >= ' + threshold6 +
+          ' => SCALE; otherwise HOLD. Explicit loader required. external_writes=false.';
+        function ruleRows6(r) { return (r && (r.results || r.rules)) || []; }
+        function conceptValue6(row) { return String((row && (row.text || row.concept_text)) || ''); }
+        function ruleValue6(row) { return String((row && row.rule) || ''); }
+        function id6(row) { return row && (row.id != null ? row.id : (row.concept_id != null ? row.concept_id : row.rule_id)); }
+        function ensureOk6(r, label) { return _studioApiOk(r, label); }
+        function validateAgentIds6(requireViewer) {
+          return ETB.api.agentsList().then(function (response) {
+            ensureOk6(response, 'agents list');
+            var ids = ((response && response.agents) || []).map(function (agent) {
+              return String(agent && (agent.id || agent.agent_id) || '');
+            });
+            if (ids.indexOf(owner6) === -1) throw new Error('owner agent is not present in this account');
+            if (requireViewer && ids.indexOf(viewer6) === -1) throw new Error('viewer agent is not present in this account');
+          });
+        }
+        function read6(agentId) {
+          return Promise.all([
+            _studioListAllConcepts({ agentId: agentId, global: true }),
+            ETB.api.ruleListScoped({ agentId: agentId, global: true })
+          ]).then(function (rows) {
+            ensureOk6(rows[1], 'rule list');
+            var concepts = rows[0].filter(function (row) {
+              return conceptValue6(row).indexOf(marker6) === 0;
+            });
+            var rules = ruleRows6(rows[1]).filter(function (row) {
+              return ruleValue6(row).indexOf(marker6) === 0;
+            });
+            return { concepts: concepts, rules: rules };
+          });
+        }
+        function result6(rows, agentId) {
+          var concept = rows.concepts[0] || null;
+          var rule = rows.rules[0] || null;
+          return {
+            agentId: agentId,
+            marker: marker6,
+            concept: concept ? { id: id6(concept), global: concept.global === true, text: conceptValue6(concept) } : null,
+            rule: rule ? { id: id6(rule), global: rule.global === true, rule: ruleValue6(rule) } : null
+          };
+        }
+        var session6 = {
+          marker: marker6,
+          ownerAgentId: owner6,
+          viewerAgentId: viewer6,
+          userId: _studioCurrentUserId(),
+          profileId: 'default',
+          hostInstanceId: STUDIO_HOST_INSTANCE,
+          createdAt: new Date().toISOString()
+        };
+        if (!session6.userId) {
+          reply6({ type: 'etb_governance_result', reqId: reqId6, ok: false, error: 'authenticated Studio account is required' });
+          return;
+        }
+        var operation6;
+        if (action6 === 'create') {
+          operation6 = _studioSerialize(marker6, function () {
+            var sessionSaved6 = false;
+            var primary6 = validateAgentIds6(true).then(function () {
+              _studioSessionSave(session6);
+              sessionSaved6 = true;
+              return read6(owner6);
+            }).then(function (existing) {
+              var tasks = [];
+              if (!existing.concepts.length) {
+                tasks.push(ETB.api.conceptAddScoped(conceptText6, { agentId: owner6, global: true }).then(function (r) {
+                  return ensureOk6(r, 'concept add');
+                }));
+              }
+              if (!existing.rules.length) {
+                tasks.push(ETB.api.ruleAddScoped(ruleText6, { agentId: owner6, global: true }).then(function (r) {
+                  return ensureOk6(r, 'rule add');
+                }));
+              } else if (ruleValue6(existing.rules[0]) !== ruleText6) {
+                tasks.push(ETB.api.ruleUpdateScoped(id6(existing.rules[0]), ruleText6, { agentId: owner6 }).then(function (r) {
+                  return ensureOk6(r, 'rule restore');
+                }));
+              }
+              return Promise.all(tasks).then(function () { return read6(owner6); });
+            }).then(function (rows) { return result6(rows, owner6); });
+
+            function settleClosed6(result, originalError) {
+              if (!panel.__etbStudioClosing || !sessionSaved6) {
+                if (originalError) throw originalError;
+                return result;
+              }
+              return _studioConfirmedCleanupNow(session6).then(function () {
+                throw originalError || new Error('Studio closed; temporary objects were cleaned');
+              }, function (cleanupError) {
+                var base = originalError && originalError.message ?
+                  originalError.message : 'Studio closed during governance create';
+                throw new Error(base + '; automatic cleanup pending: ' +
+                  ((cleanupError && cleanupError.message) || 'unknown cleanup error'));
+              });
+            }
+
+            return primary6.then(function (result) {
+              return settleClosed6(result, null);
+            }, function (error) {
+              return settleClosed6(null, error);
+            });
+          });
+        } else if (action6 === 'verify') {
+          operation6 = _studioSerialize(marker6, function () {
+            return validateAgentIds6(true).then(function () { return read6(viewer6); })
+              .then(function (rows) { return result6(rows, viewer6); });
+          });
+        } else if (action6 === 'update') {
+          operation6 = _studioSerialize(marker6, function () {
+            return validateAgentIds6(true).then(function () { return read6(owner6); }).then(function (rows) {
+              if (!rows.rules.length) throw new Error('studio rule not found');
+              return ETB.api.ruleUpdateScoped(id6(rows.rules[0]), ruleText6, { agentId: owner6 })
+                .then(function (r) { ensureOk6(r, 'rule update'); return read6(owner6); });
+            }).then(function (rows) { return result6(rows, owner6); });
+          });
+        } else if (action6 === 'cleanup') {
+          operation6 = validateAgentIds6(false).then(function () {
+            return _studioConfirmedCleanup(session6);
+          });
+        } else {
+          reply6({ type: 'etb_governance_result', reqId: reqId6, ok: false, error: 'unsupported governance action' });
+          return;
+        }
+        operation6.then(function (result) {
+          reply6({ type: 'etb_governance_result', reqId: reqId6, ok: true, result: result });
+        }).catch(function (err) {
+          reply6({ type: 'etb_governance_result', reqId: reqId6, ok: false, error: (err && err.message) || 'governance probe failed' });
+        });
+      } else if (e.data.type === 'etb_run_agent') {
+        // Fan out one validated result to selected agents. The iframe never
+        // receives the token, and workers cannot rerun the underlying Expert.
+        var src5 = _srcIframe(e);
+        if (!src5) return;
+        var reqId5 = e.data.reqId;
+        var started5 = Date.now();
+        function reply5(msg) {
+          if (src5 && src5.contentWindow) {
+            try { src5.contentWindow.postMessage(msg, '*'); } catch (_) {}
+          }
+        }
+        if (!_isBuiltinCapabilityStudio()) {
+          reply5({ type: 'etb_agent_result', reqId: reqId5, ok: false, latencyMs: Date.now() - started5, error: 'bridge not granted to this plugin' });
+          return;
+        }
+        var message5 = String(e.data.message || '');
+        var agent5 = String(e.data.agentId || e.data.agent_id || '');
+        if (!message5 || !agent5) {
+          reply5({
+            type: 'etb_agent_result',
+            reqId: reqId5,
+            ok: false,
+            error: !agent5 ? 'agent id required' : 'message required'
+          });
+          return;
+        }
+        if (message5.length > 12000) {
+          reply5({
+            type: 'etb_agent_result',
+            reqId: reqId5,
+            ok: false,
+            latencyMs: Date.now() - started5,
+            error: 'message exceeds Studio limit'
+          });
+          return;
+        }
+        try {
+          ETB.api.agentsList().then(function (listResponse) {
+            _studioApiOk(listResponse, 'agents list');
+            var selected = null;
+            ((listResponse && listResponse.agents) || []).some(function (agent) {
+              if (String(agent && (agent.id || agent.agent_id) || '') !== agent5) return false;
+              selected = agent;
+              return true;
+            });
+            if (!selected) throw new Error('agent is not present in this account');
+            var signature = [
+              selected.name,
+              selected.provider,
+              selected.model
+            ].join(' ').toLowerCase();
+            if (/(claude|anthropic)/.test(signature)) {
+              throw new Error('Anthropic models are disabled for this Studio scenario');
+            }
+            return ETB.api.runAgent(message5, {
+              agent_id: agent5,
+              run_timeout: _studioBoundedNumber(e.data.runTimeout, 180, 10, 180),
+              store: false,
+              temperature: 0,
+              max_output_tokens: _studioBoundedNumber(e.data.maxOutputTokens, 700, 128, 900),
+              tool_choice: 'none',
+              tools: []
+            });
+          }).then(function (res) {
+            var answer = '';
+            try { answer = ETB.api.extractAgentText(res); }
+            catch (extractErr) {
+              reply5({
+                type: 'etb_agent_result',
+                reqId: reqId5,
+                ok: false,
+                responseId: res && (res.id || res.response_id),
+                latencyMs: Date.now() - started5,
+                error: (extractErr && extractErr.message) || 'empty agent result'
+              });
+              return;
+            }
+            reply5({
+              type: 'etb_agent_result',
+              reqId: reqId5,
+              ok: true,
+              responseId: res && (res.id || res.response_id),
+              status: res && res.status,
+              model: res && res.model,
+              usage: (res && (res.usage || res.token_usage)) || null,
+              latencyMs: Date.now() - started5,
+              answer: String(answer || '').slice(0, 8000)
+            });
+          }).catch(function (err) {
+            reply5({
+              type: 'etb_agent_result',
+              reqId: reqId5,
+              ok: false,
+              latencyMs: Date.now() - started5,
+              error: (err && err.message) || 'agent failed'
+            });
+          });
+        } catch (err) {
+          reply5({
+            type: 'etb_agent_result',
+            reqId: reqId5,
+            ok: false,
+            latencyMs: Date.now() - started5,
+            error: (err && err.message) || 'agent failed'
+          });
         }
       } else if (e.data.type === 'etb_plugin_action' && e.data.action === 'open' && e.data.pluginId) {
         // Плагин просит открыть ДРУГОЙ установленный плагин окном приложения.
@@ -786,6 +1331,33 @@ ETB.router = (function () {
     window.addEventListener('message', _pmHandler);
     // Store handler on panel element for cleanup on panel eviction.
     panel.__etbPmHandler = _pmHandler;
+    if (_isBuiltinCapabilityStudio()) {
+      panel.__etbStudioClosing = false;
+      panel.__etbBeforeHide = function () {
+        panel.__etbStudioClosing = true;
+        var session = _studioSessionLoad();
+        if (!session || session.hostInstanceId !== STUDIO_HOST_INSTANCE) return Promise.resolve(null);
+        if (panel.__etbStudioCleanupPromise) return panel.__etbStudioCleanupPromise;
+        panel.__etbStudioCleanupPromise = _studioConfirmedCleanup(session).then(function (result) {
+          var target = content.querySelector('iframe');
+          if (target && target.contentWindow) {
+            try {
+              target.contentWindow.postMessage({
+                type: 'etb_governance_auto_cleanup',
+                ok: true,
+                result: result
+              }, '*');
+            } catch (_) {}
+          }
+          panel.__etbStudioCleanupPromise = null;
+          return result;
+        }).catch(function (error) {
+          panel.__etbStudioCleanupPromise = null;
+          throw error;
+        });
+        return panel.__etbStudioCleanupPromise;
+      };
+    }
 
     hdr.querySelector('._etbv2_panel_close').onclick = function () {
       ETB.router.close();
@@ -1633,12 +2205,16 @@ ETB.router = (function () {
       // immediately the LRU candidate when a new panel needs to be evicted.
       if (_activeId && _activeId !== id && _cache[_activeId]) {
         _cache[_activeId].lastUsed = Date.now();
+        _beforePanelHidden(_cache[_activeId].panel);
         _cache[_activeId].panel.style.display = 'none';
       }
 
       if (_cache[id]) {
         // Re-show cached panel — full iframe state is preserved.
         var entry = _cache[id];
+        if (typeof entry.panel.__etbStudioClosing === 'boolean') {
+          entry.panel.__etbStudioClosing = false;
+        }
         entry.panel.style.display = 'flex';
         entry.panel.style.animation = '_etbv2_slide_in .18s ease';
         entry.lastUsed = Date.now();
@@ -1677,6 +2253,7 @@ ETB.router = (function () {
         var panel = _cache[_activeId].panel;
         returnTo = _cache[_activeId].returnTo || '';
         _cache[_activeId].lastUsed = Date.now(); // keep it fresh in LRU
+        _beforePanelHidden(panel);
         panel.style.animation = '_etbv2_slide_out .15s ease forwards';
         setTimeout(function () {
           // Hide (not remove) — preserves iframe state for next visit.

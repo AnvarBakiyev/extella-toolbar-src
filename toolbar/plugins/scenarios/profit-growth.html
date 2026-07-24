@@ -1,0 +1,2250 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; font-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Студия способностей — Extella</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0a0b0c;
+      --surface: #111315;
+      --surface-2: #171a1d;
+      --surface-3: #1f2327;
+      --line: rgba(247, 241, 231, .10);
+      --line-strong: rgba(247, 241, 231, .20);
+      --text: #f5f1e9;
+      --text-2: #c3beb5;
+      --muted: #8c8b88;
+      --amber: #d4954d;
+      --amber-soft: rgba(212, 149, 77, .13);
+      --teal: #65aaa3;
+      --teal-soft: rgba(101, 170, 163, .13);
+      --green: #77b785;
+      --green-soft: rgba(119, 183, 133, .13);
+      --red: #db7d72;
+      --red-soft: rgba(219, 125, 114, .13);
+      --yellow: #d8b563;
+      --yellow-soft: rgba(216, 181, 99, .13);
+      --shadow: 0 18px 70px rgba(0, 0, 0, .22);
+      --radius: 14px;
+      --sans: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+
+    html[data-theme="light"] {
+      color-scheme: light;
+      --bg: #f6f4ef;
+      --surface: #fffefa;
+      --surface-2: #f0eee8;
+      --surface-3: #e7e4dc;
+      --line: rgba(34, 40, 41, .10);
+      --line-strong: rgba(34, 40, 41, .20);
+      --text: #171918;
+      --text-2: #424744;
+      --muted: #777b77;
+      --amber: #ad6824;
+      --amber-soft: rgba(173, 104, 36, .11);
+      --teal: #397d76;
+      --teal-soft: rgba(57, 125, 118, .11);
+      --green: #3f7d4c;
+      --green-soft: rgba(63, 125, 76, .11);
+      --red: #a94e46;
+      --red-soft: rgba(169, 78, 70, .10);
+      --yellow: #8b6b21;
+      --yellow-soft: rgba(139, 107, 33, .10);
+      --shadow: 0 18px 70px rgba(62, 49, 32, .08);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; margin: 0; }
+    body {
+      background:
+        radial-gradient(circle at 84% -10%, rgba(101, 170, 163, .09), transparent 32rem),
+        radial-gradient(circle at 3% 7%, rgba(212, 149, 77, .08), transparent 28rem),
+        var(--bg);
+      color: var(--text);
+      font: 14px/1.45 var(--sans);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button, input, select { font: inherit; }
+    button, select { cursor: pointer; }
+    button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible {
+      outline: 2px solid var(--teal);
+      outline-offset: 2px;
+    }
+
+    .shell { width: min(1380px, 100%); margin: 0 auto; padding: 22px; }
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 24px;
+      align-items: end;
+      padding: 22px 24px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: linear-gradient(135deg, var(--surface), color-mix(in srgb, var(--surface) 90%, var(--teal)));
+      box-shadow: var(--shadow);
+    }
+
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 9px;
+      color: var(--amber);
+      font: 700 11px/1 var(--mono);
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+    .eyebrow::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--amber); }
+    h1 { margin: 0; font-size: clamp(26px, 4vw, 43px); line-height: 1.02; letter-spacing: -.045em; }
+    .lead { max-width: 770px; margin: 12px 0 0; color: var(--text-2); font-size: 15px; }
+    .badges { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 7px; }
+    .badge {
+      padding: 7px 10px;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      color: var(--text-2);
+      background: var(--surface-2);
+      font: 650 11px/1 var(--mono);
+      letter-spacing: .04em;
+      white-space: nowrap;
+    }
+    .badge.safe { color: var(--green); border-color: color-mix(in srgb, var(--green) 35%, transparent); background: var(--green-soft); }
+
+    .layout { display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 16px; margin-top: 16px; align-items: start; }
+    .stack { display: grid; gap: 16px; }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: color-mix(in srgb, var(--surface) 96%, transparent);
+      box-shadow: 0 10px 32px rgba(0, 0, 0, .08);
+      overflow: hidden;
+    }
+    .card-hd { padding: 15px 17px 12px; border-bottom: 1px solid var(--line); }
+    .card-title { margin: 0; font-size: 14px; font-weight: 750; letter-spacing: -.01em; }
+    .card-sub { margin-top: 4px; color: var(--muted); font-size: 12px; }
+    .card-bd { padding: 16px 17px; }
+
+    .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+    label.field { display: grid; gap: 6px; }
+    .field span { color: var(--muted); font-size: 11px; font-weight: 650; }
+    .field input, .select {
+      width: 100%;
+      border: 1px solid var(--line-strong);
+      border-radius: 9px;
+      background: var(--surface-2);
+      color: var(--text);
+      padding: 9px 10px;
+      outline: none;
+    }
+    .field input:focus, .select:focus { border-color: var(--teal); }
+    .select { appearance: auto; }
+    .agent-field + .agent-field { margin-top: 12px; }
+    .agent-label { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 6px; font-size: 11px; color: var(--muted); }
+    .agent-label b { color: var(--text-2); }
+    .agent-note { min-height: 17px; margin-top: 8px; color: var(--muted); font-size: 11px; }
+
+    .policy-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+    .policy-option {
+      min-height: 76px;
+      padding: 11px;
+      text-align: left;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      color: var(--text-2);
+      background: var(--surface-2);
+    }
+    .policy-option.on { color: var(--text); border-color: var(--amber); background: var(--amber-soft); }
+    .policy-option b { display: block; margin-bottom: 4px; font-size: 12px; }
+    .policy-option small { color: var(--muted); }
+    .policy-copy { display: flex; gap: 9px; align-items: flex-start; margin-top: 12px; color: var(--text-2); font-size: 12px; }
+    .policy-copy i { width: 7px; height: 7px; margin-top: 5px; flex: 0 0 auto; border-radius: 50%; background: var(--amber); }
+
+    .check-row { display: flex; gap: 9px; align-items: flex-start; margin-top: 13px; color: var(--text-2); font-size: 12px; }
+    .check-row input { margin-top: 2px; accent-color: var(--amber); }
+
+    .actions { display: grid; gap: 8px; margin-top: 15px; }
+    .btn {
+      min-height: 42px;
+      padding: 10px 14px;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      font-weight: 750;
+      transition: transform .12s ease, opacity .12s ease, background .12s ease;
+    }
+    .btn:hover:not(:disabled) { transform: translateY(-1px); }
+    .btn:disabled { cursor: not-allowed; opacity: .5; }
+    .btn.primary { color: #111; background: var(--amber); }
+    .btn.secondary { color: var(--text); border-color: var(--line-strong); background: var(--surface-2); }
+    .btn.ghost { min-height: 36px; color: var(--teal); border-color: color-mix(in srgb, var(--teal) 35%, transparent); background: var(--teal-soft); font-size: 12px; }
+
+    .notice {
+      display: flex;
+      gap: 9px;
+      padding: 11px 12px;
+      border: 1px solid color-mix(in srgb, var(--yellow) 32%, transparent);
+      border-radius: 10px;
+      color: var(--text-2);
+      background: var(--yellow-soft);
+      font-size: 11px;
+    }
+    .notice b { color: var(--yellow); }
+
+    .pipeline { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding: 16px; }
+    .step {
+      position: relative;
+      min-height: 142px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--surface-2);
+      transition: border-color .2s, background .2s;
+    }
+    .step::after {
+      content: "→";
+      position: absolute;
+      top: 50%;
+      right: -16px;
+      z-index: 2;
+      width: 22px;
+      height: 22px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      color: var(--muted);
+      background: var(--surface);
+      transform: translateY(-50%);
+    }
+    .step:last-child::after { display: none; }
+    .step.active { border-color: var(--amber); background: var(--amber-soft); }
+    .step.ok { border-color: color-mix(in srgb, var(--green) 50%, transparent); background: var(--green-soft); }
+    .step.warn { border-color: color-mix(in srgb, var(--yellow) 50%, transparent); background: var(--yellow-soft); }
+    .step.bad { border-color: color-mix(in srgb, var(--red) 50%, transparent); background: var(--red-soft); }
+    .step-top { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+    .step-num { color: var(--muted); font: 700 10px/1 var(--mono); letter-spacing: .08em; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+    .active .status-dot { background: var(--amber); box-shadow: 0 0 0 4px var(--amber-soft); animation: pulse 1.2s infinite; }
+    .ok .status-dot { background: var(--green); }
+    .warn .status-dot { background: var(--yellow); }
+    .bad .status-dot { background: var(--red); }
+    .step h3 { margin: 14px 0 5px; font-size: 14px; }
+    .step p { margin: 0; color: var(--muted); font-size: 11px; }
+    .step-value { margin-top: 12px; color: var(--text-2); font: 650 12px/1.35 var(--mono); word-break: break-word; }
+
+    .outcome { display: none; padding: 0 16px 16px; }
+    .outcome.show { display: block; }
+    .outcome-box {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 20px;
+      align-items: center;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--surface-2);
+    }
+    .outcome-kicker { font: 700 10px/1 var(--mono); letter-spacing: .1em; color: var(--muted); }
+    .outcome-title { margin: 8px 0 4px; font-size: 23px; line-height: 1.1; letter-spacing: -.025em; }
+    .outcome-copy { color: var(--text-2); font-size: 12px; }
+    .metric-main { text-align: right; }
+    .metric-main strong { display: block; font-size: 29px; line-height: 1; letter-spacing: -.04em; }
+    .metric-main span { color: var(--muted); font-size: 11px; }
+
+    .decision-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 16px; }
+    .decision {
+      min-height: 185px;
+      padding: 15px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--surface-2);
+    }
+    .decision.ok { border-color: color-mix(in srgb, var(--green) 42%, transparent); }
+    .decision.warn { border-color: color-mix(in srgb, var(--yellow) 42%, transparent); }
+    .decision.bad { border-color: color-mix(in srgb, var(--red) 42%, transparent); }
+    .decision-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .decision-role { font-weight: 780; }
+    .decision-model { margin-top: 3px; color: var(--muted); font: 10px/1.3 var(--mono); }
+    .pill { padding: 5px 8px; border-radius: 999px; font: 750 10px/1 var(--mono); white-space: nowrap; }
+    .pill.scale { color: var(--green); background: var(--green-soft); }
+    .pill.hold { color: var(--yellow); background: var(--yellow-soft); }
+    .pill.error { color: var(--red); background: var(--red-soft); }
+    .decision-action { margin-top: 18px; font-size: 18px; font-weight: 760; letter-spacing: -.02em; }
+    .decision-rationale { margin-top: 6px; color: var(--text-2); font-size: 12px; }
+    .decision-meta { display: flex; flex-wrap: wrap; gap: 6px 13px; margin-top: 16px; color: var(--muted); font: 10px/1.3 var(--mono); }
+
+    .proof { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--line); }
+    .proof-item { padding: 16px; border-right: 1px solid var(--line); }
+    .proof-item:last-child { border-right: 0; }
+    .proof-item strong { display: block; font-size: 23px; letter-spacing: -.04em; }
+    .proof-item span { color: var(--muted); font-size: 11px; }
+
+    .compare { display: none; padding: 0 16px 16px; }
+    .compare.show { display: block; }
+    .compare table { width: 100%; border-collapse: collapse; overflow: hidden; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); }
+    .compare th, .compare td { padding: 11px 12px; border-bottom: 1px solid var(--line); text-align: left; font-size: 11px; }
+    .compare tr:last-child td { border-bottom: 0; }
+    .compare th { color: var(--muted); font: 700 10px/1 var(--mono); letter-spacing: .05em; }
+    .compare td b { color: var(--text); }
+
+    details { border-top: 1px solid var(--line); }
+    summary { padding: 13px 16px; color: var(--muted); cursor: pointer; font-size: 11px; user-select: none; }
+    pre {
+      max-height: 330px;
+      overflow: auto;
+      margin: 0;
+      padding: 0 16px 16px;
+      color: var(--text-2);
+      white-space: pre-wrap;
+      word-break: break-word;
+      font: 10px/1.55 var(--mono);
+    }
+
+    .empty { padding: 30px 18px; text-align: center; color: var(--muted); font-size: 12px; }
+    .busy .btn { pointer-events: none; }
+    .spinner { display: inline-block; width: 12px; height: 12px; margin-right: 7px; border: 2px solid rgba(0,0,0,.25); border-top-color: #111; border-radius: 50%; animation: spin .75s linear infinite; vertical-align: -2px; }
+    .error-banner { display: none; margin: 0 16px 16px; padding: 11px 13px; border: 1px solid color-mix(in srgb, var(--red) 42%, transparent); border-radius: 10px; color: var(--red); background: var(--red-soft); font-size: 12px; }
+    .error-banner.show { display: block; }
+
+    .studio-nav {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: color-mix(in srgb, var(--surface) 92%, transparent);
+      box-shadow: 0 8px 26px rgba(0, 0, 0, .12);
+      backdrop-filter: blur(18px);
+    }
+    .studio-brand {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-right: auto;
+      padding: 0 8px;
+      min-width: 0;
+    }
+    .studio-mark {
+      width: 24px;
+      height: 24px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      border-radius: 8px;
+      color: #111;
+      background: var(--amber);
+      font-weight: 900;
+    }
+    .studio-brand b { display: block; font-size: 12px; }
+    .studio-brand span { display: block; color: var(--muted); font-size: 10px; white-space: nowrap; }
+    .studio-tab {
+      min-height: 34px;
+      padding: 7px 11px;
+      border: 1px solid transparent;
+      border-radius: 9px;
+      color: var(--muted);
+      background: transparent;
+      font-size: 11px;
+      font-weight: 750;
+    }
+    .studio-tab:hover { color: var(--text); background: var(--surface-2); }
+    .studio-tab.on { color: var(--text); border-color: var(--line-strong); background: var(--surface-2); }
+    .studio-view { display: none; }
+    .studio-view.on { display: block; }
+
+    .studio-hero {
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background:
+        linear-gradient(135deg, color-mix(in srgb, var(--surface) 96%, var(--amber)), color-mix(in srgb, var(--surface) 90%, var(--teal)));
+      box-shadow: var(--shadow);
+    }
+    .studio-hero h1 { max-width: 850px; }
+    .studio-hero .lead { max-width: 900px; }
+    .coverage-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 18px;
+    }
+    .coverage-stat {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: color-mix(in srgb, var(--surface-2) 88%, transparent);
+    }
+    .coverage-stat strong { display: block; font-size: 25px; line-height: 1; letter-spacing: -.04em; }
+    .coverage-stat span { display: block; margin-top: 5px; color: var(--muted); font-size: 10px; }
+    .coverage-stat.live strong { color: var(--green); }
+    .coverage-stat.surface strong { color: var(--yellow); }
+    .coverage-stat.evidence strong { color: var(--teal); }
+
+    .catalog-tools {
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) 220px 210px;
+      gap: 9px;
+      margin: 16px 0 12px;
+    }
+    .catalog-tools input, .catalog-tools select {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid var(--line-strong);
+      border-radius: 10px;
+      padding: 8px 11px;
+      color: var(--text);
+      background: var(--surface);
+    }
+    .catalog-legend { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 12px; }
+    .coverage-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      background: var(--surface-2);
+      font: 700 9px/1 var(--mono);
+      letter-spacing: .03em;
+      text-transform: uppercase;
+    }
+    .coverage-label::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--muted); }
+    .coverage-label.live { color: var(--green); border-color: color-mix(in srgb, var(--green) 36%, transparent); }
+    .coverage-label.live::before { background: var(--green); }
+    .coverage-label.surface { color: var(--yellow); border-color: color-mix(in srgb, var(--yellow) 36%, transparent); }
+    .coverage-label.surface::before { background: var(--yellow); }
+    .coverage-label.evidence { color: var(--teal); border-color: color-mix(in srgb, var(--teal) 36%, transparent); }
+    .coverage-label.evidence::before { background: var(--teal); }
+    .capability-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    .capability-card {
+      min-height: 210px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--surface);
+    }
+    .capability-card h3 { margin: 12px 0 6px; font-size: 14px; line-height: 1.25; }
+    .capability-card p { margin: 0; color: var(--text-2); font-size: 11px; }
+    .capability-group { color: var(--muted); font: 700 9px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+    .capability-proof { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); color: var(--muted); font-size: 10px; }
+    .capability-proof b { color: var(--text-2); }
+    .capability-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+    .capability-actions button {
+      padding: 6px 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--teal);
+      background: var(--teal-soft);
+      font-size: 10px;
+      font-weight: 700;
+    }
+    .catalog-empty { grid-column: 1 / -1; padding: 38px; text-align: center; color: var(--muted); }
+
+    .memory-layout { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 16px; align-items: start; }
+    .memory-flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; }
+    .memory-stage {
+      min-height: 118px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: var(--surface-2);
+    }
+    .memory-stage b { display: block; margin: 10px 0 4px; font-size: 12px; }
+    .memory-stage span { color: var(--muted); font-size: 10px; }
+    .memory-stage.active { border-color: var(--amber); background: var(--amber-soft); }
+    .memory-stage.ok { border-color: color-mix(in srgb, var(--green) 45%, transparent); background: var(--green-soft); }
+    .memory-stage.bad { border-color: color-mix(in srgb, var(--red) 45%, transparent); background: var(--red-soft); }
+    .memory-results { display: grid; gap: 10px; margin-top: 12px; }
+    .memory-object {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--surface-2);
+    }
+    .memory-object-head { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+    .memory-object strong { font-size: 12px; }
+    .memory-object code { display: block; margin-top: 8px; color: var(--text-2); font: 10px/1.5 var(--mono); word-break: break-word; }
+    .memory-log {
+      min-height: 148px;
+      max-height: 320px;
+      overflow: auto;
+      margin-top: 12px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      color: var(--text-2);
+      background: var(--surface-2);
+      white-space: pre-wrap;
+      font: 10px/1.55 var(--mono);
+    }
+    .mutation-warning {
+      margin-top: 12px;
+      padding: 11px;
+      border: 1px solid color-mix(in srgb, var(--yellow) 36%, transparent);
+      border-radius: 10px;
+      color: var(--text-2);
+      background: var(--yellow-soft);
+      font-size: 11px;
+    }
+    .mutation-warning b { color: var(--yellow); }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes pulse { 50% { opacity: .45; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition: none !important; } }
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 1fr; }
+      .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+      .controls .card:last-child { grid-column: 1 / -1; }
+      .capability-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .memory-layout { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 690px) {
+      .shell { padding: 12px; }
+      .studio-nav { position: static; flex-wrap: wrap; }
+      .studio-brand { width: 100%; }
+      .studio-tab { flex: 1; padding-inline: 6px; }
+      .hero { grid-template-columns: 1fr; padding: 18px; }
+      .badges { justify-content: flex-start; }
+      .controls, .pipeline, .decision-grid { grid-template-columns: 1fr; }
+      .coverage-strip, .catalog-tools, .capability-grid, .memory-flow { grid-template-columns: 1fr; }
+      .step::after { display: none; }
+      .proof { grid-template-columns: 1fr 1fr; }
+      .proof-item:nth-child(2) { border-right: 0; }
+      .proof-item:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+      .outcome-box { grid-template-columns: 1fr; }
+      .metric-main { text-align: left; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <nav class="studio-nav" aria-label="Разделы Студии способностей">
+      <div class="studio-brand">
+        <span class="studio-mark">✦</span>
+        <span><b>Студия способностей</b><span>30 доказанных возможностей · честное покрытие</span></span>
+      </div>
+      <button class="studio-tab on" type="button" data-studio-view="capabilities">Способности 30</button>
+      <button class="studio-tab" type="button" data-studio-view="scenario">Прибыльный рост</button>
+      <button class="studio-tab" type="button" data-studio-view="memory">Командная память</button>
+    </nav>
+
+    <section class="studio-view on" id="capabilitiesView">
+      <div class="studio-hero">
+        <div class="eyebrow">Extella · карта возможностей</div>
+        <h1>Доказанная способность должна быть видна и применима</h1>
+        <p class="lead">Здесь собраны все 30 подтверждённых возможностей Extella. Статус показывает не силу идеи, а текущую продуктовую доступность: что запускается прямо здесь, что уже имеет поверхность в продукте и что пока существует как проверяемое evidence.</p>
+        <div class="coverage-strip">
+          <div class="coverage-stat"><strong id="catalogTotal">30</strong><span>технологических способностей доказано</span></div>
+          <div class="coverage-stat live"><strong id="catalogLive">12</strong><span>запускаются или проверяются в Studio</span></div>
+          <div class="coverage-stat surface"><strong id="catalogSurface">10</strong><span>видимы фрагментарно в продукте</span></div>
+          <div class="coverage-stat evidence"><strong id="catalogEvidence">8</strong><span>пока доступны только как evidence</span></div>
+        </div>
+      </div>
+
+      <div class="catalog-tools">
+        <input id="capabilitySearch" type="search" placeholder="Найти способность или продукт…" aria-label="Поиск способностей">
+        <select id="capabilityGroup" aria-label="Фильтр по группе">
+          <option value="">Все группы</option>
+        </select>
+        <select id="capabilityCoverage" aria-label="Фильтр по доступности">
+          <option value="">Любая доступность</option>
+          <option value="live">Запускается здесь</option>
+          <option value="surface">Есть поверхность</option>
+          <option value="evidence">Только evidence</option>
+        </select>
+      </div>
+      <div class="catalog-legend">
+        <span class="coverage-label live">Запускается здесь</span>
+        <span class="coverage-label surface">Есть часть интерфейса</span>
+        <span class="coverage-label evidence">Только доказательство</span>
+      </div>
+      <div class="capability-grid" id="capabilityGrid" data-capability-count="30"></div>
+    </section>
+
+    <section class="studio-view" id="memoryView">
+      <div class="studio-hero" style="margin-bottom:16px">
+        <div class="eyebrow">Live-сценарий 02 · governance</div>
+        <h1>Командная память</h1>
+        <p class="lead">Создайте временные глобальные Concept и Rule у одного агента, проверьте их видимость из другого, одним изменением Rule перестройте решения двух агентов и откатите версию.</p>
+      </div>
+      <div class="memory-layout">
+        <aside class="stack">
+          <section class="card">
+            <div class="card-hd">
+              <h2 class="card-title">Два агента, один объект памяти</h2>
+              <div class="card-sub">Модели Anthropic исключены из теста</div>
+            </div>
+            <div class="card-bd">
+              <div class="agent-field">
+                <div class="agent-label"><b>Владелец</b><span>создаёт global=true</span></div>
+                <select class="select" id="memoryOwner" aria-label="Агент-владелец"></select>
+              </div>
+              <div class="agent-field">
+                <div class="agent-label"><b>Наблюдатель</b><span>читает из своей области</span></div>
+                <select class="select" id="memoryViewer" aria-label="Агент-наблюдатель"></select>
+              </div>
+              <div class="agent-note" id="memoryAgentNote">Получаю список агентов…</div>
+              <div class="actions">
+                <button class="btn primary" id="memoryCreateBtn" type="button">Создать V1 и проверить</button>
+                <button class="btn ghost" id="memoryV2Btn" type="button">Изменить один Rule на V2</button>
+                <button class="btn secondary" id="memoryRollbackBtn" type="button">Откатить тот же Rule к V1</button>
+                <button class="btn secondary" id="memoryCleanupBtn" type="button">Удалить тестовые объекты</button>
+              </div>
+              <div class="mutation-warning">
+                <b>Контролируемая запись в Extella.</b> Сценарий создаёт только временные Concept и Rule с уникальным маркером, не меняет 1С, рекламу или другие бизнес-системы. После проверки нажмите «Удалить».
+              </div>
+            </div>
+          </section>
+          <div class="notice"><span>◇</span><span><b>Честное ограничение.</b> Автоматическая подгрузка global Rule моделью пока работает нестабильно. Поэтому Studio сначала явно читает точный Rule из Extella, затем передаёт его двум агентам. Это проверяет общую память и эволюцию политики, но ещё не доказывает автоматическую инъекцию.</span></div>
+        </aside>
+
+        <section class="stack">
+          <section class="card">
+            <div class="card-hd">
+              <h2 class="card-title">Строгая проверка</h2>
+              <div class="card-sub" id="memoryCaption">Готово создать изолированные тестовые объекты</div>
+            </div>
+            <div class="card-bd">
+              <div class="memory-flow">
+                <div class="memory-stage" id="memoryStageCreate"><span>01 · ЗАПИСЬ</span><b>Concept + Rule</b><span>global=true у владельца</span></div>
+                <div class="memory-stage" id="memoryStageVerify"><span>02 · ГРАНИЦА</span><b>Другой агент</b><span>читает те же ID и тексты</span></div>
+                <div class="memory-stage" id="memoryStageFanout"><span>03 · 1 → 2</span><b>Два решения</b><span>одна точная версия Rule</span></div>
+                <div class="memory-stage" id="memoryStageCleanup"><span>04 · CLEANUP</span><b>Удаление</b><span>только объекты маркера</span></div>
+              </div>
+            </div>
+            <div class="error-banner" id="memoryError"></div>
+          </section>
+
+          <section class="card">
+            <div class="card-hd">
+              <h2 class="card-title">Evidence текущего запуска</h2>
+              <div class="card-sub">ID объектов, global scope, решения, hashes и response IDs</div>
+            </div>
+            <div class="card-bd">
+              <div class="memory-results" id="memoryObjects">
+                <div class="empty">Сценарий ещё не запускался.</div>
+              </div>
+              <div class="decision-grid" id="memoryDecisions" style="padding:12px 0 0">
+                <div class="empty" style="grid-column:1/-1">После проверки здесь появятся два решения.</div>
+              </div>
+              <pre class="memory-log" id="memoryLog">Ожидаю запуска.</pre>
+            </div>
+          </section>
+        </section>
+      </div>
+    </section>
+
+    <section class="studio-view" id="scenarioView">
+    <section class="hero">
+      <div>
+        <div class="eyebrow">Extella · сценарий</div>
+        <h1>Прибыльный рост</h1>
+        <p class="lead">Один проверенный расчёт становится общим фактом для 1С и рекламы. Здесь V1/V2 — подписанные локальные снимки политики; настоящий global Rule проверяется отдельно в «Командной памяти».</p>
+      </div>
+      <div class="badges">
+        <span class="badge">СИНТЕТИЧЕСКИЕ ДАННЫЕ</span>
+        <span class="badge">DRY RUN</span>
+        <span class="badge safe">0 ВНЕШНИХ ЗАПИСЕЙ</span>
+      </div>
+    </section>
+
+    <div class="layout">
+      <aside class="stack controls">
+        <section class="card">
+          <div class="card-hd">
+            <h2 class="card-title">Экономика товара</h2>
+            <div class="card-sub">Демонстрационные данные за период, ₸</div>
+          </div>
+          <div class="card-bd">
+            <div class="fields">
+              <label class="field"><span>Выручка</span><input id="revenue" type="number" min="1" step="1000" value="1000000"></label>
+              <label class="field"><span>Себестоимость</span><input id="cogs" type="number" min="0" step="1000" value="500000"></label>
+              <label class="field"><span>Возвраты и потери</span><input id="returns_loss" type="number" min="0" step="1000" value="20000"></label>
+              <label class="field"><span>Комиссии</span><input id="commission" type="number" min="0" step="1000" value="50000"></label>
+              <label class="field"><span>Логистика</span><input id="logistics" type="number" min="0" step="1000" value="30000"></label>
+              <label class="field"><span>Реклама</span><input id="ad_spend" type="number" min="0" step="1000" value="200000"></label>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-hd">
+            <h2 class="card-title">Снимок общего правила</h2>
+            <div class="card-sub">Локальный контракт одной версии для двух ролей</div>
+          </div>
+          <div class="card-bd">
+            <div class="policy-switch">
+              <button class="policy-option on" type="button" data-policy="V1"><b>V1 · Рост от 15%</b><small>Базовая политика</small></button>
+              <button class="policy-option" type="button" data-policy="V2"><b>V2 · Рост от 25%</b><small>Более строгая</small></button>
+            </div>
+            <div class="policy-copy"><i></i><span>Если маржа не ниже порога — масштабировать. Иначе сохранить режим и отправить на проверку.</span></div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-hd">
+            <h2 class="card-title">Два исполнителя</h2>
+            <div class="card-sub">Выбираются из ваших агентов; дорогие модели не используются</div>
+          </div>
+          <div class="card-bd">
+            <div class="agent-field">
+              <div class="agent-label"><b>Контролёр 1С</b><span>запасы и проверка</span></div>
+              <select class="select" id="agent1" aria-label="Агент 1С"></select>
+            </div>
+            <div class="agent-field">
+              <div class="agent-label"><b>Таргетолог</b><span>рекламный бюджет</span></div>
+              <select class="select" id="agent2" aria-label="Агент-таргетолог"></select>
+            </div>
+            <div class="agent-note" id="agentNote">Получаю список доступных агентов…</div>
+            <label class="check-row"><input id="simulateFailure" type="checkbox"><span>Демо частичного отказа: второй агент недоступен, но первый результат сохраняется.</span></label>
+            <div class="actions">
+              <button class="btn primary" id="runBtn" type="button">Запустить сценарий</button>
+              <button class="btn ghost" id="compareBtn" type="button">Применить V2 и сравнить</button>
+              <button class="btn secondary" id="rollbackBtn" type="button">Откатить к V1</button>
+            </div>
+          </div>
+        </section>
+
+        <div class="notice"><span>◆</span><span><b>Безопасный режим.</b> Сценарий формирует решения, но не меняет 1С и рекламные кабинеты. Agent-вызовы отправляются с <code>store=false</code>; response IDs и usage показываются в текущем сеансе.</span></div>
+      </aside>
+
+      <section class="stack">
+        <section class="card">
+          <div class="card-hd">
+            <h2 class="card-title">Как проходит решение</h2>
+            <div class="card-sub" id="runCaption">Готово к запуску</div>
+          </div>
+          <div class="pipeline">
+            <article class="step" id="stepCalc">
+              <div class="step-top"><span class="step-num">01 · РАСЧЁТ</span><span class="status-dot"></span></div>
+              <h3>Единая прибыльность</h3>
+              <p>Все затраты учитываются один раз, результат получает контрольную сумму.</p>
+              <div class="step-value" id="calcValue">ожидает</div>
+            </article>
+            <article class="step" id="step1c">
+              <div class="step-top"><span class="step-num">02 · 1С</span><span class="status-dot"></span></div>
+              <h3>Решение по запасам</h3>
+              <p>Агент получает готовую маржу и применяет текущую политику.</p>
+              <div class="step-value" id="oneCValue">ожидает</div>
+            </article>
+            <article class="step" id="stepAds">
+              <div class="step-top"><span class="step-num">03 · РЕКЛАМА</span><span class="status-dot"></span></div>
+              <h3>Решение по бюджету</h3>
+              <p>Второй агент независимо интерпретирует тот же результат.</p>
+              <div class="step-value" id="adsValue">ожидает</div>
+            </article>
+          </div>
+          <div class="error-banner" id="errorBanner"></div>
+          <div class="outcome" id="outcome">
+            <div class="outcome-box">
+              <div>
+                <div class="outcome-kicker" id="outcomeKicker">СОГЛАСОВАННОЕ РЕШЕНИЕ</div>
+                <div class="outcome-title" id="outcomeTitle">—</div>
+                <div class="outcome-copy" id="outcomeCopy">—</div>
+              </div>
+              <div class="metric-main">
+                <strong id="marginMetric">—</strong>
+                <span>маржа после всех затрат</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-hd">
+            <h2 class="card-title">Решения агентов</h2>
+            <div class="card-sub">Один факт, две независимые роли, строгая проверка ответа</div>
+          </div>
+          <div class="decision-grid" id="decisionGrid">
+            <div class="empty" style="grid-column:1/-1">После запуска здесь появятся два проверенных решения.</div>
+          </div>
+          <div class="proof">
+            <div class="proof-item"><strong id="proofCapabilities">0</strong><span>способностей выполнено</span></div>
+            <div class="proof-item"><strong id="proofAgents">0/2</strong><span>агентов получили один факт</span></div>
+            <div class="proof-item"><strong id="proofChanges">0</strong><span>агентов изменено</span></div>
+            <div class="proof-item"><strong id="proofDecisions">0</strong><span>решений сформировано</span></div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-hd">
+            <h2 class="card-title">Эволюция снимка политики</h2>
+            <div class="card-sub">V1 → V2 → откат без изменения агентов; реальный Rule — в соседнем сценарии</div>
+          </div>
+          <div class="compare" id="compare">
+            <table>
+              <thead><tr><th>Версия</th><th>Порог</th><th>Маржа</th><th>1С</th><th>Реклама</th><th>Агенты изменены</th></tr></thead>
+              <tbody id="compareBody"></tbody>
+            </table>
+          </div>
+          <div class="empty" id="compareEmpty">Сначала запустите V1, затем нажмите «Применить V2 и сравнить».</div>
+          <details>
+            <summary>Технические доказательства: версии, hashes, response IDs, latency и tokens</summary>
+            <pre id="technical">Пока запусков нет.</pre>
+          </details>
+        </section>
+      </section>
+    </div>
+    </section>
+  </main>
+
+  <script>
+  (function () {
+    'use strict';
+
+    var PREVIEW = location.search.includes('preview=1');
+    var EXPERT_NAME = 'xtl_capability_studio_profitability_v1';
+    var COST_FIELDS = ['cogs', 'returns_loss', 'commission', 'logistics', 'ad_spend'];
+    var POLICIES = {
+      V1: { id: 'profitability_gate', version: 'POLICY_V1', threshold_bps: 1500, rule: 'margin_bps >= threshold_bps => SCALE; otherwise HOLD' },
+      V2: { id: 'profitability_gate', version: 'POLICY_V2', threshold_bps: 2500, rule: 'margin_bps >= threshold_bps => SCALE; otherwise HOLD' }
+    };
+    var ROLES = {
+      one_c: {
+        role: 'one_c_controller',
+        title: 'Контролёр 1С',
+        actions: { SCALE: 'REPLENISHMENT_ELIGIBLE', HOLD: 'MANUAL_REVIEW' },
+        actionLabels: { REPLENISHMENT_ELIGIBLE: 'Пополнение допустимо', MANUAL_REVIEW: 'Ручная проверка запасов' }
+      },
+      target: {
+        role: 'targetologist',
+        title: 'Таргетолог',
+        actions: { SCALE: 'INCREASE_BUDGET', HOLD: 'KEEP_BUDGET' },
+        actionLabels: { INCREASE_BUDGET: 'Увеличить бюджет', KEEP_BUDGET: 'Сохранить бюджет' }
+      }
+    };
+    var CAPABILITY_GROUPS = {
+      execution: 'Исполнение',
+      governance: 'Память и governance',
+      composition: 'Композиция агентов',
+      evolution: 'Эволюция класса',
+      device: 'Устройства',
+      interface: 'Интерфейсы',
+      learning: 'Обучение и рост'
+    };
+    var COVERAGE_LABELS = {
+      live: 'Запускается здесь',
+      surface: 'Есть часть интерфейса',
+      evidence: 'Только evidence'
+    };
+    var PROVEN_CAPABILITIES = [
+      {
+        id: 'execution.agent_manages_expert', group: 'execution', coverage: 'surface',
+        name: 'Агент создаёт, сохраняет, находит и запускает Expert',
+        summary: 'Жизненный цикл Expert доступен платформе и частично виден в Library/Activity Center.',
+        evidence: 'Эксперты создавались агентом и повторно запускались по имени.',
+        limitation: 'Нет одного пользовательского экрана со всем циклом и результатом исполнения.',
+        product: 'Управляемые бизнес-автоматизации', next: 'Показать create → run → inspect → delete в одном экране.'
+      },
+      {
+        id: 'execution.expert_persists_restart', group: 'execution', coverage: 'surface',
+        name: 'Expert переживает новую сессию и перезапуск',
+        summary: 'Сохранённая способность остаётся адресуемой после завершения чата.',
+        evidence: 'Один и тот же Expert найден и выполнен в новой сессии.',
+        limitation: 'Studio пока не проводит управляемый restart-check.',
+        product: 'Постоянные агенты и хостинг', next: 'Автоматический checkpoint до/после перезапуска.'
+      },
+      {
+        id: 'execution.deterministic_fython', group: 'execution', coverage: 'live', action: 'scenario',
+        name: 'Точный детерминированный расчёт без LLM',
+        summary: 'Одинаковые входы дают одинаковый бизнес-результат и контрольные суммы.',
+        evidence: 'xtl_capability_studio_profitability_v1 повторяет полный расчёт маржи и hashes.',
+        limitation: 'Покрыт один расчёт, а не широкий набор boundary fixtures.',
+        product: 'Сверки, калькуляторы, правила допуска', next: '100 граничных наборов и независимый oracle.'
+      },
+      {
+        id: 'execution.local_file_processing', group: 'execution', coverage: 'surface',
+        name: 'Детерминированная обработка локальных файлов',
+        summary: 'Listener позволяет Expert работать с файлами на устройстве без загрузки в контекст модели.',
+        evidence: 'HTML и отчётные артефакты создавались и проверялись на локальном диске.',
+        limitation: 'В Studio нет безопасного file-picker и отчёта об изменениях.',
+        product: 'Сверка Excel/PDF/1С', next: 'Read-only выбор файлов и diff результата.'
+      },
+      {
+        id: 'execution.listener_result_log', group: 'execution', coverage: 'live', action: 'scenario',
+        name: 'Listener возвращает result и execution log',
+        summary: 'Локальное исполнение отделено от рассуждения и оставляет проверяемый след.',
+        evidence: 'Expert envelope содержит status, result, execution_log и run_time_ms.',
+        limitation: 'Качество и полнота логов зависят от конкретного Expert.',
+        product: 'Аудируемые автоматизации', next: 'Единый журнал запусков с фильтрами.'
+      },
+      {
+        id: 'execution.expert_rest_api', group: 'execution', coverage: 'live', action: 'scenario',
+        name: 'Expert вызывается через REST API',
+        summary: 'Способность можно запускать headless из приложения или внешнего интерфейса.',
+        evidence: 'Toolbar вызывает /api/expert/run через узкий tokenless bridge.',
+        limitation: 'Текущий сценарий использует только один Expert.',
+        product: 'Backend приложений и мобильных клиентов', next: 'Контрактные тесты нескольких типов Expert.'
+      },
+      {
+        id: 'execution.agent_public_api', group: 'execution', coverage: 'live', action: 'scenario',
+        name: 'Агент вызывается через публичный API',
+        summary: 'Выбранный агент выполняет строго ограниченную интерпретацию проверенного факта.',
+        evidence: 'Два etb_run_agent запроса возвращают response ID, latency и usage.',
+        limitation: 'Studio намеренно запрещает инструменты и внешние действия.',
+        product: 'Встроенные агенты в web/iOS/Android', next: 'Сценарий с разрешённым безопасным tool contract.'
+      },
+      {
+        id: 'governance.local_expert_isolation', group: 'governance', coverage: 'surface',
+        name: 'Локальный Expert изолирован по агенту',
+        summary: 'По умолчанию способности не пересекают границу агента.',
+        evidence: 'Без global=true Expert не находился из другой области агента.',
+        limitation: 'Нет визуального инспектора владельца и области видимости.',
+        product: 'Изолированные рабочие пространства', next: 'Scope inspector с двумя агентами.'
+      },
+      {
+        id: 'governance.concept_persistence', group: 'governance', coverage: 'surface',
+        name: 'Concept сохраняется как долговременная память',
+        summary: 'Знание хранится отдельно от истории одного диалога.',
+        evidence: 'Concept находился после новой сессии.',
+        limitation: 'Studio не автоматизирует перезапуск между записью и чтением.',
+        product: 'Обучение агента на опыте пользователя', next: 'Restart-check с фиксированным marker.'
+      },
+      {
+        id: 'governance.global_concept_visibility', group: 'governance', coverage: 'live', action: 'memory',
+        name: 'Global Concept виден другому агенту',
+        summary: 'Знание с global=true пересекает границу агента в рамках аккаунта.',
+        evidence: 'Командная память создаёт Concept у владельца и читает маркер из области наблюдателя.',
+        limitation: 'Проверяется явным list(global=true), не автоматическим retrieval модели.',
+        product: 'Общая память команды агентов', next: 'Проверить семантический retrieval в nested chain.'
+      },
+      {
+        id: 'governance.rule_persistence', group: 'governance', coverage: 'surface',
+        name: 'Rule сохраняется между сессиями',
+        summary: 'Политика существует независимо от текущего prompt.',
+        evidence: 'Rule повторно находился после завершения исходной сессии.',
+        limitation: 'В Studio сохранён marker, но restart ещё требует ручного действия.',
+        product: 'Управляемая политика агентов', next: 'Кнопка «проверить после перезапуска».'
+      },
+      {
+        id: 'governance.global_rule_visibility', group: 'governance', coverage: 'live', action: 'memory',
+        name: 'Global Rule виден разным агентам',
+        summary: 'Один объект политики читается из двух агентских областей.',
+        evidence: 'Командная память сверяет ID, global flag и точный текст Rule.',
+        limitation: 'Автоматическая инъекция в модель пока нестабильна.',
+        product: 'Централизованный governance', next: 'Исправить и доказать automatic Rule loading.'
+      },
+      {
+        id: 'governance.rule_one_to_many_evolution', group: 'governance', coverage: 'live', action: 'memory',
+        name: 'Один Rule меняет поведение нескольких агентов',
+        summary: 'V1 и V2 одного объекта приводят к разным решениям двух ролей без изменения агентов.',
+        evidence: 'При марже 20% V1 даёт SCALE, V2 — HOLD у обоих агентов.',
+        limitation: 'Rule явно загружается Studio перед fan-out.',
+        product: 'Массовое изменение регламентов', next: 'Расширить тест до 10 агентов и 3 ролей.'
+      },
+      {
+        id: 'governance.rule_rollback', group: 'governance', coverage: 'live', action: 'memory',
+        name: 'Политику можно откатить без изменения агентов',
+        summary: 'Тот же Rule возвращается с V2 к V1, а решения восстанавливаются.',
+        evidence: 'Откат обновляет исходный rule_id и повторно проверяет его из другого агента.',
+        limitation: 'История версий пока хранится сценарием, а не отдельным registry.',
+        product: 'Безопасное управление изменениями', next: 'Version registry, approve и diff.'
+      },
+      {
+        id: 'composition.agent_to_agent', group: 'composition', coverage: 'evidence',
+        name: 'Один Agent вызывает другого Agent',
+        summary: 'Agent может использовать API как транспорт для вызова коллеги.',
+        evidence: 'Технологический тест подтвердил API-вызов второго агента.',
+        limitation: 'Текущий UI делает fan-out сам; nested Agent→Agent не виден.',
+        product: 'Команды специализированных агентов', next: 'Live supervisor с одним реальным child call.'
+      },
+      {
+        id: 'composition.multi_worker_aggregation', group: 'composition', coverage: 'live', action: 'scenario',
+        name: 'Один сценарий агрегирует двух workers',
+        summary: 'Два агента получают один проверенный факт, а UI собирает строгий общий итог.',
+        evidence: 'Прибыльный рост валидирует оба JSON-контракта до агрегации.',
+        limitation: 'Оркестратор сейчас находится в toolbar, а не внутри Agent.',
+        product: 'Многоагентные бизнес-процессы', next: 'Перенести orchestration в supervisor Agent.'
+      },
+      {
+        id: 'composition.rule_nested_chain', group: 'composition', coverage: 'evidence',
+        name: 'Общее Rule действует в цепочке вложенных вызовов',
+        summary: 'Политику можно передавать через supervisor к дочерним агентам.',
+        evidence: 'Отдельный эксперимент подтвердил общий контракт в nested chain.',
+        limitation: 'Нет продуктового экрана и повторного strict run.',
+        product: 'Governed agent teams', next: 'Supervisor → 2 workers с одной загруженной Rule.'
+      },
+      {
+        id: 'composition.child_failure_isolation', group: 'composition', coverage: 'live', action: 'scenario',
+        name: 'Отказ одного child не уничтожает здоровый результат',
+        summary: 'Сценарий помечает PARTIAL и сохраняет валидное решение первого агента.',
+        evidence: 'Встроенная симуляция недоступного второго агента не подменяет ответ догадкой.',
+        limitation: 'Пока моделируется один тип отказа.',
+        product: 'Устойчивые автоматизации', next: 'Timeout, malformed JSON и retry matrix.'
+      },
+      {
+        id: 'composition.cross_model_semantics', group: 'composition', coverage: 'surface',
+        name: 'Разные модели следуют одному смысловому контракту',
+        summary: 'Policy contract не привязан к одному поставщику модели.',
+        evidence: 'Сценарий умеет выбрать двух non-Claude агентов и проверяет один schema contract.',
+        limitation: 'Доказательство становится live только при реально разных provider/model.',
+        product: 'Маршрутизация дешёвых и сильных моделей', next: 'Автовыбор двух разных providers и матрица совпадений.'
+      },
+      {
+        id: 'evolution.custom_cspl_registration', group: 'evolution', coverage: 'evidence',
+        name: 'Можно зарегистрировать собственный язык исполнения',
+        summary: 'Extella принимает новый handler через DisNet без изменения product core.',
+        evidence: 'Custom HTML CSPL был зарегистрирован как отдельный зашифрованный container.',
+        limitation: 'В Studio нет безопасного installer workflow.',
+        product: 'Новые классы способностей', next: 'Read-only registry и bounded installer.'
+      },
+      {
+        id: 'evolution.declaration_handler_separation', group: 'evolution', coverage: 'evidence',
+        name: 'Декларация WHAT отделена от handler HOW',
+        summary: 'Expert описывает результат, а общий handler определяет реализацию.',
+        evidence: 'Три site Experts не содержали HTML/CSS/JS и использовали один handler.',
+        limitation: 'Проверка пока представлена отчётом и артефактами.',
+        product: 'Управляемая разработка приложений', next: 'Показать declaration и handler diff рядом.'
+      },
+      {
+        id: 'evolution.handler_multiple_artifacts', group: 'evolution', coverage: 'evidence',
+        name: 'Один handler создаёт разные артефакты',
+        summary: 'Одна реализация обслуживает разные декларативные продукты.',
+        evidence: 'Landing, docs и catalog были сгенерированы одним HTML handler.',
+        limitation: 'Нет встроенного artifact viewer.',
+        product: 'Семейства сайтов и документов', next: 'Gallery из одного live handler.'
+      },
+      {
+        id: 'evolution.one_to_many_handler_evolution', group: 'evolution', coverage: 'evidence',
+        name: 'Одно изменение handler эволюционирует весь класс',
+        summary: 'Общий HOW меняется один раз, декларации Experts остаются неизменными.',
+        evidence: 'V2 обновила 3/3 сайтов; body hashes и updated_at Experts не изменились.',
+        limitation: 'Нет продуктового diff и кнопки rollback.',
+        product: 'Class-level evolution приложений', next: 'Live V1 → V2 → rollback с artifact hashes.'
+      },
+      {
+        id: 'evolution.handler_api_addressable', group: 'evolution', coverage: 'evidence',
+        name: 'Способность на новом handler остаётся API-адресуемой',
+        summary: 'Custom runtime не ломает единый способ вызова Expert.',
+        evidence: 'Experts с custom CSPL запускались через стандартную поверхность Extella.',
+        limitation: 'API-вызов не показан в текущем UI.',
+        product: 'Единый backend разных runtimes', next: 'Contract test fython + custom CSPL через один endpoint.'
+      },
+      {
+        id: 'device.macos_listener_execution', group: 'device', coverage: 'surface',
+        name: 'Listener исполняет способности на macOS',
+        summary: 'Облако передаёт задачу на подключённое устройство, где выполняется Expert.',
+        evidence: 'Локальные Experts возвращали result и log с текущего Mac.',
+        limitation: 'UI не показывает выбранный Listener как отдельный target.',
+        product: 'Локальные и приватные автоматизации', next: 'Device badge, availability и last heartbeat.'
+      },
+      {
+        id: 'device.disnet_target_routing', group: 'device', coverage: 'surface',
+        name: 'DisNet направляет исполнение на конкретное устройство',
+        summary: 'Одна способность может быть адресована списку target IDs.',
+        evidence: 'API и Listener поддерживают targets и выбор первого доступного устройства.',
+        limitation: 'В Studio отсутствует безопасный selector устройств.',
+        product: 'Роботы, камеры, edge и закрытый контур', next: 'Read-only target picker и dry-run routing.'
+      },
+      {
+        id: 'interface.headless_backend_web_ui', group: 'interface', coverage: 'live', action: 'scenario',
+        name: 'Способность отделена от интерфейса',
+        summary: 'Один headless Expert используется богатым web-интерфейсом без копирования бизнес-логики.',
+        evidence: 'profitability Expert вызывается через bridge из самостоятельного HTML UI.',
+        limitation: 'Пока показан один интерфейсный клиент.',
+        product: 'Web, iOS, Android и встроенные агенты', next: 'Второй клиент с тем же Expert contract.'
+      },
+      {
+        id: 'learning.retrieve_prior_expert', group: 'learning', coverage: 'surface',
+        name: 'Агент находит ранее созданную способность',
+        summary: 'Новый запрос может повторно использовать Expert вместо повторного написания решения.',
+        evidence: 'Expert успешно находился по имени/смыслу в новой задаче.',
+        limitation: 'Выбор старой способности пока не объясняется пользователю.',
+        product: 'Агент, который накапливает навыки', next: 'UI «найдено и переиспользовано» с provenance.'
+      },
+      {
+        id: 'learning.policy_multi_model_evolution', group: 'learning', coverage: 'live', action: 'memory',
+        name: 'Общая политика эволюционирует поведение разных моделей',
+        summary: 'Одна версия Rule задаёт одинаковую смысловую границу нескольким моделям.',
+        evidence: 'Командная память проверяет exact policy hash в ответе каждого агента.',
+        limitation: 'Cross-model доказано только если выбранные provider/model действительно различаются.',
+        product: 'Обучение команды агентов сверху', next: 'Обязательная multi-provider test matrix.'
+      },
+      {
+        id: 'learning.handler_class_inheritance', group: 'learning', coverage: 'evidence',
+        name: 'Класс Experts наследует улучшения общего handler',
+        summary: 'Обучение может расти вниз: улучшение общей реализации наследуют все декларации класса.',
+        evidence: 'Три неизменных Experts получили V2 дизайн-систему из одного handler.',
+        limitation: 'Не построен registry наследования и совместимости версий.',
+        product: 'Эволюционирующие семейства агентов и приложений', next: 'Dependency graph handler → Experts → products.'
+      }
+    ];
+    var state = {
+      policyKey: 'V1',
+      agents: [],
+      runs: {},
+      current: null,
+      busy: false,
+      memoryBusy: false,
+      memory: {
+        marker: null,
+        ownerAgentId: null,
+        viewerAgentId: null,
+        version: null,
+        evidence: null,
+        runs: {}
+      },
+      mockGovernance: null,
+      pending: new Map(),
+      reqSeq: 0,
+      initialized: PREVIEW
+    };
+
+    function $(id) { return document.getElementById(id); }
+    function esc(value) {
+      return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    function canonical(value) {
+      if (Array.isArray(value)) return '[' + value.map(canonical).join(',') + ']';
+      if (value && typeof value === 'object') {
+        return '{' + Object.keys(value).sort().map(function (key) {
+          return JSON.stringify(key) + ':' + canonical(value[key]);
+        }).join(',') + '}';
+      }
+      return JSON.stringify(value);
+    }
+    async function sha256(value) {
+      var text = typeof value === 'string' ? value : canonical(value);
+      if (!window.crypto || !crypto.subtle || typeof TextEncoder === 'undefined') {
+        throw new Error('WebCrypto SHA-256 недоступен; проверяемый запуск остановлен');
+      }
+      var bytes = new TextEncoder().encode(text);
+      var digest = await crypto.subtle.digest('SHA-256', bytes);
+      return Array.from(new Uint8Array(digest)).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+    }
+    function formatMoney(value) {
+      return new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 }).format(Number(value || 0)) + ' ₸';
+    }
+    function formatPercent(bps) { return (Number(bps || 0) / 100).toLocaleString('ru-RU', { maximumFractionDigits: 2 }) + '%'; }
+    function shortHash(value) { return value ? String(value).slice(0, 12) + '…' : '—'; }
+    function usageText(usage) {
+      if (!usage) return 'tokens —';
+      var total = usage.total_tokens != null ? usage.total_tokens :
+        ((usage.input_tokens || usage.prompt_tokens || 0) + (usage.output_tokens || usage.completion_tokens || 0));
+      return total ? 'tokens ' + total : 'tokens —';
+    }
+    function agentLabel(agent) {
+      var name = agent.name || agent.id || 'Без имени';
+      var detail = [agent.provider, agent.model].filter(Boolean).join(' · ');
+      return detail ? name + ' — ' + detail : name;
+    }
+    function isAllowedAgent(agent) {
+      var text = [agent.id, agent.name, agent.provider, agent.model].join(' ');
+      return Boolean(agent.id) && !/(claude|anthropic)/i.test(text);
+    }
+    function agentScore(agent, role) {
+      var text = [agent.id, agent.name, agent.provider, agent.model, agent.category].join(' ').toLowerCase();
+      var score = /(qwen|alibaba)/.test(text) ? 25 : 0;
+      if (role === 'one_c' && /(1c|1с|уч[её]т|account|audit_learning)/.test(text)) score += 80;
+      if (role === 'target' && /(target|таргет|marketing|маркет|ads|реклам)/.test(text)) score += 80;
+      return score;
+    }
+    function getAgent(id) { return state.agents.find(function (a) { return a.id === id; }) || { id: id, name: id }; }
+
+    function bridge(type, resultType, payload, timeoutMs) {
+      if (PREVIEW) return mockBridge(type, payload || {});
+      return new Promise(function (resolve, reject) {
+        var reqId = 'pg_' + Date.now().toString(36) + '_' + (++state.reqSeq);
+        var timer = setTimeout(function () {
+          state.pending.delete(reqId);
+          reject(new Error('Время ожидания платформы истекло'));
+        }, timeoutMs || 210000);
+        state.pending.set(reqId, { resultType: resultType, resolve: resolve, reject: reject, timer: timer });
+        window.parent.postMessage(Object.assign({ type: type, reqId: reqId }, payload || {}), '*');
+      });
+    }
+
+    window.addEventListener('message', function (event) {
+      if (event.source !== window.parent) return;
+      var data = event.data || {};
+      if (data.type === 'etb_init') {
+        state.initialized = true;
+        applyTheme(data.theme);
+        window.parent.postMessage({ type: 'etb_ui_health', ok: true, pluginId: 'profit-growth-scenario' }, '*');
+        loadAgents();
+        return;
+      }
+      if (data.type === 'etb_theme') { applyTheme(data.theme); return; }
+      if (data.type === 'etb_governance_auto_cleanup' && data.ok === true) {
+        var autoResult = data.result || {};
+        try { localStorage.removeItem('xtl_studio_governance_session'); } catch (_) {}
+        state.memory = {
+          marker: null,
+          ownerAgentId: null,
+          viewerAgentId: null,
+          version: null,
+          evidence: null,
+          runs: {}
+        };
+        setMemoryStage('memoryStageCleanup', 'ok');
+        showMemoryError('');
+        $('memoryCaption').textContent = 'Временные объекты автоматически удалены при выходе из Studio.';
+        $('memoryObjects').innerHTML =
+          '<article class="memory-object"><div class="memory-object-head"><strong>Auto-cleanup подтверждён</strong>' +
+          '<span class="coverage-label live">VERIFIED ABSENT</span></div><code>concepts=' +
+          esc(autoResult.deletedConcepts || 0) + ' · rules=' + esc(autoResult.deletedRules || 0) + '</code></article>';
+        $('memoryDecisions').innerHTML =
+          '<div class="empty" style="grid-column:1/-1">Временная глобальная память удалена хостом.</div>';
+        $('memoryLog').textContent = JSON.stringify(autoResult, null, 2);
+        return;
+      }
+      var pending = data.reqId && state.pending.get(data.reqId);
+      if (!pending || data.type !== pending.resultType) return;
+      clearTimeout(pending.timer);
+      state.pending.delete(data.reqId);
+      if (data.ok === false) pending.reject(new Error(data.error || 'Запрос не выполнен'));
+      else pending.resolve(data);
+    });
+
+    function applyTheme(theme) {
+      var light = /light/i.test(String(theme || ''));
+      document.documentElement.setAttribute('data-theme', light ? 'light' : 'dark');
+    }
+
+    async function mockBridge(type, payload) {
+      await new Promise(function (resolve) { setTimeout(resolve, type === 'etb_run_agent' ? 430 : 230); });
+      if (type === 'etb_agents_list') {
+        return {
+          ok: true,
+          agents: [
+            { id: 'agent_qwen_one_c_demo', name: 'Контролёр 1С', provider: 'alibaba', model: 'qwen3.7' },
+            { id: 'agent_qwen_target_demo', name: 'Таргетолог', provider: 'alibaba', model: 'qwen3.7' },
+            { id: 'agent_minimax_backup_demo', name: 'Резервный аналитик', provider: 'minimax', model: 'minimax-m3' }
+          ]
+        };
+      }
+      if (type === 'etb_run_expert') {
+        var p = payload.params;
+        var profit = p.revenue - p.cogs - p.returns_loss - p.commission - p.logistics - p.ad_spend;
+        var margin = Math.round(profit * 10000 / p.revenue);
+        var result = {
+          status: 'success',
+          capability_id: 'profitability_calculation',
+          capability_version: 'CALC_V1',
+          source_marker: 'FULL_CONTRIBUTION_MARGIN_20260724',
+          profit: profit,
+          margin_bps: margin,
+          input_sha256: await sha256(p),
+          applied_costs: COST_FIELDS.slice(),
+          external_writes: false
+        };
+        result.result_sha256 = await sha256(result);
+        return { ok: true, res: { status: 'success', expert_name: EXPERT_NAME, result: JSON.stringify(result), execution_log: 'PREVIEW: deterministic Expert executed locally', run_time_ms: 18 } };
+      }
+      if (type === 'etb_governance_probe') {
+        var mockThreshold = payload.version === 'V2' ? 2500 : 1500;
+        var mockRule = payload.marker + ' POLICY_' + (payload.version === 'V2' ? 'V2' : 'V1') +
+          ': margin_bps >= ' + mockThreshold + ' => SCALE; otherwise HOLD. Explicit loader required. external_writes=false.';
+        var mockConcept = payload.marker +
+          ' CONCEPT: contribution margin includes COGS, returns, commission, logistics and advertising. This is temporary Capability Studio evidence.';
+        if (payload.action === 'create') {
+          state.mockGovernance = {
+            concept: { id: 74001, global: true, text: mockConcept },
+            rule: { id: 'rule_preview_74002', global: true, rule: mockRule }
+          };
+        } else if (payload.action === 'update') {
+          if (!state.mockGovernance) throw new Error('studio rule not found');
+          state.mockGovernance.rule.rule = mockRule;
+        } else if (payload.action === 'cleanup') {
+          var deleted = state.mockGovernance ? 1 : 0;
+          state.mockGovernance = null;
+          return {
+            ok: true,
+            result: {
+              agentId: payload.ownerAgentId,
+              marker: payload.marker,
+              deletedConcepts: deleted,
+              deletedRules: deleted,
+              verifiedAbsent: true
+            }
+          };
+        }
+        return {
+          ok: true,
+          result: {
+            agentId: payload.action === 'verify' ? payload.viewerAgentId : payload.ownerAgentId,
+            marker: payload.marker,
+            concept: state.mockGovernance && Object.assign({}, state.mockGovernance.concept),
+            rule: state.mockGovernance && Object.assign({}, state.mockGovernance.rule)
+          }
+        };
+      }
+      if (type === 'etb_run_agent') {
+        if (payload.agentId === 'agent_demo_unavailable') throw new Error('Демонстрационный отказ: агент недоступен');
+        var prompt = JSON.parse(payload.message);
+        var d = prompt.decision_contract;
+        var decision = d.margin_bps >= d.threshold_bps ? 'SCALE' : 'HOLD';
+        var roleInfo = d.role === ROLES.one_c.role ? ROLES.one_c : ROLES.target;
+        var answer = {
+          schema_version: 'decision.v1',
+          role: d.role,
+          scenario_run_id: d.scenario_run_id,
+          policy_id: d.policy_id,
+          policy_version: d.policy_version,
+          policy_sha256: d.policy_sha256,
+          result_sha256: d.result_sha256,
+          margin_bps: d.margin_bps,
+          threshold_bps: d.threshold_bps,
+          gate_decision: decision,
+          action: roleInfo.actions[decision],
+          rationale: decision === 'SCALE' ? 'Маржа проходит общий порог роста.' : 'Маржа ниже общего порога; сохраняем безопасный режим.',
+          external_writes: false
+        };
+        return {
+          ok: true,
+          responseId: 'resp_demo_' + Math.random().toString(36).slice(2, 9),
+          status: 'completed',
+          model: getAgent(payload.agentId).model,
+          usage: { input_tokens: 312, output_tokens: 118, total_tokens: 430 },
+          latencyMs: 430,
+          answer: JSON.stringify(answer)
+        };
+      }
+      throw new Error('Неизвестный mock bridge');
+    }
+
+    async function loadAgents() {
+      try {
+        var response = await bridge('etb_agents_list', 'etb_agents_result', {}, 30000);
+        state.agents = (response.agents || []).filter(isAllowedAgent);
+        state.agents.sort(function (a, b) { return agentScore(b, 'one_c') - agentScore(a, 'one_c'); });
+        renderAgentSelects();
+      } catch (error) {
+        state.agents = [];
+        renderAgentSelects(error.message);
+      }
+    }
+
+    function renderAgentSelects(error) {
+      var s1 = $('agent1'), s2 = $('agent2');
+      s1.innerHTML = ''; s2.innerHTML = '';
+      if (!state.agents.length) {
+        s1.innerHTML = '<option value="">Нет доступных агентов</option>';
+        s2.innerHTML = '<option value="">Нет доступных агентов</option>';
+        $('agentNote').textContent = error || 'Нужны минимум два доступных агента не от Anthropic.';
+        renderMemoryAgentSelects(error);
+        return;
+      }
+      state.agents.forEach(function (agent) {
+        [s1, s2].forEach(function (select) {
+          var option = document.createElement('option');
+          option.value = agent.id;
+          option.textContent = agentLabel(agent);
+          select.appendChild(option);
+        });
+      });
+      var oneC = state.agents.slice().sort(function (a, b) { return agentScore(b, 'one_c') - agentScore(a, 'one_c'); })[0];
+      var target = state.agents.slice().sort(function (a, b) { return agentScore(b, 'target') - agentScore(a, 'target'); })
+        .find(function (a) { return !oneC || a.id !== oneC.id; }) || state.agents[1] || state.agents[0];
+      s1.value = oneC && oneC.id || '';
+      s2.value = target && target.id || '';
+      $('agentNote').textContent = state.agents.length >= 2
+        ? 'Доступно: ' + state.agents.length + '. Модели Anthropic исключены из этого теста.'
+        : 'Доступен только один подходящий агент; для честного сравнения нужен второй.';
+      renderMemoryAgentSelects(error);
+    }
+
+    function renderMemoryAgentSelects(error) {
+      var owner = $('memoryOwner'), viewer = $('memoryViewer');
+      owner.innerHTML = ''; viewer.innerHTML = '';
+      if (!state.agents.length) {
+        owner.innerHTML = '<option value="">Нет доступных агентов</option>';
+        viewer.innerHTML = '<option value="">Нет доступных агентов</option>';
+        $('memoryAgentNote').textContent = error || 'Нужны два доступных агента.';
+        return;
+      }
+      state.agents.forEach(function (agent) {
+        [owner, viewer].forEach(function (select) {
+          var option = document.createElement('option');
+          option.value = agent.id;
+          option.textContent = agentLabel(agent);
+          select.appendChild(option);
+        });
+      });
+      owner.value = $('agent1').value || (state.agents[0] && state.agents[0].id) || '';
+      var ownerAgent = getAgent(owner.value);
+      var crossProvider = state.agents.find(function (agent) {
+        return agent.id !== owner.value &&
+          (String(agent.provider || '') + '/' + String(agent.model || '')) !==
+          (String(ownerAgent.provider || '') + '/' + String(ownerAgent.model || ''));
+      });
+      viewer.value = crossProvider && crossProvider.id || $('agent2').value || (state.agents[1] && state.agents[1].id) || '';
+      if (state.memory.ownerAgentId && state.agents.some(function (agent) { return agent.id === state.memory.ownerAgentId; })) {
+        owner.value = state.memory.ownerAgentId;
+      }
+      if (state.memory.viewerAgentId && state.agents.some(function (agent) { return agent.id === state.memory.viewerAgentId; })) {
+        viewer.value = state.memory.viewerAgentId;
+      }
+      if (viewer.value === owner.value && state.agents[1]) viewer.value = state.agents[1].id;
+      $('memoryAgentNote').textContent = state.agents.length >= 2
+        ? 'Владелец и наблюдатель должны быть разными. Найдено агентов: ' + state.agents.length + '.'
+        : 'Доступен только один агент; cross-agent проверка невозможна.';
+    }
+
+    function switchStudioView(view) {
+      var target = view === 'memory' ? 'memoryView' : view === 'scenario' ? 'scenarioView' : 'capabilitiesView';
+      document.querySelectorAll('.studio-view').forEach(function (node) {
+        node.classList.toggle('on', node.id === target);
+      });
+      document.querySelectorAll('[data-studio-view]').forEach(function (button) {
+        button.classList.toggle('on', button.getAttribute('data-studio-view') === view);
+      });
+      if (view === 'memory') renderMemoryAgentSelects();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function initializeCapabilityCatalog() {
+      var ids = new Set(PROVEN_CAPABILITIES.map(function (item) { return item.id; }));
+      var counts = PROVEN_CAPABILITIES.reduce(function (acc, item) {
+        acc[item.coverage] = (acc[item.coverage] || 0) + 1;
+        return acc;
+      }, {});
+      $('catalogTotal').textContent = String(PROVEN_CAPABILITIES.length);
+      $('catalogLive').textContent = String(counts.live || 0);
+      $('catalogSurface').textContent = String(counts.surface || 0);
+      $('catalogEvidence').textContent = String(counts.evidence || 0);
+      if (PROVEN_CAPABILITIES.length !== 30 || ids.size !== 30) {
+        $('capabilityGrid').innerHTML = '<div class="catalog-empty">Ошибка каталога: ожидается ровно 30 уникальных способностей.</div>';
+        return;
+      }
+      var group = $('capabilityGroup');
+      Object.keys(CAPABILITY_GROUPS).forEach(function (key) {
+        var option = document.createElement('option');
+        option.value = key;
+        option.textContent = CAPABILITY_GROUPS[key];
+        group.appendChild(option);
+      });
+      renderCapabilities();
+    }
+
+    function renderCapabilities() {
+      var query = $('capabilitySearch').value.trim().toLowerCase();
+      var group = $('capabilityGroup').value;
+      var coverage = $('capabilityCoverage').value;
+      var rows = PROVEN_CAPABILITIES.filter(function (item) {
+        if (group && item.group !== group) return false;
+        if (coverage && item.coverage !== coverage) return false;
+        if (!query) return true;
+        return [
+          item.id, item.name, item.summary, item.evidence, item.limitation,
+          item.product, item.next, CAPABILITY_GROUPS[item.group]
+        ].join(' ').toLowerCase().indexOf(query) >= 0;
+      });
+      $('capabilityGrid').innerHTML = rows.length ? rows.map(function (item) {
+        var action = item.action
+          ? '<div class="capability-actions"><button type="button" data-open-capability="' + esc(item.action) + '">' +
+            (item.action === 'memory' ? 'Открыть «Командную память»' : 'Открыть «Прибыльный рост»') + '</button></div>'
+          : '';
+        return '<article class="capability-card" data-capability-id="' + esc(item.id) + '">' +
+          '<div class="capability-group">' + esc(CAPABILITY_GROUPS[item.group]) + ' · ДОКАЗАНО</div>' +
+          '<h3>' + esc(item.name) + '</h3><p>' + esc(item.summary) + '</p>' +
+          '<div class="capability-proof"><span class="coverage-label ' + esc(item.coverage) + '">' +
+          esc(COVERAGE_LABELS[item.coverage]) + '</span><br><br><b>Evidence:</b> ' + esc(item.evidence) +
+          '<br><b>Ограничение:</b> ' + esc(item.limitation) +
+          '<br><b>Можно построить:</b> ' + esc(item.product) +
+          '<br><b>Следующий строгий тест:</b> ' + esc(item.next) + '</div>' + action + '</article>';
+      }).join('') : '<div class="catalog-empty">По этим фильтрам способностей не найдено.</div>';
+      document.querySelectorAll('[data-open-capability]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          switchStudioView(button.getAttribute('data-open-capability'));
+        });
+      });
+    }
+
+    function readInputs() {
+      var values = {};
+      ['revenue', 'cogs', 'returns_loss', 'commission', 'logistics', 'ad_spend'].forEach(function (id) {
+        values[id] = Number($(id).value);
+      });
+      Object.keys(values).forEach(function (key) {
+        if (!Number.isFinite(values[key]) || values[key] < 0) throw new Error('Проверьте поле «' + key + '»');
+      });
+      if (values.revenue <= 0) throw new Error('Выручка должна быть больше нуля');
+      return values;
+    }
+
+    async function unwrapExpert(response, expectedInput) {
+      var value = response && response.res != null ? response.res : response;
+      for (var depth = 0; depth < 6; depth++) {
+        if (typeof value === 'string') {
+          try { value = JSON.parse(value); continue; }
+          catch (_) { throw new Error('Расчёт вернул неразбираемый результат'); }
+        }
+        if (!value || typeof value !== 'object') break;
+        if (value.status === 'error') throw new Error(value.message || value.error_code || 'Ошибка расчёта');
+        if (value.capability_id) break;
+        if (value.result != null) { value = value.result; continue; }
+        if (value.output != null) { value = value.output; continue; }
+        break;
+      }
+      if (!value || value.status !== 'success' || value.capability_id !== 'profitability_calculation') {
+        throw new Error('Платформа не подтвердила расчёт прибыльности');
+      }
+      if (value.external_writes !== false) throw new Error('Нарушен безопасный режим расчёта');
+      if (!Array.isArray(value.applied_costs) || COST_FIELDS.some(function (f) { return value.applied_costs.indexOf(f) === -1; })) {
+        throw new Error('Расчёт учёл не все категории затрат');
+      }
+      if (!value.result_sha256 || !Number.isFinite(Number(value.margin_bps))) throw new Error('У результата нет проверяемой контрольной суммы');
+      var expectedProfit = expectedInput.revenue - expectedInput.cogs - expectedInput.returns_loss -
+        expectedInput.commission - expectedInput.logistics - expectedInput.ad_spend;
+      var expectedMargin = Math.round(expectedProfit * 10000 / expectedInput.revenue);
+      if (Number(value.profit) !== expectedProfit || Number(value.margin_bps) !== expectedMargin) {
+        throw new Error('Независимый пересчёт не совпал с результатом Expert');
+      }
+      if (value.input_sha256 !== await sha256(expectedInput)) {
+        throw new Error('input_sha256 не подтверждает отправленные данные');
+      }
+      var resultWithoutHash = Object.assign({}, value);
+      delete resultWithoutHash.result_sha256;
+      if (value.result_sha256 !== await sha256(resultWithoutHash)) {
+        throw new Error('result_sha256 не подтверждает полученный результат');
+      }
+      return value;
+    }
+
+    async function policySnapshot(key) {
+      var base = Object.assign({}, POLICIES[key]);
+      base.policy_sha256 = await sha256(base);
+      return base;
+    }
+
+    function makePrompt(roleKey, runId, policy, calculation) {
+      var role = ROLES[roleKey];
+      return JSON.stringify({
+        task: 'Interpret one verified profitability result for the assigned business role.',
+        rules: [
+          'Do not call tools and do not perform external actions.',
+          'Use only the supplied decision contract; do not recalculate or substitute values.',
+          'Return exactly one JSON object and no markdown.'
+        ],
+        decision_contract: {
+          schema_version: 'decision.v1',
+          role: role.role,
+          scenario_run_id: runId,
+          policy_id: policy.id,
+          policy_version: policy.version,
+          policy_sha256: policy.policy_sha256,
+          result_sha256: calculation.result_sha256,
+          margin_bps: Number(calculation.margin_bps),
+          threshold_bps: policy.threshold_bps,
+          decision_rule: policy.rule,
+          allowed_decisions: ['SCALE', 'HOLD'],
+          allowed_actions: role.actions,
+          external_writes: false
+        },
+        required_response: {
+          schema_version: 'decision.v1',
+          role: role.role,
+          scenario_run_id: runId,
+          policy_id: policy.id,
+          policy_version: policy.version,
+          policy_sha256: policy.policy_sha256,
+          result_sha256: calculation.result_sha256,
+          margin_bps: calculation.margin_bps,
+          threshold_bps: policy.threshold_bps,
+          gate_decision: 'SCALE or HOLD',
+          action: 'one allowed action for the decision',
+          rationale: 'one short sentence',
+          external_writes: false
+        }
+      });
+    }
+
+    function parseAgentAnswer(answer) {
+      var raw = String(answer || '').trim();
+      var repaired = false;
+      try { return { value: JSON.parse(raw), repaired: false }; } catch (_) {}
+      var fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
+      if (fenced) { raw = fenced[1].trim(); repaired = true; }
+      else {
+        var start = raw.indexOf('{'), end = raw.lastIndexOf('}');
+        if (start >= 0 && end > start) { raw = raw.slice(start, end + 1); repaired = true; }
+      }
+      return { value: JSON.parse(raw), repaired: repaired };
+    }
+
+    function validateDecision(roleKey, response, runId, policy, calculation) {
+      var parsed = parseAgentAnswer(response.answer);
+      var value = parsed.value;
+      var role = ROLES[roleKey];
+      var expectedDecision = calculation.margin_bps >= policy.threshold_bps ? 'SCALE' : 'HOLD';
+      var expectedAction = role.actions[expectedDecision];
+      var checks = {
+        schema: value.schema_version === 'decision.v1',
+        role: value.role === role.role,
+        run: value.scenario_run_id === runId,
+        policy_id: value.policy_id === policy.id,
+        policy_version: value.policy_version === policy.version,
+        policy_hash: value.policy_sha256 === policy.policy_sha256,
+        result_hash: value.result_sha256 === calculation.result_sha256,
+        margin: Number(value.margin_bps) === Number(calculation.margin_bps),
+        threshold: Number(value.threshold_bps) === Number(policy.threshold_bps),
+        decision: value.gate_decision === expectedDecision,
+        action: value.action === expectedAction,
+        safe: value.external_writes === false
+      };
+      var valid = Object.keys(checks).every(function (key) { return checks[key]; });
+      return {
+        roleKey: roleKey,
+        valid: valid,
+        repaired: parsed.repaired,
+        value: value,
+        checks: checks,
+        expectedDecision: expectedDecision,
+        expectedAction: expectedAction,
+        responseId: response.responseId || null,
+        latencyMs: response.latencyMs || null,
+        usage: response.usage || null,
+        model: response.model || null
+      };
+    }
+
+    function setStep(id, status, value) {
+      var el = $(id);
+      el.classList.remove('active', 'ok', 'warn', 'bad');
+      if (status) el.classList.add(status);
+      var target = id === 'stepCalc' ? $('calcValue') : id === 'step1c' ? $('oneCValue') : $('adsValue');
+      target.textContent = value || 'ожидает';
+    }
+    function resetRunUI(policy) {
+      $('errorBanner').classList.remove('show');
+      $('errorBanner').textContent = '';
+      $('outcome').classList.remove('show');
+      setStep('stepCalc', 'active', 'выполняется…');
+      setStep('step1c', '', 'ожидает расчёт');
+      setStep('stepAds', '', 'ожидает расчёт');
+      $('decisionGrid').innerHTML = '<div class="empty" style="grid-column:1/-1">Сначала проверяем экономику, затем параллельно запускаем двух агентов.</div>';
+      $('runCaption').textContent = 'Применяется ' + policy.version + ' · порог ' + formatPercent(policy.threshold_bps);
+      $('proofCapabilities').textContent = '0';
+      $('proofAgents').textContent = '0/2';
+      $('proofChanges').textContent = '0';
+      $('proofDecisions').textContent = '0';
+    }
+    function setBusy(busy) {
+      state.busy = busy;
+      document.body.classList.toggle('busy', busy);
+      ['runBtn', 'compareBtn', 'rollbackBtn'].forEach(function (id) { $(id).disabled = busy; });
+      $('runBtn').innerHTML = busy ? '<span class="spinner"></span>Выполняется' : 'Запустить сценарий';
+    }
+
+    async function runScenario(policyKey) {
+      if (state.busy) return null;
+      var input, policy;
+      try {
+        input = readInputs();
+        policy = await policySnapshot(policyKey);
+        if (state.agents.length < 2) throw new Error('Для сценария нужны два доступных агента не от Anthropic');
+        var id1 = $('agent1').value, id2 = $('agent2').value;
+        if (!id1 || !id2 || id1 === id2) throw new Error('Выберите двух разных агентов');
+        if (!isAllowedAgent(getAgent(id1)) || !isAllowedAgent(getAgent(id2))) throw new Error('В этом тесте модели Anthropic отключены');
+      } catch (preflightError) {
+        showError(preflightError.message);
+        return null;
+      }
+
+      state.policyKey = policyKey;
+      renderPolicy();
+      setBusy(true);
+      resetRunUI(policy);
+      var started = Date.now();
+      var runId = 'pg_' + new Date().toISOString().replace(/\D/g, '').slice(0, 17) + '_' + Math.random().toString(36).slice(2, 7);
+      var run = { runId: runId, mode: PREVIEW ? 'PREVIEW' : 'LIVE', policy: policy, input: input, startedAt: new Date().toISOString(), agentsChanged: 0, externalWrites: 0 };
+
+      try {
+        var expertResponse = await bridge('etb_run_expert', 'etb_expert_result', { name: EXPERT_NAME, params: input }, 60000);
+        run.calculation = await unwrapExpert(expertResponse, input);
+        run.expertEnvelope = expertResponse.res || null;
+        setStep('stepCalc', 'ok', formatMoney(run.calculation.profit) + ' · ' + formatPercent(run.calculation.margin_bps));
+        setStep('step1c', 'active', 'анализирует…');
+        setStep('stepAds', 'active', 'анализирует…');
+
+        var id1 = $('agent1').value;
+        var id2 = $('simulateFailure').checked ? 'agent_demo_unavailable' : $('agent2').value;
+        run.agentSelection = {
+          one_c: getAgent($('agent1').value),
+          target: getAgent($('agent2').value),
+          simulatedFailure: $('simulateFailure').checked
+        };
+        var requests = [
+          bridge('etb_run_agent', 'etb_agent_result', {
+            agentId: id1, message: makePrompt('one_c', runId, policy, run.calculation), runTimeout: 180, maxOutputTokens: 700
+          }, 210000),
+          bridge('etb_run_agent', 'etb_agent_result', {
+            agentId: id2, message: makePrompt('target', runId, policy, run.calculation), runTimeout: 180, maxOutputTokens: 700
+          }, 210000)
+        ];
+        var settled = await Promise.allSettled(requests);
+        run.decisions = {};
+        ['one_c', 'target'].forEach(function (roleKey, index) {
+          var item = settled[index];
+          if (item.status === 'fulfilled') {
+            try {
+              run.decisions[roleKey] = validateDecision(roleKey, item.value, runId, policy, run.calculation);
+            } catch (error) {
+              run.decisions[roleKey] = { roleKey: roleKey, valid: false, error: 'Ответ не прошёл JSON-проверку: ' + error.message };
+            }
+          } else {
+            run.decisions[roleKey] = { roleKey: roleKey, valid: false, error: item.reason && item.reason.message || 'Агент недоступен' };
+          }
+        });
+
+        var valid = Object.values(run.decisions).filter(function (d) { return d.valid; });
+        var fulfilled = Object.values(run.decisions).filter(function (d) { return !d.error; });
+        if (valid.length === 2) run.aggregate = 'CONSISTENT';
+        else if (valid.length === 1) run.aggregate = 'PARTIAL';
+        else if (fulfilled.length > 0) run.aggregate = 'CONFLICT';
+        else run.aggregate = 'UNAVAILABLE';
+        run.completedAt = new Date().toISOString();
+        run.totalLatencyMs = Date.now() - started;
+        state.current = run;
+        state.runs[policy.version] = run;
+        renderRun(run);
+        renderComparison();
+        return run;
+      } catch (error) {
+        run.aggregate = 'UNAVAILABLE';
+        run.error = error.message;
+        run.totalLatencyMs = Date.now() - started;
+        state.current = run;
+        setStep('stepCalc', 'bad', 'ошибка');
+        setStep('step1c', 'bad', 'не запускался');
+        setStep('stepAds', 'bad', 'не запускался');
+        showError(error.message);
+        renderTechnical(run);
+        return run;
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    function showError(message) {
+      $('errorBanner').textContent = message;
+      $('errorBanner').classList.add('show');
+    }
+
+    function decisionCard(roleKey, decision, agent) {
+      var role = ROLES[roleKey];
+      if (!decision || !decision.valid) {
+        return '<article class="decision bad"><div class="decision-head"><div><div class="decision-role">' + esc(role.title) + '</div>' +
+          '<div class="decision-model">' + esc(agentLabel(agent || {})) + '</div></div><span class="pill error">ОШИБКА</span></div>' +
+          '<div class="decision-action">Результат не выдуман</div><div class="decision-rationale">' +
+          esc(decision && (decision.error || 'Ответ не прошёл проверку контракта.')) + '</div></article>';
+      }
+      var value = decision.value;
+      var actionLabel = role.actionLabels[value.action] || value.action;
+      var cls = value.gate_decision === 'SCALE' ? 'ok' : 'warn';
+      return '<article class="decision ' + cls + '"><div class="decision-head"><div><div class="decision-role">' + esc(role.title) + '</div>' +
+        '<div class="decision-model">' + esc(agentLabel(agent || {})) + '</div></div><span class="pill ' +
+        (value.gate_decision === 'SCALE' ? 'scale' : 'hold') + '">' + esc(value.gate_decision) + '</span></div>' +
+        '<div class="decision-action">' + esc(actionLabel) + '</div><div class="decision-rationale">' + esc(value.rationale) + '</div>' +
+        '<div class="decision-meta"><span>' + esc(decision.responseId || 'response —') + '</span><span>' +
+        esc(decision.latencyMs != null ? decision.latencyMs + ' ms' : 'latency —') + '</span><span>' +
+        esc(usageText(decision.usage)) + '</span>' + (decision.repaired ? '<span>JSON repaired</span>' : '') + '</div></article>';
+    }
+
+    function renderRun(run) {
+      var d1 = run.decisions.one_c, d2 = run.decisions.target;
+      setStep('step1c', d1.valid ? 'ok' : 'bad', d1.valid ? d1.value.gate_decision + ' · ' + ROLES.one_c.actionLabels[d1.value.action] : 'нет проверенного решения');
+      setStep('stepAds', d2.valid ? 'ok' : 'bad', d2.valid ? d2.value.gate_decision + ' · ' + ROLES.target.actionLabels[d2.value.action] : 'нет проверенного решения');
+      $('decisionGrid').innerHTML =
+        decisionCard('one_c', d1, run.agentSelection.one_c) +
+        decisionCard('target', d2, run.agentSelection.target);
+
+      var validCount = [d1, d2].filter(function (d) { return d.valid; }).length;
+      $('proofCapabilities').textContent = '1';
+      $('proofAgents').textContent = validCount + '/2';
+      $('proofChanges').textContent = '0';
+      $('proofDecisions').textContent = String(validCount);
+      $('outcome').classList.add('show');
+      $('marginMetric').textContent = formatPercent(run.calculation.margin_bps);
+
+      var messages = {
+        CONSISTENT: ['СОГЛАСОВАННОЕ РЕШЕНИЕ', d1.value.gate_decision === 'SCALE' ? 'Рост разрешён' : 'Рост поставлен на паузу', 'Оба агента получили один и тот же проверенный факт и независимо пришли к решению по общей версии правила.'],
+        PARTIAL: ['ЧАСТИЧНЫЙ РЕЗУЛЬТАТ', 'Одно решение сохранено', 'Один агент недоступен. Работающий ответ не потерян, отсутствующий ответ не подменён догадкой.'],
+        CONFLICT: ['КОНФЛИКТ КОНТРАКТА', 'Нужна проверка', 'Ответы получены, но как минимум один не подтвердил версию правила, факт или допустимое действие.'],
+        UNAVAILABLE: ['НЕТ РЕЗУЛЬТАТА', 'Агенты недоступны', 'Расчёт сохранён, но ни один агент не вернул проверяемое решение.']
+      };
+      var msg = messages[run.aggregate] || messages.UNAVAILABLE;
+      $('outcomeKicker').textContent = msg[0];
+      $('outcomeTitle').textContent = msg[1];
+      $('outcomeCopy').textContent = msg[2];
+      $('runCaption').textContent = run.policy.version + ' завершена за ' + run.totalLatencyMs + ' ms · ' + run.aggregate;
+      if (run.aggregate !== 'CONSISTENT') showError(msg[2]);
+      renderTechnical(run);
+    }
+
+    function renderTechnical(run) {
+      var technical = {
+        architecture: {
+          orchestration: 'CENTRAL_DISTRIBUTION',
+          calculation_calls: run.calculation ? 1 : 0,
+          direct_agent_calls: run.decisions ? 2 : 0,
+          agents_modified: 0,
+          external_writes: 0,
+          note: 'The toolbar executes the deterministic calculation once and distributes the validated result to two selected agents. Workers do not rediscover or rerun it.'
+        },
+        run: {
+          id: run.runId,
+          mode: run.mode,
+          aggregate: run.aggregate,
+          started_at: run.startedAt,
+          completed_at: run.completedAt || null,
+          latency_ms: run.totalLatencyMs,
+          error: run.error || null
+        },
+        policy: run.policy,
+        calculation: run.calculation ? {
+          capability_version: run.calculation.capability_version,
+          source_marker: run.calculation.source_marker,
+          input_sha256: run.calculation.input_sha256,
+          result_sha256: run.calculation.result_sha256,
+          margin_bps: run.calculation.margin_bps,
+          external_writes: run.calculation.external_writes
+        } : null,
+        listener: run.expertEnvelope ? {
+          status: run.expertEnvelope.status || null,
+          execution_log: run.expertEnvelope.execution_log || null,
+          run_time_ms: run.expertEnvelope.run_time_ms != null ? run.expertEnvelope.run_time_ms : null
+        } : null,
+        agents: run.decisions || null
+      };
+      $('technical').textContent = JSON.stringify(technical, null, 2);
+    }
+
+    function renderComparison() {
+      var v1 = state.runs.POLICY_V1, v2 = state.runs.POLICY_V2;
+      if (!v1 && !v2) return;
+      var rows = [v1, v2].filter(Boolean).map(function (run) {
+        function decision(role) {
+          var d = run.decisions && run.decisions[role];
+          return d && d.valid ? d.value.gate_decision : '—';
+        }
+        return '<tr><td><b>' + esc(run.policy.version) + '</b><br><span style="color:var(--muted)">' + esc(shortHash(run.policy.policy_sha256)) + '</span></td>' +
+          '<td>' + esc(formatPercent(run.policy.threshold_bps)) + '</td><td>' + esc(formatPercent(run.calculation.margin_bps)) + '</td>' +
+          '<td>' + esc(decision('one_c')) + '</td><td>' + esc(decision('target')) + '</td><td><b>0</b></td></tr>';
+      });
+      $('compareBody').innerHTML = rows.join('');
+      $('compare').classList.add('show');
+      $('compareEmpty').style.display = v1 && v2 ? 'none' : 'block';
+      if (v1 && v2) $('compareEmpty').textContent = '';
+    }
+
+    function setMemoryStage(id, status) {
+      var node = $(id);
+      node.classList.remove('active', 'ok', 'bad');
+      if (status) node.classList.add(status);
+    }
+
+    function setMemoryBusy(busy, caption) {
+      state.memoryBusy = busy;
+      ['memoryCreateBtn', 'memoryV2Btn', 'memoryRollbackBtn', 'memoryCleanupBtn'].forEach(function (id) {
+        $(id).disabled = busy;
+      });
+      if (caption) $('memoryCaption').textContent = caption;
+      $('memoryCreateBtn').innerHTML = busy
+        ? '<span class="spinner"></span>Проверяю Extella'
+        : 'Создать V1 и проверить';
+    }
+
+    function showMemoryError(message) {
+      $('memoryError').textContent = message || '';
+      $('memoryError').classList.toggle('show', Boolean(message));
+    }
+
+    function restoreMemorySession() {
+      try {
+        var saved = JSON.parse(localStorage.getItem('xtl_studio_governance_session') || 'null');
+        if (saved && /^XTL-STUDIO-GOV-[A-Z0-9_-]{8,64}$/.test(saved.marker || '')) {
+          state.memory.marker = saved.marker;
+          state.memory.ownerAgentId = saved.ownerAgentId || null;
+          state.memory.viewerAgentId = saved.viewerAgentId || null;
+          $('memoryCaption').textContent = 'Найден сохранённый marker: ' + saved.marker + '. Можно проверить или удалить объекты.';
+        }
+      } catch (_) {}
+    }
+
+    function persistMemorySession() {
+      try {
+        localStorage.setItem('xtl_studio_governance_session', JSON.stringify({
+          marker: state.memory.marker,
+          ownerAgentId: state.memory.ownerAgentId,
+          viewerAgentId: state.memory.viewerAgentId
+        }));
+      } catch (_) {}
+    }
+
+    function newMemoryMarker() {
+      var entropy = Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).slice(2, 12).toUpperCase();
+      return 'XTL-STUDIO-GOV-' + entropy;
+    }
+
+    function memorySelection(useStored) {
+      var ownerId = useStored && state.memory.ownerAgentId ? state.memory.ownerAgentId : $('memoryOwner').value;
+      var viewerId = useStored && state.memory.viewerAgentId ? state.memory.viewerAgentId : $('memoryViewer').value;
+      if (!ownerId || !viewerId || ownerId === viewerId) throw new Error('Выберите двух разных агентов');
+      if (!isAllowedAgent(getAgent(ownerId)) || !isAllowedAgent(getAgent(viewerId))) {
+        throw new Error('В этом тесте модели Anthropic отключены');
+      }
+      return { ownerId: ownerId, viewerId: viewerId };
+    }
+
+    async function governanceProbe(action, version, selection) {
+      var response = await bridge('etb_governance_probe', 'etb_governance_result', {
+        action: action,
+        version: version || 'V1',
+        marker: state.memory.marker,
+        ownerAgentId: selection.ownerId,
+        viewerAgentId: selection.viewerId
+      }, 60000);
+      if (!response || !response.result) throw new Error('Governance bridge не вернул evidence');
+      return response.result;
+    }
+
+    function validateGovernancePair(ownerResult, viewerResult, version) {
+      var expectedThreshold = version === 'V2' ? 2500 : 1500;
+      if (!ownerResult || !viewerResult || !ownerResult.concept || !ownerResult.rule || !viewerResult.concept || !viewerResult.rule) {
+        throw new Error('Другой агент не увидел оба глобальных объекта');
+      }
+      if (ownerResult.concept.global !== true || ownerResult.rule.global !== true ||
+          viewerResult.concept.global !== true || viewerResult.rule.global !== true) {
+        throw new Error('API не подтвердил global=true для Concept и Rule');
+      }
+      if (String(ownerResult.concept.id) !== String(viewerResult.concept.id) ||
+          String(ownerResult.rule.id) !== String(viewerResult.rule.id)) {
+        throw new Error('Агенты увидели разные ID вместо общих объектов');
+      }
+      if (viewerResult.concept.text.indexOf(state.memory.marker) !== 0 ||
+          viewerResult.rule.rule.indexOf(state.memory.marker) !== 0) {
+        throw new Error('Тестовый marker потерян при cross-agent чтении');
+      }
+      if (viewerResult.rule.rule.indexOf('POLICY_' + version) < 0 ||
+          viewerResult.rule.rule.indexOf('>= ' + expectedThreshold) < 0) {
+        throw new Error('Другой агент прочитал не ту версию Rule');
+      }
+      return {
+        conceptId: viewerResult.concept.id,
+        ruleId: viewerResult.rule.id,
+        global: true,
+        ownerAgentId: ownerResult.agentId,
+        viewerAgentId: viewerResult.agentId,
+        conceptText: viewerResult.concept.text,
+        ruleText: viewerResult.rule.rule,
+        version: version,
+        thresholdBps: expectedThreshold
+      };
+    }
+
+    async function runMemoryAgents(version, verification, selection) {
+      var fixedInput = {
+        revenue: 1000000,
+        cogs: 500000,
+        returns_loss: 20000,
+        commission: 50000,
+        logistics: 30000,
+        ad_spend: 200000
+      };
+      var calculation = state.memory.calculation;
+      if (!calculation) {
+        var expertResponse = await bridge('etb_run_expert', 'etb_expert_result', {
+          name: EXPERT_NAME,
+          params: fixedInput
+        }, 60000);
+        calculation = await unwrapExpert(expertResponse, fixedInput);
+        state.memory.calculation = calculation;
+        state.memory.expertEnvelope = expertResponse.res || null;
+      }
+      if (Number(calculation.margin_bps) !== 2000) throw new Error('Контрольный расчёт должен дать маржу 20%');
+      var policy = {
+        id: String(verification.ruleId),
+        version: 'POLICY_' + version,
+        threshold_bps: verification.thresholdBps,
+        rule: verification.ruleText,
+        policy_sha256: await sha256(verification.ruleText)
+      };
+      var runId = 'gov_' + version.toLowerCase() + '_' + Date.now().toString(36);
+      var started = Date.now();
+      var requests = [
+        bridge('etb_run_agent', 'etb_agent_result', {
+          agentId: selection.ownerId,
+          message: makePrompt('one_c', runId, policy, calculation),
+          runTimeout: 180,
+          maxOutputTokens: 700
+        }, 210000),
+        bridge('etb_run_agent', 'etb_agent_result', {
+          agentId: selection.viewerId,
+          message: makePrompt('target', runId, policy, calculation),
+          runTimeout: 180,
+          maxOutputTokens: 700
+        }, 210000)
+      ];
+      var settled = await Promise.allSettled(requests);
+      var decisions = {};
+      ['one_c', 'target'].forEach(function (roleKey, index) {
+        var item = settled[index];
+        if (item.status === 'fulfilled') {
+          try {
+            decisions[roleKey] = validateDecision(roleKey, item.value, runId, policy, calculation);
+          } catch (error) {
+            decisions[roleKey] = { roleKey: roleKey, valid: false, error: error.message };
+          }
+        } else {
+          decisions[roleKey] = {
+            roleKey: roleKey,
+            valid: false,
+            error: item.reason && item.reason.message || 'Агент недоступен'
+          };
+        }
+      });
+      var validCount = Object.values(decisions).filter(function (decision) { return decision.valid; }).length;
+      var ownerAgent = getAgent(selection.ownerId);
+      var viewerAgent = getAgent(selection.viewerId);
+      var crossModel = String(ownerAgent.provider || '') + '/' + String(ownerAgent.model || '') !==
+        String(viewerAgent.provider || '') + '/' + String(viewerAgent.model || '');
+      return {
+        runId: runId,
+        version: version,
+        policy: policy,
+        calculation: calculation,
+        decisions: decisions,
+        validCount: validCount,
+        aggregate: validCount === 2 ? 'CONSISTENT' : validCount === 1 ? 'PARTIAL' : 'UNAVAILABLE',
+        ownerAgent: ownerAgent,
+        viewerAgent: viewerAgent,
+        crossModel: crossModel,
+        totalLatencyMs: Date.now() - started,
+        externalWrites: 0,
+        agentsChanged: 0
+      };
+    }
+
+    function renderMemoryEvidence(verification, run, ownerResult, viewerResult) {
+      var scopeText = String(verification.ownerAgentId) + ' → ' + String(verification.viewerAgentId);
+      $('memoryObjects').innerHTML =
+        '<article class="memory-object"><div class="memory-object-head"><strong>Global Concept · ID ' +
+        esc(verification.conceptId) + '</strong><span class="coverage-label live">global=true</span></div><code>' +
+        esc(verification.conceptText) + '</code></article>' +
+        '<article class="memory-object"><div class="memory-object-head"><strong>Global Rule · ID ' +
+        esc(verification.ruleId) + '</strong><span class="coverage-label live">' +
+        esc(verification.version) + '</span></div><code>' + esc(verification.ruleText) + '</code></article>' +
+        '<article class="memory-object"><div class="memory-object-head"><strong>Cross-agent visibility</strong>' +
+        '<span class="coverage-label live">SAME IDS</span></div><code>' + esc(scopeText) +
+        ' · Concept/Rule IDs совпадают · hash ' + esc(shortHash(run.policy.policy_sha256)) + '</code></article>';
+      $('memoryDecisions').innerHTML =
+        decisionCard('one_c', run.decisions.one_c, run.ownerAgent) +
+        decisionCard('target', run.decisions.target, run.viewerAgent);
+      var history = {};
+      Object.keys(state.memory.runs).forEach(function (key) {
+        var item = state.memory.runs[key];
+        history[key] = {
+          aggregate: item.aggregate,
+          decisions: {
+            owner: item.decisions.one_c.valid ? item.decisions.one_c.value.gate_decision : 'ERROR',
+            viewer: item.decisions.target.valid ? item.decisions.target.value.gate_decision : 'ERROR'
+          },
+          policy_sha256: item.policy.policy_sha256,
+          rule_id: item.policy.id
+        };
+      });
+      $('memoryLog').textContent = JSON.stringify({
+        marker: state.memory.marker,
+        operation: verification.version,
+        visibility: {
+          owner_agent: ownerResult.agentId,
+          viewer_agent: viewerResult.agentId,
+          same_concept_id: String(ownerResult.concept.id) === String(viewerResult.concept.id),
+          same_rule_id: String(ownerResult.rule.id) === String(viewerResult.rule.id),
+          global: verification.global
+        },
+        run: {
+          aggregate: run.aggregate,
+          valid_decisions: run.validCount + '/2',
+          margin_bps: run.calculation.margin_bps,
+          threshold_bps: run.policy.threshold_bps,
+          cross_model: run.crossModel,
+          agents_changed: run.agentsChanged,
+          external_business_writes: run.externalWrites,
+          latency_ms: run.totalLatencyMs
+        },
+        history: history
+      }, null, 2);
+    }
+
+    async function executeMemoryVersion(version, create) {
+      if (state.memoryBusy) return;
+      var selection;
+      try {
+        selection = memorySelection(!create);
+        if (create) {
+          state.memory.marker = state.memory.marker || newMemoryMarker();
+          state.memory.ownerAgentId = selection.ownerId;
+          state.memory.viewerAgentId = selection.viewerId;
+          persistMemorySession();
+        } else if (!state.memory.marker) {
+          throw new Error('Сначала создайте V1');
+        }
+      } catch (error) {
+        showMemoryError(error.message);
+        return;
+      }
+      showMemoryError('');
+      setMemoryBusy(true, create ? 'Создаю временные global Concept и Rule…' : 'Обновляю тот же Rule до ' + version + '…');
+      setMemoryStage('memoryStageCreate', create ? 'active' : 'ok');
+      setMemoryStage('memoryStageVerify', '');
+      setMemoryStage('memoryStageFanout', '');
+      setMemoryStage('memoryStageCleanup', '');
+      try {
+        var ownerResult = await governanceProbe(create ? 'create' : 'update', version, selection);
+        setMemoryStage('memoryStageCreate', 'ok');
+        setMemoryStage('memoryStageVerify', 'active');
+        var viewerResult = await governanceProbe('verify', version, selection);
+        var verification = validateGovernancePair(ownerResult, viewerResult, version);
+        setMemoryStage('memoryStageVerify', 'ok');
+        setMemoryStage('memoryStageFanout', 'active');
+        var run = await runMemoryAgents(version, verification, selection);
+        state.memory.version = version;
+        state.memory.evidence = verification;
+        state.memory.runs[version] = run;
+        setMemoryStage('memoryStageFanout', run.validCount > 0 ? 'ok' : 'bad');
+        renderMemoryEvidence(verification, run, ownerResult, viewerResult);
+        $('memoryCaption').textContent = version + ': ' + run.validCount + '/2 проверенных решений · ' +
+          (run.aggregate === 'CONSISTENT' ? 'согласованно' : run.aggregate);
+        if (run.validCount !== 2) showMemoryError('Один или оба Agent-ответа не прошли строгую проверку; результат не подменён.');
+      } catch (error) {
+        setMemoryStage('memoryStageVerify', 'bad');
+        setMemoryStage('memoryStageFanout', 'bad');
+        var failureEvidence = {
+          marker: state.memory.marker,
+          status: 'ERROR',
+          error: error.message
+        };
+        if (create && state.memory.marker) {
+          setMemoryStage('memoryStageCleanup', 'active');
+          try {
+            var compensation = await governanceProbe('cleanup', version, selection);
+            if (compensation.verifiedAbsent !== true) throw new Error('absence not confirmed');
+            failureEvidence.compensating_cleanup = compensation;
+            setMemoryStage('memoryStageCleanup', 'ok');
+            try { localStorage.removeItem('xtl_studio_governance_session'); } catch (_) {}
+            state.memory = {
+              marker: null,
+              ownerAgentId: null,
+              viewerAgentId: null,
+              version: null,
+              evidence: null,
+              runs: {}
+            };
+            showMemoryError(error.message + ' Временные global-объекты после ошибки удалены и проверены.');
+          } catch (cleanupError) {
+            failureEvidence.compensating_cleanup_error = cleanupError.message;
+            setMemoryStage('memoryStageCleanup', 'bad');
+            showMemoryError(error.message + ' Auto-cleanup не подтверждён; marker сохранён для повторного удаления.');
+          }
+        } else {
+          showMemoryError(error.message);
+        }
+        $('memoryLog').textContent = JSON.stringify(failureEvidence, null, 2);
+      } finally {
+        setMemoryBusy(false);
+      }
+    }
+
+    async function cleanupMemory() {
+      if (state.memoryBusy) return;
+      var selection;
+      try {
+        if (!state.memory.marker) throw new Error('Нет сохранённого marker для удаления');
+        selection = memorySelection(true);
+      } catch (error) {
+        showMemoryError(error.message);
+        return;
+      }
+      showMemoryError('');
+      setMemoryBusy(true, 'Удаляю только объекты текущего marker…');
+      setMemoryStage('memoryStageCleanup', 'active');
+      try {
+        var result = await governanceProbe('cleanup', state.memory.version || 'V1', selection);
+        if (result.verifiedAbsent !== true) throw new Error('Платформа не подтвердила отсутствие тестовых объектов');
+        setMemoryStage('memoryStageCleanup', 'ok');
+        $('memoryCaption').textContent = 'Cleanup завершён: Concept ' + result.deletedConcepts + ', Rule ' + result.deletedRules + '.';
+        $('memoryObjects').innerHTML = '<article class="memory-object"><div class="memory-object-head"><strong>Cleanup подтверждён</strong>' +
+          '<span class="coverage-label live">DELETED</span></div><code>marker ' + esc(state.memory.marker) +
+          ' · concepts=' + esc(result.deletedConcepts) + ' · rules=' + esc(result.deletedRules) + '</code></article>';
+        $('memoryDecisions').innerHTML = '<div class="empty" style="grid-column:1/-1">Тестовые объекты удалены. История запуска очищена из интерфейса.</div>';
+        $('memoryLog').textContent = JSON.stringify(result, null, 2);
+        try { localStorage.removeItem('xtl_studio_governance_session'); } catch (_) {}
+        state.memory = {
+          marker: null,
+          ownerAgentId: null,
+          viewerAgentId: null,
+          version: null,
+          evidence: null,
+          runs: {}
+        };
+      } catch (error) {
+        setMemoryStage('memoryStageCleanup', 'bad');
+        showMemoryError(error.message);
+      } finally {
+        setMemoryBusy(false);
+      }
+    }
+
+    function renderPolicy() {
+      document.querySelectorAll('[data-policy]').forEach(function (button) {
+        button.classList.toggle('on', button.getAttribute('data-policy') === state.policyKey);
+      });
+    }
+
+    document.querySelectorAll('[data-policy]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        state.policyKey = button.getAttribute('data-policy');
+        renderPolicy();
+      });
+    });
+    document.querySelectorAll('[data-studio-view]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        switchStudioView(button.getAttribute('data-studio-view'));
+      });
+    });
+    $('capabilitySearch').addEventListener('input', renderCapabilities);
+    $('capabilityGroup').addEventListener('change', renderCapabilities);
+    $('capabilityCoverage').addEventListener('change', renderCapabilities);
+    $('runBtn').addEventListener('click', function () { runScenario(state.policyKey); });
+    $('compareBtn').addEventListener('click', async function () {
+      if (!state.runs.POLICY_V1) await runScenario('V1');
+      if (!state.busy) await runScenario('V2');
+    });
+    $('rollbackBtn').addEventListener('click', function () { runScenario('V1'); });
+    $('memoryCreateBtn').addEventListener('click', function () { executeMemoryVersion('V1', true); });
+    $('memoryV2Btn').addEventListener('click', function () { executeMemoryVersion('V2', false); });
+    $('memoryRollbackBtn').addEventListener('click', function () { executeMemoryVersion('V1', false); });
+    $('memoryCleanupBtn').addEventListener('click', cleanupMemory);
+
+    initializeCapabilityCatalog();
+    restoreMemorySession();
+    var requestedView = new URLSearchParams(location.search).get('view');
+    if (requestedView === 'scenario' || requestedView === 'memory') switchStudioView(requestedView);
+    window.parent.postMessage({ type: 'etb_ui_health', ok: true, pluginId: 'profit-growth-scenario' }, '*');
+    if (PREVIEW) {
+      applyTheme(new URLSearchParams(location.search).get('theme') || 'dark');
+      loadAgents().then(function () { setTimeout(function () { runScenario('V1'); }, 120); });
+    } else {
+      setTimeout(function () {
+        if (!state.initialized) $('agentNote').textContent = 'Ожидаю соединение с Extella…';
+      }, 1200);
+    }
+  })();
+  </script>
+</body>
+</html>

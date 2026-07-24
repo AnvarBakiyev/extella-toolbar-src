@@ -88,6 +88,35 @@ function loadPlugins() {
   for (const f of files) {
     try {
       const data = JSON.parse(readFile(f));
+      const pluginRoot = path.resolve(PLUGINS) + path.sep;
+      const pluginRootReal = fs.realpathSync(PLUGINS) + path.sep;
+      function readPluginAsset(relativePath, fieldName) {
+        const resolved = path.resolve(path.dirname(f), String(relativePath || ''));
+        if (!resolved.startsWith(pluginRoot)) {
+          throw new Error(`${fieldName} must stay inside toolbar/plugins`);
+        }
+        if (!fs.existsSync(resolved)) {
+          throw new Error(`${fieldName} not found: ${relativePath}`);
+        }
+        const real = fs.realpathSync(resolved);
+        if (!real.startsWith(pluginRootReal)) {
+          throw new Error(`${fieldName} symlink must stay inside toolbar/plugins`);
+        }
+        return readFile(real);
+      }
+
+      // Keep large reviewed UIs and Expert sources as ordinary files, then
+      // inline them into the single-file toolbar bundle at build time.
+      if (data.ui && data.ui.htmlFile) {
+        data.ui.html = readPluginAsset(data.ui.htmlFile, 'ui.htmlFile');
+        delete data.ui.htmlFile;
+      }
+      const expertDefs = data.expert_defs || data.expertDefs || [];
+      expertDefs.forEach(function (def) {
+        if (!def || !def.codeFile) return;
+        def.code = readPluginAsset(def.codeFile, 'expert_defs[].codeFile');
+        delete def.codeFile;
+      });
       plugins.push(data);
     } catch (e) {
       console.warn(`  ⚠ Could not parse ${f}: ${e.message}`);
@@ -238,12 +267,22 @@ function indent(code, n) {
   }).join('\n');
 }
 
+// JSON embedded inside an HTML <script> must not contain a literal closing
+// script tag from an inlined plugin UI. Escape all "<" plus the two JavaScript
+// line-separator code points so reviewed HTML remains data, never host markup.
+function jsonForInlineScript(value) {
+  return JSON.stringify(value, null, 2)
+    .replace(/</g, '\\u003c')
+    .replace(/\u2028/g, '\\u2028')
+    .replace(/\u2029/g, '\\u2029');
+}
+
 // ── Step 3: Build plugins_manager.html ────────────────────────────────────
 function buildMarketplace(plugins) {
   const template = readFile(path.join(PUBLIC, 'plugins_manager.html'));
   const _formHtml = buildForm(plugins);
   const _chatHtml = buildChat(plugins);
-  const dataVar = `var BUILTIN_PLUGINS_DATA = ${JSON.stringify(plugins, null, 2)};`;
+  const dataVar = `var BUILTIN_PLUGINS_DATA = ${jsonForInlineScript(plugins)};`;
   // Function replacer required: string replacements treat `$'` / `$&` in plugin
   // expert code (regex patterns) as special patterns and corrupt the output.
   return template
@@ -257,7 +296,7 @@ function buildMarketplace(plugins) {
 // ── Step 4: Build plugin-chat.html (inject plugin data, same as marketplace) ──
 function buildChat(plugins) {
   const template = readFile(path.join(PUBLIC, 'plugin-chat.html'));
-  const dataVar = `var BUILTIN_PLUGINS_DATA = ${JSON.stringify(plugins, null, 2)};`;
+  const dataVar = `var BUILTIN_PLUGINS_DATA = ${jsonForInlineScript(plugins)};`;
   return template
     .replaceAll('__EXTELLA_LOGO_DATA__', getBrandLogoData())
     .replace('/* __BUILTIN_PLUGINS_DATA__ */', function () { return dataVar; });
@@ -266,7 +305,7 @@ function buildChat(plugins) {
 // ── Step 4b: Build plugin-form.html (inject plugin data) ──────────────────
 function buildForm(plugins) {
   const template = readFile(path.join(PUBLIC, 'plugin-form.html'));
-  const dataVar = `var BUILTIN_PLUGINS_DATA = ${JSON.stringify(plugins, null, 2)};`;
+  const dataVar = `var BUILTIN_PLUGINS_DATA = ${jsonForInlineScript(plugins)};`;
   return template
     .replaceAll('__EXTELLA_LOGO_DATA__', getBrandLogoData())
     .replace('/* __BUILTIN_PLUGINS_DATA__ */', function () { return dataVar; });
@@ -335,6 +374,21 @@ function build() {
 
   console.log('\n📦 Writing output files:');
   const toolbarArtifact = buildToolbar(plugins);
+  const studio = plugins.find(function (plugin) {
+    return plugin && plugin.id === 'profit-growth-scenario';
+  });
+  if (!studio || !studio.ui || !studio.ui.html || studio.ui.htmlFile) {
+    throw new Error('Capability Studio is missing or its reviewed HTML was not inlined');
+  }
+  const studioExperts = studio.expert_defs || studio.expertDefs || [];
+  if (!studioExperts.length || studioExperts.some(function (def) {
+    return !def.code || def.codeFile;
+  })) {
+    throw new Error('Capability Studio Expert source was not inlined');
+  }
+  if (toolbarArtifact.indexOf('profit-growth-scenario') === -1) {
+    throw new Error('Capability Studio is absent from the toolbar artifact');
+  }
   writeFile(path.join(OUT, 'toolbar.js'), toolbarArtifact);
   writeFile(path.join(OUT, 'plugins_manager.html'), buildMarketplace(plugins));
   writeFile(path.join(OUT, 'plugin-chat.html'), buildChat(plugins));
@@ -400,6 +454,8 @@ function watch() {
   const watcher = chokidar.watch([
     path.join(SRC, '**/*.js'),
     path.join(PLUGINS, '**/*.json'),
+    path.join(PLUGINS, '**/*.html'),
+    path.join(PLUGINS, '**/*.py'),
     path.join(PUBLIC, '**/*.html')
   ], { ignoreInitial: true });
 

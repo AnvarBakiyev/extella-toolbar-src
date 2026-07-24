@@ -201,7 +201,8 @@ ETB.plugins = (function () {
               description: def.description || '',
               code: code,
               kwargs: def.kwargs || {},
-              cspl: def.cspl || 'fython'
+              cspl: def.cspl || 'fython',
+              global: def.global === true
             }).then(function (res) {
               if (!res || res.status !== 'success') {
                 errors.push(def.name + ': ' + ((res && res.message) || 'save failed'));

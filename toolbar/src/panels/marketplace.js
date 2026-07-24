@@ -540,7 +540,62 @@ ETB.marketplace = (function () {
             if (ETB.registry.markRemoving) ETB.registry.markRemoving(pluginId);
             _removeAgentPlugin(pluginId, unPlugin);
           } else {
-            // Built-in / curated plugin: just mark uninstalled and evict.
+            // Built-in / curated plugin: remove only Experts explicitly owned
+            // by that manifest, then mark the UI uninstalled. Never infer
+            // ownership from an arbitrary name.
+            var ownedNames = [];
+            if (unPlugin && unPlugin.owned_experts === true) {
+              var declared = unPlugin.experts || [];
+              (unPlugin.expert_defs || []).forEach(function (def) {
+                var name = String(def && def.name || '');
+                if (name && declared.indexOf(name) !== -1) {
+                  ownedNames.push(name);
+                }
+              });
+            }
+            if (ownedNames.length) {
+              var _replyUninstall = function (ok, message) {
+                var frame = document.getElementById('_etbv2_mkt_frame');
+                if (frame && frame.contentWindow) {
+                  frame.contentWindow.postMessage({
+                    type: 'etb_uninstall_result',
+                    pluginId: pluginId,
+                    ok: ok,
+                    message: message || ''
+                  }, '*');
+                }
+              };
+              function _expertAbsent(result) {
+                var status = String(result && result.status || '').toLowerCase();
+                var message = String(result && result.message || '');
+                return status === 'not_found' ||
+                  (status === 'error' && /(not found|does not exist|не найден)/i.test(message));
+              }
+              Promise.all(ownedNames.map(function (name) {
+                return ETB.api.deleteExpert(name).then(function (result) {
+                  if (!result || (result.status !== 'success' && !_expertAbsent(result))) {
+                    throw new Error(name + ': Expert delete was not confirmed');
+                  }
+                  return ETB.api.getExpert(name, { global: true }).then(function (check) {
+                    if (!_expertAbsent(check)) {
+                      throw new Error(name + ': Expert still exists after delete');
+                    }
+                  });
+                });
+              })).then(function () {
+                ETB.registry.uninstall(pluginId);
+                if (ETB.router && ETB.router.evict) ETB.router.evict(pluginId);
+                ETB.tabs.refresh();
+                _replyUninstall(true);
+              }).catch(function (error) {
+                // The storefront optimistically removed the local flag. Restore
+                // it when owned-resource cleanup was not proven.
+                ETB.registry.install(pluginId);
+                ETB.tabs.refresh();
+                _replyUninstall(false, (error && error.message) || 'Expert cleanup failed');
+              });
+              return;
+            }
             ETB.registry.uninstall(pluginId);
             if (ETB.router && ETB.router.evict) ETB.router.evict(pluginId);
           }
