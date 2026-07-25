@@ -2,17 +2,17 @@
   "id": "profit-growth-scenario",
   "mode": "scenario",
   "featured": true,
-  "name": "Студия способностей",
-  "tagline": "Все доказанные способности Extella и работающие сценарии в одном месте",
-  "description": "Единый продуктовый интерфейс доказанных способностей Extella: карта покрытия, доказательства и безопасные исполняемые сценарии для общей прибыльности и межагентной governance-памяти.",
+  "name": "Центр управления агентами",
+  "tagline": "Знания, правила, способности и проверяемые версии ваших агентов",
+  "description": "Tokenless-контур управления двумя реальными агентами: снимок действующей конфигурации, черновик общего правила, анализ влияния, безопасный Полигон, управляемая публикация версии, журнал доказательств и точный pointer rollback.",
   "category": "business",
   "type": "application",
-  "version": "0.2.0",
-  "eye": "Extella Scenarios",
+  "version": "0.3.0",
+  "eye": "Extella Agent Control",
   "pills": [
-    "30 доказано",
-    "2 live-сценария",
-    "Проверяемые evidence"
+    "2 реальных агента",
+    "Dry-run до публикации",
+    "Версии и rollback"
   ],
   "stars": "5.0",
   "installs": 0,
@@ -39,12 +39,31 @@
     },
     {
       "id": "profitability_gate",
-      "name": "Общее правило прибыльного роста",
+      "name": "Управляемая проверка политики маржи",
+      "description": "Получает фактическую маржу от caller и оценивает managed policy; does NOT invoke Expert.",
       "versions": [
         "POLICY_V1",
         "POLICY_V2"
       ],
-      "consumers": 2,
+      "consumer_source": "managed_dependency_graph",
+      "external_writes": false
+    },
+    {
+      "id": "managed_configuration_draft",
+      "name": "Черновик изменения конфигурации",
+      "version": "AGENT_CONTROL_DRAFT_V1",
+      "external_writes": false
+    },
+    {
+      "id": "managed_configuration_playground",
+      "name": "Полигон до и после изменения",
+      "version": "AGENT_CONTROL_TESTRUN_V1",
+      "external_writes": false
+    },
+    {
+      "id": "managed_configuration_versioning",
+      "name": "Управляемые версии и точный pointer rollback",
+      "version": "AGENT_CONTROL_LEDGER_V1",
       "external_writes": false
     }
   ],

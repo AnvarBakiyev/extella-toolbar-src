@@ -33,6 +33,7 @@ const CORE_ORDER = [
   'brand.js',
   'auth.js',
   'api.js',
+  'agent-control.js',
   'install-prompt.js',
   'repo-analyzer.js',
   'hf-analyzer.js',

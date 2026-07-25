@@ -9,9 +9,20 @@
 ETB.router = (function () {
   var CACHE_MAX = 5; // max live panels in DOM simultaneously
   var STUDIO_GOV_SESSION_KEY = 'etb_capability_studio_governance_v1';
+  var AGENT_CONTROL_LEDGER_KEY = 'xtl_agent_control:profitability_governance_v1';
+  var AGENT_CONTROL_INDEX_SCHEMA = 'agent-control-index.v1';
+  var AGENT_CONTROL_SHARD_SCHEMA = 'agent-control-shard.v1';
+  var AGENT_CONTROL_CHUNK_SCHEMA = 'agent-control-chunk.v1';
+  var AGENT_CONTROL_CHUNK_ENCODING = 'canonical-json-chunks.v1';
+  var AGENT_CONTROL_MAX_SHARD_BYTES = 13000;
+  var AGENT_CONTROL_CHUNK_CHARS = 2400;
+  var AGENT_CONTROL_MAX_CHUNKS = 64;
   var STUDIO_HOST_INSTANCE = Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
   var _studioCleanupTimer = null;
   var _studioOperationChains = {};
+  var _agentControlOperationChains = {};
+  var _agentControlSessionEpoch = 0;
+  var _agentControlRunSequence = 0;
 
   // cache entry: { panel, blobUrl, lastUsed (ms timestamp) }
   var _cache = {};
@@ -129,12 +140,14 @@ ETB.router = (function () {
     var maxPages = 200;
     function readPage(offset, collected, page) {
       if (page >= maxPages) return Promise.reject(new Error('concept pagination safety limit reached'));
+      if (opts.context) _agentControlAssertContext(opts.context);
       return ETB.api.conceptListScoped({
         agentId: opts.agentId,
         global: opts.global === true,
         limit: limit,
         offset: offset
       }).then(function (response) {
+        if (opts.context) _agentControlAssertContext(opts.context);
         _studioApiOk(response, 'concept list');
         var rows = _studioConceptRows(response);
         var next = offset + rows.length;
@@ -153,6 +166,1269 @@ ETB.router = (function () {
       });
     }
     return readPage(0, [], 0);
+  }
+
+  function _agentControlContext(actorId, operationId) {
+    return {
+      actorId: String(actorId || ''),
+      epoch: _agentControlSessionEpoch,
+      operationId: String(operationId || ''),
+      deadlineAt: Date.now() + 210000
+    };
+  }
+
+  function _agentControlAssertContext(context, allowExpired) {
+    if (!context) {
+      var missingContextError = new Error(
+        'authenticated Agent Control operation context is required'
+      );
+      missingContextError.code = 'ACCOUNT_CONTEXT_REQUIRED';
+      throw missingContextError;
+    }
+    if (!context.actorId || context.epoch !== _agentControlSessionEpoch ||
+        String(_studioCurrentUserId() || '') !== context.actorId) {
+      var accountError = new Error(
+        'authenticated account changed; Agent Control operation was fenced before commit'
+      );
+      accountError.code = 'ACCOUNT_SESSION_CHANGED';
+      throw accountError;
+    }
+    if (!allowExpired && Date.now() > context.deadlineAt) {
+      var deadlineError = new Error(
+        'operation deadline exceeded; outcome is unknown until the ledger is reloaded'
+      );
+      deadlineError.code = 'OPERATION_OUTCOME_UNKNOWN';
+      throw deadlineError;
+    }
+  }
+
+  function _agentControlSerialize(ownerAgentId, context, task) {
+    if (!String(ownerAgentId || '')) {
+      return Promise.reject(new Error('control-plane owner agent is required'));
+    }
+    var key = String(context && context.actorId || '') + ':' +
+      String(context && context.epoch || 0) + ':' + String(ownerAgentId || '');
+    var previous = _agentControlOperationChains[key] || Promise.resolve();
+    var operation = previous.catch(function () {}).then(function () {
+      _agentControlAssertContext(context);
+      return task();
+    });
+    var tail = operation.catch(function () {});
+    _agentControlOperationChains[key] = tail;
+    tail.then(function () {
+      if (_agentControlOperationChains[key] === tail) {
+        delete _agentControlOperationChains[key];
+      }
+    });
+    return operation;
+  }
+
+  function _agentControlIsMissingKv(response) {
+    if (!response || typeof response !== 'object') return false;
+    var status = String(response.status || '').toLowerCase();
+    var httpStatus = Number(response.httpStatus || response.statusCode || 0);
+    var detail = response.detail;
+    if (Array.isArray(detail)) {
+      detail = detail.map(function (row) {
+        return row && (row.msg || row.message) || '';
+      }).join('; ');
+    } else if (detail && typeof detail === 'object') {
+      detail = detail.message || detail.msg || '';
+    }
+    var message = [
+      response.message,
+      typeof response.error === 'string' ? response.error :
+        (response.error && response.error.message),
+      detail
+    ].filter(Boolean).join(' ').toLowerCase();
+    var explicitFailure = status === 'error' || status === 'not_found' ||
+      status === 'failed' || httpStatus === 404 || httpStatus === 500;
+    return explicitFailure &&
+      /key not found|kv[^ ]* not found|ключ[^ ]* не найден/.test(message);
+  }
+
+  function _agentControlByteLength(value) {
+    if (typeof TextEncoder === 'undefined') {
+      throw new Error('TextEncoder is required for verified control-plane storage');
+    }
+    return new TextEncoder().encode(String(value || '')).length;
+  }
+
+  function _agentControlReadJson(key, ownerAgentId, allowMissing, context, allowExpired) {
+    _agentControlAssertContext(context, allowExpired === true);
+    return ETB.api.kvGet(key, { agentId: ownerAgentId }).then(function (response) {
+      _agentControlAssertContext(context, allowExpired === true);
+      if (_agentControlIsMissingKv(response) && allowMissing) return null;
+      _studioApiOk(response, 'control-plane KV read');
+      var value = response && (response.value != null ? response.value :
+        (response.kv_value != null ? response.kv_value :
+          (response.result && response.result.value != null ? response.result.value : null)));
+      if (value == null || value === '') throw new Error('control-plane KV value is empty');
+      if (typeof value !== 'string') return value;
+      try { return JSON.parse(value); }
+      catch (_) { throw new Error('control-plane KV value is not valid JSON'); }
+    });
+  }
+
+  function _agentControlWriteJson(key, value, ownerAgentId, description, context) {
+    var expected = ETB.agentControl.canonical(value);
+    var bytes = _agentControlByteLength(expected);
+    var writeError = null;
+    if (bytes > AGENT_CONTROL_MAX_SHARD_BYTES) {
+      return Promise.reject(new Error(
+        'control-plane shard exceeds ' + AGENT_CONTROL_MAX_SHARD_BYTES +
+        ' bytes (' + bytes + '): ' + key
+      ));
+    }
+    _agentControlAssertContext(context);
+    return ETB.api.kvSet(
+      key,
+      expected,
+      description || 'Extella Agent Control Center v1',
+      { agentId: ownerAgentId }
+    ).then(function (response) {
+      // Once kvSet has returned, an exact read-back reconciles the outcome even
+      // if the UI deadline elapsed while the request was in flight. Account
+      // switching is never ignored.
+      _agentControlAssertContext(context, true);
+      try { _studioApiOk(response, 'control-plane KV write'); }
+      catch (error) { writeError = error; }
+      return _agentControlReadJson(key, ownerAgentId, false, context, true);
+    }).then(function (readBack) {
+      if (ETB.agentControl.canonical(readBack) !== expected) {
+        var suffix = writeError && writeError.message ? ': ' + writeError.message : '';
+        throw new Error('control-plane shard read-back mismatch' + suffix);
+      }
+      return readBack;
+    });
+  }
+
+  function _agentControlWriteImmutableJson(
+    key,
+    value,
+    ownerAgentId,
+    description,
+    context
+  ) {
+    var expected = ETB.agentControl.canonical(value);
+    return _agentControlReadJson(key, ownerAgentId, true, context).then(function (existing) {
+      if (existing) {
+        if (ETB.agentControl.canonical(existing) !== expected) {
+          var collisionError = new Error(
+            'immutable control-plane shard collision: ' + key
+          );
+          collisionError.code = 'IMMUTABLE_SHARD_COLLISION';
+          throw collisionError;
+        }
+        return existing;
+      }
+      return _agentControlWriteJson(
+        key,
+        value,
+        ownerAgentId,
+        description,
+        context
+      );
+    });
+  }
+
+  function _agentControlShardKey(kind, id) {
+    var safeKind = String(kind || '');
+    var safeId = String(id || '');
+    if (!/^(version|draft|testrun|run|ledger)$/.test(safeKind) ||
+        !/^[A-Za-z0-9_-]{8,96}$/.test(safeId)) {
+      throw new Error('invalid control-plane shard identity');
+    }
+    return AGENT_CONTROL_LEDGER_KEY + ':' + safeKind + ':' + safeId;
+  }
+
+  function _agentControlShard(kind, id, payload) {
+    return {
+      schemaVersion: AGENT_CONTROL_SHARD_SCHEMA,
+      kind: kind,
+      id: id,
+      payload: payload
+    };
+  }
+
+  function _agentControlChunkKey(kind, id, payloadSha256, index) {
+    _agentControlShardKey(kind, id);
+    var hash = String(payloadSha256 || '');
+    var position = Number(index);
+    if (!/^[a-f0-9]{64}$/.test(hash) ||
+        !Number.isInteger(position) || position < 0 || position >= AGENT_CONTROL_MAX_CHUNKS) {
+      throw new Error('invalid control-plane chunk identity');
+    }
+    return AGENT_CONTROL_LEDGER_KEY + ':chunk:' + kind + ':' + id + ':' +
+      hash.slice(0, 20) + ':' + position;
+  }
+
+  function _agentControlChunkPayload(canonicalPayload) {
+    var chunks = [];
+    var text = String(canonicalPayload || '');
+    for (var offset = 0; offset < text.length; offset += AGENT_CONTROL_CHUNK_CHARS) {
+      chunks.push(text.slice(offset, offset + AGENT_CONTROL_CHUNK_CHARS));
+    }
+    if (!chunks.length) chunks.push('');
+    if (chunks.length > AGENT_CONTROL_MAX_CHUNKS) {
+      throw new Error('control-plane payload exceeds bounded chunk count');
+    }
+    return chunks;
+  }
+
+  function _agentControlPrepareShard(shard) {
+    var directBytes = _agentControlByteLength(ETB.agentControl.canonical(shard.value));
+    if (directBytes <= AGENT_CONTROL_MAX_SHARD_BYTES) {
+      return Promise.resolve([shard]);
+    }
+    var payloadCanonical = ETB.agentControl.canonical(shard.value.payload);
+    var parts;
+    try { parts = _agentControlChunkPayload(payloadCanonical); }
+    catch (error) { return Promise.reject(error); }
+    return ETB.agentControl.sha256(payloadCanonical).then(function (payloadSha256) {
+      var total = parts.length;
+      var chunkRows = parts.map(function (data, index) {
+        return {
+          key: _agentControlChunkKey(
+            shard.value.kind,
+            shard.value.id,
+            payloadSha256,
+            index
+          ),
+          value: {
+            schemaVersion: AGENT_CONTROL_CHUNK_SCHEMA,
+            parentKind: shard.value.kind,
+            parentId: shard.value.id,
+            payloadSha256: payloadSha256,
+            index: index,
+            total: total,
+            data: data
+          }
+        };
+      });
+      chunkRows.push({
+        key: shard.key,
+        value: {
+          schemaVersion: AGENT_CONTROL_SHARD_SCHEMA,
+          kind: shard.value.kind,
+          id: shard.value.id,
+          payloadEncoding: AGENT_CONTROL_CHUNK_ENCODING,
+          payloadSha256: payloadSha256,
+          payloadByteLength: _agentControlByteLength(payloadCanonical),
+          chunkRefs: chunkRows.map(function (row) { return row.key; })
+        }
+      });
+      return chunkRows;
+    });
+  }
+
+  function _agentControlReadShard(
+    key,
+    ownerAgentId,
+    kind,
+    id,
+    context,
+    allowExpired
+  ) {
+    return _agentControlReadJson(
+      key,
+      ownerAgentId,
+      false,
+      context,
+      allowExpired === true
+    ).then(function (shard) {
+      if (!shard || shard.schemaVersion !== AGENT_CONTROL_SHARD_SCHEMA ||
+          shard.kind !== kind || shard.id !== id) {
+        throw new Error('control-plane shard envelope mismatch');
+      }
+      if (Object.prototype.hasOwnProperty.call(shard, 'payload')) {
+        if (shard.payloadEncoding || shard.chunkRefs) {
+          throw new Error('ambiguous control-plane shard envelope');
+        }
+        return shard.payload;
+      }
+      if (shard.payloadEncoding !== AGENT_CONTROL_CHUNK_ENCODING ||
+          !/^[a-f0-9]{64}$/.test(String(shard.payloadSha256 || '')) ||
+          !Array.isArray(shard.chunkRefs) || !shard.chunkRefs.length ||
+          shard.chunkRefs.length > AGENT_CONTROL_MAX_CHUNKS ||
+          !Number.isInteger(shard.payloadByteLength) || shard.payloadByteLength < 0) {
+        throw new Error('invalid chunked control-plane shard');
+      }
+      var total = shard.chunkRefs.length;
+      return Promise.all(shard.chunkRefs.map(function (ref, index) {
+        var expectedRef = _agentControlChunkKey(kind, id, shard.payloadSha256, index);
+        if (String(ref || '') !== expectedRef) {
+          throw new Error('control-plane chunk reference mismatch');
+        }
+        return _agentControlReadJson(
+          expectedRef,
+          ownerAgentId,
+          false,
+          context,
+          allowExpired === true
+        ).then(function (chunk) {
+          if (!chunk || chunk.schemaVersion !== AGENT_CONTROL_CHUNK_SCHEMA ||
+              chunk.parentKind !== kind || chunk.parentId !== id ||
+              chunk.payloadSha256 !== shard.payloadSha256 ||
+              chunk.index !== index || chunk.total !== total ||
+              typeof chunk.data !== 'string') {
+            throw new Error('control-plane chunk envelope mismatch');
+          }
+          return chunk.data;
+        });
+      })).then(function (parts) {
+        var payloadCanonical = parts.join('');
+        if (_agentControlByteLength(payloadCanonical) !== shard.payloadByteLength) {
+          throw new Error('control-plane chunked payload length mismatch');
+        }
+        return ETB.agentControl.sha256(payloadCanonical).then(function (payloadSha256) {
+          var payload;
+          if (payloadSha256 !== shard.payloadSha256) {
+            throw new Error('control-plane chunked payload hash mismatch');
+          }
+          try { payload = JSON.parse(payloadCanonical); }
+          catch (_) { throw new Error('control-plane chunked payload is not valid JSON'); }
+          if (ETB.agentControl.canonical(payload) !== payloadCanonical) {
+            throw new Error('control-plane chunked payload is not canonical');
+          }
+          return payload;
+        });
+      });
+    });
+  }
+
+  function _agentControlDehydrate(ledger) {
+    var skeleton = JSON.parse(ETB.agentControl.canonical(ledger));
+    var shards = [];
+    Object.keys(skeleton.versions || {}).forEach(function (versionId) {
+      var version = skeleton.versions[versionId];
+      var ref = _agentControlShardKey('version', versionId);
+      shards.push({ key: ref, value: _agentControlShard('version', versionId, version.bundle) });
+      delete version.bundle;
+      version.bundleRef = ref;
+    });
+    Object.keys(skeleton.drafts || {}).forEach(function (draftId) {
+      var draft = skeleton.drafts[draftId];
+      if (!draft.candidateBundle) return;
+      var ref = _agentControlShardKey('draft', draftId);
+      shards.push({ key: ref, value: _agentControlShard('draft', draftId, draft.candidateBundle) });
+      delete draft.candidateBundle;
+      draft.candidateBundleRef = ref;
+    });
+    Object.keys(skeleton.testRuns || {}).forEach(function (testRunId) {
+      var testRun = skeleton.testRuns[testRunId];
+      var ref = _agentControlShardKey('testrun', testRunId);
+      shards.push({ key: ref, value: _agentControlShard('testrun', testRunId, testRun) });
+      skeleton.testRuns[testRunId] = {
+        id: testRun.id,
+        status: testRun.status,
+        draftId: testRun.draftId,
+        candidateVersionId: testRun.candidateVersionId,
+        candidateBundleSha256: testRun.candidateBundleSha256,
+        receiptSha256: testRun.receiptSha256,
+        payloadRef: ref
+      };
+    });
+    Object.keys(skeleton.runs || {}).forEach(function (runId) {
+      var run = skeleton.runs[runId];
+      var ref = _agentControlShardKey('run', runId);
+      shards.push({ key: ref, value: _agentControlShard('run', runId, run) });
+      skeleton.runs[runId] = {
+        id: run.id,
+        status: run.status,
+        agentId: run.agentId,
+        configurationVersionId: run.configurationVersionId,
+        payloadRef: ref
+      };
+    });
+    return ETB.agentControl.sha256(ledger).then(function (ledgerHash) {
+      var stateId = 'state_' + ledgerHash.slice(0, 24);
+      var stateRef = _agentControlShardKey('ledger', stateId);
+      shards.push({
+        key: stateRef,
+        value: _agentControlShard('ledger', stateId, skeleton)
+      });
+      return {
+        shards: shards,
+        index: {
+          schemaVersion: AGENT_CONTROL_INDEX_SCHEMA,
+          ownerAgentId: ledger.ownerAgentId,
+          ownerAccountId: ledger.ownerAccountId,
+          ledgerSha256: ledgerHash,
+          ledgerStateId: stateId,
+          ledgerStateRef: stateRef,
+          baselineVersionId: ledger.baselineVersionId,
+          activeVersionByAgent: JSON.parse(
+            ETB.agentControl.canonical(ledger.activeVersionByAgent)
+          ),
+          currentDraftId: ledger.currentDraftId,
+          currentTestRunId: ledger.currentTestRunId,
+          currentRunId: ledger.currentRunId
+        }
+      };
+    });
+  }
+
+  function _agentControlHydrate(index, ownerAgentId, context, allowExpired) {
+    if (!index || index.schemaVersion !== AGENT_CONTROL_INDEX_SCHEMA ||
+        String(index.ownerAgentId || '') !== String(ownerAgentId || '') ||
+        String(index.ownerAccountId || '') !== String(context.actorId || '') ||
+        !/^[a-f0-9]{64}$/.test(String(index.ledgerSha256 || '')) ||
+        !index.ledgerStateId || !index.ledgerStateRef) {
+      return Promise.reject(new Error('invalid control-plane ledger index'));
+    }
+    var expectedStateRef;
+    try {
+      expectedStateRef = _agentControlShardKey('ledger', index.ledgerStateId);
+    } catch (error) {
+      return Promise.reject(error);
+    }
+    if (String(index.ledgerStateRef || '') !== expectedStateRef) {
+      return Promise.reject(new Error('control-plane ledger state reference mismatch'));
+    }
+    return _agentControlReadShard(
+      expectedStateRef,
+      ownerAgentId,
+      'ledger',
+      index.ledgerStateId,
+      context,
+      allowExpired === true
+    ).then(function (storedLedger) {
+      return _agentControlHydrateState(
+        storedLedger,
+        index,
+        ownerAgentId,
+        context,
+        allowExpired === true
+      );
+    });
+  }
+
+  function _agentControlHydrateState(
+    storedLedger,
+    index,
+    ownerAgentId,
+    context,
+    allowExpired
+  ) {
+    var ledger = JSON.parse(ETB.agentControl.canonical(storedLedger));
+    var refs = [];
+    function addRef(ref, kind, id, apply) {
+      var value = String(ref || '');
+      if (value !== _agentControlShardKey(kind, id)) {
+        throw new Error('control-plane shard reference mismatch');
+      }
+      refs.push({ key: value, kind: kind, id: id, apply: apply });
+    }
+    try {
+      Object.keys(ledger.versions || {}).forEach(function (versionId) {
+        var entry = ledger.versions[versionId];
+        addRef(entry.bundleRef, 'version', versionId, function (payload) {
+          entry.bundle = payload;
+          delete entry.bundleRef;
+        });
+      });
+      Object.keys(ledger.drafts || {}).forEach(function (draftId) {
+        var entry = ledger.drafts[draftId];
+        if (!entry.candidateBundleRef) return;
+        addRef(entry.candidateBundleRef, 'draft', draftId, function (payload) {
+          entry.candidateBundle = payload;
+          delete entry.candidateBundleRef;
+        });
+      });
+      Object.keys(ledger.testRuns || {}).forEach(function (testRunId) {
+        var entry = ledger.testRuns[testRunId];
+        addRef(entry.payloadRef, 'testrun', testRunId, function (payload) {
+          ledger.testRuns[testRunId] = payload;
+        });
+      });
+      Object.keys(ledger.runs || {}).forEach(function (runId) {
+        var entry = ledger.runs[runId];
+        addRef(entry.payloadRef, 'run', runId, function (payload) {
+          ledger.runs[runId] = payload;
+        });
+      });
+    } catch (error) {
+      return Promise.reject(error);
+    }
+    return Promise.all(refs.map(function (ref) {
+      return _agentControlReadShard(
+        ref.key,
+        ownerAgentId,
+        ref.kind,
+        ref.id,
+        context,
+        allowExpired === true
+      ).then(function (payload) {
+        ref.apply(payload);
+      });
+    })).then(function () {
+      return ETB.agentControl.sha256(ledger);
+    }).then(function (ledgerHash) {
+      if (ledgerHash !== index.ledgerSha256) {
+        throw new Error('control-plane hydrated ledger hash mismatch');
+      }
+      ETB.agentControl.validateLedger(ledger);
+      if (String(ledger.ownerAgentId || '') !== String(ownerAgentId || '')) {
+        throw new Error('control-plane ledger owner mismatch');
+      }
+      if (String(ledger.ownerAccountId || '') !== String(context.actorId || '')) {
+        throw new Error('control-plane ledger account mismatch');
+      }
+      if (ETB.agentControl.canonical(ledger.activeVersionByAgent) !==
+          ETB.agentControl.canonical(index.activeVersionByAgent) ||
+          ledger.baselineVersionId !== index.baselineVersionId ||
+          ledger.currentDraftId !== index.currentDraftId ||
+          ledger.currentTestRunId !== index.currentTestRunId ||
+          ledger.currentRunId !== index.currentRunId) {
+        throw new Error('control-plane active pointer index mismatch');
+      }
+      return ledger;
+    });
+  }
+
+  function _agentControlReadLedger(ownerAgentId, context, allowExpired) {
+    if (!ETB.agentControl) {
+      return Promise.reject(new Error('agent control core is unavailable'));
+    }
+    _agentControlAssertContext(context, allowExpired === true);
+    return _agentControlReadJson(
+      AGENT_CONTROL_LEDGER_KEY,
+      ownerAgentId,
+      true,
+      context,
+      allowExpired === true
+    )
+      .then(function (stored) {
+        if (!stored) return null;
+        // Pre-index ledgers from this feature branch are accepted only when
+        // their account binding is already explicit and exact.
+        if (stored.schemaVersion === ETB.agentControl.SCHEMA_VERSION) {
+          ETB.agentControl.validateLedger(stored);
+          if (String(stored.ownerAgentId || '') !== String(ownerAgentId || '') ||
+              String(stored.ownerAccountId || '') !== String(context.actorId || '')) {
+            throw new Error('control-plane ledger owner mismatch');
+          }
+          return stored;
+        }
+        return _agentControlHydrate(
+          stored,
+          ownerAgentId,
+          context,
+          allowExpired === true
+        );
+      });
+  }
+
+  function _agentControlWriteLedger(ownerAgentId, ledger, context) {
+    if (!ETB.agentControl) {
+      return Promise.reject(new Error('agent control core is unavailable'));
+    }
+    _agentControlAssertContext(context);
+    ETB.agentControl.validateLedger(ledger);
+    if (String(ledger.ownerAgentId || '') !== String(ownerAgentId || '') ||
+        String(ledger.ownerAccountId || '') !== String(context.actorId || '')) {
+      return Promise.reject(new Error('control-plane ledger owner/account mismatch'));
+    }
+    var expected = ETB.agentControl.canonical(ledger);
+    return _agentControlDehydrate(ledger).then(function (stored) {
+      _agentControlAssertContext(context);
+      // Immutable candidate/evidence/state shards are written and verified
+      // first. Within a chunked shard, content chunks land before its manifest.
+      // The final single root-index write is the managed active-pointer commit.
+      return Promise.all(stored.shards.map(_agentControlPrepareShard)).then(function (rows) {
+        return Promise.all(rows.map(function (items) {
+          return items.reduce(function (chain, shard) {
+            return chain.then(function () {
+              return _agentControlWriteImmutableJson(
+                shard.key,
+                shard.value,
+                ownerAgentId,
+                'Extella Agent Control Center v1 — immutable verified shard',
+                context
+              );
+            });
+          }, Promise.resolve());
+        }));
+      }).then(function () {
+        _agentControlAssertContext(context);
+        return _agentControlWriteJson(
+          AGENT_CONTROL_LEDGER_KEY,
+          stored.index,
+          ownerAgentId,
+          'Extella Agent Control Center v1 — active pointer index',
+          context
+        );
+      });
+    }).then(function () {
+      // Reconcile the exact committed root and all referenced immutable data.
+      // Deadline expiry is allowed only here; account/epoch fencing remains.
+      return _agentControlReadLedger(ownerAgentId, context, true);
+    }).then(function (readBack) {
+      if (!readBack || ETB.agentControl.canonical(readBack) !== expected) {
+        throw new Error('control-plane sharded ledger read-back mismatch');
+      }
+      return readBack;
+    });
+  }
+
+  function _agentControlAgentRows(response) {
+    if (Array.isArray(response)) return response;
+    return (response && (response.agents || response.results || response.items)) || [];
+  }
+
+  function _agentControlAgentId(row) {
+    return String((row && (row.id || row.agent_id)) || '');
+  }
+
+  function _agentControlSlimAgent(row) {
+    var id = _agentControlAgentId(row);
+    var provider = String((row && row.provider) || '');
+    var model = String((row && row.model) || '');
+    var providerKey = provider.trim().toLowerCase();
+    var modelKey = model.trim().toLowerCase();
+    var providerAlibaba = /(alibaba|aliyun|dashscope)/.test(providerKey);
+    var modelQwen = /qwen/.test(modelKey);
+    var forbidden = /(claude|anthropic)/.test(providerKey + ' ' + modelKey);
+    var qwenConfirmed = !forbidden && providerAlibaba && modelQwen;
+    return {
+      id: id,
+      name: String((row && (row.name || row.agent_name)) || id),
+      provider: provider,
+      model: model,
+      category: String((row && row.category) || ''),
+      role: String((row && row.role) || ''),
+      eligible: Boolean(id && qwenConfirmed),
+      eligibility: forbidden ? 'ANTHROPIC_FORBIDDEN' :
+        (qwenConfirmed ? 'QWEN_PROVIDER_MODEL_CONFIRMED' :
+          'QWEN_PROVIDER_MODEL_NOT_CONFIRMED')
+    };
+  }
+
+  function _agentControlApiRead(context, task) {
+    _agentControlAssertContext(context);
+    return Promise.resolve().then(task).then(function (response) {
+      _agentControlAssertContext(context);
+      return response;
+    });
+  }
+
+  function _agentControlVerifyExactAgent(agent, context) {
+    return _agentControlApiRead(context, function () {
+      return ETB.api.agentGetScoped(agent.id);
+    }).then(function (response) {
+      _studioApiOk(response, 'agent identity verification');
+      var detail = (response && response.agent) || response || {};
+      var exact = _agentControlSlimAgent(detail);
+      if (!exact.id || exact.id !== agent.id) {
+        throw new Error('agent/get identity does not match the requested agent id');
+      }
+      if (!exact.eligible) {
+        throw new Error('agent/get must confirm a Qwen model on the Alibaba provider');
+      }
+      return exact;
+    });
+  }
+
+  function _agentControlLoadAgents(requestedIds, context) {
+    var requested = (requestedIds || []).map(String);
+    return _agentControlApiRead(context, function () {
+      return ETB.api.agentsList();
+    }).then(function (response) {
+      _studioApiOk(response, 'agents list');
+      var agents = _agentControlAgentRows(response).map(_agentControlSlimAgent)
+        .filter(function (agent) { return Boolean(agent.id); });
+      if (!requested.length) return agents;
+      var selected = requested.map(function (id) {
+        return agents.filter(function (agent) { return agent.id === id; })[0] || null;
+      });
+      if (selected.some(function (agent) { return !agent; })) {
+        throw new Error('one or more selected agents are not present in this account');
+      }
+      if (selected.some(function (agent) { return !agent.eligible; })) {
+        throw new Error('selected agents must be confirmed Qwen/Alibaba agents');
+      }
+      if (new Set(requested).size !== requested.length) {
+        throw new Error('selected agent ids must be distinct');
+      }
+      return Promise.all(selected.map(function (agent) {
+        return _agentControlVerifyExactAgent(agent, context);
+      }));
+    });
+  }
+
+  function _agentControlRows(response, keys) {
+    if (Array.isArray(response)) return response;
+    for (var i = 0; i < keys.length; i++) {
+      if (response && Array.isArray(response[keys[i]])) return response[keys[i]];
+    }
+    return [];
+  }
+
+  function _agentControlPreview(value, limit) {
+    var compact = String(value || '').replace(/\s+/g, ' ').trim();
+    var max = limit || 180;
+    var sensitive = /(?:bearer\s+[A-Za-z0-9._~+/=-]{8,}|(?:api[_ -]?key|access[_ -]?token|secret|password|парол(?:ь|я))\s*[:=]\s*\S{4,}|sk-[A-Za-z0-9_-]{12,}|[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}|\+?\d[\d\s().-]{8,}\d)/i;
+    if (sensitive.test(compact)) {
+      return '[СКРЫТО: возможный секрет или ПДн; в снимке сохранён только SHA-256]';
+    }
+    return compact.length > max ? compact.slice(0, max - 1) + '…' : compact;
+  }
+
+  function _agentControlInspectOne(agent, context) {
+    var managedKnowledgeText =
+      'Фактическая маржа учитывает себестоимость, возвраты, комиссии, логистику и рекламу.';
+    return Promise.all([
+      _agentControlApiRead(context, function () {
+        return ETB.api.agentGetScoped(agent.id);
+      }),
+      _studioListAllConcepts({
+        agentId: agent.id,
+        global: false,
+        context: context
+      }),
+      _studioListAllConcepts({
+        agentId: agent.id,
+        global: true,
+        context: context
+      }),
+      _agentControlApiRead(context, function () {
+        return ETB.api.ruleListScoped({ agentId: agent.id, global: false });
+      }),
+      _agentControlApiRead(context, function () {
+        return ETB.api.ruleListScoped({ agentId: agent.id, global: true });
+      }),
+      _agentControlApiRead(context, function () {
+        return ETB.api.expertsListScoped({ agentId: agent.id, global: true });
+      })
+    ]).then(function (responses) {
+      _studioApiOk(responses[0], 'agent snapshot');
+      _studioApiOk(responses[3], 'agent-local rule list');
+      _studioApiOk(responses[4], 'account-global rule list');
+      _studioApiOk(responses[5], 'expert list');
+      var detail = (responses[0] && responses[0].agent) || responses[0] || {};
+      var verifiedDetail = _agentControlSlimAgent(detail);
+      if (!verifiedDetail.id || verifiedDetail.id !== agent.id) {
+        throw new Error('agent snapshot identity does not match the requested agent id');
+      }
+      if (!verifiedDetail.eligible) {
+        throw new Error('agent snapshot must confirm a Qwen model on the Alibaba provider');
+      }
+      var conceptsLocal = responses[1];
+      var conceptsGlobal = responses[2];
+      var rulesLocal = _agentControlRows(
+        responses[3],
+        ['results', 'rules', 'items']
+      );
+      var rulesGlobal = _agentControlRows(
+        responses[4],
+        ['results', 'rules', 'items']
+      );
+      var experts = _agentControlRows(
+        responses[5],
+        ['results', 'experts', 'items']
+      );
+      var exactAgent = {
+        id: agent.id,
+        name: verifiedDetail.name,
+        provider: verifiedDetail.provider,
+        model: verifiedDetail.model,
+        category: verifiedDetail.category,
+        role: String(detail.role || detail.category || agent.role || ''),
+        instructions: String(detail.instructions || ''),
+        tools: Array.isArray(detail.tools) ? detail.tools.map(String) : [],
+        modelParameters: detail.model_parameters || detail.modelParameters || null
+      };
+      function exactConcept(row, scope) {
+        var nativeId = String(
+          _studioObjectId(row) == null ? '' : _studioObjectId(row)
+        );
+        return {
+          id: scope + ':' + nativeId,
+          nativeId: nativeId,
+          scope: scope,
+          text: _studioConceptText(row)
+        };
+      }
+      function exactRule(row, scope) {
+        var nativeId = String(
+          _studioObjectId(row) == null ? '' : _studioObjectId(row)
+        );
+        return {
+          id: scope + ':' + nativeId,
+          nativeId: nativeId,
+          scope: scope,
+          text: _studioRuleText(row)
+        };
+      }
+      var exactConceptsLocal = conceptsLocal.map(function (row) {
+        return exactConcept(row, 'agent');
+      }).filter(function (row) { return Boolean(row.nativeId); });
+      var exactConceptsGlobal = conceptsGlobal.map(function (row) {
+        return exactConcept(row, 'account_global');
+      }).filter(function (row) { return Boolean(row.nativeId); });
+      var exactRulesLocal = rulesLocal.map(function (row) {
+        return exactRule(row, 'agent');
+      }).filter(function (row) { return Boolean(row.nativeId); });
+      var exactRulesGlobal = rulesGlobal.map(function (row) {
+        return exactRule(row, 'account_global');
+      }).filter(function (row) { return Boolean(row.nativeId); });
+      var exactConcepts = exactConceptsLocal.concat(exactConceptsGlobal);
+      var exactRules = exactRulesLocal.concat(exactRulesGlobal);
+      var exactExperts = experts.map(function (row) {
+        return {
+          name: String((row && (row.name || row.expert_name)) || ''),
+          description: String((row && (row.description || row.expert_description)) || ''),
+          code: String((row && (row.code || row.expert_code)) || '')
+        };
+      }).filter(function (row) { return Boolean(row.name); });
+      var seenExperts = {};
+      exactExperts = exactExperts.filter(function (row) {
+        if (seenExperts[row.name]) return false;
+        seenExperts[row.name] = true;
+        return true;
+      });
+      return Promise.all([
+        ETB.agentControl.sha256(exactAgent.instructions),
+        ETB.agentControl.sha256(ETB.agentControl.canonical(exactAgent)),
+        ETB.agentControl.sha256(ETB.agentControl.canonical(exactConceptsLocal)),
+        ETB.agentControl.sha256(ETB.agentControl.canonical(exactConceptsGlobal)),
+        ETB.agentControl.sha256(ETB.agentControl.canonical(exactConcepts)),
+        ETB.agentControl.sha256(ETB.agentControl.canonical(exactRulesLocal)),
+        ETB.agentControl.sha256(ETB.agentControl.canonical(exactRulesGlobal)),
+        ETB.agentControl.sha256(ETB.agentControl.canonical(exactRules)),
+        ETB.agentControl.sha256(ETB.agentControl.canonical(exactExperts)),
+        ETB.agentControl.sha256(managedKnowledgeText)
+      ]).then(function (hashes) {
+        var inventory = {
+          agent: {
+            id: exactAgent.id,
+            name: exactAgent.name,
+            provider: exactAgent.provider,
+            model: exactAgent.model,
+            category: exactAgent.category,
+            role: exactAgent.role,
+            tools: exactAgent.tools,
+            instructionsSha256: hashes[0],
+            configurationSnapshotSha256: hashes[1]
+          },
+          knowledge: [{
+            id: 'knowledge.contribution_margin_definition.v1',
+            scope: 'managed_policy',
+            preview: managedKnowledgeText,
+            contentSha256: hashes[9]
+          }].concat(exactConcepts.slice(0, 24).map(function (row) {
+            return {
+              id: row.id,
+              nativeId: row.nativeId,
+              scope: row.scope,
+              preview: _agentControlPreview(row.text, 80)
+            };
+          })),
+          localRules: exactRules.slice(0, 24).map(function (row) {
+            return {
+              id: row.id,
+              nativeId: row.nativeId,
+              scope: row.scope,
+              preview: _agentControlPreview(row.text, 80)
+            };
+          }),
+          capabilities: exactExperts.filter(function (row) {
+            return row.name !== 'profitability_gate';
+          }).slice(0, 20).map(function (row) {
+            return {
+              id: row.name,
+              name: row.name,
+              scope: 'visible_from_agent',
+              shared: false
+            };
+          }).concat([{
+            id: 'profitability_gate',
+            name: 'Управляемая проверка политики маржи',
+            scope: 'managed_policy',
+            shared: true,
+            version: 'AGENT_CONTROL_POLICY_V1',
+            description: 'Deterministic managed policy evaluator. It consumes caller-supplied marginBps and does not call an Extella Expert or native agent.'
+          }]),
+          processes: [{
+            id: 'managed.profitability_governance',
+            name: 'Контроль маржи перед решением о росте'
+          }],
+          hashes: {
+            agent: hashes[1],
+            conceptsAgent: hashes[2],
+            conceptsAccountGlobal: hashes[3],
+            concepts: hashes[4],
+            rulesAgent: hashes[5],
+            rulesAccountGlobal: hashes[6],
+            rules: hashes[7],
+            experts: hashes[8]
+          },
+          counts: {
+            concepts: exactConcepts.length,
+            conceptsAgent: exactConceptsLocal.length,
+            conceptsAccountGlobal: exactConceptsGlobal.length,
+            rules: exactRules.length,
+            rulesAgent: exactRulesLocal.length,
+            rulesAccountGlobal: exactRulesGlobal.length,
+            experts: exactExperts.length
+          }
+        };
+        return {
+          agent: inventory.agent,
+          inventory: inventory,
+          display: {
+            concepts: exactConcepts.slice(0, 40).map(function (row) {
+              return {
+                id: row.id,
+                nativeId: row.nativeId,
+                scope: row.scope,
+                preview: _agentControlPreview(row.text)
+              };
+            }),
+            rules: exactRules.slice(0, 40).map(function (row) {
+              return {
+                id: row.id,
+                nativeId: row.nativeId,
+                scope: row.scope,
+                preview: _agentControlPreview(row.text)
+              };
+            }),
+            experts: exactExperts.slice(0, 80).map(function (row) {
+              return {
+                name: row.name,
+                scope: 'visible_from_agent',
+                description: _agentControlPreview(row.description)
+              };
+            }),
+            counts: {
+              concepts: exactConcepts.length,
+              conceptsAgent: exactConceptsLocal.length,
+              conceptsAccountGlobal: exactConceptsGlobal.length,
+              rules: exactRules.length,
+              rulesAgent: exactRulesLocal.length,
+              rulesAccountGlobal: exactRulesGlobal.length,
+              experts: exactExperts.length
+            },
+            hashes: inventory.hashes
+          }
+        };
+      });
+    });
+  }
+
+  function _agentControlInspect(agentIds, context) {
+    return _agentControlLoadAgents(agentIds, context).then(function (agents) {
+      return Promise.all(agents.map(function (agent) {
+        return _agentControlInspectOne(agent, context);
+      }));
+    });
+  }
+
+  function _agentControlPlatformStatus() {
+    return {
+      managedAdapter: 'AVAILABLE',
+      nativeBundleVersioning: 'PLATFORM_UNAVAILABLE',
+      nativeAtomicPublish: 'PLATFORM_UNAVAILABLE',
+      nativeRunVersionBinding: 'PLATFORM_UNAVAILABLE',
+      multiDeviceCompareAndSwap: 'PLATFORM_UNAVAILABLE',
+      auditIntegrity: 'KV_READBACK_VERIFIED_NOT_TAMPER_EVIDENT',
+      organizationScope: 'PLATFORM_RBAC_UNAVAILABLE',
+      dependencyGraph: 'MANAGED_LEDGER_DECLARATION_NOT_NATIVE_EXPERT_BINDING',
+      conflictDetection: 'MANAGED_POLICY_ONLY_NATIVE_RULES_NOT_EVALUATED',
+      profileScope: 'DEFAULT_PROFILE_ONLY',
+      effectiveConfigCompleteness: 'LOCAL_AND_ACCOUNT_GLOBAL_READ_DEFAULT_PROFILE',
+      managedGuarantee: 'Every run launched here resolves one verified active pointer and executes the deterministic managed policy evaluator only.',
+      nativeGuarantee: 'The managed evaluator does not call an Extella Expert or native agent. Native Rules are inventoried but not evaluated. Ordinary Extella chats and agent/run calls outside this adapter are not version-bound.'
+    };
+  }
+
+  function _agentControlRuleText(value) {
+    var text = String(value || '').replace(/\s+/g, ' ').trim();
+    var percentages = text.match(/\d+(?:[.,]\d+)?\s*%/g) || [];
+    if (text.length < 40 || text.length > 800) {
+      throw new Error('business rule must contain between 40 and 800 characters');
+    }
+    if (!/(марж|margin)/i.test(text) ||
+        !/(ниже|меньше|below|under|less\s+than)/i.test(text) ||
+        !/20(?:[.,]0+)?\s*%/.test(text) ||
+        !/(бюдж|budget)/i.test(text) ||
+        !/(не\s+увелич|do\s+not\s+increase|not\s+increase)/i.test(text)) {
+      throw new Error('business rule must explicitly say: margin below 20% must not increase the ad budget');
+    }
+    if (!percentages.length || percentages.some(function (value) {
+      return Number(value.replace(/\s*%/, '').replace(',', '.')) !== 20;
+    })) {
+      throw new Error('business rule must contain no percentage threshold other than 20%');
+    }
+    if (/<script|function\s*\(|=>\s*\{|eval\s*\(|api[_ -]?token|bearer\s+/i.test(text)) {
+      throw new Error('executable code and credentials are not accepted as business rules');
+    }
+    return text;
+  }
+
+  function _agentControlOwner(data) {
+    return String((data && data.ownerAgentId) || '');
+  }
+
+  function _agentControlLoadOwned(data, context) {
+    var owner = _agentControlOwner(data);
+    if (!owner) return Promise.reject(new Error('control-plane owner agent is required'));
+    return _agentControlLoadAgents([owner], context).then(function () {
+      return _agentControlReadLedger(owner, context);
+    }).then(function (ledger) {
+      if (!ledger) throw new Error('managed baseline has not been captured');
+      if (String(ledger.ownerAccountId || '') !== String(context.actorId || '')) {
+        throw new Error('managed ledger belongs to a different authenticated account');
+      }
+      return ledger;
+    });
+  }
+
+  function _agentControlEventId(prefix) {
+    if (typeof crypto === 'undefined' ||
+        typeof crypto.getRandomValues !== 'function') {
+      throw new Error('WebCrypto random IDs are required for managed run receipts');
+    }
+    var bytes = new Uint32Array(4);
+    crypto.getRandomValues(bytes);
+    _agentControlRunSequence += 1;
+    return String(prefix || 'event') + '_' +
+      Array.prototype.map.call(bytes, function (value) {
+        return ('00000000' + value.toString(16)).slice(-8);
+      }).join('') + '_' + _agentControlRunSequence.toString(36);
+  }
+
+  function _agentControlAction(data) {
+    var action = String((data && data.action) || '');
+    var actorId = _studioCurrentUserId();
+    var owner = _agentControlOwner(data);
+    if (!actorId) return Promise.reject(new Error('authenticated Control Center account is required'));
+    var context = _agentControlContext(actorId, data && data.reqId);
+
+    if (action === 'bootstrap') {
+      return _agentControlLoadAgents([], context).then(function (agents) {
+        if (!owner) return { agents: agents, ledger: null, platform: _agentControlPlatformStatus() };
+        return _agentControlLoadAgents([owner], context).then(function () {
+          return _agentControlReadLedger(owner, context);
+        }).then(function (ledger) {
+          return { agents: agents, ledger: ledger, platform: _agentControlPlatformStatus() };
+        });
+      });
+    }
+
+    if (action === 'inspect') {
+      var inspectIds = (data.agentIds || []).map(String);
+      if (!inspectIds.length || inspectIds.length > 8) {
+        return Promise.reject(new Error('inspect requires between one and eight agent ids'));
+      }
+      return _agentControlInspect(inspectIds, context).then(function (snapshots) {
+        return {
+          snapshots: snapshots.map(function (snapshot) {
+            return { agent: snapshot.agent, inventory: snapshot.display };
+          }),
+          platform: _agentControlPlatformStatus()
+        };
+      });
+    }
+
+    if (action === 'baseline_create') {
+      var baselineIds = (data.agentIds || []).map(String);
+      if (baselineIds.length !== 2 || new Set(baselineIds).size !== 2) {
+        return Promise.reject(new Error('the vertical slice requires exactly two distinct agents'));
+      }
+      owner = baselineIds[0];
+      return _agentControlLoadAgents(baselineIds, context).then(function () {
+        return _agentControlSerialize(owner, context, function () {
+          return _agentControlReadLedger(owner, context).then(function (existing) {
+            if (existing) {
+              var existingIds = Object.keys(existing.agents || {}).sort();
+              var requestedIds = baselineIds.slice().sort();
+              if (ETB.agentControl.canonical(existingIds) !==
+                  ETB.agentControl.canonical(requestedIds)) {
+                throw new Error('the selected pair does not match the existing owner ledger');
+              }
+              return {
+                ledger: existing,
+                existing: true,
+                platform: _agentControlPlatformStatus()
+              };
+            }
+            return _agentControlInspect(baselineIds, context).then(function (snapshots) {
+              var agents = [];
+              var inventories = {};
+              snapshots.forEach(function (snapshot, index) {
+                var agent = Object.assign({}, snapshot.agent, {
+                  managedRole: index === 0 ? 'one_c_controller' : 'targetologist'
+                });
+                snapshot.inventory.agent.managedRole = agent.managedRole;
+                agents.push(agent);
+                inventories[agent.id] = snapshot.inventory;
+              });
+              return ETB.agentControl.newLedger(agents, inventories, {
+                ownerAgentId: owner,
+                ownerAccountId: actorId,
+                actorId: actorId,
+                now: new Date().toISOString()
+              }).then(function (ledger) {
+                return _agentControlWriteLedger(owner, ledger, context);
+              }).then(function (ledger) {
+                return {
+                  ledger: ledger,
+                  existing: false,
+                  snapshots: snapshots.map(function (snapshot) {
+                    return { agent: snapshot.agent, inventory: snapshot.display };
+                  }),
+                  platform: _agentControlPlatformStatus()
+                };
+              });
+            });
+          });
+        });
+      });
+    }
+
+    if (action === 'load') {
+      return _agentControlLoadOwned(data, context).then(function (ledger) {
+        return { ledger: ledger, platform: _agentControlPlatformStatus() };
+      });
+    }
+
+    if (action === 'draft_create') {
+      return _agentControlSerialize(owner, context, function () {
+        return _agentControlLoadOwned(data, context).then(function (ledger) {
+          var requestedScope = data.scope || {};
+          var kind = String(requestedScope.kind || 'selected');
+          var agentIds = (requestedScope.agentIds || []).map(String);
+          if (kind === 'organization') {
+            throw new Error('organization scope requires platform RBAC and a complete organization registry');
+          }
+          var scope = kind === 'one' ?
+            { kind: 'one', agentId: String(requestedScope.agentId || agentIds[0] || '') } :
+            { kind: 'selected', agentIds: agentIds };
+          return ETB.agentControl.createDraft(ledger, {
+            scope: scope,
+            capabilityId: 'profitability_gate',
+            ruleId: 'shared.actual-margin-ad-budget-guard',
+            text: _agentControlRuleText(data.ruleText),
+            thresholdBps: 2000,
+            operator: '<',
+            actorId: actorId,
+            now: new Date().toISOString()
+          });
+        }).then(function (ledger) {
+          return _agentControlWriteLedger(owner, ledger, context);
+        }).then(function (ledger) {
+          var draft = ledger.drafts[ledger.currentDraftId];
+          return {
+            ledger: ledger,
+            draft: draft,
+            impact: ETB.agentControl.analyzeImpact(ledger, draft.id),
+            platform: _agentControlPlatformStatus()
+          };
+        });
+      });
+    }
+
+    if (action === 'playground_run') {
+      return _agentControlSerialize(owner, context, function () {
+        return _agentControlLoadOwned(data, context).then(function (ledger) {
+          var draftId = String(data.draftId || ledger.currentDraftId || '');
+          return ETB.agentControl.runPlayground(ledger, draftId, data.cases || null, {
+            actorId: actorId,
+            now: new Date().toISOString()
+          });
+        }).then(function (ledger) {
+          return _agentControlWriteLedger(owner, ledger, context);
+        }).then(function (ledger) {
+          return {
+            ledger: ledger,
+            testRun: ledger.testRuns[ledger.currentTestRunId],
+            platform: _agentControlPlatformStatus()
+          };
+        });
+      });
+    }
+
+    if (action === 'publish') {
+      return _agentControlSerialize(owner, context, function () {
+        return _agentControlLoadOwned(data, context).then(function (ledger) {
+          return ETB.agentControl.publishDraft(
+            ledger,
+            String(data.draftId || ledger.currentDraftId || ''),
+            String(data.testRunId || ledger.currentTestRunId || ''),
+            { actorId: actorId, now: new Date().toISOString() }
+          );
+        }).then(function (ledger) {
+          return _agentControlWriteLedger(owner, ledger, context);
+        }).then(function (ledger) {
+          return {
+            ledger: ledger,
+            publication: ledger.audit[ledger.audit.length - 1],
+            platform: _agentControlPlatformStatus()
+          };
+        });
+      });
+    }
+
+    if (action === 'rollback') {
+      return _agentControlSerialize(owner, context, function () {
+        return _agentControlLoadOwned(data, context).then(function (ledger) {
+          var target = String(data.targetVersionId || ledger.baselineVersionId || '');
+          return ETB.agentControl.rollback(ledger, target, {
+            actorId: actorId,
+            now: new Date().toISOString(),
+            agentIds: Object.keys(ledger.agents || {})
+          });
+        }).then(function (ledger) {
+          return _agentControlWriteLedger(owner, ledger, context);
+        }).then(function (ledger) {
+          return {
+            ledger: ledger,
+            rollback: ledger.audit[ledger.audit.length - 1],
+            platform: _agentControlPlatformStatus()
+          };
+        });
+      });
+    }
+
+    if (action === 'active_run') {
+      return _agentControlSerialize(owner, context, function () {
+        return _agentControlLoadOwned(data, context).then(function (ledger) {
+          var ids = (data.agentIds && data.agentIds.length ?
+            data.agentIds.map(String) : Object.keys(ledger.agents || {}).sort());
+          if (!ids.length || ids.length > 8 || new Set(ids).size !== ids.length) {
+            throw new Error('managed run requires between one and eight distinct agent ids');
+          }
+          var marginBps = Number(data.marginBps);
+          var next = ledger;
+          var recordedAt = new Date().toISOString();
+          var receipts = ids.map(function (agentId) {
+            return ETB.agentControl.runActive(ledger, agentId, {
+              marginBps: marginBps,
+              runId: _agentControlEventId('managed')
+            });
+          });
+          receipts.forEach(function (receipt) {
+            next = ETB.agentControl.recordRun(next, receipt, {
+              actorId: actorId,
+              now: recordedAt
+            });
+          });
+          return _agentControlWriteLedger(owner, next, context).then(function (saved) {
+            return {
+              ledger: saved,
+              receipts: receipts.map(function (receipt) {
+                return saved.runs[receipt.id];
+              }),
+              platform: _agentControlPlatformStatus()
+            };
+          });
+        });
+      });
+    }
+
+    return Promise.reject(new Error('unsupported Agent Control action'));
   }
 
   function _studioReadObjects(session) {
@@ -249,6 +1525,21 @@ ETB.router = (function () {
   if (!window.__etbRouterSessionHook) {
     window.__etbRouterSessionHook = true;
     ETB.auth.onSessionChange(function (ev) {
+      // Fence every in-flight control operation before any new-account init is
+      // delivered. The iframe also receives an explicit reset on clear/switch,
+      // so cached previews from the previous account cannot remain authoritative.
+      _agentControlSessionEpoch += 1;
+      var controlEntry = _cache['profit-growth-scenario'];
+      var controlIframe = controlEntry && controlEntry.panel &&
+        controlEntry.panel.querySelector('iframe');
+      if (controlIframe && controlIframe.contentWindow) {
+        try {
+          controlIframe.contentWindow.postMessage({
+            type: 'etb_account_reset',
+            reason: ev && ev.reason || 'session_change'
+          }, '*');
+        } catch (_) {}
+      }
       if (ev.token && !ev.cleared && window.__etbResendInit) {
         window.__etbResendInit(ev.token);
       }
@@ -1048,6 +2339,43 @@ ETB.router = (function () {
         } catch (err) {
           reply4({ type: 'etb_agents_result', reqId: reqId4, ok: false, error: (err && err.message) || 'agents failed' });
         }
+      } else if (e.data.type === 'etb_agent_control') {
+        // Agent Control Center bridge. The tokenless iframe can request only
+        // schema-bound control-plane operations; all API access, account
+        // validation, hashing and verified KV read-back remain in the host.
+        var src7 = _srcIframe(e);
+        if (!src7) return;
+        var reqId7 = e.data.reqId;
+        function reply7(msg) {
+          if (src7 && src7.contentWindow) {
+            try { src7.contentWindow.postMessage(msg, '*'); } catch (_) {}
+          }
+        }
+        if (!_isBuiltinCapabilityStudio()) {
+          reply7({
+            type: 'etb_agent_control_result',
+            reqId: reqId7,
+            ok: false,
+            error: 'bridge not granted to this plugin'
+          });
+          return;
+        }
+        _agentControlAction(e.data).then(function (result) {
+          reply7({
+            type: 'etb_agent_control_result',
+            reqId: reqId7,
+            ok: true,
+            result: result
+          });
+        }).catch(function (error) {
+          reply7({
+            type: 'etb_agent_control_result',
+            reqId: reqId7,
+            ok: false,
+            error: (error && error.message) || 'Agent Control operation failed',
+            errorCode: error && error.code || null
+          });
+        });
       } else if (e.data.type === 'etb_governance_probe') {
         // Capability Studio's bounded governance lab. It may manage only
         // temporary objects carrying its own high-entropy marker.
