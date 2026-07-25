@@ -1374,6 +1374,11 @@ function setc(id) {
 // pills/category), then a fallback from the old tech category. Fuzzy on purpose
 //, the goal is a shop a non-technical buyer can browse, not perfect taxonomy.
 function normalizeCategory(p) {
+  // Сценарии-витрины (Студия способностей) канонически живут в «Работе»
+  // (совпадает с их CURATED biz:'work'). 'work' сюда иначе не приходит —
+  // без этого сырой путь клал сценарий в 'automation', а featured-путь в
+  // 'work', и карточка «терялась между стульями» (жалоба Анвара).
+  if (p && p.mode === 'scenario') return 'work';
   var hay = ((p.name || '') + ' ' + (p.tagline || '') + ' ' + (p.description || '') +
     ' ' + ((p.pills || []).join(' ')) + ' ' + (p.category || '')).toLowerCase();
   if (/\bpdf\b|docx|\bdoc\b|word|excel|xlsx|\bocr\b|\bfile\b|документ|скан|расшифров|транскрип/.test(hay)) return 'docs';
