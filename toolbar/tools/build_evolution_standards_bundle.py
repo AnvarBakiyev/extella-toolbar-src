@@ -35,6 +35,13 @@ PRODUCTION_DELIVERY_MODE = "ACCOUNT_SCOPED_HOST_PROVIDER"
 PRODUCTION_ATTESTATION_SCHEMA = (
     "extella.evolution.standards_bundle.attestation.v1"
 )
+KV_PACKAGE_SCHEMA = "extella.evolution.standards_kv_package.v1"
+KV_MANIFEST_SCHEMA = "extella.evolution.standards_kv_manifest.v1"
+KV_CHUNK_ENCODING = "canonical-json-chunks.v1"
+KV_BUNDLE_KEY = "xtl_evolution:production_standards_bundle:v1"
+KV_CHUNK_MAX_BYTES = 9000
+KV_MAX_CHUNKS = 128
+KV_MAX_BUNDLE_BYTES = 2 * 1024 * 1024
 PRODUCTION_PLATFORM_METADATA_FIELDS = (
     "platform_agent_id",
     "name",
@@ -95,6 +102,106 @@ def _canonical_sha256(value):
         separators=(",", ":"),
     ).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
+
+
+def _canonical_json(value):
+    return json.dumps(
+        value,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+
+
+def _utf8_chunks(value, maximum_bytes):
+    chunks = []
+    current = []
+    current_bytes = 0
+    for character in value:
+        character_bytes = len(character.encode("utf-8"))
+        if current and current_bytes + character_bytes > maximum_bytes:
+            chunks.append("".join(current))
+            current = []
+            current_bytes = 0
+        current.append(character)
+        current_bytes += character_bytes
+    if current:
+        chunks.append("".join(current))
+    return chunks
+
+
+def _validate_kv_bounds(bundle_byte_length, chunk_count):
+    if bundle_byte_length > KV_MAX_BUNDLE_BYTES:
+        raise AdapterError(
+            "managed KV bundle exceeds %d bytes" % KV_MAX_BUNDLE_BYTES
+        )
+    if chunk_count > KV_MAX_CHUNKS:
+        raise AdapterError(
+            "managed KV bundle exceeds %d chunks" % KV_MAX_CHUNKS
+        )
+
+
+def _selftest_kv_bounds():
+    _validate_kv_bounds(KV_MAX_BUNDLE_BYTES, KV_MAX_CHUNKS)
+    for byte_length, chunk_count, expected in (
+        (KV_MAX_BUNDLE_BYTES + 1, KV_MAX_CHUNKS, "bytes"),
+        (KV_MAX_BUNDLE_BYTES, KV_MAX_CHUNKS + 1, "chunks"),
+    ):
+        try:
+            _validate_kv_bounds(byte_length, chunk_count)
+        except AdapterError as exc:
+            if expected not in str(exc):
+                raise AdapterError(
+                    "managed KV bounds selftest returned wrong error"
+                ) from exc
+        else:
+            raise AdapterError(
+                "managed KV bounds selftest accepted an invalid package"
+            )
+
+
+def build_kv_package(bundle):
+    if (
+        bundle.get("data_mode") != PRODUCTION_DATA_MODE
+        or bundle.get("delivery_mode") != PRODUCTION_DELIVERY_MODE
+        or not str(bundle.get("owner_account_id") or "").strip()
+    ):
+        raise AdapterError(
+            "managed KV package requires an account-scoped PRODUCTION bundle"
+        )
+    canonical_bundle = _canonical_json(bundle)
+    bundle_sha256 = hashlib.sha256(
+        canonical_bundle.encode("utf-8")
+    ).hexdigest()
+    chunks = _utf8_chunks(canonical_bundle, KV_CHUNK_MAX_BYTES)
+    _validate_kv_bounds(
+        len(canonical_bundle.encode("utf-8")),
+        len(chunks),
+    )
+    manifest = {
+        "schema": KV_MANIFEST_SCHEMA,
+        "owner_account_id": bundle["owner_account_id"],
+        "encoding": KV_CHUNK_ENCODING,
+        "bundle_sha256": bundle_sha256,
+        "bundle_byte_length": len(canonical_bundle.encode("utf-8")),
+        "chunk_count": len(chunks),
+    }
+    return {
+        "schema": KV_PACKAGE_SCHEMA,
+        "owner_account_id": bundle["owner_account_id"],
+        "root": {
+            "key": KV_BUNDLE_KEY,
+            "value": manifest,
+        },
+        "chunks": [
+            {
+                "key": "%s:chunk:%s:%d"
+                % (KV_BUNDLE_KEY, bundle_sha256[:20], index),
+                "value": chunk,
+            }
+            for index, chunk in enumerate(chunks)
+        ],
+    }
 
 
 def _resolve_under(root, relative_path, label):
@@ -580,8 +687,10 @@ def build_bundle(standards_dir, registry_path, pin_path, mode=DATA_MODE):
         )
 
     agents = []
+    stable_id_required = []
     passport_sources = []
     seen_passport_ids = set()
+    seen_source_passport_ids = set()
     for passport_path in passport_paths:
         passport = _read_json(
             passport_path,
@@ -592,12 +701,62 @@ def build_bundle(standards_dir, registry_path, pin_path, mode=DATA_MODE):
             ),
         )
         agent = passport.get("agent") if isinstance(passport.get("agent"), dict) else {}
-        platform_agent_id = str(agent.get("platform_agent_id") or "")
+        platform_agent_id = str(agent.get("platform_agent_id") or "").strip()
+        relative_passport = passport_path.relative_to(source_root).as_posix()
+        passport_sha = _sha256_file(passport_path)
+        passport_canonical_sha = _canonical_sha256(passport)
         if not platform_agent_id:
-            raise AdapterError(
-                "Agent Passport %s has no agent.platform_agent_id"
-                % passport_path
+            if mode != PRODUCTION_DATA_MODE:
+                raise AdapterError(
+                    "Agent Passport %s has no agent.platform_agent_id"
+                    % passport_path
+                )
+            report = checker.check_report(passport)
+            _validate_report_and_legacy(checker, passport, report)
+            issue_codes = {
+                str(issue.get("code") or "")
+                for issue in report.get("issues", [])
+                if isinstance(issue, dict)
+            }
+            if (
+                report.get("ready") is not False
+                or "AGENT_PLATFORM_ID_REQUIRED" not in issue_codes
+            ):
+                raise AdapterError(
+                    "canonical checker did not classify missing "
+                    "agent.platform_agent_id for %s" % passport_path
+                )
+            source_passport_id = "passport_" + _canonical_sha256(
+                {
+                    "path": relative_passport,
+                    "passport_sha256": passport_sha,
+                }
+            )[:32]
+            if source_passport_id in seen_source_passport_ids:
+                raise AdapterError(
+                    "duplicate stable-id remediation source %s"
+                    % source_passport_id
+                )
+            seen_source_passport_ids.add(source_passport_id)
+            stable_id_required.append(
+                {
+                    "source_passport_id": source_passport_id,
+                    "source_path": relative_passport,
+                    "passport_sha256": passport_sha,
+                    "passport_canonical_sha256": passport_canonical_sha,
+                    "passport": passport,
+                    "checker_report": report,
+                }
             )
+            passport_sources.append(
+                {
+                    "path": relative_passport,
+                    "platform_agent_id": None,
+                    "source_passport_id": source_passport_id,
+                    "sha256": passport_sha,
+                }
+            )
+            continue
         if mode == PRODUCTION_DATA_MODE:
             hosting_profile = str(agent.get("hosting_profile") or "").casefold()
             if hosting_profile in {"demo", "demo_fixture", "fixture"}:
@@ -628,8 +787,6 @@ def build_bundle(standards_dir, registry_path, pin_path, mode=DATA_MODE):
             raise AdapterError("canonical builder returned invalid shared_genes")
 
         platform_metadata = platform_by_id.get(platform_agent_id)
-        relative_passport = passport_path.relative_to(source_root).as_posix()
-        passport_sha = _sha256_file(passport_path)
         row = {
             "platform_agent_id": platform_agent_id,
             "passport_present": True,
@@ -661,7 +818,13 @@ def build_bundle(standards_dir, registry_path, pin_path, mode=DATA_MODE):
         )
 
     agents.sort(key=lambda row: row["platform_agent_id"])
-    passport_sources.sort(key=lambda row: row["platform_agent_id"])
+    stable_id_required.sort(key=lambda row: row["source_passport_id"])
+    passport_sources.sort(
+        key=lambda row: (
+            str(row.get("platform_agent_id") or ""),
+            str(row.get("source_passport_id") or ""),
+        )
+    )
     template = checker.load_passport(str(artifact_paths["passport_template"]))
     if not isinstance(template, dict):
         raise AdapterError("canonical Agent Passport template did not parse as an object")
@@ -717,6 +880,7 @@ def build_bundle(standards_dir, registry_path, pin_path, mode=DATA_MODE):
         },
     }
     if production:
+        bundle["unbound_passports"] = stable_id_required
         bundle["owner_account_id"] = registry["owner_account_id"].strip()
         bundle["delivery_mode"] = PRODUCTION_DELIVERY_MODE
         bundle["attestation"] = {
@@ -772,7 +936,8 @@ def _validate_output_destination(output_path, mode):
 def parse_args(argv):
     scenario_dir = _default_scenario_dir()
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--standards-dir", required=True, type=Path)
+    parser.add_argument("--standards-dir", type=Path)
+    parser.add_argument("--selftest-kv-bounds", action="store_true")
     parser.add_argument(
         "--mode",
         choices=(DATA_MODE, PRODUCTION_DATA_MODE),
@@ -793,12 +958,27 @@ def parse_args(argv):
         type=Path,
         default=None,
     )
+    parser.add_argument(
+        "--kv-package-output",
+        type=Path,
+        default=None,
+        help=(
+            "optional PRODUCTION-only managed-KV manifest/chunk package "
+            "for the host provider"
+        ),
+    )
     args = parser.parse_args(argv)
+    if args.selftest_kv_bounds:
+        return args
+    if args.standards_dir is None:
+        parser.error("--standards-dir is required")
     if args.mode == PRODUCTION_DATA_MODE:
         if args.registry is None:
             parser.error("--registry is required with --mode PRODUCTION")
         if args.output is None:
             parser.error("--output is required with --mode PRODUCTION")
+    elif args.kv_package_output is not None:
+        parser.error("--kv-package-output requires --mode PRODUCTION")
     if args.registry is None:
         args.registry = scenario_dir / "fixture-registry.fixture"
     if args.output is None:
@@ -808,8 +988,21 @@ def parse_args(argv):
 
 def main(argv=None):
     args = parse_args(sys.argv[1:] if argv is None else argv)
+    if args.selftest_kv_bounds:
+        try:
+            _selftest_kv_bounds()
+        except AdapterError as exc:
+            print("ERROR: %s" % exc, file=sys.stderr)
+            return 2
+        print("Evolution standards managed-KV bounds selftest: PASS")
+        return 0
     try:
         _validate_output_destination(args.output, args.mode)
+        if args.kv_package_output is not None:
+            _validate_output_destination(
+                args.kv_package_output,
+                args.mode,
+            )
         bundle = build_bundle(
             args.standards_dir,
             args.registry.resolve(),
@@ -817,6 +1010,11 @@ def main(argv=None):
             args.mode,
         )
         _write_bundle(args.output.resolve(), bundle)
+        if args.kv_package_output is not None:
+            _write_bundle(
+                args.kv_package_output.resolve(),
+                build_kv_package(bundle),
+            )
     except AdapterError as exc:
         print("ERROR: %s" % exc, file=sys.stderr)
         return 2
@@ -828,6 +1026,11 @@ def main(argv=None):
             len(bundle["shared_gene_index"]["genes"]),
         )
     )
+    if args.kv_package_output is not None:
+        print(
+            "Evolution standards managed-KV package: %s"
+            % args.kv_package_output
+        )
     return 0
 
 

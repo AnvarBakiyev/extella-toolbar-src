@@ -41,6 +41,7 @@ const CORE_ORDER = [
   'api.js',
   'agent-control.js',
   'evolution-console.js',
+  'evolution-standards-provider.js',
   'install-prompt.js',
   'repo-analyzer.js',
   'hf-analyzer.js',
@@ -269,8 +270,7 @@ function buildToolbar(plugins, evolutionBundle) {
   for (const name of CORE_ORDER) {
     const p = path.join(SRC, 'core', name);
     if (!fs.existsSync(p)) {
-      console.warn(`  ⚠ Missing core module: ${name}`);
-      continue;
+      throw new Error(`Missing required core module: ${name}`);
     }
     parts.push(`\n  // ── ${name} ─────────────────────────────────────────────────────────\n`);
     parts.push(indent(readFile(p), 2));
@@ -502,6 +502,17 @@ function build() {
   if (toolbarArtifact.indexOf('profit-growth-scenario') === -1 ||
       toolbarArtifact.indexOf('capability-studio-scenario') === -1) {
     throw new Error('Evolution Console or Capability Studio is absent from the toolbar artifact');
+  }
+  const providerMarker = 'ETB.evolutionStandardsProvider = (function () {';
+  const providerUseMarker = 'var provider = ETB.evolutionStandardsProvider;';
+  const providerCount = toolbarArtifact.split(providerMarker).length - 1;
+  if (providerCount !== 1 ||
+      toolbarArtifact.indexOf(providerUseMarker) === -1 ||
+      toolbarArtifact.indexOf(providerMarker) >
+        toolbarArtifact.indexOf(providerUseMarker)) {
+    throw new Error(
+      'Evolution standards provider must appear exactly once before router use'
+    );
   }
   writeFile(path.join(OUT, 'toolbar.js'), toolbarArtifact);
   writeFile(path.join(OUT, 'plugins_manager.html'), buildMarketplace(plugins));

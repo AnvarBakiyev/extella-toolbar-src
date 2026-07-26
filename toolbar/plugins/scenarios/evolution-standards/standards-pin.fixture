@@ -1,10 +1,10 @@
 {
   "schema": "extella.evolution.standards_pin.v1",
-  "standards_git_commit": "6f3222f794d565066d72652fd3ba234f66114a3d",
+  "standards_git_commit": "4d8d759feeac8e27ca6fe94fb1925220406984d0",
   "artifacts": {
     "checker": {
       "path": "tools/check_agent_passport.py",
-      "sha256": "51ef6ade71b5a9e19da621ee656e4a79c903fc5769f3fade97f43c1792539668"
+      "sha256": "7fe28ebbea5067144ee1b13af6acd7b3f5bcf784ee780eca44e0919adaeb22d8"
     },
     "builder": {
       "path": "tools/build_agent_cabinet.py",

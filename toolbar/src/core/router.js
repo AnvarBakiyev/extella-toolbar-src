@@ -1547,7 +1547,8 @@ ETB.router = (function () {
       bundle.live_projection_allowed === true &&
       policy.live_projection === 'ALLOWED' &&
       policy.production_merge === 'ALLOWED' &&
-      Array.isArray(bundle.agents)
+      Array.isArray(bundle.agents) &&
+      Array.isArray(bundle.unbound_passports)
     );
   }
 
@@ -1605,20 +1606,151 @@ ETB.router = (function () {
     });
   }
 
-  function _evolutionLoadStandardsForActor(context) {
+  function _evolutionUnboundPassports(bundle) {
+    var rows = bundle && bundle.unbound_passports;
+    var sources = bundle && bundle.sources &&
+      bundle.sources.passports;
+    var seen = {};
+    if (!Array.isArray(rows) || !Array.isArray(sources)) {
+      throw _evolutionError(
+        'PRODUCTION_UNBOUND_PASSPORTS_INVALID',
+        'production Agent Passport bundle must declare unbound passports and sources'
+      );
+    }
+    var normalized = rows.map(function (row) {
+      var keys = row && typeof row === 'object' && !Array.isArray(row) ?
+        Object.keys(row).sort() : [];
+      var sourceId = String(row && row.source_passport_id || '');
+      var sourcePath = String(row && row.source_path || '');
+      var passportHash = String(row && row.passport_sha256 || '');
+      var passportCanonicalHash = String(
+        row && row.passport_canonical_sha256 || ''
+      );
+      var passport = row && row.passport;
+      var agent = passport && passport.agent;
+      var report = row && row.checker_report;
+      var issues = report && report.issues;
+      var sourceMatches = sources.filter(function (source) {
+        return source && source.source_passport_id === sourceId &&
+          source.path === sourcePath &&
+          source.sha256 === passportHash &&
+          source.platform_agent_id === null &&
+          ETB.evolutionConsole.canonical(
+            Object.keys(source).sort()
+          ) === ETB.evolutionConsole.canonical([
+            'path',
+            'platform_agent_id',
+            'sha256',
+            'source_passport_id'
+          ].sort());
+      });
+      var missingIdIssue = Array.isArray(issues) && issues.some(function (
+        issue
+      ) {
+        return issue && issue.code === 'AGENT_PLATFORM_ID_REQUIRED' &&
+          issue.severity === 'error' &&
+          issue.path === 'agent.platform_agent_id';
+      });
+      if (ETB.evolutionConsole.canonical(keys) !==
+            ETB.evolutionConsole.canonical([
+              'checker_report',
+              'passport',
+              'passport_canonical_sha256',
+              'passport_sha256',
+              'source_passport_id',
+              'source_path'
+            ].sort()) ||
+          !/^passport_[a-f0-9]{32}$/.test(sourceId) || seen[sourceId] ||
+          !sourcePath || sourcePath !== sourcePath.trim() ||
+          sourcePath.length > 1024 || /^[\\/]/.test(sourcePath) ||
+          /(^|[\\/])\.\.([\\/]|$)|[\u0000-\u001f\u007f]/.test(sourcePath) ||
+          !/^[a-f0-9]{64}$/.test(passportHash) ||
+          !/^[a-f0-9]{64}$/.test(passportCanonicalHash) ||
+          !passport || typeof passport !== 'object' ||
+          Array.isArray(passport) || !agent || typeof agent !== 'object' ||
+          Array.isArray(agent) ||
+          String(agent.platform_agent_id || '').trim() ||
+          !report || report.schema !==
+            'extella.agent_passport.check_report.v1' ||
+          report.ready !== false || !missingIdIssue ||
+          sourceMatches.length !== 1) {
+        throw _evolutionError(
+          'PRODUCTION_UNBOUND_PASSPORTS_INVALID',
+          'unbound Agent Passport remediation source is invalid'
+        );
+      }
+      seen[sourceId] = true;
+      return {
+        sourcePassportId: sourceId,
+        sourcePath: sourcePath,
+        passportSha256: passportHash,
+        passportCanonicalSha256: passportCanonicalHash,
+        passport: _evolutionClone(passport),
+        checkerReport: _evolutionClone(report)
+      };
+    });
+    return Promise.all(normalized.map(function (row) {
+      return Promise.all([
+        ETB.evolutionConsole.sha256(row.passport),
+        ETB.evolutionConsole.sha256({
+          path: row.sourcePath,
+          passport_sha256: row.passportSha256
+        })
+      ]).then(function (hashes) {
+        if (hashes[0] !== row.passportCanonicalSha256 ||
+            'passport_' + hashes[1].slice(0, 32) !==
+              row.sourcePassportId) {
+          throw _evolutionError(
+            'PRODUCTION_UNBOUND_PASSPORTS_INVALID',
+            'unbound Agent Passport content or source identity is invalid'
+          );
+        }
+        return row;
+      });
+    })).then(function (verified) {
+      return verified.sort(function (left, right) {
+      return left.sourcePassportId < right.sourcePassportId ? -1 :
+        (left.sourcePassportId > right.sourcePassportId ? 1 : 0);
+      });
+    });
+  }
+
+  function _evolutionStableIdRequiredForUi(rows) {
+    return (rows || []).map(function (row) {
+      var agent = row.passport && row.passport.agent || {};
+      return {
+        sourcePassport: row.sourcePassportId,
+        sourcePath: row.sourcePath,
+        name: String(agent.name || row.sourcePath),
+        passportSha256: row.passportSha256,
+        passportCanonicalSha256: row.passportCanonicalSha256,
+        checkerIssues: _evolutionClone(
+          row.checkerReport && row.checkerReport.issues || []
+        )
+      };
+    });
+  }
+
+  function _evolutionLoadStandardsForActor(context, platformAgentIds) {
     var provider = ETB.evolutionStandardsProvider;
-    var fallback = _evolutionBundle();
     if (!provider || typeof provider.loadForActor !== 'function') {
       return Promise.resolve({
-        bundle: fallback,
+        bundle: null,
         accountScoped: false,
-        error: null
+        unboundPassports: [],
+        error: {
+          platformAgentId: null,
+          code: 'PRODUCTION_STANDARDS_UNAVAILABLE',
+          message: 'account-scoped Agent Passport registry provider is unavailable'
+        }
       });
     }
     return Promise.resolve().then(function () {
+      _agentControlAssertContext(context);
       return provider.loadForActor({
         actorId: context.actorId,
-        epoch: context.epoch
+        epoch: context.epoch,
+        platformAgentIds: (platformAgentIds || []).slice()
       });
     }).then(function (bundle) {
       _agentControlAssertContext(context);
@@ -1630,18 +1762,23 @@ ETB.router = (function () {
       }
       return _evolutionVerifyProviderBundle(bundle, context)
         .then(function (verified) {
-          return {
-            bundle: verified,
-            accountScoped: true,
-            error: null
-          };
+          return _evolutionUnboundPassports(verified)
+            .then(function (unboundPassports) {
+              return {
+                bundle: verified,
+                accountScoped: true,
+                unboundPassports: unboundPassports,
+                error: null
+              };
+            });
         });
     }).catch(function (error) {
       if (error && (error.code === 'ACCOUNT_SESSION_CHANGED' ||
           error.code === 'OPERATION_OUTCOME_UNKNOWN')) throw error;
       return {
-        bundle: fallback,
+        bundle: null,
         accountScoped: false,
+        unboundPassports: [],
         error: {
           platformAgentId: null,
           code: String(error && error.code ||
@@ -1694,7 +1831,10 @@ ETB.router = (function () {
       liveProjectionAllowed: productionAvailable,
       commit: String(standards.git_commit || ''),
       checkerSha256: String(checker.sha256 || ''),
-      builderSha256: String(builder.sha256 || '')
+      builderSha256: String(builder.sha256 || ''),
+      contentSha256: productionAvailable ?
+        String(bundle.attestation && bundle.attestation.content_sha256 || '') :
+        ''
     };
   }
 
@@ -2073,12 +2213,16 @@ ETB.router = (function () {
     var ledgerResult;
     var fleet;
     var sharedMap;
-    return Promise.all([
-      _evolutionLoadStandardsForActor(context),
-      _evolutionLoadPlatformFleet(context)
-    ]).then(function (loaded) {
-      standardsResult = loaded[0];
-      platformResult = loaded[1];
+    return _evolutionLoadPlatformFleet(context).then(function (loaded) {
+      platformResult = loaded;
+      return _evolutionLoadStandardsForActor(
+        context,
+        platformResult.rows.map(function (row) {
+          return row.platform_agent_id;
+        })
+      );
+    }).then(function (loaded) {
+      standardsResult = loaded;
       bundle = standardsResult.bundle;
       standardsAvailable = _evolutionProductionStandardsAvailable(
         bundle,
@@ -2125,6 +2269,9 @@ ETB.router = (function () {
         platformErrors: platformResult.errors,
         ledgerErrors: ledgerResult.errors,
         standardsError: standardsResult.error,
+        stableIdRequired: _evolutionStableIdRequiredForUi(
+          standardsResult.unboundPassports
+        ),
         standards: _evolutionStandardsSummary(
           bundle,
           context.actorId,
@@ -2151,6 +2298,14 @@ ETB.router = (function () {
         snapshotId: projection.snapshotId,
         complete: complete,
         standardsAvailable: standardsAvailable,
+        unboundPassports: standardsResult.unboundPassports,
+        unboundPassportsById: standardsResult.unboundPassports.reduce(
+          function (acc, row) {
+            acc[row.sourcePassportId] = row;
+            return acc;
+          },
+          {}
+        ),
         ownerAgentId: ledgerResult.ledger ?
           ledgerResult.ownerAgentId :
           (platformResult.rows[0] &&
@@ -2177,6 +2332,9 @@ ETB.router = (function () {
           bundle,
           context.actorId,
           standardsResult.accountScoped
+        ),
+        stableIdRequired: _evolutionStableIdRequiredForUi(
+          standardsResult.unboundPassports
         ),
         ledger: ledgerResult.ledger,
         receipts: _evolutionReceiptRows(ledgerResult.ledger),
@@ -2379,6 +2537,10 @@ ETB.router = (function () {
   function _evolutionPassportDraft(data, context) {
     var session = _evolutionRequireSession(data, context, false);
     var id = String(data && data.agentId || '');
+    var sourcePassportId = String(data && data.sourcePassport || '').trim();
+    var sourcePassport = sourcePassportId &&
+      session.unboundPassportsById &&
+      session.unboundPassportsById[sourcePassportId];
     var listed = session.platformById[id];
     var fleetRow = session.fleet && session.fleet.rows.filter(
       function (row) { return row.platformAgentId === id; }
@@ -2387,6 +2549,12 @@ ETB.router = (function () {
       return Promise.reject(_evolutionError(
         'AGENT_PASSPORT_REGISTRY_REQUIRED',
         'a production Agent Passport registry is required before declaring a passport missing'
+      ));
+    }
+    if (sourcePassportId && !sourcePassport) {
+      return Promise.reject(_evolutionError(
+        'AGENT_PASSPORT_SOURCE_NOT_FOUND',
+        'the selected unbound Agent Passport is not in the exact current production registry'
       ));
     }
     if (!listed || !fleetRow || !fleetRow.platformPresent ||
@@ -2413,36 +2581,47 @@ ETB.router = (function () {
       var template = session.standardsBundle &&
         session.standardsBundle.passport_template ||
         _evolutionBundle().passport_template;
-      if (!template || !template.parsed ||
-          template.draft_state !== 'NOT_VALIDATED') {
+      if (!sourcePassport && (!template || !template.parsed ||
+          template.draft_state !== 'NOT_VALIDATED')) {
         throw _evolutionError(
           'CANONICAL_PASSPORT_TEMPLATE_UNAVAILABLE',
           'the pinned canonical Agent Passport template is unavailable'
         );
       }
-      var draft = _evolutionClone(template.parsed);
+      var draft = sourcePassport ?
+        _evolutionClone(sourcePassport.passport) :
+        _evolutionClone(template.parsed);
       draft.agent = draft.agent || {};
       draft.agent.platform_agent_id = id;
-      draft.agent.name = detail.name;
-      draft.agent.model_profile = detail.model;
-      if (Object.prototype.hasOwnProperty.call(
-            draft.agent,
-            'platform_provider'
-          )) {
-        draft.agent.platform_provider = detail.provider;
-      }
-      if (Object.prototype.hasOwnProperty.call(
-            draft.agent,
-            'declared_instructions'
-          )) {
-        draft.agent.declared_instructions = detail.instructions;
+      if (!sourcePassport) {
+        draft.agent.name = detail.name;
+        draft.agent.model_profile = detail.model;
+        if (Object.prototype.hasOwnProperty.call(
+              draft.agent,
+              'platform_provider'
+            )) {
+          draft.agent.platform_provider = detail.provider;
+        }
+        if (Object.prototype.hasOwnProperty.call(
+              draft.agent,
+              'declared_instructions'
+            )) {
+          draft.agent.declared_instructions = detail.instructions;
+        }
       }
       return {
         filename: 'agent_passport_' +
           id.replace(/[^A-Za-z0-9._-]/g, '_') + '.yaml',
         draft: draft,
         status: 'NOT_VALIDATED',
-        templateSha256: String(template.sha256 || ''),
+        templateSha256: String(template && template.sha256 || ''),
+        sourcePassport: sourcePassport ?
+          sourcePassport.sourcePassportId : null,
+        sourcePath: sourcePassport ? sourcePassport.sourcePath : null,
+        sourcePassportSha256: sourcePassport ?
+          sourcePassport.passportSha256 : null,
+        sourcePassportCanonicalSha256: sourcePassport ?
+          sourcePassport.passportCanonicalSha256 : null,
         liveFields: {
           platform_agent_id: id,
           name: detail.name,

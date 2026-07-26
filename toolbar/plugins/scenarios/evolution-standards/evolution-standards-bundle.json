@@ -1209,7 +1209,7 @@
     "standards_pin": {
       "path": "standards-pin.fixture",
       "schema": "extella.evolution.standards_pin.v1",
-      "sha256": "dd1829c91c8ecc1d729f3ea3d363b2183e72339018b0bb018f868d2092efa943"
+      "sha256": "c2e52a9fade5b42bd59584bbc85925827d258ee5fc18c6a2777ada39db4a8b07"
     }
   },
   "standards": {
@@ -1226,7 +1226,7 @@
       },
       "checker": {
         "path": "tools/check_agent_passport.py",
-        "sha256": "51ef6ade71b5a9e19da621ee656e4a79c903fc5769f3fade97f43c1792539668"
+        "sha256": "7fe28ebbea5067144ee1b13af6acd7b3f5bcf784ee780eca44e0919adaeb22d8"
       },
       "help_widget": {
         "path": "templates/help_widget.js",
@@ -1239,6 +1239,6 @@
         "sha256": "63a963e9a9db399d130a4035500b769e16eb082f3013f8fd46a1ebc20b92d8af"
       }
     },
-    "git_commit": "6f3222f794d565066d72652fd3ba234f66114a3d"
+    "git_commit": "4d8d759feeac8e27ca6fe94fb1925220406984d0"
   }
 }

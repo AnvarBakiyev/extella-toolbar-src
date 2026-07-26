@@ -3,7 +3,7 @@
 Дата: 2026-07-26
 Toolbar branch: `codex/evolution-console-v2`
 Standards branch: `codex/evolution-console-v2-standards`
-Pinned standards commit: `6f3222f794d565066d72652fd3ba234f66114a3d`
+Pinned standards commit: `4d8d759feeac8e27ca6fe94fb1925220406984d0`
 
 ## Результат
 
@@ -55,11 +55,15 @@ Pinned DEMO_FIXTURE bundle:
 
 ## Production provider contract
 
-Live Agent Passport registry не встраивается в статический toolbar. Хост должен
-предоставить:
+Live Agent Passport registry не встраивается в статический toolbar. Хост
+использует реализованный read-only provider:
 
 ```js
-ETB.evolutionStandardsProvider.loadForActor({ actorId, epoch })
+ETB.evolutionStandardsProvider.loadForActor({
+  actorId,
+  epoch,
+  platformAgentIds
+})
 ```
 
 Возвращаемый bundle обязан быть:
@@ -73,7 +77,21 @@ ETB.evolutionStandardsProvider.loadForActor({ actorId, epoch })
 
 Production bundle создаётся `toolbar/tools/build_evolution_standards_bundle.py`
 в режиме `PRODUCTION` с отдельными production registry/platform inputs и output
-вне статического `toolbar/`.
+вне статического `toolbar/`. Опция `--kv-package-output` создаёт
+воспроизводимый пакет из content-addressed chunks и корневого manifest.
+
+`toolbar/tools/provision_evolution_standards.py` по умолчанию только проверяет
+пакет и точный toolbar pin без сетевых записей. Режим записи требует одновременно
+`--apply --confirm APPLY`, точный `--owner-account-id`, один live `--agent-id`
+из предварительного `agent/list` и `--token-file`. Chunks записываются и
+перечитываются до root; после root весь опубликованный bundle повторно
+гидратируется, проверяется по byte length, canonical JSON, SHA-256 и owner, затем
+root читается ещё раз. Неопределённый исход записи не повторяется вслепую.
+
+Runtime provider получает точные live IDs только после `agent/list` +
+`agent/get`, читает managed KV в scope этих агентов, проверяет account owner,
+manifest/chunks, pinned artifacts и attestation. При отсутствии или конфликте
+данных Console показывает `UNKNOWN`/`UNAVAILABLE`; DEMO_FIXTURE не подставляется.
 
 ## Host adapters и native write gate
 
@@ -102,9 +120,16 @@ IDs и hashes/read-back всё равно проверяются в core.
 - Read-only live sanity check 2026-07-26: текущий profile вернул 15 стабильных
   agent ID; два точечных `agent/get` подтвердили доступность provider, model,
   version и полного instructions. Live writes не выполнялись.
-- В репозитории нет production реализации
-  `ETB.evolutionStandardsProvider`; без неё live standards/risk/Shared Genes
-  fail closed как `UNKNOWN`, а мутации заблокированы.
+- Production provider и безопасный provisioner реализованы, но production
+  registry/package в managed KV аккаунта в рамках этой feature-ветки не
+  записывались. Поэтому повторная UI-приёмка «15 live агентов + точное число
+  рисков по реальным паспортам» остаётся внешним release-гейтом, а не заявляется
+  выполненной по тестовым данным.
+- Тест provider использует 15 точных live-shaped ID и доказывает отсутствие
+  DEMO fallback; это не выдаётся за живую UI-приёмку аккаунта.
+- Живая проверка паспорта 1С локально завершена; публикация результата ожидает
+  отдельного privacy-reviewed cross-repository release шага. Account linkage и
+  идентификатор в toolbar PR не раскрываются.
 - В репозитории нет production `ETB.evolutionAdapter`; Evolution Lab,
   activation, schedule mutations, observation и rollback заблокированы.
 - Durable native intent и multi-device ledger CAS отсутствуют; native
@@ -123,12 +148,20 @@ IDs и hashes/read-back всё равно проверяются в core.
 
 Проверено в feature worktree:
 
-- strict pinned `npm test -w @extella/toolbar`: 103/103, без `SKIP`;
-- focused Evolution core/router/surface: 34/34;
-- pinned standards integration: 10/10, без `SKIP`;
-- `npm run build -w @extella/toolbar`: успешно, 111 plugin definitions,
-  inline-script и naming checks пройдены;
-- `git diff --check` и ES5 syntax checks: успешно.
+- strict pinned `npm test -w @extella/toolbar`: 115/115, failed 0,
+  skipped 0;
+- pinned standards adapter: 11/11, failed 0, skipped 0;
+- provider/router: 8/8, включая 15 live-shaped IDs, failed 0, skipped 0;
+- provisioner selftest: PASS, включая wrong-account/target до первой записи,
+  конфликт, post-root tamper, неполный runtime contract и pin mismatch;
+- `check_brand_copy.py --strict`: PASS (предупреждения только на операторы `!`
+  внутри JavaScript);
+- полная сборка и `test:reproducible`: PASS, 111 plugin definitions,
+  Library встроена, три проверенных артефакта совпали:
+  SHA-256 `5756c7a30dcd4e510c30799d59434a42928cdd2fac237f0fd5e629b637ee0716`,
+  размер `9 078 218` байт;
+- `^</script>` в `toolbar/build/toolbar.js`: 0;
+- inline-script, naming, ES5 и `git diff --check`: успешно;
 
 Cross-repository standards tests локально дают явный `SKIP`, если pinned
 checkout недоступен. В release/CI это аварийный гейт:
@@ -142,19 +175,24 @@ EXTELLA_STANDARDS_DIR=/clean/path/to/extella-agent-standards \
 `CI=true`, неверный `EXTELLA_STANDARDS_DIR`, несовпавший commit или SHA любого
 canonical artifact завершают suite ошибкой `PINNED_STANDARDS_UNAVAILABLE`.
 
-Полный Library build в этом worktree не запускался: зависимости TypeScript/Vite
-не установлены (`tsc: command not found`). Toolbar build поэтому честно сообщает,
-что Library tab будет пуст до clean dependency install/build.
+`npm ci` для проверки release-сборки сообщил 1 moderate и 5 high advisories;
+автоматические dependency-изменения не применялись. Сгенерированные release-копии
+не являются разрешением на deploy из feature worktree.
 
 Перед merge интегратор должен:
 
 1. merge/publish standards draft PR #1, чтобы pinned commit был доступен clean CI;
-2. merge toolbar branch;
-3. подключить account-scoped production provider; реализовать durable native
-   intent + ledger CAS, затем подключить write adapters;
-4. повторить полный toolbar test/build в чистом checkout `origin/main`;
-5. выполнить release sentinels из `docs/TEAM_PROTOCOL.md`;
-6. deploy только из чистого интеграторского checkout.
+2. merge toolbar PR #2;
+3. подготовить production registry реальных паспортов аккаунта, собрать пакет,
+   выполнить dry-run provisioner, затем отдельным подтверждённым release-шагом
+   записать и перечитать managed KV;
+4. повторить live UI-приёмку: ≥15 агентов и точное равенство risk count прямому
+   canonical checker по тем же паспортам;
+5. реализовать durable native intent + ledger CAS, затем отдельно подключить
+   write adapters;
+6. повторить полный toolbar test/build в чистом checkout `origin/main`;
+7. выполнить release sentinels из `docs/TEAM_PROTOCOL.md`;
+8. deploy только из чистого интеграторского checkout.
 
 Прямой deploy артефакта из feature worktree запрещён §§10–11
 `docs/TEAM_PROTOCOL.md`.

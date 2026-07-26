@@ -23,6 +23,11 @@ const adapterPath = path.join(
   'tools',
   'build_evolution_standards_bundle.py',
 );
+const provisionPath = path.join(
+  toolbarRoot,
+  'tools',
+  'provision_evolution_standards.py',
+);
 const registryPath = path.join(scenarioRoot, 'fixture-registry.fixture');
 const pinPath = path.join(scenarioRoot, 'standards-pin.fixture');
 const bundlePath = path.join(scenarioRoot, 'evolution-standards-bundle.json');
@@ -132,6 +137,23 @@ function sha256File(file) {
   return crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 }
 
+function canonical(value) {
+  if (value === null) return 'null';
+  if (Array.isArray(value)) {
+    return `[${value.map(canonical).join(',')}]`;
+  }
+  if (typeof value === 'object') {
+    return `{${Object.keys(value).sort().map(
+      (key) => `${JSON.stringify(key)}:${canonical(value[key])}`,
+    ).join(',')}}`;
+  }
+  return JSON.stringify(value);
+}
+
+function sha256Canonical(value) {
+  return crypto.createHash('sha256').update(canonical(value)).digest('hex');
+}
+
 function runPython(args) {
   return spawnSync(python, args, {
     cwd: repoRoot,
@@ -162,8 +184,9 @@ function runProduction(
   registry,
   pin = pinPath,
   productionStandardsDir = standardsDir,
+  kvPackageOutput = null,
 ) {
-  return runPython([
+  const args = [
     adapterPath,
     '--standards-dir',
     productionStandardsDir,
@@ -175,7 +198,11 @@ function runProduction(
     pin,
     '--output',
     output,
-  ]);
+  ];
+  if (kvPackageOutput) {
+    args.push('--kv-package-output', kvPackageOutput);
+  }
+  return runPython(args);
 }
 
 function writeJson(file, value) {
@@ -233,7 +260,7 @@ builder_spec.loader.exec_module(builder)
 agents = {}
 for relative in registry["passport_files"]:
     passport = json.loads((scenario / relative).read_text(encoding="utf-8"))
-    platform_agent_id = passport["agent"]["platform_agent_id"]
+    platform_agent_id = passport.get("agent", {}).get("platform_agent_id", "")
     report = checker.check_report(passport)
     legacy = checker.check(passport)
     agents[platform_agent_id] = {
@@ -275,7 +302,7 @@ builder_spec.loader.exec_module(builder)
 agents = {}
 for raw in sys.argv[2:]:
     passport = json.loads(Path(raw).read_text(encoding="utf-8"))
-    platform_agent_id = passport["agent"]["platform_agent_id"]
+    platform_agent_id = passport.get("agent", {}).get("platform_agent_id", "")
     report = checker.check_report(passport)
     agents[platform_agent_id] = {
         "checker_report": report,
@@ -651,7 +678,14 @@ standardsIntegrationTest('strict production registry builds exact canonical rows
   const source = makeProductionSource(t);
   const firstOutput = path.join(source.root, 'first.json');
   const secondOutput = path.join(source.root, 'second.json');
-  const first = runProduction(firstOutput, source.registryPath);
+  const kvPackageOutput = path.join(source.root, 'managed-kv-package.json');
+  const first = runProduction(
+    firstOutput,
+    source.registryPath,
+    pinPath,
+    standardsDir,
+    kvPackageOutput,
+  );
   const second = runProduction(secondOutput, source.registryPath);
   assert.equal(first.status, 0, first.stderr || first.stdout);
   assert.equal(second.status, 0, second.stderr || second.stdout);
@@ -661,6 +695,39 @@ standardsIntegrationTest('strict production registry builds exact canonical rows
   );
 
   const bundle = JSON.parse(fs.readFileSync(firstOutput, 'utf8'));
+  const kvPackage = JSON.parse(fs.readFileSync(kvPackageOutput, 'utf8'));
+  const canonicalBundle = canonical(bundle);
+  const packageBundle = kvPackage.chunks
+    .map((entry) => entry.value)
+    .join('');
+  assert.equal(
+    kvPackage.schema,
+    'extella.evolution.standards_kv_package.v1',
+  );
+  assert.equal(
+    kvPackage.root.key,
+    'xtl_evolution:production_standards_bundle:v1',
+  );
+  assert.equal(
+    kvPackage.root.value.schema,
+    'extella.evolution.standards_kv_manifest.v1',
+  );
+  assert.equal(kvPackage.root.value.encoding, 'canonical-json-chunks.v1');
+  assert.equal(kvPackage.root.value.chunk_count, kvPackage.chunks.length);
+  assert.ok(
+    kvPackage.chunks.every(
+      (entry) => new TextEncoder().encode(entry.value).length <= 9000,
+    ),
+  );
+  assert.equal(packageBundle, canonicalBundle);
+  assert.equal(
+    kvPackage.root.value.bundle_sha256,
+    await loadCore().sha256(bundle),
+  );
+  assert.equal(
+    kvPackage.root.value.bundle_byte_length,
+    new TextEncoder().encode(canonicalBundle).length,
+  );
   const direct = canonicalOutputForPassports([
     source.validPath,
     source.invalidPath,
@@ -769,6 +836,124 @@ standardsIntegrationTest('strict production registry builds exact canonical rows
   for (const sourcePath of productionDataPaths) {
     assert.doesNotMatch(sourcePath, /fixture|demo/i);
   }
+  const provisionSelftest = runPython([provisionPath, '--selftest']);
+  assert.equal(
+    provisionSelftest.status,
+    0,
+    provisionSelftest.stderr || provisionSelftest.stdout,
+  );
+  const kvBoundsSelftest = runPython([
+    adapterPath,
+    '--selftest-kv-bounds',
+  ]);
+  assert.equal(
+    kvBoundsSelftest.status,
+    0,
+    kvBoundsSelftest.stderr || kvBoundsSelftest.stdout,
+  );
+  const provisionDryRun = runPython([
+    provisionPath,
+    '--package',
+    kvPackageOutput,
+    '--pin',
+    pinPath,
+  ]);
+  assert.equal(
+    provisionDryRun.status,
+    0,
+    provisionDryRun.stderr || provisionDryRun.stdout,
+  );
+  assert.deepEqual(JSON.parse(provisionDryRun.stdout), {
+    bundle_byte_length: new TextEncoder().encode(canonicalBundle).length,
+    bundle_sha256: kvPackage.root.value.bundle_sha256,
+    chunk_count: kvPackage.chunks.length,
+    external_writes: 0,
+    owner_account_id: 'account_production_owner',
+    root_key: 'xtl_evolution:production_standards_bundle:v1',
+    status: 'VALIDATED_DRY_RUN',
+  });
+});
+
+standardsIntegrationTest('production registry exposes legacy passports without stable IDs for explicit one-click repair', async (t) => {
+  const source = makeProductionSource(t);
+  const legacyPath = path.join(source.root, 'passports', 'legacy-unbound.json');
+  const legacy = productionPassport(
+    'valid-alpha.fixture',
+    'agent_production_legacy_source',
+  );
+  delete legacy.agent.platform_agent_id;
+  legacy.shared_genes = [];
+  writeJson(legacyPath, legacy);
+
+  const registry = {
+    ...source.registry,
+    passport_count: 3,
+    passport_files: [
+      ...source.registry.passport_files,
+      'passports/legacy-unbound.json',
+    ],
+  };
+  writeJson(source.registryPath, registry);
+  const output = path.join(source.root, 'with-unbound-passport.json');
+  const result = runProduction(output, source.registryPath);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+
+  const bundle = JSON.parse(fs.readFileSync(output, 'utf8'));
+  assert.equal(bundle.agents.length, 2);
+  assert.equal(bundle.unbound_passports.length, 1);
+  const unbound = bundle.unbound_passports[0];
+  assert.match(unbound.source_passport_id, /^passport_[a-f0-9]{32}$/);
+  assert.equal(unbound.source_path, 'passports/legacy-unbound.json');
+  assert.equal(unbound.passport_sha256, sha256File(legacyPath));
+  assert.equal(
+    unbound.passport_canonical_sha256,
+    sha256Canonical(legacy),
+  );
+  assert.equal(
+    unbound.source_passport_id,
+    `passport_${sha256Canonical({
+      path: 'passports/legacy-unbound.json',
+      passport_sha256: sha256File(legacyPath),
+    }).slice(0, 32)}`,
+  );
+  assert.deepEqual(unbound.passport, legacy);
+  assert.equal(unbound.checker_report.ready, false);
+  assert.deepEqual(
+    unbound.checker_report,
+    canonicalOutputForPassports([legacyPath]).agents[''].checker_report,
+  );
+  assert.ok(
+    unbound.checker_report.issues.some(
+      (issue) =>
+        issue.code === 'AGENT_PLATFORM_ID_REQUIRED' &&
+        /Evolution Console/.test(issue.message_ru) &&
+        /Evolution Console/.test(issue.message_en),
+    ),
+  );
+  assert.equal(
+    bundle.agents.some((row) => !row.platform_agent_id),
+    false,
+    'an unbound passport must never be joined to a live agent by display name',
+  );
+  assert.deepEqual(
+    bundle.sources.passports.find(
+      (entry) => entry.source_passport_id === unbound.source_passport_id,
+    ),
+    {
+      path: 'passports/legacy-unbound.json',
+      platform_agent_id: null,
+      source_passport_id: unbound.source_passport_id,
+      sha256: sha256File(legacyPath),
+    },
+  );
+
+  const unsignedBundle = plain(bundle);
+  delete unsignedBundle.attestation;
+  assert.equal(
+    await loadCore().sha256(unsignedBundle),
+    bundle.attestation.content_sha256,
+    'the remediation source and original passport are covered by the account-bound attestation',
+  );
 });
 
 standardsIntegrationTest('bundle pins exact canonical artifacts, widgets, and parsed passport template', () => {
@@ -1040,6 +1225,7 @@ test('DEMO_FIXTURE IDs cannot enter the live router standards projection', () =>
     data_mode: 'PRODUCTION',
     delivery_mode: 'ACCOUNT_SCOPED_HOST_PROVIDER',
     owner_account_id: 'account_a',
+    unbound_passports: [],
   };
   assert.equal(context.available(production, 'account_a', true), true);
   assert.equal(context.available(production, 'account_b', true), false);

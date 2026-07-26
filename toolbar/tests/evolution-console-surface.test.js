@@ -121,6 +121,62 @@ test('Evolution Console HTML has valid inline scripts and unique document IDs', 
   }
 });
 
+test('Evolution Console uses only the approved brand palette and never uses Petrol for actions', () => {
+  const approvedColors = new Set([
+    'C57E33', 'D4984F', 'A5632A', 'D4944A', 'E0A85E',
+    '2F6B66', '3D8078', '24544F', 'B7CEC9', '5FA8A0', '6BB3AA',
+    '0A0A0A', '1A1A1A', '2A2A2A', 'F0F0F0', 'D8D8D8', 'B0B0B0',
+    '8C8C8C', 'AAAAAA', 'FAFAF8', 'F5F3EE', 'EBE8E1', 'D4B896',
+    '0E0E0E', '181818', '222222', '000000',
+    '1F7A4D', '57B37E', 'A63A2E', 'E8705F',
+  ]);
+  const usedColors = [...evolutionHtml.matchAll(/#([0-9a-f]{6})\b/gi)]
+    .map((match) => match[1].toUpperCase());
+  assert.ok(usedColors.length > 0);
+  assert.deepEqual(
+    [...new Set(usedColors.filter((color) => !approvedColors.has(color)))],
+    [],
+  );
+  assert.doesNotMatch(evolutionHtml, /#C49C70/i);
+  assert.match(
+    evolutionHtml,
+    /--warn:#E0A85E;--bad:#E8705F;--good:#57B37E/,
+  );
+  assert.match(
+    evolutionHtml,
+    /--warn:#A5632A;--bad:#A63A2E;--good:#1F7A4D/,
+  );
+  assert.match(evolutionHtml, /\.primary\{background:var\(--gold\)/);
+  assert.match(evolutionHtml, /\.btn\.gold,.gold\{background:var\(--gold\)/);
+  assert.doesNotMatch(
+    evolutionHtml,
+    /\.(?:primary|btn\.gold)[^{]*\{[^}]*var\(--petrol\)/,
+  );
+  assert.match(evolutionHtml, /\.tab\.on\{[^}]*color:var\(--petrol\)/);
+  assert.match(evolutionHtml, /\.step\.on\{[^}]*color:var\(--petrol\)/);
+});
+
+test('Evolution Console status meaning is explicit without relying on color', () => {
+  assert.match(
+    evolutionHtml,
+    /\.state\{[^}]*background:var\(--panel2\)/,
+  );
+  assert.match(
+    evolutionHtml,
+    /function statusMark\(kind\)\{return kind==='good'\?'✓':kind==='bad'\?'✕':'⚠';\}/,
+  );
+  assert.match(evolutionHtml, /p\.complete\?'✓ COMPLETE ':'✕ INCOMPLETE '/);
+  assert.match(
+    evolutionHtml,
+    /ready\?'✓ PRODUCTION READY · ':'⚠ PRODUCTION BLOCKED · '/,
+  );
+  assert.match(
+    evolutionHtml,
+    /var phase=i<n\?'COMPLETE':i===n\?'CURRENT':'PENDING',mark=i<n\?'✓':i===n\?'→':'○'/,
+  );
+  assert.match(evolutionHtml, /<small>'\+phase\+'<\/small>/);
+});
+
 test('Evolution Console tokenless iframe and host use one exact fenced bridge contract', () => {
   const requestType = evolutionHtml.match(
     /postMessage\(Object\.assign\(\{type:'([^']+)',reqId:id,action:action\}/,
@@ -226,6 +282,8 @@ test('Evolution Console clears every account-bound UI slice before a new init', 
   for (const clearedField of [
     'state.actorId=null',
     'state.projection=null',
+    'state.stableIdRequired=[]',
+    'state.stableTargetBySource=Object.create(null)',
     'state.shared=null',
     'state.standards=null',
     'state.platform=null',
@@ -296,6 +354,67 @@ test('Evolution Console uses exact API fields and canonical checker facts', () =
     'JSON serialization is YAML 1.2-compatible and must use the YAML filename/MIME contract',
   );
   assert.match(evolutionHtml, /'agent_passport_'\+agentId\+'\.yaml'/);
+});
+
+test('Stable-ID-required passports bind only an explicit source Passport to an exact live agentId', () => {
+  assert.match(evolutionHtml, /id="stableIdRequiredList"/);
+  assert.match(evolutionHtml, /stableIdRequired:'Нужен стабильный ID'/);
+  assert.match(evolutionHtml, /stableIdRequired:'Stable ID required'/);
+  assert.match(
+    evolutionHtml,
+    /state\.stableIdRequired=Array\.isArray\(result\.stableIdRequired\)\?result\.stableIdRequired:\[\]/,
+  );
+
+  const stableStart = evolutionHtml.indexOf('    function stableIdLiveRows()');
+  const stableEnd = evolutionHtml.indexOf(
+    '    function geneConsumerVersion(',
+    stableStart,
+  );
+  assert.ok(stableStart >= 0 && stableEnd > stableStart);
+  const stableSource = evolutionHtml.slice(stableStart, stableEnd);
+  assert.match(stableSource, /entry\.sourcePassport/);
+  assert.match(stableSource, /entry\.sourcePath/);
+  assert.match(stableSource, /entry\.name/);
+  assert.match(stableSource, /entry\.passportSha256/);
+  assert.match(stableSource, /entry\.checkerIssues/);
+  assert.match(
+    stableSource,
+    /r\.platformPresent===true&&r\.registryPresent===false&&r\.standard&&r\.standard\.status==='MISSING'/,
+  );
+  assert.match(stableSource, /<option value="'\+esc\(row\.agentId\)/);
+  assert.match(stableSource, /source&&selected\?'':'disabled'/);
+  assert.match(
+    stableSource,
+    /downloadDraft\(agentId,source\)/,
+  );
+  assert.match(
+    stableSource,
+    /entry\.sourcePassport===source/,
+  );
+  assert.match(
+    stableSource,
+    /stableIdLiveRows\(\)\.some\(function\(row\)\{return row\.agentId===agentId;\}\)/,
+  );
+  assert.doesNotMatch(stableSource, /entry\.name\s*===|row\.name\s*===/);
+  assert.doesNotMatch(
+    stableSource,
+    /(?:entry|row)\.name[^;\n]*(?:toLowerCase|localeCompare|indexOf)/,
+  );
+
+  assert.match(
+    evolutionHtml,
+    /async function downloadDraft\(agentId,sourcePassport\)/,
+  );
+  assert.match(evolutionHtml, /var payload=\{agentId:agentId\}/);
+  assert.match(
+    evolutionHtml,
+    /if\(sourcePassport\)payload\.sourcePassport=sourcePassport/,
+  );
+  assert.match(
+    evolutionHtml,
+    /if\(action!=='fleet_load'&&state\.projection&&!payload\.snapshotId\)/,
+    'passport draft requests must inherit the exact current snapshotId',
+  );
 });
 
 test('Evolution Console follows explicit current ledger pointers, never object insertion order', () => {
