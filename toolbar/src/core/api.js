@@ -10,6 +10,12 @@ ETB.api = (function () {
   // с пометкой DEFAULT; иначе первый в списке). Фолбэк — общий платформенный
   // агент, который есть у всех аккаунтов. Значение X-Agent-Id обязано
   // присутствовать в заголовках, но сервером не валидируется (проверено).
+  // Заголовок X-Agent-Id обязателен синтаксически даже для /api/agent/list —
+  // самого вызова, которым мы ТОЛЬКО И УЗНАЁМ агентов аккаунта. Значение при
+  // этом сервером не проверяется (живая проверка 26.07), поэтому здесь стоит
+  // заведомо ненастоящая заглушка, а не чей-то id. Для запусков экспертов,
+  // агентов, KV и правил эту заглушку использовать НЕЛЬЗЯ.
+  var BOOTSTRAP_AGENT_SCOPE = 'agent_XXXXXXXX';
   var FALLBACK_AGENT = 'agent_extella_alibaba_default';  // платформенный Qwen (канон: клиентам Qwen, НЕ Claude); доступен любому аккаунту, проверено
   // Кандидаты ранжируются, а не выбирается один: пометка DEFAULT не гарантирует
   // рабочий ключ (проверено: у DEFAULT-копии ключ может быть битым, 401). Если
@@ -33,7 +39,7 @@ ETB.api = (function () {
   }
   function _resolveAgent() {
     if (window.__etbAgentId) return Promise.resolve(window.__etbAgentId);
-    return _post('/api/agent/list', {}).then(function (d) {
+    return _post('/api/agent/list', {}, { 'X-Agent-Id': BOOTSTRAP_AGENT_SCOPE }).then(function (d) {
       var cands = _rankAgents((d && d.agents) || []);
       window.__etbAgentCands = cands;
       window.__etbAgentIdx = 0;

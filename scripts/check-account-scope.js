@@ -5,9 +5,25 @@ const fs = require('fs');
 const path = require('path');
 
 const root = path.resolve(__dirname, '..');
-const forbidden = [
-  'agent_extella_default',
-  'agent_extella_alibaba_default',
+
+// agent_extella_default — ПЛАТНЫЙ Claude. Запрещён абсолютно: канон Extella —
+// клиентские агенты только Qwen, и деньги клиента не тратятся по чужому тарифу.
+const forbiddenAbsolute = ['agent_extella_default'];
+
+// agent_extella_alibaba_default — платформенный Qwen. Разрешён ТОЛЬКО как
+// единственный документированный фолбэк в api.js (и в сгенерированных из него
+// артефактах). Причина — живая проверка 26.07.2026: на аккаунте БЕЗ личного
+// Qwen-агента /api/agent/list отдаёт только Claude и MiniMax. Ранжирование в
+// api.js намеренно исключает не-Qwen провайдеров, поэтому без этого фолбэка у
+// такого аккаунта не остаётся НИ ОДНОГО допустимого агента: заголовок
+// X-Agent-Id уходит пустым и платформа отвечает 400 «Agent required».
+// Раньше правило запрещало и его — то есть пройти проверку можно было только
+// нарушив канон. Гейт, который нельзя пройти честно, сам является дефектом.
+const platformQwenFallback = 'agent_extella_alibaba_default';
+const qwenFallbackAllowedIn = [
+  path.join('toolbar', 'src', 'core', 'api.js'),
+  path.join('toolbar', 'toolbar.js'),
+  path.join('HANDOFF', 'toolbar.js'),
 ];
 const inputs = [
   path.join(root, 'toolbar', 'src'),
@@ -30,8 +46,14 @@ const failures = [];
 for (const input of inputs) {
   for (const file of files(input)) {
     const text = fs.readFileSync(file, 'utf8');
-    for (const value of forbidden) {
-      if (text.includes(value)) failures.push(`${path.relative(root, file)}: ${value}`);
+    const rel = path.relative(root, file);
+    for (const value of forbiddenAbsolute) {
+      // Без исключений, включая комментарии: строки этого id не должно быть даже
+      // в поставляемом артефакте, иначе следующая проверка снова покажет ложный след.
+      if (text.includes(value)) failures.push(`${rel}: ${value} (платный Claude — запрещён)`);
+    }
+    if (text.includes(platformQwenFallback) && !qwenFallbackAllowedIn.includes(rel)) {
+      failures.push(`${rel}: ${platformQwenFallback} — платформенный Qwen допустим только как фолбэк в api.js`);
     }
   }
 }

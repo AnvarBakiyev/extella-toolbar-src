@@ -693,7 +693,7 @@ ETB.installPrompt = (function () {
       'If you must rebuild the UI (e.g. it was a "Copy command" / Quick Start description page), make',
       'a REAL control panel: the toolbar postMessages the iframe { type:"etb_init", token, apiBase },',
       'so buttons call POST <apiBase>/api/expert/run (headers X-Auth-Token, X-Profile-Id:"default",',
-      'X-Agent-Id:"' + ((ETB.api && ETB.api.currentAgent) ? ETB.api.currentAgent() : 'agent_extella_default') + '"; body {expert_name, params}) to run real action experts',
+      'X-Agent-Id:"' + ((ETB.api && ETB.api.currentAgent) ? ETB.api.currentAgent() : 'agent_XXXXXXXX') + '"; body {expert_name, params}) to run real action experts',
       '(configure/start/stop/status/send). Collect required config (API key, provider, channel,',
       'message) via form fields; never tell the user to run terminal commands.',
       'Use the LIGHT Extella palette (bg #f2f2f7, surfaces #fff, text #111, accent #C67E34) —',

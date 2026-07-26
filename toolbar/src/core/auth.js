@@ -28,12 +28,23 @@ ETB.auth = (function () {
 
   var API_BASE = 'https://api.extella.ai';
 
+  // Токен получаем ДО того, как можно перечислить агентов аккаунта, а платформа
+  // требует заголовок X-Agent-Id синтаксически (без него HTTP 400 «Agent
+  // required»), но операции с токенами по его значению не скоупит — проверено
+  // вживую 26.07 на живом agent/list с этим самым значением.
+  // Поэтому здесь стоит ЗАГЛУШКА, а не чей-то настоящий id: раньше тут стоял
+  // платный Claude-агент по умолчанию, и одно его присутствие в коде нарушало
+  // канон «клиентские агенты только Qwen». Все реальные вызовы
+  // определяют агента аккаунта в api.js (_resolveAgent), где не-Qwen
+  // провайдеры исключены намеренно.
+  var BOOTSTRAP_AGENT_SCOPE = 'agent_XXXXXXXX';
+
   function _userIdHeaders(userId) {
     return {
       'Content-Type': 'application/json',
       'X-User-Id': userId,
       'X-Profile-Id': 'default',
-      'X-Agent-Id': 'agent_extella_default'
+      'X-Agent-Id': BOOTSTRAP_AGENT_SCOPE
     };
   }
 
@@ -157,7 +168,7 @@ ETB.auth = (function () {
         'Content-Type': 'application/json',
         'X-Auth-Token': token,
         'X-Profile-Id': 'default',
-        'X-Agent-Id': 'agent_extella_default'
+        'X-Agent-Id': BOOTSTRAP_AGENT_SCOPE
       },
       body: '{}'
     }).then(function (r) { return r.status; }).catch(function () { return -1; });
