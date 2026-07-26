@@ -41,11 +41,62 @@ function baseInput(overrides = {}) {
     platformAgents: [],
     experts: [],
     scheduleStates: [],
+    runtimeStates: [],
+    automationStates: [],
+    automationRuns: [],
+    schedulerIndexSids: [],
     localInstalledIds: [],
     composerInstalledRecords: [],
     checkedAt: '2026-07-26T12:00:00.000Z',
     sourceErrors: [],
     ...overrides,
+  };
+}
+
+function runtimeFact(id, overrides = {}) {
+  const value = {
+    enabled: true,
+    active_version: '1.0.0',
+    last_run: null,
+    last_result: null,
+    last_error: null,
+    schedules: [],
+    checked_at: '2026-07-27T08:30:00.000Z',
+    ...(overrides.value || {}),
+  };
+  return {
+    automation_id: id,
+    runtime: {
+      configured: true,
+      port: 8766,
+      health: { available: true, responded: true, status_code: 200 },
+      state: {
+        available: true,
+        responded: true,
+        status_code: 200,
+        error_code: null,
+        value,
+      },
+      ...(overrides.runtime || {}),
+    },
+  };
+}
+
+function stateFact(id, enabled) {
+  return {
+    automation_id: id,
+    available: true,
+    present: true,
+    value: { enabled, status: enabled ? 'active' : 'paused' },
+  };
+}
+
+function runsFact(id, latest = null) {
+  return {
+    automation_id: id,
+    available: true,
+    present: true,
+    value: { latest, count: latest ? 1 : 0 },
   };
 }
 
@@ -221,6 +272,7 @@ test('reviewed 1C migration produces declared dev version and honest stale state
   assert.equal(row.components.services[0].port, 8792);
   assert.equal(row.components.services[0].state, 'UNKNOWN');
   assert.equal(row.components.schedules[0].interval_s, 30);
+  assert.equal(row.components.schedules[0].state, 'NOT_APPLICABLE');
   assert.equal(row.components.integrations.length, 2);
   assert.deepEqual(row.evidence.reviewed_source, {
     repository: 'github.com/AnvarBakiyev/extella-1c-agent',
@@ -231,10 +283,14 @@ test('reviewed 1C migration produces declared dev version and honest stale state
   assert.deepEqual(row.state, {
     source: 'UNKNOWN',
     status: 'beta',
+    operational_status: 'STATE_UNAVAILABLE',
+    active_version: null,
     last_run: null,
     last_result: null,
     last_error: null,
     checked_at: '2026-07-26T12:00:00.000Z',
+    service_reachable: 'UNKNOWN',
+    contract_available: false,
   });
 });
 
@@ -277,6 +333,7 @@ test('Kazakh Lawyer and Travel Agency legacy cards use reviewed status migration
     ],
     platformAgents: [{ id: 'agent_contract' }, { id: 'agent_travel' }],
     experts: [{ name: 'contract_pipeline' }, { name: 'travel_pipeline' }],
+    schedulerIndexSids: ['sched:wz_20260709_travel'],
   })));
   const byId = Object.fromEntries(
     result.rows.map((row) => [row.automation_id, row]),
@@ -736,4 +793,440 @@ test('unavailable sources never turn absence into orphan or dead-reference fact'
   assert.equal(result.counters.dead_reference, 0);
   assert.equal(byId.unknown_device_one, undefined);
   assert.doesNotMatch(JSON.stringify(result), /TOKEN=secret/);
+});
+
+test('strict operational state exposes WORKING and preserves explicit nulls', () => {
+  const api = load();
+  const result = plain(api.project(baseInput({
+    catalogRecords: [{
+      id: 'working_one',
+      version: '1.0.0',
+      status: 'active',
+    }],
+    deviceRecords: [device('working_one', {
+      category: 'automations',
+      type: 'process',
+      version: '1.0.0',
+      status: 'active',
+    })],
+    runtimeStates: [runtimeFact('working_one')],
+    automationStates: [stateFact('working_one', true)],
+    automationRuns: [runsFact('working_one')],
+  })));
+  const row = result.rows[0];
+
+  assert.equal(row.operational_status, 'WORKING');
+  assert.equal(row.state.operational_status, 'WORKING');
+  assert.equal(row.state.active_version, '1.0.0');
+  assert.equal(row.state.last_run, null);
+  assert.equal(row.state.last_result, null);
+  assert.equal(row.state.last_error, null);
+  assert.equal(row.enabled, true);
+  assert.equal(row.state.source, 'LOCAL_STATE_CONTRACT+AGENT_STATE');
+  assert.equal(row.state.contract_available, true);
+  assert.equal(row.action_gates.enable_disable.allowed, false);
+  assert.equal(
+    row.action_gates.enable_disable.reason_code,
+    'NOT_IMPLEMENTED',
+  );
+});
+
+test('null active version stays unknown without invalidating a trustworthy state', () => {
+  const api = load();
+  const result = plain(api.project(baseInput({
+    catalogRecords: [{
+      id: 'extella_travel_agency',
+      version: '1.0.0',
+      status: 'active',
+    }],
+    deviceRecords: [device('extella_travel_agency', {
+      category: 'automations',
+      type: 'process',
+      version: '1.0.0',
+      status: 'active',
+      synthAgent: { id: 'agent_travel' },
+      experts: ['travel_pipeline'],
+    })],
+    platformAgents: [{ id: 'agent_travel' }],
+    experts: [{ name: 'travel_pipeline' }],
+    runtimeStates: [runtimeFact('extella_travel_agency', {
+      value: { active_version: null },
+    })],
+    automationStates: [stateFact('extella_travel_agency', true)],
+    automationRuns: [runsFact('extella_travel_agency')],
+    schedulerIndexSids: ['sched:wz_20260709_travel'],
+  })));
+
+  const row = result.rows.find(
+    (candidate) => candidate.automation_id === 'extella_travel_agency',
+  );
+  assert.equal(row.state.operational_status, 'WORKING');
+  assert.equal(row.state.active_version, null);
+  assert.equal(row.action_gates.enable_disable.reason_code, 'NOT_IMPLEMENTED');
+  assert.ok(!row.discrepancies.includes('STATE_CONTRACT_INVALID'));
+});
+
+test('valid stopped state exposes NOT_RUNNING with localized run facts', () => {
+  const api = load();
+  const result = plain(api.project(baseInput({
+    catalogRecords: [{
+      id: 'stopped_one',
+      version: '1.0.0',
+      status: 'active',
+    }],
+    deviceRecords: [device('stopped_one', {
+      category: 'automations',
+      type: 'process',
+      version: '1.0.0',
+      status: 'active',
+    })],
+    runtimeStates: [runtimeFact('stopped_one', {
+      value: {
+        enabled: false,
+        last_error: {
+          code: 'AUTOMATION_PAUSED',
+          message_ru: 'Автоматизация приостановлена.',
+          message_en: 'The automation is paused.',
+        },
+      },
+    })],
+    automationStates: [stateFact('stopped_one', false)],
+    automationRuns: [runsFact('stopped_one', {
+      ts: '2026-07-27T08:00:00.000Z',
+      ok: false,
+    })],
+  })));
+  const row = result.rows[0];
+
+  assert.equal(row.operational_status, 'NOT_RUNNING');
+  assert.equal(row.state.last_run, '2026-07-27T08:00:00.000Z');
+  assert.equal(row.state.last_result, 'failed');
+  assert.deepEqual(row.state.last_error, {
+    code: 'AUTOMATION_PAUSED',
+    message_ru: 'Автоматизация приостановлена.',
+    message_en: 'The automation is paused.',
+  });
+  assert.equal(row.action_gates.rollback.reason_code, 'NOT_IMPLEMENTED');
+});
+
+test('missing or non-localized state evidence fails closed with STATE_REQUIRED', () => {
+  const api = load();
+  const result = plain(api.project(baseInput({
+    catalogRecords: [{
+      id: 'state_missing_one',
+      version: '1.0.0',
+      status: 'active',
+    }],
+    deviceRecords: [device('state_missing_one', {
+      category: 'automations',
+      type: 'process',
+      version: '1.0.0',
+      status: 'active',
+    })],
+    runtimeStates: [runtimeFact('state_missing_one', {
+      runtime: {
+        state: {
+          available: false,
+          responded: true,
+          status_code: 404,
+          error_code: 'HTTP_STATUS',
+          value: null,
+        },
+      },
+    })],
+    automationStates: [stateFact('state_missing_one', true)],
+    automationRuns: [runsFact('state_missing_one')],
+  })));
+  const row = result.rows[0];
+
+  assert.equal(row.operational_status, 'STATE_UNAVAILABLE');
+  assert.equal(row.state.active_version, null);
+  assert.equal(row.state.last_result, null);
+  assert.equal(row.state.service_reachable, true);
+  assert.equal(row.action_gates.update.allowed, false);
+  assert.equal(row.action_gates.update.reason_code, 'STATE_REQUIRED');
+  assert.ok(row.discrepancies.includes('AUTOMATION_STATE_UNAVAILABLE'));
+});
+
+test('unknown runtime result fails closed as an invalid state contract', () => {
+  const api = load();
+  const result = plain(api.project(baseInput({
+    catalogRecords: [{
+      id: 'invalid_result_one',
+      version: '1.0.0',
+      status: 'active',
+    }],
+    deviceRecords: [device('invalid_result_one', {
+      category: 'automations',
+      type: 'process',
+      version: '1.0.0',
+      status: 'active',
+    })],
+    runtimeStates: [runtimeFact('invalid_result_one', {
+      value: {
+        last_run: '2026-07-27T09:15:00.000Z',
+        last_result: 'healthy',
+      },
+    })],
+    automationStates: [stateFact('invalid_result_one', true)],
+    automationRuns: [runsFact('invalid_result_one')],
+  })));
+  const row = result.rows[0];
+
+  assert.equal(row.operational_status, 'STATE_UNAVAILABLE');
+  assert.equal(row.action_gates.update.reason_code, 'STATE_REQUIRED');
+  assert.ok(row.discrepancies.includes('STATE_CONTRACT_INVALID'));
+});
+
+test('non-ISO runtime last_run fails closed as an invalid state contract', () => {
+  const api = load();
+  const result = plain(api.project(baseInput({
+    catalogRecords: [{
+      id: 'invalid_last_run_one',
+      version: '1.0.0',
+      status: 'active',
+    }],
+    deviceRecords: [device('invalid_last_run_one', {
+      category: 'automations',
+      type: 'process',
+      version: '1.0.0',
+      status: 'active',
+    })],
+    runtimeStates: [runtimeFact('invalid_last_run_one', {
+      value: { last_run: 'definitely-not-iso', last_result: 'ok' },
+    })],
+    automationStates: [stateFact('invalid_last_run_one', true)],
+    automationRuns: [runsFact('invalid_last_run_one')],
+  })));
+  const row = result.rows[0];
+
+  assert.equal(row.operational_status, 'STATE_UNAVAILABLE');
+  assert.equal(row.action_gates.update.reason_code, 'STATE_REQUIRED');
+  assert.ok(row.discrepancies.includes('STATE_CONTRACT_INVALID'));
+});
+
+test('active-version mismatch remains visible as a reconciliation risk', () => {
+  const api = load();
+  const result = plain(api.project(baseInput({
+    catalogRecords: [{
+      id: 'version_mismatch_one',
+      version: '1.0.0',
+      status: 'active',
+    }],
+    deviceRecords: [device('version_mismatch_one', {
+      category: 'automations',
+      type: 'process',
+      version: '1.0.0',
+      status: 'active',
+    })],
+    runtimeStates: [runtimeFact('version_mismatch_one', {
+      value: { active_version: '1.1.0' },
+    })],
+    automationStates: [stateFact('version_mismatch_one', true)],
+    automationRuns: [runsFact('version_mismatch_one')],
+  })));
+  const row = result.rows[0];
+
+  assert.equal(row.operational_status, 'WORKING');
+  assert.equal(row.state.active_version, '1.1.0');
+  assert.ok(row.discrepancies.includes('ACTIVE_VERSION_MISMATCH'));
+});
+
+test('reviewed schedules reconcile PRESENT, MISSING and NO_SCHEDULE', () => {
+  const api = load();
+  const common = {
+    catalogRecords: [{
+      id: 'extella_travel_agency',
+      version: '0.1.0',
+      status: 'active',
+    }],
+    deviceRecords: [device('extella_travel_agency', {
+      category: 'automations',
+      type: 'process',
+      version: '0.1.0',
+      status: 'active',
+    })],
+    automationStates: [stateFact('extella_travel_agency', true)],
+    automationRuns: [runsFact('extella_travel_agency')],
+  };
+  const present = plain(api.project(baseInput({
+    ...common,
+    runtimeStates: [runtimeFact('extella_travel_agency', {
+      value: {
+        active_version: '0.1.0',
+        schedules: [{
+          id: 'campaigns_birthday',
+          active: true,
+          next_run: '2026-07-28T03:00:00.000Z',
+          location: 'external_cron',
+        }, {
+          id: 'inbound_poller',
+          active: false,
+          next_run: null,
+          location: 'internal_bridge',
+        }],
+      },
+    })],
+    schedulerIndexSids: [
+      'wz_20260709_travel',
+    ],
+  }))).rows[0];
+  assert.equal(present.components.schedules[0].id, 'campaigns_birthday');
+  assert.equal(
+    present.components.schedules[0].scheduler_sid,
+    'sched:wz_20260709_travel',
+  );
+  assert.equal(
+    present.components.schedules[0].operational_status,
+    'ACTIVE',
+  );
+  assert.equal(
+    present.components.schedules[0].reference_status,
+    'PRESENT',
+  );
+  assert.equal(
+    present.components.schedules[1].reference_status,
+    'NOT_APPLICABLE',
+  );
+  assert.equal(present.flags.dead_reference, false);
+
+  const missing = plain(api.project(baseInput({
+    ...common,
+    runtimeStates: [runtimeFact('extella_travel_agency', {
+      value: {
+        active_version: '0.1.0',
+        schedules: [{
+          id: 'campaigns_birthday',
+          active: true,
+          next_run: '2026-07-28T03:00:00.000Z',
+        }],
+      },
+    })],
+    schedulerIndexSids: [],
+  }))).rows[0];
+  assert.equal(missing.flags.dead_reference, true);
+  assert.ok(missing.discrepancies.includes('SCHEDULE_REFERENCE_MISSING'));
+
+  const disabled = plain(api.project(baseInput({
+    ...common,
+    runtimeStates: [runtimeFact('extella_travel_agency', {
+      value: {
+        active_version: '0.1.0',
+        schedules: [{
+          id: 'campaigns_birthday',
+          active: false,
+          next_run: null,
+        }],
+      },
+    })],
+    schedulerIndexSids: [],
+  }))).rows[0];
+  assert.equal(
+    disabled.components.schedules[0].operational_status,
+    'NO_SCHEDULE',
+  );
+  assert.equal(
+    disabled.components.schedules[0].reference_status,
+    'MISSING',
+  );
+  assert.equal(disabled.components.schedules[0].active, false);
+  assert.equal(disabled.components.schedules[0].next_run, null);
+  assert.ok(disabled.discrepancies.includes('SCHEDULE_REFERENCE_MISSING'));
+  assert.equal(disabled.flags.dead_reference, true);
+});
+
+test('current-device manifests extend schedule dead-reference checks to future automations', () => {
+  const api = load();
+  const row = plain(api.project(baseInput({
+    catalogRecords: [{
+      id: 'future_business_automation',
+      version: '1.0.0',
+      status: 'active',
+    }],
+    deviceRecords: [device('future_business_automation', {
+      category: 'automations',
+      type: 'process',
+      version: '1.0.0',
+      status: 'active',
+      schedules: [{
+        id: 'daily_sync',
+        location: 'external_cron',
+        kv_key: 'sched:future_daily_sync',
+        required: true,
+      }],
+      components: {
+        schedules: [{
+          id: 'weekly_audit',
+          kind: 'external_cron',
+          scheduler_ref: 'sched:future_weekly_audit',
+          required: true,
+        }],
+      },
+    })],
+    runtimeStates: [runtimeFact('future_business_automation', {
+      value: {
+        schedules: [{
+          id: 'daily_sync',
+          active: true,
+          next_run: '2026-07-28T03:00:00.000Z',
+        }, {
+          id: 'weekly_audit',
+          active: true,
+          next_run: '2026-08-03T03:00:00.000Z',
+        }],
+      },
+    })],
+    automationStates: [stateFact('future_business_automation', true)],
+    automationRuns: [runsFact('future_business_automation')],
+    schedulerIndexSids: ['future_daily_sync'],
+  }))).rows[0];
+
+  assert.equal(row.components.schedules.length, 2);
+  assert.equal(row.components.schedules[0].id, 'daily_sync');
+  assert.equal(
+    row.components.schedules[0].scheduler_ref,
+    'sched:future_daily_sync',
+  );
+  assert.equal(row.components.schedules[0].operational_status, 'ACTIVE');
+  assert.equal(row.components.schedules[0].reference_status, 'PRESENT');
+  assert.equal(row.components.schedules[1].id, 'weekly_audit');
+  assert.equal(
+    row.components.schedules[1].scheduler_ref,
+    'sched:future_weekly_audit',
+  );
+  assert.equal(row.components.schedules[1].reference_status, 'MISSING');
+  assert.equal(row.flags.dead_reference, true);
+  assert.ok(row.discrepancies.includes('SCHEDULE_REFERENCE_MISSING'));
+});
+
+test('one failed KV fact never hides another automation trustworthy state', () => {
+  const api = load();
+  const row = plain(api.project(baseInput({
+    catalogRecords: [{
+      id: 'isolated_state_automation',
+      version: '1.0.0',
+      status: 'active',
+    }],
+    deviceRecords: [device('isolated_state_automation', {
+      category: 'automations',
+      type: 'process',
+      version: '1.0.0',
+      status: 'active',
+    })],
+    runtimeStates: [runtimeFact('isolated_state_automation')],
+    automationStates: [stateFact('isolated_state_automation', true)],
+    automationRuns: [runsFact('isolated_state_automation', {
+      ts: '2026-07-27T09:15:00.000Z',
+      ok: true,
+    })],
+    sourceAvailability: {
+      runtime_state: false,
+      automation_state: false,
+      automation_runs: false,
+    },
+  }))).rows[0];
+
+  assert.equal(row.operational_status, 'WORKING');
+  assert.equal(row.state.last_run, '2026-07-27T09:15:00.000Z');
+  assert.equal(row.state.last_result, 'ok');
 });

@@ -9,9 +9,10 @@
 
 ETB.evolutionAutomationRegistryProvider = (function () {
   var SOURCE_SCHEMA =
-    'extella.evolution.automation-registry-sources.v1';
+    'extella.evolution.automation-registry-sources.v2';
   var BROWSER_INSTALLED_KEY = 'etb_plugins_installed_v1';
   var STRICT_CARD_FILE = /^([a-z0-9][a-z0-9._-]{1,79})\.json$/;
+  var AUTOMATION_ID = /^[a-z0-9][a-z0-9._-]{1,79}$/;
 
   function hasOwn(value, key) {
     return Object.prototype.hasOwnProperty.call(value, key);
@@ -108,6 +109,22 @@ ETB.evolutionAutomationRegistryProvider = (function () {
     if (typeof value !== 'string') return clone(value);
     try { return JSON.parse(value); }
     catch (_) { return value; }
+  }
+
+  function missingResponse(response) {
+    var status = text(response && response.status).toLowerCase();
+    var httpStatus = Number(response && (
+      response.httpStatus != null ? response.httpStatus : response.http_status
+    ));
+    var detail = apiFailureMessage(response).toLowerCase();
+    return status === 'not_found' || httpStatus === 404 ||
+      /key[^a-z0-9]+not[^a-z0-9]+found|not[^a-z0-9]+found[^a-z0-9]+key/
+        .test(detail);
+  }
+
+  function missingError(error) {
+    return /key[^a-z0-9]+not[^a-z0-9]+found|not[^a-z0-9]+found[^a-z0-9]+key/
+      .test(errorDetail(error).toLowerCase());
   }
 
   function documentItems(value) {
@@ -399,6 +416,116 @@ ETB.evolutionAutomationRegistryProvider = (function () {
     return null;
   }
 
+  function safeRuntimeState(value) {
+    var output;
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+    output = {
+      enabled: value.enabled,
+      active_version: typeof value.active_version === 'string' ?
+        value.active_version.slice(0, 160) : value.active_version,
+      last_run: null,
+      last_result: typeof value.last_result === 'string' ?
+        value.last_result.slice(0, 160) : value.last_result,
+      last_error: null,
+      schedules: [],
+      checked_at: typeof value.checked_at === 'string' ?
+        value.checked_at.slice(0, 160) : value.checked_at
+    };
+    if (value.last_run && typeof value.last_run === 'object' &&
+        !Array.isArray(value.last_run)) {
+      output.last_run = {};
+      ['id', 'at', 'ts', 'status', 'kind'].forEach(function (key) {
+        var exact = value.last_run[key];
+        if (typeof exact === 'string') {
+          output.last_run[key] = exact.slice(0, 500);
+        } else if (typeof exact === 'number' && isFinite(exact)) {
+          output.last_run[key] = exact;
+        }
+      });
+    } else if (value.last_run != null) {
+      output.last_run = value.last_run;
+    }
+    if (value.last_error && typeof value.last_error === 'object' &&
+        !Array.isArray(value.last_error)) {
+      output.last_error = {};
+      ['code', 'message_ru', 'message_en'].forEach(function (key) {
+        if (typeof value.last_error[key] === 'string') {
+          output.last_error[key] = value.last_error[key].slice(0, 1000);
+        }
+      });
+    } else if (value.last_error != null) {
+      output.last_error = value.last_error;
+    }
+    if (Array.isArray(value.schedules)) {
+      output.schedules = value.schedules.slice(0, 200).map(function (schedule) {
+        var safe = {};
+        if (!schedule || typeof schedule !== 'object' ||
+            Array.isArray(schedule)) return null;
+        ['id', 'location', 'kind', 'cadence'].forEach(function (key) {
+          if (typeof schedule[key] === 'string') {
+            safe[key] = schedule[key].slice(0, 160);
+          }
+        });
+        if (typeof schedule.active === 'boolean') {
+          safe.active = schedule.active;
+        }
+        if (schedule.next_run === null ||
+            typeof schedule.next_run === 'string' ||
+            (typeof schedule.next_run === 'number' &&
+             isFinite(schedule.next_run))) {
+          safe.next_run = schedule.next_run;
+        }
+        return safe;
+      }).filter(Boolean);
+    } else {
+      output.schedules = value.schedules;
+    }
+    return output;
+  }
+
+  function safeProbe(value, stateProbe) {
+    var output;
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+    output = {
+      available: value.available === true,
+      responded: value.responded === true,
+      status_code: Number.isInteger(Number(value.status_code)) ?
+        Number(value.status_code) : null,
+      error_code: text(value.error_code).slice(0, 160) || null,
+      value: null
+    };
+    if (stateProbe) {
+      output.value = safeRuntimeState(value.value);
+    } else if (value.value && typeof value.value === 'object' &&
+               !Array.isArray(value.value)) {
+      output.value = {};
+      ['ok', 'service', 'version', 'mode'].forEach(function (key) {
+        var exact = value.value[key];
+        if (typeof exact === 'string') {
+          output.value[key] = exact.slice(0, 500);
+        } else if (typeof exact === 'boolean' ||
+                   (typeof exact === 'number' && isFinite(exact))) {
+          output.value[key] = exact;
+        }
+      });
+    }
+    return output;
+  }
+
+  function safeRuntime(value) {
+    var port;
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+    port = Number(value.port);
+    return {
+      configured: value.configured === true,
+      port: Number.isInteger(port) && port > 0 && port <= 65535 ? port : null,
+      health: safeProbe(value.health, false),
+      state: safeProbe(value.state, true),
+      state_path_source:
+        text(value.state_path_source).slice(0, 80) || null
+    };
+  }
+
   function normalizeDeviceScan(result) {
     var cards = [];
     var errors = [];
@@ -486,7 +613,8 @@ ETB.evolutionAutomationRegistryProvider = (function () {
       seen[id] = true;
       cards.push({
         filename: filename,
-        manifest: clone(manifest)
+        manifest: clone(manifest),
+        runtime: safeRuntime(entry && entry.runtime)
       });
     });
     backupFilesIgnored = Math.max(backupFilesIgnored, locallyIgnoredBackups);
@@ -605,6 +733,260 @@ ETB.evolutionAutomationRegistryProvider = (function () {
       value.automation_id || value.automationId ||
       value.id || value.orchestrator
     ));
+  }
+
+  function installedAutomationIds(deviceCards) {
+    var ids = [];
+    var seen = {};
+    (deviceCards || []).forEach(function (card) {
+      var manifest = card && card.manifest;
+      var id = text(manifest && manifest.id);
+      var business = manifest && (
+        (manifest.category === 'automations' && manifest.type === 'process') ||
+        manifest.schemaVersion === 'extella-process-pack-v1' ||
+        ['extella_1c_agent', 'extella_contract_agent',
+          'extella_travel_agency'].indexOf(id) !== -1
+      );
+      if (business && AUTOMATION_ID.test(id) && !seen[id]) {
+        seen[id] = true;
+        ids.push(id);
+      }
+    });
+    return ids.sort();
+  }
+
+  function canonicalState(value) {
+    var status;
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      throw new Error('agent_state must be an object');
+    }
+    status = text(value.status).toLowerCase();
+    if (typeof value.enabled === 'boolean') {
+      return { enabled: value.enabled, status: status || null };
+    }
+    if (status === 'active') return { enabled: true, status: status };
+    if (status === 'paused' || status === 'frozen' || status === 'disabled') {
+      return { enabled: false, status: status };
+    }
+    return { enabled: 'UNKNOWN', status: status || null };
+  }
+
+  function canonicalRuns(value) {
+    var runs;
+    var latest;
+    function timestamp(exact) {
+      var parsed;
+      if (typeof exact === 'number' && isFinite(exact)) return exact;
+      parsed = Date.parse(exact);
+      if (!isFinite(parsed)) {
+        throw new Error('agent_runs contains an invalid timestamp');
+      }
+      return parsed;
+    }
+    if (!value || typeof value !== 'object' || Array.isArray(value) ||
+        !Array.isArray(value.runs)) {
+      throw new Error('agent_runs must contain a runs array');
+    }
+    if (value.runs.length > 1000) {
+      throw new Error('agent_runs exceeds the bounded history limit');
+    }
+    runs = value.runs.map(function (run) {
+      var ts;
+      if (!run || typeof run !== 'object' || Array.isArray(run)) {
+        throw new Error('agent_runs contains an invalid run');
+      }
+      ts = run.ts;
+      if (typeof ts !== 'string' &&
+          !(typeof ts === 'number' && isFinite(ts))) {
+        throw new Error('agent_runs contains an invalid timestamp');
+      }
+      timestamp(ts);
+      if (run.ok !== true && run.ok !== false && run.ok !== null) {
+        throw new Error('agent_runs contains an invalid result');
+      }
+      return {
+        ts: ts,
+        ok: run.ok
+      };
+    }).sort(function (left, right) {
+      return timestamp(right.ts) - timestamp(left.ts);
+    });
+    latest = runs.length ? runs[0] : null;
+    return { latest: latest, count: runs.length };
+  }
+
+  function readAutomationKvFact(api, automation, kind, options) {
+    var prefix = kind === 'state' ? 'agent_state:' : 'agent_runs:';
+    var key = prefix + automation;
+    var source = kind === 'state' ? 'AUTOMATION_STATE' : 'AUTOMATION_RUNS';
+    var scope = {};
+    assertContext(options);
+    return Promise.resolve().then(function () {
+      return api.kvGet(key, scope);
+    }).then(function (response) {
+      var value;
+      assertContext(options);
+      if (missingResponse(response)) {
+        return {
+          available: true,
+          present: false,
+          automationId: automation,
+          key: key,
+          scope: clone(scope),
+          value: null,
+          errors: []
+        };
+      }
+      value = parseJsonDocument(response);
+      return {
+        available: true,
+        present: true,
+        automationId: automation,
+        key: key,
+        scope: clone(scope),
+        value: kind === 'state' ?
+          canonicalState(value) : canonicalRuns(value),
+        errors: []
+      };
+    }).catch(function (error) {
+      rethrowContext(error);
+      if (missingError(error)) {
+        return {
+          available: true,
+          present: false,
+          automationId: automation,
+          key: key,
+          scope: clone(scope),
+          value: null,
+          errors: []
+        };
+      }
+      return {
+        available: false,
+        present: false,
+        automationId: automation,
+        key: key,
+        scope: clone(scope),
+        value: null,
+        errors: [sourceError(
+          source,
+          kind === 'state' ?
+            'AUTOMATION_STATE_UNAVAILABLE' : 'AUTOMATION_RUNS_UNAVAILABLE',
+          kind === 'state' ?
+            'Каноническое состояние автоматизации недоступно' :
+            'Каноническая история запусков автоматизации недоступна',
+          kind === 'state' ?
+            'The canonical automation state is unavailable' :
+            'The canonical automation run history is unavailable',
+          automation + ':' + errorDetail(error)
+        )]
+      };
+    });
+  }
+
+  function readAutomationKvFacts(api, ids, kind, options) {
+    return Promise.all(ids.map(function (id) {
+      return readAutomationKvFact(api, id, kind, options);
+    })).then(function (facts) {
+      var errors = [];
+      facts.forEach(function (fact) {
+        errors = errors.concat(fact.errors || []);
+      });
+      return {
+        available: facts.every(function (fact) {
+          return fact.available === true;
+        }),
+        facts: facts,
+        errors: errors
+      };
+    });
+  }
+
+  function schedulerScopeAgentId(platformAgents, options) {
+    var explicit = installedId(options && options.schedulerScopeAgentId);
+    var matches;
+    if (explicit) return explicit;
+    matches = (platformAgents && platformAgents.rows || []).filter(
+      function (agent) {
+        return text(agent && agent.name) === 'Extella (Claude)' &&
+          text(agent && agent.provider).toLowerCase() === 'anthropic' &&
+          text(agent && agent.model).toLowerCase().indexOf('claude') !== -1;
+      }
+    );
+    return matches.length === 1 ? installedId(matches[0].id) : null;
+  }
+
+  function schedulerIndexSids(value) {
+    var raw = Array.isArray(value) ? value :
+      (value && Array.isArray(value.sids) ? value.sids : null);
+    var output = [];
+    var seen = {};
+    if (!raw) throw new Error('scheduler index must contain a sids array');
+    raw.forEach(function (value) {
+      var sid = text(value);
+      if (sid.indexOf('sched:') === 0) sid = sid.slice(6);
+      if (!sid || !/^[A-Za-z0-9][A-Za-z0-9._:-]{0,239}$/.test(sid)) {
+        throw new Error('scheduler index contains an invalid sid');
+      }
+      if (!seen[sid]) {
+        seen[sid] = true;
+        output.push(sid);
+      }
+    });
+    return output.sort();
+  }
+
+  function readSchedulerIndex(api, platformAgents, options) {
+    var agentId = schedulerScopeAgentId(platformAgents, options);
+    var key = 'sched:__index__';
+    var scope = agentId ? { agentId: agentId } : null;
+    if (!scope) {
+      return Promise.resolve({
+        available: false,
+        key: key,
+        scope: null,
+        sids: [],
+        errors: [sourceError(
+          'SCHEDULER_INDEX',
+          'SCHEDULER_SCOPE_UNRESOLVED',
+          'Штатный скоуп индекса расписаний не определён однозначно',
+          'The canonical scheduler-index scope could not be resolved uniquely'
+        )]
+      });
+    }
+    assertContext(options);
+    return Promise.resolve().then(function () {
+      return api.kvGet(key, scope);
+    }).then(function (response) {
+      var value;
+      assertContext(options);
+      if (missingResponse(response)) {
+        throw new Error('scheduler index key not found');
+      }
+      value = parseJsonDocument(response);
+      return {
+        available: true,
+        key: key,
+        scope: clone(scope),
+        sids: schedulerIndexSids(value),
+        errors: []
+      };
+    }).catch(function (error) {
+      rethrowContext(error);
+      return {
+        available: false,
+        key: key,
+        scope: clone(scope),
+        sids: [],
+        errors: [sourceError(
+          'SCHEDULER_INDEX',
+          'SCHEDULER_INDEX_UNAVAILABLE',
+          'Канонический индекс расписаний недоступен',
+          'The canonical scheduler index is unavailable',
+          errorDetail(error)
+        )]
+      };
+    });
   }
 
   function appendScheduleDescriptor(output, seen, automation, descriptor) {
@@ -818,8 +1200,27 @@ ETB.evolutionAutomationRegistryProvider = (function () {
       var platformExperts = sources[4];
       var deviceCards = sources[5];
       assertContext(options);
-      return readSchedules(api, catalog, deviceCards, options).then(
-        function (schedules) {
+      return Promise.all([
+        readSchedules(api, catalog, deviceCards, options),
+        readAutomationKvFacts(
+          api,
+          installedAutomationIds(deviceCards.cards),
+          'state',
+          options
+        ),
+        readAutomationKvFacts(
+          api,
+          installedAutomationIds(deviceCards.cards),
+          'runs',
+          options
+        ),
+        readSchedulerIndex(api, platformAgents, options)
+      ]).then(
+        function (additional) {
+          var schedules = additional[0];
+          var automationStates = additional[1];
+          var automationRuns = additional[2];
+          var schedulerIndex = additional[3];
           var errors = [];
           [
             catalog,
@@ -828,7 +1229,10 @@ ETB.evolutionAutomationRegistryProvider = (function () {
             platformAgents,
             platformExperts,
             deviceCards,
-            schedules
+            schedules,
+            automationStates,
+            automationRuns,
+            schedulerIndex
           ].forEach(function (source) {
             errors = errors.concat(source.errors || []);
           });
@@ -843,6 +1247,9 @@ ETB.evolutionAutomationRegistryProvider = (function () {
               platformAgents: platformAgents,
               platformExperts: platformExperts,
               schedules: schedules,
+              automationStates: automationStates,
+              automationRuns: automationRuns,
+              schedulerIndex: schedulerIndex,
               deviceCards: deviceCards
             },
             catalogItems: clone(catalog.items),
@@ -851,6 +1258,16 @@ ETB.evolutionAutomationRegistryProvider = (function () {
             platformAgentRows: clone(platformAgents.rows),
             platformExpertRows: clone(platformExperts.rows),
             scheduleFacts: clone(schedules.facts),
+            runtimeStateRows: deviceCards.cards.map(function (card) {
+              return {
+                automationId: text(card && card.manifest &&
+                  card.manifest.id),
+                runtime: clone(card && card.runtime)
+              };
+            }),
+            automationStateFacts: clone(automationStates.facts),
+            automationRunFacts: clone(automationRuns.facts),
+            schedulerIndexSids: clone(schedulerIndex.sids),
             deviceCardRows: clone(deviceCards.cards),
             complete: [
               catalog,
@@ -859,6 +1276,9 @@ ETB.evolutionAutomationRegistryProvider = (function () {
               platformAgents,
               platformExperts,
               schedules,
+              automationStates,
+              automationRuns,
+              schedulerIndex,
               deviceCards
             ].every(function (source) {
               return sourceComplete(source);
@@ -875,6 +1295,8 @@ ETB.evolutionAutomationRegistryProvider = (function () {
     BROWSER_INSTALLED_KEY: BROWSER_INSTALLED_KEY,
     load: load,
     normalizeDeviceScan: normalizeDeviceScan,
-    collectScheduleSources: collectScheduleSources
+    collectScheduleSources: collectScheduleSources,
+    schedulerIndexSids: schedulerIndexSids,
+    schedulerScopeAgentId: schedulerScopeAgentId
   };
 }());

@@ -99,10 +99,16 @@
     .state{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:3px 7px;border:1px solid var(--line);background:var(--panel2);
       font-size:11px}.state.good{color:var(--good)}.state.bad{color:var(--bad)}.state.warn{color:var(--warn)}
     .state-stack,.component-summary{display:grid;gap:5px}.state-stack .state{width:max-content}
+    .automation-state{display:grid;gap:7px;margin-top:7px}.automation-state-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+    .automation-state-fact{padding:5px 7px;border-left:2px solid var(--line);background:var(--panel2);word-break:break-word}
+    .automation-state-fact small{margin:0}.automation-state-fact b{display:block;color:var(--ink);font-size:11px;font-weight:650}
+    .state-gate-explanation{padding:7px;border:1px solid var(--warn);border-radius:8px;color:var(--warn);background:var(--panel2)}
     .composition{margin-top:4px}.composition summary{color:var(--petrol);cursor:pointer;font-weight:700}
     .composition-body{display:grid;gap:10px;margin-top:9px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--panel2)}
     .component-group b{display:block;color:var(--ink);font-size:12px}.component-items,.risk-codes{display:grid;gap:5px;margin:6px 0 0;padding:0;list-style:none}
     .component-items li,.risk-codes li{color:var(--muted);word-break:break-word}.component-items code{word-break:break-all}
+    .schedule-facts,.action-gates{display:grid;gap:5px;margin-top:5px}.schedule-facts .state{margin:2px 4px 0 0}
+    .action-gate{display:grid;grid-template-columns:auto 1fr;align-items:start;gap:7px}.action-gate small{margin:2px 0 0;color:var(--muted)}
     .empty{padding:34px;text-align:center;color:var(--muted)}.split{display:grid;grid-template-columns:1fr 1fr;gap:14px}
     .stable-id-card{margin-top:14px}.stable-id-entry .form{margin-top:11px}.stable-id-entry select{width:100%}
     .risk-list,.gene-list,.receipt-list{display:grid;gap:9px}.risk,.gene,.receipt{padding:12px;border:1px solid var(--line);
@@ -310,9 +316,9 @@
         overviewTitle:'Ваши автоматизации',overviewLead:'Сразу видно, что доступно в каталоге, что установлено на этом устройстве, где отстала версия и где компонент больше не найден.',
         allAutomations:'всего автоматизаций',installed:'установлены',catalogAvailable:'доступны в каталоге',automation:'Автоматизация',availability:'Доступность',versions:'Версии',composition:'Состав',
         declaredVersion:'Заявленная',installedVersion:'Установленная',versionBehind:'Версия отстала',deadReference:'Мёртвая ссылка',orphaned:'Сирота',catalogOnly:'Только в каталоге',installedOnly:'Только установлена',
-        availableYes:'Доступна',availableNo:'Не в каталоге',catalogUnknown:'Каталог недоступен',catalogRecordInvalid:'запись отклонена',installedYes:'Установлена',installedNo:'Не установлена',installationUnknown:'Установка не подтверждена',stateUnknown:'Статус выпуска',sourceMismatch:'Расхождение источников',noSourceErrors:'Ошибок источников нет',
+        availableYes:'Доступна',availableNo:'Не в каталоге',catalogUnknown:'Каталог недоступен',catalogRecordInvalid:'запись отклонена',installedYes:'Установлена',installedNo:'Не установлена',installationUnknown:'Установка не подтверждена',stateUnknown:'Состояние автоматизации',sourceMismatch:'Расхождение источников',noSourceErrors:'Ошибок источников нет',
         platform_agents:'Внутренние агенты',experts:'Experts',services:'Службы',schedules:'Расписания',integrations:'Интеграции',knowledge:'Знания',rules:'Правила',optional:'необязательный',
-        attentionStale:'Есть отставшие версии',attentionStaleText:'Установленная версия ниже заявленной в манифесте источника.',attentionDeadAutomation:'Есть мёртвые ссылки',attentionDeadAutomationText:'Объявленный агент, эксперт или служба не найден.',attentionOrphan:'Есть записи-сироты',attentionOrphanText:'Источник сохранил запись, которую нельзя подтвердить другими источниками.',
+        attentionStale:'Есть отставшие версии',attentionStaleText:'Установленная версия ниже заявленной в манифесте источника.',attentionDeadAutomation:'Есть мёртвые ссылки',attentionDeadAutomationText:'Объявленный агент, Expert, служба или расписание не найдены.',attentionOrphan:'Есть записи-сироты',attentionOrphanText:'Источник сохранил запись, которую нельзя подтвердить другими источниками.',
         noAutomationRisks:'Вычисляемых расхождений не найдено.',registryIncomplete:'Часть источников недоступна',registryIncompleteText:'Неизвестные факты остаются неизвестными; реестр не подставляет успех.',
         fleetTitle:'Весь парк — одним снимком',fleetLead:'Платформа показывает фактический парк, Agent Passport заявляет владельца и границы, единый журнал даёт активную версию. Неизвестное остаётся неизвестным.',
         allAgents:'всего агентов',passedChecks:'прошли проверку',attentionItems:'типов расхождений',needsAttention:'требуют внимания',pendingEscalations:'эскалации ожидают решения',
@@ -336,6 +342,9 @@
         refresh:'Обновить снимок',search:'Поиск автоматизации по имени или ID',filterAll:'Все автоматизации',filterFailed:'Не проходят стандарт',filterOwnerless:'Без владельца',
         filterNonQwen:'Не Qwen',filterShared:'Есть Shared Genes',filterInactive:'Нет активности 30 дней',filterDead:'Мёртвые ссылки',agent:'Агент',owner:'Владелец',
         model:'Модель и поставщик',activeVersion:'Активная версия',standard:'Стандарт',lastActivity:'Последняя активность',capabilities:'Способности',
+        automationWorking:'Работает',automationStateUnavailable:'Состояние недоступно',automationNotRunning:'Не запущена',stateDetails:'Факты состояния',lastRun:'Последний запуск',lastResult:'Последний результат',lastError:'Последняя ошибка',
+        resultOk:'успешно',resultFailed:'ошибка',resultPartial:'частично',scheduleOperational:'Работа расписания',scheduleReference:'Ссылка планировщика',scheduleActive:'Работает',schedulePaused:'Приостановлено',scheduleNone:'Расписания нет',scheduleReferencePresent:'Ссылка жива',scheduleReferenceMissing:'Мёртвая ссылка',scheduleReferenceNotApplicable:'Внутреннее расписание',
+        automationActions:'Действия автоматизации',actionEnableDisable:'Включить / выключить',actionUpdate:'Обновить',actionRollback:'Откатить',actionStateRequired:'Действие заблокировано: достоверное состояние автоматизации не получено.',actionNotImplemented:'Действие пока недоступно: Evolution Console работает в режиме чтения.',
         loading:'Читаю каталог, карточки текущего устройства и состав автоматизаций…',openCabinet:'Открыть Agent Cabinet',createDraft:'Создать черновик Agent Passport',unknown:'неизвестно',
         riskTitle:'Риски — результат единого стандарта',riskLead:'Ошибки и предупреждения приходят из закреплённого check_agent_passport.py. Evolution Console не повторяет и не исправляет его правила.',
         riskByAgent:'Проверка по агентам',riskCanonical:'Код, тяжесть, путь и текст принадлежат canonical checker.',missingPassports:'Agent Passport отсутствует',
@@ -361,7 +370,7 @@
         evidenceBoundary:'Evolution Lab evidence приходит только из host Evolution Lab adapter. Этот UI не создаёт и не подтверждает результаты теста самостоятельно.',
         adapterBoundary:'UI показывает план и Evolution Receipts host adapter; native-запись заблокирована без durable intent recovery и multi-device CAS общего ledger. Сам по себе статус этапа не доказывает активацию агента.',
         productionRequired:'Мутации закрыты: требуется явный data_mode=PRODUCTION, account-scoped production-eligible стандарт и полный текущий снимок.',
-        scheduleAdapterRequired:'Операция закрыта: host не объявил native schedule adapter.',exactTargetsOnly:'Цели создаются только из текущих видимых строк canonical projection.',
+        scheduleAdapterRequired:'Операция закрыта: host не объявил native schedule adapter.',scheduleStateRequired:'Операция закрыта: для всех установленных автоматизаций нужно достоверное состояние WORKING или NOT_RUNNING. STATE_UNAVAILABLE и неизвестное состояние блокируют действие.',exactTargetsOnly:'Цели создаются только из текущих видимых строк canonical projection.',
         wholeClassRequired:'Для Shared Gene выбран весь точный consumer class; каждый потребитель должен быть видим в текущем фильтре.',
         selectExactTarget:'Выберите хотя бы одну доступную точную цель.',selectGeneVersion:'Выберите Shared Gene и задайте candidate version.',
         actorUnavailable:'Текущий actor_id отсутствует в проверенном едином журнале; эскалация закрыта.',mapUnavailable:'Полная текущая карта Shared Genes недоступна.',
@@ -374,9 +383,9 @@
         overviewTitle:'Your automations',overviewLead:'See what is available in the catalog, what is installed on this device, which version is behind, and which declared component can no longer be found.',
         allAutomations:'total automations',installed:'installed',catalogAvailable:'available in catalog',automation:'Automation',availability:'Availability',versions:'Versions',composition:'Composition',
         declaredVersion:'Declared',installedVersion:'Installed',versionBehind:'Version behind',deadReference:'Dead reference',orphaned:'Orphan',catalogOnly:'Catalog only',installedOnly:'Installed only',
-        availableYes:'Available',availableNo:'Not in catalog',catalogUnknown:'Catalog unavailable',catalogRecordInvalid:'record rejected',installedYes:'Installed',installedNo:'Not installed',installationUnknown:'Installation not confirmed',stateUnknown:'Release status',sourceMismatch:'Source discrepancy',noSourceErrors:'No source errors',
+        availableYes:'Available',availableNo:'Not in catalog',catalogUnknown:'Catalog unavailable',catalogRecordInvalid:'record rejected',installedYes:'Installed',installedNo:'Not installed',installationUnknown:'Installation not confirmed',stateUnknown:'Automation state',sourceMismatch:'Source discrepancy',noSourceErrors:'No source errors',
         platform_agents:'Internal agents',experts:'Experts',services:'Services',schedules:'Schedules',integrations:'Integrations',knowledge:'Knowledge',rules:'Rules',optional:'optional',
-        attentionStale:'Versions are behind',attentionStaleText:'The installed version is lower than the version declared by the source manifest.',attentionDeadAutomation:'Dead references found',attentionDeadAutomationText:'A declared agent, Expert, or service was not found.',attentionOrphan:'Orphan records found',attentionOrphanText:'A source retained a record that no other source confirms.',
+        attentionStale:'Versions are behind',attentionStaleText:'The installed version is lower than the version declared by the source manifest.',attentionDeadAutomation:'Dead references found',attentionDeadAutomationText:'A declared agent, Expert, service, or schedule was not found.',attentionOrphan:'Orphan records found',attentionOrphanText:'A source retained a record that no other source confirms.',
         noAutomationRisks:'No computed discrepancies were found.',registryIncomplete:'Some sources are unavailable',registryIncompleteText:'Unknown facts stay unknown; the registry does not substitute success.',
         fleetTitle:'The whole fleet in one snapshot',fleetLead:'The platform shows the actual fleet, Agent Passport declares ownership and limits, and the single ledger provides the active version. Unknown stays unknown.',
         allAgents:'total agents',passedChecks:'passed checks',attentionItems:'discrepancy types',needsAttention:'need attention',pendingEscalations:'escalations need a decision',
@@ -400,6 +409,9 @@
         refresh:'Refresh snapshot',search:'Search automations by name or ID',filterAll:'All automations',filterFailed:'Fail the standard',filterOwnerless:'Without an owner',
         filterNonQwen:'Not Qwen',filterShared:'Has Shared Genes',filterInactive:'No activity for 30 days',filterDead:'Dead references',agent:'Agent',owner:'Owner',
         model:'Model and provider',activeVersion:'Active version',standard:'Standard',lastActivity:'Last activity',capabilities:'Capabilities',
+        automationWorking:'Working',automationStateUnavailable:'State unavailable',automationNotRunning:'Not running',stateDetails:'State facts',lastRun:'Last run',lastResult:'Last result',lastError:'Last error',
+        resultOk:'succeeded',resultFailed:'failed',resultPartial:'partial',scheduleOperational:'Schedule operation',scheduleReference:'Scheduler reference',scheduleActive:'Working',schedulePaused:'Paused',scheduleNone:'No schedule',scheduleReferencePresent:'Reference alive',scheduleReferenceMissing:'Dead reference',scheduleReferenceNotApplicable:'Internal schedule',
+        automationActions:'Automation actions',actionEnableDisable:'Enable / disable',actionUpdate:'Update',actionRollback:'Roll back',actionStateRequired:'Action blocked: a trustworthy automation state was not obtained.',actionNotImplemented:'Action is not available yet: Evolution Console is read-only.',
         loading:'Reading the catalog, current-device cards, and automation composition…',openCabinet:'Open Agent Cabinet',createDraft:'Create Agent Passport draft',unknown:'unknown',
         riskTitle:'Risks are the result of one standard',riskLead:'Errors and warnings come from the pinned check_agent_passport.py. The Console neither repeats nor patches its rules.',
         riskByAgent:'Checks by agent',riskCanonical:'Code, severity, path and text belong to the canonical checker.',missingPassports:'Missing Agent Passport',
@@ -425,7 +437,7 @@
         evidenceBoundary:'Evolution Lab evidence comes only from the host Evolution Lab adapter. This UI never creates or attests a test result itself.',
         adapterBoundary:'The UI shows a plan and host-adapter Evolution Receipts; native writes are blocked without durable intent recovery and multi-device CAS for the shared ledger. A stage status alone is not evidence of agent activation.',
         productionRequired:'Mutations are closed: explicit data_mode=PRODUCTION, an account-scoped production-eligible standard and a complete current snapshot are required.',
-        scheduleAdapterRequired:'Operation is closed: the host has not declared a native schedule adapter.',exactTargetsOnly:'Targets are generated only from the current visible canonical projection.',
+        scheduleAdapterRequired:'Operation is closed: the host has not declared a native schedule adapter.',scheduleStateRequired:'Operation is closed: every installed automation needs a trustworthy WORKING or NOT_RUNNING state. STATE_UNAVAILABLE and unknown state block the action.',exactTargetsOnly:'Targets are generated only from the current visible canonical projection.',
         wholeClassRequired:'The entire exact Shared Gene consumer class is selected; every consumer must be visible under the current filter.',
         selectExactTarget:'Select at least one available exact target.',selectGeneVersion:'Select a Shared Gene and enter a candidate version.',
         actorUnavailable:'The current actor_id is unavailable in the verified single ledger; escalation is closed.',mapUnavailable:'A complete current Shared Genes map is unavailable.',
@@ -437,7 +449,10 @@
     function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
     function clone(v){return v==null?v:JSON.parse(JSON.stringify(v));}
     function short(v){v=String(v||'');return v?v.slice(0,12)+(v.length>12?'…':''):'—';}
-    function fmtTime(v){if(!v)return t('unknown');try{return new Intl.DateTimeFormat(WLANG==='en'?'en-GB':'ru-RU',{dateStyle:'short',timeStyle:'short'}).format(new Date(v));}catch(_){return String(v);}}
+    function unknownFact(v){return v==null||v===''||String(v).toUpperCase()==='UNKNOWN';}
+    function factText(v){return unknownFact(v)?t('unknown'):String(v);}
+    function fmtTime(v){if(unknownFact(v))return t('unknown');try{return new Intl.DateTimeFormat(WLANG==='en'?'en-GB':'ru-RU',{dateStyle:'short',timeStyle:'short'}).format(new Date(v));}catch(_){return factText(v);}}
+    function resultText(v){var value=unknownFact(v)?'UNKNOWN':String(v).toUpperCase();if(['OK','SUCCESS','SUCCEEDED'].indexOf(value)!==-1)return t('resultOk');if(['FAIL','FAILED','ERROR'].indexOf(value)!==-1)return t('resultFailed');if(value==='PARTIAL')return t('resultPartial');return factText(v);}
     var state={
       pending:new Map(),seq:0,automationRegistry:null,automationRegistryError:null,legacyLoading:false,actorId:null,projection:null,shared:null,standards:null,platform:null,ledger:null,
       stableIdRequired:[],stableTargetBySource:Object.create(null),escalations:[],bulk:null,receipts:[],draft:null,geneView:'object',accountEpoch:0,
@@ -524,22 +539,41 @@
         window.parent.postMessage(Object.assign({type:'etb_evolution_console',reqId:id,action:action},payload),'*');
       });
     }
+    function demoActionGates(reasonCode){
+      var stateRequired=reasonCode==='STATE_REQUIRED';
+      function gate(){return {allowed:false,reason_code:reasonCode,message_ru:stateRequired?'Действие заблокировано: достоверное состояние автоматизации не получено.':'Действие пока недоступно: Evolution Console работает в режиме чтения.',message_en:stateRequired?'Action blocked: a trustworthy automation state was not obtained.':'Action is not available yet: Evolution Console is read-only.'};}
+      return {enable_disable:gate(),update:gate(),rollback:gate()};
+    }
     function demoAutomationRegistry(){
-      return {schema:'extella.evolution.automation_registry.v1',scope:'CURRENT_DEVICE',checked_at:'2026-07-26T12:00:00Z',complete:true,
+      return {schema:'extella.evolution.automation_registry.v1',scope:'CURRENT_DEVICE',checked_at:'2026-07-27T12:00:00Z',complete:true,
         rows:[
-          {automation_id:'extella_1c_agent',name:{ru:'Агент 1С',en:'1C Agent'},version_declared:'0.3.0-dev.16',version_installed:'0.3.0-dev.6',versions:{declared:'0.3.0-dev.16',catalog:'0.2.0-beta.1',installed:'0.3.0-dev.6'},availability:'installed_stale',
+          {
+            automation_id:'extella_1c_agent',name:{ru:'Агент 1С',en:'1C Agent'},version_declared:'0.3.0-dev.16',version_installed:'0.3.0-dev.6',
+            versions:{declared:'0.3.0-dev.16',catalog:'0.2.0-beta.1',installed:'0.3.0-dev.6'},availability:'installed_stale',
             flags:{catalog:true,catalog_valid:true,installed:true,installed_stale:true,dead_reference:true},enabled:'UNKNOWN',statuses:{catalog:'beta',installed:'beta',effective:'beta'},
-            components:{platform_agents:[{id:'UNKNOWN',state:'MISSING',declared:true,orphan:false,source:'REVIEWED_AGENT_PASSPORT_FACT',reviewed_at:'2026-07-26'}],experts:[{id:'wz_1c',state:'PRESENT',declared:true,orphan:false}],schedule:{state:'UNKNOWN'}},
-            state:{source:'UNKNOWN',status:'beta',last_run:null,last_result:null,last_error:null,checked_at:'2026-07-26T12:00:00Z'},actions:{enable:'NOT_IMPLEMENTED',disable:'NOT_IMPLEMENTED',update:'NOT_IMPLEMENTED',rollback:'NOT_IMPLEMENTED'},risks:[{code:'INSTALLED_VERSION_STALE',severity:'warning',ru:'Установленная версия отстала.',en:'The installed version is behind.'},{code:'PLATFORM_AGENT_MISSING',severity:'error',ru:'Объявленный агент не найден.',en:'A declared agent was not found.'}],discrepancies:['INSTALLED_VERSION_STALE','PLATFORM_AGENT_MISSING'],updated_at:'2026-07-26T12:00:00Z'},
-          {automation_id:'extella_contract_agent',name:{ru:'Kazakh Lawyer',en:'Kazakh Lawyer'},version_declared:'1.0.0',version_installed:'0.1.0',availability:'installed_stale',
-            versions:{declared:'1.0.0',catalog:'1.0.0',installed:'0.1.0'},flags:{catalog:true,catalog_valid:true,installed:true,installed_stale:true,dead_reference:false},enabled:'UNKNOWN',statuses:{catalog:'active',installed:'active',effective:'active'},
-            components:{platform_agents:[{id:'demo_agent_01',state:'PRESENT',declared:true,orphan:false}],experts:[],schedule:{state:'UNKNOWN'}},
-            state:{source:'UNKNOWN',status:'active',last_run:null,last_result:null,last_error:null,checked_at:'2026-07-26T12:00:00Z'},actions:{enable:'NOT_IMPLEMENTED',disable:'NOT_IMPLEMENTED',update:'NOT_IMPLEMENTED',rollback:'NOT_IMPLEMENTED'},risks:[{code:'INSTALLED_VERSION_STALE',severity:'warning',ru:'Установленная версия отстала.',en:'The installed version is behind.'}],discrepancies:['INSTALLED_VERSION_STALE'],updated_at:'2026-07-26T12:00:00Z'},
-          {automation_id:'extella_travel_agency',name:{ru:'Агент турагентства',en:'Travel Agency Agent'},version_declared:'0.1.0',version_installed:'0.1.0',availability:'installed',
-            versions:{declared:'0.1.0',catalog:'0.1.0',installed:'0.1.0'},flags:{catalog:true,catalog_valid:true,installed:true,installed_stale:false,dead_reference:false},enabled:'UNKNOWN',statuses:{catalog:'active',installed:'active',effective:'active'},
-            components:{platform_agents:[{id:'demo_agent_02',state:'PRESENT',declared:true,orphan:false}],experts:[],schedule:{state:'UNKNOWN'}},
-            state:{source:'UNKNOWN',status:'active',last_run:null,last_result:null,last_error:null,checked_at:'2026-07-26T12:00:00Z'},actions:{enable:'NOT_IMPLEMENTED',disable:'NOT_IMPLEMENTED',update:'NOT_IMPLEMENTED',rollback:'NOT_IMPLEMENTED'},risks:[],discrepancies:[],updated_at:'2026-07-26T12:00:00Z'}
-        ],counters:{total:3,catalog:3,installed:3,installed_stale:2,dead_reference:1,with_risks:2,orphans:0},source_errors:[]};
+            components:{platform_agents:[{id:'UNKNOWN',state:'MISSING',declared:true,orphan:false,source:'REVIEWED_AGENT_PASSPORT_FACT',reviewed_at:'2026-07-26'}],experts:[{id:'wz_1c',state:'PRESENT',declared:true,orphan:false}],schedules:[{id:'sync_1c',operational_status:'UNKNOWN',reference_status:'UNKNOWN',required:true}]},
+            state:{source:'UNKNOWN',operational_status:'STATE_UNAVAILABLE',active_version:null,last_run:null,last_result:null,last_error:null,checked_at:'2026-07-27T12:00:00Z'},
+            action_gates:demoActionGates('STATE_REQUIRED'),
+            risks:[{code:'INSTALLED_VERSION_STALE',severity:'warning',ru:'Установленная версия отстала.',en:'The installed version is behind.'},{code:'PLATFORM_AGENT_MISSING',severity:'error',ru:'Объявленный агент не найден.',en:'A declared agent was not found.'}],
+            discrepancies:['INSTALLED_VERSION_STALE','PLATFORM_AGENT_MISSING'],updated_at:'2026-07-27T12:00:00Z'
+          },
+          {
+            automation_id:'extella_contract_agent',name:{ru:'Kazakh Lawyer',en:'Kazakh Lawyer'},version_declared:'1.0.0',version_installed:'0.1.0',availability:'installed_stale',
+            versions:{declared:'1.0.0',catalog:'1.0.0',installed:'0.1.0'},flags:{catalog:true,catalog_valid:true,installed:true,installed_stale:true,dead_reference:false},enabled:false,statuses:{catalog:'active',installed:'active',effective:'active'},
+            components:{platform_agents:[{id:'demo_agent_01',state:'PRESENT',declared:true,orphan:false}],experts:[],schedules:[]},
+            state:{source:'LOCAL_STATE_CONTRACT',operational_status:'NOT_RUNNING',active_version:'0.1.0',last_run:'2026-07-26T10:30:00Z',last_result:'failed',last_error:{code:'MANUAL_STOP',message_ru:'Автоматизация остановлена владельцем.',message_en:'The automation was stopped by its owner.'},checked_at:'2026-07-27T12:00:00Z'},
+            action_gates:demoActionGates('NOT_IMPLEMENTED'),
+            risks:[{code:'INSTALLED_VERSION_STALE',severity:'warning',ru:'Установленная версия отстала.',en:'The installed version is behind.'}],discrepancies:['INSTALLED_VERSION_STALE'],updated_at:'2026-07-27T12:00:00Z'
+          },
+          {
+            automation_id:'extella_travel_agency',name:{ru:'Агент турагентства',en:'Travel Agency Agent'},version_declared:'0.1.0',version_installed:'0.1.0',availability:'installed',
+            versions:{declared:'0.1.0',catalog:'0.1.0',installed:'0.1.0'},flags:{catalog:true,catalog_valid:true,installed:true,installed_stale:false,dead_reference:true},enabled:true,statuses:{catalog:'active',installed:'active',effective:'active'},
+            components:{platform_agents:[{id:'demo_agent_02',state:'PRESENT',declared:true,orphan:false}],experts:[],schedules:[{id:'campaigns_birthday',scheduler_ref:'sched:wz_20260709_travel',operational_status:'NO_SCHEDULE',reference_status:'MISSING',active:false,next_run:null,required:true}]},
+            state:{source:'LOCAL_STATE_CONTRACT',operational_status:'WORKING',active_version:'0.1.0',last_run:'2026-07-27T09:00:00Z',last_result:'ok',last_error:null,checked_at:'2026-07-27T12:00:00Z'},
+            action_gates:demoActionGates('NOT_IMPLEMENTED'),
+            risks:[{code:'SCHEDULE_REFERENCE_MISSING',severity:'error',ru:'Объявленное расписание не найдено в индексе планировщика.',en:'The declared schedule was not found in the scheduler index.'}],discrepancies:['SCHEDULE_REFERENCE_MISSING'],updated_at:'2026-07-27T12:00:00Z'
+          }
+        ],counters:{total:3,catalog:3,installed:3,installed_stale:2,dead_reference:2,with_risks:3,orphans:0},source_errors:[]};
     }
     function demoProjection(){
       var rows=[];for(var i=1;i<=15;i++){var id='demo_agent_'+String(i).padStart(2,'0'),valid=i<=3;
@@ -593,19 +627,27 @@
     }
     function visibleAgentRows(){var p=state.projection;if(!p)return[];return p.rows.slice();}
     function automationName(row){var name=row&&row.name;return typeof name==='string'?name:String(name&&name[WLANG]||name&&name.ru||name&&name.en||row&&row.automation_id||t('unknown'));}
+    function automationStateObject(row){return row&&row.state&&typeof row.state==='object'?row.state:{};}
+    function automationOperationalStatus(row){var value=String(automationStateObject(row).operational_status||automationStateObject(row).operationalStatus||'UNKNOWN').toUpperCase();return ['WORKING','STATE_UNAVAILABLE','NOT_RUNNING'].indexOf(value)!==-1?value:'UNKNOWN';}
+    function automationStateUsable(row){return ['WORKING','NOT_RUNNING'].indexOf(automationOperationalStatus(row))!==-1;}
     function triFlag(value){return value===true||value===false?value:(String(value||'').toUpperCase()==='UNKNOWN'?'UNKNOWN':false);}
     function automationFlags(row){
       var flags=row&&row.flags&&typeof row.flags==='object'?row.flags:(row&&row.availability_flags&&typeof row.availability_flags==='object'?row.availability_flags:{});
       var catalog=triFlag(flags.catalog),catalogValid=triFlag(flags.catalog_valid);
-      return {catalog:catalog,catalog_valid:catalog===true?catalogValid:(catalog==='UNKNOWN'?'UNKNOWN':false),installed:triFlag(flags.installed),installed_stale:flags.installed_stale===true,dead_reference:flags.dead_reference===true};
+      return {catalog:catalog,catalog_valid:catalog===true?catalogValid:(catalog==='UNKNOWN'?'UNKNOWN':false),installed:triFlag(flags.installed),installed_stale:flags.installed_stale===true,dead_reference:triFlag(flags.dead_reference)};
+    }
+    function scheduleAutomationStateGate(){
+      var rows=state.automationRegistry&&Array.isArray(state.automationRegistry.rows)?state.automationRegistry.rows.filter(function(row){return automationFlags(row).installed===true;}):[];
+      var unavailable=rows.filter(function(row){return !automationStateUsable(row);});
+      return {allowed:rows.length>0&&unavailable.length===0,installed_count:rows.length,blocked_ids:unavailable.map(function(row){return String(row.automation_id||'UNKNOWN');})};
     }
     function automationRisks(row){return Array.isArray(row&&row.risks)?row.risks:[];}
     function visibleRows(){var p=state.automationRegistry;if(!p)return[];var q=el('searchInput').value.trim().toLowerCase(),f=el('filterSelect').value;return p.rows.filter(function(r){
       var flags=automationFlags(r),risks=automationRisks(r),haystack=[r.automation_id,automationName(r),r.name&&r.name.ru,r.name&&r.name.en].join(' ').toLowerCase();
       if(q&&haystack.indexOf(q)===-1)return false;
       if(f==='installed'&&flags.installed!==true)return false;if(f==='catalog'&&flags.catalog!==true)return false;
-      if(f==='attention'&&!risks.length&&!flags.installed_stale&&!flags.dead_reference)return false;
-      if(f==='stale'&&!flags.installed_stale)return false;if(f==='dead'&&!flags.dead_reference)return false;
+      if(f==='attention'&&!risks.length&&!flags.installed_stale&&flags.dead_reference===false)return false;
+      if(f==='stale'&&!flags.installed_stale)return false;if(f==='dead'&&flags.dead_reference!==true)return false;
       if(f==='orphan'&&!(r.orphan===true||r.orphaned===true||risks.some(function(risk){return String(risk&&risk.code||risk)==='orphaned';})))return false;
       return true;});}
     function legacyVisibleRows(){var p=state.projection;if(!p)return[];var q='',f='';return p.rows.filter(function(r){
@@ -628,9 +670,9 @@
       var p=state.automationRegistry,rows=p&&p.rows||[];
       return {
         stale:rows.filter(function(r){return automationFlags(r).installed_stale;}).length,
-        dead:rows.filter(function(r){return automationFlags(r).dead_reference;}).length,
+        dead:rows.filter(function(r){return automationFlags(r).dead_reference===true;}).length,
         orphan:rows.filter(function(r){return r.orphan===true||r.orphaned===true||automationRisks(r).some(function(risk){return String(risk&&risk.code||risk)==='orphaned';});}).length,
-        discrepancy:rows.filter(function(r){return automationRisks(r).length>0&&!automationFlags(r).installed_stale&&!automationFlags(r).dead_reference&&r.orphan!==true&&r.orphaned!==true;}).length,
+        discrepancy:rows.filter(function(r){var dead=automationFlags(r).dead_reference;return (automationRisks(r).length>0||dead==='UNKNOWN')&&!automationFlags(r).installed_stale&&dead!==true&&r.orphan!==true&&r.orphaned!==true;}).length,
         incomplete:p&&p.complete!==true?1:0
       };
     }
@@ -661,13 +703,13 @@
       var type=el('bulkType').value,rows=legacyVisibleRows();
       if(type==='dead_reference_remove')return rows.filter(function(r){return r.reconciliation==='REGISTRY_ONLY';});
       if(type==='shared_gene_change'){var gene=geneById(selectedGeneId()),ids=gene&&gene.consumerAgentIds||[];return rows.filter(function(r){return ids.indexOf(r.agentId)!==-1;});}
-      if(type==='schedule_pause'||type==='schedule_resume')return scheduleAdapterAvailable()?rows.filter(function(r){return r.platformPresent===true;}):[];
+      if(type==='schedule_pause'||type==='schedule_resume')return scheduleAdapterAvailable()&&scheduleAutomationStateGate().allowed?rows.filter(function(r){return r.platformPresent===true;}):[];
       return[];
     }
     function renderBulkTargetPicker(){
-      var type=el('bulkType').value,isGene=type==='shared_gene_change',genes=state.shared&&state.shared.complete?state.shared.genes||[]:[];
+      var type=el('bulkType').value,isGene=type==='shared_gene_change',scheduleOperation=type==='schedule_pause'||type==='schedule_resume',scheduleStateGate=scheduleAutomationStateGate(),genes=state.shared&&state.shared.complete?state.shared.genes||[]:[];
       el('bulkGeneField').style.display=isGene?'grid':'none';el('bulkVersionField').style.display=isGene?'grid':'none';
-      if(!state.projection){el('bulkGeneSelect').innerHTML='';el('bulkTargets').innerHTML='<div class="empty">'+esc(t('noData'))+'</div>';el('bulkGate').textContent=t('productionRequired');el('bulkPreviewBtn').disabled=true;return;}
+      if(!state.projection){el('bulkGeneSelect').innerHTML='';el('bulkTargets').innerHTML='<div class="empty">'+esc(t('noData'))+'</div>';el('bulkGate').textContent=scheduleOperation&&!scheduleStateGate.allowed?t('scheduleStateRequired'):t('productionRequired');el('bulkPreviewBtn').disabled=true;return;}
       var prior=state.selectedBulkGeneId||el('bulkGeneSelect').value;el('bulkGeneSelect').innerHTML=genes.map(function(g){return '<option value="'+esc(g.geneId)+'">'+esc(g.name||g.geneId)+' · '+esc(g.geneId)+'</option>';}).join('');
       if(prior&&genes.some(function(g){return g.geneId===prior;}))el('bulkGeneSelect').value=prior;state.selectedBulkGeneId=el('bulkGeneSelect').value||null;
       var rows=eligibleBulkRows(),allowed=rows.map(function(r){return r.agentId;}),gene=isGene?geneById(selectedGeneId()):null,classIds=gene&&(gene.consumerAgentIds||[]).slice().sort()||[];
@@ -675,8 +717,8 @@
       state.selectedBulkIds=selected;
       el('bulkTargets').innerHTML=rows.length?rows.map(function(r){return '<label class="target"><input type="checkbox" value="'+esc(r.agentId)+'" '+(selected.indexOf(r.agentId)!==-1?'checked ':'')+(productionReady()&&!isGene?'':'disabled')+'><span>'+esc(r.name)+' <small class="mono">'+esc(r.agentId)+'</small></span></label>';}).join(''):'<div class="empty">'+esc(t('noData'))+'</div>';
       el('bulkTargets').querySelectorAll('input').forEach(function(n){n.onchange=function(){state.selectedBulkIds=Array.from(el('bulkTargets').querySelectorAll('input:checked')).map(function(x){return x.value;}).sort();state.lastBulkEvidence=null;renderBulkTargetPicker();renderBulk();};});
-      var missingVersion=isGene&&!el('bulkVersionInput').value.trim(),missingTargets=!isGene&&!selected.length,blocked=!productionReady()||((type==='schedule_pause'||type==='schedule_resume')&&!scheduleAdapterAvailable())||(isGene&&(!state.shared||!state.shared.complete||!classComplete||missingVersion))||missingTargets;
-      el('bulkGate').textContent=!productionReady()?t('productionRequired'):(type==='schedule_pause'||type==='schedule_resume')&&!scheduleAdapterAvailable()?t('scheduleAdapterRequired'):isGene&&!classComplete?t('wholeClassRequired'):missingVersion?t('selectGeneVersion'):missingTargets?t('selectExactTarget'):isGene?t('wholeClassRequired'):t('exactTargetsOnly');
+      var missingVersion=isGene&&!el('bulkVersionInput').value.trim(),missingTargets=!isGene&&!selected.length,blocked=!productionReady()||(scheduleOperation&&!scheduleStateGate.allowed)||(scheduleOperation&&!scheduleAdapterAvailable())||(isGene&&(!state.shared||!state.shared.complete||!classComplete||missingVersion))||missingTargets;
+      el('bulkGate').textContent=scheduleOperation&&!scheduleStateGate.allowed?t('scheduleStateRequired'):!productionReady()?t('productionRequired'):scheduleOperation&&!scheduleAdapterAvailable()?t('scheduleAdapterRequired'):isGene&&!classComplete?t('wholeClassRequired'):missingVersion?t('selectGeneVersion'):missingTargets?t('selectExactTarget'):isGene?t('wholeClassRequired'):t('exactTargetsOnly');
       el('bulkPreviewBtn').disabled=blocked||!rows.length;
     }
     function registryCounter(name,fallback){
@@ -687,6 +729,51 @@
     function automationRiskText(risk){
       if(!risk||typeof risk!=='object')return automationRiskCode(risk)||t('sourceMismatch');
       return String(risk[WLANG==='en'?'message_en':'message_ru']||risk[WLANG==='en'?'messageEn':'messageRu']||risk[WLANG==='en'?'en':'ru']||risk.message||risk.code||t('sourceMismatch'));
+    }
+    function localizedStateError(error){
+      if(unknownFact(error))return esc(t('unknown'));
+      if(typeof error!=='object')return '<code>'+esc(factText(error))+'</code> · '+esc(t('unknown'));
+      var code=factText(error.code),message=error[WLANG==='en'?'message_en':'message_ru']||error[WLANG==='en'?'messageEn':'messageRu']||error[WLANG==='en'?'en':'ru'];
+      return '<code>'+esc(code)+'</code> · '+esc(factText(message));
+    }
+    function automationStatePresentation(row){
+      var status=automationOperationalStatus(row);
+      if(status==='WORKING')return {status:status,kind:'good',mark:'✓',label:t('automationWorking')};
+      if(status==='STATE_UNAVAILABLE')return {status:status,kind:'bad',mark:'✕',label:t('automationStateUnavailable')};
+      if(status==='NOT_RUNNING')return {status:status,kind:'warn',mark:'○',label:t('automationNotRunning')};
+      return {status:'UNKNOWN',kind:'warn',mark:'⚠',label:t('unknown')};
+    }
+    function renderAutomationState(row){
+      var source=automationStateObject(row),view=automationStatePresentation(row),activeVersion=source.active_version!=null?source.active_version:source.activeVersion,lastRun=source.last_run!=null?source.last_run:source.lastRun,lastResult=source.last_result!=null?source.last_result:source.lastResult,lastError=source.last_error!=null?source.last_error:source.lastError;
+      var explanation=(view.status==='STATE_UNAVAILABLE'||view.status==='UNKNOWN')?'<small class="state-gate-explanation">'+esc(t('actionStateRequired'))+'</small>':'';
+      return '<div class="automation-state" data-automation-state="'+esc(view.status)+'"><span class="state '+esc(view.kind)+'">'+esc(view.mark)+' '+esc(view.label)+' · '+esc(view.status)+'</span>'+
+        '<div class="automation-state-facts" aria-label="'+esc(t('stateDetails'))+'">'+
+          '<span class="automation-state-fact" data-state-field="active_version"><small>'+esc(t('activeVersion'))+'</small><b class="mono">'+esc(factText(activeVersion))+'</b></span>'+
+          '<span class="automation-state-fact" data-state-field="last_run"><small>'+esc(t('lastRun'))+'</small><b>'+esc(fmtTime(lastRun))+'</b></span>'+
+          '<span class="automation-state-fact" data-state-field="last_result"><small>'+esc(t('lastResult'))+'</small><b>'+esc(resultText(lastResult))+'</b></span>'+
+          '<span class="automation-state-fact" data-state-field="last_error"><small>'+esc(t('lastError'))+'</small><b>'+localizedStateError(lastError)+'</b></span>'+
+        '</div>'+explanation+'</div>';
+    }
+    function scheduleOperationalPresentation(item){
+      var status=String(item&&typeof item==='object'?(item.operational_status||item.operationalStatus||'UNKNOWN'):'UNKNOWN').toUpperCase();
+      if(status==='ACTIVE'||status==='WORKING')return {status:status,kind:'good',mark:'✓',label:t('scheduleActive')};
+      if(status==='PAUSED')return {status:status,kind:'warn',mark:'Ⅱ',label:t('schedulePaused')};
+      if(status==='NO_SCHEDULE')return {status:status,kind:'',mark:'○',label:t('scheduleNone')};
+      return {status:'UNKNOWN',kind:'warn',mark:'⚠',label:t('unknown')};
+    }
+    function scheduleReferencePresentation(item){
+      var status=String(item&&typeof item==='object'?(item.reference_status||item.referenceStatus||'UNKNOWN'):'UNKNOWN').toUpperCase();
+      if(status==='PRESENT')return {status:status,kind:'good',mark:'✓',label:t('scheduleReferencePresent')};
+      if(status==='MISSING')return {status:status,kind:'bad',mark:'✕',label:'dead_reference · '+t('scheduleReferenceMissing')};
+      if(status==='NOT_APPLICABLE')return {status:status,kind:'',mark:'○',label:t('scheduleReferenceNotApplicable')};
+      return {status:'UNKNOWN',kind:'warn',mark:'⚠',label:t('unknown')};
+    }
+    function renderScheduleItem(item){
+      var operational=scheduleOperationalPresentation(item),reference=scheduleReferencePresentation(item),ref=item&&typeof item==='object'?(item.scheduler_ref||item.schedulerRef):null;
+      return '<li data-schedule-operational="'+esc(operational.status)+'" data-schedule-reference="'+esc(reference.status)+'"><code>'+esc(componentLabel(item))+'</code>'+
+        (unknownFact(ref)?'':'<small class="mono">'+esc(factText(ref))+'</small>')+
+        '<div class="schedule-facts"><span class="state '+esc(operational.kind)+'">'+esc(operational.mark)+' '+esc(t('scheduleOperational'))+': '+esc(operational.label)+' · '+esc(operational.status)+'</span>'+
+        '<span class="state '+esc(reference.kind)+'">'+esc(reference.mark)+' '+esc(t('scheduleReference'))+': '+esc(reference.label)+' · '+esc(reference.status)+'</span></div></li>';
     }
     function componentArrays(components){
       var source=components&&typeof components==='object'?components:{};
@@ -704,6 +791,7 @@
       return state.projection&&Array.isArray(state.projection.rows)&&state.projection.rows.find(function(row){return row.agentId===agentId&&row.standard&&row.standard.status==='PASS';});
     }
     function renderComponentGroup(key,items){
+      if(key==='schedules')return '<div class="component-group"><b>'+esc(t(key))+' · '+items.length+'</b><ul class="component-items">'+(items.length?items.map(renderScheduleItem).join(''):'<li>'+esc(t('noData'))+'</li>')+'</ul></div>';
       return '<div class="component-group"><b>'+esc(t(key)||key)+' · '+items.length+'</b><ul class="component-items">'+(items.length?items.map(function(item){
         var label=componentLabel(item),componentState=String(item&&item.state||''),present=item&&typeof item==='object'?(item.present===true||componentState==='PRESENT'?'✓':item.present===false||componentState==='MISSING'?'✕':'⚠'):'⚠';
         var agentId=key==='platform_agents'&&item&&typeof item==='object'?String(item.platform_agent_id||item.platformAgentId||item.id||''):'';
@@ -711,19 +799,34 @@
         return '<li>'+esc(present)+' <code>'+esc(label)+'</code>'+(item&&item.required===false?' · '+esc(t('optional')):'')+cabinet+'</li>';
       }).join(''):'<li>'+esc(t('noData'))+'</li>')+'</ul></div>';
     }
+    function actionGateMessage(gate,status){
+      if(gate&&typeof gate==='object'){
+        var message=gate[WLANG==='en'?'message_en':'message_ru']||gate[WLANG==='en'?'messageEn':'messageRu'];
+        if(!unknownFact(message))return String(message);
+        if(String(gate.reason_code||gate.reasonCode||'').toUpperCase()==='STATE_REQUIRED')return t('actionStateRequired');
+      }
+      return status==='STATE_UNAVAILABLE'||status==='UNKNOWN'?t('actionStateRequired'):t('actionNotImplemented');
+    }
+    function renderAutomationActionGates(row){
+      var source=row&&row.action_gates&&typeof row.action_gates==='object'?row.action_gates:(row&&row.actionGates&&typeof row.actionGates==='object'?row.actionGates:(automationStateObject(row).action_gates||{})),status=automationOperationalStatus(row);
+      return '<div class="component-group"><b>'+esc(t('automationActions'))+'</b><div class="action-gates">'+[
+        ['enable_disable',t('actionEnableDisable')],['update',t('actionUpdate')],['rollback',t('actionRollback')]
+      ].map(function(spec){var gate=source[spec[0]]&&typeof source[spec[0]]==='object'?source[spec[0]]:{},code=String(gate.reason_code||gate.reasonCode||(status==='STATE_UNAVAILABLE'||status==='UNKNOWN'?'STATE_REQUIRED':'NOT_IMPLEMENTED'));return '<span class="action-gate" data-action-gate="'+esc(spec[0])+'"><button class="ghost sm" type="button" disabled>'+esc(spec[1])+'</button><small><code>'+esc(code)+'</code> · '+esc(actionGateMessage(gate,status))+'</small></span>';}).join('')+'</div></div>';
+    }
     function renderAutomationComposition(row){
       var groups=componentArrays(row.components),order=['platform_agents','experts','services','schedules','integrations','knowledge','rules'];
+      if(!groups.schedules.length&&Array.isArray(automationStateObject(row).schedules))groups.schedules=automationStateObject(row).schedules;
       var body=order.map(function(key){return renderComponentGroup(key,groups[key]);}).join('');
       var discrepancies=Array.isArray(row.discrepancies)?row.discrepancies:[];
-      var actions=row.actions&&typeof row.actions==='object'?Object.keys(row.actions).sort().map(function(key){return key+'='+row.actions[key];}).join(' · '):t('unknown');
       body+='<div class="component-group"><b>'+esc(t('sourceMismatch'))+' · '+discrepancies.length+'</b><ul class="component-items">'+(discrepancies.length?discrepancies.map(function(item){return '<li>'+esc(automationRiskText(item))+'</li>';}).join(''):'<li>'+esc(t('noData'))+'</li>')+'</ul></div>';
-      body+='<div class="component-group"><b>actions</b><span class="mono">'+esc(actions)+'</span></div>';
+      body+=renderAutomationActionGates(row);
       return '<details class="composition" data-internal-agents="collapsed"><summary>'+esc(t('composition'))+'</summary><div class="composition-body">'+body+'</div></details>';
     }
     function renderAutomationRisks(row){
       var flags=automationFlags(row),risks=automationRisks(row),badges=[];
       if(flags.installed_stale)badges.push('<span class="state warn">⚠ installed_stale · '+esc(t('versionBehind'))+'</span>');
-      if(flags.dead_reference)badges.push('<span class="state bad">✕ dead_reference · '+esc(t('deadReference'))+'</span>');
+      if(flags.dead_reference===true)badges.push('<span class="state bad">✕ dead_reference · '+esc(t('deadReference'))+'</span>');
+      if(flags.dead_reference==='UNKNOWN')badges.push('<span class="state warn">⚠ dead_reference · '+esc(t('unknown'))+'</span>');
       if(row.orphan===true||row.orphaned===true)badges.push('<span class="state warn">⚠ orphaned · '+esc(t('orphaned'))+'</span>');
       risks.forEach(function(risk){var code=automationRiskCode(risk);if(!code||['installed_stale','dead_reference','orphaned','INSTALLED_VERSION_STALE','PLATFORM_AGENT_MISSING','EXPERT_MISSING','CATALOG_ORPHAN'].indexOf(code)!==-1)return;badges.push('<span class="state warn">⚠ '+esc(code)+'</span>');});
       return badges.length?'<div class="state-stack">'+badges.join('')+'</div><ul class="risk-codes">'+risks.map(function(risk){return '<li>'+esc(automationRiskText(risk))+'</li>';}).join('')+'</ul>':'<span class="state good">✓ '+esc(t('noAutomationRisks'))+'</span>';
@@ -746,11 +849,10 @@
       var rows=visibleRows();el('snapshotNote').textContent=t('showing')+' '+rows.length+' '+t('of')+' '+allRows.length+' · '+(registryProjection.complete===true?'✓ '+t('complete'):'⚠ '+t('registryIncomplete'));
       el('fleetRows').innerHTML=rows.length?rows.map(function(row){
         var id=String(row.automation_id||''),flags=automationFlags(row),catalogKind=flags.catalog===true&&flags.catalog_valid===true?'good':'warn',installedKind=flags.installed===true?'good':'warn';
-        var versions=row.versions&&typeof row.versions==='object'?row.versions:{},statuses=row.statuses&&typeof row.statuses==='object'?row.statuses:{};
-        var stateValue=statuses.effective||row.state&&row.state.status||row.enabled||'UNKNOWN';
+        var versions=row.versions&&typeof row.versions==='object'?row.versions:{};
         var catalogLabel=flags.catalog==='UNKNOWN'?t('catalogUnknown'):(flags.catalog===true?t('availableYes')+(flags.catalog_valid===true?'':' · '+t('catalogRecordInvalid')):t('availableNo'));
         var installedLabel=flags.installed==='UNKNOWN'?t('installationUnknown'):(flags.installed===true?t('installedYes'):t('installedNo'));
-        return '<tr data-registry-row="'+esc(id)+'"><th scope="row"><span class="mobile-label">'+esc(t('automation'))+'</span><b>'+esc(automationName(row))+'</b><span class="cell-meta"><small class="mono">'+esc(id||t('unknown'))+'</small><small>'+esc(t('stateUnknown'))+': '+esc(stateValue)+'</small></span></th>'+
+        return '<tr data-registry-row="'+esc(id)+'"><th scope="row"><span class="mobile-label">'+esc(t('automation'))+'</span><b>'+esc(automationName(row))+'</b><span class="cell-meta"><small class="mono">'+esc(id||t('unknown'))+'</small></span>'+renderAutomationState(row)+'</th>'+
           '<td><span class="mobile-label">'+esc(t('availability'))+'</span><div class="state-stack"><span class="state '+catalogKind+'">'+esc(statusMark(catalogKind))+' '+esc(catalogLabel)+'</span><span class="state '+installedKind+'">'+esc(statusMark(installedKind))+' '+esc(installedLabel)+'</span></div><small class="mono">'+esc(row.availability||t('unknown'))+'</small></td>'+
           '<td><span class="mobile-label">'+esc(t('versions'))+'</span><div class="component-summary"><small>'+esc(t('declaredVersion'))+'</small><b class="mono">'+esc(versions.declared||row.version_declared||t('unknown'))+'</b><small>'+esc(t('installedVersion'))+'</small><b class="mono">'+esc(versions.installed||row.version_installed||t('unknown'))+'</b></div></td>'+
           '<td><span class="mobile-label">'+esc(t('attention'))+'</span>'+renderAutomationRisks(row)+'</td>'+
@@ -810,12 +912,13 @@
       if(type==='shared_gene_change')return payload.shared_gene_id===selectedGeneId()&&payload.desired_version===el('bulkVersionInput').value.trim();
       return true;
     }
+    function bulkOperationRequiresAutomationState(operation){var type=operation&&(operation.operationType||operation.type)||el('bulkType').value;return type==='schedule_pause'||type==='schedule_resume';}
     function renderBulk(){
       var choices=state.bulkOperations.map(function(op){var id=op.operationId||op.id;return '<option value="'+esc(id)+'" '+(id===state.selectedBulkOperationId?'selected':'')+'>'+esc(id)+' · '+esc(op.status)+'</option>';}).join('');
       el('bulkOperationSelect').innerHTML='<option value="">—</option>'+choices;el('bulkOperationSelect').onchange=function(){state.selectedBulkOperationId=el('bulkOperationSelect').value||null;state.bulk=state.selectedBulkOperationId?state.bulkOperations.find(function(op){return (op.operationId||op.id)===state.selectedBulkOperationId;})||null:null;renderBulk();};
       renderFlow(el('bulkFlow'),state.bulk&&state.bulk.status);el('bulkEvidence').textContent=state.lastBulkEvidence?JSON.stringify(state.lastBulkEvidence,null,2):(state.bulk?JSON.stringify(state.bulk,null,2):'—');
-      var actions=[],selectionMatches=bulkFormMatchesOperation(state.bulk);
-      if(state.bulk&&productionReady()){
+      var actions=[],selectionMatches=bulkFormMatchesOperation(state.bulk),stateBlocked=bulkOperationRequiresAutomationState(state.bulk)&&!scheduleAutomationStateGate().allowed;
+      if(state.bulk&&productionReady()&&!stateBlocked){
         if(['PREVIEWED','IMPACT_PREVIEWED'].indexOf(state.bulk.status)!==-1&&selectionMatches)actions.push(['bulk_confirm',t('confirmExact'),true,'ledger']);
         if(state.bulk.status==='CONFIRMED')actions.push(['bulk_stage',t('planStages'),true,'ledger']);
         if(['ACTIVATION_PLANNED','STAGING'].indexOf(state.bulk.status)!==-1)actions.push(['bulk_stage',t('stage'),adapterAvailable('bulkActivationAdapter'),'bulkActivationAdapter']);
@@ -823,7 +926,7 @@
         if(state.bulk.status==='PUBLISHED')actions.push(['bulk_observe',t('observe'),adapterAvailable('bulkObservationAdapter'),'bulkObservationAdapter']);
         if(state.bulk.status==='OBSERVED')actions.push(['bulk_rollback',t('rollback'),adapterAvailable('bulkRollbackAdapter'),'bulkRollbackAdapter']);
       }
-      el('bulkActions').innerHTML=actions.map(function(a){return '<span><button class="'+(a[0]==='bulk_rollback'?'danger':'primary')+'" data-bulk-action="'+a[0]+'" '+(a[2]?'':'disabled')+'>'+esc(a[1])+'</button><small class="mono">'+esc(a[3])+'='+(a[2]?'AVAILABLE':'PLATFORM_UNAVAILABLE')+'</small></span>';}).join('');el('bulkActions').querySelectorAll('[data-bulk-action]').forEach(function(b){b.onclick=function(){runBulkAction(b.dataset.bulkAction);};});
+      el('bulkActions').innerHTML=stateBlocked?'<span class="state-gate-explanation" data-bulk-state-gate="STATE_REQUIRED">'+esc(t('scheduleStateRequired'))+'</span>':actions.map(function(a){return '<span><button class="'+(a[0]==='bulk_rollback'?'danger':'primary')+'" data-bulk-action="'+a[0]+'" '+(a[2]?'':'disabled')+'>'+esc(a[1])+'</button><small class="mono">'+esc(a[3])+'='+(a[2]?'AVAILABLE':'PLATFORM_UNAVAILABLE')+'</small></span>';}).join('');el('bulkActions').querySelectorAll('[data-bulk-action]').forEach(function(b){b.onclick=function(){runBulkAction(b.dataset.bulkAction);};});
     }
     function renderReceipts(){el('receiptList').innerHTML=state.receipts.length?state.receipts.slice().reverse().map(function(r){return '<article class="receipt"><b>'+esc(r.type||'Evolution Receipt')+'</b><p>'+esc(fmtTime(r.at))+' · '+esc(r.status||'RECORDED')+'</p><code>'+esc(r.sha256||'—')+'</code></article>';}).join(''):'<div class="empty">'+esc(t('noData'))+'</div>';}
     function renderAll(){renderFleet();renderAttention();renderRisks();renderStableIdRequired();renderGenes();renderEscalations();renderBulk();renderReceipts();renderBoundary();el('escalationEvidence').textContent=state.lastEscalationEvidence?JSON.stringify(state.lastEscalationEvidence,null,2):'—';}
@@ -911,12 +1014,12 @@
     }catch(err){showError(err.message);}}
     async function createBulkPreview(){
       var type=el('bulkType').value,allowed=eligibleBulkRows().map(function(r){return r.agentId;}),ids=state.selectedBulkIds.slice().sort();
-      if(!productionReady()){showError(t('productionRequired'));return;}if((type==='schedule_pause'||type==='schedule_resume')&&!scheduleAdapterAvailable()){showError(t('scheduleAdapterRequired'));return;}
+      if((type==='schedule_pause'||type==='schedule_resume')&&!scheduleAutomationStateGate().allowed){showError(t('scheduleStateRequired'));return;}if(!productionReady()){showError(t('productionRequired'));return;}if((type==='schedule_pause'||type==='schedule_resume')&&!scheduleAdapterAvailable()){showError(t('scheduleAdapterRequired'));return;}
       if(!ids.length||ids.some(function(id){return allowed.indexOf(id)===-1;})){showError(t('selectExactTarget'));return;}
       var payload={operationType:type,targetIds:ids};if(type==='shared_gene_change'){var gene=geneById(selectedGeneId()),version=el('bulkVersionInput').value.trim();if(!gene||!version){showError(t('selectGeneVersion'));return;}payload.sharedGeneId=gene.geneId;payload.desiredVersion=version;}
       try{var r=await request('bulk_preview',payload);await refreshAfterMutation('bulk',r);}catch(e){showError(e.message);}
     }
-    async function runBulkAction(action){try{if(!state.bulk)throw new Error(t('noData'));if(action==='bulk_confirm'&&!bulkFormMatchesOperation(state.bulk))throw new Error(t('boundTargets'));var adapter=bulkNativeAdapter(action,state.bulk);if(adapter&&!adapterAvailable(adapter))throw new Error(adapter+'=PLATFORM_UNAVAILABLE · '+t('adapterBoundary'));var targets=state.bulk.targetIds||state.bulk.targetAgentIds||[];var r=await request(action,{operationId:state.bulk.id||state.bulk.operationId,targetIds:targets});await refreshAfterMutation('bulk',r);}catch(e){showError(e.message);}}
+    async function runBulkAction(action){try{if(!state.bulk)throw new Error(t('noData'));if(bulkOperationRequiresAutomationState(state.bulk)&&!scheduleAutomationStateGate().allowed)throw new Error(t('scheduleStateRequired'));if(action==='bulk_confirm'&&!bulkFormMatchesOperation(state.bulk))throw new Error(t('boundTargets'));var adapter=bulkNativeAdapter(action,state.bulk);if(adapter&&!adapterAvailable(adapter))throw new Error(adapter+'=PLATFORM_UNAVAILABLE · '+t('adapterBoundary'));var targets=state.bulk.targetIds||state.bulk.targetAgentIds||[];var r=await request(action,{operationId:state.bulk.id||state.bulk.operationId,targetIds:targets});await refreshAfterMutation('bulk',r);}catch(e){showError(e.message);}}
     function exportRows(kind){var registry=state.automationRegistry;if(!registry){showError(t('noData'));return;}var rows=visibleRows().map(function(row){var flags=automationFlags(row),versions=row.versions||{},statuses=row.statuses||{};return {automation_id:row.automation_id||'',name_ru:row.name&&row.name.ru||automationName(row),name_en:row.name&&row.name.en||automationName(row),catalog_available:flags.catalog,installed:flags.installed,installed_stale:flags.installed_stale,dead_reference:flags.dead_reference,version_declared:versions.declared||row.version_declared||'UNKNOWN',version_installed:versions.installed||row.version_installed||'UNKNOWN',status:statuses.effective||'UNKNOWN',availability:row.availability||'UNKNOWN',risk_codes:automationRisks(row).map(automationRiskCode).join('|')};});var body,type,name='evolution-console-automation-registry';if(kind==='json'){body=JSON.stringify(registry,null,2);type='application/json';name+='.json';}else{var keys=Object.keys(rows[0]||{automation_id:'',name_ru:'',name_en:''});function cell(v){var s=String(v==null?'':v);if(/^[=+@-]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';}body=keys.join(',')+'\n'+rows.map(function(r){return keys.map(function(k){return cell(r[k]);}).join(',');}).join('\n');type='text/csv';name+='.csv';}var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([body],{type:type}));a.download=name;a.click();setTimeout(function(){URL.revokeObjectURL(a.href);},0);}
     function resetAccountState(message){
       state.accountEpoch++;state.pending.forEach(function(p){clearTimeout(p.timer);p.reject(new Error('Account context changed; stale result discarded.'));});state.pending.clear();
