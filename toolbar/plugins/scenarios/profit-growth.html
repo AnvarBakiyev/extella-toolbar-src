@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; font-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Студия способностей — Extella</title>
+  <title>Центр управления агентами — Extella</title>
   <style>
     :root {
       color-scheme: dark;
@@ -498,6 +498,227 @@
     }
     .mutation-warning b { color: var(--yellow); }
 
+    /* ── Agent Control Center ────────────────────────────────────────────── */
+    .studio-nav { flex-wrap: wrap; }
+    .cc-global-error {
+      display: none;
+      position: sticky;
+      top: 66px;
+      z-index: 19;
+      margin: -4px 0 14px;
+      padding: 12px 14px;
+      border: 1px solid color-mix(in srgb, var(--red) 48%, transparent);
+      border-radius: 11px;
+      color: var(--red);
+      background: color-mix(in srgb, var(--surface) 88%, var(--red-soft));
+      box-shadow: var(--shadow);
+      font-size: 12px;
+    }
+    .cc-global-error.show { display: block; }
+    .cc-demo {
+      display: none;
+      margin: 0 0 14px;
+      padding: 10px 13px;
+      border: 1px solid color-mix(in srgb, var(--teal) 38%, transparent);
+      border-radius: 10px;
+      color: var(--teal);
+      background: var(--teal-soft);
+      font: 700 10px/1.45 var(--mono);
+    }
+    .cc-demo.show { display: block; }
+    .cc-hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 20px;
+      align-items: end;
+      margin-bottom: 16px;
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background:
+        radial-gradient(circle at 92% 0, var(--teal-soft), transparent 24rem),
+        linear-gradient(135deg, color-mix(in srgb, var(--surface) 95%, var(--amber)), var(--surface));
+      box-shadow: var(--shadow);
+    }
+    .cc-hero h1 { max-width: 920px; }
+    .cc-hero .lead { max-width: 920px; }
+    .cc-hero-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+    .cc-inline-action {
+      min-height: 34px;
+      padding: 7px 10px;
+      border: 1px solid var(--line-strong);
+      border-radius: 9px;
+      color: var(--text);
+      background: var(--surface-2);
+      font-size: 11px;
+      font-weight: 750;
+    }
+    .cc-inline-action:hover { border-color: var(--teal); }
+    .cc-section-title { margin: 0 0 5px; font-size: 19px; letter-spacing: -.025em; }
+    .cc-section-copy { margin: 0; color: var(--muted); font-size: 12px; }
+    .cc-grid { display: grid; gap: 14px; margin-top: 14px; }
+    .cc-grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .cc-grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .cc-grid.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .cc-metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .cc-metric {
+      min-height: 104px;
+      padding: 15px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--surface);
+    }
+    .cc-metric strong { display: block; font-size: 25px; line-height: 1; letter-spacing: -.045em; }
+    .cc-metric span { display: block; margin-top: 8px; color: var(--muted); font-size: 10px; }
+    .cc-metric small { display: block; margin-top: 5px; color: var(--text-2); font: 9px/1.35 var(--mono); word-break: break-all; }
+    .cc-workflow {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .cc-stage {
+      min-height: 100px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: var(--surface-2);
+    }
+    .cc-stage span { color: var(--muted); font: 700 9px/1 var(--mono); letter-spacing: .06em; }
+    .cc-stage b { display: block; margin: 12px 0 4px; font-size: 12px; }
+    .cc-stage small { color: var(--muted); font-size: 10px; }
+    .cc-stage.ok { border-color: color-mix(in srgb, var(--green) 45%, transparent); background: var(--green-soft); }
+    .cc-stage.active { border-color: color-mix(in srgb, var(--amber) 58%, transparent); background: var(--amber-soft); }
+    .cc-stage.blocked { border-color: color-mix(in srgb, var(--yellow) 40%, transparent); background: var(--yellow-soft); }
+    .cc-agent-card {
+      min-height: 180px;
+      padding: 15px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--surface);
+    }
+    .cc-agent-card.selected { border-color: color-mix(in srgb, var(--teal) 55%, transparent); background: var(--teal-soft); }
+    .cc-agent-card.ineligible { opacity: .72; }
+    .cc-agent-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .cc-agent-head h3 { margin: 0; font-size: 14px; }
+    .cc-agent-head p { margin: 4px 0 0; color: var(--muted); font: 10px/1.4 var(--mono); }
+    .cc-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 7px;
+      border-radius: 999px;
+      font: 750 9px/1 var(--mono);
+      white-space: nowrap;
+    }
+    .cc-status.ok { color: var(--green); background: var(--green-soft); }
+    .cc-status.warn { color: var(--yellow); background: var(--yellow-soft); }
+    .cc-status.bad { color: var(--red); background: var(--red-soft); }
+    .cc-status.info { color: var(--teal); background: var(--teal-soft); }
+    .cc-agent-meta {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 7px;
+      margin-top: 15px;
+    }
+    .cc-agent-meta div { padding: 9px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface-2); }
+    .cc-agent-meta b { display: block; font-size: 15px; }
+    .cc-agent-meta span { color: var(--muted); font-size: 9px; }
+    .cc-hash { color: var(--teal); font: 10px/1.45 var(--mono); word-break: break-all; }
+    .cc-list { display: grid; gap: 8px; margin-top: 12px; }
+    .cc-list-item {
+      padding: 11px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: var(--surface-2);
+    }
+    .cc-list-item b { display: block; font-size: 11px; }
+    .cc-list-item span, .cc-list-item p { margin: 4px 0 0; color: var(--muted); font-size: 10px; }
+    .cc-list-item code { display: block; margin-top: 6px; color: var(--text-2); font: 9px/1.45 var(--mono); word-break: break-all; }
+    .cc-form { display: grid; gap: 11px; }
+    .cc-form label > span { display: block; margin-bottom: 6px; color: var(--muted); font-size: 10px; font-weight: 700; }
+    .cc-form textarea, .cc-form select, .cc-form input {
+      width: 100%;
+      border: 1px solid var(--line-strong);
+      border-radius: 10px;
+      padding: 10px 11px;
+      color: var(--text);
+      background: var(--surface-2);
+    }
+    .cc-form textarea { min-height: 112px; resize: vertical; line-height: 1.5; }
+    .cc-form textarea:focus, .cc-form select:focus, .cc-form input:focus { border-color: var(--teal); outline: none; }
+    .cc-scope-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .cc-scope-option {
+      display: grid;
+      gap: 5px;
+      padding: 11px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      color: var(--text-2);
+      background: var(--surface-2);
+      font-size: 11px;
+    }
+    .cc-scope-option:has(input:checked) { border-color: var(--amber); background: var(--amber-soft); }
+    .cc-scope-option.blocked { opacity: .62; }
+    .cc-scope-option b { color: var(--text); }
+    .cc-scope-option small { color: var(--muted); }
+    .cc-scope-option input { width: auto; margin: 0 5px 0 0; accent-color: var(--amber); }
+    .cc-chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
+    .cc-chip {
+      display: inline-flex;
+      padding: 5px 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--text-2);
+      background: var(--surface-2);
+      font: 9px/1.2 var(--mono);
+    }
+    .cc-impact-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; }
+    .cc-impact-item { padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); }
+    .cc-impact-item strong { display: block; font-size: 20px; }
+    .cc-impact-item span { color: var(--muted); font-size: 9px; }
+    .cc-table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 11px; }
+    .cc-table { width: 100%; min-width: 760px; border-collapse: collapse; background: var(--surface-2); }
+    .cc-table th, .cc-table td { padding: 11px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; font-size: 10px; }
+    .cc-table th { color: var(--muted); font: 700 9px/1.2 var(--mono); letter-spacing: .05em; }
+    .cc-table tr:last-child td { border-bottom: 0; }
+    .cc-change { color: var(--amber); font-weight: 750; }
+    .cc-stable { color: var(--green); font-weight: 750; }
+    .cc-version-card {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: var(--surface-2);
+    }
+    .cc-version-card.active { border-color: color-mix(in srgb, var(--green) 48%, transparent); background: var(--green-soft); }
+    .cc-version-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+    .cc-version-head h3 { margin: 0; font-size: 13px; }
+    .cc-version-card p { margin: 8px 0 0; color: var(--muted); font-size: 10px; }
+    .cc-audit { display: grid; gap: 8px; }
+    .cc-audit-row { display: grid; grid-template-columns: 150px 150px minmax(0, 1fr); gap: 10px; padding: 11px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface-2); }
+    .cc-audit-row b { font-size: 10px; }
+    .cc-audit-row span { color: var(--muted); font: 9px/1.4 var(--mono); word-break: break-all; }
+    .cc-platform-grid { display: grid; gap: 8px; }
+    .cc-platform-row { display: grid; grid-template-columns: minmax(180px, .8fr) minmax(0, 1.2fr); gap: 12px; padding: 10px 11px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface-2); }
+    .cc-platform-row b { font-size: 10px; }
+    .cc-platform-row span { color: var(--muted); font-size: 10px; }
+    .cc-legacy-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .cc-legacy-button {
+      min-height: 100px;
+      padding: 14px;
+      text-align: left;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      color: var(--text);
+      background: var(--surface-2);
+    }
+    .cc-legacy-button b { display: block; margin-bottom: 6px; }
+    .cc-legacy-button span { color: var(--muted); font-size: 10px; }
+
     @keyframes spin { to { transform: rotate(360deg); } }
     @keyframes pulse { 50% { opacity: .45; } }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition: none !important; } }
@@ -507,16 +728,25 @@
       .controls .card:last-child { grid-column: 1 / -1; }
       .capability-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .memory-layout { grid-template-columns: 1fr; }
+      .cc-grid.three, .cc-grid.four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .cc-workflow { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .cc-impact-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
     @media (max-width: 690px) {
       .shell { padding: 12px; }
       .studio-nav { position: static; flex-wrap: wrap; }
       .studio-brand { width: 100%; }
       .studio-tab { flex: 1; padding-inline: 6px; }
+      .cc-global-error { position: static; margin-top: 0; }
       .hero { grid-template-columns: 1fr; padding: 18px; }
+      .cc-hero { grid-template-columns: 1fr; padding: 18px; }
+      .cc-hero-actions { justify-content: flex-start; }
       .badges { justify-content: flex-start; }
       .controls, .pipeline, .decision-grid { grid-template-columns: 1fr; }
       .coverage-strip, .catalog-tools, .capability-grid, .memory-flow { grid-template-columns: 1fr; }
+      .cc-grid.two, .cc-grid.three, .cc-grid.four, .cc-metrics, .cc-workflow,
+      .cc-scope-grid, .cc-impact-grid, .cc-legacy-actions { grid-template-columns: 1fr; }
+      .cc-audit-row, .cc-platform-row { grid-template-columns: 1fr; }
       .step::after { display: none; }
       .proof { grid-template-columns: 1fr 1fr; }
       .proof-item:nth-child(2) { border-right: 0; }
@@ -528,17 +758,284 @@
 </head>
 <body>
   <main class="shell">
-    <nav class="studio-nav" aria-label="Разделы Студии способностей">
+    <nav class="studio-nav" aria-label="Разделы Центра управления агентами">
       <div class="studio-brand">
         <span class="studio-mark">✦</span>
-        <span><b>Студия способностей</b><span>30 доказанных возможностей · честное покрытие</span></span>
+        <span><b>Центр управления агентами</b><span>Черновик → Полигон → версия → точный rollback</span></span>
       </div>
-      <button class="studio-tab on" type="button" data-studio-view="capabilities">Способности 30</button>
-      <button class="studio-tab" type="button" data-studio-view="scenario">Прибыльный рост</button>
-      <button class="studio-tab" type="button" data-studio-view="memory">Командная память</button>
+      <button class="studio-tab on" type="button" data-studio-view="overview">Обзор</button>
+      <button class="studio-tab" type="button" data-studio-view="agents">Агенты</button>
+      <button class="studio-tab" type="button" data-studio-view="governance">Знания и правила</button>
+      <button class="studio-tab" type="button" data-studio-view="playground">Полигон</button>
+      <button class="studio-tab" type="button" data-studio-view="versions">Изменения и версии</button>
+      <button class="studio-tab" type="button" data-studio-view="evidence">Запуски и доказательства</button>
+      <button class="studio-tab" type="button" data-studio-view="capabilities">Способности</button>
     </nav>
 
-    <section class="studio-view on" id="capabilitiesView">
+    <div class="cc-global-error" id="controlError" role="alert"></div>
+    <div class="cc-demo" id="controlDemoBanner">DEMO · PREVIEW=1: агенты, снимки, ledger и receipts созданы в памяти этой страницы. Никакие данные Extella не читаются и не изменяются.</div>
+
+    <section class="studio-view on" id="overviewView">
+      <header class="cc-hero">
+        <div>
+          <div class="eyebrow">Extella · управляемый контур</div>
+          <h1>Управляемая политика сначала проверяется в черновике</h1>
+          <p class="lead">Зафиксируйте действующую V1 двух реальных Qwen-агентов, выполните managed policy evaluation на caller-supplied margin и только затем переключите управляемый active pointer. Это не запуск Agent и не вызов Expert; обычные запуски Extella вне adapter пока не привязаны к версии.</p>
+        </div>
+        <div class="badges">
+          <span class="badge" id="controlModeBadge">HOST BRIDGE</span>
+          <span class="badge">TOKENLESS UI</span>
+          <span class="badge safe">0 ВНЕШНИХ ЗАПИСЕЙ</span>
+        </div>
+      </header>
+
+      <div class="cc-metrics">
+        <article class="cc-metric"><strong id="controlMetricAgents">—</strong><span>выбранных агентов</span><small id="controlMetricAgentsDetail">ожидаю bootstrap</small></article>
+        <article class="cc-metric"><strong id="controlMetricVersion">—</strong><span>активная версия</span><small id="controlMetricVersionHash">baseline ещё не зафиксирован</small></article>
+        <article class="cc-metric"><strong id="controlMetricDraft">—</strong><span>текущий черновик</span><small id="controlMetricDraftHash">изменений нет</small></article>
+        <article class="cc-metric"><strong id="controlMetricRuns">0</strong><span>managed receipts</span><small id="controlMetricRunVersion">каждый содержит version + hash</small></article>
+      </div>
+
+      <section class="card">
+        <div class="card-hd">
+          <h2 class="card-title">Проверяемый путь изменения</h2>
+          <div class="card-sub" id="controlStatus">Подключаю managed adapter…</div>
+        </div>
+        <div class="card-bd">
+          <div class="cc-workflow">
+            <div class="cc-stage active" id="controlStageAgents"><span>01 · РЕЕСТР</span><b>Два агента</b><small>Qwen/Alibaba, разные ID</small></div>
+            <div class="cc-stage" id="controlStageBaseline"><span>02 · V1</span><b>Точный снимок</b><small>знания, правила, Experts, hashes</small></div>
+            <div class="cc-stage" id="controlStageDraft"><span>03 · DRAFT</span><b>Общее правило</b><small>рабочие агенты не меняются</small></div>
+            <div class="cc-stage" id="controlStageTest"><span>04 · DRY RUN</span><b>18% · 20% · 30%</b><small>до/после, 0 записей</small></div>
+            <div class="cc-stage" id="controlStagePublish"><span>05 · POINTER</span><b>Publish / rollback</b><small>managed adapter + read-back</small></div>
+          </div>
+          <div class="actions"><button class="btn secondary" id="controlReloadLedgerBtn" type="button">Перезагрузить ledger</button></div>
+        </div>
+      </section>
+
+      <div class="cc-grid two">
+        <section class="card">
+          <div class="card-hd">
+            <h2 class="card-title">Выберите двух агентов</h2>
+            <div class="card-sub">Первый станет владельцем ledger и ролью контролёра 1С; второй — таргетологом</div>
+          </div>
+          <div class="card-bd">
+            <div class="agent-field">
+              <div class="agent-label"><b>Агент 1С</b><span>owner · one_c_controller</span></div>
+              <select class="select" id="controlAgent1" aria-label="Агент 1С"></select>
+            </div>
+            <div class="agent-field">
+              <div class="agent-label"><b>Агент-таргетолог</b><span>targetologist</span></div>
+              <select class="select" id="controlAgent2" aria-label="Агент-таргетолог"></select>
+            </div>
+            <div class="agent-note" id="controlAgentNote">Получаю реестр агентов…</div>
+            <div class="actions">
+              <button class="btn primary" id="controlCaptureBtn" type="button">Зафиксировать реальную V1</button>
+              <button class="btn secondary" id="controlInspectBtn" type="button">Обновить чтение конфигурации</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-hd">
+            <h2 class="card-title">Текущий состав системы</h2>
+            <div class="card-sub">Только данные, прочитанные host-контуром; число потребителей — из managed dependency graph</div>
+          </div>
+          <div class="card-bd">
+            <div class="cc-grid two" id="controlOverviewAgents">
+              <div class="empty">Сначала выберите двух подходящих агентов.</div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="cc-grid two">
+        <section class="card">
+          <div class="card-hd"><h2 class="card-title">Что гарантирует этот срез</h2></div>
+          <div class="card-bd">
+            <div class="cc-list">
+              <div class="cc-list-item"><b>Черновик не меняет active pointer</b><span>До publish снимки V1 обоих агентов остаются активными.</span></div>
+              <div class="cc-list-item"><b>Publish привязан к точному GREEN TestRun</b><span>Hash кандидата, draft и тест сверяются перед одним managed commit.</span></div>
+              <div class="cc-list-item"><b>Rollback возвращает прежний pointer</b><span>Read-back подтверждает исходный immutable version ID и SHA-256; копия не создаётся.</span></div>
+            </div>
+          </div>
+        </section>
+        <section class="card">
+          <div class="card-hd"><h2 class="card-title">Граница платформы</h2><div class="card-sub">Не маскируется под готовую enterprise-функцию</div></div>
+          <div class="card-bd"><div class="cc-platform-grid" id="controlPlatformOverview"></div></div>
+        </section>
+      </div>
+    </section>
+
+    <section class="studio-view" id="agentsView">
+      <header class="cc-hero">
+        <div>
+          <div class="eyebrow">Реестр и активная конфигурация</div>
+          <h1>Агенты компании</h1>
+          <p class="lead">Eligible Qwen/Alibaba-агенты можно включить в managed vertical slice. Claude/Anthropic и неподтверждённые провайдеры видны, но не допускаются к baseline.</p>
+        </div>
+        <div class="cc-hero-actions">
+          <button class="cc-inline-action" type="button" data-studio-view="overview">Изменить выбор</button>
+          <button class="cc-inline-action" type="button" id="controlAgentsRefreshBtn">Обновить снимки</button>
+        </div>
+      </header>
+      <div class="cc-grid three" id="controlAgentGrid"><div class="empty">Получаю список агентов…</div></div>
+      <div class="cc-grid two" id="controlInventoryGrid">
+        <div class="empty">После чтения конфигурации здесь появятся реальные Concepts, Rules, Experts и их hashes.</div>
+      </div>
+    </section>
+
+    <section class="studio-view" id="governanceView">
+      <header class="cc-hero">
+        <div>
+          <div class="eyebrow">Черновик · знания и обязательная политика</div>
+          <h1>Сформулируйте бизнес-изменение</h1>
+          <p class="lead">Пользователь задаёт правило обычным языком и выбирает границу. Managed control-plane формирует Rule, dependency lock и candidate bundle; проверка получает маржу от caller и не запускает Expert.</p>
+        </div>
+        <div class="badges"><span class="badge">DRAFT FIRST</span><span class="badge safe">ACTIVE V1 НЕ МЕНЯЕТСЯ</span></div>
+      </header>
+      <div class="cc-grid two">
+        <section class="card">
+          <div class="card-hd"><h2 class="card-title">Новое общее правило</h2><div class="card-sub">Порог строгий: правило срабатывает только при марже &lt; 20%</div></div>
+          <div class="card-bd">
+            <div class="cc-form">
+              <label><span>Бизнес-формулировка</span><textarea id="controlRuleText">Если фактическая маржа продукта ниже 20%, не увеличивать рекламный бюджет. Предложить остановку или пересмотр кампании.</textarea></label>
+              <div>
+                <span style="display:block;margin-bottom:6px;color:var(--muted);font-size:10px;font-weight:700">Область действия</span>
+                <div class="cc-scope-grid">
+                  <label class="cc-scope-option"><span><input type="radio" name="controlScope" value="one"><b>Один агент</b></span><small>Только выбранный ниже агент</small></label>
+                  <label class="cc-scope-option"><span><input type="radio" name="controlScope" value="group" checked><b>Выбранная группа</b></span><small>Ровно два агента vertical slice</small></label>
+                  <label class="cc-scope-option blocked"><span><input type="radio" name="controlScope" value="organization" disabled><b>Вся организация</b></span><small>Заблокировано: нет native RBAC/registry</small></label>
+                </div>
+              </div>
+              <label><span>Агент для scope «один»</span><select id="controlScopeAgent"></select></label>
+              <button class="btn primary" id="controlDraftBtn" type="button">Сохранить как черновик и рассчитать влияние</button>
+            </div>
+          </div>
+        </section>
+        <section class="card">
+          <div class="card-hd"><h2 class="card-title">Активная V1 до публикации</h2><div class="card-sub">Контроль отсутствия преждевременного изменения</div></div>
+          <div class="card-bd" id="controlBaselineProof">
+            <div class="empty">Сначала зафиксируйте baseline двух агентов.</div>
+          </div>
+        </section>
+      </div>
+      <section class="card" style="margin-top:14px">
+        <div class="card-hd"><h2 class="card-title">Анализ влияния</h2><div class="card-sub">IDs берутся из ledger; процессы, знания и потребители не угадываются интерфейсом</div></div>
+        <div class="card-bd" id="controlImpact">
+          <div class="empty">После создания черновика здесь появится точный scope и dependency graph.</div>
+        </div>
+      </section>
+    </section>
+
+    <section class="studio-view" id="playgroundView">
+      <header class="cc-hero">
+        <div>
+          <div class="eyebrow">Полигон · candidate bundle</div>
+          <h1>Сравнение V1 и V2 без внешних записей</h1>
+          <p class="lead">Три обязательных кейса выполняют managed policy evaluation над caller-supplied margin. Expert не вызывается. При 20% строгое правило «ниже 20%» не срабатывает.</p>
+        </div>
+        <div class="badges"><span class="badge">18% · 20% · 30%</span><span class="badge">DRY_RUN</span><span class="badge safe">WRITE ATTEMPTS 0</span></div>
+      </header>
+      <section class="card">
+        <div class="card-hd"><h2 class="card-title">Контрольные кейсы</h2><div class="card-sub" id="controlTestSummary">Нужен черновик, привязанный к текущей V1</div></div>
+        <div class="card-bd">
+          <div class="cc-impact-grid">
+            <div class="cc-impact-item"><strong>18%</strong><span>ниже 20% · правило должно сработать</span></div>
+            <div class="cc-impact-item"><strong>20%</strong><span>граница · strict &lt; не срабатывает</span></div>
+            <div class="cc-impact-item"><strong>30%</strong><span>выше 20% · обычное действие</span></div>
+            <div class="cc-impact-item"><strong>0</strong><span>внешних записей и write attempts</span></div>
+          </div>
+          <div class="actions"><button class="btn primary" id="controlPlaygroundBtn" type="button">Запустить Полигон для точного candidate hash</button></div>
+        </div>
+      </section>
+      <section class="card" style="margin-top:14px">
+        <div class="card-hd"><h2 class="card-title">Managed policy evaluation до / после</h2><div class="card-sub">Сработавшее правило, отдельно использованные и доступные знания, планируемые действия</div></div>
+        <div class="card-bd" id="controlPlaygroundResults"><div class="empty">Полигон ещё не запускался.</div></div>
+      </section>
+      <section class="card" style="margin-top:14px">
+        <div class="card-hd"><h2 class="card-title">TestRun receipt</h2></div>
+        <pre id="controlTestEvidence">Ожидаю проверяемый TestRun.</pre>
+      </section>
+    </section>
+
+    <section class="studio-view" id="versionsView">
+      <header class="cc-hero">
+        <div>
+          <div class="eyebrow">Immutable history · managed adapter</div>
+          <h1>Изменения и версии</h1>
+          <p class="lead">Публикация доступна только после GREEN-теста точного SHA. Managed pointer переключается целиком; native Extella bundle/CAS пока недоступны.</p>
+        </div>
+        <div class="badges"><span class="badge">HASH-BOUND TEST</span><span class="badge">READ-BACK</span></div>
+      </header>
+      <div class="cc-grid two">
+        <section class="card">
+          <div class="card-hd"><h2 class="card-title">Кандидат к публикации</h2><div class="card-sub" id="controlPublishStatus">Нет подготовленного кандидата</div></div>
+          <div class="card-bd">
+            <div id="controlCandidate"><div class="empty">Создайте черновик и выполните Полигон.</div></div>
+            <div class="actions"><button class="btn primary" id="controlPublishBtn" type="button" disabled>Опубликовать managed-версию</button></div>
+            <div class="mutation-warning"><b>Честная граница.</b> Это атомарный commit одного managed ledger с подтверждённым read-back. Обычные чаты и <code>agent/run</code> вне adapter не обязаны читать этот pointer.</div>
+          </div>
+        </section>
+        <section class="card">
+          <div class="card-hd"><h2 class="card-title">Точный rollback</h2><div class="card-sub">Возвращает исходный version ID и SHA, не создавая приблизительную копию</div></div>
+          <div class="card-bd">
+            <div id="controlRollbackTarget"><div class="empty">Baseline пока не зафиксирован.</div></div>
+            <div class="actions"><button class="btn secondary" id="controlRollbackManagedBtn" type="button" disabled>Вернуть точную baseline V1</button></div>
+            <div id="controlRollbackProof"></div>
+          </div>
+        </section>
+      </div>
+      <section class="card" style="margin-top:14px">
+        <div class="card-hd"><h2 class="card-title">Неизменяемые версии</h2><div class="card-sub">Активный pointer показан отдельно для каждого агента</div></div>
+        <div class="card-bd"><div class="cc-grid two" id="controlVersionList"><div class="empty">Версий ещё нет.</div></div></div>
+      </section>
+    </section>
+
+    <section class="studio-view" id="evidenceView">
+      <header class="cc-hero">
+        <div>
+          <div class="eyebrow">Run receipts · audit</div>
+          <h1>Запуски и доказательства</h1>
+          <p class="lead">Каждая managed policy evaluation фиксирует точный configurationVersionId, bundle SHA-256, сработавшие Rules, отдельно used/available Knowledge IDs, planned actions и нулевые внешние записи. Это не исполнение Agent.</p>
+        </div>
+        <div class="badges"><span class="badge">VERSION BOUND</span><span class="badge safe">EVIDENCE RECEIPT</span></div>
+      </header>
+      <div class="cc-grid two">
+        <section class="card">
+          <div class="card-hd"><h2 class="card-title">Managed policy evaluation + receipt</h2><div class="card-sub">Детерминированная проверка active policy по переданной марже; не вызов Agent и не вызов Expert</div></div>
+          <div class="card-bd">
+            <div class="cc-form">
+              <label><span>Фактическая маржа</span><select id="controlActiveMargin"><option value="1800">18% — правило срабатывает</option><option value="2000">20% — граница, не срабатывает</option><option value="3000">30% — обычный рост</option></select></label>
+              <button class="btn primary" id="controlActiveRunBtn" type="button">Проверить managed policy для обоих</button>
+            </div>
+          </div>
+        </section>
+        <section class="card">
+          <div class="card-hd"><h2 class="card-title">Native platform blockers</h2><div class="card-sub">Managed доказательство не выдаётся за платформенную гарантию</div></div>
+          <div class="card-bd"><div class="cc-platform-grid" id="controlPlatformEvidence"></div></div>
+        </section>
+      </div>
+      <section class="card" style="margin-top:14px">
+        <div class="card-hd"><h2 class="card-title">Последние evaluation receipts</h2><div class="card-sub">Версия и hash обязательны для каждой managed policy evaluation</div></div>
+        <div class="card-bd"><div class="cc-grid two" id="controlRunReceipts"><div class="empty">Managed policy evaluations ещё не выполнялись.</div></div></div>
+      </section>
+      <section class="card" style="margin-top:14px">
+        <div class="card-hd"><h2 class="card-title">Журнал действий</h2><div class="card-sub">Автор, время, тип изменения, version/test/run IDs</div></div>
+        <div class="card-bd"><div class="cc-audit" id="controlAuditLog"><div class="empty">Baseline ещё не создан.</div></div></div>
+      </section>
+      <section class="card" style="margin-top:14px">
+        <div class="card-hd"><h2 class="card-title">Расширенные доказательства старой Studio</h2><div class="card-sub">Существующие эксперименты сохранены и отделены от production-контура</div></div>
+        <div class="card-bd">
+          <div class="cc-legacy-actions">
+            <button class="cc-legacy-button" type="button" data-studio-view="scenario"><b>Полигон «Прибыльный рост»</b><span>Детерминированный Expert + два реальных агента, response IDs, usage и controlled failure.</span></button>
+            <button class="cc-legacy-button" type="button" data-studio-view="memory"><b>Эксперимент «Командная память»</b><span>Временные global Concept/Rule, cross-agent visibility и подтверждённый cleanup.</span></button>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section class="studio-view" id="capabilitiesView">
       <div class="studio-hero">
         <div class="eyebrow">Extella · карта возможностей</div>
         <h1>Доказанная способность должна быть видна и применима</h1>
@@ -672,7 +1169,7 @@
               <label class="field"><span>Возвраты и потери</span><input id="returns_loss" type="number" min="0" step="1000" value="20000"></label>
               <label class="field"><span>Комиссии</span><input id="commission" type="number" min="0" step="1000" value="50000"></label>
               <label class="field"><span>Логистика</span><input id="logistics" type="number" min="0" step="1000" value="30000"></label>
-              <label class="field"><span>Реклама</span><input id="ad_spend" type="number" min="0" step="1000" value="200000"></label>
+              <label class="field"><span>Реклама</span><input id="ad_spend" type="number" min="0" step="1000" value="220000"></label>
             </div>
           </div>
         </section>
@@ -685,7 +1182,7 @@
           <div class="card-bd">
             <div class="policy-switch">
               <button class="policy-option on" type="button" data-policy="V1"><b>V1 · Рост от 15%</b><small>Базовая политика</small></button>
-              <button class="policy-option" type="button" data-policy="V2"><b>V2 · Рост от 25%</b><small>Более строгая</small></button>
+              <button class="policy-option" type="button" data-policy="V2"><b>V2 · Рост от 20%</b><small>Строгое правило нового черновика</small></button>
             </div>
             <div class="policy-copy"><i></i><span>Если маржа не ниже порога — масштабировать. Иначе сохранить режим и отправить на проверку.</span></div>
           </div>
@@ -807,7 +1304,7 @@
     var COST_FIELDS = ['cogs', 'returns_loss', 'commission', 'logistics', 'ad_spend'];
     var POLICIES = {
       V1: { id: 'profitability_gate', version: 'POLICY_V1', threshold_bps: 1500, rule: 'margin_bps >= threshold_bps => SCALE; otherwise HOLD' },
-      V2: { id: 'profitability_gate', version: 'POLICY_V2', threshold_bps: 2500, rule: 'margin_bps >= threshold_bps => SCALE; otherwise HOLD' }
+      V2: { id: 'profitability_gate', version: 'POLICY_V2', threshold_bps: 2000, rule: 'margin_bps >= threshold_bps => SCALE; otherwise HOLD' }
     };
     var ROLES = {
       one_c: {
@@ -837,6 +1334,12 @@
       surface: 'Есть часть интерфейса',
       evidence: 'Только evidence'
     };
+    var CONTROL_RULE_TEXT = 'Если фактическая маржа продукта ниже 20%, не увеличивать рекламный бюджет. Предложить остановку или пересмотр кампании.';
+    var CONTROL_CASES = [
+      { id: 'below-18', marginBps: 1800 },
+      { id: 'boundary-20', marginBps: 2000 },
+      { id: 'above-30', marginBps: 3000 }
+    ];
     var PROVEN_CAPABILITIES = [
       {
         id: 'execution.agent_manages_expert', group: 'execution', coverage: 'surface',
@@ -1095,6 +1598,24 @@
         runs: {}
       },
       mockGovernance: null,
+      control: {
+        agents: [],
+        selectedAgentIds: [],
+        snapshots: [],
+        ledger: null,
+        platform: null,
+        draft: null,
+        impact: null,
+        testRun: null,
+        receipts: [],
+        rollback: null,
+        busy: false,
+        outcomeUnknown: false,
+        accountEpoch: 0,
+        mockLedger: null,
+        mockEventSeq: 0,
+        mockLastEventMs: 0
+      },
       pending: new Map(),
       reqSeq: 0,
       initialized: PREVIEW
@@ -1114,6 +1635,13 @@
         }).join(',') + '}';
       }
       return JSON.stringify(value);
+    }
+    function deterministicHalfEven(value) {
+      var lower = Math.floor(Number(value));
+      var fraction = Number(value) - lower;
+      if (fraction < .5) return lower;
+      if (fraction > .5) return lower + 1;
+      return Math.abs(lower % 2) === 0 ? lower : lower + 1;
     }
     async function sha256(value) {
       var text = typeof value === 'string' ? value : canonical(value);
@@ -1159,11 +1687,951 @@
         var reqId = 'pg_' + Date.now().toString(36) + '_' + (++state.reqSeq);
         var timer = setTimeout(function () {
           state.pending.delete(reqId);
-          reject(new Error('Время ожидания платформы истекло'));
+          var error = new Error('Результат операции неизвестен; перезагрузите ledger перед повтором. Время ожидания платформы истекло.');
+          error.code = 'OUTCOME_UNKNOWN';
+          error.outcomeUnknown = true;
+          reject(error);
         }, timeoutMs || 210000);
-        state.pending.set(reqId, { resultType: resultType, resolve: resolve, reject: reject, timer: timer });
+        state.pending.set(reqId, {
+          requestType: type,
+          resultType: resultType,
+          resolve: resolve,
+          reject: reject,
+          timer: timer
+        });
         window.parent.postMessage(Object.assign({ type: type, reqId: reqId }, payload || {}), '*');
       });
+    }
+
+    function controlClone(value) {
+      return value == null ? value : JSON.parse(JSON.stringify(value));
+    }
+
+    function controlShort(value, length) {
+      var text = String(value || '');
+      return text ? text.slice(0, length || 16) + (text.length > (length || 16) ? '…' : '') : '—';
+    }
+
+    function controlTime(value) {
+      if (!value) return '—';
+      try {
+        return new Intl.DateTimeFormat('ru-RU', {
+          day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+        }).format(new Date(value));
+      } catch (_) { return String(value); }
+    }
+
+    function controlActionLabel(value) {
+      var labels = {
+        INCREASE_AD_BUDGET: 'Увеличить рекламный бюджет',
+        ALLOW_GROWTH_PLAN: 'Разрешить план роста',
+        CONTINUE_PLAN: 'Продолжить план',
+        STOP_OR_REVIEW_CAMPAIGN: 'Остановить или пересмотреть кампанию',
+        FLAG_LOW_MARGIN_FOR_REVIEW: 'Отправить низкую маржу на проверку',
+        REVIEW_CAMPAIGN: 'Пересмотреть кампанию'
+      };
+      return labels[value] || value || '—';
+    }
+
+    function controlShowError(message) {
+      var node = $('controlError');
+      node.textContent = String(message || 'Неизвестная ошибка');
+      node.classList.add('show');
+    }
+
+    function controlClearError() {
+      $('controlError').textContent = '';
+      $('controlError').classList.remove('show');
+    }
+
+    function controlSetBusy(busy, status) {
+      state.control.busy = busy;
+      [
+        'controlCaptureBtn', 'controlInspectBtn', 'controlAgentsRefreshBtn',
+        'controlDraftBtn', 'controlPlaygroundBtn', 'controlPublishBtn',
+        'controlRollbackManagedBtn', 'controlActiveRunBtn', 'controlReloadLedgerBtn'
+      ].forEach(function (id) {
+        var node = $(id);
+        if (node) node.disabled = busy || Boolean(node.dataset.prerequisiteBlocked);
+      });
+      if (status) $('controlStatus').textContent = status;
+    }
+
+    async function controlRequest(action, payload) {
+      var accountEpoch = state.control.accountEpoch;
+      var response = await bridge(
+        'etb_agent_control',
+        'etb_agent_control_result',
+        Object.assign({ action: action }, payload || {}),
+        240000
+      );
+      if (accountEpoch !== state.control.accountEpoch) {
+        var contextError = new Error('Контекст аккаунта изменился; устаревший результат операции отброшен.');
+        contextError.code = 'CONTROL_CONTEXT_CHANGED';
+        throw contextError;
+      }
+      if (!response || response.ok === false) {
+        throw new Error(response && response.error || 'Agent Control не вернул результат');
+      }
+      return response.result || response;
+    }
+
+    function controlSelectedIds() {
+      var first = String($('controlAgent1').value || '');
+      var second = String($('controlAgent2').value || '');
+      if (!first || !second) throw new Error('Нужны два eligible Qwen/Alibaba-агента');
+      if (first === second) throw new Error('Выберите двух разных агентов');
+      return [first, second];
+    }
+
+    function controlLedgerAgentIds() {
+      return Object.keys(state.control.ledger && state.control.ledger.agents || {}).sort();
+    }
+
+    function controlCurrentDraft() {
+      var ledger = state.control.ledger;
+      return ledger && ledger.currentDraftId && ledger.drafts &&
+        ledger.drafts[ledger.currentDraftId] || null;
+    }
+
+    function controlCurrentTestRun() {
+      var ledger = state.control.ledger;
+      return ledger && ledger.currentTestRunId && ledger.testRuns &&
+        ledger.testRuns[ledger.currentTestRunId] || null;
+    }
+
+    function controlClearLedgerDerivedState() {
+      state.control.snapshots = [];
+      state.control.ledger = null;
+      state.control.draft = null;
+      state.control.impact = null;
+      state.control.testRun = null;
+      state.control.receipts = [];
+      state.control.rollback = null;
+    }
+
+    function controlResetAccountState() {
+      state.control.accountEpoch += 1;
+      state.control.agents = [];
+      state.control.selectedAgentIds = [];
+      state.control.platform = null;
+      state.control.busy = false;
+      state.control.outcomeUnknown = false;
+      state.control.mockLedger = null;
+      state.control.mockEventSeq = 0;
+      state.control.mockLastEventMs = 0;
+      controlClearLedgerDerivedState();
+    }
+
+    function controlIsOutcomeUnknown(error) {
+      return Boolean(error && (
+        error.outcomeUnknown === true ||
+        error.code === 'OUTCOME_UNKNOWN' ||
+        error.code === 'OPERATION_OUTCOME_UNKNOWN'
+      ));
+    }
+
+    function controlIsContextChanged(error) {
+      return Boolean(error && error.code === 'CONTROL_CONTEXT_CHANGED');
+    }
+
+    function controlMutationFailure(error, fallbackStatus) {
+      if (controlIsContextChanged(error)) return null;
+      controlShowError(error && error.message);
+      if (controlIsOutcomeUnknown(error)) {
+        state.control.outcomeUnknown = true;
+        return 'OUTCOME UNKNOWN · результат операции неизвестен; перезагрузите ledger перед повтором';
+      }
+      return fallbackStatus;
+    }
+
+    function controlExactPublishReady(ledger, draft, testRun) {
+      if (!ledger || !draft || !testRun ||
+          ledger.currentDraftId !== draft.id ||
+          ledger.currentTestRunId !== testRun.id ||
+          draft.status !== 'DRAFT' ||
+          testRun.status !== 'PASSED' ||
+          testRun.draftId !== draft.id ||
+          testRun.draftSha256 !== draft.draftSha256 ||
+          testRun.candidateVersionId !== draft.candidateVersionId ||
+          testRun.candidateBundleSha256 !== draft.candidateBundleSha256 ||
+          !testRun.coverage || testRun.coverage.below !== true ||
+          testRun.coverage.boundary !== true || testRun.coverage.above !== true ||
+          !testRun.assertions || testRun.assertions.allPassed !== true ||
+          Number(testRun.writeAttempts || 0) !== 0 ||
+          (testRun.externalWrites || []).length !== 0) {
+        return false;
+      }
+      return Object.keys(draft.baseVersionByAgent || {}).every(function (agentId) {
+        return ledger.activeVersionByAgent &&
+          ledger.activeVersionByAgent[agentId] === draft.baseVersionByAgent[agentId];
+      });
+    }
+
+    function controlApplyResult(result) {
+      result = result || {};
+      var hasLedger = Object.prototype.hasOwnProperty.call(result, 'ledger');
+      if (Array.isArray(result.agents)) state.control.agents = result.agents;
+      if (Object.prototype.hasOwnProperty.call(result, 'platform')) {
+        state.control.platform = result.platform || null;
+      }
+      if (hasLedger) {
+        if (result.ledger == null) {
+          controlClearLedgerDerivedState();
+        } else {
+          var previousLedger = state.control.ledger;
+          var changedLedger = !previousLedger ||
+            previousLedger.ledgerId !== result.ledger.ledgerId ||
+            previousLedger.ownerAgentId !== result.ledger.ownerAgentId;
+          if (changedLedger) controlClearLedgerDerivedState();
+          state.control.ledger = result.ledger;
+        }
+        state.control.outcomeUnknown = false;
+      }
+      if (Array.isArray(result.snapshots)) state.control.snapshots = result.snapshots;
+      if (state.control.ledger) {
+        state.control.draft = controlCurrentDraft();
+        state.control.impact = state.control.draft && state.control.draft.impact || null;
+        state.control.testRun = controlCurrentTestRun();
+      }
+      if (Object.prototype.hasOwnProperty.call(result, 'draft')) state.control.draft = result.draft || null;
+      if (Object.prototype.hasOwnProperty.call(result, 'impact')) state.control.impact = result.impact || null;
+      if (Object.prototype.hasOwnProperty.call(result, 'testRun')) state.control.testRun = result.testRun || null;
+      if (Array.isArray(result.receipts)) state.control.receipts = result.receipts;
+      if (Object.prototype.hasOwnProperty.call(result, 'rollback')) state.control.rollback = result.rollback || null;
+      renderControlCenter();
+    }
+
+    function controlAgentById(id) {
+      return state.control.agents.find(function (agent) { return agent.id === id; }) ||
+        state.control.ledger && state.control.ledger.agents && state.control.ledger.agents[id] ||
+        { id: id, name: id };
+    }
+
+    function controlSnapshotByAgent(id) {
+      return state.control.snapshots.find(function (snapshot) {
+        return snapshot && snapshot.agent && String(snapshot.agent.id) === String(id);
+      }) || null;
+    }
+
+    function controlBundleInventory(id) {
+      var ledger = state.control.ledger;
+      if (!ledger) return null;
+      var pointer = ledger.activeVersionByAgent && ledger.activeVersionByAgent[id];
+      var version = ledger.versions && ledger.versions[pointer];
+      return version && version.bundle && version.bundle.agents && version.bundle.agents[id] || null;
+    }
+
+    function renderControlAgentSelects() {
+      var eligible = state.control.agents.filter(function (agent) { return agent.eligible === true; });
+      var first = $('controlAgent1');
+      var second = $('controlAgent2');
+      var scopeAgent = $('controlScopeAgent');
+      var previous = state.control.selectedAgentIds.slice();
+      var ledgerIds = controlLedgerAgentIds();
+      var selected;
+      [first, second, scopeAgent].forEach(function (select) { select.innerHTML = ''; });
+      eligible.forEach(function (agent) {
+        [first, second, scopeAgent].forEach(function (select) {
+          var option = document.createElement('option');
+          option.value = agent.id;
+          option.textContent = agentLabel(agent);
+          select.appendChild(option);
+        });
+      });
+      if (ledgerIds.length >= 2) {
+        var oneCId = ledgerIds.find(function (id) {
+          return /one_c|1c|1с/i.test(String(state.control.ledger.agents[id].role || ''));
+        }) || ledgerIds[0];
+        var targetId = ledgerIds.find(function (id) {
+          return id !== oneCId && /target|таргет/i.test(String(state.control.ledger.agents[id].role || ''));
+        }) || ledgerIds.find(function (id) { return id !== oneCId; });
+        selected = [oneCId, targetId];
+      } else if (previous.length === 2 &&
+          eligible.some(function (agent) { return agent.id === previous[0]; }) &&
+          eligible.some(function (agent) { return agent.id === previous[1]; })) {
+        selected = previous;
+      } else {
+        var oneC = eligible.slice().sort(function (a, b) {
+          return agentScore(b, 'one_c') - agentScore(a, 'one_c');
+        })[0];
+        var target = eligible.slice().sort(function (a, b) {
+          return agentScore(b, 'target') - agentScore(a, 'target');
+        }).find(function (agent) { return !oneC || agent.id !== oneC.id; });
+        selected = [oneC && oneC.id || '', target && target.id || ''];
+      }
+      state.control.selectedAgentIds = selected.filter(Boolean);
+      first.value = selected[0] || '';
+      second.value = selected[1] || '';
+      scopeAgent.value = selected[0] || '';
+      first.disabled = Boolean(state.control.ledger);
+      second.disabled = Boolean(state.control.ledger);
+      $('controlAgentNote').textContent = eligible.length >= 2
+        ? (state.control.ledger
+          ? 'Baseline закрепил эту пару. Для другого состава нужен отдельный ledger.'
+          : 'Подтверждено Qwen/Alibaba: ' + eligible.length + '. Claude/Anthropic исключены host-side.')
+        : 'Найдено eligible агентов: ' + eligible.length + '. Для vertical slice нужны два.';
+    }
+
+    function controlInventoryCounts(agentId) {
+      var snapshot = controlSnapshotByAgent(agentId);
+      if (snapshot && snapshot.inventory) return snapshot.inventory.counts || {};
+      var inventory = controlBundleInventory(agentId);
+      return inventory ? {
+        concepts: (inventory.knowledge || []).length,
+        rules: (inventory.localRules || []).length,
+        experts: (inventory.capabilities || []).length
+      } : {};
+    }
+
+    function renderControlAgentCard(agent, detailed) {
+      var selected = state.control.selectedAgentIds.indexOf(agent.id) !== -1;
+      var counts = controlInventoryCounts(agent.id);
+      var ledger = state.control.ledger;
+      var pointer = ledger && ledger.activeVersionByAgent && ledger.activeVersionByAgent[agent.id];
+      var eligibility = agent.eligible === true ? 'QWEN CONFIRMED' :
+        (agent.eligibility === 'ANTHROPIC_FORBIDDEN' ? 'ANTHROPIC BLOCKED' : 'NOT ELIGIBLE');
+      var statusClass = agent.eligible === true ? 'ok' : 'bad';
+      return '<article class="cc-agent-card ' + (selected ? 'selected ' : '') +
+        (agent.eligible === true ? '' : 'ineligible') + '">' +
+        '<div class="cc-agent-head"><div><h3>' + esc(agent.name || agent.id) + '</h3><p>' +
+        esc(agent.provider || 'provider —') + ' · ' + esc(agent.model || 'model —') +
+        '</p></div><span class="cc-status ' + statusClass + '">' + esc(eligibility) + '</span></div>' +
+        '<div class="cc-chip-row"><span class="cc-chip">' + esc(agent.id) + '</span>' +
+        (selected ? '<span class="cc-chip">В VERTICAL SLICE</span>' : '') + '</div>' +
+        (detailed ? '<div class="cc-agent-meta"><div><b>' + esc(counts.concepts || 0) +
+          '</b><span>знаний</span></div><div><b>' + esc(counts.rules || 0) +
+          '</b><span>правил</span></div><div><b>' + esc(counts.experts || 0) +
+          '</b><span>способностей</span></div></div><p class="cc-hash" style="margin-top:12px">active ' +
+          esc(pointer || 'baseline не создан') + '</p>' : '') + '</article>';
+    }
+
+    function renderControlAgents() {
+      var agents = state.control.agents;
+      $('controlAgentGrid').innerHTML = agents.length
+        ? agents.map(function (agent) { return renderControlAgentCard(agent, true); }).join('')
+        : '<div class="empty">Реестр агентов недоступен.</div>';
+      var ids = state.control.selectedAgentIds;
+      $('controlOverviewAgents').innerHTML = ids.length
+        ? ids.map(function (id) { return renderControlAgentCard(controlAgentById(id), false); }).join('')
+        : '<div class="empty">Выберите двух eligible агентов.</div>';
+    }
+
+    function renderControlInventoryList(title, rows, idField, textField) {
+      var shown = (rows || []).slice(0, 4);
+      return '<div class="cc-list-item"><b>' + esc(title) + ' · ' + esc((rows || []).length) + '</b>' +
+        (shown.length ? '<div class="cc-list">' + shown.map(function (row) {
+          return '<div><code>' + esc(row[idField] || row.id || row.name || '—') + '</code><span>' +
+            esc(row[textField] || row.preview || row.description || '') + '</span></div>';
+        }).join('') + '</div>' : '<span>Нет объектов в прочитанной области.</span>') + '</div>';
+    }
+
+    function renderControlInventories() {
+      var ids = state.control.selectedAgentIds;
+      var html = ids.map(function (id) {
+        var agent = controlAgentById(id);
+        var snapshot = controlSnapshotByAgent(id);
+        var display = snapshot && snapshot.inventory;
+        var bundle = controlBundleInventory(id);
+        var concepts = display ? display.concepts || [] : bundle ? bundle.knowledge || [] : [];
+        var rules = display ? display.rules || [] : bundle ? bundle.localRules || [] : [];
+        var experts = display ? display.experts || [] : bundle ? bundle.capabilities || [] : [];
+        var hashes = display && display.hashes || {};
+        return '<section class="card"><div class="card-hd"><h2 class="card-title">' +
+          esc(agent.name || id) + '</h2><div class="card-sub">' + esc(id) +
+          '</div></div><div class="card-bd"><div class="cc-list">' +
+          renderControlInventoryList('Знания / Concepts', concepts, 'id', 'preview') +
+          renderControlInventoryList('Правила / Rules', rules, 'id', 'preview') +
+          renderControlInventoryList('Способности / Experts', experts, 'name', 'description') +
+          '</div><div class="cc-list" style="margin-top:12px"><div class="cc-list-item"><b>Хеши снимка</b>' +
+          '<code>agent ' + esc(hashes.agent || bundle && bundle.agent && bundle.agent.instructionsSha256 || '—') +
+          '\nconcepts ' + esc(hashes.concepts || '—') + '\nrules ' + esc(hashes.rules || '—') +
+          '\nexperts ' + esc(hashes.experts || '—') + '</code></div></div></div></section>';
+      }).join('');
+      $('controlInventoryGrid').innerHTML = html || '<div class="empty">Снимки ещё не прочитаны.</div>';
+    }
+
+    function renderControlMetrics() {
+      var ledger = state.control.ledger;
+      var draft = controlCurrentDraft();
+      var ids = ledger ? Object.keys(ledger.agents || {}) : state.control.selectedAgentIds;
+      var pointers = ledger ? Array.from(new Set(Object.keys(ledger.activeVersionByAgent || {}).map(function (id) {
+        return ledger.activeVersionByAgent[id];
+      }))) : [];
+      var version = pointers.length === 1 ? pointers[0] : pointers.length > 1 ? 'MIXED' : null;
+      var runs = ledger ? Object.keys(ledger.runs || {}).length : 0;
+      $('controlMetricAgents').textContent = String(ids.length || '—');
+      $('controlMetricAgentsDetail').textContent = ids.length ? ids.map(function (id) {
+        return controlAgentById(id).name || id;
+      }).join(' · ') : 'ожидаю bootstrap';
+      $('controlMetricVersion').textContent = version ? controlShort(version, 12) : '—';
+      $('controlMetricVersionHash').textContent = version && ledger.versions[version]
+        ? ledger.versions[version].bundleSha256 : 'baseline ещё не зафиксирован';
+      $('controlMetricDraft').textContent = draft ? draft.status : '—';
+      $('controlMetricDraftHash').textContent = draft ? draft.draftSha256 : 'изменений нет';
+      $('controlMetricRuns').textContent = String(runs);
+      var latest = ledger && ledger.currentRunId && ledger.runs[ledger.currentRunId];
+      $('controlMetricRunVersion').textContent = latest
+        ? latest.configurationVersionId + ' · ' + controlShort(latest.configurationSha256)
+        : 'каждый содержит version + hash';
+      var testRun = controlCurrentTestRun();
+      var published = draft && draft.status === 'PUBLISHED';
+      var testPassed = Boolean(testRun && testRun.status === 'PASSED' &&
+        testRun.assertions && testRun.assertions.allPassed === true);
+      [
+        ['controlStageAgents', ids.length === 2],
+        ['controlStageBaseline', Boolean(ledger)],
+        ['controlStageDraft', Boolean(draft)],
+        ['controlStageTest', testPassed],
+        ['controlStagePublish', Boolean(published)]
+      ].forEach(function (item, index) {
+        var node = $(item[0]);
+        node.classList.toggle('ok', item[1]);
+        node.classList.toggle('active', !item[1] && (
+          index === 0 ||
+          index === 1 && ids.length === 2 ||
+          index === 2 && ledger ||
+          index === 3 && draft ||
+          index === 4 && testPassed
+        ));
+      });
+    }
+
+    function renderControlBaselineProof() {
+      var ledger = state.control.ledger;
+      if (!ledger) {
+        $('controlBaselineProof').innerHTML = '<div class="empty">Сначала зафиксируйте baseline двух агентов.</div>';
+        return;
+      }
+      var draft = controlCurrentDraft();
+      var rows = Object.keys(ledger.agents).sort().map(function (id) {
+        var pointer = ledger.activeVersionByAgent[id];
+        var version = ledger.versions[pointer];
+        var unchanged = !draft || !draft.baseVersionByAgent[id] ||
+          draft.baseVersionByAgent[id] === pointer;
+        return '<div class="cc-list-item"><b>' + esc(ledger.agents[id].name) +
+          ' · ' + (unchanged ? 'ACTIVE НЕ ИЗМЕНЁН' : 'POINTER ИЗМЕНЁН') + '</b><code>' +
+          esc(id) + '\nversion ' + esc(pointer) + '\nsha256 ' +
+          esc(version && version.bundleSha256 || '—') + '</code></div>';
+      }).join('');
+      $('controlBaselineProof').innerHTML = '<div class="cc-list">' + rows + '</div>';
+    }
+
+    function renderControlImpact() {
+      var impact = state.control.impact || controlCurrentDraft() && controlCurrentDraft().impact;
+      if (!impact) {
+        $('controlImpact').innerHTML = '<div class="empty">После создания черновика здесь появится точный scope и dependency graph.</div>';
+        return;
+      }
+      var consumerRows = impact.sharedCapabilityConsumers || [];
+      var usedKnowledgeIds = impact.usedKnowledgeIds || impact.knowledgeIds || [];
+      var availableKnowledgeIds = impact.availableKnowledgeIds || [];
+      function chips(values) {
+        return (values || []).map(function (value) {
+          return '<span class="cc-chip">' + esc(value) + '</span>';
+        }).join('') || '<span class="cc-chip">нет</span>';
+      }
+      $('controlImpact').innerHTML =
+        '<div class="cc-impact-grid"><div class="cc-impact-item"><strong>' + esc(impact.agentCount) +
+        '</strong><span>агентов затронуто</span></div><div class="cc-impact-item"><strong>' +
+        esc((impact.processIds || []).length) + '</strong><span>процессов</span></div><div class="cc-impact-item"><strong>' +
+        esc(usedKnowledgeIds.length) + '</strong><span>знаний использовано</span></div><div class="cc-impact-item"><strong>' +
+        esc(availableKnowledgeIds.length) + '</strong><span>знаний доступно</span></div><div class="cc-impact-item"><strong>' +
+        esc(consumerRows.reduce(function (sum, row) { return sum + Number(row.consumerCount || 0); }, 0)) +
+        '</strong><span>потребителей shared capability</span></div></div>' +
+        '<div class="cc-grid two"><div class="cc-list-item"><b>Точные Agent IDs</b><div class="cc-chip-row">' +
+        chips(impact.agentIds) + '</div></div><div class="cc-list-item"><b>Процессы</b><div class="cc-chip-row">' +
+        chips(impact.processIds) + '</div></div><div class="cc-list-item"><b>Использованные знания</b><div class="cc-chip-row">' +
+        chips(usedKnowledgeIds) + '</div></div><div class="cc-list-item"><b>Доступные знания (не считаются использованными)</b><div class="cc-chip-row">' +
+        chips(availableKnowledgeIds) + '</div></div><div class="cc-list-item"><b>Managed policy capability → все потребители</b>' +
+        consumerRows.map(function (row) {
+          return '<code>' + esc(row.capabilityId) + ' → ' + esc((row.consumerAgentIds || []).join(', ')) + '</code>';
+        }).join('') + '</div></div>';
+    }
+
+    function renderControlPlayground() {
+      var testRun = controlCurrentTestRun();
+      if (!testRun) {
+        $('controlTestSummary').textContent = state.control.draft
+          ? 'Черновик готов; обязательны кейсы 18%, 20% и 30%'
+          : 'Нужен черновик, привязанный к текущей V1';
+        $('controlPlaygroundResults').innerHTML = '<div class="empty">Полигон ещё не запускался.</div>';
+        $('controlTestEvidence').textContent = 'Ожидаю проверяемый TestRun.';
+        return;
+      }
+      $('controlTestSummary').textContent = testRun.status + ' · receipt ' +
+        controlShort(testRun.receiptSha256) + ' · assertions ' +
+        String(Boolean(testRun.assertions && testRun.assertions.allPassed)) +
+        ' · writes ' + Number(testRun.writeAttempts || 0);
+      var rows = [];
+      (testRun.cases || []).forEach(function (testCase) {
+        (testCase.agentResults || []).forEach(function (result) {
+          var usedKnowledgeIds = result.after.usedKnowledgeIds || result.after.knowledgeIds || [];
+          var availableKnowledgeIds = result.after.availableKnowledgeIds || [];
+          rows.push('<tr><td><b>' + esc(formatPercent(testCase.marginBps)) + '</b><br>' +
+            esc(testCase.id) + '</td><td>' + esc(controlAgentById(result.agentId).name || result.agentId) +
+            '<br><span class="cc-hash">' + esc(result.agentId) + '</span></td><td>' +
+            esc((result.before.plannedActions || []).map(controlActionLabel).join(', ')) + '</td><td class="' +
+            (result.changed ? 'cc-change' : 'cc-stable') + '">' +
+            esc((result.after.plannedActions || []).map(controlActionLabel).join(', ')) + '</td><td>' +
+            esc((result.after.firedRuleIds || []).join(', ') || 'не сработало') + '</td><td>' +
+            esc(usedKnowledgeIds.join(', ') || 'не использованы') + '</td><td>' +
+            esc(availableKnowledgeIds.join(', ') || 'нет') + '</td><td><b>0</b></td></tr>');
+        });
+      });
+      $('controlPlaygroundResults').innerHTML =
+        '<div class="cc-table-wrap"><table class="cc-table"><thead><tr><th>Кейс</th><th>Агент</th><th>До · V1</th>' +
+        '<th>После · candidate</th><th>Сработавшее правило</th><th>Used knowledge</th><th>Available knowledge</th><th>Записи</th></tr></thead><tbody>' +
+        rows.join('') + '</tbody></table></div>';
+      $('controlTestEvidence').textContent = JSON.stringify(testRun, null, 2);
+    }
+
+    function renderControlVersions() {
+      var ledger = state.control.ledger;
+      var draft = controlCurrentDraft();
+      var testRun = controlCurrentTestRun();
+      var publishReady = !state.control.outcomeUnknown &&
+        controlExactPublishReady(ledger, draft, testRun);
+      $('controlPublishBtn').dataset.prerequisiteBlocked = publishReady ? '' : '1';
+      $('controlPublishBtn').disabled = state.control.busy || !publishReady;
+      $('controlPublishStatus').textContent = state.control.outcomeUnknown
+        ? 'OUTCOME UNKNOWN · сначала перезагрузите ledger'
+        : publishReady
+        ? 'GREEN · test и candidate связаны точными hashes'
+        : draft && draft.status === 'PUBLISHED' ? 'Версия уже опубликована' : 'Сначала нужен GREEN TestRun';
+      $('controlCandidate').innerHTML = draft
+        ? '<div class="cc-version-card"><div class="cc-version-head"><h3>' + esc(draft.candidateVersionId) +
+          '</h3><span class="cc-status ' + (publishReady ? 'ok' : 'warn') + '">' +
+          esc(draft.status) + '</span></div><p>candidate SHA-256</p><code class="cc-hash">' +
+          esc(draft.candidateBundleSha256) + '</code><p>draft SHA-256</p><code class="cc-hash">' +
+          esc(draft.draftSha256) + '</code></div>'
+        : '<div class="empty">Создайте черновик и выполните Полигон.</div>';
+      if (!ledger) {
+        $('controlVersionList').innerHTML = '<div class="empty">Версий ещё нет.</div>';
+        $('controlRollbackTarget').innerHTML = '<div class="empty">Baseline пока не зафиксирован.</div>';
+        $('controlRollbackManagedBtn').dataset.prerequisiteBlocked = '1';
+        $('controlRollbackManagedBtn').disabled = true;
+        return;
+      }
+      var activeByVersion = {};
+      Object.keys(ledger.activeVersionByAgent || {}).forEach(function (id) {
+        var pointer = ledger.activeVersionByAgent[id];
+        if (!activeByVersion[pointer]) activeByVersion[pointer] = [];
+        activeByVersion[pointer].push(id);
+      });
+      var versionIds = Object.keys(ledger.versions || {}).sort(function (a, b) {
+        return Number(ledger.versions[b].sequence || 0) - Number(ledger.versions[a].sequence || 0);
+      });
+      $('controlVersionList').innerHTML = versionIds.map(function (id) {
+        var version = ledger.versions[id];
+        var activeIds = activeByVersion[id] || [];
+        return '<article class="cc-version-card ' + (activeIds.length ? 'active' : '') + '">' +
+          '<div class="cc-version-head"><h3>V' + esc(version.sequence) + ' · ' + esc(id) +
+          '</h3><span class="cc-status ' + (activeIds.length ? 'ok' : 'info') + '">' +
+          (activeIds.length ? 'ACTIVE ' + activeIds.length : 'PUBLISHED') + '</span></div>' +
+          '<p>' + esc(controlTime(version.createdAt)) + ' · ' + esc(version.createdBy) +
+          '</p><code class="cc-hash">' + esc(version.bundleSha256) + '</code>' +
+          (activeIds.length ? '<div class="cc-chip-row">' + activeIds.map(function (agentId) {
+            return '<span class="cc-chip">' + esc(agentId) + '</span>';
+          }).join('') + '</div>' : '') + '</article>';
+      }).join('');
+      var baseline = ledger.versions[ledger.baselineVersionId];
+      var rollbackNeeded = !state.control.outcomeUnknown &&
+        Object.keys(ledger.activeVersionByAgent || {}).some(function (id) {
+        return ledger.activeVersionByAgent[id] !== ledger.baselineVersionId;
+      });
+      $('controlRollbackTarget').innerHTML = '<div class="cc-version-card"><div class="cc-version-head"><h3>' +
+        esc(ledger.baselineVersionId) + '</h3><span class="cc-status info">IMMUTABLE V1</span></div>' +
+        '<p>Точный target SHA-256</p><code class="cc-hash">' +
+        esc(baseline && baseline.bundleSha256 || '—') + '</code></div>';
+      $('controlRollbackManagedBtn').dataset.prerequisiteBlocked = rollbackNeeded ? '' : '1';
+      $('controlRollbackManagedBtn').disabled = state.control.busy || !rollbackNeeded;
+      var rollback = state.control.rollback || (ledger.audit || []).slice().reverse().find(function (row) {
+        return row.type === 'ROLLED_BACK';
+      });
+      $('controlRollbackProof').innerHTML = rollback
+        ? '<div class="notice" style="margin-top:12px"><span>✓</span><span><b>VERIFIED EXACT.</b> restored ' +
+          esc(rollback.restoredVersionId) + ' · ' + esc(rollback.restoredSha256) +
+          ' · copy_created=' + esc(String(rollback.copyCreated)) + '</span></div>' : '';
+    }
+
+    function renderControlReceipts() {
+      var ledger = state.control.ledger;
+      var receipts = ledger ? Object.keys(ledger.runs || {}).map(function (id) {
+        return ledger.runs[id];
+      }).reverse() : [];
+      $('controlRunReceipts').innerHTML = receipts.length ? receipts.map(function (receipt) {
+        var usedKnowledgeIds = receipt.usedKnowledgeIds || receipt.knowledgeIds || [];
+        var availableKnowledgeIds = receipt.availableKnowledgeIds || [];
+        return '<article class="cc-version-card"><div class="cc-version-head"><h3>' +
+          esc(receipt.id) + '</h3><span class="cc-status ok">' + esc(receipt.status) +
+          '</span></div><p>' + esc(controlAgentById(receipt.agentId).name || receipt.agentId) +
+          ' · margin ' + esc(formatPercent(receipt.marginBps)) + '</p><code class="cc-hash">version ' +
+          esc(receipt.configurationVersionId) + '\nsha256 ' + esc(receipt.configurationSha256) +
+          '</code><div class="cc-chip-row">' + (receipt.firedRuleIds || []).map(function (id) {
+            return '<span class="cc-chip">RULE ' + esc(id) + '</span>';
+          }).join('') + (receipt.plannedActions || []).map(function (action) {
+            return '<span class="cc-chip">' + esc(controlActionLabel(action)) + '</span>';
+          }).join('') + '<span class="cc-chip">USED KNOWLEDGE ' +
+          esc(usedKnowledgeIds.join(', ') || 'NONE') + '</span><span class="cc-chip">AVAILABLE KNOWLEDGE ' +
+          esc(availableKnowledgeIds.join(', ') || 'NONE') + '</span>' +
+          (receipt.expertInvoked === false ? '<span class="cc-chip">EXPERT NOT INVOKED</span>' : '') +
+          '<span class="cc-chip">WRITES 0</span></div></article>';
+      }).join('') : '<div class="empty">Managed policy evaluations ещё не выполнялись.</div>';
+      var audit = ledger && ledger.audit || [];
+      $('controlAuditLog').innerHTML = audit.length ? audit.slice().reverse().map(function (row) {
+        var ref = row.versionId || row.toVersionId || row.targetVersionId ||
+          row.draftId || row.testRunId || (row.runIds || []).join(', ') || '—';
+        return '<div class="cc-audit-row"><b>' + esc(row.type) + '<br><span>' +
+          esc(row.status || '—') + '</span></b><span>' + esc(controlTime(row.at)) +
+          '<br>' + esc(row.actorId || '—') + '</span><span>' + esc(ref) + '</span></div>';
+      }).join('') : '<div class="empty">Baseline ещё не создан.</div>';
+    }
+
+    function renderControlPlatform() {
+      var platform = state.control.platform || {
+        managedAdapter: 'UNKNOWN',
+        nativeBundleVersioning: 'PLATFORM_UNAVAILABLE',
+        nativeAtomicPublish: 'PLATFORM_UNAVAILABLE',
+        nativeRunVersionBinding: 'PLATFORM_UNAVAILABLE',
+        conflictDetection: 'NOT_REPORTED',
+        profileScope: 'NOT_REPORTED',
+        effectiveConfigCompleteness: 'NOT_REPORTED',
+        dependencyGraph: 'NOT_REPORTED',
+        auditIntegrity: 'NOT_REPORTED',
+        multiDeviceCompareAndSwap: 'NOT_REPORTED',
+        organizationScope: 'PLATFORM_RBAC_UNAVAILABLE',
+        managedGuarantee: 'Managed adapter status has not been loaded.',
+        nativeGuarantee: 'Ordinary agent/run is not proven version-bound.'
+      };
+      var labels = {
+        managedAdapter: 'Managed adapter',
+        nativeBundleVersioning: 'Native bundle versions',
+        nativeAtomicPublish: 'Native atomic publish / CAS',
+        nativeRunVersionBinding: 'Обычный agent/run version binding',
+        conflictDetection: 'Conflict detection',
+        profileScope: 'Profile/account scope',
+        effectiveConfigCompleteness: 'Effective configuration coverage',
+        dependencyGraph: 'Dependency graph provenance',
+        auditIntegrity: 'Audit integrity',
+        multiDeviceCompareAndSwap: 'Multi-device compare-and-swap',
+        organizationScope: 'Organization scope / RBAC'
+      };
+      var html = Object.keys(labels).map(function (key) {
+        var value = platform[key] == null ? 'NOT_REPORTED' : platform[key];
+        var ok = value === 'AVAILABLE';
+        return '<div class="cc-platform-row"><b>' + esc(labels[key]) + '</b><span><span class="cc-status ' +
+          (ok ? 'ok' : 'warn') + '">' + esc(value) + '</span></span></div>';
+      }).join('') +
+        '<div class="cc-platform-row"><b>Managed guarantee</b><span>' +
+        esc(platform.managedGuarantee || '—') + '</span></div>' +
+        '<div class="cc-platform-row"><b>Native limitation</b><span>' +
+        esc(platform.nativeGuarantee || '—') + '</span></div>';
+      $('controlPlatformOverview').innerHTML = html;
+      $('controlPlatformEvidence').innerHTML = html;
+    }
+
+    function renderControlButtons() {
+      var ledger = state.control.ledger;
+      var draft = controlCurrentDraft();
+      var eligible = state.control.agents.filter(function (agent) { return agent.eligible; });
+      var canPair = eligible.length >= 2;
+      var mutationsAllowed = !state.control.outcomeUnknown;
+      var ownerId = ledger && ledger.ownerAgentId || state.control.selectedAgentIds[0];
+      var controls = {
+        controlCaptureBtn: mutationsAllowed && canPair && !ledger,
+        controlInspectBtn: canPair,
+        controlAgentsRefreshBtn: canPair,
+        controlDraftBtn: Boolean(mutationsAllowed && ledger && (!draft || draft.status !== 'DRAFT')),
+        controlPlaygroundBtn: Boolean(mutationsAllowed && draft && draft.status === 'DRAFT'),
+        controlActiveRunBtn: Boolean(mutationsAllowed && ledger),
+        controlReloadLedgerBtn: Boolean(ownerId)
+      };
+      Object.keys(controls).forEach(function (id) {
+        var node = $(id);
+        node.dataset.prerequisiteBlocked = controls[id] ? '' : '1';
+        node.disabled = state.control.busy || !controls[id];
+      });
+      if (ledger) {
+        $('controlCaptureBtn').textContent = 'V1 уже зафиксирована';
+      } else {
+        $('controlCaptureBtn').textContent = 'Зафиксировать реальную V1';
+      }
+      $('controlReloadLedgerBtn').textContent = state.control.outcomeUnknown
+        ? 'Перезагрузить ledger · обязательно'
+        : 'Перезагрузить ledger';
+    }
+
+    function renderControlCenter() {
+      renderControlAgentSelects();
+      renderControlAgents();
+      renderControlInventories();
+      renderControlMetrics();
+      renderControlBaselineProof();
+      renderControlImpact();
+      renderControlPlayground();
+      renderControlVersions();
+      renderControlReceipts();
+      renderControlPlatform();
+      renderControlButtons();
+      $('controlDemoBanner').classList.toggle('show', PREVIEW);
+      $('controlModeBadge').textContent = PREVIEW ? 'DEMO · IN-MEMORY' : 'LIVE · MANAGED ADAPTER';
+    }
+
+    async function controlBootstrap() {
+      if (state.control.busy) return;
+      var accountEpoch = state.control.accountEpoch;
+      controlSetBusy(true, 'Получаю реестр агентов через tokenless host bridge…');
+      try {
+        var first = await controlRequest('bootstrap', {});
+        controlApplyResult(first);
+        var ids = state.control.selectedAgentIds;
+        if (ids.length === 2) {
+          var owned = await controlRequest('bootstrap', { ownerAgentId: ids[0] });
+          controlApplyResult(owned);
+          await controlInspectSelected(true);
+        }
+        controlClearError();
+        $('controlStatus').textContent = state.control.ledger
+          ? 'Ledger загружен и проверен read-back'
+          : 'Выберите пару и зафиксируйте реальную V1';
+      } catch (error) {
+        if (controlIsContextChanged(error)) return;
+        controlShowError(error.message);
+        $('controlStatus').textContent = 'Bootstrap не завершён: ' + error.message;
+      } finally {
+        if (accountEpoch === state.control.accountEpoch) {
+          controlSetBusy(false);
+          renderControlCenter();
+        }
+      }
+    }
+
+    async function controlInspectSelected(nested) {
+      var accountEpoch = state.control.accountEpoch;
+      var ids = controlSelectedIds();
+      if (!nested) controlSetBusy(true, 'Читаю Agent, Concepts, Rules и Experts для двух агентов…');
+      try {
+        var result = await controlRequest('inspect', { agentIds: ids });
+        controlApplyResult(result);
+        controlClearError();
+        $('controlStatus').textContent = 'Конфигурации прочитаны: реальные counts, previews и hashes';
+        return result;
+      } catch (error) {
+        if (!controlIsContextChanged(error)) {
+          controlShowError(error.message);
+          $('controlStatus').textContent = 'Чтение конфигурации не завершено';
+        }
+        throw error;
+      } finally {
+        if (!nested && accountEpoch === state.control.accountEpoch) controlSetBusy(false);
+      }
+    }
+
+    async function controlCaptureBaseline() {
+      if (state.control.busy) return;
+      var accountEpoch = state.control.accountEpoch;
+      controlSetBusy(true, 'Фиксирую реальные inventories и создаю immutable baseline V1…');
+      try {
+        var ids = controlSelectedIds();
+        await controlInspectSelected(true);
+        var result = await controlRequest('baseline_create', { agentIds: ids });
+        controlApplyResult(result);
+        var ledgerIds = controlLedgerAgentIds();
+        if (ledgerIds.length !== 2 || ids.some(function (id) { return ledgerIds.indexOf(id) === -1; })) {
+          throw new Error('У владельца уже есть ledger с другим составом агентов');
+        }
+        controlClearError();
+        $('controlStatus').textContent = result.existing
+          ? 'Существующая V1 загружена; active hashes подтверждены'
+          : 'V1 создана и подтверждена точным KV read-back';
+      } catch (error) {
+        var status = controlMutationFailure(error, 'Baseline не создан: ' + error.message);
+        if (status) $('controlStatus').textContent = status;
+      } finally {
+        if (accountEpoch === state.control.accountEpoch) {
+          controlSetBusy(false);
+          renderControlCenter();
+        }
+      }
+    }
+
+    async function controlReloadLedger() {
+      if (state.control.busy) return;
+      var accountEpoch = state.control.accountEpoch;
+      var ownerAgentId = state.control.ledger && state.control.ledger.ownerAgentId ||
+        state.control.selectedAgentIds[0];
+      controlSetBusy(true, 'Перезагружаю ledger без повтора изменения…');
+      try {
+        if (!ownerAgentId) throw new Error('Сначала выберите owner agent');
+        var result = await controlRequest('load', { ownerAgentId: ownerAgentId });
+        controlApplyResult(result);
+        controlClearError();
+        $('controlStatus').textContent = state.control.ledger
+          ? 'Ledger перезагружен; outcome снова известен'
+          : 'Ledger для выбранного owner отсутствует';
+      } catch (error) {
+        if (controlIsContextChanged(error)) return;
+        controlShowError(error.message);
+        $('controlStatus').textContent = controlIsOutcomeUnknown(error)
+          ? 'Результат чтения неизвестен; перезагрузите ledger повторно'
+          : 'Ledger не перезагружен: ' + error.message;
+      } finally {
+        if (accountEpoch === state.control.accountEpoch) {
+          controlSetBusy(false);
+          renderControlCenter();
+        }
+      }
+    }
+
+    function controlRequestedScope() {
+      var selected = document.querySelector('input[name="controlScope"]:checked');
+      var value = selected && selected.value || 'group';
+      if (value === 'organization') {
+        throw new Error('Вся организация заблокирована: нет полного registry и native RBAC');
+      }
+      if (value === 'one') {
+        return { kind: 'one', agentId: String($('controlScopeAgent').value || '') };
+      }
+      return { kind: 'selected', agentIds: controlLedgerAgentIds() };
+    }
+
+    async function controlCreateDraft() {
+      if (state.control.busy) return;
+      var accountEpoch = state.control.accountEpoch;
+      controlSetBusy(true, 'Сохраняю изменение как DRAFT; active pointer не меняется…');
+      try {
+        if (!state.control.ledger) throw new Error('Сначала зафиксируйте baseline V1');
+        var result = await controlRequest('draft_create', {
+          ownerAgentId: state.control.ledger.ownerAgentId,
+          ruleText: String($('controlRuleText').value || ''),
+          scope: controlRequestedScope()
+        });
+        controlApplyResult(result);
+        controlClearError();
+        $('controlStatus').textContent = 'DRAFT создан; затронуто агентов: ' + result.impact.agentCount;
+        switchStudioView('governance');
+      } catch (error) {
+        var status = controlMutationFailure(error, 'Черновик не создан');
+        if (status) $('controlStatus').textContent = status;
+      } finally {
+        if (accountEpoch === state.control.accountEpoch) {
+          controlSetBusy(false);
+          renderControlCenter();
+        }
+      }
+    }
+
+    async function controlRunPlayground() {
+      if (state.control.busy) return;
+      var accountEpoch = state.control.accountEpoch;
+      controlSetBusy(true, 'Полигон сравнивает V1 и candidate для 18%, 20% и 30%…');
+      try {
+        var ledger = state.control.ledger;
+        var draft = controlCurrentDraft();
+        if (!ledger || !draft) throw new Error('Сначала создайте черновик');
+        var result = await controlRequest('playground_run', {
+          ownerAgentId: ledger.ownerAgentId,
+          draftId: draft.id,
+          cases: CONTROL_CASES
+        });
+        controlApplyResult(result);
+        if (!result.testRun || result.testRun.status !== 'PASSED' ||
+            !result.testRun.assertions || result.testRun.assertions.allPassed !== true) {
+          throw new Error('Полигон не дал GREEN для точного candidate hash');
+        }
+        controlClearError();
+        $('controlStatus').textContent = 'GREEN TestRun · write_attempts=0 · publish разблокирован';
+      } catch (error) {
+        var status = controlMutationFailure(error, 'Полигон завершился с FAILED assertions');
+        if (status) $('controlStatus').textContent = status;
+      } finally {
+        if (accountEpoch === state.control.accountEpoch) {
+          controlSetBusy(false);
+          renderControlCenter();
+        }
+      }
+    }
+
+    async function controlPublish() {
+      if (state.control.busy) return;
+      var accountEpoch = state.control.accountEpoch;
+      controlSetBusy(true, 'Проверяю exact TestRun и выполняю managed pointer commit…');
+      try {
+        var ledger = state.control.ledger;
+        var draft = controlCurrentDraft();
+        var testRun = controlCurrentTestRun();
+        if (!controlExactPublishReady(ledger, draft, testRun)) {
+          throw new Error('Публикация требует exact current PASSED TestRun для неизменившегося candidate');
+        }
+        var result = await controlRequest('publish', {
+          ownerAgentId: ledger.ownerAgentId,
+          draftId: draft.id,
+          testRunId: testRun.id
+        });
+        controlApplyResult(result);
+        controlClearError();
+        $('controlStatus').textContent = 'Managed version опубликована; pointers подтверждены read-back';
+      } catch (error) {
+        var status = controlMutationFailure(error, 'Публикация отклонена до изменения pointer');
+        if (status) $('controlStatus').textContent = status;
+      } finally {
+        if (accountEpoch === state.control.accountEpoch) {
+          controlSetBusy(false);
+          renderControlCenter();
+        }
+      }
+    }
+
+    async function controlRollback() {
+      if (state.control.busy) return;
+      var accountEpoch = state.control.accountEpoch;
+      controlSetBusy(true, 'Возвращаю exact baseline pointer и перепроверяю SHA-256…');
+      try {
+        var ledger = state.control.ledger;
+        if (!ledger) throw new Error('Ledger не загружен');
+        var result = await controlRequest('rollback', {
+          ownerAgentId: ledger.ownerAgentId,
+          targetVersionId: ledger.baselineVersionId
+        });
+        controlApplyResult(result);
+        controlClearError();
+        $('controlStatus').textContent = 'Rollback VERIFIED EXACT · копия конфигурации не создавалась';
+      } catch (error) {
+        var status = controlMutationFailure(error, 'Rollback отклонён до подтверждённого read-back');
+        if (status) $('controlStatus').textContent = status;
+      } finally {
+        if (accountEpoch === state.control.accountEpoch) {
+          controlSetBusy(false);
+          renderControlCenter();
+        }
+      }
+    }
+
+    async function controlRunActive() {
+      if (state.control.busy) return;
+      var accountEpoch = state.control.accountEpoch;
+      controlSetBusy(true, 'Выполняю managed policy evaluation и формирую receipt по active pointers…');
+      try {
+        var ledger = state.control.ledger;
+        if (!ledger) throw new Error('Ledger не загружен');
+        var result = await controlRequest('active_run', {
+          ownerAgentId: ledger.ownerAgentId,
+          agentIds: Object.keys(ledger.agents || {}).sort(),
+          marginBps: Number($('controlActiveMargin').value)
+        });
+        controlApplyResult(result);
+        controlClearError();
+        $('controlStatus').textContent = 'Managed policy evaluation receipts записаны: version ID + configuration SHA для каждого agent ID';
+      } catch (error) {
+        var status = controlMutationFailure(error, 'Managed policy evaluation отклонена');
+        if (status) $('controlStatus').textContent = status;
+      } finally {
+        if (accountEpoch === state.control.accountEpoch) {
+          controlSetBusy(false);
+          renderControlCenter();
+        }
+      }
     }
 
     window.addEventListener('message', function (event) {
@@ -1171,9 +2639,30 @@
       var data = event.data || {};
       if (data.type === 'etb_init') {
         state.initialized = true;
+        controlResetAccountState();
+        controlClearError();
         applyTheme(data.theme);
+        renderControlCenter();
         window.parent.postMessage({ type: 'etb_ui_health', ok: true, pluginId: 'profit-growth-scenario' }, '*');
         loadAgents();
+        controlBootstrap();
+        return;
+      }
+      if (data.type === 'etb_account_reset') {
+        state.pending.forEach(function (pending) {
+          clearTimeout(pending.timer);
+          var resetError = new Error(
+            'Контекст аккаунта изменился; незавершённая операция отброшена.'
+          );
+          resetError.code = 'CONTROL_CONTEXT_CHANGED';
+          pending.reject(resetError);
+        });
+        state.pending.clear();
+        controlResetAccountState();
+        controlClearError();
+        $('controlStatus').textContent =
+          'Сессия аккаунта изменилась; ожидаю новый безопасный bootstrap';
+        renderControlCenter();
         return;
       }
       if (data.type === 'etb_theme') { applyTheme(data.theme); return; }
@@ -1204,8 +2693,12 @@
       if (!pending || data.type !== pending.resultType) return;
       clearTimeout(pending.timer);
       state.pending.delete(data.reqId);
-      if (data.ok === false) pending.reject(new Error(data.error || 'Запрос не выполнен'));
-      else pending.resolve(data);
+      if (data.ok === false) {
+        var responseError = new Error(data.error || 'Запрос отклонён платформой');
+        responseError.code = data.code || data.errorCode || 'PLATFORM_REJECTED';
+        responseError.outcomeUnknown = data.outcomeUnknown === true;
+        pending.reject(responseError);
+      } else pending.resolve(data);
     });
 
     function applyTheme(theme) {
@@ -1213,8 +2706,667 @@
       document.documentElement.setAttribute('data-theme', light ? 'light' : 'dark');
     }
 
+    function controlMockHash(character) {
+      return new Array(65).join(String(character || 'a').slice(0, 1));
+    }
+
+    function controlMockEvent(prefix) {
+      state.control.mockEventSeq += 1;
+      var nowMs = Date.now();
+      if (nowMs <= state.control.mockLastEventMs) nowMs = state.control.mockLastEventMs + 1;
+      state.control.mockLastEventMs = nowMs;
+      var at = new Date(nowMs).toISOString();
+      return {
+        id: String(prefix) + '_' + Date.now().toString(36) + '_' + state.control.mockEventSeq,
+        at: at,
+        hash: controlMockHash((state.control.mockEventSeq % 15 + 1).toString(16))
+      };
+    }
+
+    function controlMockAgents() {
+      return [
+        {
+          id: 'agent_qwen_one_c_demo',
+          name: 'Контролёр 1С · DEMO',
+          provider: 'alibaba',
+          model: 'qwen3.7',
+          category: 'accounting',
+          eligible: true,
+          eligibility: 'QWEN_CONFIRMED'
+        },
+        {
+          id: 'agent_qwen_target_demo',
+          name: 'Таргетолог · DEMO',
+          provider: 'alibaba',
+          model: 'qwen3.7',
+          category: 'marketing',
+          eligible: true,
+          eligibility: 'QWEN_CONFIRMED'
+        },
+        {
+          id: 'agent_claude_blocked_demo',
+          name: 'Claude observer · DEMO',
+          provider: 'anthropic',
+          model: 'claude-demo',
+          category: 'other',
+          eligible: false,
+          eligibility: 'ANTHROPIC_FORBIDDEN'
+        }
+      ];
+    }
+
+    function controlMockSnapshot(agentId) {
+      var oneC = agentId === 'agent_qwen_one_c_demo';
+      var index = oneC ? '1' : '2';
+      return {
+        agent: {
+          id: agentId,
+          name: oneC ? 'Контролёр 1С · DEMO' : 'Таргетолог · DEMO',
+          provider: 'alibaba',
+          model: 'qwen3.7',
+          category: oneC ? 'accounting' : 'marketing',
+          tools: oneC ? ['read_inventory_demo'] : ['read_campaign_demo'],
+          instructionsSha256: controlMockHash(oneC ? '1' : '2'),
+          configurationSnapshotSha256: controlMockHash(oneC ? '3' : '4')
+        },
+        inventory: {
+          concepts: [
+            {
+              id: 'concept_demo_' + index,
+              scope: 'agent',
+              preview: oneC
+                ? 'DEMO: сверять фактическую маржу после всех расходов.'
+                : 'DEMO: рекламный бюджет растёт только после проверки экономики.'
+            }
+          ],
+          rules: [
+            {
+              id: 'rule_demo_' + index,
+              scope: 'agent',
+              preview: oneC
+                ? 'DEMO: не подтверждать рост при неполных данных.'
+                : 'DEMO: не менять кампанию без проверенного решения.'
+            }
+          ],
+          experts: [
+            {
+              name: oneC ? 'demo_inventory_reader' : 'demo_campaign_reader',
+              scope: 'visible_from_agent',
+              description: 'DEMO: read-only способность агента.'
+            }
+          ],
+          counts: { concepts: 1, rules: 1, experts: 1 },
+          hashes: {
+            agent: controlMockHash(oneC ? '3' : '4'),
+            concepts: controlMockHash(oneC ? '5' : '6'),
+            rules: controlMockHash(oneC ? '7' : '8'),
+            experts: controlMockHash(oneC ? '9' : 'a')
+          }
+        }
+      };
+    }
+
+    function controlMockBundleAgent(snapshot, role) {
+      return {
+        agentId: snapshot.agent.id,
+        agent: {
+          id: snapshot.agent.id,
+          name: snapshot.agent.name,
+          role: role,
+          provider: snapshot.agent.provider,
+          model: snapshot.agent.model,
+          tools: snapshot.agent.tools,
+          instructionsSha256: snapshot.agent.instructionsSha256,
+          instructionsPreview: null
+        },
+        knowledge: [{
+          id: 'knowledge.contribution_margin_definition.v1',
+          name: 'Фактическая маржа после всех расходов',
+          scope: 'managed',
+          preview: 'DEMO: себестоимость, возвраты, комиссии, логистика и реклама.'
+        }].concat(snapshot.inventory.concepts.map(function (row) {
+          return { id: row.id, name: row.preview, scope: row.scope, preview: row.preview };
+        })),
+        localRules: snapshot.inventory.rules.map(function (row) {
+          return { id: row.id, name: row.preview, text: row.preview, scope: row.scope, preview: row.preview };
+        }),
+        capabilities: snapshot.inventory.experts.map(function (row) {
+          return {
+            id: row.name,
+            name: row.name,
+            shared: false,
+            version: null,
+            description: row.description
+          };
+        }).concat([{
+          id: 'profitability_gate',
+          name: 'Управляемая проверка политики маржи',
+          shared: true,
+          version: 'POLICY_EVALUATION_V1',
+          description: 'DEMO: caller-supplied margin_bps; does NOT invoke Expert.'
+        }]),
+        processes: [{
+          id: 'managed.profitability_governance',
+          name: 'Managed policy evaluation перед планом роста'
+        }]
+      };
+    }
+
+    function controlMockCreateLedger(agentIds) {
+      var snapshots = agentIds.map(controlMockSnapshot);
+      var versionId = 'cfg_demo_baseline_v1';
+      var bundleHash = controlMockHash('b');
+      var agents = {};
+      var bundleAgents = {};
+      snapshots.forEach(function (snapshot, index) {
+        var role = index === 0 ? 'one_c_controller' : 'targetologist';
+        agents[snapshot.agent.id] = {
+          id: snapshot.agent.id,
+          name: snapshot.agent.name,
+          role: role,
+          provider: snapshot.agent.provider,
+          model: snapshot.agent.model
+        };
+        bundleAgents[snapshot.agent.id] = controlMockBundleAgent(snapshot, role);
+      });
+      var bundle = {
+        schemaVersion: 'agent-configuration-bundle.v1',
+        agents: bundleAgents,
+        sharedCapabilities: {
+          profitability_gate: {
+            id: 'profitability_gate',
+            name: 'Управляемая проверка политики маржи',
+            description: 'Caller-supplied margin_bps; does NOT invoke Expert.',
+            version: 'POLICY_EVALUATION_V1',
+            consumerAgentIds: agentIds.slice().sort()
+          }
+        },
+        sharedRules: []
+      };
+      var pointers = {};
+      agentIds.forEach(function (id) { pointers[id] = versionId; });
+      var createdAt = new Date().toISOString();
+      return {
+        schemaVersion: 'agent-control-ledger.v1',
+        ledgerId: 'ledger_demo_control_center',
+        createdAt: createdAt,
+        ownerAgentId: agentIds[0],
+        baselineVersionId: versionId,
+        agents: agents,
+        versions: {
+          cfg_demo_baseline_v1: {
+            id: versionId,
+            sequence: 1,
+            status: 'PUBLISHED',
+            immutable: true,
+            parentVersionIds: [],
+            createdAt: createdAt,
+            createdBy: 'demo_user',
+            bundleSha256: bundleHash,
+            bundle: bundle
+          }
+        },
+        activeVersionByAgent: pointers,
+        drafts: {},
+        testRuns: {},
+        runs: {},
+        audit: [{
+          type: 'BASELINE_CAPTURED',
+          status: 'SUCCESS',
+          actorId: 'demo_user',
+          at: createdAt,
+          versionId: versionId,
+          bundleSha256: bundleHash,
+          agentIds: agentIds.slice()
+        }],
+        currentDraftId: null,
+        currentTestRunId: null,
+        currentRunId: null
+      };
+    }
+
+    function controlMockPlatform() {
+      return {
+        managedAdapter: 'AVAILABLE',
+        nativeBundleVersioning: 'PLATFORM_UNAVAILABLE',
+        nativeAtomicPublish: 'PLATFORM_UNAVAILABLE',
+        nativeRunVersionBinding: 'PLATFORM_UNAVAILABLE',
+        conflictDetection: 'MANAGED_POLICY_ONLY_NATIVE_RULES_NOT_EVALUATED',
+        profileScope: 'DEFAULT_PROFILE_ONLY',
+        effectiveConfigCompleteness: 'LOCAL_AND_ACCOUNT_GLOBAL_READ_DEFAULT_PROFILE',
+        dependencyGraph: 'MANAGED_LEDGER_DECLARATION_NOT_NATIVE_EXPERT_BINDING',
+        auditIntegrity: 'KV_READBACK_VERIFIED_NOT_TAMPER_EVIDENT',
+        multiDeviceCompareAndSwap: 'PLATFORM_UNAVAILABLE',
+        organizationScope: 'PLATFORM_RBAC_UNAVAILABLE',
+        managedGuarantee: 'DEMO: every managed policy evaluation resolves one verified active pointer and executes the deterministic managed policy evaluator only.',
+        nativeGuarantee: 'The managed evaluator does not call an Extella Expert or native agent. Native Rules are inventoried but not evaluated. Ordinary Extella chats and agent/run calls outside this adapter are not version-bound.'
+      };
+    }
+
+    function controlMockDecision(ledger, version, agentId, marginBps) {
+      var agent = ledger.agents[agentId];
+      var inventory = version.bundle.agents[agentId];
+      var rule = (version.bundle.sharedRules || []).slice().reverse().find(function (row) {
+        return row.id === 'shared.actual-margin-ad-budget-guard' &&
+          row.scope && (row.scope.agentIds || []).indexOf(agentId) !== -1;
+      });
+      var fired = Boolean(rule && Number(marginBps) < 2000);
+      var target = /target/i.test(String(agent.role || ''));
+      return {
+        agentId: agentId,
+        evaluationType: 'MANAGED_POLICY_EVALUATION',
+        inputSource: 'CALLER_SUPPLIED_MARGIN_BPS',
+        expertInvoked: false,
+        configurationVersionId: version.id,
+        configurationSha256: version.bundleSha256,
+        marginBps: Number(marginBps),
+        firedRuleIds: fired ? ['shared.actual-margin-ad-budget-guard'] : [],
+        availableLocalRuleIds: (inventory.localRules || []).map(function (row) { return row.id; }),
+        availableKnowledgeIds: (inventory.knowledge || []).map(function (row) { return row.id; }),
+        availableCapabilityIds: (inventory.capabilities || []).map(function (row) { return row.id; }),
+        knowledgeIds: [],
+        usedKnowledgeIds: [],
+        capabilityIds: rule ? [rule.capabilityId] : [],
+        usedCapabilityIds: rule ? [rule.capabilityId] : [],
+        plannedActions: fired
+          ? [target ? 'STOP_OR_REVIEW_CAMPAIGN' : 'FLAG_LOW_MARGIN_FOR_REVIEW']
+          : [target ? 'INCREASE_AD_BUDGET' : 'ALLOW_GROWTH_PLAN'],
+        externalWrites: [],
+        writeAttempts: 0
+      };
+    }
+
+    function controlMockImpact(ledger, draft) {
+      var base = ledger.versions[draft.primaryBaseVersionId];
+      var processes = [];
+      var availableKnowledge = [];
+      draft.scope.agentIds.forEach(function (id) {
+        (base.bundle.agents[id].processes || []).forEach(function (row) { processes.push(row.id); });
+        (base.bundle.agents[id].knowledge || []).forEach(function (row) { availableKnowledge.push(row.id); });
+      });
+      return {
+        scope: controlClone(draft.scope),
+        agentIds: draft.scope.agentIds.slice(),
+        agentCount: draft.scope.agentIds.length,
+        processIds: Array.from(new Set(processes)).sort(),
+        knowledgeIds: [],
+        usedKnowledgeIds: [],
+        availableKnowledgeIds: Array.from(new Set(availableKnowledge)).sort(),
+        capabilityIds: ['profitability_gate'],
+        sharedCapabilityConsumers: [{
+          capabilityId: 'profitability_gate',
+          name: 'Управляемая проверка политики маржи',
+          consumerAgentIds: base.bundle.sharedCapabilities.profitability_gate.consumerAgentIds.slice(),
+          consumerCount: base.bundle.sharedCapabilities.profitability_gate.consumerAgentIds.length
+        }]
+      };
+    }
+
+    function controlMockAction(payload) {
+      var action = String(payload.action || '');
+      var platform = controlMockPlatform();
+      var agents = controlMockAgents();
+      if (action === 'bootstrap') {
+        return {
+          agents: agents,
+          ledger: payload.ownerAgentId && state.control.mockLedger &&
+            state.control.mockLedger.ownerAgentId === payload.ownerAgentId
+            ? controlClone(state.control.mockLedger) : null,
+          platform: platform
+        };
+      }
+      if (action === 'inspect') {
+        var inspectIds = (payload.agentIds || []).map(String);
+        if (!inspectIds.length || inspectIds.some(function (id) {
+          return !agents.some(function (agent) { return agent.id === id && agent.eligible; });
+        })) throw new Error('DEMO inspect требует eligible Qwen agent IDs');
+        return {
+          snapshots: inspectIds.map(controlMockSnapshot),
+          platform: platform
+        };
+      }
+      if (action === 'baseline_create') {
+        var baselineIds = (payload.agentIds || []).map(String);
+        if (baselineIds.length !== 2 || baselineIds[0] === baselineIds[1]) {
+          throw new Error('DEMO baseline требует двух разных агентов');
+        }
+        var existingBaseline = Boolean(state.control.mockLedger);
+        if (!state.control.mockLedger) state.control.mockLedger = controlMockCreateLedger(baselineIds);
+        return {
+          ledger: controlClone(state.control.mockLedger),
+          existing: existingBaseline,
+          snapshots: baselineIds.map(controlMockSnapshot),
+          platform: platform
+        };
+      }
+      if (action === 'load') {
+        if (!state.control.mockLedger) throw new Error('DEMO baseline ещё не создан');
+        return { ledger: controlClone(state.control.mockLedger), platform: platform };
+      }
+      if (!state.control.mockLedger) throw new Error('DEMO: сначала зафиксируйте baseline V1');
+      var ledger = controlClone(state.control.mockLedger);
+      if (String(payload.ownerAgentId || '') !== ledger.ownerAgentId) {
+        throw new Error('DEMO ledger owner mismatch');
+      }
+      if (action === 'draft_create') {
+        if (String(payload.ruleText || '').replace(/\s+/g, ' ').trim() !== CONTROL_RULE_TEXT) {
+          throw new Error('DEMO принимает точную бизнес-формулировку правила 20%');
+        }
+        if (payload.scope && payload.scope.kind === 'organization') {
+          throw new Error('organization scope requires platform RBAC and a complete organization registry');
+        }
+        var scopeIds = payload.scope && payload.scope.kind === 'one'
+          ? [String(payload.scope.agentId || '')]
+          : (payload.scope && payload.scope.agentIds || []).map(String);
+        if (!scopeIds.length || scopeIds.some(function (id) { return !ledger.agents[id]; })) {
+          throw new Error('DEMO scope содержит неизвестного агента');
+        }
+        var baseId = ledger.activeVersionByAgent[scopeIds[0]];
+        var candidateBundle = controlClone(ledger.versions[baseId].bundle);
+        var nextSequence = Object.keys(ledger.versions || {}).reduce(function (highest, versionId) {
+          return Math.max(highest, Number(ledger.versions[versionId].sequence || 0));
+        }, 0) + 1;
+        var draftEvent = controlMockEvent('event_demo_draft');
+        candidateBundle.sharedRules = (candidateBundle.sharedRules || []).filter(function (row) {
+          return row.id !== 'shared.actual-margin-ad-budget-guard';
+        });
+        candidateBundle.sharedRules.push({
+          id: 'shared.actual-margin-ad-budget-guard',
+          text: CONTROL_RULE_TEXT,
+          kind: 'BUSINESS_POLICY',
+          capabilityId: 'profitability_gate',
+          condition: { field: 'actual_margin_bps', operator: '<', value: 2000 },
+          effect: {
+            prohibitedAction: 'INCREASE_AD_BUDGET',
+            proposedActions: ['STOP_CAMPAIGN', 'REVIEW_CAMPAIGN']
+          },
+          scope: { kind: payload.scope.kind, agentIds: scopeIds.slice().sort() }
+        });
+        var draft = {
+          id: 'draft_demo_margin_guard_v' + nextSequence + '_' + state.control.mockEventSeq,
+          status: 'DRAFT',
+          sequence: nextSequence,
+          eventId: draftEvent.id,
+          eventAt: draftEvent.at,
+          createdAt: draftEvent.at,
+          createdBy: 'demo_user',
+          draftSha256: draftEvent.hash,
+          baseVersionByAgent: {},
+          primaryBaseVersionId: baseId,
+          candidateVersionId: 'cfg_demo_candidate_v' + nextSequence + '_' + state.control.mockEventSeq,
+          candidateBundleSha256: controlMockHash(((state.control.mockEventSeq + 7) % 15 + 1).toString(16)),
+          candidateBundle: candidateBundle,
+          scope: { kind: payload.scope.kind, agentIds: scopeIds.slice().sort() },
+          rule: {
+            id: 'shared.actual-margin-ad-budget-guard',
+            text: CONTROL_RULE_TEXT,
+            kind: 'BUSINESS_POLICY',
+            capabilityId: 'profitability_gate',
+            condition: { field: 'actual_margin_bps', operator: '<', value: 2000 },
+            effect: {
+              prohibitedAction: 'INCREASE_AD_BUDGET',
+              proposedActions: ['STOP_CAMPAIGN', 'REVIEW_CAMPAIGN']
+            }
+          }
+        };
+        scopeIds.forEach(function (id) { draft.baseVersionByAgent[id] = ledger.activeVersionByAgent[id]; });
+        draft.impact = controlMockImpact(ledger, draft);
+        ledger.drafts[draft.id] = draft;
+        ledger.currentDraftId = draft.id;
+        ledger.currentTestRunId = null;
+        ledger.audit.push({
+          type: 'DRAFT_CREATED',
+          status: 'SUCCESS',
+          eventId: draft.eventId,
+          actorId: 'demo_user',
+          at: draft.createdAt,
+          draftId: draft.id,
+          draftSha256: draft.draftSha256,
+          candidateVersionId: draft.candidateVersionId,
+          impactedAgentIds: scopeIds.slice()
+        });
+        state.control.mockLedger = controlClone(ledger);
+        return { ledger: ledger, draft: draft, impact: draft.impact, platform: platform };
+      }
+      if (action === 'playground_run') {
+        var currentDraft = ledger.drafts[String(payload.draftId || ledger.currentDraftId || '')];
+        if (!currentDraft || currentDraft.status !== 'DRAFT') throw new Error('DEMO draft не найден');
+        var baseVersion = ledger.versions[currentDraft.primaryBaseVersionId];
+        var candidateVersion = {
+          id: currentDraft.candidateVersionId,
+          bundleSha256: currentDraft.candidateBundleSha256,
+          bundle: currentDraft.candidateBundle
+        };
+        var testCases = payload.cases || CONTROL_CASES;
+        var changedAgentIds = [];
+        var seenCaseIds = {};
+        var caseRows = testCases.map(function (testCase) {
+          var row = {
+            id: testCase.id,
+            marginBps: Number(testCase.marginBps),
+            agentResults: currentDraft.impact.agentIds.map(function (agentId) {
+              var before = controlMockDecision(ledger, baseVersion, agentId, testCase.marginBps);
+              var after = controlMockDecision(ledger, candidateVersion, agentId, testCase.marginBps);
+              var changed = JSON.stringify(before.plannedActions) !== JSON.stringify(after.plannedActions) ||
+                JSON.stringify(before.firedRuleIds) !== JSON.stringify(after.firedRuleIds);
+              if (changed) changedAgentIds.push(agentId);
+              return { agentId: agentId, before: before, after: after, changed: changed };
+            }),
+            externalWrites: [],
+            writeAttempts: 0
+          };
+          seenCaseIds[row.id] = (seenCaseIds[row.id] || 0) + 1;
+          return row;
+        });
+        var belowCase = caseRows.find(function (row) { return row.marginBps === 1800; });
+        var boundaryCase = caseRows.find(function (row) { return row.marginBps === 2000; });
+        var aboveCase = caseRows.find(function (row) { return row.marginBps === 3000; });
+        function everyAgent(row, predicate) {
+          return Boolean(row && row.agentResults && row.agentResults.length &&
+            row.agentResults.every(predicate));
+        }
+        var assertions = {
+          exactCases: caseRows.length === 3 &&
+            seenCaseIds['below-18'] === 1 &&
+            seenCaseIds['boundary-20'] === 1 &&
+            seenCaseIds['above-30'] === 1 &&
+            Boolean(belowCase && belowCase.id === 'below-18' &&
+              boundaryCase && boundaryCase.id === 'boundary-20' &&
+              aboveCase && aboveCase.id === 'above-30'),
+          belowFires: everyAgent(belowCase, function (row) {
+            return row.after.firedRuleIds.indexOf('shared.actual-margin-ad-budget-guard') !== -1;
+          }),
+          belowDiffers: everyAgent(belowCase, function (row) { return row.changed === true; }),
+          belowProhibitsIncrease: everyAgent(belowCase, function (row) {
+            return row.after.plannedActions.indexOf('INCREASE_AD_BUDGET') === -1;
+          }),
+          boundaryDoesNotFire: everyAgent(boundaryCase, function (row) {
+            return row.after.firedRuleIds.length === 0;
+          }),
+          boundaryDoesNotDiffer: everyAgent(boundaryCase, function (row) { return row.changed === false; }),
+          aboveDoesNotFire: everyAgent(aboveCase, function (row) {
+            return row.after.firedRuleIds.length === 0;
+          }),
+          aboveDoesNotDiffer: everyAgent(aboveCase, function (row) { return row.changed === false; }),
+          zeroWrites: caseRows.every(function (row) {
+            return row.writeAttempts === 0 && row.externalWrites.length === 0 &&
+              row.agentResults.every(function (agentResult) {
+                return agentResult.before.writeAttempts === 0 &&
+                  agentResult.before.externalWrites.length === 0 &&
+                  agentResult.after.writeAttempts === 0 &&
+                  agentResult.after.externalWrites.length === 0;
+              });
+          }),
+          expertNotInvoked: caseRows.every(function (row) {
+            return row.agentResults.every(function (agentResult) {
+              return agentResult.before.expertInvoked === false &&
+                agentResult.after.expertInvoked === false;
+            });
+          })
+        };
+        assertions.allPassed = Object.keys(assertions).every(function (key) {
+          return assertions[key] === true;
+        });
+        var testEvent = controlMockEvent('event_demo_playground');
+        var testRun = {
+          id: 'testrun_' + testEvent.id,
+          eventId: testEvent.id,
+          eventAt: testEvent.at,
+          draftId: currentDraft.id,
+          draftSha256: currentDraft.draftSha256,
+          baseVersionByAgent: controlClone(currentDraft.baseVersionByAgent),
+          candidateVersionId: currentDraft.candidateVersionId,
+          candidateBundleSha256: currentDraft.candidateBundleSha256,
+          mode: 'DRY_RUN',
+          evaluationType: 'MANAGED_POLICY_EVALUATION',
+          inputSource: 'CALLER_SUPPLIED_MARGIN_BPS',
+          expertInvoked: false,
+          status: assertions.allPassed ? 'PASSED' : 'FAILED',
+          coverage: {
+            below: Boolean(belowCase),
+            boundary: Boolean(boundaryCase),
+            above: Boolean(aboveCase)
+          },
+          assertions: assertions,
+          cases: caseRows,
+          changedAgentIds: Array.from(new Set(changedAgentIds)).sort(),
+          firedRuleIds: assertions.belowFires ? ['shared.actual-margin-ad-budget-guard'] : [],
+          knowledgeIds: [],
+          usedKnowledgeIds: [],
+          availableKnowledgeIds: (currentDraft.impact.availableKnowledgeIds || []).slice(),
+          capabilityIds: ['profitability_gate'],
+          usedCapabilityIds: ['profitability_gate'],
+          plannedActions: ['ALLOW_GROWTH_PLAN', 'FLAG_LOW_MARGIN_FOR_REVIEW', 'INCREASE_AD_BUDGET', 'STOP_OR_REVIEW_CAMPAIGN'],
+          externalWrites: [],
+          writeAttempts: 0,
+          completedAt: testEvent.at,
+          receiptSha256: testEvent.hash
+        };
+        ledger.testRuns[testRun.id] = testRun;
+        ledger.currentTestRunId = testRun.id;
+        ledger.audit.push({
+          type: 'PLAYGROUND_COMPLETED',
+          status: testRun.status,
+          eventId: testRun.eventId,
+          actorId: 'demo_user',
+          at: testRun.completedAt,
+          draftId: currentDraft.id,
+          testRunId: testRun.id,
+          candidateVersionId: currentDraft.candidateVersionId,
+          assertionsAllPassed: testRun.assertions.allPassed,
+          externalWrites: [],
+          writeAttempts: 0
+        });
+        state.control.mockLedger = controlClone(ledger);
+        return { ledger: ledger, testRun: testRun, platform: platform };
+      }
+      if (action === 'publish') {
+        var publishDraft = ledger.drafts[String(payload.draftId || ledger.currentDraftId || '')];
+        var publishTest = ledger.testRuns[String(payload.testRunId || ledger.currentTestRunId || '')];
+        if (!controlExactPublishReady(ledger, publishDraft, publishTest)) {
+          throw new Error('DEMO publish требует exact GREEN TestRun');
+        }
+        var publishEvent = controlMockEvent('event_demo_publish');
+        var publishedAt = publishEvent.at;
+        ledger.versions[publishDraft.candidateVersionId] = {
+          id: publishDraft.candidateVersionId,
+          sequence: Number(publishDraft.sequence || 2),
+          status: 'PUBLISHED',
+          immutable: true,
+          parentVersionIds: [publishDraft.primaryBaseVersionId],
+          createdAt: publishedAt,
+          createdBy: 'demo_user',
+          bundleSha256: publishDraft.candidateBundleSha256,
+          bundle: controlClone(publishDraft.candidateBundle)
+        };
+        publishDraft.scope.agentIds.forEach(function (id) {
+          ledger.activeVersionByAgent[id] = publishDraft.candidateVersionId;
+        });
+        ledger.drafts[publishDraft.id].status = 'PUBLISHED';
+        ledger.drafts[publishDraft.id].publishedVersionId = publishDraft.candidateVersionId;
+        ledger.drafts[publishDraft.id].publishedAt = publishedAt;
+        var publication = {
+          type: 'PUBLISHED',
+          status: 'SUCCESS',
+          eventId: publishEvent.id,
+          actorId: 'demo_user',
+          at: publishedAt,
+          draftId: publishDraft.id,
+          testRunId: publishTest.id,
+          toVersionId: publishDraft.candidateVersionId,
+          bundleSha256: publishDraft.candidateBundleSha256,
+          impactedAgentIds: publishDraft.scope.agentIds.slice()
+        };
+        ledger.audit.push(publication);
+        state.control.mockLedger = controlClone(ledger);
+        return { ledger: ledger, publication: publication, platform: platform };
+      }
+      if (action === 'rollback') {
+        var targetId = String(payload.targetVersionId || ledger.baselineVersionId);
+        var target = ledger.versions[targetId];
+        if (!target) throw new Error('DEMO rollback target не найден');
+        var changed = Object.keys(ledger.activeVersionByAgent).filter(function (id) {
+          return ledger.activeVersionByAgent[id] !== targetId;
+        });
+        if (!changed.length) throw new Error('No active pointer requires rollback');
+        var before = controlClone(ledger.activeVersionByAgent);
+        Object.keys(ledger.activeVersionByAgent).forEach(function (id) {
+          ledger.activeVersionByAgent[id] = targetId;
+        });
+        var rollback = {
+          type: 'ROLLED_BACK',
+          status: 'SUCCESS',
+          actorId: 'demo_user',
+          at: new Date().toISOString(),
+          fromVersionByAgent: before,
+          targetVersionId: targetId,
+          restoredVersionId: targetId,
+          restoredSha256: target.bundleSha256,
+          verifiedExact: true,
+          copyCreated: false,
+          agentIds: Object.keys(ledger.agents).sort()
+        };
+        ledger.audit.push(rollback);
+        state.control.mockLedger = controlClone(ledger);
+        return { ledger: ledger, rollback: rollback, platform: platform };
+      }
+      if (action === 'active_run') {
+        var runIds = (payload.agentIds || Object.keys(ledger.agents)).map(String);
+        var evaluationEvent = controlMockEvent('event_demo_policy_evaluation');
+        var receipts = runIds.map(function (agentId, index) {
+          var versionId = ledger.activeVersionByAgent[agentId];
+          var receipt = controlMockDecision(ledger, ledger.versions[versionId], agentId, Number(payload.marginBps));
+          receipt.id = 'managed_policy_evaluation_' + evaluationEvent.id + '_' + index;
+          receipt.eventId = evaluationEvent.id + '_' + index;
+          receipt.evaluatedAt = evaluationEvent.at;
+          receipt.mode = 'ACTIVE';
+          receipt.status = 'SUCCESS';
+          ledger.runs[receipt.id] = receipt;
+          return receipt;
+        });
+        ledger.currentRunId = receipts.length ? receipts[receipts.length - 1].id : null;
+        ledger.audit.push({
+          type: 'MANAGED_POLICY_EVALUATION_RECORDED',
+          status: 'SUCCESS',
+          eventId: evaluationEvent.id,
+          actorId: 'demo_user',
+          at: evaluationEvent.at,
+          runIds: receipts.map(function (receipt) { return receipt.id; }),
+          configurationVersionIds: receipts.map(function (receipt) { return receipt.configurationVersionId; }),
+          externalWrites: [],
+          writeAttempts: 0
+        });
+        state.control.mockLedger = controlClone(ledger);
+        return { ledger: ledger, receipts: receipts, platform: platform };
+      }
+      throw new Error('Неизвестное DEMO-действие Agent Control');
+    }
+
     async function mockBridge(type, payload) {
       await new Promise(function (resolve) { setTimeout(resolve, type === 'etb_run_agent' ? 430 : 230); });
+      if (type === 'etb_agent_control') {
+        return { ok: true, result: controlMockAction(payload) };
+      }
       if (type === 'etb_agents_list') {
         return {
           ok: true,
@@ -1228,7 +3380,7 @@
       if (type === 'etb_run_expert') {
         var p = payload.params;
         var profit = p.revenue - p.cogs - p.returns_loss - p.commission - p.logistics - p.ad_spend;
-        var margin = Math.round(profit * 10000 / p.revenue);
+        var margin = deterministicHalfEven(profit * 10000 / p.revenue);
         var result = {
           status: 'success',
           capability_id: 'profitability_calculation',
@@ -1394,14 +3546,27 @@
     }
 
     function switchStudioView(view) {
-      var target = view === 'memory' ? 'memoryView' : view === 'scenario' ? 'scenarioView' : 'capabilitiesView';
+      var targets = {
+        overview: 'overviewView',
+        agents: 'agentsView',
+        governance: 'governanceView',
+        playground: 'playgroundView',
+        versions: 'versionsView',
+        evidence: 'evidenceView',
+        capabilities: 'capabilitiesView',
+        scenario: 'scenarioView',
+        memory: 'memoryView'
+      };
+      var target = targets[view] || targets.overview;
+      var navView = view === 'scenario' ? 'playground' : view === 'memory' ? 'evidence' : view;
       document.querySelectorAll('.studio-view').forEach(function (node) {
         node.classList.toggle('on', node.id === target);
       });
-      document.querySelectorAll('[data-studio-view]').forEach(function (button) {
-        button.classList.toggle('on', button.getAttribute('data-studio-view') === view);
+      document.querySelectorAll('.studio-tab[data-studio-view]').forEach(function (button) {
+        button.classList.toggle('on', button.getAttribute('data-studio-view') === navView);
       });
       if (view === 'memory') renderMemoryAgentSelects();
+      if (view !== 'scenario' && view !== 'memory') renderControlCenter();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -1499,7 +3664,7 @@
       if (!value.result_sha256 || !Number.isFinite(Number(value.margin_bps))) throw new Error('У результата нет проверяемой контрольной суммы');
       var expectedProfit = expectedInput.revenue - expectedInput.cogs - expectedInput.returns_loss -
         expectedInput.commission - expectedInput.logistics - expectedInput.ad_spend;
-      var expectedMargin = Math.round(expectedProfit * 10000 / expectedInput.revenue);
+      var expectedMargin = deterministicHalfEven(expectedProfit * 10000 / expectedInput.revenue);
       if (Number(value.profit) !== expectedProfit || Number(value.margin_bps) !== expectedMargin) {
         throw new Error('Независимый пересчёт не совпал с результатом Expert');
       }
@@ -2217,6 +4382,37 @@
         switchStudioView(button.getAttribute('data-studio-view'));
       });
     });
+    $('controlAgent1').addEventListener('change', function () {
+      if ($('controlAgent1').value === $('controlAgent2').value) {
+        var replacement = state.control.agents.find(function (agent) {
+          return agent.eligible && agent.id !== $('controlAgent1').value;
+        });
+        if (replacement) $('controlAgent2').value = replacement.id;
+      }
+      state.control.selectedAgentIds = [$('controlAgent1').value, $('controlAgent2').value].filter(Boolean);
+      $('controlScopeAgent').value = $('controlAgent1').value;
+      renderControlCenter();
+    });
+    $('controlAgent2').addEventListener('change', function () {
+      if ($('controlAgent1').value === $('controlAgent2').value) {
+        var replacement = state.control.agents.find(function (agent) {
+          return agent.eligible && agent.id !== $('controlAgent2').value;
+        });
+        if (replacement) $('controlAgent1').value = replacement.id;
+      }
+      state.control.selectedAgentIds = [$('controlAgent1').value, $('controlAgent2').value].filter(Boolean);
+      $('controlScopeAgent').value = $('controlAgent1').value;
+      renderControlCenter();
+    });
+    $('controlCaptureBtn').addEventListener('click', controlCaptureBaseline);
+    $('controlInspectBtn').addEventListener('click', function () { controlInspectSelected(false).catch(function () {}); });
+    $('controlAgentsRefreshBtn').addEventListener('click', function () { controlInspectSelected(false).catch(function () {}); });
+    $('controlReloadLedgerBtn').addEventListener('click', controlReloadLedger);
+    $('controlDraftBtn').addEventListener('click', controlCreateDraft);
+    $('controlPlaygroundBtn').addEventListener('click', controlRunPlayground);
+    $('controlPublishBtn').addEventListener('click', controlPublish);
+    $('controlRollbackManagedBtn').addEventListener('click', controlRollback);
+    $('controlActiveRunBtn').addEventListener('click', controlRunActive);
     $('capabilitySearch').addEventListener('input', renderCapabilities);
     $('capabilityGroup').addEventListener('change', renderCapabilities);
     $('capabilityCoverage').addEventListener('change', renderCapabilities);
@@ -2233,15 +4429,24 @@
 
     initializeCapabilityCatalog();
     restoreMemorySession();
+    $('controlRuleText').value = CONTROL_RULE_TEXT;
+    renderControlCenter();
     var requestedView = new URLSearchParams(location.search).get('view');
-    if (requestedView === 'scenario' || requestedView === 'memory') switchStudioView(requestedView);
+    if (requestedView && [
+      'overview', 'agents', 'governance', 'playground', 'versions',
+      'evidence', 'capabilities', 'scenario', 'memory'
+    ].indexOf(requestedView) !== -1) switchStudioView(requestedView);
     window.parent.postMessage({ type: 'etb_ui_health', ok: true, pluginId: 'profit-growth-scenario' }, '*');
     if (PREVIEW) {
       applyTheme(new URLSearchParams(location.search).get('theme') || 'dark');
-      loadAgents().then(function () { setTimeout(function () { runScenario('V1'); }, 120); });
+      loadAgents();
+      controlBootstrap();
     } else {
       setTimeout(function () {
-        if (!state.initialized) $('agentNote').textContent = 'Ожидаю соединение с Extella…';
+        if (!state.initialized) {
+          $('agentNote').textContent = 'Ожидаю соединение с Extella…';
+          $('controlStatus').textContent = 'Ожидаю tokenless host bridge Extella…';
+        }
       }, 1200);
     }
   })();

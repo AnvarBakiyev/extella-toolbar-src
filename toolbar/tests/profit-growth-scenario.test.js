@@ -11,11 +11,11 @@ const manifestPath = path.join(scenarioRoot, 'profit-growth.json');
 const htmlPath = path.join(scenarioRoot, 'profit-growth.html');
 const expertPath = path.join(scenarioRoot, 'profit-growth-expert.py');
 
-test('scenario manifest declares one shared calculation and no external writes', () => {
+test('Control Center manifest keeps the stable scenario identity and no-write contract', () => {
   const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
   assert.equal(manifest.id, 'profit-growth-scenario');
-  assert.equal(manifest.name, 'Студия способностей');
-  assert.equal(manifest.version, '0.2.0');
+  assert.equal(manifest.name, 'Центр управления агентами');
+  assert.equal(manifest.version, '0.3.0');
   assert.equal(manifest.ui.type, 'html');
   assert.equal(manifest.ui.htmlFile, 'profit-growth.html');
   assert.equal(manifest.ui.tokenless, true);
@@ -23,7 +23,14 @@ test('scenario manifest declares one shared calculation and no external writes',
   assert.equal(manifest.expert_defs[0].name, 'xtl_capability_studio_profitability_v1');
   assert.equal(manifest.owned_experts, true);
   assert.equal(manifest.expert_defs[0].global, true);
-  assert.equal(manifest.capabilities.length, 2);
+  assert.ok(manifest.capabilities.length >= 5);
+  assert.equal(
+    manifest.capabilities.find((row) => row.id === 'profitability_gate').consumer_source,
+    'managed_dependency_graph',
+  );
+  assert.ok(manifest.capabilities.some((row) => row.id === 'managed_configuration_draft'));
+  assert.ok(manifest.capabilities.some((row) => row.id === 'managed_configuration_playground'));
+  assert.ok(manifest.capabilities.some((row) => row.id === 'managed_configuration_versioning'));
   assert.ok(manifest.capabilities.every((capability) => capability.external_writes === false));
 });
 
@@ -51,9 +58,78 @@ test('scenario assets contain the toolbar bridge and explicit safety contract', 
     'preview=1',
     'Content-Security-Policy',
     'event.source !== window.parent',
+    'etb_agent_control',
+    'etb_agent_control_result',
+    'etb_account_reset',
+    'OPERATION_OUTCOME_UNKNOWN',
+    'overviewView',
+    'agentsView',
+    'governanceView',
+    'playgroundView',
+    'versionsView',
+    'evidenceView',
+    'controlExactPublishReady',
+    'PLATFORM_RBAC_UNAVAILABLE',
+    'effectiveConfigCompleteness',
+    'Ordinary Extella chats and agent/run calls outside this adapter are not version-bound',
+    'DEMO · IN-MEMORY',
   ]) {
     assert.match(html, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
+});
+
+test('Control Center UI has valid script, unique DOM ids, and an exact publish gate', () => {
+  const html = fs.readFileSync(htmlPath, 'utf8');
+  const scriptStart = html.indexOf('<script>');
+  const scriptEnd = html.lastIndexOf('</script>');
+  assert.ok(scriptStart >= 0 && scriptEnd > scriptStart);
+  const script = html.slice(scriptStart + '<script>'.length, scriptEnd);
+  const syntax = spawnSync(process.execPath, ['--check', '-'], {
+    input: script,
+    encoding: 'utf8',
+  });
+  assert.equal(syntax.status, 0, syntax.stderr);
+
+  const ids = [...html.matchAll(/\sid="([^"]+)"/g)].map((match) => match[1]);
+  assert.equal(new Set(ids).size, ids.length, 'all document ids must be unique');
+  for (const view of [
+    'overview',
+    'agents',
+    'governance',
+    'playground',
+    'versions',
+    'evidence',
+    'capabilities',
+  ]) {
+    assert.match(html, new RegExp(`data-studio-view="${view}"`));
+  }
+  assert.match(
+    script,
+    /ledger\.currentDraftId !== draft\.id[\s\S]*?ledger\.currentTestRunId !== testRun\.id/,
+  );
+  assert.match(
+    script,
+    /testRun\.draftSha256 !== draft\.draftSha256[\s\S]*?testRun\.candidateBundleSha256 !== draft\.candidateBundleSha256/,
+  );
+  assert.match(script, /testRun\.coverage\.boundary !== true/);
+  assert.match(script, /Number\(testRun\.writeAttempts \|\| 0\) !== 0/);
+  assert.match(script, /controlPublishBtn'\)\.disabled = state\.control\.busy \|\| !publishReady/);
+});
+
+test('preview calculation mirrors Python half-even rounding at exact ties', () => {
+  const html = fs.readFileSync(htmlPath, 'utf8');
+  const start = html.indexOf('    function deterministicHalfEven');
+  const end = html.indexOf('    async function sha256', start);
+  assert.ok(start >= 0 && end > start);
+  const context = {};
+  vm.runInNewContext(
+    `${html.slice(start, end)}\nthis.halfEven = deterministicHalfEven;`,
+    context,
+  );
+  assert.equal(context.halfEven(2.5), 2);
+  assert.equal(context.halfEven(3.5), 4);
+  assert.equal(context.halfEven(-1.5), -2);
+  assert.equal(context.halfEven(-2.5), -2);
 });
 
 test('capability catalog contains exactly 30 unique proven entries with honest coverage', () => {

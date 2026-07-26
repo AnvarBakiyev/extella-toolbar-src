@@ -548,6 +548,17 @@ ETB.api = (function () {
         rule_id: String(ruleId)
       }, opts.agentId ? { 'X-Agent-Id': opts.agentId } : null);
     },
+    agentGetScoped: function (agentId) {
+      return _post('/api/agent/get', {
+        agent_id: String(agentId || '')
+      }, agentId ? { 'X-Agent-Id': String(agentId) } : null);
+    },
+    expertsListScoped: function (opts) {
+      opts = opts || {};
+      return _post('/api/experts_db/list', {
+        global: opts.global === true
+      }, opts.agentId ? { 'X-Agent-Id': opts.agentId } : null);
+    },
 
     // Rules = always-on behavioral instructions injected into every agent turn.
     // This is the reliable vehicle for Skills (concepts are only search-retrieved,
@@ -602,13 +613,15 @@ ETB.api = (function () {
     kvGet: function (key, opts) {
       var body = { key: key };
       if (opts && opts.global) body.global = true;
-      return _post('/api/kv/get', body);
+      return _post('/api/kv/get', body,
+        opts && opts.agentId ? { 'X-Agent-Id': opts.agentId } : null);
     },
 
     kvSet: function (key, value, desc, opts) {
       var body = { key: key, value: value, description: desc || '' };
       if (opts && opts.global) body.global = true;
-      return _post('/api/kv/set', body);
+      return _post('/api/kv/set', body,
+        opts && opts.agentId ? { 'X-Agent-Id': opts.agentId } : null);
     },
 
     health: function () {
