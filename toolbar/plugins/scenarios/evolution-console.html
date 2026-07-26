@@ -31,7 +31,7 @@
     .brand{display:flex;align-items:center;gap:11px;min-width:245px}.mark{width:34px;height:34px;
       display:grid;place-items:center;border-radius:11px;background:var(--gold);color:var(--on-gold);font-weight:900}
     .brand b{display:block;font-size:15px;color:var(--ink)}.brand small{color:var(--muted)}
-    .tabs{display:flex;gap:5px;overflow:auto;flex:1}.tab,.ghost,.primary,.danger{
+    .tabs{display:flex;align-items:center;gap:5px;overflow:visible;flex:1}.tab,.ghost,.primary,.danger{
       border:1px solid transparent;border-radius:10px;padding:8px 11px;background:transparent;color:var(--muted)}
     .tab.on{background:var(--panel2);border-color:var(--petrol-border);color:var(--petrol)}
     .tab.on:hover{color:var(--petrol-hover)}.ghost{border-color:var(--line);color:var(--ink)}
@@ -43,7 +43,14 @@
     .btn.gold:hover:not(:disabled),.gold:hover:not(:disabled){background:var(--gold-hover)}
     .btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}.btn.sm,.sm{font-size:12px;padding:6px 9px}
     button:disabled{opacity:.42;cursor:not-allowed}.top-actions{display:flex;gap:7px;white-space:nowrap}
-    main{max-width:1480px;margin:0 auto;padding:24px}.view{display:none}.view.on{display:block}
+    .advanced-nav{position:relative}.advanced-nav summary{list-style:none;border:1px solid transparent;border-radius:10px;
+      padding:8px 11px;color:var(--muted);cursor:pointer}.advanced-nav summary::-webkit-details-marker{display:none}
+    .advanced-nav summary::after{content:"⌄";margin-left:7px}.advanced-nav[open] summary,.advanced-nav.has-active summary{
+      background:var(--panel2);border-color:var(--line);color:var(--ink)}
+    .advanced-menu{position:absolute;top:calc(100% + 7px);right:0;min-width:220px;display:grid;gap:4px;padding:7px;
+      background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
+    .advanced-menu .tab{text-align:left;width:100%}.advanced-menu .tab.on{color:var(--petrol)}
+    main{max-width:1260px;margin:0 auto;padding:28px 24px 42px}.view{display:none}.view.on{display:block}
     .hero{display:flex;justify-content:space-between;gap:20px;align-items:flex-end;margin-bottom:20px}
     .eyebrow{color:var(--petrol);font:700 11px/1.2 var(--mono);letter-spacing:.12em;text-transform:uppercase}
     h1{font-size:30px;line-height:1.12;margin:7px 0 8px;letter-spacing:-.03em}h2{font-size:17px;margin:0}h1,h2{color:var(--ink)}
@@ -56,19 +63,39 @@
     .boundary{margin:12px 0;padding:10px 12px;border:1px solid var(--warn);border-radius:10px;
       color:var(--warn);background:var(--panel2);font-size:12px}
     .error{display:none;margin-bottom:15px;padding:11px 13px;border:1px solid var(--bad);border-radius:11px;color:var(--bad);background:var(--panel2)}
-    .error.on{display:block}.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:15px}
+    .error.on{display:block}.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:15px}
     .metric,.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
-    .metric{padding:15px}.metric strong{font-size:27px;display:block}.metric span{color:var(--muted)}
+    .metric{padding:16px;text-align:left;color:var(--body);width:100%}.metric strong{font-size:29px;display:block;color:var(--ink)}
+    .metric span{color:var(--muted)}button.metric{cursor:pointer}button.metric:hover{border-color:var(--petrol-border)}
+    button.metric:focus-visible,.attention-item:focus-visible,.filter-chip:focus-visible,.tab:focus-visible,
+    .ghost:focus-visible,.primary:focus-visible,.danger:focus-visible,.advanced-nav summary:focus-visible{
+      outline:2px solid var(--gold);outline-offset:2px}
     .card{padding:16px}.card-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:13px}
     .card-head p{margin:3px 0 0;color:var(--muted);font-size:12px}.tools{display:flex;gap:8px;flex-wrap:wrap}
     .tools input,.tools select,.form input,.form select{min-height:38px;border:1px solid var(--line);border-radius:9px;
       background:var(--panel2);color:var(--ink);padding:8px 10px}.tools input{min-width:250px;flex:1}
     #bulkOperationSelect,#escalationSelect{width:100%;min-height:38px;margin-bottom:10px;border:1px solid var(--line);border-radius:9px;
       background:var(--panel2);color:var(--ink);padding:8px 10px}
-    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}table{width:100%;border-collapse:collapse;min-width:1120px}
+    .attention-card{margin-bottom:15px}.attention-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .attention-item{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;width:100%;padding:13px;
+      border:1px solid var(--line);border-radius:12px;background:var(--panel2);color:var(--body);text-align:left}
+    .attention-item:hover{border-color:var(--petrol-border)}.attention-count{display:grid;place-items:center;min-width:39px;height:39px;
+      border-radius:11px;background:var(--panel);color:var(--ink);font-size:18px;font-weight:800}
+    .attention-copy b{display:block;color:var(--ink)}.attention-copy small{display:block;margin-top:2px;color:var(--muted)}
+    .attention-next{color:var(--gold);font-weight:750;white-space:nowrap}.attention-ok{padding:14px;border:1px solid var(--good);
+      border-radius:12px;background:var(--panel2);color:var(--good)}.overview-links{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:15px}
+    .context-link{border:0;background:transparent;color:var(--petrol);padding:4px 0;font-weight:700;cursor:pointer}
+    .inventory-tools{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:12px}
+    .search-wrap{min-width:260px;flex:1}.search-wrap input{width:100%}.quick-filters{display:flex;gap:5px;flex-wrap:wrap}
+    .filter-chip{border:1px solid var(--line);border-radius:999px;padding:7px 10px;background:transparent;color:var(--muted);cursor:pointer}
+    .filter-chip.on{border-color:var(--petrol-border);color:var(--petrol);background:var(--panel2)}
+    .more-filters{position:relative}.more-filters summary,.export-menu summary{cursor:pointer;color:var(--muted);padding:8px 4px}
+    .more-filters select{margin-top:7px;min-width:220px}.export-menu{position:relative}.export-actions{position:absolute;right:0;top:100%;
+      z-index:4;display:flex;gap:6px;padding:7px;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow)}
+    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}table{width:100%;border-collapse:collapse;min-width:920px}
     th,td{text-align:left;padding:10px 11px;border-bottom:1px solid var(--line);vertical-align:top}
     th{position:sticky;top:0;background:var(--panel2);color:var(--muted);font-size:11px;z-index:2}
-    td small{display:block;color:var(--muted);margin-top:2px}.mono{font-family:var(--mono);font-size:11px}
+    td small{display:block;color:var(--muted);margin-top:3px}.cell-meta{display:grid;gap:2px;margin-top:5px}.mobile-label{display:none}.mono{font-family:var(--mono);font-size:11px}
     .state{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:3px 7px;border:1px solid var(--line);background:var(--panel2);
       font-size:11px}.state.good{color:var(--good)}.state.bad{color:var(--bad)}.state.warn{color:var(--warn)}
     .empty{padding:34px;text-align:center;color:var(--muted)}.split{display:grid;grid-template-columns:1fr 1fr;gap:14px}
@@ -90,21 +117,35 @@
       border-radius:18px;padding:18px;box-shadow:var(--shadow)}.dialog-top{display:flex;justify-content:space-between;gap:12px;margin-bottom:14px}
     #xtl_help{display:none;position:fixed;inset:0;z-index:110;background:color-mix(in srgb,#000000 78%,transparent);overflow:auto;padding:30px 18px}
     #xtl_help>div{max-width:760px;margin:0 auto;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:24px}
-    @media(max-width:1000px){.top{flex-wrap:wrap}.brand{min-width:0}.tabs{order:3;width:100%}.metrics{grid-template-columns:1fr 1fr}.split{grid-template-columns:1fr}.flow{grid-template-columns:1fr 1fr 1fr}}
-    @media(max-width:620px){main{padding:15px}.top{padding:12px}.metrics{grid-template-columns:1fr}.hero{display:block}.top-actions{width:100%}.tools>*{width:100%}.flow{grid-template-columns:1fr 1fr}}
+    .sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;
+      overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+    @media(max-width:1000px){.top{flex-wrap:wrap}.brand{min-width:0}.tabs{order:3;width:100%;flex:1 0 100%;overflow:auto}.advanced-menu{position:fixed;left:16px;right:16px;top:auto}
+      .metrics{grid-template-columns:1fr 1fr 1fr}.split{grid-template-columns:1fr}.flow{grid-template-columns:1fr 1fr 1fr}.attention-list{grid-template-columns:1fr}}
+    @media(max-width:700px){main{padding:18px 15px 34px}.top{padding:12px}.metrics{grid-template-columns:1fr}.hero{display:block}.top-actions{margin-left:auto}
+      .tabs{flex-wrap:wrap;overflow:visible}.inventory-tools{display:block}.quick-filters{margin:10px 0}.search-wrap{min-width:0}.tools>*{max-width:100%}.flow{grid-template-columns:1fr 1fr}
+      .attention-item{grid-template-columns:auto 1fr}.attention-next{grid-column:2}.advanced-nav summary{white-space:nowrap}
+      .table-wrap{overflow:visible;border:0}.table-wrap table{display:block;min-width:0}.table-wrap thead{display:none}.table-wrap tbody{display:grid;gap:10px}
+      .table-wrap tr[data-registry-row]{display:grid;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel2)}
+      .table-wrap tr[data-registry-row]>th,.table-wrap tr[data-registry-row]>td{display:block;position:static;padding:8px 0;border:0;background:transparent}
+      .table-wrap tr[data-registry-row]>td+td{border-top:1px solid var(--line)}.mobile-label{display:block;margin-bottom:5px;color:var(--muted);font-size:10px;font-weight:700;text-transform:uppercase}}
   </style>
 </head>
 <body>
   <div class="shell">
     <header class="top">
       <div class="brand"><span class="mark">E</span><span><b>Extella Evolution</b><small data-t="consoleSub"></small></span></div>
-      <nav class="tabs" id="tabs">
-        <button class="tab on" data-view="fleet" data-t="fleet"></button>
-        <button class="tab" data-view="risks" data-t="risks"></button>
-        <button class="tab" data-view="genes">Shared Genes</button>
-        <button class="tab" data-view="escalations" data-t="escalations"></button>
-        <button class="tab" data-view="bulk" data-t="bulk"></button>
-        <button class="tab" data-view="receipts">Evolution Receipts</button>
+      <nav class="tabs" id="tabs" data-aria="mainNavigation">
+        <button class="tab on" type="button" data-view="fleet" data-t="overview"></button>
+        <button class="tab" type="button" data-view="genes">Shared Genes</button>
+        <button class="tab" type="button" data-view="escalations" data-t="escalations"></button>
+        <details class="advanced-nav" id="advancedNav" data-nav-tier="advanced">
+          <summary data-t="advanced"></summary>
+          <div class="advanced-menu">
+            <button class="tab" type="button" data-view="risks" data-t="riskDetails"></button>
+            <button class="tab" type="button" data-view="bulk" data-t="bulk"></button>
+            <button class="tab" type="button" data-view="receipts">Evolution Receipts</button>
+          </div>
+        </details>
       </nav>
       <div class="top-actions">
         <button class="ghost" id="langBtn">EN</button>
@@ -113,46 +154,74 @@
     </header>
 
     <main>
-      <div class="demo" id="demoBanner" data-t="demo"></div>
-      <div class="error" id="errorBox"></div>
+      <div class="demo" id="demoBanner" data-t="demo" role="status" aria-live="polite"></div>
+      <div class="error" id="errorBox" role="alert" aria-live="assertive"></div>
 
-      <section class="view on" id="fleetView">
+      <section class="view on" id="fleetView" data-evolution-view="overview" data-default-view="true">
         <div class="hero">
-          <div><div class="eyebrow">Extella Evolution · Evolution Console</div><h1 data-t="fleetTitle"></h1><p class="lead" data-t="fleetLead"></p></div>
-          <div class="status"><span class="badge" id="snapshotBadge">SNAPSHOT —</span><span class="badge" id="standardsBadge">STANDARD —</span></div>
+          <div><div class="eyebrow">Extella Evolution · Evolution Console</div><h1 data-t="overviewTitle"></h1><p class="lead" data-t="overviewLead"></p></div>
+          <details class="more-filters">
+            <summary data-t="dataDetails"></summary>
+            <div class="status"><span class="badge" id="snapshotBadge">SNAPSHOT —</span><span class="badge" id="standardsBadge">STANDARD —</span></div>
+          </details>
         </div>
-        <div class="metrics">
+        <div class="metrics" data-ux="overview-summary" data-overview-region="summary">
           <article class="metric"><strong id="countTotal">—</strong><span data-t="allAgents"></span></article>
-          <article class="metric"><strong id="countFailed">—</strong><span data-t="failedStandard"></span></article>
-          <article class="metric"><strong id="countOwnerless">—</strong><span data-t="ownerless"></span></article>
-          <article class="metric"><strong id="countShared">—</strong><span data-t="withShared"></span></article>
+          <button class="metric" type="button" data-summary-filter="ready"><strong id="countPassed">—</strong><span data-t="passedChecks"></span></button>
+          <button class="metric" type="button" data-summary-attention><strong id="countAttention">—</strong><span data-t="attentionItems"></span></button>
         </div>
-        <section class="card">
+
+        <section class="card attention-card" id="attentionSection" tabindex="-1" data-ux="attention" data-overview-region="attention">
+          <div class="card-head"><div><h2 data-t="attentionTitle"></h2><p data-t="attentionLead"></p></div></div>
+          <div class="attention-list" id="attentionList" data-attention-list="actionable" aria-live="polite"></div>
+        </section>
+
+        <div class="overview-links">
+          <button class="context-link" type="button" id="sharedGenesShortcut"><span id="countShared">—</span> <span data-t="sharedGenesShortcut"></span> →</button>
+        </div>
+
+        <section class="card" id="fleetRegistry" data-ux="fleet-registry" data-overview-region="registry" aria-busy="true">
           <div class="card-head">
             <div><h2 data-t="inventory"></h2><p id="snapshotNote"></p></div>
-            <div class="tools"><button class="ghost" id="refreshBtn" data-t="refresh"></button><button class="ghost" id="jsonBtn">JSON</button><button class="ghost" id="csvBtn">CSV</button></div>
+            <div class="tools">
+              <button class="ghost" type="button" id="refreshBtn" data-t="refresh"></button>
+              <details class="export-menu"><summary data-t="export"></summary><div class="export-actions"><button class="ghost" type="button" id="jsonBtn">JSON</button><button class="ghost" type="button" id="csvBtn">CSV</button></div></details>
+            </div>
           </div>
-          <div class="tools" style="margin-bottom:12px">
-            <input id="searchInput" type="search" data-ph="search">
-            <select id="filterSelect">
-              <option value="" data-t="filterAll"></option>
-              <option value="failed" data-t="filterFailed"></option>
-              <option value="ownerless" data-t="filterOwnerless"></option>
-              <option value="non_qwen" data-t="filterNonQwen"></option>
-              <option value="shared" data-t="filterShared"></option>
-              <option value="inactive" data-t="filterInactive"></option>
-              <option value="dead" data-t="filterDead"></option>
-            </select>
+          <div class="inventory-tools">
+            <label class="search-wrap"><span class="sr-only" data-t="search"></span><input id="searchInput" type="search" data-ph="search"></label>
+            <div class="quick-filters" role="group" data-aria="quickFilters">
+              <button class="filter-chip on" type="button" data-fleet-filter="" data-t="filterAll" aria-pressed="true"></button>
+              <button class="filter-chip" type="button" data-fleet-filter="failed" data-t="needsAttention" aria-pressed="false"></button>
+              <button class="filter-chip" type="button" data-fleet-filter="ready" data-t="ready" aria-pressed="false"></button>
+              <button class="filter-chip" type="button" data-fleet-filter="unknown" data-t="unknown" aria-pressed="false"></button>
+            </div>
+            <details class="more-filters">
+              <summary data-t="moreFilters"></summary>
+              <label><span class="sr-only" data-t="moreFilters"></span><select id="filterSelect">
+                <option value="" data-t="filterAll"></option>
+                <option value="failed" data-t="filterFailed"></option>
+                <option value="ready" data-t="filterReady"></option>
+                <option value="unknown" data-t="filterUnknown"></option>
+                <option value="missing" data-t="filterMissing"></option>
+                <option value="ownerless" data-t="filterOwnerless"></option>
+                <option value="non_qwen" data-t="filterNonQwen"></option>
+                <option value="shared" data-t="filterShared"></option>
+                <option value="inactive" data-t="filterInactive"></option>
+                <option value="dead" data-t="filterDead"></option>
+              </select></label>
+            </details>
           </div>
-          <div class="table-wrap"><table>
-            <thead><tr><th data-t="agent"></th><th data-t="owner"></th><th data-t="model"></th><th data-t="activeVersion"></th>
-              <th data-t="standard"></th><th data-t="lastActivity"></th><th data-t="capabilities"></th><th>Shared Genes</th><th>Agent Cabinet</th></tr></thead>
-            <tbody id="fleetRows"><tr><td colspan="9" class="empty" data-t="loading"></td></tr></tbody>
+          <div class="table-wrap" role="region" data-aria="inventory"><table data-ux="fleet-table" data-evolution-registry="fleet">
+            <caption class="sr-only" data-t="inventory"></caption>
+            <thead><tr><th scope="col" data-registry-column="agent" data-t="agent"></th><th scope="col" data-registry-column="status" data-t="platformState"></th><th scope="col" data-registry-column="genome" data-t="genomeColumn"></th>
+              <th scope="col" data-registry-column="attention" data-t="attention"></th><th scope="col" data-registry-column="action" data-t="nextStep"></th></tr></thead>
+            <tbody id="fleetRows"><tr><td colspan="5" class="empty" data-t="loading"></td></tr></tbody>
           </table></div>
         </section>
       </section>
 
-      <section class="view" id="risksView">
+      <section class="view" id="risksView" data-evolution-view="risks">
         <div class="hero"><div><div class="eyebrow">check_agent_passport.py</div><h1 data-t="riskTitle"></h1><p class="lead" data-t="riskLead"></p></div></div>
         <div class="split">
           <section class="card"><div class="card-head"><div><h2 data-t="riskByAgent"></h2><p data-t="riskCanonical"></p></div></div><div class="risk-list" id="riskList"></div></section>
@@ -164,13 +233,13 @@
         </section>
       </section>
 
-      <section class="view" id="genesView">
+      <section class="view" id="genesView" data-evolution-view="shared-genes">
         <div class="hero"><div><div class="eyebrow">Agent Genome · Shared Genes</div><h1 data-t="genesTitle"></h1><p class="lead" data-t="genesLead"></p></div>
           <div class="tools"><button class="ghost" id="geneObjectBtn" data-t="objectView"></button><button class="ghost" id="geneAgentBtn" data-t="agentView"></button></div></div>
         <section class="card"><div class="gene-list" id="geneList"></div></section>
       </section>
 
-      <section class="view" id="escalationsView">
+      <section class="view" id="escalationsView" tabindex="-1" data-evolution-view="escalations">
         <div class="hero"><div><div class="eyebrow">Agent Cabinet → Evolution Console</div><h1 data-t="escTitle"></h1><p class="lead" data-t="escLead"></p></div></div>
         <div class="split">
           <section class="card"><div class="card-head"><div><h2 data-t="pendingClass"></h2><p data-t="contract"></p></div></div><div id="escalationList"></div></section>
@@ -179,7 +248,7 @@
         </div>
       </section>
 
-      <section class="view" id="bulkView">
+      <section class="view" id="bulkView" data-evolution-view="bulk">
         <div class="hero"><div><div class="eyebrow">Evolution Console · fail-closed</div><h1 data-t="bulkTitle"></h1><p class="lead" data-t="bulkLead"></p></div></div>
         <div class="split">
           <section class="card"><div class="card-head"><div><h2 data-t="operation"></h2><p data-t="noApplyAll"></p></div></div>
@@ -199,15 +268,15 @@
         </div>
       </section>
 
-      <section class="view" id="receiptsView">
+      <section class="view" id="receiptsView" data-evolution-view="receipts">
         <div class="hero"><div><div class="eyebrow">Evolution Loop</div><h1>Evolution Receipts</h1><p class="lead" data-t="receiptsLead"></p></div></div>
         <section class="card"><div class="receipt-list" id="receiptList"></div></section>
       </section>
     </main>
   </div>
 
-  <div class="overlay" id="cabinetOverlay">
-    <div class="dialog"><div class="dialog-top"><div><div class="eyebrow">Extella Evolution · Agent Cabinet</div><h2 id="cabinetTitle">Agent Cabinet</h2></div>
+  <div class="overlay" id="cabinetOverlay" role="dialog" aria-modal="true" aria-labelledby="cabinetTitle">
+    <div class="dialog" tabindex="-1"><div class="dialog-top"><div><div class="eyebrow">Extella Evolution · Agent Cabinet</div><h2 id="cabinetTitle">Agent Cabinet</h2></div>
       <button class="ghost" id="cabinetClose" data-t="close"></button></div><div id="cabinetHost"></div>
       <section class="card" id="cabinetEscalationWrapper">
         <div class="card-head"><div><h2 data-t="classChange"></h2><p data-t="cabinetHostContract"></p></div></div>
@@ -234,10 +303,28 @@
     var PREVIEW = new URLSearchParams(location.search).get('preview') === '1';
     var I18N = {
       ru:{
-        consoleSub:'Evolution Console · консоль управления парком агентов',fleet:'Парк',risks:'Риски',escalations:'Изменения класса',bulk:'Массовые операции',
+        consoleSub:'Evolution Console · консоль управления парком агентов',fleet:'Парк',overview:'Обзор',advanced:'Дополнительно',risks:'Риски',riskDetails:'Причины рисков',escalations:'Эскалации',bulk:'Массовые операции',
         how:'? Как это работает',demo:'DEMO: данные и Evolution Receipts существуют только в памяти страницы; платформа не читается и не изменяется.',
+        overviewTitle:'Ваши агенты',overviewLead:'Проверьте состояние парка, разберите проблемы и откройте Agent Cabinet для работы с конкретным агентом.',
         fleetTitle:'Весь парк — одним снимком',fleetLead:'Платформа показывает фактический парк, Agent Passport заявляет владельца и границы, единый журнал даёт активную версию. Неизвестное остаётся неизвестным.',
-        allAgents:'всего агентов',failedStandard:'не проходят стандарт',ownerless:'без владельца',withShared:'с Shared Genes',inventory:'Инвентарь парка',
+        allAgents:'всего агентов',passedChecks:'прошли проверку',attentionItems:'задач требуют внимания',needsAttention:'требуют внимания',pendingEscalations:'эскалации ожидают решения',
+        failedStandard:'не проходят стандарт',ownerless:'без владельца',withShared:'с Shared Genes',inventory:'Агенты',
+        attentionTitle:'Что требует внимания',attentionLead:'Начните с этих задач. Каждая ведёт сразу к нужным агентам или следующему решению.',
+        attentionStandard:'Agent Passport требуют исправления',attentionStandardText:'Проверка нашла ошибки или отсутствующий Agent Passport.',attentionStable:'Не удалось сопоставить Agent Passport',
+        attentionStableText:'Выберите точный ID агента, чтобы связать его с Agent Passport.',attentionDead:'Есть расхождения с платформой',
+        attentionDeadText:'Агент записан в реестре, но не найден на платформе.',attentionEscalation:'Изменение Shared Gene ждёт решения',
+        attentionEscalationText:'Изменение поступило из Agent Cabinet и может затронуть несколько агентов.',nothingNeedsAttention:'Внимание не требуется',
+        attentionUnknown:'Проверка части агентов недоступна',attentionUnknownText:'Не считайте неизвестное состояние успешной проверкой.',attentionIncomplete:'Данные парка неполные',
+        attentionIncompleteText:'Изменения временно недоступны, чтобы не затронуть неверный список агентов.',
+        nothingNeedsAttentionText:'Все доступные Agent Passport прошли проверку; незавершённых эскалаций и расхождений нет.',
+        viewAgents:'Посмотреть агентов',reviewIssues:'Посмотреть причины',matchAgents:'Сопоставить агентов',reviewChange:'Рассмотреть изменение',
+        dataDetails:'Данные и источник',technicalDetails:'Технические данные',export:'Экспорт',moreFilters:'Другие фильтры',quickFilters:'Быстрые фильтры',
+        mainNavigation:'Разделы Evolution Console',sharedGenesShortcut:'агентов используют Shared Genes — общие наследуемые элементы Agent Genome',ready:'Проверены',filterReady:'Agent Passport проверен',
+        filterUnknown:'Проверка недоступна',filterMissing:'Нет Agent Passport',platformState:'Состояние',attention:'Что не так',nextStep:'Следующий шаг',
+        genomeColumn:'Agent Genome (знания, правила и способности)',
+        onPlatform:'На платформе',notOnPlatform:'Не найден на платформе',checkUnavailable:'Проверка недоступна',passportVerified:'Agent Passport проверен',
+        passportNeedsFixes:'Agent Passport требует исправления',noPassport:'Нет Agent Passport',viewReason:'Посмотреть причины',
+        capabilitiesShort:'способностей',genomeUnavailable:'Данные Agent Genome недоступны',issuesLabel:'Проблемы',lastChecked:'Обновлено',showing:'Показано',of:'из',readOnlyBoundary:'Данные доступны для просмотра; изменения временно недоступны, чтобы не затронуть неверный список агентов.',
         refresh:'Обновить снимок',search:'Поиск по имени или ID',filterAll:'Все агенты',filterFailed:'Не проходят стандарт',filterOwnerless:'Без владельца',
         filterNonQwen:'Не Qwen',filterShared:'Есть Shared Genes',filterInactive:'Нет активности 30 дней',filterDead:'Мёртвые ссылки',agent:'Агент',owner:'Владелец',
         model:'Модель и поставщик',activeVersion:'Активная версия',standard:'Стандарт',lastActivity:'Последняя активность',capabilities:'Способности',
@@ -249,7 +336,7 @@
         exactLiveAgent:'Точный live agentId',selectStableAgent:'Выберите точный live agentId',sourcePassport:'Source Passport',sourcePath:'Путь источника',
         genesTitle:'Карта Shared Genes',
         genesLead:'N считается один раз по стабильным gene_id и точным consumer_agent_ids. Видимость native-объекта не выдаётся за использование.',
-        objectView:'Объект → потребители',agentView:'Агент → объекты',escTitle:'Приём эскалаций из Agent Cabinet',
+        objectView:'Shared Gene → агенты',agentView:'Агент → Shared Genes',escTitle:'Приём эскалаций из Agent Cabinet',
         escLead:'Изменение Shared Gene начинается в Agent Cabinet и завершается здесь: весь класс, одинаковые кейсы, поэтапное включение, наблюдение и точный откат.',
         pendingClass:'Ожидает решения по классу',contract:'candidate_id + SHA-256 + scope + affected agents + actor_id',exactBinding:'Каждый шаг привязан к точному candidate и target set.',
         bulkTitle:'Массовые операции только через гейты',bulkLead:'Нельзя выполнить действие, пока не показаны точные цели и последствия и не дано подтверждение для их неизменившегося списка.',
@@ -257,7 +344,7 @@
         removeDead:'Снять мёртвые ссылки',changeShared:'Изменить Shared Gene',showImpact:'Показать влияние',impactApproval:'Влияние и подтверждение',
         boundTargets:'Изменение списка целей инвалидирует подтверждение.',receiptsLead:'Квитанции шагов Evidence → Candidate → Test → Approval → Activation → Observation → Rollback.',
         close:'Закрыть',gotIt:'Понятно',passed:'проходит',failed:'не проходит',missing:'Agent Passport отсутствует',standardUnknown:'реестр стандарта недоступен',dead:'в реестре, не на платформе',
-        consumers:'потребителей',moreAgents:'ещё агентов',noData:'Данных нет',incomplete:'Снимок неполный — мутации заблокированы.',
+        consumers:'потребителей',moreAgents:'ещё агентов',noData:'Данных нет',noAgents:'В парке пока нет агентов',noMatches:'По этому поиску и фильтру ничего не найдено',incomplete:'Снимок неполный — мутации заблокированы.',
         complete:'Снимок полный',downloaded:'Черновик скачан; canonical checker ещё не запускался.',confirmExact:'Подтвердить точный список',
         planStages:'Составить точный план этапов',stage:'Включить следующий этап',publish:'Опубликовать',observe:'Зафиксировать наблюдение',rollback:'Откатить одним действием',runTest:'Тест всего класса',approve:'Подтвердить',
         selectedSharedGene:'Shared Gene из текущей карты',candidateVersion:'Версия candidate',candidateVersionPlaceholder:'например 2.0.0',
@@ -274,10 +361,28 @@
         managedVerified:'managed / verified',declaredFact:'declared',platformFact:'PLATFORM fact',pinnedFact:'pinned standards fact',sourceUnknown:'source UNKNOWN'
       },
       en:{
-        consoleSub:'Evolution Console · agent fleet management console',fleet:'Fleet',risks:'Risks',escalations:'Class changes',bulk:'Bulk operations',
+        consoleSub:'Evolution Console · agent fleet management console',fleet:'Fleet',overview:'Overview',advanced:'More',risks:'Risks',riskDetails:'Risk details',escalations:'Escalations',bulk:'Bulk operations',
         how:'? How it works',demo:'DEMO: data and Evolution Receipts exist only in this page memory; the platform is neither read nor changed.',
+        overviewTitle:'Your agents',overviewLead:'Check your fleet, resolve issues, and open Agent Cabinet to work with a specific agent.',
         fleetTitle:'The whole fleet in one snapshot',fleetLead:'The platform shows the actual fleet, Agent Passport declares ownership and limits, and the single ledger provides the active version. Unknown stays unknown.',
-        allAgents:'total agents',failedStandard:'fail the standard',ownerless:'without an owner',withShared:'with Shared Genes',inventory:'Fleet inventory',
+        allAgents:'total agents',passedChecks:'passed checks',attentionItems:'attention items',needsAttention:'need attention',pendingEscalations:'escalations need a decision',
+        failedStandard:'fail the standard',ownerless:'without an owner',withShared:'with Shared Genes',inventory:'Agents',
+        attentionTitle:'Needs attention',attentionLead:'Start with these tasks. Each one opens the relevant agents or the next decision.',
+        attentionStandard:'Agent Passports need fixes',attentionStandardText:'The check found errors or a missing Agent Passport.',attentionStable:'Agent Passport could not be matched',
+        attentionStableText:'Select the exact agent ID to link it to the Agent Passport.',attentionDead:'Platform discrepancies found',
+        attentionDeadText:'An agent is recorded in the registry but is not found on the platform.',attentionEscalation:'A Shared Gene change needs a decision',
+        attentionEscalationText:'The change came from Agent Cabinet and may affect multiple agents.',nothingNeedsAttention:'Nothing needs attention',
+        attentionUnknown:'Checks are unavailable for some agents',attentionUnknownText:'Do not treat an unknown state as a successful check.',attentionIncomplete:'Fleet data is incomplete',
+        attentionIncompleteText:'Changes are temporarily unavailable to avoid acting on an incorrect agent list.',
+        nothingNeedsAttentionText:'All available Agent Passports passed the check; there are no pending escalations or discrepancies.',
+        viewAgents:'View agents',reviewIssues:'Review issues',matchAgents:'Match agents',reviewChange:'Review change',
+        dataDetails:'Data and source',technicalDetails:'Technical details',export:'Export',moreFilters:'More filters',quickFilters:'Quick filters',
+        mainNavigation:'Evolution Console sections',sharedGenesShortcut:'agents use Shared Genes — inherited elements shared in Agent Genome',ready:'Verified',filterReady:'Agent Passport verified',
+        filterUnknown:'Check unavailable',filterMissing:'Missing Agent Passport',platformState:'Status',attention:'What is wrong',nextStep:'Next step',
+        genomeColumn:'Agent Genome (knowledge, rules, and capabilities)',
+        onPlatform:'On platform',notOnPlatform:'Not found on platform',checkUnavailable:'Check unavailable',passportVerified:'Agent Passport verified',
+        passportNeedsFixes:'Agent Passport needs fixes',noPassport:'Missing Agent Passport',viewReason:'Review issues',
+        capabilitiesShort:'capabilities',genomeUnavailable:'Agent Genome data unavailable',issuesLabel:'Issues',lastChecked:'Updated',showing:'Showing',of:'of',readOnlyBoundary:'Fleet data is available for review; changes are temporarily unavailable to avoid acting on an incorrect agent list.',
         refresh:'Refresh snapshot',search:'Search by name or ID',filterAll:'All agents',filterFailed:'Fail the standard',filterOwnerless:'Without an owner',
         filterNonQwen:'Not Qwen',filterShared:'Has Shared Genes',filterInactive:'No activity for 30 days',filterDead:'Dead references',agent:'Agent',owner:'Owner',
         model:'Model and provider',activeVersion:'Active version',standard:'Standard',lastActivity:'Last activity',capabilities:'Capabilities',
@@ -289,7 +394,7 @@
         exactLiveAgent:'Exact live agentId',selectStableAgent:'Select an exact live agentId',sourcePassport:'Source Passport',sourcePath:'Source path',
         genesTitle:'Shared Genes map',
         genesLead:'N is calculated once from stable gene_id and exact consumer_agent_ids. Native visibility is never presented as usage.',
-        objectView:'Object → consumers',agentView:'Agent → objects',escTitle:'Escalations from Agent Cabinet',
+        objectView:'Shared Gene → agents',agentView:'Agent → Shared Genes',escTitle:'Escalations from Agent Cabinet',
         escLead:'A Shared Gene change starts in Agent Cabinet and ends here: the whole class, identical cases, staged activation, observation and exact rollback.',
         pendingClass:'Pending class decision',contract:'candidate_id + SHA-256 + scope + affected agents + actor_id',exactBinding:'Every step is bound to the exact candidate and target set.',
         bulkTitle:'Bulk operations only through gates',bulkLead:'No action can run before exact targets and consequences are shown and approval is bound to their unchanged list.',
@@ -297,7 +402,7 @@
         removeDead:'Remove dead references',changeShared:'Change a Shared Gene',showImpact:'Show impact',impactApproval:'Impact and approval',
         boundTargets:'Changing the target list invalidates approval.',receiptsLead:'Receipts for Evidence → Candidate → Test → Approval → Activation → Observation → Rollback.',
         close:'Close',gotIt:'Got it',passed:'passes',failed:'fails',missing:'Agent Passport missing',standardUnknown:'standards registry unavailable',dead:'in registry, absent on platform',
-        consumers:'consumers',moreAgents:'more agents',noData:'No data',incomplete:'Snapshot is incomplete — mutations are blocked.',
+        consumers:'consumers',moreAgents:'more agents',noData:'No data',noAgents:'There are no agents in this fleet yet',noMatches:'No agents match this search and filter',incomplete:'Snapshot is incomplete — mutations are blocked.',
         complete:'Snapshot complete',downloaded:'Draft downloaded; the canonical checker has not run yet.',confirmExact:'Approve exact list',
         planStages:'Create exact stage plan',stage:'Activate next stage',publish:'Publish',observe:'Record observation',rollback:'One-action rollback',runTest:'Test the whole class',approve:'Approve',
         selectedSharedGene:'Shared Gene from the current map',candidateVersion:'Candidate version',candidateVersionPlaceholder:'for example 2.0.0',
@@ -324,14 +429,16 @@
       stableIdRequired:[],stableTargetBySource:Object.create(null),escalations:[],bulk:null,receipts:[],draft:null,geneView:'object',accountEpoch:0,
       cabinetAgentId:null,cabinetGeneId:null,cabinetArtifactBase:null,currentEscalationId:null,selectedEscalationId:null,
       bulkOperations:[],currentBulkOperationId:null,selectedBulkOperationId:null,selectedBulkGeneId:null,selectedBulkIds:[],
-      lastEscalationEvidence:null,lastBulkEvidence:null
+      lastEscalationEvidence:null,lastBulkEvidence:null,lastLoadedAt:null,focusRiskAgentId:null,cabinetTrigger:null
     };
 
     function applyLanguage(){
       document.documentElement.lang=WLANG;
       document.querySelectorAll('[data-t]').forEach(function(n){n.textContent=t(n.getAttribute('data-t'));});
       document.querySelectorAll('[data-ph]').forEach(function(n){n.placeholder=t(n.getAttribute('data-ph'));});
+      document.querySelectorAll('[data-aria]').forEach(function(n){n.setAttribute('aria-label',t(n.getAttribute('data-aria')));});
       el('langBtn').textContent=WLANG==='ru'?'EN':'RU';
+      el('langBtn').setAttribute('aria-label',WLANG==='ru'?'Switch language to English':'Переключить язык на русский');
       if(window.HELP){
         HELP.evolution_console={
           ru:{icon:'◇',title:'Как работает Evolution Console',sub:'Консоль управления парком агентов',
@@ -348,7 +455,11 @@
       }
     }
     function showError(msg){var n=el('errorBox');n.textContent=String(msg||'');n.classList.toggle('on',!!msg);}
-    function setView(view){document.querySelectorAll('.view').forEach(function(n){n.classList.toggle('on',n.id===view+'View');});document.querySelectorAll('.tab').forEach(function(n){n.classList.toggle('on',n.dataset.view===view);});}
+    function setView(view){
+      document.querySelectorAll('.view').forEach(function(n){var active=n.id===view+'View';n.classList.toggle('on',active);n.setAttribute('aria-hidden',active?'false':'true');});
+      document.querySelectorAll('.tab').forEach(function(n){var active=n.dataset.view===view;n.classList.toggle('on',active);if(active)n.setAttribute('aria-current','page');else n.removeAttribute('aria-current');});
+      var advanced=el('advancedNav'),advancedActive=['risks','bulk','receipts'].indexOf(view)!==-1;advanced.classList.toggle('has-active',advancedActive);advanced.open=false;
+    }
     function standardDataMode(){var s=state.standards||{};return String(s.dataMode||s.data_mode||'UNAVAILABLE');}
     function productionReady(){
       var s=state.standards||{},p=state.projection;
@@ -375,9 +486,10 @@
       return Array.from(new Uint8Array(hash)).map(function(n){return n.toString(16).padStart(2,'0');}).join('');
     }
     function renderBoundary(){
-      var mode=standardDataMode(),ready=productionReady(),s=state.standards||{};
-      el('demoBanner').textContent=(PREVIEW?t('demo'):'data_mode='+mode+' · delivery_mode='+(s.deliveryMode||s.delivery_mode||'UNAVAILABLE')+' · account_scoped='+(s.accountScoped===true?'true':'false')+' · '+(ready?t('complete'):t('productionRequired')));
-      el('demoBanner').classList.toggle('on',PREVIEW||!ready);
+      var mode=standardDataMode(),ready=productionReady(),s=state.standards||{},banner=el('demoBanner');
+      var technical='data_mode='+mode+' · delivery_mode='+(s.deliveryMode||s.delivery_mode||'UNAVAILABLE')+' · account_scoped='+(s.accountScoped===true?'true':'false');
+      banner.textContent=PREVIEW?t('demo'):t('readOnlyBoundary');
+      banner.title=technical;banner.classList.toggle('on',PREVIEW||!ready);
       el('escalationBoundary').textContent=t('evidenceBoundary')+' '+t('adapterBoundary')+' evolutionLabAdapter='+(state.platform&&state.platform.evolutionLabAdapter||'UNAVAILABLE')+' · classActivationAdapter='+(state.platform&&state.platform.classActivationAdapter||'UNAVAILABLE')+' · classObservationAdapter='+(state.platform&&state.platform.classObservationAdapter||'UNAVAILABLE')+' · classRollbackAdapter='+(state.platform&&state.platform.classRollbackAdapter||'UNAVAILABLE')+' · nativeDurableIntent='+(state.platform&&state.platform.nativeDurableIntent||'PLATFORM_UNAVAILABLE')+' · multiDeviceCompareAndSwap='+(state.platform&&state.platform.multiDeviceCompareAndSwap||'PLATFORM_UNAVAILABLE');
       el('bulkBoundary').textContent=t('adapterBoundary')+' scheduleStateAdapter='+(state.platform&&state.platform.scheduleStateAdapter||'UNAVAILABLE')+' · bulkActivationAdapter='+(state.platform&&state.platform.bulkActivationAdapter||'UNAVAILABLE')+' · bulkObservationAdapter='+(state.platform&&state.platform.bulkObservationAdapter||'UNAVAILABLE')+' · bulkRollbackAdapter='+(state.platform&&state.platform.bulkRollbackAdapter||'UNAVAILABLE')+' · nativeDurableIntent='+(state.platform&&state.platform.nativeDurableIntent||'PLATFORM_UNAVAILABLE')+' · multiDeviceCompareAndSwap='+(state.platform&&state.platform.multiDeviceCompareAndSwap||'PLATFORM_UNAVAILABLE');
     }
@@ -416,6 +528,7 @@
     }
     function applyFleet(result){
       state.actorId=result.actorId||null;state.projection=result.projection||null;state.stableIdRequired=Array.isArray(result.stableIdRequired)?result.stableIdRequired:[];state.stableTargetBySource=Object.create(null);state.shared=result.shared||null;state.standards=result.standards||null;state.platform=result.platform||null;state.ledger=result.ledger||null;
+      state.lastLoadedAt=new Date().toISOString();
       state.receipts=result.receipts||[];var ev=state.ledger&&state.ledger.evolution;
       state.currentEscalationId=ev&&ev.currentEscalationId||null;state.selectedEscalationId=state.currentEscalationId;
       state.escalations=ev&&ev.escalations?Object.keys(ev.escalations).sort().map(function(k){return ev.escalations[k];}):[];
@@ -432,8 +545,53 @@
     }
     function visibleRows(){var p=state.projection;if(!p)return[];var q=el('searchInput').value.trim().toLowerCase(),f=el('filterSelect').value;return p.rows.filter(function(r){
       if(q&&String(r.name+' '+r.agentId).toLowerCase().indexOf(q)===-1)return false;
-      if(f==='failed'&&['FAIL','MISSING'].indexOf(r.standard.status)===-1)return false;if(f==='ownerless'&&!(r.registryPresent===true&&!r.owner))return false;if(f==='non_qwen'&&r.qwenConfirmed)return false;
+      if(f==='failed'&&['FAIL','MISSING'].indexOf(r.standard.status)===-1)return false;if(f==='ready'&&r.standard.status!=='PASS')return false;if(f==='unknown'&&r.standard.status!=='UNKNOWN')return false;if(f==='missing'&&r.standard.status!=='MISSING')return false;
+      if(f==='ownerless'&&!(r.registryPresent===true&&!r.owner))return false;if(f==='non_qwen'&&r.qwenConfirmed)return false;
       if(f==='shared'&&!(r.sharedGeneIds||[]).length)return false;if(f==='inactive'&&!isInactiveRow(r))return false;if(f==='dead'&&r.reconciliation!=='REGISTRY_ONLY')return false;return true;});}
+    function syncFilterControls(){
+      var value=el('filterSelect').value;
+      document.querySelectorAll('[data-fleet-filter]').forEach(function(button){var active=button.dataset.fleetFilter===value;button.classList.toggle('on',active);button.setAttribute('aria-pressed',active?'true':'false');});
+    }
+    function applyFleetFilter(value,scrollToRegistry){
+      el('filterSelect').value=value||'';syncFilterControls();renderFleet();renderBulk();
+      if(scrollToRegistry){el('fleetRegistry').scrollIntoView({behavior:'smooth',block:'start'});el('searchInput').focus({preventScroll:true});}
+    }
+    function pendingEscalationCount(){
+      return state.escalations.filter(function(row){return ['OBSERVED','ROLLED_BACK'].indexOf(String(row.status||''))===-1;}).length;
+    }
+    function attentionFacts(){
+      var p=state.projection,rows=p&&p.rows||[];
+      return {
+        standard:p&&p.counters?p.counters.failed||0:0,
+        unknown:rows.filter(function(r){return r.standard&&r.standard.status==='UNKNOWN';}).length,
+        stable:(state.stableIdRequired||[]).length,
+        dead:rows.filter(function(r){return r.reconciliation==='REGISTRY_ONLY';}).length,
+        escalation:pendingEscalationCount(),
+        incomplete:p&&p.complete!==true?1:0
+      };
+    }
+    function attentionCategoryCount(){
+      var facts=attentionFacts();return Object.keys(facts).filter(function(key){return facts[key]>0;}).length;
+    }
+    function attentionButton(kind,count,title,text,action,actionLabel){
+      var attribute=action.indexOf('filter:')===0?' data-attention-filter="'+esc(action.slice(7))+'"':action.indexOf('view:')===0?' data-attention-view="'+esc(action.slice(5))+'"':'';
+      return '<button class="attention-item" type="button" data-attention-card="'+esc(kind)+'" data-attention-action="'+esc(action)+'"'+attribute+'>'+
+        '<span class="attention-count">'+esc(count)+'</span><span class="attention-copy"><b>'+esc(title)+'</b><small>'+esc(text)+'</small></span><span class="attention-next">'+esc(actionLabel)+' →</span></button>';
+    }
+    function renderAttention(){
+      var p=state.projection,host=el('attentionList');if(!p){host.innerHTML='<div class="empty">'+esc(t('loading'))+'</div>';return;}
+      var facts=attentionFacts(),cards=[];
+      if(facts.standard)cards.push(attentionButton('standard',facts.standard,t('attentionStandard'),t('attentionStandardText'),'filter:failed',t('viewAgents')));
+      if(facts.unknown)cards.push(attentionButton('unknown',facts.unknown,t('attentionUnknown'),t('attentionUnknownText'),'filter:unknown',t('viewAgents')));
+      if(facts.stable)cards.push(attentionButton('stable-id',facts.stable,t('attentionStable'),t('attentionStableText'),'view:risks',t('matchAgents')));
+      if(facts.dead)cards.push(attentionButton('dead-reference',facts.dead,t('attentionDead'),t('attentionDeadText'),'filter:dead',t('viewAgents')));
+      if(facts.escalation)cards.push(attentionButton('escalation',facts.escalation,t('attentionEscalation'),t('attentionEscalationText'),'view:escalations',t('reviewChange')));
+      if(facts.incomplete)cards.push(attentionButton('incomplete','⚠',t('attentionIncomplete'),t('attentionIncompleteText'),'refresh',t('refresh')));
+      host.innerHTML=cards.length?cards.join(''):'<div class="attention-ok"><b>✓ '+esc(t('nothingNeedsAttention'))+'</b><div>'+esc(t('nothingNeedsAttentionText'))+'</div></div>';
+      host.querySelectorAll('[data-attention-filter]').forEach(function(button){button.onclick=function(){applyFleetFilter(button.dataset.attentionFilter,true);};});
+      host.querySelectorAll('[data-attention-view]').forEach(function(button){button.onclick=function(){setView(button.dataset.attentionView);};});
+      host.querySelectorAll('[data-attention-action="refresh"]').forEach(function(button){button.onclick=loadFleet;});
+    }
     function geneById(geneId){return state.shared&&(state.shared.genes||[]).find(function(g){return g.geneId===geneId;})||null;}
     function selectedGeneId(){return el('bulkGeneSelect').value||state.selectedBulkGeneId||'';}
     function eligibleBulkRows(){
@@ -459,29 +617,47 @@
       el('bulkPreviewBtn').disabled=blocked||!rows.length;
     }
     function renderFleet(){
-      var p=state.projection;if(!p){el('countTotal').textContent='—';el('countFailed').textContent='—';el('countOwnerless').textContent='—';el('countShared').textContent='—';el('snapshotBadge').textContent='SNAPSHOT —';el('snapshotBadge').className='badge';el('snapshotNote').textContent='';el('fleetRows').innerHTML='<tr><td colspan="9" class="empty">'+esc(t('noData'))+'</td></tr>';el('jsonBtn').disabled=true;el('csvBtn').disabled=true;renderBulkTargetPicker();return;}
-      el('jsonBtn').disabled=false;el('csvBtn').disabled=false;
-      el('countTotal').textContent=p.counters.total;el('countFailed').textContent=p.counters.failed;el('countOwnerless').textContent=p.counters.ownerless;el('countShared').textContent=p.counters.withShared;
-      el('snapshotBadge').textContent=(p.complete?'✓ COMPLETE ':'✕ INCOMPLETE ')+short(p.snapshotId);el('snapshotBadge').className='badge '+(p.complete?'good':'bad');el('snapshotNote').textContent=p.complete?t('complete'):t('incomplete');
-      var rows=visibleRows();el('fleetRows').innerHTML=rows.length?rows.map(function(r){
-        var st=r.standard||{},kind=st.status==='PASS'?'good':st.status==='MISSING'||st.status==='UNKNOWN'?'warn':'bad',versionSource=r.activeVersionSource||'UNKNOWN';
-        var versionKnown=!!r.activeVersion&&(versionSource==='EVOLUTION_LEDGER'||versionSource==='AGENT_PASSPORT'),versionLabel=versionSource==='EVOLUTION_LEDGER'?t('managedVerified'):versionSource==='AGENT_PASSPORT'?t('declaredFact'):t('sourceUnknown');
-        var activityKnown=r.activityState==='KNOWN'&&r.lastActivity&&r.lastActivitySource,activityLabel=r.lastActivitySource==='PLATFORM'?t('platformFact'):r.lastActivitySource?t('pinnedFact')+' · '+r.lastActivitySource:t('sourceUnknown');
-        return '<tr><td><b>'+esc(r.name||r.agentId)+'</b><small class="mono">'+esc(r.agentId)+'</small></td><td>'+esc(r.owner||t('unknown'))+'<small>'+esc(r.ownerSource||t('sourceUnknown'))+'</small></td>'+
-          '<td>'+esc(r.model||t('unknown'))+'<small>'+esc(r.provider||t('unknown'))+'</small></td><td>'+esc(versionKnown?r.activeVersion:t('unknown'))+'<small>'+esc(versionLabel)+' · '+esc(versionSource)+'</small></td>'+
-          '<td><span class="state '+kind+'">'+esc(statusMark(kind))+' '+esc(st.status==='PASS'?t('passed'):st.status==='MISSING'?t('missing'):st.status==='UNKNOWN'?t('standardUnknown'):t('failed'))+'</span><small>'+esc(st.issueCount||0)+' issues</small></td>'+
-          '<td>'+esc(activityKnown?fmtTime(r.lastActivity):t('unknown'))+'<small>'+esc(activityLabel)+'</small></td><td>'+esc(r.capabilityCount==null?t('unknown'):r.capabilityCount)+'<small>'+esc(r.capabilityCountSource||t('sourceUnknown'))+'</small></td>'+
-          '<td>'+esc(r.sharedGeneState==='UNKNOWN'?t('unknown'):(r.sharedGeneIds||[]).length)+'</td><td>'+
-          (r.standard.status==='PASS'?'<button class="ghost" data-cab="'+esc(r.agentId)+'">'+esc(t('openCabinet'))+'</button>':r.platformPresent===true&&r.registryPresent===false&&r.standard.status==='MISSING'?'<button class="ghost" data-draft="'+esc(r.agentId)+'">'+esc(t('createDraft'))+'</button>':'—')+'</td></tr>';}).join(''):'<tr><td colspan="9" class="empty">'+esc(t('noData'))+'</td></tr>';
+      var p=state.projection,registry=el('fleetRegistry');if(!p){el('countTotal').textContent='—';el('countPassed').textContent='—';el('countAttention').textContent='—';el('countShared').textContent='—';el('snapshotBadge').textContent='SNAPSHOT —';el('snapshotBadge').className='badge';el('snapshotNote').textContent='';el('fleetRows').innerHTML='<tr><td colspan="5" class="empty">'+esc(t('noData'))+'</td></tr>';el('jsonBtn').disabled=true;el('csvBtn').disabled=true;registry.setAttribute('aria-busy','true');syncFilterControls();renderBulkTargetPicker();return;}
+      el('jsonBtn').disabled=false;el('csvBtn').disabled=false;registry.setAttribute('aria-busy','false');
+      var allRows=p.rows||[],known=allRows.some(function(r){return r.standard&&r.standard.status!=='UNKNOWN';}),passed=allRows.filter(function(r){return r.standard&&r.standard.status==='PASS';}).length;
+      el('countTotal').textContent=p.counters.total;el('countPassed').textContent=known?passed:'—';el('countAttention').textContent=attentionCategoryCount();el('countShared').textContent=p.counters.withShared;
+      el('snapshotBadge').textContent=(p.complete?'✓ COMPLETE ':'✕ INCOMPLETE ')+short(p.snapshotId);el('snapshotBadge').className='badge '+(p.complete?'good':'bad');
+      var rows=visibleRows();el('snapshotNote').textContent=t('showing')+' '+rows.length+' '+t('of')+' '+p.counters.total+' · '+t('lastChecked')+' '+fmtTime(state.lastLoadedAt);
+      el('fleetRows').innerHTML=rows.length?rows.map(function(r){
+        var st=r.standard||{},riskKind=st.status==='PASS'?'good':st.status==='FAIL'?'bad':'warn',versionSource=r.activeVersionSource||'UNKNOWN';
+        var versionKnown=!!r.activeVersion&&(versionSource==='EVOLUTION_LEDGER'||versionSource==='AGENT_PASSPORT');
+        var activityKnown=r.activityState==='KNOWN'&&r.lastActivity&&r.lastActivitySource,platformKind=r.reconciliation==='REGISTRY_ONLY'?'bad':r.platformPresent===true?'good':'warn';
+        var ownerSource=r.ownerSource||t('sourceUnknown'),capabilitySource=r.capabilityCountSource||t('sourceUnknown');
+        var activitySource=r.lastActivitySource==='PLATFORM'?t('platformFact'):r.lastActivitySource?t('pinnedFact')+' · '+r.lastActivitySource:t('sourceUnknown');
+        var platformLabel=r.reconciliation==='REGISTRY_ONLY'?t('notOnPlatform'):r.platformPresent===true?t('onPlatform'):t('unknown');
+        var riskLabel=st.status==='PASS'?t('passportVerified'):st.status==='MISSING'?t('noPassport'):st.status==='UNKNOWN'?t('checkUnavailable'):t('passportNeedsFixes');
+        var genomeKnown=versionKnown||r.capabilityCount!=null||r.sharedGeneState!=='UNKNOWN',genomeHtml=genomeKnown?
+          '<b>'+esc(versionKnown?r.activeVersion:t('versionUnknown'))+'</b><span class="cell-meta"><small>'+esc(r.capabilityCount==null?t('unknown'):r.capabilityCount)+' '+esc(t('capabilitiesShort'))+'</small><small>Shared Genes: '+esc(r.sharedGeneState==='UNKNOWN'?t('unknown'):(r.sharedGeneIds||[]).length)+'</small></span>':
+          '<span class="state warn">⚠ '+esc(t('genomeUnavailable'))+'</span>';
+        var action=r.standard.status==='PASS'?'<button class="ghost" type="button" data-action="open-agent-cabinet" data-cab="'+esc(r.agentId)+'" aria-label="'+esc(t('openCabinet')+' — '+(r.name||r.agentId))+'">'+esc(t('openCabinet'))+'</button>':
+          r.platformPresent===true&&r.registryPresent===false&&r.standard.status==='MISSING'?'<button class="ghost" type="button" data-draft="'+esc(r.agentId)+'">'+esc(t('createDraft'))+'</button>':
+          r.standard.status==='FAIL'||r.reconciliation==='REGISTRY_ONLY'?'<button class="ghost" type="button" data-risk-agent="'+esc(r.agentId)+'">'+esc(t('viewReason'))+'</button>':
+          '<button class="ghost" type="button" data-refresh-agent="'+esc(r.agentId)+'">'+esc(t('refresh'))+'</button>';
+        return '<tr data-registry-row="'+esc(r.agentId)+'" data-owner-source="'+esc(ownerSource)+'" data-capability-source="'+esc(capabilitySource)+'" data-activity-source="'+esc(activitySource)+'"><th scope="row"><span class="mobile-label">'+esc(t('agent'))+'</span><b>'+esc(r.name||r.agentId)+'</b><span class="cell-meta"><small>'+esc(t('owner'))+': '+esc(r.owner||t('unknown'))+'</small></span></th>'+
+          '<td><span class="mobile-label">'+esc(t('platformState'))+'</span><span class="state '+platformKind+'">'+esc(statusMark(platformKind))+' '+esc(platformLabel)+'</span><span class="cell-meta"><small>'+esc(r.model||t('unknown'))+' · '+esc(r.provider||t('unknown'))+'</small><small>'+esc(t('lastActivity'))+': '+esc(activityKnown?fmtTime(r.lastActivity):t('unknown'))+'</small></span></td>'+
+          '<td><span class="mobile-label">'+esc(t('genomeColumn'))+'</span>'+genomeHtml+'</td><td><span class="mobile-label">'+esc(t('attention'))+'</span><span class="state '+riskKind+'">'+esc(statusMark(riskKind))+' '+esc(riskLabel)+'</span><small>'+esc(t('issuesLabel'))+': '+esc(st.issueCount||0)+'</small></td><td><span class="mobile-label">'+esc(t('nextStep'))+'</span>'+action+'</td></tr>';
+      }).join(''):'<tr><td colspan="5" class="empty">'+esc(t(allRows.length?'noMatches':'noAgents'))+'</td></tr>';
       el('fleetRows').querySelectorAll('[data-draft]').forEach(function(b){b.onclick=function(){downloadDraft(b.dataset.draft);};});
-      el('fleetRows').querySelectorAll('[data-cab]').forEach(function(b){b.onclick=function(){openCabinet(b.dataset.cab);};});
-      renderBulkTargetPicker();
+      el('fleetRows').querySelectorAll('[data-cab]').forEach(function(b){b.onclick=function(){state.cabinetTrigger=b;openCabinet(b.dataset.cab);};});
+      el('fleetRows').querySelectorAll('[data-risk-agent]').forEach(function(b){b.onclick=function(){openRiskDetails(b.dataset.riskAgent);};});
+      el('fleetRows').querySelectorAll('[data-refresh-agent]').forEach(function(b){b.onclick=loadFleet;});
+      syncFilterControls();renderBulkTargetPicker();
     }
     function statusMark(kind){return kind==='good'?'✓':kind==='bad'?'✕':'⚠';}
     function issueText(issue){return issue[WLANG==='en'?'message_en':'message_ru']||issue.message||issue.code;}
+    function openRiskDetails(agentId){
+      state.focusRiskAgentId=agentId;renderRisks();setView('risks');setTimeout(function(){var target=Array.from(document.querySelectorAll('[data-risk-id]')).find(function(node){return node.dataset.riskId===agentId;});if(target){target.scrollIntoView({behavior:'smooth',block:'center'});target.focus({preventScroll:true});}},0);
+    }
     function renderRisks(){var rows=state.projection?state.projection.rows:[],risk=rows.filter(function(r){return r.standard&&r.standard.status!=='MISSING'&&(r.standard.issues||[]).length;});
-      el('riskList').innerHTML=risk.length?risk.map(function(r){return '<article class="risk"><b>'+esc(r.name)+'</b>'+(r.standard.issues||[]).map(function(i){var severity=String(i.severity||'unknown').toLowerCase(),kind=severity==='error'?'bad':'warn';return '<p><span class="state '+kind+'">'+esc(statusMark(kind))+' '+esc(severity)+'</span> <code>'+esc(i.path||'—')+'</code> · <code>'+esc(i.code||'—')+'</code> · '+esc(issueText(i))+'</p>';}).join('')+'</article>';}).join(''):'<div class="empty">'+esc(t('noData'))+'</div>';
-      var missing=rows.filter(function(r){return r.standard.status==='MISSING'||r.reconciliation==='REGISTRY_ONLY';});el('missingList').innerHTML=missing.length?missing.map(function(r){var canDraft=r.platformPresent===true&&r.registryPresent===false&&r.standard.status==='MISSING';return '<article class="risk"><b>'+esc(r.name||r.agentId)+'</b><p>'+esc(r.reconciliation==='REGISTRY_ONLY'?t('dead'):t('missing'))+'</p>'+(canDraft?'<button class="ghost" data-missing-draft="'+esc(r.agentId)+'">'+esc(t('createDraft'))+'</button>':'')+'</article>';}).join(''):'<div class="empty">'+esc(t('noData'))+'</div>';
+      el('riskList').innerHTML=risk.length?risk.map(function(r){var issues=r.standard.issues||[],human=issues.map(function(i){return '<p><span aria-hidden="true">⚠</span> '+esc(issueText(i))+'</p>';}).join('');
+        var technical=issues.map(function(i){var severity=String(i.severity||'unknown').toLowerCase(),kind=severity==='error'?'bad':'warn';return '<p><span class="state '+kind+'">'+esc(statusMark(kind))+' '+esc(severity)+'</span> <code>'+esc(i.path||'—')+'</code> · <code>'+esc(i.code||'—')+'</code></p>';}).join('');
+        return '<article class="risk" tabindex="-1" data-risk-id="'+esc(r.agentId)+'"><b>'+esc(r.name)+'</b>'+human+'<details><summary>'+esc(t('technicalDetails'))+'</summary>'+technical+'</details></article>';}).join(''):'<div class="empty">'+esc(t('noData'))+'</div>';
+      var missing=rows.filter(function(r){return r.standard.status==='MISSING'||r.reconciliation==='REGISTRY_ONLY';});el('missingList').innerHTML=missing.length?missing.map(function(r){var canDraft=r.platformPresent===true&&r.registryPresent===false&&r.standard.status==='MISSING';return '<article class="risk" tabindex="-1" data-risk-id="'+esc(r.agentId)+'"><b>'+esc(r.name||r.agentId)+'</b><p>'+esc(r.reconciliation==='REGISTRY_ONLY'?t('dead'):t('missing'))+'</p>'+(canDraft?'<button class="ghost" data-missing-draft="'+esc(r.agentId)+'">'+esc(t('createDraft'))+'</button>':'')+'</article>';}).join(''):'<div class="empty">'+esc(t('noData'))+'</div>';
       el('missingList').querySelectorAll('[data-missing-draft]').forEach(function(b){b.onclick=function(){downloadDraft(b.dataset.missingDraft);};});}
     function stableIdLiveRows(){var rows=state.projection&&state.projection.rows||[];return rows.filter(function(r){return r.platformPresent===true&&r.registryPresent===false&&r.standard&&r.standard.status==='MISSING';});}
     function renderStableIdRequired(){
@@ -492,7 +668,7 @@
         var options='<option value="">— '+esc(t('selectStableAgent'))+' —</option>'+targets.map(function(row){return '<option value="'+esc(row.agentId)+'" '+(row.agentId===selected?'selected':'')+'>'+esc(row.agentId)+' · '+esc(row.name||t('unknown'))+'</option>';}).join('');
         var issueRows=issues.map(function(issue){var severity=String(issue.severity||'error').toLowerCase(),kind=severity==='error'?'bad':'warn';return '<p><span class="state '+kind+'">'+esc(statusMark(kind))+' '+esc(severity)+'</span> <code>'+esc(issue.path||'—')+'</code> · <code>'+esc(issue.code||'—')+'</code> · '+esc(issueText(issue))+'</p>';}).join('');
         return '<article class="risk stable-id-entry"><b>'+esc(entry.name||t('unknown'))+'</b><p><span class="state bad">✕ '+esc(t('stableIdRequired'))+'</span></p>'+
-          '<p>'+esc(t('sourcePassport'))+': <code>'+esc(source||'—')+'</code> · '+esc(t('sourcePath'))+': <code>'+esc(entry.sourcePath||'—')+'</code></p><code>'+esc(entry.passportSha256||'—')+'</code>'+issueRows+
+          '<details><summary>'+esc(t('technicalDetails'))+'</summary><p>'+esc(t('sourcePassport'))+': <code>'+esc(source||'—')+'</code> · '+esc(t('sourcePath'))+': <code>'+esc(entry.sourcePath||'—')+'</code></p><code>'+esc(entry.passportSha256||'—')+'</code>'+issueRows+'</details>'+
           '<div class="form"><label>'+esc(t('exactLiveAgent'))+'<select data-stable-agent="'+esc(source)+'">'+options+'</select></label><button class="primary" data-stable-draft="'+esc(source)+'" '+(source&&selected?'':'disabled')+'>'+esc(t('createDraft'))+'</button></div></article>';
       }).join('');
       host.querySelectorAll('[data-stable-agent]').forEach(function(select){select.onchange=function(){var source=select.dataset.stableAgent;state.stableTargetBySource[source]=select.value||'';var button=Array.from(host.querySelectorAll('[data-stable-draft]')).find(function(node){return node.dataset.stableDraft===source;});if(button)button.disabled=!select.value;};});
@@ -539,8 +715,8 @@
       el('bulkActions').innerHTML=actions.map(function(a){return '<span><button class="'+(a[0]==='bulk_rollback'?'danger':'primary')+'" data-bulk-action="'+a[0]+'" '+(a[2]?'':'disabled')+'>'+esc(a[1])+'</button><small class="mono">'+esc(a[3])+'='+(a[2]?'AVAILABLE':'PLATFORM_UNAVAILABLE')+'</small></span>';}).join('');el('bulkActions').querySelectorAll('[data-bulk-action]').forEach(function(b){b.onclick=function(){runBulkAction(b.dataset.bulkAction);};});
     }
     function renderReceipts(){el('receiptList').innerHTML=state.receipts.length?state.receipts.slice().reverse().map(function(r){return '<article class="receipt"><b>'+esc(r.type||'Evolution Receipt')+'</b><p>'+esc(fmtTime(r.at))+' · '+esc(r.status||'RECORDED')+'</p><code>'+esc(r.sha256||'—')+'</code></article>';}).join(''):'<div class="empty">'+esc(t('noData'))+'</div>';}
-    function renderAll(){renderFleet();renderRisks();renderStableIdRequired();renderGenes();renderEscalations();renderBulk();renderReceipts();renderBoundary();el('escalationEvidence').textContent=state.lastEscalationEvidence?JSON.stringify(state.lastEscalationEvidence,null,2):'—';}
-    async function loadFleet(){showError('');el('fleetRows').innerHTML='<tr><td colspan="9" class="empty">'+esc(t('loading'))+'</td></tr>';try{applyFleet(await request('fleet_load',{}));return true;}catch(e){showError(e.message);return false;}}
+    function renderAll(){renderFleet();renderAttention();renderRisks();renderStableIdRequired();renderGenes();renderEscalations();renderBulk();renderReceipts();renderBoundary();el('escalationEvidence').textContent=state.lastEscalationEvidence?JSON.stringify(state.lastEscalationEvidence,null,2):'—';}
+    async function loadFleet(){showError('');el('fleetRegistry').setAttribute('aria-busy','true');el('fleetRows').innerHTML='<tr><td colspan="5" class="empty">'+esc(t('loading'))+'</td></tr>';try{applyFleet(await request('fleet_load',{}));return true;}catch(e){el('fleetRegistry').setAttribute('aria-busy','false');showError(e.message);return false;}}
     async function refreshAfterMutation(kind,result){
       if(kind==='escalation')state.lastEscalationEvidence=result;else state.lastBulkEvidence=result;
       state.actorId=null;state.projection=null;state.stableIdRequired=[];state.stableTargetBySource=Object.create(null);state.shared=null;state.standards=null;state.platform=null;state.ledger=null;state.escalations=[];state.currentEscalationId=null;state.selectedEscalationId=null;state.bulkOperations=[];state.currentBulkOperationId=null;state.selectedBulkOperationId=null;state.bulk=null;state.receipts=[];renderAll();
@@ -571,10 +747,14 @@
     }
     async function openCabinet(agentId,preselectedGeneId){
       try{
+        if(!state.cabinetTrigger&&document.activeElement&&document.activeElement!==document.body)state.cabinetTrigger=document.activeElement;
         var result=PREVIEW?{cabinet:previewCabinetFromBundle(agentId)}:await request('cabinet_get',{agentId:agentId}),cab=result&&result.cabinet;
         if(!cab||typeof window.renderCabinet!=='function')throw new Error('Agent Cabinet artifact is unavailable for this validated Agent Passport.');
-        state.cabinetAgentId=agentId;state.cabinetArtifactBase=cab;el('cabinetOverlay').classList.add('on');renderCabinetEscalationForm(preselectedGeneId);renderCanonicalCabinetForSelectedGene();
+        state.cabinetAgentId=agentId;state.cabinetArtifactBase=cab;el('cabinetOverlay').classList.add('on');renderCabinetEscalationForm(preselectedGeneId);renderCanonicalCabinetForSelectedGene();el('cabinetClose').focus();
       }catch(error){showError(error.message);}
+    }
+    function closeCabinet(){
+      el('cabinetOverlay').classList.remove('on');var trigger=state.cabinetTrigger;state.cabinetTrigger=null;if(trigger&&document.contains(trigger))trigger.focus();
     }
     function openClassChangeForGene(geneId){
       var gene=geneById(geneId),ids=gene&&gene.consumerAgentIds||[],rows=state.projection&&state.projection.rows||[],source=ids.find(function(id){var row=rows.find(function(r){return r.agentId===id;});return row&&row.standard&&row.standard.status==='PASS';})||ids[0];
@@ -603,7 +783,7 @@
         window.dispatchEvent(new CustomEvent('extella_agent_cabinet_escalation',{detail:contract}));
       }catch(err){showError(err.message);}
     }
-    async function acceptCabinetEscalation(contract){try{var r=await request('escalation_accept',{contract:validateCabinetContract(contract)});el('cabinetOverlay').classList.remove('on');await refreshAfterMutation('escalation',r);}catch(err){showError(err.message);}}
+    async function acceptCabinetEscalation(contract){try{var r=await request('escalation_accept',{contract:validateCabinetContract(contract)});closeCabinet();await refreshAfterMutation('escalation',r);el('escalationsView').focus({preventScroll:true});}catch(err){showError(err.message);}}
     async function runEscAction(action){var e=currentEsc();if(!e)return;try{
       var adapter=action==='escalation_test'?'evolutionLabAdapter':action==='escalation_stage'&&e.status!=='APPROVED'?'classActivationAdapter':action==='escalation_observe'?'classObservationAdapter':action==='escalation_rollback'?'classRollbackAdapter':null;
       if(adapter&&!adapterAvailable(adapter))throw new Error(adapter+'=PLATFORM_UNAVAILABLE · '+(action==='escalation_test'?t('evidenceBoundary'):t('adapterBoundary')));
@@ -622,19 +802,30 @@
       state.accountEpoch++;state.pending.forEach(function(p){clearTimeout(p.timer);p.reject(new Error('Account context changed; stale result discarded.'));});state.pending.clear();
       state.actorId=null;state.projection=null;state.stableIdRequired=[];state.stableTargetBySource=Object.create(null);state.shared=null;state.standards=null;state.platform=null;state.ledger=null;state.escalations=[];state.bulkOperations=[];state.bulk=null;state.receipts=[];state.draft=null;
       state.cabinetAgentId=null;state.cabinetGeneId=null;state.cabinetArtifactBase=null;state.currentEscalationId=null;state.selectedEscalationId=null;state.currentBulkOperationId=null;state.selectedBulkOperationId=null;state.selectedBulkGeneId=null;state.selectedBulkIds=[];state.lastEscalationEvidence=null;state.lastBulkEvidence=null;
+      state.lastLoadedAt=null;state.focusRiskAgentId=null;state.cabinetTrigger=null;
       el('searchInput').value='';el('filterSelect').value='';el('bulkType').value='shared_gene_change';el('bulkVersionInput').value='';el('cabinetVersionInput').value='';
       el('standardsBadge').textContent='STANDARD —';el('standardsBadge').className='badge';el('cabinetTitle').textContent='Agent Cabinet';el('cabinetHost').innerHTML='';el('cabinetGeneSelect').innerHTML='';el('cabinetImpact').textContent='';el('cabinetEscalateBtn').disabled=true;
-      el('cabinetOverlay').classList.remove('on');window._cab=null;renderAll();showError(message||'');
+      el('advancedNav').open=false;el('cabinetOverlay').classList.remove('on');window._cab=null;setView('fleet');renderAll();showError(message||'');
     }
     document.querySelectorAll('.tab').forEach(function(b){b.onclick=function(){setView(b.dataset.view);};});
+    document.querySelectorAll('[data-summary-filter]').forEach(function(b){b.onclick=function(){applyFleetFilter(b.dataset.summaryFilter,true);};});
+    document.querySelectorAll('[data-summary-view]').forEach(function(b){b.onclick=function(){setView(b.dataset.summaryView);};});
+    document.querySelectorAll('[data-summary-attention]').forEach(function(b){b.onclick=function(){el('attentionSection').scrollIntoView({behavior:'smooth',block:'start'});el('attentionSection').focus({preventScroll:true});};});
+    document.querySelectorAll('[data-fleet-filter]').forEach(function(b){b.onclick=function(){applyFleetFilter(b.dataset.fleetFilter,false);};});
     el('langBtn').onclick=function(){WLANG=WLANG==='ru'?'en':'ru';applyLanguage();renderAll();if(el('cabinetOverlay').classList.contains('on'))updateCabinetImpact();};
     el('helpBtn').onclick=function(){if(typeof openHelp==='function')openHelp('evolution_console');};el('refreshBtn').onclick=loadFleet;
-    el('searchInput').oninput=function(){renderFleet();renderBulk();};el('filterSelect').onchange=function(){renderFleet();renderBulk();};el('jsonBtn').onclick=function(){exportRows('json');};el('csvBtn').onclick=function(){exportRows('csv');};
+    el('searchInput').oninput=function(){renderFleet();renderBulk();};el('filterSelect').onchange=function(){syncFilterControls();renderFleet();renderBulk();};el('jsonBtn').onclick=function(){exportRows('json');};el('csvBtn').onclick=function(){exportRows('csv');};
+    el('sharedGenesShortcut').onclick=function(){setView('genes');};
     el('geneObjectBtn').onclick=function(){state.geneView='object';renderGenes();};el('geneAgentBtn').onclick=function(){state.geneView='agent';renderGenes();};
     el('bulkType').onchange=function(){state.selectedBulkIds=[];state.lastBulkEvidence=null;renderFleet();renderBulk();};el('bulkGeneSelect').onchange=function(){state.selectedBulkGeneId=el('bulkGeneSelect').value||null;state.selectedBulkIds=[];state.lastBulkEvidence=null;renderFleet();renderBulk();};
     el('bulkVersionInput').oninput=function(){state.lastBulkEvidence=null;renderBulkTargetPicker();renderBulk();};el('bulkPreviewBtn').onclick=createBulkPreview;
     el('cabinetGeneSelect').onchange=function(){state.cabinetGeneId=el('cabinetGeneSelect').value||null;updateCabinetImpact();renderCanonicalCabinetForSelectedGene();};el('cabinetVersionInput').oninput=updateCabinetImpact;el('cabinetEscalateBtn').onclick=dispatchCabinetEscalation;
-    el('cabinetClose').onclick=function(){el('cabinetOverlay').classList.remove('on');};el('cabinetOverlay').onclick=function(e){if(e.target===el('cabinetOverlay'))el('cabinetOverlay').classList.remove('on');};
+    el('cabinetClose').onclick=closeCabinet;el('cabinetOverlay').onclick=function(e){if(e.target===el('cabinetOverlay'))closeCabinet();};
+    document.addEventListener('keydown',function(event){
+      var overlay=el('cabinetOverlay');if(!overlay.classList.contains('on'))return;
+      if(event.key==='Escape'){event.preventDefault();closeCabinet();return;}
+      if(event.key==='Tab'){var focusable=Array.from(overlay.querySelectorAll('button:not([disabled]),select:not([disabled]),input:not([disabled]),[tabindex="0"]')),first=focusable[0],last=focusable[focusable.length-1];if(!first){event.preventDefault();el('cabinetClose').focus();return;}if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}}
+    });
     window.addEventListener('extella_agent_cabinet_escalation',function(event){var contract=event&&event.detail;if(contract&&typeof contract==='object')acceptCabinetEscalation(contract);});
     window.addEventListener('message',function(event){
       if(event.source!==window.parent)return;var d=event.data||{};
@@ -643,7 +834,7 @@
       if(d.type==='etb_account_reset'||d.type==='etb_logout'||d.type==='etb_session_reset'){resetAccountState(t('accountCleared'));return;}
       if(d.type==='etb_evolution_console_result'){var p=state.pending.get(d.reqId);if(!p)return;clearTimeout(p.timer);state.pending.delete(d.reqId);if(p.epoch!==state.accountEpoch){p.reject(new Error('Account context changed; stale result discarded.'));return;}if(d.ok===false)p.reject(new Error(d.error||'Evolution Console operation failed'));else p.resolve(d.result||d);}
     });
-    if(new URLSearchParams(location.search).get('lang')==='en')WLANG='en';applyLanguage();document.documentElement.dataset.theme=new URLSearchParams(location.search).get('theme')==='light'?'light':'dark';renderAll();
+    if(new URLSearchParams(location.search).get('lang')==='en')WLANG='en';applyLanguage();document.documentElement.dataset.theme=new URLSearchParams(location.search).get('theme')==='light'?'light':'dark';renderAll();setView('fleet');
     window.parent.postMessage({type:'etb_ui_health',ok:true,pluginId:'profit-growth-scenario'},'*');
     if(PREVIEW)loadFleet();
   })();
