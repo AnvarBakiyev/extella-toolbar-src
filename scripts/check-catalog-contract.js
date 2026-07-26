@@ -113,8 +113,15 @@ for (const { file, name, value } of manifests) {
     if (!def.name || !/^[A-Za-z_][A-Za-z0-9_]{1,127}$/.test(def.name)) fail(`${name}: invalid expert name`);
     if (expertNames.has(def.name)) fail(`${name}: duplicate authored expert ${def.name}`);
     expertNames.add(def.name);
-    if (value.mode === 'scenario' && !def.name.startsWith('xtl_capability_studio_')) {
-      fail(`${name}: scenario Expert must use the Capability Studio namespace`);
+    if (value.mode === 'scenario') {
+      const scenarioExpertPrefix = value.id === 'capability-studio-scenario'
+        ? 'xtl_capability_studio_'
+        : value.id === 'profit-growth-scenario'
+          ? '_etb_evolution_'
+          : '';
+      if (!scenarioExpertPrefix || !def.name.startsWith(scenarioExpertPrefix)) {
+        fail(`${name}: scenario Expert must use its reviewed product namespace`);
+      }
     }
     const code = def.codeFile
       ? readManifestAsset(file, def.codeFile, 'expert_defs[].codeFile')

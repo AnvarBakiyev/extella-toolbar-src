@@ -2346,6 +2346,175 @@ ETB.router = (function () {
     });
   }
 
+  function _evolutionAutomationSourceName(source) {
+    var exact = String(source || '');
+    var names = {
+      _mkt_automations: 'catalog',
+      _mkt_installed: 'composer_installed',
+      BROWSER_INSTALLED: 'local_installed',
+      PLATFORM_AGENTS: 'platform_agents',
+      PLATFORM_EXPERTS: 'experts',
+      DEVICE_CARDS: 'device',
+      SCHEDULE_KV: 'schedules'
+    };
+    return names[exact] || 'UNKNOWN';
+  }
+
+  function _evolutionAutomationScheduleState(fact) {
+    var descriptor = fact && fact.descriptor || {};
+    var value = fact && fact.value;
+    var row = {
+      automation_id: String(
+        descriptor.automationId || descriptor.automation_id || ''
+      )
+    };
+    if (!row.automation_id || !fact || fact.available !== true) return null;
+    if (typeof value === 'boolean') {
+      row.active = value;
+      return row;
+    }
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      if (typeof value.active === 'boolean') row.active = value.active;
+      else if (typeof value.enabled === 'boolean') row.active = value.enabled;
+      else if (typeof value.paused === 'boolean') row.active = !value.paused;
+      else if (value.status != null) row.status = String(value.status);
+      return row;
+    }
+    if (typeof value === 'string') row.status = value;
+    return row;
+  }
+
+  function _evolutionAutomationSourceComplete(source) {
+    return Boolean(
+      source &&
+      source.available === true &&
+      Array.isArray(source.errors) &&
+      source.errors.length === 0
+    );
+  }
+
+  function _evolutionAutomationProjectionInput(sources) {
+    var sourceMap;
+    var requiredArrays = [
+      'catalogItems',
+      'deviceCardRows',
+      'platformAgentRows',
+      'platformExpertRows',
+      'scheduleFacts',
+      'browserInstalledIds',
+      'composerInstalledItems',
+      'errors'
+    ];
+    var requiredSources = [
+      'catalog',
+      'composerInstalled',
+      'browserInstalled',
+      'platformAgents',
+      'platformExperts',
+      'schedules',
+      'deviceCards'
+    ];
+    var valid = sources &&
+      sources.schemaVersion ===
+        'extella.evolution.automation-registry-sources.v1' &&
+      typeof sources.complete === 'boolean' &&
+      String(sources.collectedAt || '').trim() &&
+      sources.sources &&
+      typeof sources.sources === 'object' &&
+      requiredArrays.every(function (key) {
+        return Array.isArray(sources[key]);
+      }) &&
+      requiredSources.every(function (key) {
+        var source = sources.sources[key];
+        return source &&
+          typeof source.available === 'boolean' &&
+          Array.isArray(source.errors);
+      }) &&
+      sources.complete === requiredSources.every(function (key) {
+        return _evolutionAutomationSourceComplete(sources.sources[key]);
+      });
+    if (!valid) {
+      throw _evolutionError(
+        'AUTOMATION_REGISTRY_SOURCE_CONTRACT_INVALID',
+        'the read-only automation source snapshot has an invalid contract'
+      );
+    }
+    sourceMap = sources.sources;
+    return {
+      catalogRecords: sources.catalogItems,
+      deviceRecords: sources.deviceCardRows,
+      platformAgents: sources.platformAgentRows,
+      experts: sources.platformExpertRows,
+      scheduleStates: sources.scheduleFacts.map(
+          _evolutionAutomationScheduleState
+        ).filter(Boolean),
+      localInstalledIds: sources.browserInstalledIds,
+      composerInstalledRecords: sources.composerInstalledItems,
+      sourceErrors: sources.errors.map(function (error) {
+          return {
+            source: _evolutionAutomationSourceName(error && error.source),
+            code: String(error && error.code || 'SOURCE_UNAVAILABLE')
+          };
+        }),
+      sourceAvailability: {
+        catalog: _evolutionAutomationSourceComplete(sourceMap.catalog),
+        device: _evolutionAutomationSourceComplete(sourceMap.deviceCards),
+        platform_agents: _evolutionAutomationSourceComplete(
+          sourceMap.platformAgents
+        ),
+        experts: _evolutionAutomationSourceComplete(
+          sourceMap.platformExperts
+        ),
+        schedules: _evolutionAutomationSourceComplete(sourceMap.schedules),
+        local_installed: _evolutionAutomationSourceComplete(
+          sourceMap.browserInstalled
+        ),
+        composer_installed: _evolutionAutomationSourceComplete(
+          sourceMap.composerInstalled
+        )
+      },
+      sourceSnapshotComplete: sources.complete === true,
+      includeReviewedAutomations: true,
+      checkedAt: String(sources.collectedAt)
+    };
+  }
+
+  function _evolutionAutomationRegistryLoad(context) {
+    var provider = ETB.evolutionAutomationRegistryProvider;
+    var projector = ETB.evolutionAutomationRegistry;
+    if (!provider || typeof provider.load !== 'function' ||
+        !projector || typeof projector.project !== 'function') {
+      return Promise.reject(_evolutionError(
+        'AUTOMATION_REGISTRY_UNAVAILABLE',
+        'the read-only automation registry projection is unavailable'
+      ));
+    }
+    return provider.load({
+      actorId: context.actorId,
+      epoch: context.epoch,
+      assertContext: function () {
+        _agentControlAssertContext(context);
+      }
+    }).then(function (sources) {
+      _agentControlAssertContext(context);
+      var registry = projector.project(
+        _evolutionAutomationProjectionInput(sources)
+      );
+      // The primary automation registry path performs read/compute only.
+      // Agent Passport, Shared Genes, Agent Cabinet and Evolution Loop are
+      // loaded separately if a person opens an advanced agent-level view.
+      return {
+        actorId: context.actorId,
+        registry: registry,
+        legacy: null,
+        legacyError: {
+          code: 'ADVANCED_EVOLUTION_NOT_LOADED',
+          message: 'advanced agent-level Evolution data is loaded on demand'
+        }
+      };
+    });
+  }
+
   function _evolutionRequireSession(data, context, requireComplete) {
     var session = _evolutionFleetSession;
     if (!session || session.actorId !== context.actorId ||
@@ -3742,6 +3911,9 @@ ETB.router = (function () {
       ));
     }
     var context = _agentControlContext(actorId, data && data.reqId);
+    if (action === 'automation_registry_load') {
+      return _evolutionAutomationRegistryLoad(context);
+    }
     if (action === 'fleet_load') return _evolutionFleetLoad(context);
     if (action === 'passport_draft') {
       try {

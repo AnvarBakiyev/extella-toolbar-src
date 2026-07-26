@@ -3,22 +3,24 @@
   "mode": "scenario",
   "featured": true,
   "name": "Evolution Console",
-  "tagline": "Консоль управления парком агентов",
-  "description": "Поверхность Extella Evolution для инвентаря всего парка, рисков по Agent Passport, карты Shared Genes и управляемых изменений через Evolution Loop.",
+  "tagline": "Единый реестр автоматизаций",
+  "description": "Поверхность Extella Evolution для единого read-only реестра автоматизаций пользователя: каталог и установки разделены, отставшие версии и мёртвые ссылки вычисляются автоматически.",
   "category": "business",
   "type": "application",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "eye": "Extella Evolution",
   "pills": [
-    "Весь парк",
-    "Shared Genes",
-    "Evolution Loop"
+    "Автоматизации",
+    "Каталог и установки",
+    "Вычисляемые риски"
   ],
   "stars": "5.0",
   "installs": 0,
   "source": "",
-  "owned_experts": false,
-  "experts": [],
+  "owned_experts": true,
+  "experts": [
+    "_etb_evolution_registry_scan_v1"
+  ],
   "concepts": [],
   "requirements": [],
   "ui": {
@@ -29,9 +31,11 @@
   },
   "capabilities": [
     {
-      "id": "fleet_inventory",
-      "name": "Инвентарь парка",
-      "version": "EVOLUTION_FLEET_V1",
+      "id": "automation_registry",
+      "name": "Реестр автоматизаций",
+      "description": "Read-only проекция каталога, установок, версий, состава и вычисляемых рисков автоматизаций пользователя.",
+      "expert_name": "_etb_evolution_registry_scan_v1",
+      "version": "EVOLUTION_AUTOMATION_REGISTRY_V1",
       "external_writes": false
     },
     {
@@ -60,7 +64,17 @@
       "external_writes": false
     }
   ],
-  "expert_defs": [],
+  "expert_defs": [
+    {
+      "name": "_etb_evolution_registry_scan_v1",
+      "description": "Read-only strict scanner for top-level current-device automation cards. It ignores backup-shaped files and never mutates the device registry.",
+      "cspl": "fython",
+      "global": true,
+      "kwargs": {},
+      "codeFile": "evolution-registry-scanner.py",
+      "sourceSha256": "ab76ee5633353ebec87825b672eeb28c3b1c931c5426da26bda46370fff68134"
+    }
+  ],
   "conceptTexts": [],
   "hidden": false,
   "trust_tier": "verified"
