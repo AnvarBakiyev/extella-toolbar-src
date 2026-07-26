@@ -1,0 +1,44 @@
+{
+  "id": "extella_adoption_wizard",
+  "supportedPluginId": "extella_adoption_wizard",
+  "classification": "supported_on_demand",
+  "mode": "managed_runtime",
+  "featured": true,
+  "hidden": false,
+  "name": "Конструктор",
+  "tagline": "Собирает процессы, расписания и рабочие пространства Extella",
+  "description": "Поддерживаемая локальная программа Extella. Устанавливается только по нажатию через проверенный пакет, создаёт экспертов текущего аккаунта и запускается под единым контроллером процессов.",
+  "category": "ai-work",
+  "type": "tool",
+  "version": "5.0.0-rc.1",
+  "eye": "Extella Client",
+  "pills": [
+    "Процессы",
+    "Расписания",
+    "Рабочие пространства"
+  ],
+  "source": "Extella Client release manifest",
+  "experts": [],
+  "concepts": [],
+  "requirements": [
+    "Extella Client 2.0.0-rc.1"
+  ],
+  "ui": {
+    "type": "local_server",
+    "port": 8765,
+    "mainFile": "wizard.html",
+    "openInBrowser": false
+  },
+  "service": {
+    "port": 8765,
+    "owner": "extella_adoption_wizard"
+  },
+  "expert_defs": [],
+  "conceptTexts": [],
+  "releaseState": {
+    "advertised": false,
+    "verification": "pending"
+  },
+  "trust_tier": "candidate",
+  "_fixture": "Испытательный образец для scripts/check-managed-runtime-lifecycle.js. НЕ продуктовая карточка: карточка Конструктора раздаётся через реестр пака (~/extella-plugins/_registry), поэтому в каталоге тулбара её быть не должно — из-за этого гейт и падал с 22.07."
+}

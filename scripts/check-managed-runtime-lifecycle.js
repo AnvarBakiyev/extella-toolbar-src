@@ -8,8 +8,13 @@ const vm = require('vm');
 
 const root = path.resolve(__dirname, '..');
 const source = fs.readFileSync(path.join(root, 'toolbar/src/core/plugins.js'), 'utf8');
+// Испытательный образец, а НЕ продуктовая карточка каталога. Раньше проверка
+// читала toolbar/plugins/extella_adoption_wizard.json — карточку, которая в main
+// не поставляется намеренно (Конструктор раздаётся через реестр пака), поэтому
+// с 22.07.2026 гейт падал с ENOENT и ничего не проверял. Причина: выборочный
+// мерж 9a1a663 взял скрипт без его образца.
 const manifest = JSON.parse(fs.readFileSync(
-  path.join(root, 'toolbar/plugins/extella_adoption_wizard.json'), 'utf8'
+  path.join(root, 'toolbar/tests/fixtures/managed-runtime-card.json'), 'utf8'
 ));
 
 function response(status, payload) {
