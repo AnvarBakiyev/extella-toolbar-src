@@ -2619,7 +2619,8 @@ var BIZ_ORDER_ALL = ['work','marketing','money','study','home','travel','health'
 // humanize-plugins (Claude): dev/техно-утилиты помечены audience=pro и в «Для всех»
 // НЕ показываются (они в «Для профи»). Выбор Extella-200 (MCP-репо), тоже «Для профи».
 var CURATED_PROGRAMS = {
-  'profit-growth-scenario': { biz:'work', icon:'✦', name:'Центр управления агентами', tagline:'Знания, правила, способности и проверяемые версии ваших агентов' },
+  'profit-growth-scenario': { biz:'work', icon:'✦', name:'Evolution Console', tagline:'Консоль управления парком агентов' },
+  'capability-studio-scenario': { biz:'work', icon:'◇', name:'Студия способностей', tagline:'Отдельный демо-каталог подтверждённых возможностей' },
   'legal-simplifier': { biz:'docs', icon:'⚖️', name:'Договор простым языком', tagline:'Объяснит по-человечески и покажет, на что смотреть перед подписью' },
   'meeting-notes': { biz:'work', icon:'📝', name:'Итоги встречи', tagline:'Был созвон, будут задачи: кто, что и к какому сроку' },
   'email-composer': { biz:'work', icon:'✉️', name:'Деловые письма', tagline:'Вежливо, по делу и без «доброго времени суток»' },
@@ -4186,7 +4187,7 @@ function renderDesktop(){
     {lbl:'Команда',          ico:'users',    acc:'#C9A35C', req:'extella_team', go:"notify('open','extella_team')",        tip:'Пригласить в общий контур — именные ключи доступа'},
     {lbl:'Подключения',      ico:'globe',    acc:'#2F6B66', req:'extella_connectors', go:"notify('open','extella_connectors')", tip:'Свои сервисы, CRM и кабинеты — один контур доступа'},
     {lbl:'Псевдоанонимизация',ico:'docs',    acc:'#6B7280', req:'extella_anon', go:"notify('open','extella_anon')",         tip:'Файлы с ПДн → безопасные копии: локально, без ИИ-моделей'},
-    {lbl:'Центр агентов',    ico:'monitor',  acc:'#5B4FC4', go:"notify('open','profit-growth-scenario')", tip:'Знания, правила, способности и проверяемые версии ваших агентов'}
+    {lbl:'Evolution Console',ico:'monitor',  acc:'#5B4FC4', go:"notify('open','profit-growth-scenario')", tip:'Консоль управления парком агентов'}
   ];
   // Честность стола: если системного плагина нет в реестре устройства — ярлык
   // приглушён, а клик объясняет причину (раньше клик молча умирал на хосте).

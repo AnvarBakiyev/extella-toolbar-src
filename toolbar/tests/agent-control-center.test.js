@@ -865,9 +865,12 @@ test('ACC-11: unknown shared dependency fails closed instead of reporting zero i
   );
 });
 
-test('build loads the ES5-compatible Agent Control core immediately after api.js', () => {
+test('build loads both ES5 Evolution cores immediately after api.js', () => {
   const build = fs.readFileSync(buildPath, 'utf8');
-  assert.match(build, /'api\.js',\s*\n\s*'agent-control\.js',\s*\n\s*'install-prompt\.js'/);
+  assert.match(
+    build,
+    /'api\.js',\s*\n\s*'agent-control\.js',\s*\n\s*'evolution-console\.js',\s*\n\s*'install-prompt\.js'/,
+  );
   assert.doesNotMatch(coreSource, /\brequire\s*\(/);
   assert.doesNotMatch(coreSource, /=>/);
   assert.doesNotMatch(coreSource, /\b(?:const|let)\s+[A-Za-z_$]/);

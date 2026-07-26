@@ -1,0 +1,61 @@
+{
+  "id": "capability-studio-scenario",
+  "mode": "scenario",
+  "featured": false,
+  "name": "Студия способностей",
+  "tagline": "Отдельный демо-каталог подтверждённых возможностей",
+  "description": "Демонстрационный каталог способностей и два изолированных эксперимента. Не является частью Extella Evolution.",
+  "category": "business",
+  "type": "application",
+  "version": "0.3.0",
+  "eye": "DEMO",
+  "pills": [
+    "30 способностей",
+    "Прибыльный рост",
+    "Командная память"
+  ],
+  "stars": "5.0",
+  "installs": 0,
+  "source": "",
+  "owned_experts": true,
+  "experts": [
+    "xtl_capability_studio_profitability_v1"
+  ],
+  "concepts": [],
+  "requirements": [],
+  "ui": {
+    "type": "html",
+    "htmlFile": "profit-growth.html",
+    "tokenless": true,
+    "expectsHealth": true
+  },
+  "capabilities": [
+    {
+      "id": "profitability_calculation",
+      "name": "Единый расчёт прибыльности",
+      "expert_name": "xtl_capability_studio_profitability_v1",
+      "version": "CALC_V1",
+      "external_writes": false
+    }
+  ],
+  "expert_defs": [
+    {
+      "name": "xtl_capability_studio_profitability_v1",
+      "description": "Deterministically calculates contribution profit and margin after COGS, returns, commission, logistics and advertising. Returns canonical hashes and never performs external writes.",
+      "cspl": "fython",
+      "global": true,
+      "kwargs": {
+        "revenue": 1000000,
+        "cogs": 500000,
+        "returns_loss": 20000,
+        "commission": 50000,
+        "logistics": 30000,
+        "ad_spend": 200000
+      },
+      "codeFile": "profit-growth-expert.py"
+    }
+  ],
+  "conceptTexts": [],
+  "hidden": false,
+  "trust_tier": "verified"
+}

@@ -1,0 +1,48 @@
+{
+  "agent": {
+    "name": "Dead Reference Demo Agent",
+    "platform_agent_id": "agent_demo_fixture_dead_reference",
+    "platform_provider": "alibaba",
+    "declared_instructions": "Registry-only fixture with no matching platform metadata row.",
+    "owner": "Demo Owner",
+    "business_goal": "Prove a registry-only stable ID is reported as a dead reference",
+    "model_profile": "qwen-plus",
+    "version": "1.0.0",
+    "languages": ["ru", "en"],
+    "immutable_bundle_id": "demo-bundle-dead-reference-v1",
+    "dependency_lock_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "interfaces": ["Evolution Console demo"],
+    "hosting_profile": "DEMO_FIXTURE",
+    "data_classification": "synthetic demo data"
+  },
+  "capabilities": [
+    {
+      "name": "read_only_registry_probe",
+      "version": "1.0.0",
+      "autonomy": "A0",
+      "side_effects": "none",
+      "confirmation": "never",
+      "idempotency": "supported",
+      "global": false,
+      "rollback": "",
+      "evidence_schema": "",
+      "permissions": [],
+      "rules": [],
+      "help_surface": "Evolution Console demo help",
+      "limits": ["DEMO_FIXTURE only; never deletes a live platform agent"]
+    }
+  ],
+  "shared_genes": [],
+  "budgets": {
+    "max_duration_ms": 30000,
+    "max_llm_tokens": 4000,
+    "max_delegation_depth": 0,
+    "max_external_actions": 0
+  },
+  "operations": {
+    "success_metric": "dead reference is detected only by stable ID",
+    "alerts": [],
+    "evidence_retention": "test run",
+    "owner_on_call": "Demo Owner"
+  }
+}

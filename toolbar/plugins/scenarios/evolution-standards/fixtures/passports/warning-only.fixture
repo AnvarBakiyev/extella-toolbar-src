@@ -1,0 +1,56 @@
+{
+  "agent": {
+    "name": "Warning-only Demo Agent",
+    "platform_agent_id": "agent_demo_fixture_warning_only",
+    "platform_provider": "dashscope",
+    "declared_instructions": "Read-only demo instructions with one passport warning.",
+    "owner": "Demo Owner",
+    "business_goal": "Prove warnings do not suppress a valid Agent Cabinet",
+    "model_profile": "qwen-plus",
+    "version": "1.0.0",
+    "languages": ["ru", "en"],
+    "immutable_bundle_id": "",
+    "dependency_lock_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "interfaces": ["Evolution Console demo"],
+    "hosting_profile": "DEMO_FIXTURE",
+    "data_classification": "synthetic demo data"
+  },
+  "capabilities": [
+    {
+      "name": "read_only_summary",
+      "version": "1.0.0",
+      "autonomy": "A1",
+      "side_effects": "none",
+      "confirmation": "never",
+      "idempotency": "supported",
+      "global": false,
+      "rollback": "",
+      "evidence_schema": "",
+      "permissions": [],
+      "rules": [],
+      "help_surface": "Evolution Console demo help",
+      "limits": ["DEMO_FIXTURE only; never reads or changes live customer data"]
+    }
+  ],
+  "shared_genes": [
+    {
+      "gene_id": "rule.demo.stable-approval-guard",
+      "kind": "rule",
+      "name": "Stable demo approval guard",
+      "version": "1.0.0",
+      "provenance": "global"
+    }
+  ],
+  "budgets": {
+    "max_duration_ms": 30000,
+    "max_llm_tokens": 4000,
+    "max_delegation_depth": 0,
+    "max_external_actions": 0
+  },
+  "operations": {
+    "success_metric": "warning report and Cabinet are both preserved",
+    "alerts": [],
+    "evidence_retention": "test run",
+    "owner_on_call": "Demo Owner"
+  }
+}

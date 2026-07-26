@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; font-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Центр управления агентами — Extella</title>
+  <title>Студия способностей — Extella</title>
   <style>
     :root {
       color-scheme: dark;
@@ -758,24 +758,20 @@
 </head>
 <body>
   <main class="shell">
-    <nav class="studio-nav" aria-label="Разделы Центра управления агентами">
+    <nav class="studio-nav" aria-label="Разделы Студии способностей">
       <div class="studio-brand">
         <span class="studio-mark">✦</span>
-        <span><b>Центр управления агентами</b><span>Черновик → Полигон → версия → точный rollback</span></span>
+        <span><b>Студия способностей</b><span>Отдельный демо-каталог, не часть Extella Evolution</span></span>
       </div>
-      <button class="studio-tab on" type="button" data-studio-view="overview">Обзор</button>
-      <button class="studio-tab" type="button" data-studio-view="agents">Агенты</button>
-      <button class="studio-tab" type="button" data-studio-view="governance">Знания и правила</button>
-      <button class="studio-tab" type="button" data-studio-view="playground">Полигон</button>
-      <button class="studio-tab" type="button" data-studio-view="versions">Изменения и версии</button>
-      <button class="studio-tab" type="button" data-studio-view="evidence">Запуски и доказательства</button>
-      <button class="studio-tab" type="button" data-studio-view="capabilities">Способности</button>
+      <button class="studio-tab on" type="button" data-studio-view="capabilities">Способности</button>
+      <button class="studio-tab" type="button" data-studio-view="scenario">Прибыльный рост</button>
+      <button class="studio-tab" type="button" data-studio-view="memory">Командная память</button>
     </nav>
 
     <div class="cc-global-error" id="controlError" role="alert"></div>
     <div class="cc-demo" id="controlDemoBanner">DEMO · PREVIEW=1: агенты, снимки, ledger и receipts созданы в памяти этой страницы. Никакие данные Extella не читаются и не изменяются.</div>
 
-    <section class="studio-view on" id="overviewView">
+    <section class="studio-view" id="overviewView">
       <header class="cc-hero">
         <div>
           <div class="eyebrow">Extella · управляемый контур</div>
@@ -1035,7 +1031,7 @@
       </section>
     </section>
 
-    <section class="studio-view" id="capabilitiesView">
+    <section class="studio-view on" id="capabilitiesView">
       <div class="studio-hero">
         <div class="eyebrow">Extella · карта возможностей</div>
         <h1>Доказанная способность должна быть видна и применима</h1>
@@ -2642,10 +2638,9 @@
         controlResetAccountState();
         controlClearError();
         applyTheme(data.theme);
-        renderControlCenter();
-        window.parent.postMessage({ type: 'etb_ui_health', ok: true, pluginId: 'profit-growth-scenario' }, '*');
+        switchStudioView('capabilities');
+        window.parent.postMessage({ type: 'etb_ui_health', ok: true, pluginId: 'capability-studio-scenario' }, '*');
         loadAgents();
-        controlBootstrap();
         return;
       }
       if (data.type === 'etb_account_reset') {
@@ -3557,8 +3552,8 @@
         scenario: 'scenarioView',
         memory: 'memoryView'
       };
-      var target = targets[view] || targets.overview;
-      var navView = view === 'scenario' ? 'playground' : view === 'memory' ? 'evidence' : view;
+      var target = targets[view] || targets.capabilities;
+      var navView = view;
       document.querySelectorAll('.studio-view').forEach(function (node) {
         node.classList.toggle('on', node.id === target);
       });
@@ -3566,7 +3561,9 @@
         button.classList.toggle('on', button.getAttribute('data-studio-view') === navView);
       });
       if (view === 'memory') renderMemoryAgentSelects();
-      if (view !== 'scenario' && view !== 'memory') renderControlCenter();
+      if (view !== 'scenario' && view !== 'memory' && view !== 'capabilities') {
+        renderControlCenter();
+      }
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -4430,17 +4427,15 @@
     initializeCapabilityCatalog();
     restoreMemorySession();
     $('controlRuleText').value = CONTROL_RULE_TEXT;
-    renderControlCenter();
+    switchStudioView('capabilities');
     var requestedView = new URLSearchParams(location.search).get('view');
     if (requestedView && [
-      'overview', 'agents', 'governance', 'playground', 'versions',
-      'evidence', 'capabilities', 'scenario', 'memory'
+      'capabilities', 'scenario', 'memory'
     ].indexOf(requestedView) !== -1) switchStudioView(requestedView);
-    window.parent.postMessage({ type: 'etb_ui_health', ok: true, pluginId: 'profit-growth-scenario' }, '*');
+    window.parent.postMessage({ type: 'etb_ui_health', ok: true, pluginId: 'capability-studio-scenario' }, '*');
     if (PREVIEW) {
       applyTheme(new URLSearchParams(location.search).get('theme') || 'dark');
       loadAgents();
-      controlBootstrap();
     } else {
       setTimeout(function () {
         if (!state.initialized) {

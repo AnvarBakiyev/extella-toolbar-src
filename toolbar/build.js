@@ -25,6 +25,12 @@ const PUBLIC  = path.join(ROOT, 'public');
 const OUT     = path.join(ROOT, 'build');
 const DESKTOP_LOADER = path.join(ROOT, 'assets', 'desktop-loader.webm');
 const BRAND_LOGO = path.join(ROOT, 'assets', 'extella-x.png');
+const EVOLUTION_STANDARDS_BUNDLE = path.join(
+  PLUGINS,
+  'scenarios',
+  'evolution-standards',
+  'evolution-standards-bundle.json'
+);
 const RELEASE_ARTIFACTS = process.argv.slice(2).includes('--release-artifacts');
 
 // ── Module load order ──────────────────────────────────────────────────────
@@ -34,6 +40,7 @@ const CORE_ORDER = [
   'auth.js',
   'api.js',
   'agent-control.js',
+  'evolution-console.js',
   'install-prompt.js',
   'repo-analyzer.js',
   'hf-analyzer.js',
@@ -82,13 +89,97 @@ function collectJsonFiles(dir) {
   return results;
 }
 
+function evolutionRuntimeBundle(bundle) {
+  const runtime = JSON.parse(JSON.stringify(bundle));
+  const artifacts = runtime.standards && runtime.standards.artifacts || {};
+  Object.keys(artifacts).forEach(function (key) {
+    if (artifacts[key] && typeof artifacts[key] === 'object') {
+      delete artifacts[key].source;
+    }
+  });
+  return runtime;
+}
+
+function loadEvolutionStandardsBundle() {
+  if (!fs.existsSync(EVOLUTION_STANDARDS_BUNDLE)) {
+    throw new Error('pinned Evolution standards bundle is missing');
+  }
+  const bundle = JSON.parse(readFile(EVOLUTION_STANDARDS_BUNDLE));
+  if (!bundle ||
+      bundle.schema !== 'extella.evolution.standards_bundle.v1' ||
+      !bundle.standards || !bundle.standards.artifacts ||
+      !bundle.passport_template || !Array.isArray(bundle.agents)) {
+    throw new Error('pinned Evolution standards bundle has an invalid schema');
+  }
+  if (bundle.data_mode !== 'DEMO_FIXTURE' ||
+      bundle.production_eligible !== false ||
+      bundle.live_projection_allowed !== false ||
+      !bundle.runtime_policy ||
+      bundle.runtime_policy.live_projection !== 'FORBIDDEN' ||
+      bundle.runtime_policy.production_merge !== 'FORBIDDEN') {
+    throw new Error(
+      'static toolbar embedding accepts only the reviewed DEMO_FIXTURE bundle; ' +
+      'production Agent Passports require the account-scoped host provider'
+    );
+  }
+  const createHash = require('crypto').createHash;
+  ['cabinet_widget', 'help_widget'].forEach(function (key) {
+    const artifact = bundle.standards.artifacts[key];
+    if (!artifact || typeof artifact.source !== 'string' ||
+        !/^[a-f0-9]{64}$/.test(String(artifact.sha256 || ''))) {
+      throw new Error(`pinned ${key} source/hash is missing`);
+    }
+    const actual = createHash('sha256')
+      .update(artifact.source, 'utf8')
+      .digest('hex');
+    if (actual !== artifact.sha256) {
+      throw new Error(`pinned ${key} source does not match its SHA-256`);
+    }
+    if (/<\/script/i.test(artifact.source)) {
+      throw new Error(`pinned ${key} cannot be safely embedded in HTML`);
+    }
+  });
+  if (bundle.passport_template.draft_state !== 'NOT_VALIDATED' ||
+      !bundle.passport_template.parsed) {
+    throw new Error('canonical Agent Passport draft template is unavailable');
+  }
+  return bundle;
+}
+
+function injectEvolutionStandards(html, bundle) {
+  const marker = '<!-- EXTELLA_EVOLUTION_STANDARD_ARTIFACTS -->';
+  if (String(html).split(marker).length !== 2) {
+    throw new Error('Evolution Console must contain exactly one standards marker');
+  }
+  const artifacts = bundle.standards.artifacts;
+  const runtime = evolutionRuntimeBundle(bundle);
+  const injected = [
+    '<script>window.__EXTELLA_EVOLUTION_STANDARDS_BUNDLE__ = ' +
+      jsonForInlineScript(runtime) + ';</script>',
+    '<script>',
+    artifacts.cabinet_widget.source,
+    '</script>',
+    '<script>',
+    artifacts.help_widget.source,
+    '</script>'
+  ].join('\n');
+  return html.replace(marker, function () { return injected; });
+}
+
 // ── Step 1: Load all plugin JSON files ────────────────────────────────────
-function loadPlugins() {
+function loadPlugins(evolutionBundle) {
   const files = collectJsonFiles(PLUGINS);
   const plugins = [];
   for (const f of files) {
     try {
       const data = JSON.parse(readFile(f));
+      // Scenario support artifacts (for example the pinned standards bundle)
+      // may live beside manifests. Only an object with a stable plugin id and
+      // an explicit UI contract is a built-in plugin definition.
+      if (!data || typeof data.id !== 'string' || !data.id ||
+          !data.ui || typeof data.ui !== 'object') {
+        continue;
+      }
       const pluginRoot = path.resolve(PLUGINS) + path.sep;
       const pluginRootReal = fs.realpathSync(PLUGINS) + path.sep;
       function readPluginAsset(relativePath, fieldName) {
@@ -110,6 +201,12 @@ function loadPlugins() {
       // inline them into the single-file toolbar bundle at build time.
       if (data.ui && data.ui.htmlFile) {
         data.ui.html = readPluginAsset(data.ui.htmlFile, 'ui.htmlFile');
+        if (data.id === 'profit-growth-scenario') {
+          data.ui.html = injectEvolutionStandards(
+            data.ui.html,
+            evolutionBundle
+          );
+        }
         delete data.ui.htmlFile;
       }
       const expertDefs = data.expert_defs || data.expertDefs || [];
@@ -128,7 +225,7 @@ function loadPlugins() {
 }
 
 // ── Step 2: Build toolbar.js ───────────────────────────────────────────────
-function buildToolbar(plugins) {
+function buildToolbar(plugins, evolutionBundle) {
   const parts = [];
 
   // Build embedded HTML strings (blob URL approach — no local server needed)
@@ -149,6 +246,11 @@ function buildToolbar(plugins) {
 
   // ── IIFE start ─────────────────────────────────────────────────
   parts.push(`(function () {\n  'use strict';\n\n  var ETB = {};\n`);
+  parts.push(
+    `  ETB.evolutionStandardsBundle = ${
+      jsonForInlineScript(evolutionRuntimeBundle(evolutionBundle))
+    };\n`
+  );
 
   // ── Embedded HTML (marketplace + plugin chat + plugin form) ───────────────
   // These are loaded as blob: URLs so no local HTTP server is required.
@@ -371,24 +473,35 @@ function buildLibrary() {
 function build() {
   console.log('\n🔧 Extella Toolbar — Building...\n');
 
-  const plugins = loadPlugins();
+  const evolutionBundle = loadEvolutionStandardsBundle();
+  const plugins = loadPlugins(evolutionBundle);
 
   console.log('\n📦 Writing output files:');
-  const toolbarArtifact = buildToolbar(plugins);
-  const studio = plugins.find(function (plugin) {
+  const toolbarArtifact = buildToolbar(plugins, evolutionBundle);
+  const evolutionConsole = plugins.find(function (plugin) {
     return plugin && plugin.id === 'profit-growth-scenario';
   });
-  if (!studio || !studio.ui || !studio.ui.html || studio.ui.htmlFile) {
+  if (!evolutionConsole || !evolutionConsole.ui ||
+      !evolutionConsole.ui.html || evolutionConsole.ui.htmlFile) {
+    throw new Error('Evolution Console is missing or its reviewed HTML was not inlined');
+  }
+  const capabilityStudio = plugins.find(function (plugin) {
+    return plugin && plugin.id === 'capability-studio-scenario';
+  });
+  if (!capabilityStudio || !capabilityStudio.ui ||
+      !capabilityStudio.ui.html || capabilityStudio.ui.htmlFile) {
     throw new Error('Capability Studio is missing or its reviewed HTML was not inlined');
   }
-  const studioExperts = studio.expert_defs || studio.expertDefs || [];
+  const studioExperts = capabilityStudio.expert_defs ||
+    capabilityStudio.expertDefs || [];
   if (!studioExperts.length || studioExperts.some(function (def) {
     return !def.code || def.codeFile;
   })) {
     throw new Error('Capability Studio Expert source was not inlined');
   }
-  if (toolbarArtifact.indexOf('profit-growth-scenario') === -1) {
-    throw new Error('Capability Studio is absent from the toolbar artifact');
+  if (toolbarArtifact.indexOf('profit-growth-scenario') === -1 ||
+      toolbarArtifact.indexOf('capability-studio-scenario') === -1) {
+    throw new Error('Evolution Console or Capability Studio is absent from the toolbar artifact');
   }
   writeFile(path.join(OUT, 'toolbar.js'), toolbarArtifact);
   writeFile(path.join(OUT, 'plugins_manager.html'), buildMarketplace(plugins));

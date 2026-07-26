@@ -1,0 +1,26 @@
+{
+  "schema": "extella.evolution.standards_pin.v1",
+  "standards_git_commit": "6f3222f794d565066d72652fd3ba234f66114a3d",
+  "artifacts": {
+    "checker": {
+      "path": "tools/check_agent_passport.py",
+      "sha256": "51ef6ade71b5a9e19da621ee656e4a79c903fc5769f3fade97f43c1792539668"
+    },
+    "builder": {
+      "path": "tools/build_agent_cabinet.py",
+      "sha256": "5ebce7065973fc48e15815ac0803fb7a28c9384d5135299c5de3858eca55c009"
+    },
+    "passport_template": {
+      "path": "templates/agent_passport.yaml",
+      "sha256": "63a963e9a9db399d130a4035500b769e16eb082f3013f8fd46a1ebc20b92d8af"
+    },
+    "cabinet_widget": {
+      "path": "templates/cabinet_widget.js",
+      "sha256": "c1331705dbc9fa44a4f6afb844e938e3bf37155a5aa0af07994f6769a6dd32f4"
+    },
+    "help_widget": {
+      "path": "templates/help_widget.js",
+      "sha256": "4f3273d9bfaf0873ef490f8dff15b6e50fc379f69c095852a93d5a2f649c0f9f"
+    }
+  }
+}
