@@ -2346,6 +2346,144 @@ ETB.router = (function () {
     });
   }
 
+  function _evolutionAutomationFleetLoad(context) {
+    var provider = ETB.evolutionAutomationProvider;
+    var inventory = ETB.evolutionAutomationInventory;
+    if (!provider || typeof provider.loadCurrentDevice !== 'function' ||
+        !inventory || typeof inventory.normalize !== 'function') {
+      return Promise.reject(_evolutionError(
+        'AUTOMATION_INVENTORY_UNAVAILABLE',
+        'the current-device automation inventory provider is unavailable'
+      ));
+    }
+    return provider.loadCurrentDevice({
+      actorId: context.actorId,
+      epoch: context.epoch
+    }).then(function (raw) {
+      _agentControlAssertContext(context);
+      var projection = inventory.normalize(
+        raw.manifests,
+        raw.services,
+        {
+          checkedAt: raw.checkedAt,
+          complete: raw.complete,
+          sourceErrors: raw.sourceErrors,
+          evidence: raw.evidence
+        }
+      );
+      // The user-facing device inventory remains usable when the legacy
+      // platform-agent/standards projection is unavailable. Advanced
+      // Shared Genes, Agent Cabinet and Evolution Loop actions stay closed
+      // until that exact account-bound projection succeeds.
+      return _evolutionFleetLoad(context).then(function (legacy) {
+        return {
+          actorId: context.actorId,
+          inventory: projection,
+          legacy: legacy,
+          legacyError: null
+        };
+      }).catch(function (error) {
+        if (error && (error.code === 'ACCOUNT_SESSION_CHANGED' ||
+            error.code === 'OPERATION_OUTCOME_UNKNOWN')) {
+          throw error;
+        }
+        return {
+          actorId: context.actorId,
+          inventory: projection,
+          legacy: null,
+          legacyError: {
+            code: String(error && error.code ||
+              'EVOLUTION_PLATFORM_PROJECTION_UNAVAILABLE'),
+            message: String(error && error.message ||
+              'the platform-agent Evolution projection is unavailable')
+          }
+        };
+      });
+    });
+  }
+
+  function _evolutionAutomationServiceControl(data, context) {
+    var provider = ETB.evolutionAutomationProvider;
+    var automationId = String(data && data.automationId || '');
+    var action = String(data && data.serviceAction || '');
+    var confirmation = String(data && data.confirmation || '');
+    var expectedConfirmation = 'CONFIRM_' +
+      action.toUpperCase() + ':' + automationId;
+    var controlConfirmed = false;
+    if (!provider ||
+        typeof provider.controlCurrentDevice !== 'function') {
+      return Promise.reject(_evolutionError(
+        'AUTOMATION_SERVICE_CONTROL_UNAVAILABLE',
+        'current-device service control is unavailable'
+      ));
+    }
+    if ((action !== 'start' && action !== 'stop') ||
+        confirmation !== expectedConfirmation) {
+      return Promise.reject(_evolutionError(
+        'SERVICE_CONTROL_CONFIRMATION_REQUIRED',
+        'an exact explicit service-control confirmation is required'
+      ));
+    }
+    return _evolutionAutomationFleetLoad(context).then(function (preflight) {
+      _agentControlAssertContext(context);
+      var inventory = preflight && preflight.inventory;
+      var matches = inventory && Array.isArray(inventory.rows) ?
+        inventory.rows.filter(function (row) {
+          return String(row && row.id || '') === automationId;
+        }) : [];
+      if (!inventory ||
+          inventory.schema !==
+            'extella.evolution.automation_inventory.v1' ||
+          inventory.scope !== 'CURRENT_DEVICE' ||
+          inventory.complete !== true ||
+          matches.length !== 1) {
+        throw _evolutionError(
+          'AUTOMATION_CONTROL_TARGET_UNAUTHORIZED',
+          'service control requires one exact installed application agent in a complete current-device inventory'
+        );
+      }
+      if (!matches[0].actions ||
+          matches[0].actions[action] !== 'AVAILABLE') {
+        throw _evolutionError(
+          'SERVICE_CONTROL_NOT_ALLOWED',
+          'the current-device inventory does not allow this action'
+        );
+      }
+      return provider.controlCurrentDevice({
+        actorId: context.actorId,
+        epoch: context.epoch,
+        automationId: automationId,
+        action: action
+      });
+    }).then(function (control) {
+      if (!control ||
+          control.automationId !== automationId ||
+          control.action !== action ||
+          control.outcome !== 'CONFIRMED') {
+        throw _evolutionError(
+          'OPERATION_OUTCOME_UNKNOWN',
+          'OUTCOME UNKNOWN · service-control evidence did not bind the exact request'
+        );
+      }
+      controlConfirmed = true;
+      _agentControlAssertContext(context);
+      return _evolutionAutomationFleetLoad(context)
+        .then(function (result) {
+          result.control = control;
+          return result;
+        });
+    }).catch(function (error) {
+      if (!controlConfirmed ||
+          error && error.code === 'OPERATION_OUTCOME_UNKNOWN') {
+        throw error;
+      }
+      throw _evolutionError(
+        'OPERATION_OUTCOME_UNKNOWN',
+        'OUTCOME UNKNOWN · the service action was confirmed, but the required fresh inventory could not be loaded'
+      );
+    });
+  }
+
   function _evolutionRequireSession(data, context, requireComplete) {
     var session = _evolutionFleetSession;
     if (!session || session.actorId !== context.actorId ||
@@ -3742,6 +3880,12 @@ ETB.router = (function () {
       ));
     }
     var context = _agentControlContext(actorId, data && data.reqId);
+    if (action === 'automation_fleet_load') {
+      return _evolutionAutomationFleetLoad(context);
+    }
+    if (action === 'automation_service_control') {
+      return _evolutionAutomationServiceControl(data, context);
+    }
     if (action === 'fleet_load') return _evolutionFleetLoad(context);
     if (action === 'passport_draft') {
       try {

@@ -874,23 +874,32 @@ test('scoped API helpers keep credentials in the host and bind reads/writes to a
   );
 });
 
-test('Evolution Console manifest keeps the stable install identity and no-write contract', () => {
+test('Evolution Console manifest keeps stable identity and declares lifecycle writes', () => {
   assert.equal(manifest.id, 'profit-growth-scenario');
   assert.equal(manifest.name, 'Evolution Console');
-  assert.equal(manifest.version, '0.4.0');
+  assert.equal(manifest.version, '0.5.0');
   assert.equal(manifest.ui.htmlFile, 'evolution-console.html');
   assert.equal(manifest.ui.tokenless, true);
   assert.deepEqual(
     manifest.capabilities.map((capability) => capability.id).sort(),
     [
       'agent_passport_risks',
+      'automation_lifecycle_control',
       'evolution_lab',
       'evolution_loop',
       'fleet_inventory',
       'shared_genes_map',
     ],
   );
-  assert.ok(manifest.capabilities.every((capability) => capability.external_writes === false));
+  const lifecycle = manifest.capabilities.find(
+    (capability) => capability.id === 'automation_lifecycle_control',
+  );
+  assert.equal(lifecycle.external_writes, true);
+  assert.ok(
+    manifest.capabilities
+      .filter((capability) => capability !== lifecycle)
+      .every((capability) => capability.external_writes === false),
+  );
   assert.deepEqual(manifest.expert_defs, []);
   assert.equal(manifest.owned_experts, false);
 });

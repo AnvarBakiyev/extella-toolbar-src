@@ -35,11 +35,14 @@ function inlineScripts(html) {
   )].map((match) => match[1]);
 }
 
-test('Evolution Console manifest keeps exact product naming and a read-only surface contract', () => {
+test('Evolution Console manifest declares exact product naming and lifecycle writes honestly', () => {
   assert.equal(evolutionManifest.id, 'profit-growth-scenario');
   assert.equal(evolutionManifest.name, 'Evolution Console');
-  assert.equal(evolutionManifest.tagline, 'Консоль управления парком агентов');
-  assert.equal(evolutionManifest.version, '0.4.0');
+  assert.equal(
+    evolutionManifest.tagline,
+    'Управление установленными прикладными агентами',
+  );
+  assert.equal(evolutionManifest.version, '0.5.0');
   assert.equal(evolutionManifest.trust_tier, 'verified');
   assert.equal(evolutionManifest.ui.type, 'html');
   assert.equal(evolutionManifest.ui.htmlFile, 'evolution-console.html');
@@ -48,15 +51,20 @@ test('Evolution Console manifest keeps exact product naming and a read-only surf
   assert.equal(evolutionManifest.owned_experts, false);
   assert.deepEqual(evolutionManifest.expert_defs, []);
   assert.deepEqual(evolutionManifest.experts, []);
+  const lifecycle = evolutionManifest.capabilities.find(
+    (capability) => capability.id === 'automation_lifecycle_control',
+  );
+  assert.equal(lifecycle.external_writes, true);
   assert.ok(
-    evolutionManifest.capabilities.every(
-      (capability) => capability.external_writes === false,
-    ),
+    evolutionManifest.capabilities
+      .filter((capability) => capability !== lifecycle)
+      .every((capability) => capability.external_writes === false),
   );
   assert.deepEqual(
     evolutionManifest.capabilities.map((capability) => capability.id).sort(),
     [
       'agent_passport_risks',
+      'automation_lifecycle_control',
       'evolution_lab',
       'evolution_loop',
       'fleet_inventory',
@@ -322,7 +330,7 @@ test('Evolution Console clears every account-bound UI slice before a new init', 
   );
 });
 
-test('Evolution Console uses exact API fields and canonical checker facts', () => {
+test('Evolution Console uses exact automation runtime fields and canonical checker facts', () => {
   assert.match(evolutionHtml, /e\.candidateBundleSha256\|\|e\.candidate_sha256/);
   assert.doesNotMatch(evolutionHtml, /draftSha256|draft_sha256/);
   assert.match(evolutionHtml, /r\.type\|\|'Evolution Receipt'/);
@@ -339,14 +347,20 @@ test('Evolution Console uses exact API fields and canonical checker facts', () =
     evolutionHtml,
     /r\.platformPresent===true&&r\.registryPresent===false&&r\.standard\.status==='MISSING'/,
   );
-  assert.match(evolutionHtml, /r\.activeVersionSource\|\|'UNKNOWN'/);
-  assert.match(evolutionHtml, /versionSource==='EVOLUTION_LEDGER'/);
-  assert.match(evolutionHtml, /versionSource==='AGENT_PASSPORT'/);
-  assert.match(evolutionHtml, /r\.lastActivitySource==='PLATFORM'/);
-  assert.match(evolutionHtml, /r\.ownerSource\|\|t\('sourceUnknown'\)/);
   assert.match(
     evolutionHtml,
-    /r\.capabilityCountSource\|\|t\('sourceUnknown'\)/,
+    /row\.installedVersion\|\|t\('unknown'\)/,
+  );
+  assert.match(evolutionHtml, /runtimeData\.lastRun\?fmtTime/);
+  assert.match(evolutionHtml, /runtimeData\.lastResult\|\|t\('unknown'\)/);
+  assert.match(evolutionHtml, /runtimeData\.lastError/);
+  assert.match(evolutionHtml, /row\.manifestSource\|\|t\('unknown'\)/);
+  assert.match(evolutionHtml, /item\.verified===true/);
+  assert.match(evolutionHtml, /function automationHealth\(row\)/);
+  assert.doesNotMatch(
+    evolutionHtml,
+    /automationRuntimeStatus\(row\)==='RUNNING'[^;\n]*health/,
+    'running must never be converted into health evidence',
   );
   assert.match(
     evolutionHtml,
@@ -412,9 +426,129 @@ test('Stable-ID-required passports bind only an explicit source Passport to an e
   );
   assert.match(
     evolutionHtml,
-    /if\(action!=='fleet_load'&&state\.projection&&!payload\.snapshotId\)/,
+    /if\(action!=='fleet_load'&&action!=='automation_fleet_load'&&action!=='automation_service_control'&&state\.projection&&!payload\.snapshotId\)/,
     'passport draft requests must inherit the exact current snapshotId',
   );
+});
+
+test('Application-agent lifecycle controls execute two UI steps and expire arming', () => {
+  assert.match(evolutionHtml, /data-service-action="start"/);
+  assert.match(evolutionHtml, /data-service-action="stop"/);
+  assert.match(
+    evolutionHtml,
+    /controlReady=!!actions&&!PREVIEW&&state\.automationInventory&&state\.automationInventory\.complete===true&&!state\.serviceControlPending/,
+  );
+  const controllerStart = evolutionHtml.indexOf(
+    '    function clearServiceArmTimer()',
+  );
+  const controllerEnd = evolutionHtml.indexOf(
+    '    function renderFleet()',
+    controllerStart,
+  );
+  assert.ok(controllerStart >= 0 && controllerEnd > controllerStart);
+  const timers = [];
+  const controls = [];
+  const buttons = [];
+  const context = {
+    state: {
+      serviceArmTimer: null,
+      serviceControlPending: null,
+    },
+    clearTimeout() {},
+    setTimeout(callback) {
+      timers.push(callback);
+      return timers.length;
+    },
+    t(key) {
+      return key;
+    },
+    el() {
+      return {
+        querySelectorAll() {
+          return buttons.filter(
+            (button) => button.dataset.armed === 'true',
+          );
+        },
+      };
+    },
+    controlAutomationService(...args) {
+      controls.push(args);
+    },
+  };
+  vm.runInNewContext(
+    evolutionHtml.slice(controllerStart, controllerEnd),
+    context,
+  );
+  const stop = {
+    disabled: false,
+    isConnected: true,
+    textContent: 'stopAgent',
+    dataset: {
+      armed: 'false',
+      serviceAction: 'stop',
+      automationId: 'application-1',
+    },
+  };
+  buttons.push(stop);
+  context.handleServiceControlClick(stop);
+  assert.equal(controls.length, 0, 'the first click only arms');
+  assert.equal(stop.dataset.armed, 'true');
+  context.handleServiceControlClick(stop);
+  assert.equal(controls.length, 1, 'the second click dispatches once');
+  assert.equal(stop.dataset.armed, 'false');
+
+  const start = {
+    disabled: false,
+    isConnected: true,
+    textContent: 'startAgent',
+    dataset: {
+      armed: 'false',
+      serviceAction: 'start',
+      automationId: 'application-2',
+    },
+  };
+  buttons.push(start);
+  context.handleServiceControlClick(start);
+  timers.at(-1)();
+  assert.equal(start.dataset.armed, 'false', 'arming expires');
+  context.state.serviceControlPending = {};
+  context.handleServiceControlClick(start);
+  assert.equal(controls.length, 1, 'pending control blocks another call');
+
+  assert.match(
+    evolutionHtml,
+    /request\('automation_service_control',\{automationId:automationId,serviceAction:action,confirmation:'CONFIRM_'\+action\.toUpperCase\(\)\+':'\+automationId\}\)/,
+  );
+  assert.match(
+    evolutionHtml,
+    /control\.outcome!=='CONFIRMED'\|\|control\.automationId!==automationId\|\|control\.action!==action/,
+  );
+  assert.match(
+    evolutionHtml,
+    /String\(control\.status\|\|''\)\.toUpperCase\(\)!==expected\|\|!row\|\|automationRuntimeStatus\(row\)!==expected/,
+  );
+  assert.match(evolutionHtml, /error\.code==='OPERATION_OUTCOME_UNKNOWN'/);
+  assert.match(
+    evolutionHtml,
+    /var mismatch=new Error\(t\('serviceControlFailed'\)\);mismatch\.code='OPERATION_OUTCOME_UNKNOWN';throw mismatch/,
+  );
+  assert.match(
+    evolutionHtml,
+    /function serviceControlNeedsRefresh\(code\)\{return \['SERVICE_CONTROL_NOT_ALLOWED','AUTOMATION_CONTROL_TARGET_UNAUTHORIZED','AUTOMATION_CONTROL_INVENTORY_INCOMPLETE'\]/,
+  );
+  assert.match(
+    evolutionHtml,
+    /generation!==state\.inventoryLoadGeneration\|\|epoch!==state\.accountEpoch/,
+  );
+  assert.match(
+    evolutionHtml,
+    /state\.inventoryLoadGeneration\+\+;state\.serviceControlPending=null;clearServiceArmTimer\(\)/,
+  );
+  assert.match(
+    evolutionHtml,
+    /error\.code=String\(d\.errorCode\|\|''\)/,
+  );
+  assert.doesNotMatch(evolutionHtml, /controlToken|X-Extella-Control/);
 });
 
 test('Evolution Console follows explicit current ledger pointers, never object insertion order', () => {

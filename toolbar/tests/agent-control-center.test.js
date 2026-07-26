@@ -865,11 +865,11 @@ test('ACC-11: unknown shared dependency fails closed instead of reporting zero i
   );
 });
 
-test('build loads both ES5 Evolution cores and the standards provider after api.js', () => {
+test('build loads the ES5 Evolution cores, inventory, and standards provider after api.js', () => {
   const build = fs.readFileSync(buildPath, 'utf8');
   assert.match(
     build,
-    /'api\.js',\s*\n\s*'agent-control\.js',\s*\n\s*'evolution-console\.js',\s*\n\s*'evolution-standards-provider\.js',\s*\n\s*'install-prompt\.js'/,
+    /'api\.js',\s*\n\s*'agent-control\.js',\s*\n\s*'evolution-console\.js',\s*\n\s*'evolution-automation-inventory\.js',\s*\n\s*'evolution-standards-provider\.js',\s*\n\s*'install-prompt\.js'/,
   );
   assert.match(
     build,

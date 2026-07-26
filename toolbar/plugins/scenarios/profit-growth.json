@@ -3,11 +3,11 @@
   "mode": "scenario",
   "featured": true,
   "name": "Evolution Console",
-  "tagline": "Консоль управления парком агентов",
-  "description": "Поверхность Extella Evolution для инвентаря всего парка, рисков по Agent Passport, карты Shared Genes и управляемых изменений через Evolution Loop.",
+  "tagline": "Управление установленными прикладными агентами",
+  "description": "Поверхность Extella Evolution для установленных прикладных агентов, их фактического состояния, Agent Passport, Shared Genes и управляемых изменений через Evolution Loop.",
   "category": "business",
   "type": "application",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "eye": "Extella Evolution",
   "pills": [
     "Весь парк",
@@ -30,9 +30,16 @@
   "capabilities": [
     {
       "id": "fleet_inventory",
-      "name": "Инвентарь парка",
-      "version": "EVOLUTION_FLEET_V1",
+      "name": "Инвентарь установленных агентов",
+      "version": "EVOLUTION_FLEET_V2",
       "external_writes": false
+    },
+    {
+      "id": "automation_lifecycle_control",
+      "name": "Запуск и остановка прикладных агентов",
+      "description": "Локальная мутация Activity Center для одного точного ID с двойным подтверждением и обязательным read-back.",
+      "version": "AUTOMATION_LIFECYCLE_V1",
+      "external_writes": true
     },
     {
       "id": "agent_passport_risks",

@@ -1,9 +1,57 @@
 # Extella Evolution — Evolution Console v2 handoff
 
 Дата: 2026-07-26
-Toolbar branch: `codex/evolution-console-v2`
+Toolbar branch: `codex/evolution-console-automation-mvp`
 Standards branch: `codex/evolution-console-v2-standards`
 Pinned standards commit: `4d8d759feeac8e27ca6fe94fb1925220406984d0`
+
+## Решение для MVP 0.5
+
+Анвар отменил отдельные прототипы: следующий результат должен собираться как
+реальный toolbar-плагин и проверяться внутри Xtel.
+
+Главный объект первого экрана изменён:
+
+- было: внутренний парк platform agents текущего аккаунта;
+- стало: установленные прикладные агенты на текущем устройстве — Агент 1С,
+  Kazakh Lawyer, агент турагентства и следующие продукты того же класса;
+- platform agents, Experts, службы, расписания и интеграции показываются как
+  технический состав, а не как равноправные пользовательские карточки.
+
+Источник установки и состава — device manifests через существующий
+`ETB.registry.syncFromDevice()`. Источник runtime/lifecycle — Activity Center
+`/api/services`. `_mkt_automations` не является inventory: он смешивает каталог,
+неустановленные предложения и неполные записи.
+
+До появления общего account-wide registry интерфейс обязан показывать точный
+охват `Текущее устройство`. Отсутствующие last run, result, error и health
+остаются `UNKNOWN`; состояние `running` само по себе не доказывает health.
+
+MVP lifecycle управляет только одним точным ID установленного прикладного агента:
+
+- `Запустить`/`Остановить` видны прямо в строке, но только при полном свежем
+  `CURRENT_DEVICE` inventory;
+- первое нажатие лишь подготавливает действие, второе создаёт точное
+  `CONFIRM_START:<id>` или `CONFIRM_STOP:<id>`;
+- host повторно авторизует ID через device registry + canonical normalizer,
+  перечитывает `canStart`/`canStop`, выполняет ровно один POST и подтверждает
+  новое состояние свежим read-back;
+- control token остаётся внутри host;
+- duplicate manifest ID, параллельная команда, Preview, неполный inventory и
+  произвольный Activity Center service блокируются fail-closed;
+- любая ошибка после начала POST — `OPERATION_OUTCOME_UNKNOWN`: UI инвалидирует
+  старый снимок, обязательно перечитывает состояние и не повторяет команду
+  вслепую.
+
+Agent Cabinet остаётся канонически сгенерированной поверхностью, а не кодом
+toolbar. Точный запрос интегратору на общий состав и расширение v1.1 зафиксирован
+в core portal:
+
+`extella-core-portal/docs/CODEX_AGENT_CABINET_COMMON_CONTRACT.md`
+
+Evolution Lab принадлежит общей поверхности: Agent Cabinet инициирует изменение,
+Evolution Lab изолированно сравнивает baseline/candidate, Evolution Console
+принимает evidence, публикует, наблюдает и откатывает.
 
 ## Результат
 
@@ -12,13 +60,15 @@ Agent Cabinet остаётся поверхностью одного агент�
 канонический артефакт `extella.agent_cabinet.v1.1`, сгенерированный из Agent
 Passport. Собственного кабинета в toolbar нет.
 
-Порядок работы соответствует ТЗ:
+Основной и углублённый порядок работы соответствует ТЗ:
 
-1. полный account-bound инвентарь парка по стабильным platform agent ID;
-2. единый результат canonical `check_agent_passport.py`;
-3. двунаправленная карта Shared Genes;
-4. приём class-эскалации из Agent Cabinet;
-5. массовые операции только с exact-target preview, confirmation, staged
+1. `CURRENT_DEVICE` inventory установленных прикладных агентов;
+2. технический account-bound парк platform agents только как углублённая
+   проекция состава;
+3. единый результат canonical `check_agent_passport.py`;
+4. двунаправленная карта Shared Genes;
+5. приём class-эскалации из Agent Cabinet;
+6. массовые операции только с exact-target preview, confirmation, staged
    activation, observation, Evolution Receipt и rollback.
 
 Legacy-поверхность разделена без потери установленной Capability Studio:
@@ -117,6 +167,13 @@ IDs и hashes/read-back всё равно проверяются в core.
 
 ## Честные границы текущей ветки
 
+- Read-only live sanity check текущего устройства 2026-07-26 подтвердил три
+  установленных прикладных агента: Агент 1С, Kazakh Lawyer и агент
+  турагентства. Device registry и Activity Center читаются раздельно; live
+  `start`/`stop` во время проверки не выполнялись.
+- Общий health contract у трёх продуктов пока не унифицирован. Поэтому runtime
+  `RUNNING` показывается отдельно, а health без собственного подтверждения
+  остаётся `UNKNOWN`.
 - Read-only live sanity check 2026-07-26: текущий profile вернул 15 стабильных
   agent ID; два точечных `agent/get` подтвердили доступность provider, model,
   version и полного instructions. Live writes не выполнялись.
@@ -132,6 +189,10 @@ IDs и hashes/read-back всё равно проверяются в core.
   идентификатор в toolbar PR не раскрываются.
 - В репозитории нет production `ETB.evolutionAdapter`; Evolution Lab,
   activation, schedule mutations, observation и rollback заблокированы.
+- Lifecycle текущего устройства пока имеет только authenticated-account fence,
+  но не platform RBAC. MVP допускается как single-operator deployment; для
+  shared-device/multi-user Xtel отсутствие роли оператора является release
+  blocker.
 - Durable native intent и multi-device ledger CAS отсутствуют; native
   activation/rollback дополнительно hard-gated кодом, а не только отсутствием
   adapter.
@@ -148,18 +209,21 @@ IDs и hashes/read-back всё равно проверяются в core.
 
 Проверено в feature worktree:
 
-- strict pinned `npm test -w @extella/toolbar`: 115/115, failed 0,
+- strict pinned `npm test -w @extella/toolbar`: 150/150, failed 0,
   skipped 0;
-- pinned standards adapter: 11/11, failed 0, skipped 0;
-- provider/router: 8/8, включая 15 live-shaped IDs, failed 0, skipped 0;
+- current-device inventory/provider/router: 24/24, включая оба lifecycle
+  направления, exact target authorization, duplicate rejection, parallel lock,
+  post-send outcome-unknown и fresh read-back;
+- desktop и responsive 390×844 visual QA: горизонтального overflow и console
+  errors нет; lifecycle в Preview и при неполном inventory явно заблокирован;
 - provisioner selftest: PASS, включая wrong-account/target до первой записи,
   конфликт, post-root tamper, неполный runtime contract и pin mismatch;
 - `check_brand_copy.py --strict`: PASS (предупреждения только на операторы `!`
   внутри JavaScript);
 - полная сборка и `test:reproducible`: PASS, 111 plugin definitions,
-  Library встроена, три проверенных артефакта совпали:
-  SHA-256 `5756c7a30dcd4e510c30799d59434a42928cdd2fac237f0fd5e629b637ee0716`,
-  размер `9 078 218` байт;
+  Library встроена, две последовательные feature-сборки совпали:
+  SHA-256 `80acf5292d68fa81ed56797537ed4748395d03568c8f95ae8a327b6f715e0d37`,
+  размер `9 434 572` байта;
 - `^</script>` в `toolbar/build/toolbar.js`: 0;
 - inline-script, naming, ES5 и `git diff --check`: успешно;
 
@@ -181,18 +245,24 @@ canonical artifact завершают suite ошибкой `PINNED_STANDARDS_UNA
 
 Перед merge интегратор должен:
 
-1. merge/publish standards draft PR #1, чтобы pinned commit был доступен clean CI;
-2. merge toolbar PR #2;
-3. подготовить production registry реальных паспортов аккаунта, собрать пакет,
+1. принять общий контракт Agent Cabinet из
+   `extella-core-portal/docs/CODEX_AGENT_CABINET_COMMON_CONTRACT.md` и закрепить
+   следующую версию identity/components в standards;
+2. проверить манифесты трёх прикладных агентов и единый runtime/health contract;
+3. merge ветки `codex/evolution-console-automation-mvp` в toolbar;
+4. подготовить production registry реальных паспортов аккаунта, собрать пакет,
    выполнить dry-run provisioner, затем отдельным подтверждённым release-шагом
    записать и перечитать managed KV;
-4. повторить live UI-приёмку: ≥15 агентов и точное равенство risk count прямому
+5. повторить live UI-приёмку: три прикладных агента текущего устройства,
+   lifecycle read-back, ≥15 внутренних platform agents в углублённой проекции и
+   точное равенство risk count прямому
    canonical checker по тем же паспортам;
-5. реализовать durable native intent + ledger CAS, затем отдельно подключить
-   write adapters;
-6. повторить полный toolbar test/build в чистом checkout `origin/main`;
-7. выполнить release sentinels из `docs/TEAM_PROTOCOL.md`;
-8. deploy только из чистого интеграторского checkout.
+6. для исполняемого Evolution Lab подключить production
+   `ETB.evolutionAdapter`, canonical test suites и evidence read-back; затем
+   отдельно реализовать durable native intent + ledger CAS и write adapters;
+7. повторить полный toolbar test/build в чистом checkout `origin/main`;
+8. выполнить release sentinels из `docs/TEAM_PROTOCOL.md`;
+9. deploy только из чистого интеграторского checkout.
 
 Прямой deploy артефакта из feature worktree запрещён §§10–11
 `docs/TEAM_PROTOCOL.md`.
