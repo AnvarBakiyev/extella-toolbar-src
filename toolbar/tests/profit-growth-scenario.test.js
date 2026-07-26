@@ -7,14 +7,14 @@ const vm = require('node:vm');
 
 const toolbarRoot = path.resolve(__dirname, '..');
 const scenarioRoot = path.join(toolbarRoot, 'plugins', 'scenarios');
-const manifestPath = path.join(scenarioRoot, 'profit-growth.json');
+const manifestPath = path.join(scenarioRoot, 'capability-studio.json');
 const htmlPath = path.join(scenarioRoot, 'profit-growth.html');
 const expertPath = path.join(scenarioRoot, 'profit-growth-expert.py');
 
-test('Control Center manifest keeps the stable scenario identity and no-write contract', () => {
+test('Capability Studio has its own manifest and retains the no-write demo Expert', () => {
   const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-  assert.equal(manifest.id, 'profit-growth-scenario');
-  assert.equal(manifest.name, 'Центр управления агентами');
+  assert.equal(manifest.id, 'capability-studio-scenario');
+  assert.equal(manifest.name, 'Студия способностей');
   assert.equal(manifest.version, '0.3.0');
   assert.equal(manifest.ui.type, 'html');
   assert.equal(manifest.ui.htmlFile, 'profit-growth.html');
@@ -23,18 +23,15 @@ test('Control Center manifest keeps the stable scenario identity and no-write co
   assert.equal(manifest.expert_defs[0].name, 'xtl_capability_studio_profitability_v1');
   assert.equal(manifest.owned_experts, true);
   assert.equal(manifest.expert_defs[0].global, true);
-  assert.ok(manifest.capabilities.length >= 5);
+  assert.equal(manifest.capabilities.length, 1);
   assert.equal(
-    manifest.capabilities.find((row) => row.id === 'profitability_gate').consumer_source,
-    'managed_dependency_graph',
+    manifest.capabilities[0].id,
+    'profitability_calculation',
   );
-  assert.ok(manifest.capabilities.some((row) => row.id === 'managed_configuration_draft'));
-  assert.ok(manifest.capabilities.some((row) => row.id === 'managed_configuration_playground'));
-  assert.ok(manifest.capabilities.some((row) => row.id === 'managed_configuration_versioning'));
   assert.ok(manifest.capabilities.every((capability) => capability.external_writes === false));
 });
 
-test('scenario assets contain the toolbar bridge and explicit safety contract', () => {
+test('Capability Studio assets retain the toolbar bridge and explicit safety contract', () => {
   assert.ok(fs.existsSync(htmlPath), 'profit-growth.html must exist');
   const html = fs.readFileSync(htmlPath, 'utf8');
   for (const marker of [
@@ -78,7 +75,7 @@ test('scenario assets contain the toolbar bridge and explicit safety contract', 
   }
 });
 
-test('Control Center UI has valid script, unique DOM ids, and an exact publish gate', () => {
+test('Capability Studio UI has valid script, unique DOM ids, and an exact demo publish gate', () => {
   const html = fs.readFileSync(htmlPath, 'utf8');
   const scriptStart = html.indexOf('<script>');
   const scriptEnd = html.lastIndexOf('</script>');
@@ -93,16 +90,33 @@ test('Control Center UI has valid script, unique DOM ids, and an exact publish g
   const ids = [...html.matchAll(/\sid="([^"]+)"/g)].map((match) => match[1]);
   assert.equal(new Set(ids).size, ids.length, 'all document ids must be unique');
   for (const view of [
-    'overview',
-    'agents',
-    'governance',
-    'playground',
-    'versions',
-    'evidence',
     'capabilities',
+    'scenario',
+    'memory',
   ]) {
     assert.match(html, new RegExp(`data-studio-view="${view}"`));
   }
+  const requestedViewStart = html.indexOf(
+    "var requestedView = new URLSearchParams(location.search).get('view');",
+  );
+  const requestedViewEnd = html.indexOf(
+    "if (PREVIEW) {",
+    requestedViewStart,
+  );
+  assert.ok(requestedViewStart >= 0 && requestedViewEnd > requestedViewStart);
+  const requestedViewSource = html.slice(
+    requestedViewStart,
+    requestedViewEnd,
+  );
+  assert.match(
+    requestedViewSource,
+    /\[\s*'capabilities', 'scenario', 'memory'\s*\]/,
+  );
+  assert.doesNotMatch(
+    requestedViewSource,
+    /'overview'|'agents'|'governance'|'playground'|'versions'|'evidence'/,
+    'legacy one-agent control views must remain unreachable',
+  );
   assert.match(
     script,
     /ledger\.currentDraftId !== draft\.id[\s\S]*?ledger\.currentTestRunId !== testRun\.id/,
@@ -515,4 +529,123 @@ test('uninstall removes only Experts explicitly owned by the Studio manifest', (
   assert.match(marketplaceHost, /Expert still exists after delete/);
   assert.match(marketplaceHost, /ETB\.registry\.install\(pluginId\)/);
   assert.match(marketplaceHost, /type:\s*'etb_uninstall_result'/);
+});
+
+test('one-time ownership migration prevents the Capability Studio Expert from being orphaned', () => {
+  const registrySource = fs.readFileSync(
+    path.join(toolbarRoot, 'src', 'core', 'registry.js'),
+    'utf8',
+  );
+  function storage(initial) {
+    const values = new Map(Object.entries(initial || {}));
+    return {
+      getItem(key) {
+        return values.has(key) ? values.get(key) : null;
+      },
+      setItem(key, value) {
+        values.set(key, String(value));
+      },
+      removeItem(key) {
+        values.delete(key);
+      },
+      values,
+    };
+  }
+
+  const upgraded = storage({
+    etb_plugins_installed_v1: JSON.stringify(['profit-growth-scenario']),
+  });
+  const upgradedContext = {
+    ETB: {},
+    BUILTIN_PLUGINS: [],
+    localStorage: upgraded,
+    console,
+  };
+  vm.runInNewContext(registrySource, upgradedContext);
+  assert.deepEqual(
+    JSON.parse(upgraded.getItem('etb_plugins_installed_v1')).sort(),
+    ['capability-studio-scenario', 'profit-growth-scenario'],
+  );
+  assert.equal(
+    upgraded.getItem('etb_evolution_studio_ownership_migration_v1'),
+    'done',
+  );
+
+  const fresh = storage({
+    etb_evolution_studio_ownership_migration_v1: 'done',
+    etb_plugins_installed_v1: JSON.stringify(['profit-growth-scenario']),
+  });
+  vm.runInNewContext(registrySource, {
+    ETB: {},
+    BUILTIN_PLUGINS: [],
+    localStorage: fresh,
+    console,
+  });
+  assert.deepEqual(
+    JSON.parse(fresh.getItem('etb_plugins_installed_v1')),
+    ['profit-growth-scenario'],
+    'fresh post-split Evolution Console installs must not auto-install Studio',
+  );
+});
+
+test('device sync recovers Capability Studio ownership after a cleared local cache', async () => {
+  const registrySource = fs.readFileSync(
+    path.join(toolbarRoot, 'src', 'core', 'registry.js'),
+    'utf8',
+  );
+  const values = new Map();
+  const localStorage = {
+    getItem(key) {
+      return values.has(key) ? values.get(key) : null;
+    },
+    setItem(key, value) {
+      values.set(key, String(value));
+    },
+    removeItem(key) {
+      values.delete(key);
+    },
+  };
+  const legacyManifest = {
+    id: 'profit-growth-scenario',
+    owned_experts: true,
+    experts: ['xtl_capability_studio_profitability_v1'],
+    expert_defs: [{
+      name: 'xtl_capability_studio_profitability_v1',
+    }],
+    ui: { type: 'html', html: '<p>legacy device cache</p>' },
+  };
+  const context = {
+    ETB: {
+      api: {
+        saveExpert() {
+          return Promise.resolve({ status: 'success' });
+        },
+        runExpert() {
+          return Promise.resolve({
+            result: JSON.stringify({ m: [legacyManifest], t: [] }),
+          });
+        },
+      },
+      router: { evict() {} },
+    },
+    BUILTIN_PLUGINS: [
+      { id: 'profit-growth-scenario' },
+      { id: 'capability-studio-scenario' },
+    ],
+    localStorage,
+    console,
+    Promise,
+  };
+  vm.runInNewContext(registrySource, context);
+  assert.equal(
+    localStorage.getItem('etb_evolution_studio_ownership_migration_v1'),
+    'done',
+    'bootstrap marker is written before asynchronous device sync',
+  );
+
+  await context.ETB.registry.syncFromDevice('', '');
+  assert.deepEqual(
+    JSON.parse(localStorage.getItem('etb_plugins_installed_v1')).sort(),
+    ['capability-studio-scenario', 'profit-growth-scenario'],
+  );
 });

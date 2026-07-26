@@ -1,0 +1,42 @@
+{
+  "schema": "extella.evolution.demo_platform_agents.v1",
+  "data_mode": "DEMO_FIXTURE",
+  "agents": [
+    {
+      "platform_agent_id": "agent_demo_fixture_valid_alpha",
+      "name": "Duplicate Demo Operator",
+      "provider": "alibaba",
+      "model": "qwen-3.7",
+      "instructions": "Read-only demo instructions for alpha.",
+      "last_activity_at": "2026-07-25T08:00:00Z",
+      "fixture_metadata_marker": "ALPHA_BY_STABLE_ID"
+    },
+    {
+      "platform_agent_id": "agent_demo_fixture_valid_beta",
+      "name": "Duplicate Demo Operator",
+      "provider": "alibaba",
+      "model": "qwen-max",
+      "instructions": "Read-only demo instructions for beta.",
+      "last_activity_at": "2026-07-25T09:00:00Z",
+      "fixture_metadata_marker": "BETA_BY_STABLE_ID"
+    },
+    {
+      "platform_agent_id": "agent_demo_fixture_warning_only",
+      "name": "Warning-only Demo Agent",
+      "provider": "dashscope",
+      "model": "qwen-plus",
+      "instructions": "Read-only demo instructions with one passport warning.",
+      "last_activity_at": "2026-07-25T10:00:00Z",
+      "fixture_metadata_marker": "WARNING_BY_STABLE_ID"
+    },
+    {
+      "platform_agent_id": "agent_demo_fixture_non_qwen",
+      "name": "Invalid Non-Qwen Demo Agent",
+      "provider": "openai",
+      "model": "gpt-4o",
+      "instructions": "This fixture must fail the canonical Qwen gate.",
+      "last_activity_at": "2026-07-25T11:00:00Z",
+      "fixture_metadata_marker": "NON_QWEN_BY_STABLE_ID"
+    }
+  ]
+}

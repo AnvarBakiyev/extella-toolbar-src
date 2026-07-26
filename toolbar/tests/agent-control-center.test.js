@@ -865,9 +865,20 @@ test('ACC-11: unknown shared dependency fails closed instead of reporting zero i
   );
 });
 
-test('build loads the ES5-compatible Agent Control core immediately after api.js', () => {
+test('build loads both ES5 Evolution cores and the standards provider after api.js', () => {
   const build = fs.readFileSync(buildPath, 'utf8');
-  assert.match(build, /'api\.js',\s*\n\s*'agent-control\.js',\s*\n\s*'install-prompt\.js'/);
+  assert.match(
+    build,
+    /'api\.js',\s*\n\s*'agent-control\.js',\s*\n\s*'evolution-console\.js',\s*\n\s*'evolution-standards-provider\.js',\s*\n\s*'install-prompt\.js'/,
+  );
+  assert.match(
+    build,
+    /throw new Error\(`Missing required core module: \$\{name\}`\)/,
+  );
+  assert.match(
+    build,
+    /providerCount !== 1[\s\S]*providerUseMarker[\s\S]*providerMarker/,
+  );
   assert.doesNotMatch(coreSource, /\brequire\s*\(/);
   assert.doesNotMatch(coreSource, /=>/);
   assert.doesNotMatch(coreSource, /\b(?:const|let)\s+[A-Za-z_$]/);

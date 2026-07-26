@@ -32,13 +32,27 @@ function controlSlice() {
   return router.slice(start, end);
 }
 
-test('Agent Control bridge is restricted to the exact canonical tokenless Studio iframe', () => {
+test('legacy Agent Control bridge is retired and cannot bypass Evolution Console gates', () => {
   assert.match(router, /e\.data\.type === 'etb_agent_control'/);
   assert.match(router, /var src7 = _srcIframe\(e\);\s*if \(!src7\) return;/);
-  assert.match(
-    router,
-    /if \(!_isBuiltinCapabilityStudio\(\)\) \{[\s\S]*?bridge not granted to this plugin/,
+  const legacyStart = router.indexOf(
+    "} else if (e.data.type === 'etb_agent_control')",
   );
+  const legacyEnd = router.indexOf(
+    "} else if (e.data.type === 'etb_evolution_console')",
+    legacyStart,
+  );
+  assert.ok(legacyStart >= 0 && legacyEnd > legacyStart);
+  const legacyBridge = router.slice(legacyStart, legacyEnd);
+  assert.match(legacyBridge, /LEGACY_AGENT_CONTROL_BRIDGE_RETIRED/);
+  assert.match(legacyBridge, /use etb_evolution_console/);
+  assert.doesNotMatch(legacyBridge, /_agentControlAction\(/);
+
+  const evolutionBridge = router.slice(
+    legacyEnd,
+    router.indexOf("} else if (e.data.type === 'etb_governance_probe')", legacyEnd),
+  );
+  assert.match(evolutionBridge, /if \(!_isBuiltinEvolutionConsole\(\)\)/);
   assert.match(router, /plugin === canonical/);
   assert.match(router, /ui\.tokenless === true/);
   assert.match(router, /iframe\.setAttribute\('sandbox',\s*'allow-scripts'\)/);
@@ -713,8 +727,15 @@ test('Agent Control inventory reads exact agent/config surfaces and returns boun
   assert.match(source, /exactConcepts\.slice\(0,\s*\d+\)/);
   assert.match(source, /exactRules\.slice\(0,\s*\d+\)/);
   assert.match(source, /exactExperts\.filter[\s\S]*?\.slice\(0,\s*\d+\)/);
-  assert.doesNotMatch(source, /display:\s*\{[\s\S]*?instructions:/);
-  assert.doesNotMatch(source, /display:\s*\{[\s\S]*?code:/);
+  const displayStart = source.indexOf('          display: {');
+  const displayEnd = source.indexOf(
+    '            hashes: inventory.hashes\n          }',
+    displayStart,
+  );
+  assert.ok(displayStart >= 0 && displayEnd > displayStart);
+  const displayProjection = source.slice(displayStart, displayEnd);
+  assert.doesNotMatch(displayProjection, /\binstructions\s*:/);
+  assert.doesNotMatch(displayProjection, /\bcode\s*:/);
 });
 
 test('inventory previews redact obvious secrets and personal contact data before persistence', () => {
@@ -853,15 +874,23 @@ test('scoped API helpers keep credentials in the host and bind reads/writes to a
   );
 });
 
-test('manifest keeps the stable install identity and declares only no-write capabilities', () => {
+test('Evolution Console manifest keeps the stable install identity and no-write contract', () => {
   assert.equal(manifest.id, 'profit-growth-scenario');
-  assert.equal(manifest.name, 'Центр управления агентами');
-  assert.equal(manifest.version, '0.3.0');
+  assert.equal(manifest.name, 'Evolution Console');
+  assert.equal(manifest.version, '0.4.0');
+  assert.equal(manifest.ui.htmlFile, 'evolution-console.html');
   assert.equal(manifest.ui.tokenless, true);
-  assert.ok(manifest.capabilities.length >= 5);
-  assert.ok(
-    manifest.capabilities.some((capability) => capability.id === 'profitability_gate'),
-    'managed policy evaluator must be declared as a capability',
+  assert.deepEqual(
+    manifest.capabilities.map((capability) => capability.id).sort(),
+    [
+      'agent_passport_risks',
+      'evolution_lab',
+      'evolution_loop',
+      'fleet_inventory',
+      'shared_genes_map',
+    ],
   );
   assert.ok(manifest.capabilities.every((capability) => capability.external_writes === false));
+  assert.deepEqual(manifest.expert_defs, []);
+  assert.equal(manifest.owned_experts, false);
 });

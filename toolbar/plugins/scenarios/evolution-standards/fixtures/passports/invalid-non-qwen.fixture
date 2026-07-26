@@ -1,0 +1,48 @@
+{
+  "agent": {
+    "name": "Invalid Non-Qwen Demo Agent",
+    "platform_agent_id": "agent_demo_fixture_non_qwen",
+    "platform_provider": "openai",
+    "declared_instructions": "This fixture must fail the canonical Qwen gate.",
+    "owner": "Demo Owner",
+    "business_goal": "Prove the exact canonical checker rejects a non-Qwen model",
+    "model_profile": "gpt-4o",
+    "version": "1.0.0",
+    "languages": ["ru", "en"],
+    "immutable_bundle_id": "demo-bundle-invalid-v1",
+    "dependency_lock_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "interfaces": ["Evolution Console demo"],
+    "hosting_profile": "DEMO_FIXTURE",
+    "data_classification": "synthetic demo data"
+  },
+  "capabilities": [
+    {
+      "name": "read_only_summary",
+      "version": "1.0.0",
+      "autonomy": "A1",
+      "side_effects": "none",
+      "confirmation": "never",
+      "idempotency": "supported",
+      "global": false,
+      "rollback": "",
+      "evidence_schema": "",
+      "permissions": [],
+      "rules": [],
+      "help_surface": "Evolution Console demo help",
+      "limits": ["DEMO_FIXTURE only; never reads or changes live customer data"]
+    }
+  ],
+  "shared_genes": [],
+  "budgets": {
+    "max_duration_ms": 30000,
+    "max_llm_tokens": 4000,
+    "max_delegation_depth": 0,
+    "max_external_actions": 0
+  },
+  "operations": {
+    "success_metric": "canonical checker returns Qwen-required issue",
+    "alerts": [],
+    "evidence_retention": "test run",
+    "owner_on_call": "Demo Owner"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "schema": "extella.evolution.demo_fixture_registry.v1",
+  "data_mode": "DEMO_FIXTURE",
+  "production_eligible": false,
+  "live_projection_allowed": false,
+  "platform_agents_file": "fixtures/platform-agents.fixture",
+  "passport_files": [
+    "fixtures/passports/warning-only.fixture",
+    "fixtures/passports/valid-alpha.fixture",
+    "fixtures/passports/dead-reference.fixture",
+    "fixtures/passports/invalid-non-qwen.fixture",
+    "fixtures/passports/valid-beta.fixture"
+  ]
+}

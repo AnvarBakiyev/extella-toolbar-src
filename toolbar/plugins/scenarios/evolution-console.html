@@ -1,0 +1,652 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; font-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'">
+  <title>Extella Evolution · Evolution Console</title>
+  <style>
+    :root {
+      --bg:#0E0E0E;--panel:#181818;--panel2:#222222;--ink:#F0F0F0;--body:#D8D8D8;--muted:#B0B0B0;
+      --line:color-mix(in srgb,var(--muted) 30%,var(--bg));--gold:#D4944A;--gold-hover:#E0A85E;
+      --petrol:#5FA8A0;--petrol-hover:#6BB3AA;--petrol-border:color-mix(in srgb,var(--petrol) 55%,var(--bg));
+      --warn:#E0A85E;--bad:#E8705F;--good:#57B37E;--terminal:#000000;--on-gold:#0A0A0A;
+      --shadow:0 18px 45px color-mix(in srgb,#000000 24%,transparent);--radius:16px;--silver:#B0B0B0;
+      --sans:"DM Sans",Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+    }
+    [data-theme="light"] {
+      --bg:#FAFAF8;--panel:#F5F3EE;--panel2:#FAFAF8;--line:#EBE8E1;
+      --ink:#0A0A0A;--body:#1A1A1A;--muted:#2A2A2A;--gold:#C57E33;--gold-hover:#D4984F;
+      --petrol:#2F6B66;--petrol-hover:#3D8078;--petrol-border:#B7CEC9;
+      --warn:#A5632A;--bad:#A63A2E;--good:#1F7A4D;--silver:#8C8C8C;
+      --shadow:0 15px 35px color-mix(in srgb,#2A2A2A 10%,transparent);
+    }
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--body);font:14px/1.45 var(--sans)}
+    button,input,select{font:inherit}button{cursor:pointer}.shell{min-height:100vh}
+    .top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:16px;
+      padding:14px 22px;background:color-mix(in srgb,var(--bg) 88%,transparent);
+      backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
+    .brand{display:flex;align-items:center;gap:11px;min-width:245px}.mark{width:34px;height:34px;
+      display:grid;place-items:center;border-radius:11px;background:var(--gold);color:var(--on-gold);font-weight:900}
+    .brand b{display:block;font-size:15px;color:var(--ink)}.brand small{color:var(--muted)}
+    .tabs{display:flex;gap:5px;overflow:auto;flex:1}.tab,.ghost,.primary,.danger{
+      border:1px solid transparent;border-radius:10px;padding:8px 11px;background:transparent;color:var(--muted)}
+    .tab.on{background:var(--panel2);border-color:var(--petrol-border);color:var(--petrol)}
+    .tab.on:hover{color:var(--petrol-hover)}.ghost{border-color:var(--line);color:var(--ink)}
+    .primary{background:var(--gold);color:var(--on-gold);font-weight:750}
+    .primary:hover:not(:disabled){background:var(--gold-hover)}
+    .danger{background:var(--panel2);border-color:var(--bad);color:var(--bad)}
+    .btn{display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:10px;padding:8px 11px;
+      background:transparent;color:var(--ink);font-family:var(--sans);cursor:pointer}.btn.gold,.gold{background:var(--gold);color:var(--on-gold);border-color:transparent;font-weight:750}
+    .btn.gold:hover:not(:disabled),.gold:hover:not(:disabled){background:var(--gold-hover)}
+    .btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}.btn.sm,.sm{font-size:12px;padding:6px 9px}
+    button:disabled{opacity:.42;cursor:not-allowed}.top-actions{display:flex;gap:7px;white-space:nowrap}
+    main{max-width:1480px;margin:0 auto;padding:24px}.view{display:none}.view.on{display:block}
+    .hero{display:flex;justify-content:space-between;gap:20px;align-items:flex-end;margin-bottom:20px}
+    .eyebrow{color:var(--petrol);font:700 11px/1.2 var(--mono);letter-spacing:.12em;text-transform:uppercase}
+    h1{font-size:30px;line-height:1.12;margin:7px 0 8px;letter-spacing:-.03em}h2{font-size:17px;margin:0}h1,h2{color:var(--ink)}
+    .lead{max-width:820px;margin:0;color:var(--muted)}.status{display:flex;gap:7px;flex-wrap:wrap}
+    .badge{border:1px solid var(--line);background:var(--panel2);padding:5px 8px;border-radius:999px;
+      color:var(--muted);font:700 10px var(--mono)}.badge.good{color:var(--good)}
+    .badge.warn{color:var(--warn)}.badge.bad{color:var(--bad)}
+    .demo{display:none;margin:0 0 15px;padding:10px 13px;border:1px solid var(--warn);border-radius:11px;
+      color:var(--warn);background:var(--panel2)}.demo.on{display:block}
+    .boundary{margin:12px 0;padding:10px 12px;border:1px solid var(--warn);border-radius:10px;
+      color:var(--warn);background:var(--panel2);font-size:12px}
+    .error{display:none;margin-bottom:15px;padding:11px 13px;border:1px solid var(--bad);border-radius:11px;color:var(--bad);background:var(--panel2)}
+    .error.on{display:block}.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:15px}
+    .metric,.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+    .metric{padding:15px}.metric strong{font-size:27px;display:block}.metric span{color:var(--muted)}
+    .card{padding:16px}.card-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:13px}
+    .card-head p{margin:3px 0 0;color:var(--muted);font-size:12px}.tools{display:flex;gap:8px;flex-wrap:wrap}
+    .tools input,.tools select,.form input,.form select{min-height:38px;border:1px solid var(--line);border-radius:9px;
+      background:var(--panel2);color:var(--ink);padding:8px 10px}.tools input{min-width:250px;flex:1}
+    #bulkOperationSelect,#escalationSelect{width:100%;min-height:38px;margin-bottom:10px;border:1px solid var(--line);border-radius:9px;
+      background:var(--panel2);color:var(--ink);padding:8px 10px}
+    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}table{width:100%;border-collapse:collapse;min-width:1120px}
+    th,td{text-align:left;padding:10px 11px;border-bottom:1px solid var(--line);vertical-align:top}
+    th{position:sticky;top:0;background:var(--panel2);color:var(--muted);font-size:11px;z-index:2}
+    td small{display:block;color:var(--muted);margin-top:2px}.mono{font-family:var(--mono);font-size:11px}
+    .state{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:3px 7px;border:1px solid var(--line);background:var(--panel2);
+      font-size:11px}.state.good{color:var(--good)}.state.bad{color:var(--bad)}.state.warn{color:var(--warn)}
+    .empty{padding:34px;text-align:center;color:var(--muted)}.split{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .stable-id-card{margin-top:14px}.stable-id-entry .form{margin-top:11px}.stable-id-entry select{width:100%}
+    .risk-list,.gene-list,.receipt-list{display:grid;gap:9px}.risk,.gene,.receipt{padding:12px;border:1px solid var(--line);
+      border-radius:11px;background:var(--panel2)}.risk b,.gene b,.receipt b{display:block;margin-bottom:4px}
+    .risk p,.gene p,.receipt p{margin:4px 0;color:var(--muted)}.risk code,.gene code,.receipt code{word-break:break-all}
+    .consumer{display:inline-flex;margin:3px 4px 0 0;padding:3px 7px;border-radius:999px;background:var(--panel);font-size:11px}
+    .flow{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:7px;margin:12px 0}.step{border:1px solid var(--line);
+      border-radius:10px;padding:9px;background:var(--panel2);color:var(--muted);font-size:11px}.step.on{border-color:var(--petrol);color:var(--petrol)}
+    .step.done{border-color:var(--good);color:var(--good)}.step small{display:block;margin-top:3px;color:currentColor;font:700 9px var(--mono)}
+    .form{display:grid;gap:10px}.form label{display:grid;gap:5px;color:var(--muted);font-size:12px}
+    .targets{max-height:245px;overflow:auto;
+      border:1px solid var(--line);border-radius:10px;padding:8px}.target{display:flex;gap:8px;padding:7px;border-bottom:1px solid var(--line)}
+    pre{white-space:pre-wrap;word-break:break-word;background:var(--terminal);color:#D8D8D8;border-radius:11px;padding:12px;
+      max-height:340px;overflow:auto;font:11px/1.55 var(--mono)}
+    .overlay{display:none;position:fixed;inset:0;z-index:100;background:color-mix(in srgb,#000000 76%,transparent);padding:24px;overflow:auto}
+    .overlay.on{display:block}.dialog{max-width:1040px;margin:0 auto;background:var(--bg);border:1px solid var(--line);
+      border-radius:18px;padding:18px;box-shadow:var(--shadow)}.dialog-top{display:flex;justify-content:space-between;gap:12px;margin-bottom:14px}
+    #xtl_help{display:none;position:fixed;inset:0;z-index:110;background:color-mix(in srgb,#000000 78%,transparent);overflow:auto;padding:30px 18px}
+    #xtl_help>div{max-width:760px;margin:0 auto;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:24px}
+    @media(max-width:1000px){.top{flex-wrap:wrap}.brand{min-width:0}.tabs{order:3;width:100%}.metrics{grid-template-columns:1fr 1fr}.split{grid-template-columns:1fr}.flow{grid-template-columns:1fr 1fr 1fr}}
+    @media(max-width:620px){main{padding:15px}.top{padding:12px}.metrics{grid-template-columns:1fr}.hero{display:block}.top-actions{width:100%}.tools>*{width:100%}.flow{grid-template-columns:1fr 1fr}}
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="top">
+      <div class="brand"><span class="mark">E</span><span><b>Extella Evolution</b><small data-t="consoleSub"></small></span></div>
+      <nav class="tabs" id="tabs">
+        <button class="tab on" data-view="fleet" data-t="fleet"></button>
+        <button class="tab" data-view="risks" data-t="risks"></button>
+        <button class="tab" data-view="genes">Shared Genes</button>
+        <button class="tab" data-view="escalations" data-t="escalations"></button>
+        <button class="tab" data-view="bulk" data-t="bulk"></button>
+        <button class="tab" data-view="receipts">Evolution Receipts</button>
+      </nav>
+      <div class="top-actions">
+        <button class="ghost" id="langBtn">EN</button>
+        <button class="ghost" id="helpBtn" data-t="how"></button>
+      </div>
+    </header>
+
+    <main>
+      <div class="demo" id="demoBanner" data-t="demo"></div>
+      <div class="error" id="errorBox"></div>
+
+      <section class="view on" id="fleetView">
+        <div class="hero">
+          <div><div class="eyebrow">Extella Evolution · Evolution Console</div><h1 data-t="fleetTitle"></h1><p class="lead" data-t="fleetLead"></p></div>
+          <div class="status"><span class="badge" id="snapshotBadge">SNAPSHOT —</span><span class="badge" id="standardsBadge">STANDARD —</span></div>
+        </div>
+        <div class="metrics">
+          <article class="metric"><strong id="countTotal">—</strong><span data-t="allAgents"></span></article>
+          <article class="metric"><strong id="countFailed">—</strong><span data-t="failedStandard"></span></article>
+          <article class="metric"><strong id="countOwnerless">—</strong><span data-t="ownerless"></span></article>
+          <article class="metric"><strong id="countShared">—</strong><span data-t="withShared"></span></article>
+        </div>
+        <section class="card">
+          <div class="card-head">
+            <div><h2 data-t="inventory"></h2><p id="snapshotNote"></p></div>
+            <div class="tools"><button class="ghost" id="refreshBtn" data-t="refresh"></button><button class="ghost" id="jsonBtn">JSON</button><button class="ghost" id="csvBtn">CSV</button></div>
+          </div>
+          <div class="tools" style="margin-bottom:12px">
+            <input id="searchInput" type="search" data-ph="search">
+            <select id="filterSelect">
+              <option value="" data-t="filterAll"></option>
+              <option value="failed" data-t="filterFailed"></option>
+              <option value="ownerless" data-t="filterOwnerless"></option>
+              <option value="non_qwen" data-t="filterNonQwen"></option>
+              <option value="shared" data-t="filterShared"></option>
+              <option value="inactive" data-t="filterInactive"></option>
+              <option value="dead" data-t="filterDead"></option>
+            </select>
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr><th data-t="agent"></th><th data-t="owner"></th><th data-t="model"></th><th data-t="activeVersion"></th>
+              <th data-t="standard"></th><th data-t="lastActivity"></th><th data-t="capabilities"></th><th>Shared Genes</th><th>Agent Cabinet</th></tr></thead>
+            <tbody id="fleetRows"><tr><td colspan="9" class="empty" data-t="loading"></td></tr></tbody>
+          </table></div>
+        </section>
+      </section>
+
+      <section class="view" id="risksView">
+        <div class="hero"><div><div class="eyebrow">check_agent_passport.py</div><h1 data-t="riskTitle"></h1><p class="lead" data-t="riskLead"></p></div></div>
+        <div class="split">
+          <section class="card"><div class="card-head"><div><h2 data-t="riskByAgent"></h2><p data-t="riskCanonical"></p></div></div><div class="risk-list" id="riskList"></div></section>
+          <section class="card"><div class="card-head"><div><h2 data-t="missingPassports"></h2><p data-t="draftTruth"></p></div></div><div class="risk-list" id="missingList"></div></section>
+        </div>
+        <section class="card stable-id-card">
+          <div class="card-head"><div><h2 data-t="stableIdRequired"></h2><p data-t="stableIdLead"></p></div></div>
+          <div class="risk-list" id="stableIdRequiredList"></div>
+        </section>
+      </section>
+
+      <section class="view" id="genesView">
+        <div class="hero"><div><div class="eyebrow">Agent Genome · Shared Genes</div><h1 data-t="genesTitle"></h1><p class="lead" data-t="genesLead"></p></div>
+          <div class="tools"><button class="ghost" id="geneObjectBtn" data-t="objectView"></button><button class="ghost" id="geneAgentBtn" data-t="agentView"></button></div></div>
+        <section class="card"><div class="gene-list" id="geneList"></div></section>
+      </section>
+
+      <section class="view" id="escalationsView">
+        <div class="hero"><div><div class="eyebrow">Agent Cabinet → Evolution Console</div><h1 data-t="escTitle"></h1><p class="lead" data-t="escLead"></p></div></div>
+        <div class="split">
+          <section class="card"><div class="card-head"><div><h2 data-t="pendingClass"></h2><p data-t="contract"></p></div></div><div id="escalationList"></div></section>
+          <section class="card"><div class="card-head"><div><h2>Evolution Loop</h2><p data-t="exactBinding"></p></div></div>
+            <div class="flow" id="escalationFlow"></div><div class="boundary" id="escalationBoundary"></div><div class="tools" id="escalationActions"></div><pre id="escalationEvidence">—</pre></section>
+        </div>
+      </section>
+
+      <section class="view" id="bulkView">
+        <div class="hero"><div><div class="eyebrow">Evolution Console · fail-closed</div><h1 data-t="bulkTitle"></h1><p class="lead" data-t="bulkLead"></p></div></div>
+        <div class="split">
+          <section class="card"><div class="card-head"><div><h2 data-t="operation"></h2><p data-t="noApplyAll"></p></div></div>
+            <div class="form">
+              <select id="bulkType"><option value="shared_gene_change" data-t="changeShared"></option><option value="dead_reference_remove" data-t="removeDead"></option>
+                <option value="schedule_pause" data-t="pauseSchedules"></option><option value="schedule_resume" data-t="resumeSchedules"></option></select>
+              <label id="bulkGeneField"><span data-t="selectedSharedGene"></span><select id="bulkGeneSelect"></select></label>
+              <label id="bulkVersionField"><span data-t="candidateVersion"></span><input id="bulkVersionInput" autocomplete="off" data-ph="candidateVersionPlaceholder"></label>
+              <div class="boundary" id="bulkGate"></div>
+              <div class="targets" id="bulkTargets"></div>
+              <button class="primary" id="bulkPreviewBtn" data-t="showImpact"></button>
+            </div>
+          </section>
+          <section class="card"><div class="card-head"><div><h2 data-t="impactApproval"></h2><p data-t="boundTargets"></p></div></div>
+            <select id="bulkOperationSelect"><option value="">—</option></select><div class="flow" id="bulkFlow"></div><div class="boundary" id="bulkBoundary"></div><pre id="bulkEvidence">—</pre><div class="tools" id="bulkActions"></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="view" id="receiptsView">
+        <div class="hero"><div><div class="eyebrow">Evolution Loop</div><h1>Evolution Receipts</h1><p class="lead" data-t="receiptsLead"></p></div></div>
+        <section class="card"><div class="receipt-list" id="receiptList"></div></section>
+      </section>
+    </main>
+  </div>
+
+  <div class="overlay" id="cabinetOverlay">
+    <div class="dialog"><div class="dialog-top"><div><div class="eyebrow">Extella Evolution · Agent Cabinet</div><h2 id="cabinetTitle">Agent Cabinet</h2></div>
+      <button class="ghost" id="cabinetClose" data-t="close"></button></div><div id="cabinetHost"></div>
+      <section class="card" id="cabinetEscalationWrapper">
+        <div class="card-head"><div><h2 data-t="classChange"></h2><p data-t="cabinetHostContract"></p></div></div>
+        <div class="form">
+          <label><span data-t="selectedSharedGene"></span><select id="cabinetGeneSelect"></select></label>
+          <label><span data-t="candidateVersion"></span><input id="cabinetVersionInput" autocomplete="off" data-ph="candidateVersionPlaceholder"></label>
+          <div class="boundary" id="cabinetImpact"></div>
+          <button class="primary" id="cabinetEscalateBtn" data-t="sendEscalation"></button>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div id="xtl_help"><div><div id="xtl_help_body"></div><button class="primary" onclick="closeHelp()" data-t="gotIt"></button></div></div>
+
+  <script>
+    var WLANG = 'ru';
+    function el(id){return document.getElementById(id);}
+  </script>
+  <!-- EXTELLA_EVOLUTION_STANDARD_ARTIFACTS -->
+  <script>
+  (function(){
+    'use strict';
+    var PREVIEW = new URLSearchParams(location.search).get('preview') === '1';
+    var I18N = {
+      ru:{
+        consoleSub:'Evolution Console · консоль управления парком агентов',fleet:'Парк',risks:'Риски',escalations:'Изменения класса',bulk:'Массовые операции',
+        how:'? Как это работает',demo:'DEMO: данные и Evolution Receipts существуют только в памяти страницы; платформа не читается и не изменяется.',
+        fleetTitle:'Весь парк — одним снимком',fleetLead:'Платформа показывает фактический парк, Agent Passport заявляет владельца и границы, единый журнал даёт активную версию. Неизвестное остаётся неизвестным.',
+        allAgents:'всего агентов',failedStandard:'не проходят стандарт',ownerless:'без владельца',withShared:'с Shared Genes',inventory:'Инвентарь парка',
+        refresh:'Обновить снимок',search:'Поиск по имени или ID',filterAll:'Все агенты',filterFailed:'Не проходят стандарт',filterOwnerless:'Без владельца',
+        filterNonQwen:'Не Qwen',filterShared:'Есть Shared Genes',filterInactive:'Нет активности 30 дней',filterDead:'Мёртвые ссылки',agent:'Агент',owner:'Владелец',
+        model:'Модель и поставщик',activeVersion:'Активная версия',standard:'Стандарт',lastActivity:'Последняя активность',capabilities:'Способности',
+        loading:'Получаю полный account-bound снимок…',openCabinet:'Открыть Agent Cabinet',createDraft:'Создать черновик Agent Passport',unknown:'неизвестно',
+        riskTitle:'Риски — результат единого стандарта',riskLead:'Ошибки и предупреждения приходят из закреплённого check_agent_passport.py. Evolution Console не повторяет и не исправляет его правила.',
+        riskByAgent:'Проверка по агентам',riskCanonical:'Код, тяжесть, путь и текст принадлежат canonical checker.',missingPassports:'Agent Passport отсутствует',
+        draftTruth:'Черновик заполняется живыми данными, но остаётся NOT_VALIDATED, пока его не проверит canonical checker.',
+        stableIdRequired:'Нужен стабильный ID',stableIdLead:'Эти Agent Passport не связываются с платформой по имени. Выберите точный live agentId; source Passport и checker issues останутся видимыми.',
+        exactLiveAgent:'Точный live agentId',selectStableAgent:'Выберите точный live agentId',sourcePassport:'Source Passport',sourcePath:'Путь источника',
+        genesTitle:'Карта Shared Genes',
+        genesLead:'N считается один раз по стабильным gene_id и точным consumer_agent_ids. Видимость native-объекта не выдаётся за использование.',
+        objectView:'Объект → потребители',agentView:'Агент → объекты',escTitle:'Приём эскалаций из Agent Cabinet',
+        escLead:'Изменение Shared Gene начинается в Agent Cabinet и завершается здесь: весь класс, одинаковые кейсы, поэтапное включение, наблюдение и точный откат.',
+        pendingClass:'Ожидает решения по классу',contract:'candidate_id + SHA-256 + scope + affected agents + actor_id',exactBinding:'Каждый шаг привязан к точному candidate и target set.',
+        bulkTitle:'Массовые операции только через гейты',bulkLead:'Нельзя выполнить действие, пока не показаны точные цели и последствия и не дано подтверждение для их неизменившегося списка.',
+        operation:'Операция и точные цели',noApplyAll:'Wildcard и «применить ко всем» не поддерживаются.',pauseSchedules:'Пауза расписаний',resumeSchedules:'Возобновление расписаний',
+        removeDead:'Снять мёртвые ссылки',changeShared:'Изменить Shared Gene',showImpact:'Показать влияние',impactApproval:'Влияние и подтверждение',
+        boundTargets:'Изменение списка целей инвалидирует подтверждение.',receiptsLead:'Квитанции шагов Evidence → Candidate → Test → Approval → Activation → Observation → Rollback.',
+        close:'Закрыть',gotIt:'Понятно',passed:'проходит',failed:'не проходит',missing:'Agent Passport отсутствует',standardUnknown:'реестр стандарта недоступен',dead:'в реестре, не на платформе',
+        consumers:'потребителей',moreAgents:'ещё агентов',noData:'Данных нет',incomplete:'Снимок неполный — мутации заблокированы.',
+        complete:'Снимок полный',downloaded:'Черновик скачан; canonical checker ещё не запускался.',confirmExact:'Подтвердить точный список',
+        planStages:'Составить точный план этапов',stage:'Включить следующий этап',publish:'Опубликовать',observe:'Зафиксировать наблюдение',rollback:'Откатить одним действием',runTest:'Тест всего класса',approve:'Подтвердить',
+        selectedSharedGene:'Shared Gene из текущей карты',candidateVersion:'Версия candidate',candidateVersionPlaceholder:'например 2.0.0',
+        classChange:'Изменить как класс',cabinetHostContract:'Host-форма не изменяет canonical Agent Cabinet и формирует точный контракт из текущей карты Shared Genes.',
+        sendEscalation:'Передать в Evolution Console',changeAsClass:'Изменить как класс',activeGeneVersion:'активная версия',
+        evidenceBoundary:'Evolution Lab evidence приходит только из host Evolution Lab adapter. Этот UI не создаёт и не подтверждает результаты теста самостоятельно.',
+        adapterBoundary:'UI показывает план и Evolution Receipts host adapter; native-запись заблокирована без durable intent recovery и multi-device CAS общего ledger. Сам по себе статус этапа не доказывает активацию агента.',
+        productionRequired:'Мутации закрыты: требуется явный data_mode=PRODUCTION, account-scoped production-eligible стандарт и полный текущий снимок.',
+        scheduleAdapterRequired:'Операция закрыта: host не объявил native schedule adapter.',exactTargetsOnly:'Цели создаются только из текущих видимых строк canonical projection.',
+        wholeClassRequired:'Для Shared Gene выбран весь точный consumer class; каждый потребитель должен быть видим в текущем фильтре.',
+        selectExactTarget:'Выберите хотя бы одну доступную точную цель.',selectGeneVersion:'Выберите Shared Gene и задайте candidate version.',
+        actorUnavailable:'Текущий actor_id отсутствует в проверенном едином журнале; эскалация закрыта.',mapUnavailable:'Полная текущая карта Shared Genes недоступна.',
+        accountCleared:'Контекст аккаунта очищен; ожидается новый etb_init.',versionUnknown:'версия неизвестна',
+        managedVerified:'managed / verified',declaredFact:'declared',platformFact:'PLATFORM fact',pinnedFact:'pinned standards fact',sourceUnknown:'source UNKNOWN'
+      },
+      en:{
+        consoleSub:'Evolution Console · agent fleet management console',fleet:'Fleet',risks:'Risks',escalations:'Class changes',bulk:'Bulk operations',
+        how:'? How it works',demo:'DEMO: data and Evolution Receipts exist only in this page memory; the platform is neither read nor changed.',
+        fleetTitle:'The whole fleet in one snapshot',fleetLead:'The platform shows the actual fleet, Agent Passport declares ownership and limits, and the single ledger provides the active version. Unknown stays unknown.',
+        allAgents:'total agents',failedStandard:'fail the standard',ownerless:'without an owner',withShared:'with Shared Genes',inventory:'Fleet inventory',
+        refresh:'Refresh snapshot',search:'Search by name or ID',filterAll:'All agents',filterFailed:'Fail the standard',filterOwnerless:'Without an owner',
+        filterNonQwen:'Not Qwen',filterShared:'Has Shared Genes',filterInactive:'No activity for 30 days',filterDead:'Dead references',agent:'Agent',owner:'Owner',
+        model:'Model and provider',activeVersion:'Active version',standard:'Standard',lastActivity:'Last activity',capabilities:'Capabilities',
+        loading:'Loading a complete account-bound snapshot…',openCabinet:'Open Agent Cabinet',createDraft:'Create Agent Passport draft',unknown:'unknown',
+        riskTitle:'Risks are the result of one standard',riskLead:'Errors and warnings come from the pinned check_agent_passport.py. The Console neither repeats nor patches its rules.',
+        riskByAgent:'Checks by agent',riskCanonical:'Code, severity, path and text belong to the canonical checker.',missingPassports:'Missing Agent Passport',
+        draftTruth:'The draft uses live data but remains NOT_VALIDATED until the canonical checker runs.',
+        stableIdRequired:'Stable ID required',stableIdLead:'These Agent Passports are never joined to the platform by name. Select an exact live agentId; the source Passport and checker issues remain visible.',
+        exactLiveAgent:'Exact live agentId',selectStableAgent:'Select an exact live agentId',sourcePassport:'Source Passport',sourcePath:'Source path',
+        genesTitle:'Shared Genes map',
+        genesLead:'N is calculated once from stable gene_id and exact consumer_agent_ids. Native visibility is never presented as usage.',
+        objectView:'Object → consumers',agentView:'Agent → objects',escTitle:'Escalations from Agent Cabinet',
+        escLead:'A Shared Gene change starts in Agent Cabinet and ends here: the whole class, identical cases, staged activation, observation and exact rollback.',
+        pendingClass:'Pending class decision',contract:'candidate_id + SHA-256 + scope + affected agents + actor_id',exactBinding:'Every step is bound to the exact candidate and target set.',
+        bulkTitle:'Bulk operations only through gates',bulkLead:'No action can run before exact targets and consequences are shown and approval is bound to their unchanged list.',
+        operation:'Operation and exact targets',noApplyAll:'Wildcards and “apply to all” are unsupported.',pauseSchedules:'Pause schedules',resumeSchedules:'Resume schedules',
+        removeDead:'Remove dead references',changeShared:'Change a Shared Gene',showImpact:'Show impact',impactApproval:'Impact and approval',
+        boundTargets:'Changing the target list invalidates approval.',receiptsLead:'Receipts for Evidence → Candidate → Test → Approval → Activation → Observation → Rollback.',
+        close:'Close',gotIt:'Got it',passed:'passes',failed:'fails',missing:'Agent Passport missing',standardUnknown:'standards registry unavailable',dead:'in registry, absent on platform',
+        consumers:'consumers',moreAgents:'more agents',noData:'No data',incomplete:'Snapshot is incomplete — mutations are blocked.',
+        complete:'Snapshot complete',downloaded:'Draft downloaded; the canonical checker has not run yet.',confirmExact:'Approve exact list',
+        planStages:'Create exact stage plan',stage:'Activate next stage',publish:'Publish',observe:'Record observation',rollback:'One-action rollback',runTest:'Test the whole class',approve:'Approve',
+        selectedSharedGene:'Shared Gene from the current map',candidateVersion:'Candidate version',candidateVersionPlaceholder:'for example 2.0.0',
+        classChange:'Change as a class',cabinetHostContract:'The host form leaves canonical Agent Cabinet unchanged and builds an exact contract from the current Shared Genes map.',
+        sendEscalation:'Send to Evolution Console',changeAsClass:'Change as a class',activeGeneVersion:'active version',
+        evidenceBoundary:'Evolution Lab evidence comes only from the host Evolution Lab adapter. This UI never creates or attests a test result itself.',
+        adapterBoundary:'The UI shows a plan and host-adapter Evolution Receipts; native writes are blocked without durable intent recovery and multi-device CAS for the shared ledger. A stage status alone is not evidence of agent activation.',
+        productionRequired:'Mutations are closed: explicit data_mode=PRODUCTION, an account-scoped production-eligible standard and a complete current snapshot are required.',
+        scheduleAdapterRequired:'Operation is closed: the host has not declared a native schedule adapter.',exactTargetsOnly:'Targets are generated only from the current visible canonical projection.',
+        wholeClassRequired:'The entire exact Shared Gene consumer class is selected; every consumer must be visible under the current filter.',
+        selectExactTarget:'Select at least one available exact target.',selectGeneVersion:'Select a Shared Gene and enter a candidate version.',
+        actorUnavailable:'The current actor_id is unavailable in the verified single ledger; escalation is closed.',mapUnavailable:'A complete current Shared Genes map is unavailable.',
+        accountCleared:'Account context was cleared; waiting for a new etb_init.',versionUnknown:'version unknown',
+        managedVerified:'managed / verified',declaredFact:'declared',platformFact:'PLATFORM fact',pinnedFact:'pinned standards fact',sourceUnknown:'source UNKNOWN'
+      }
+    };
+    function t(key){return (I18N[WLANG]&&I18N[WLANG][key])||key;}
+    function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+    function clone(v){return v==null?v:JSON.parse(JSON.stringify(v));}
+    function short(v){v=String(v||'');return v?v.slice(0,12)+(v.length>12?'…':''):'—';}
+    function fmtTime(v){if(!v)return t('unknown');try{return new Intl.DateTimeFormat(WLANG==='en'?'en-GB':'ru-RU',{dateStyle:'short',timeStyle:'short'}).format(new Date(v));}catch(_){return String(v);}}
+    var state={
+      pending:new Map(),seq:0,actorId:null,projection:null,shared:null,standards:null,platform:null,ledger:null,
+      stableIdRequired:[],stableTargetBySource:Object.create(null),escalations:[],bulk:null,receipts:[],draft:null,geneView:'object',accountEpoch:0,
+      cabinetAgentId:null,cabinetGeneId:null,cabinetArtifactBase:null,currentEscalationId:null,selectedEscalationId:null,
+      bulkOperations:[],currentBulkOperationId:null,selectedBulkOperationId:null,selectedBulkGeneId:null,selectedBulkIds:[],
+      lastEscalationEvidence:null,lastBulkEvidence:null
+    };
+
+    function applyLanguage(){
+      document.documentElement.lang=WLANG;
+      document.querySelectorAll('[data-t]').forEach(function(n){n.textContent=t(n.getAttribute('data-t'));});
+      document.querySelectorAll('[data-ph]').forEach(function(n){n.placeholder=t(n.getAttribute('data-ph'));});
+      el('langBtn').textContent=WLANG==='ru'?'EN':'RU';
+      if(window.HELP){
+        HELP.evolution_console={
+          ru:{icon:'◇',title:'Как работает Evolution Console',sub:'Консоль управления парком агентов',
+            steps:['Считывает весь парк текущего аккаунта и связывает его с Agent Passport только по стабильному ID.','Показывает риски из canonical check_agent_passport.py и строит карту Shared Genes.','Проводит изменения класса и массовые операции через Evolution Loop с точным откатом.'],
+            sure:['Один расчёт рисков и один журнал версий для Evolution Console и Agent Cabinet.','Preview, approval и Evolution Receipts связаны с точным SHA-256 и списком целей.'],
+            nope:['Ролей и разграничения доступа пока нет.','Журнал не защищён от подделки (не tamper-evident).','Видны только управляемые запуски; прямые чаты не отслеживаются.','Расходы — оценка, не биллинговый факт.','Риски считаются по стандарту Extella, не платформой.','Между аккаунтами видимости нет.'],
+            who:{title:'Кто подтверждает и откатывает',items:['Изменение подтверждает человек с текущей сессией; роли платформой пока не различаются.','Rollback возвращает точную предыдущую managed-версию.']}},
+          en:{icon:'◇',title:'How Evolution Console works',sub:'Agent fleet management console',
+            steps:['It reads the whole current-account fleet and joins Agent Passport only by a stable ID.','It shows risks from canonical check_agent_passport.py and builds the Shared Genes map.','It runs class changes and bulk operations through the Evolution Loop with exact rollback.'],
+            sure:['One risk calculation and one version ledger serve Evolution Console and Agent Cabinet.','Preview, approval and Evolution Receipts are bound to the exact SHA-256 and target list.'],
+            nope:['Roles and access separation are not available yet.','The log is not tamper-evident.','Only managed runs are visible; direct chats are not traced.','Cost is an estimate, not a billing fact.','Risks come from the Extella standard, not the platform.','There is no cross-account visibility.'],
+            who:{title:'Who approves and rolls back',items:['A person in the current session approves; the platform does not distinguish roles yet.','Rollback restores the exact previous managed version.']}}
+        };
+      }
+    }
+    function showError(msg){var n=el('errorBox');n.textContent=String(msg||'');n.classList.toggle('on',!!msg);}
+    function setView(view){document.querySelectorAll('.view').forEach(function(n){n.classList.toggle('on',n.id===view+'View');});document.querySelectorAll('.tab').forEach(function(n){n.classList.toggle('on',n.dataset.view===view);});}
+    function standardDataMode(){var s=state.standards||{};return String(s.dataMode||s.data_mode||'UNAVAILABLE');}
+    function productionReady(){
+      var s=state.standards||{},p=state.projection;
+      return !PREVIEW&&standardDataMode()==='PRODUCTION'&&s.accountScoped===true&&(s.productionEligible===true||s.production_eligible===true)&&(s.liveProjectionAllowed===true||s.live_projection_allowed===true)&&
+        !!p&&p.complete===true&&p.mutationsAllowed===true;
+    }
+    function adapterAvailable(name){return (state.platform||{})[name]==='AVAILABLE';}
+    function scheduleAdapterAvailable(){return adapterAvailable('scheduleStateAdapter');}
+    function canonical(value){
+      function encode(current,stack){
+        var type,keys,parts,i;if(current===null)return'null';type=typeof current;
+        if(type==='string'||type==='boolean')return JSON.stringify(current);
+        if(type==='number'){if(!isFinite(current))throw new Error('Canonical JSON rejects non-finite numbers.');return JSON.stringify(current===0?0:current);}
+        if(type!=='object')throw new Error('Canonical JSON accepts JSON values only.');if(stack.indexOf(current)!==-1)throw new Error('Canonical JSON rejects cycles.');
+        stack.push(current);if(Array.isArray(current)){parts=[];for(i=0;i<current.length;i++)parts.push(encode(current[i],stack));stack.pop();return'['+parts.join(',')+']';}
+        keys=Object.keys(current).sort();parts=[];for(i=0;i<keys.length;i++){if(typeof current[keys[i]]==='undefined')throw new Error('Canonical JSON rejects undefined.');parts.push(JSON.stringify(keys[i])+':'+encode(current[keys[i]],stack));}
+        stack.pop();return'{'+parts.join(',')+'}';
+      }
+      return encode(value,[]);
+    }
+    async function sha256(value){
+      if(!window.crypto||!window.crypto.subtle||!window.TextEncoder)throw new Error('WebCrypto SHA-256 is unavailable.');
+      var bytes=new TextEncoder().encode(canonical(value)),hash=await crypto.subtle.digest('SHA-256',bytes);
+      return Array.from(new Uint8Array(hash)).map(function(n){return n.toString(16).padStart(2,'0');}).join('');
+    }
+    function renderBoundary(){
+      var mode=standardDataMode(),ready=productionReady(),s=state.standards||{};
+      el('demoBanner').textContent=(PREVIEW?t('demo'):'data_mode='+mode+' · delivery_mode='+(s.deliveryMode||s.delivery_mode||'UNAVAILABLE')+' · account_scoped='+(s.accountScoped===true?'true':'false')+' · '+(ready?t('complete'):t('productionRequired')));
+      el('demoBanner').classList.toggle('on',PREVIEW||!ready);
+      el('escalationBoundary').textContent=t('evidenceBoundary')+' '+t('adapterBoundary')+' evolutionLabAdapter='+(state.platform&&state.platform.evolutionLabAdapter||'UNAVAILABLE')+' · classActivationAdapter='+(state.platform&&state.platform.classActivationAdapter||'UNAVAILABLE')+' · classObservationAdapter='+(state.platform&&state.platform.classObservationAdapter||'UNAVAILABLE')+' · classRollbackAdapter='+(state.platform&&state.platform.classRollbackAdapter||'UNAVAILABLE')+' · nativeDurableIntent='+(state.platform&&state.platform.nativeDurableIntent||'PLATFORM_UNAVAILABLE')+' · multiDeviceCompareAndSwap='+(state.platform&&state.platform.multiDeviceCompareAndSwap||'PLATFORM_UNAVAILABLE');
+      el('bulkBoundary').textContent=t('adapterBoundary')+' scheduleStateAdapter='+(state.platform&&state.platform.scheduleStateAdapter||'UNAVAILABLE')+' · bulkActivationAdapter='+(state.platform&&state.platform.bulkActivationAdapter||'UNAVAILABLE')+' · bulkObservationAdapter='+(state.platform&&state.platform.bulkObservationAdapter||'UNAVAILABLE')+' · bulkRollbackAdapter='+(state.platform&&state.platform.bulkRollbackAdapter||'UNAVAILABLE')+' · nativeDurableIntent='+(state.platform&&state.platform.nativeDurableIntent||'PLATFORM_UNAVAILABLE')+' · multiDeviceCompareAndSwap='+(state.platform&&state.platform.multiDeviceCompareAndSwap||'PLATFORM_UNAVAILABLE');
+    }
+    function request(action,payload){
+      if(PREVIEW)return Promise.resolve(mockRequest(action,payload||{}));
+      if((action.indexOf('escalation_')===0||action.indexOf('bulk_')===0)&&!productionReady()){
+        return Promise.reject(new Error(t('productionRequired')));
+      }
+      payload=Object.assign({},payload||{});
+      if(action!=='fleet_load'&&state.projection&&!payload.snapshotId){
+        payload.snapshotId=state.projection.snapshotId;
+      }
+      return new Promise(function(resolve,reject){
+        var id='evo_'+Date.now().toString(36)+'_'+(++state.seq),epoch=state.accountEpoch;
+        var timer=setTimeout(function(){state.pending.delete(id);reject(new Error('OUTCOME UNKNOWN · reload the snapshot before retrying'));},240000);
+        state.pending.set(id,{resolve:resolve,reject:reject,timer:timer,epoch:epoch});
+        window.parent.postMessage(Object.assign({type:'etb_evolution_console',reqId:id,action:action},payload),'*');
+      });
+    }
+    function demoProjection(){
+      var rows=[];for(var i=1;i<=15;i++){var id='demo_agent_'+String(i).padStart(2,'0'),valid=i<=3;
+        rows.push({agentId:id,name:'Demo Agent '+String(i).padStart(2,'0'),platformPresent:true,registryPresent:valid,
+          provider:i===14?'anthropic':i===15?'custom':'alibaba',model:i===14?'claude-sonnet':i===15?'extella_test_llm':'qwen3.7-max',
+          qwenConfirmed:i<14,owner:valid?'Demo Owner':null,ownerSource:valid?'AGENT_PASSPORT':null,activeVersion:valid?'1.0.'+i:null,activeVersionSource:valid?'AGENT_PASSPORT':null,
+          lastActivity:'2026-06-'+String(10+i).padStart(2,'0')+'T08:00:00Z',activityState:'KNOWN',lastActivitySource:'PINNED_STANDARDS',
+          capabilityCount:valid?2:null,capabilityCountSource:valid?'PINNED_STANDARDS':null,sharedGeneIds:valid?['shared.demo.approval_guard']:[],sharedGeneState:valid?'KNOWN':'UNKNOWN',
+          standard:{status:valid?'PASS':'MISSING',issueCount:valid?0:1,issues:valid?[]:[{code:'PASSPORT_MISSING',severity:'error',path:'agent.platform_agent_id',message_ru:'Agent Passport отсутствует',message_en:'Agent Passport is missing'}]},
+          reconciliation:valid?'BOTH':'PLATFORM_ONLY'});}
+      return {complete:true,snapshotId:'demo_snapshot_15',rows:rows,counters:{total:15,failed:12,ownerless:12,withShared:3},mutationsAllowed:false};
+    }
+    function mockRequest(action,payload){
+      if(action==='fleet_load')return {actorId:'demo_actor',projection:demoProjection(),stableIdRequired:[{sourcePassport:'demo_unbound_passport',sourcePath:'agents/demo-unbound.yaml',name:'Demo unbound Agent Passport',passportSha256:'0000000000000000000000000000000000000000000000000000000000000000',checkerIssues:[{code:'AGENT_PLATFORM_ID_REQUIRED',severity:'error',path:'agent.platform_agent_id',message_ru:'Нужен стабильный platform_agent_id',message_en:'A stable platform_agent_id is required'}]}],shared:{complete:true,snapshotId:'demo_genes_1',genes:[{geneId:'shared.demo.approval_guard',kind:'rule',name:'Approval guard',version:'1.0.0',consumerAgentIds:['demo_agent_01','demo_agent_02','demo_agent_03'],consumers:[{platformAgentId:'demo_agent_01',activeVersion:'1.0.0'},{platformAgentId:'demo_agent_02',activeVersion:'1.0.0'},{platformAgentId:'demo_agent_03',activeVersion:'1.0.0'}],lastChanged:'2026-07-20T10:00:00Z'}],byAgent:{demo_agent_01:['shared.demo.approval_guard'],demo_agent_02:['shared.demo.approval_guard'],demo_agent_03:['shared.demo.approval_guard']}},standards:{dataMode:'DEMO_FIXTURE',deliveryMode:'STATIC_BUILD_ARTIFACT',accountScoped:false,productionEligible:false,liveProjectionAllowed:false,commit:'demo-standards',checkerSha256:'demo'},platform:{evolutionLabAdapter:'PLATFORM_UNAVAILABLE',classActivationAdapter:'PLATFORM_UNAVAILABLE',classObservationAdapter:'PLATFORM_UNAVAILABLE',classRollbackAdapter:'PLATFORM_UNAVAILABLE',scheduleStateAdapter:'PLATFORM_UNAVAILABLE',nativeScheduleAdapter:'PLATFORM_UNAVAILABLE',bulkActivationAdapter:'PLATFORM_UNAVAILABLE',bulkObservationAdapter:'PLATFORM_UNAVAILABLE',bulkRollbackAdapter:'PLATFORM_UNAVAILABLE'},ledger:{ownerAccountId:'demo_actor',evolution:{currentEscalationId:'demo_candidate_1',escalations:{demo_candidate_1:{candidateId:'demo_candidate_1',status:'PENDING_CLASS_DECISION',candidateBundleSha256:'0000000000000000000000000000000000000000000000000000000000000000',affectedAgentIds:['demo_agent_01','demo_agent_02','demo_agent_03'],actorId:'demo_actor'}},bulkOperations:{},receipts:{}}},receipts:[]};
+      if(action==='passport_draft')return {filename:'agent_passport_'+payload.agentId+'.json',draft:{agent:{platform_agent_id:payload.agentId,name:'Demo Agent',owner:'',business_goal:'',model_profile:'qwen3.7-max',version:'0.1.0',languages:['ru','en']},capabilities:[],shared_genes:[],budgets:{max_duration_ms:null,max_llm_tokens:null,max_delegation_depth:null,max_external_actions:null},operations:{success_metric:'',owner_on_call:''},draft_status:'NOT_VALIDATED'}};
+      if(action.indexOf('escalation_')===0||action.indexOf('bulk_')===0)throw new Error(t('productionRequired'));
+      throw new Error('Unsupported preview action '+action);
+    }
+    function applyFleet(result){
+      state.actorId=result.actorId||null;state.projection=result.projection||null;state.stableIdRequired=Array.isArray(result.stableIdRequired)?result.stableIdRequired:[];state.stableTargetBySource=Object.create(null);state.shared=result.shared||null;state.standards=result.standards||null;state.platform=result.platform||null;state.ledger=result.ledger||null;
+      state.receipts=result.receipts||[];var ev=state.ledger&&state.ledger.evolution;
+      state.currentEscalationId=ev&&ev.currentEscalationId||null;state.selectedEscalationId=state.currentEscalationId;
+      state.escalations=ev&&ev.escalations?Object.keys(ev.escalations).sort().map(function(k){return ev.escalations[k];}):[];
+      state.currentBulkOperationId=ev&&ev.currentBulkOperationId||null;state.selectedBulkOperationId=state.currentBulkOperationId;
+      state.bulkOperations=ev&&ev.bulkOperations?Object.keys(ev.bulkOperations).sort().map(function(k){return ev.bulkOperations[k];}):[];
+      state.bulk=state.selectedBulkOperationId?state.bulkOperations.find(function(op){return (op.operationId||op.id)===state.selectedBulkOperationId;})||null:null;
+      renderAll();var s=state.standards||{},ready=productionReady();
+      el('standardsBadge').textContent=(ready?'✓ PRODUCTION READY · ':'⚠ PRODUCTION BLOCKED · ')+'STANDARD '+short(s.commit||s.checkerSha256)+' · '+standardDataMode();
+      el('standardsBadge').className='badge '+(ready?'good':'warn');
+    }
+    function isInactiveRow(r){
+      if(!r.platformPresent||r.activityState!=='KNOWN'||!r.lastActivity||!r.lastActivitySource)return false;
+      var at=Date.parse(r.lastActivity);return Number.isFinite(at)&&Date.now()-at>=30*24*60*60*1000;
+    }
+    function visibleRows(){var p=state.projection;if(!p)return[];var q=el('searchInput').value.trim().toLowerCase(),f=el('filterSelect').value;return p.rows.filter(function(r){
+      if(q&&String(r.name+' '+r.agentId).toLowerCase().indexOf(q)===-1)return false;
+      if(f==='failed'&&['FAIL','MISSING'].indexOf(r.standard.status)===-1)return false;if(f==='ownerless'&&!(r.registryPresent===true&&!r.owner))return false;if(f==='non_qwen'&&r.qwenConfirmed)return false;
+      if(f==='shared'&&!(r.sharedGeneIds||[]).length)return false;if(f==='inactive'&&!isInactiveRow(r))return false;if(f==='dead'&&r.reconciliation!=='REGISTRY_ONLY')return false;return true;});}
+    function geneById(geneId){return state.shared&&(state.shared.genes||[]).find(function(g){return g.geneId===geneId;})||null;}
+    function selectedGeneId(){return el('bulkGeneSelect').value||state.selectedBulkGeneId||'';}
+    function eligibleBulkRows(){
+      var type=el('bulkType').value,rows=visibleRows();
+      if(type==='dead_reference_remove')return rows.filter(function(r){return r.reconciliation==='REGISTRY_ONLY';});
+      if(type==='shared_gene_change'){var gene=geneById(selectedGeneId()),ids=gene&&gene.consumerAgentIds||[];return rows.filter(function(r){return ids.indexOf(r.agentId)!==-1;});}
+      if(type==='schedule_pause'||type==='schedule_resume')return scheduleAdapterAvailable()?rows.filter(function(r){return r.platformPresent===true;}):[];
+      return[];
+    }
+    function renderBulkTargetPicker(){
+      var type=el('bulkType').value,isGene=type==='shared_gene_change',genes=state.shared&&state.shared.complete?state.shared.genes||[]:[];
+      el('bulkGeneField').style.display=isGene?'grid':'none';el('bulkVersionField').style.display=isGene?'grid':'none';
+      if(!state.projection){el('bulkGeneSelect').innerHTML='';el('bulkTargets').innerHTML='<div class="empty">'+esc(t('noData'))+'</div>';el('bulkGate').textContent=t('productionRequired');el('bulkPreviewBtn').disabled=true;return;}
+      var prior=state.selectedBulkGeneId||el('bulkGeneSelect').value;el('bulkGeneSelect').innerHTML=genes.map(function(g){return '<option value="'+esc(g.geneId)+'">'+esc(g.name||g.geneId)+' · '+esc(g.geneId)+'</option>';}).join('');
+      if(prior&&genes.some(function(g){return g.geneId===prior;}))el('bulkGeneSelect').value=prior;state.selectedBulkGeneId=el('bulkGeneSelect').value||null;
+      var rows=eligibleBulkRows(),allowed=rows.map(function(r){return r.agentId;}),gene=isGene?geneById(selectedGeneId()):null,classIds=gene&&(gene.consumerAgentIds||[]).slice().sort()||[];
+      var classComplete=!isGene||canonical(allowed.slice().sort())===canonical(classIds),selected=isGene&&classComplete?allowed.slice().sort():state.selectedBulkIds.filter(function(id){return allowed.indexOf(id)!==-1;});
+      state.selectedBulkIds=selected;
+      el('bulkTargets').innerHTML=rows.length?rows.map(function(r){return '<label class="target"><input type="checkbox" value="'+esc(r.agentId)+'" '+(selected.indexOf(r.agentId)!==-1?'checked ':'')+(productionReady()&&!isGene?'':'disabled')+'><span>'+esc(r.name)+' <small class="mono">'+esc(r.agentId)+'</small></span></label>';}).join(''):'<div class="empty">'+esc(t('noData'))+'</div>';
+      el('bulkTargets').querySelectorAll('input').forEach(function(n){n.onchange=function(){state.selectedBulkIds=Array.from(el('bulkTargets').querySelectorAll('input:checked')).map(function(x){return x.value;}).sort();state.lastBulkEvidence=null;renderBulkTargetPicker();renderBulk();};});
+      var missingVersion=isGene&&!el('bulkVersionInput').value.trim(),missingTargets=!isGene&&!selected.length,blocked=!productionReady()||((type==='schedule_pause'||type==='schedule_resume')&&!scheduleAdapterAvailable())||(isGene&&(!state.shared||!state.shared.complete||!classComplete||missingVersion))||missingTargets;
+      el('bulkGate').textContent=!productionReady()?t('productionRequired'):(type==='schedule_pause'||type==='schedule_resume')&&!scheduleAdapterAvailable()?t('scheduleAdapterRequired'):isGene&&!classComplete?t('wholeClassRequired'):missingVersion?t('selectGeneVersion'):missingTargets?t('selectExactTarget'):isGene?t('wholeClassRequired'):t('exactTargetsOnly');
+      el('bulkPreviewBtn').disabled=blocked||!rows.length;
+    }
+    function renderFleet(){
+      var p=state.projection;if(!p){el('countTotal').textContent='—';el('countFailed').textContent='—';el('countOwnerless').textContent='—';el('countShared').textContent='—';el('snapshotBadge').textContent='SNAPSHOT —';el('snapshotBadge').className='badge';el('snapshotNote').textContent='';el('fleetRows').innerHTML='<tr><td colspan="9" class="empty">'+esc(t('noData'))+'</td></tr>';el('jsonBtn').disabled=true;el('csvBtn').disabled=true;renderBulkTargetPicker();return;}
+      el('jsonBtn').disabled=false;el('csvBtn').disabled=false;
+      el('countTotal').textContent=p.counters.total;el('countFailed').textContent=p.counters.failed;el('countOwnerless').textContent=p.counters.ownerless;el('countShared').textContent=p.counters.withShared;
+      el('snapshotBadge').textContent=(p.complete?'✓ COMPLETE ':'✕ INCOMPLETE ')+short(p.snapshotId);el('snapshotBadge').className='badge '+(p.complete?'good':'bad');el('snapshotNote').textContent=p.complete?t('complete'):t('incomplete');
+      var rows=visibleRows();el('fleetRows').innerHTML=rows.length?rows.map(function(r){
+        var st=r.standard||{},kind=st.status==='PASS'?'good':st.status==='MISSING'||st.status==='UNKNOWN'?'warn':'bad',versionSource=r.activeVersionSource||'UNKNOWN';
+        var versionKnown=!!r.activeVersion&&(versionSource==='EVOLUTION_LEDGER'||versionSource==='AGENT_PASSPORT'),versionLabel=versionSource==='EVOLUTION_LEDGER'?t('managedVerified'):versionSource==='AGENT_PASSPORT'?t('declaredFact'):t('sourceUnknown');
+        var activityKnown=r.activityState==='KNOWN'&&r.lastActivity&&r.lastActivitySource,activityLabel=r.lastActivitySource==='PLATFORM'?t('platformFact'):r.lastActivitySource?t('pinnedFact')+' · '+r.lastActivitySource:t('sourceUnknown');
+        return '<tr><td><b>'+esc(r.name||r.agentId)+'</b><small class="mono">'+esc(r.agentId)+'</small></td><td>'+esc(r.owner||t('unknown'))+'<small>'+esc(r.ownerSource||t('sourceUnknown'))+'</small></td>'+
+          '<td>'+esc(r.model||t('unknown'))+'<small>'+esc(r.provider||t('unknown'))+'</small></td><td>'+esc(versionKnown?r.activeVersion:t('unknown'))+'<small>'+esc(versionLabel)+' · '+esc(versionSource)+'</small></td>'+
+          '<td><span class="state '+kind+'">'+esc(statusMark(kind))+' '+esc(st.status==='PASS'?t('passed'):st.status==='MISSING'?t('missing'):st.status==='UNKNOWN'?t('standardUnknown'):t('failed'))+'</span><small>'+esc(st.issueCount||0)+' issues</small></td>'+
+          '<td>'+esc(activityKnown?fmtTime(r.lastActivity):t('unknown'))+'<small>'+esc(activityLabel)+'</small></td><td>'+esc(r.capabilityCount==null?t('unknown'):r.capabilityCount)+'<small>'+esc(r.capabilityCountSource||t('sourceUnknown'))+'</small></td>'+
+          '<td>'+esc(r.sharedGeneState==='UNKNOWN'?t('unknown'):(r.sharedGeneIds||[]).length)+'</td><td>'+
+          (r.standard.status==='PASS'?'<button class="ghost" data-cab="'+esc(r.agentId)+'">'+esc(t('openCabinet'))+'</button>':r.platformPresent===true&&r.registryPresent===false&&r.standard.status==='MISSING'?'<button class="ghost" data-draft="'+esc(r.agentId)+'">'+esc(t('createDraft'))+'</button>':'—')+'</td></tr>';}).join(''):'<tr><td colspan="9" class="empty">'+esc(t('noData'))+'</td></tr>';
+      el('fleetRows').querySelectorAll('[data-draft]').forEach(function(b){b.onclick=function(){downloadDraft(b.dataset.draft);};});
+      el('fleetRows').querySelectorAll('[data-cab]').forEach(function(b){b.onclick=function(){openCabinet(b.dataset.cab);};});
+      renderBulkTargetPicker();
+    }
+    function statusMark(kind){return kind==='good'?'✓':kind==='bad'?'✕':'⚠';}
+    function issueText(issue){return issue[WLANG==='en'?'message_en':'message_ru']||issue.message||issue.code;}
+    function renderRisks(){var rows=state.projection?state.projection.rows:[],risk=rows.filter(function(r){return r.standard&&r.standard.status!=='MISSING'&&(r.standard.issues||[]).length;});
+      el('riskList').innerHTML=risk.length?risk.map(function(r){return '<article class="risk"><b>'+esc(r.name)+'</b>'+(r.standard.issues||[]).map(function(i){var severity=String(i.severity||'unknown').toLowerCase(),kind=severity==='error'?'bad':'warn';return '<p><span class="state '+kind+'">'+esc(statusMark(kind))+' '+esc(severity)+'</span> <code>'+esc(i.path||'—')+'</code> · <code>'+esc(i.code||'—')+'</code> · '+esc(issueText(i))+'</p>';}).join('')+'</article>';}).join(''):'<div class="empty">'+esc(t('noData'))+'</div>';
+      var missing=rows.filter(function(r){return r.standard.status==='MISSING'||r.reconciliation==='REGISTRY_ONLY';});el('missingList').innerHTML=missing.length?missing.map(function(r){var canDraft=r.platformPresent===true&&r.registryPresent===false&&r.standard.status==='MISSING';return '<article class="risk"><b>'+esc(r.name||r.agentId)+'</b><p>'+esc(r.reconciliation==='REGISTRY_ONLY'?t('dead'):t('missing'))+'</p>'+(canDraft?'<button class="ghost" data-missing-draft="'+esc(r.agentId)+'">'+esc(t('createDraft'))+'</button>':'')+'</article>';}).join(''):'<div class="empty">'+esc(t('noData'))+'</div>';
+      el('missingList').querySelectorAll('[data-missing-draft]').forEach(function(b){b.onclick=function(){downloadDraft(b.dataset.missingDraft);};});}
+    function stableIdLiveRows(){var rows=state.projection&&state.projection.rows||[];return rows.filter(function(r){return r.platformPresent===true&&r.registryPresent===false&&r.standard&&r.standard.status==='MISSING';});}
+    function renderStableIdRequired(){
+      var host=el('stableIdRequiredList'),entries=state.stableIdRequired||[],targets=stableIdLiveRows();
+      if(!entries.length){host.innerHTML='<div class="empty">'+esc(t('noData'))+'</div>';return;}
+      host.innerHTML=entries.map(function(entry){
+        var source=String(entry.sourcePassport||''),selected=String(state.stableTargetBySource[source]||''),issues=Array.isArray(entry.checkerIssues)?entry.checkerIssues:[];
+        var options='<option value="">— '+esc(t('selectStableAgent'))+' —</option>'+targets.map(function(row){return '<option value="'+esc(row.agentId)+'" '+(row.agentId===selected?'selected':'')+'>'+esc(row.agentId)+' · '+esc(row.name||t('unknown'))+'</option>';}).join('');
+        var issueRows=issues.map(function(issue){var severity=String(issue.severity||'error').toLowerCase(),kind=severity==='error'?'bad':'warn';return '<p><span class="state '+kind+'">'+esc(statusMark(kind))+' '+esc(severity)+'</span> <code>'+esc(issue.path||'—')+'</code> · <code>'+esc(issue.code||'—')+'</code> · '+esc(issueText(issue))+'</p>';}).join('');
+        return '<article class="risk stable-id-entry"><b>'+esc(entry.name||t('unknown'))+'</b><p><span class="state bad">✕ '+esc(t('stableIdRequired'))+'</span></p>'+
+          '<p>'+esc(t('sourcePassport'))+': <code>'+esc(source||'—')+'</code> · '+esc(t('sourcePath'))+': <code>'+esc(entry.sourcePath||'—')+'</code></p><code>'+esc(entry.passportSha256||'—')+'</code>'+issueRows+
+          '<div class="form"><label>'+esc(t('exactLiveAgent'))+'<select data-stable-agent="'+esc(source)+'">'+options+'</select></label><button class="primary" data-stable-draft="'+esc(source)+'" '+(source&&selected?'':'disabled')+'>'+esc(t('createDraft'))+'</button></div></article>';
+      }).join('');
+      host.querySelectorAll('[data-stable-agent]').forEach(function(select){select.onchange=function(){var source=select.dataset.stableAgent;state.stableTargetBySource[source]=select.value||'';var button=Array.from(host.querySelectorAll('[data-stable-draft]')).find(function(node){return node.dataset.stableDraft===source;});if(button)button.disabled=!select.value;};});
+      host.querySelectorAll('[data-stable-draft]').forEach(function(button){button.onclick=function(){var source=button.dataset.stableDraft,agentId=state.stableTargetBySource[source]||'',sourceKnown=state.stableIdRequired.some(function(entry){return entry.sourcePassport===source;}),targetKnown=stableIdLiveRows().some(function(row){return row.agentId===agentId;});if(!sourceKnown||!targetKnown){showError(t('selectStableAgent'));return;}downloadDraft(agentId,source);};});
+    }
+    function geneConsumerVersion(gene,agentId){
+      var row=(gene&&gene.consumers||[]).find(function(c){return (c.platformAgentId||c.agentId)===agentId;});
+      if(row&&row.activeVersion)return row.activeVersion;
+      if(gene&&gene.activeVersionByAgent&&gene.activeVersionByAgent[agentId])return gene.activeVersionByAgent[agentId];
+      return gene&&gene.version&&gene.version!=='MIXED'?gene.version:null;
+    }
+    function renderGenes(){var s=state.shared,projectionRows=state.projection&&state.projection.rows||[];if(!s||!s.complete){el('geneList').innerHTML='<div class="empty">'+esc(t('incomplete'))+'</div>';return;}
+      if(state.geneView==='object'){el('geneList').innerHTML=(s.genes||[]).map(function(g){var ids=g.consumerAgentIds||[];return '<article class="gene"><b>'+esc(g.name||g.geneId)+' <span class="mono">'+esc(g.geneId)+'</span></b><p>'+esc(g.kind)+' · v'+esc(g.version||t('unknown'))+' · '+esc(fmtTime(g.lastChanged))+'</p><p><strong>'+ids.length+'</strong> '+esc(t('consumers'))+'</p>'+ids.map(function(id){var r=projectionRows.find(function(x){return x.agentId===id;}),version=geneConsumerVersion(g,id);return '<span class="consumer">'+esc(r?r.name:id)+' · '+esc(t('activeGeneVersion'))+' '+esc(version||t('versionUnknown'))+'</span>';}).join('')+'<p><button class="primary" data-class-gene="'+esc(g.geneId)+'" '+(productionReady()?'':'disabled')+'>'+esc(t('changeAsClass'))+'</button></p></article>';}).join('')||'<div class="empty">'+esc(t('noData'))+'</div>';}
+      else{el('geneList').innerHTML=Object.keys(s.byAgent||{}).map(function(id){var r=projectionRows.find(function(x){return x.agentId===id;});return '<article class="gene"><b>'+esc(r?r.name:id)+'</b>'+(s.byAgent[id]||[]).map(function(geneRef){var geneId=typeof geneRef==='string'?geneRef:geneRef.geneId,g=geneById(geneId),version=g?geneConsumerVersion(g,id):(geneRef&&geneRef.activeVersion);return '<span class="consumer">'+esc(geneId)+' · '+esc(t('activeGeneVersion'))+' '+esc(version||t('versionUnknown'))+'</span>';}).join('')+'</article>';}).join('')||'<div class="empty">'+esc(t('noData'))+'</div>';}
+      el('geneList').querySelectorAll('[data-class-gene]').forEach(function(b){b.onclick=function(){openClassChangeForGene(b.dataset.classGene);};});
+    }
+    var FLOW=['EVIDENCE','CANDIDATE','TEST','APPROVAL','ACTIVATION','OBSERVATION','ROLLBACK'];
+    function statusIndex(status){var map={PENDING_CLASS_DECISION:1,TESTED:2,APPROVED:3,ACTIVATION_PLANNED:4,STAGING:4,STAGED:4,PUBLISHED:4,OBSERVED:5,ROLLED_BACK:6,IMPACT_PREVIEWED:0,CONFIRMED:3,PREVIEWED:0};return map[status]||0;}
+    function renderFlow(host,status){var n=status?statusIndex(status):-1;host.innerHTML=FLOW.map(function(x,i){var phase=i<n?'COMPLETE':i===n?'CURRENT':'PENDING',mark=i<n?'✓':i===n?'→':'○';return '<div class="step '+(i<n?'done':i===n?'on':'')+'"><span aria-hidden="true">'+mark+'</span> '+esc(x)+'<small>'+phase+'</small></div>';}).join('');}
+    function currentEsc(){var id=state.selectedEscalationId;return id?state.escalations.find(function(e){return (e.candidateId||e.candidate_id)===id;})||null:null;}
+    function renderEscalations(){var e=currentEsc(),options=state.escalations.map(function(row){var id=row.candidateId||row.candidate_id;return '<option value="'+esc(id)+'" '+(id===state.selectedEscalationId?'selected':'')+'>'+esc(id)+' · '+esc(row.status)+'</option>';}).join('');el('escalationList').innerHTML=state.escalations.length?'<select id="escalationSelect"><option value="">—</option>'+options+'</select>'+(e?'<article class="risk"><b>'+esc(e.candidateId||e.candidate_id)+'</b><p>'+esc(e.status)+' · '+esc((e.affectedAgentIds||e.affected_agent_ids||[]).length)+' targets</p><code>'+esc(e.candidateBundleSha256||e.candidate_sha256||'—')+'</code></article>':''):'<div class="empty">'+esc(t('noData'))+'</div>';var selector=el('escalationSelect');if(selector)selector.onchange=function(){state.selectedEscalationId=selector.value||null;renderEscalations();};renderFlow(el('escalationFlow'),e&&e.status);
+      var actions=[];if(e&&productionReady()){if(e.status==='PENDING_CLASS_DECISION')actions.push(['escalation_test',t('runTest'),adapterAvailable('evolutionLabAdapter'),'evolutionLabAdapter']);if(e.status==='TESTED')actions.push(['escalation_approve',t('approve'),true,'ledger']);if(e.status==='APPROVED')actions.push(['escalation_stage',t('planStages'),true,'ledger']);if(['ACTIVATION_PLANNED','STAGING'].indexOf(e.status)!==-1)actions.push(['escalation_stage',t('stage'),adapterAvailable('classActivationAdapter'),'classActivationAdapter']);if(e.status==='STAGED')actions.push(['escalation_publish',t('publish'),true,'ledger']);if(e.status==='PUBLISHED')actions.push(['escalation_observe',t('observe'),adapterAvailable('classObservationAdapter'),'classObservationAdapter']);if(e.status==='OBSERVED')actions.push(['escalation_rollback',t('rollback'),adapterAvailable('classRollbackAdapter'),'classRollbackAdapter']);}
+      el('escalationActions').innerHTML=actions.map(function(a){return '<span><button class="'+(a[0].indexOf('rollback')>-1?'danger':'primary')+'" data-esc-action="'+a[0]+'" '+(a[2]?'':'disabled')+'>'+esc(a[1])+'</button><small class="mono">'+esc(a[3])+'='+(a[2]?'AVAILABLE':'PLATFORM_UNAVAILABLE')+'</small></span>';}).join('');el('escalationActions').querySelectorAll('[data-esc-action]').forEach(function(b){b.onclick=function(){runEscAction(b.dataset.escAction);};});}
+    function bulkNativeAdapter(action,operation){if(action==='bulk_stage'&&operation&&operation.status!=='CONFIRMED')return'bulkActivationAdapter';if(action==='bulk_observe')return'bulkObservationAdapter';if(action==='bulk_rollback')return'bulkRollbackAdapter';return null;}
+    function bulkFormMatchesOperation(operation){
+      if(!operation)return false;var type=operation.operationType||operation.type,targets=operation.targetIds||operation.targetAgentIds||[],payload=operation.payload||{};
+      if(type!==el('bulkType').value||canonical(targets.slice().sort())!==canonical(state.selectedBulkIds.slice().sort()))return false;
+      if(type==='shared_gene_change')return payload.shared_gene_id===selectedGeneId()&&payload.desired_version===el('bulkVersionInput').value.trim();
+      return true;
+    }
+    function renderBulk(){
+      var choices=state.bulkOperations.map(function(op){var id=op.operationId||op.id;return '<option value="'+esc(id)+'" '+(id===state.selectedBulkOperationId?'selected':'')+'>'+esc(id)+' · '+esc(op.status)+'</option>';}).join('');
+      el('bulkOperationSelect').innerHTML='<option value="">—</option>'+choices;el('bulkOperationSelect').onchange=function(){state.selectedBulkOperationId=el('bulkOperationSelect').value||null;state.bulk=state.selectedBulkOperationId?state.bulkOperations.find(function(op){return (op.operationId||op.id)===state.selectedBulkOperationId;})||null:null;renderBulk();};
+      renderFlow(el('bulkFlow'),state.bulk&&state.bulk.status);el('bulkEvidence').textContent=state.lastBulkEvidence?JSON.stringify(state.lastBulkEvidence,null,2):(state.bulk?JSON.stringify(state.bulk,null,2):'—');
+      var actions=[],selectionMatches=bulkFormMatchesOperation(state.bulk);
+      if(state.bulk&&productionReady()){
+        if(['PREVIEWED','IMPACT_PREVIEWED'].indexOf(state.bulk.status)!==-1&&selectionMatches)actions.push(['bulk_confirm',t('confirmExact'),true,'ledger']);
+        if(state.bulk.status==='CONFIRMED')actions.push(['bulk_stage',t('planStages'),true,'ledger']);
+        if(['ACTIVATION_PLANNED','STAGING'].indexOf(state.bulk.status)!==-1)actions.push(['bulk_stage',t('stage'),adapterAvailable('bulkActivationAdapter'),'bulkActivationAdapter']);
+        if(state.bulk.status==='STAGED')actions.push(['bulk_publish',t('publish'),true,'ledger']);
+        if(state.bulk.status==='PUBLISHED')actions.push(['bulk_observe',t('observe'),adapterAvailable('bulkObservationAdapter'),'bulkObservationAdapter']);
+        if(state.bulk.status==='OBSERVED')actions.push(['bulk_rollback',t('rollback'),adapterAvailable('bulkRollbackAdapter'),'bulkRollbackAdapter']);
+      }
+      el('bulkActions').innerHTML=actions.map(function(a){return '<span><button class="'+(a[0]==='bulk_rollback'?'danger':'primary')+'" data-bulk-action="'+a[0]+'" '+(a[2]?'':'disabled')+'>'+esc(a[1])+'</button><small class="mono">'+esc(a[3])+'='+(a[2]?'AVAILABLE':'PLATFORM_UNAVAILABLE')+'</small></span>';}).join('');el('bulkActions').querySelectorAll('[data-bulk-action]').forEach(function(b){b.onclick=function(){runBulkAction(b.dataset.bulkAction);};});
+    }
+    function renderReceipts(){el('receiptList').innerHTML=state.receipts.length?state.receipts.slice().reverse().map(function(r){return '<article class="receipt"><b>'+esc(r.type||'Evolution Receipt')+'</b><p>'+esc(fmtTime(r.at))+' · '+esc(r.status||'RECORDED')+'</p><code>'+esc(r.sha256||'—')+'</code></article>';}).join(''):'<div class="empty">'+esc(t('noData'))+'</div>';}
+    function renderAll(){renderFleet();renderRisks();renderStableIdRequired();renderGenes();renderEscalations();renderBulk();renderReceipts();renderBoundary();el('escalationEvidence').textContent=state.lastEscalationEvidence?JSON.stringify(state.lastEscalationEvidence,null,2):'—';}
+    async function loadFleet(){showError('');el('fleetRows').innerHTML='<tr><td colspan="9" class="empty">'+esc(t('loading'))+'</td></tr>';try{applyFleet(await request('fleet_load',{}));return true;}catch(e){showError(e.message);return false;}}
+    async function refreshAfterMutation(kind,result){
+      if(kind==='escalation')state.lastEscalationEvidence=result;else state.lastBulkEvidence=result;
+      state.actorId=null;state.projection=null;state.stableIdRequired=[];state.stableTargetBySource=Object.create(null);state.shared=null;state.standards=null;state.platform=null;state.ledger=null;state.escalations=[];state.currentEscalationId=null;state.selectedEscalationId=null;state.bulkOperations=[];state.currentBulkOperationId=null;state.selectedBulkOperationId=null;state.bulk=null;state.receipts=[];renderAll();
+      if(!await loadFleet())throw new Error('Mutation completed, but the required fresh fleet snapshot could not be loaded.');
+      if(kind==='escalation')setView('escalations');else setView('bulk');
+    }
+    async function downloadDraft(agentId,sourcePassport){try{var payload={agentId:agentId};if(sourcePassport)payload.sourcePassport=sourcePassport;var r=await request('passport_draft',payload);state.draft=r;var blob=new Blob([JSON.stringify(r.draft,null,2)+'\n'],{type:'application/yaml;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=r.filename||('agent_passport_'+agentId+'.yaml');a.click();setTimeout(function(){URL.revokeObjectURL(a.href);},0);showError(t('downloaded'));}catch(e){showError(e.message);}}
+    function previewCabinetFromBundle(agentId){if(!PREVIEW)return null;var bundle=window.__EXTELLA_EVOLUTION_STANDARDS_BUNDLE__||{},entries=bundle.agents||bundle.entries||[];var item=entries.find(function(x){return x.platformAgentId===agentId||x.platform_agent_id===agentId;});return item&&item.cabinet||null;}
+    function cabinetGeneIds(agentId){return ((state.shared&&state.shared.byAgent&&state.shared.byAgent[agentId])||[]).map(function(row){return typeof row==='string'?row:row.geneId;}).filter(Boolean);}
+    function cabinetActorId(){return String(state.actorId||'');}
+    function updateCabinetImpact(){
+      var gene=geneById(el('cabinetGeneSelect').value),affected=gene&&gene.consumerAgentIds||[],actor=cabinetActorId(),version=el('cabinetVersionInput').value.trim();
+      if(!state.shared||!state.shared.complete||!gene){el('cabinetImpact').textContent=t('mapUnavailable');el('cabinetEscalateBtn').disabled=true;return;}
+      el('cabinetImpact').textContent='shared_gene_id='+gene.geneId+' · affected_agent_ids='+affected.length+' · affected_count='+Math.max(0,affected.length-1)+' · shared_gene_map_sha256='+state.shared.snapshotId;
+      el('cabinetEscalateBtn').disabled=!productionReady()||!actor||!version||affected.indexOf(state.cabinetAgentId)===-1;
+      if(!actor)el('cabinetImpact').textContent+=' · '+t('actorUnavailable');
+    }
+    function renderCabinetEscalationForm(preselectedGeneId){
+      var ids=cabinetGeneIds(state.cabinetAgentId),genes=ids.map(geneById).filter(Boolean);
+      el('cabinetGeneSelect').innerHTML=genes.map(function(g){return '<option value="'+esc(g.geneId)+'">'+esc(g.name||g.geneId)+' · '+esc(g.geneId)+'</option>';}).join('');
+      if(preselectedGeneId&&ids.indexOf(preselectedGeneId)!==-1)el('cabinetGeneSelect').value=preselectedGeneId;
+      state.cabinetGeneId=el('cabinetGeneSelect').value||null;el('cabinetVersionInput').value='';updateCabinetImpact();
+    }
+    function renderCanonicalCabinetForSelectedGene(){
+      var base=state.cabinetArtifactBase,gene=geneById(el('cabinetGeneSelect').value);if(!base||typeof window.renderCabinet!=='function')return;
+      var cab=clone(base),guard=cab.evolution&&cab.evolution.shared_change_guard;if(gene&&guard)guard.affected_count=Math.max(0,(gene.consumerAgentIds||[]).length-1);
+      window._cab=cab;el('cabinetTitle').textContent=cab.passport&&cab.passport.identity&&cab.passport.identity.name||'Agent Cabinet';renderCabinet(cab,'cabinetHost','passport');
+    }
+    async function openCabinet(agentId,preselectedGeneId){
+      try{
+        var result=PREVIEW?{cabinet:previewCabinetFromBundle(agentId)}:await request('cabinet_get',{agentId:agentId}),cab=result&&result.cabinet;
+        if(!cab||typeof window.renderCabinet!=='function')throw new Error('Agent Cabinet artifact is unavailable for this validated Agent Passport.');
+        state.cabinetAgentId=agentId;state.cabinetArtifactBase=cab;el('cabinetOverlay').classList.add('on');renderCabinetEscalationForm(preselectedGeneId);renderCanonicalCabinetForSelectedGene();
+      }catch(error){showError(error.message);}
+    }
+    function openClassChangeForGene(geneId){
+      var gene=geneById(geneId),ids=gene&&gene.consumerAgentIds||[],rows=state.projection&&state.projection.rows||[],source=ids.find(function(id){var row=rows.find(function(r){return r.agentId===id;});return row&&row.standard&&row.standard.status==='PASS';})||ids[0];
+      if(!productionReady()||!source){showError(t('productionRequired'));return;}openCabinet(source,geneId);
+    }
+    function validateCabinetContract(contract){
+      if(!productionReady()||!contract||typeof contract!=='object')throw new Error(t('productionRequired'));
+      var gene=geneById(contract.shared_gene_id),source=String(contract.source_agent_id||''),affected=gene&&(gene.consumerAgentIds||[]).slice().sort();
+      if(!gene||!state.shared||!state.shared.complete||contract.shared_gene_map_sha256!==state.shared.snapshotId)throw new Error(t('mapUnavailable'));
+      if(cabinetGeneIds(source).indexOf(gene.geneId)===-1)throw new Error('source_agent_id is not an exact Shared Gene consumer.');
+      if(canonical((contract.affected_agent_ids||[]).slice().sort())!==canonical(affected))throw new Error('affected_agent_ids do not match the exact current consumer class.');
+      if(contract.affected_count!==Math.max(0,affected.length-1))throw new Error('affected_count does not match the exact other-consumer count.');
+      if(!contract.candidate_bundle||!contract.candidate_bundle.sharedGene||contract.candidate_bundle.sharedGene.id!==gene.geneId||!contract.candidate_bundle.agents||
+        canonical(Object.keys(contract.candidate_bundle.agents).sort())!==canonical(affected))throw new Error('candidate_bundle does not bind the exact Shared Gene class.');
+      if(contract.actor_id!==cabinetActorId())throw new Error(t('actorUnavailable'));return contract;
+    }
+    async function dispatchCabinetEscalation(){
+      try{
+        var gene=geneById(el('cabinetGeneSelect').value),version=el('cabinetVersionInput').value.trim(),affected=gene&&(gene.consumerAgentIds||[]).slice().sort();
+        if(!gene||!version)throw new Error(t('selectGeneVersion'));
+        var agents={};affected.forEach(function(id){agents[id]={platform_agent_id:id,sharedGene:{id:gene.geneId,fromVersion:geneConsumerVersion(gene,id),version:version}};});
+        var bundle={schemaVersion:'managed-agent-class-candidate.v1',agents:agents,sharedGene:{id:gene.geneId,version:version}};
+        var hash=await sha256(bundle),contract={source_agent_id:state.cabinetAgentId,shared_gene_id:gene.geneId,shared_gene_map_sha256:state.shared.snapshotId,
+          affected_agent_ids:affected,affected_count:Math.max(0,affected.length-1),candidate_id:'candidate_'+gene.geneId.replace(/[^A-Za-z0-9._-]/g,'_')+'_'+hash.slice(0,16),
+          candidate_sha256:hash,candidate_bundle:bundle,scope:{kind:'class'},actor_id:cabinetActorId()};
+        window.dispatchEvent(new CustomEvent('extella_agent_cabinet_escalation',{detail:contract}));
+      }catch(err){showError(err.message);}
+    }
+    async function acceptCabinetEscalation(contract){try{var r=await request('escalation_accept',{contract:validateCabinetContract(contract)});el('cabinetOverlay').classList.remove('on');await refreshAfterMutation('escalation',r);}catch(err){showError(err.message);}}
+    async function runEscAction(action){var e=currentEsc();if(!e)return;try{
+      var adapter=action==='escalation_test'?'evolutionLabAdapter':action==='escalation_stage'&&e.status!=='APPROVED'?'classActivationAdapter':action==='escalation_observe'?'classObservationAdapter':action==='escalation_rollback'?'classRollbackAdapter':null;
+      if(adapter&&!adapterAvailable(adapter))throw new Error(adapter+'=PLATFORM_UNAVAILABLE · '+(action==='escalation_test'?t('evidenceBoundary'):t('adapterBoundary')));
+      var r=await request(action,{candidateId:e.candidateId||e.candidate_id});await refreshAfterMutation('escalation',r);
+    }catch(err){showError(err.message);}}
+    async function createBulkPreview(){
+      var type=el('bulkType').value,allowed=eligibleBulkRows().map(function(r){return r.agentId;}),ids=state.selectedBulkIds.slice().sort();
+      if(!productionReady()){showError(t('productionRequired'));return;}if((type==='schedule_pause'||type==='schedule_resume')&&!scheduleAdapterAvailable()){showError(t('scheduleAdapterRequired'));return;}
+      if(!ids.length||ids.some(function(id){return allowed.indexOf(id)===-1;})){showError(t('selectExactTarget'));return;}
+      var payload={operationType:type,targetIds:ids};if(type==='shared_gene_change'){var gene=geneById(selectedGeneId()),version=el('bulkVersionInput').value.trim();if(!gene||!version){showError(t('selectGeneVersion'));return;}payload.sharedGeneId=gene.geneId;payload.desiredVersion=version;}
+      try{var r=await request('bulk_preview',payload);await refreshAfterMutation('bulk',r);}catch(e){showError(e.message);}
+    }
+    async function runBulkAction(action){try{if(!state.bulk)throw new Error(t('noData'));if(action==='bulk_confirm'&&!bulkFormMatchesOperation(state.bulk))throw new Error(t('boundTargets'));var adapter=bulkNativeAdapter(action,state.bulk);if(adapter&&!adapterAvailable(adapter))throw new Error(adapter+'=PLATFORM_UNAVAILABLE · '+t('adapterBoundary'));var targets=state.bulk.targetIds||state.bulk.targetAgentIds||[];var r=await request(action,{operationId:state.bulk.id||state.bulk.operationId,targetIds:targets});await refreshAfterMutation('bulk',r);}catch(e){showError(e.message);}}
+    function exportRows(kind){if(!state.projection){showError(t('noData'));return;}var rows=visibleRows().map(function(r){return {agent_id:r.agentId,name:r.name,owner:r.owner||'',owner_source:r.ownerSource||'',provider:r.provider||'',model:r.model||'',active_version:r.activeVersion||'',active_version_source:r.activeVersionSource||'',standard:r.standard.status,issue_count:r.standard.issueCount,last_activity:r.lastActivity||'',last_activity_source:r.lastActivitySource||'',capability_count:r.capabilityCount==null?'':r.capabilityCount,capability_count_source:r.capabilityCountSource||'',shared_gene_count:(r.sharedGeneIds||[]).length};});var body,type,name;if(kind==='json'){body=JSON.stringify({snapshot_id:state.projection.snapshotId,rows:rows},null,2);type='application/json';name='evolution-console-'+state.projection.snapshotId+'.json';}else{var keys=Object.keys(rows[0]||{agent_id:'',name:''});function cell(v){var s=String(v==null?'':v);if(/^[=+@-]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';}body=keys.join(',')+'\n'+rows.map(function(r){return keys.map(function(k){return cell(r[k]);}).join(',');}).join('\n');type='text/csv';name='evolution-console-'+state.projection.snapshotId+'.csv';}var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([body],{type:type}));a.download=name;a.click();setTimeout(function(){URL.revokeObjectURL(a.href);},0);}
+    function resetAccountState(message){
+      state.accountEpoch++;state.pending.forEach(function(p){clearTimeout(p.timer);p.reject(new Error('Account context changed; stale result discarded.'));});state.pending.clear();
+      state.actorId=null;state.projection=null;state.stableIdRequired=[];state.stableTargetBySource=Object.create(null);state.shared=null;state.standards=null;state.platform=null;state.ledger=null;state.escalations=[];state.bulkOperations=[];state.bulk=null;state.receipts=[];state.draft=null;
+      state.cabinetAgentId=null;state.cabinetGeneId=null;state.cabinetArtifactBase=null;state.currentEscalationId=null;state.selectedEscalationId=null;state.currentBulkOperationId=null;state.selectedBulkOperationId=null;state.selectedBulkGeneId=null;state.selectedBulkIds=[];state.lastEscalationEvidence=null;state.lastBulkEvidence=null;
+      el('searchInput').value='';el('filterSelect').value='';el('bulkType').value='shared_gene_change';el('bulkVersionInput').value='';el('cabinetVersionInput').value='';
+      el('standardsBadge').textContent='STANDARD —';el('standardsBadge').className='badge';el('cabinetTitle').textContent='Agent Cabinet';el('cabinetHost').innerHTML='';el('cabinetGeneSelect').innerHTML='';el('cabinetImpact').textContent='';el('cabinetEscalateBtn').disabled=true;
+      el('cabinetOverlay').classList.remove('on');window._cab=null;renderAll();showError(message||'');
+    }
+    document.querySelectorAll('.tab').forEach(function(b){b.onclick=function(){setView(b.dataset.view);};});
+    el('langBtn').onclick=function(){WLANG=WLANG==='ru'?'en':'ru';applyLanguage();renderAll();if(el('cabinetOverlay').classList.contains('on'))updateCabinetImpact();};
+    el('helpBtn').onclick=function(){if(typeof openHelp==='function')openHelp('evolution_console');};el('refreshBtn').onclick=loadFleet;
+    el('searchInput').oninput=function(){renderFleet();renderBulk();};el('filterSelect').onchange=function(){renderFleet();renderBulk();};el('jsonBtn').onclick=function(){exportRows('json');};el('csvBtn').onclick=function(){exportRows('csv');};
+    el('geneObjectBtn').onclick=function(){state.geneView='object';renderGenes();};el('geneAgentBtn').onclick=function(){state.geneView='agent';renderGenes();};
+    el('bulkType').onchange=function(){state.selectedBulkIds=[];state.lastBulkEvidence=null;renderFleet();renderBulk();};el('bulkGeneSelect').onchange=function(){state.selectedBulkGeneId=el('bulkGeneSelect').value||null;state.selectedBulkIds=[];state.lastBulkEvidence=null;renderFleet();renderBulk();};
+    el('bulkVersionInput').oninput=function(){state.lastBulkEvidence=null;renderBulkTargetPicker();renderBulk();};el('bulkPreviewBtn').onclick=createBulkPreview;
+    el('cabinetGeneSelect').onchange=function(){state.cabinetGeneId=el('cabinetGeneSelect').value||null;updateCabinetImpact();renderCanonicalCabinetForSelectedGene();};el('cabinetVersionInput').oninput=updateCabinetImpact;el('cabinetEscalateBtn').onclick=dispatchCabinetEscalation;
+    el('cabinetClose').onclick=function(){el('cabinetOverlay').classList.remove('on');};el('cabinetOverlay').onclick=function(e){if(e.target===el('cabinetOverlay'))el('cabinetOverlay').classList.remove('on');};
+    window.addEventListener('extella_agent_cabinet_escalation',function(event){var contract=event&&event.detail;if(contract&&typeof contract==='object')acceptCabinetEscalation(contract);});
+    window.addEventListener('message',function(event){
+      if(event.source!==window.parent)return;var d=event.data||{};
+      if(d.type==='etb_init'){resetAccountState('');if(String(d.lang||'').toLowerCase().indexOf('en')===0)WLANG='en';else if(String(d.lang||'').toLowerCase().indexOf('ru')===0)WLANG='ru';applyLanguage();document.documentElement.dataset.theme=d.theme==='light'?'light':'dark';renderAll();loadFleet();return;}
+      if(d.type==='etb_theme'){document.documentElement.dataset.theme=d.theme==='light'?'light':'dark';return;}
+      if(d.type==='etb_account_reset'||d.type==='etb_logout'||d.type==='etb_session_reset'){resetAccountState(t('accountCleared'));return;}
+      if(d.type==='etb_evolution_console_result'){var p=state.pending.get(d.reqId);if(!p)return;clearTimeout(p.timer);state.pending.delete(d.reqId);if(p.epoch!==state.accountEpoch){p.reject(new Error('Account context changed; stale result discarded.'));return;}if(d.ok===false)p.reject(new Error(d.error||'Evolution Console operation failed'));else p.resolve(d.result||d);}
+    });
+    if(new URLSearchParams(location.search).get('lang')==='en')WLANG='en';applyLanguage();document.documentElement.dataset.theme=new URLSearchParams(location.search).get('theme')==='light'?'light':'dark';renderAll();
+    window.parent.postMessage({type:'etb_ui_health',ok:true,pluginId:'profit-growth-scenario'},'*');
+    if(PREVIEW)loadFleet();
+  })();
+  </script>
+</body>
+</html>

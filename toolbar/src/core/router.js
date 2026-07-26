@@ -17,12 +17,14 @@ ETB.router = (function () {
   var AGENT_CONTROL_MAX_SHARD_BYTES = 13000;
   var AGENT_CONTROL_CHUNK_CHARS = 2400;
   var AGENT_CONTROL_MAX_CHUNKS = 64;
+  var EVOLUTION_LEDGER_LOCATOR_PREFIX = 'etb_evolution_ledger_owner_v1:';
   var STUDIO_HOST_INSTANCE = Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
   var _studioCleanupTimer = null;
   var _studioOperationChains = {};
   var _agentControlOperationChains = {};
   var _agentControlSessionEpoch = 0;
   var _agentControlRunSequence = 0;
+  var _evolutionFleetSession = null;
 
   // cache entry: { panel, blobUrl, lastUsed (ms timestamp) }
   var _cache = {};
@@ -43,6 +45,28 @@ ETB.router = (function () {
 
   function _studioCurrentUserId() {
     try { return String(ETB.auth.getUserId() || ''); } catch (_) { return ''; }
+  }
+
+  function _evolutionLedgerOwnerLoad(actorId) {
+    try {
+      return String(localStorage.getItem(
+        EVOLUTION_LEDGER_LOCATOR_PREFIX +
+          encodeURIComponent(String(actorId || ''))
+      ) || '');
+    } catch (_) {
+      return '';
+    }
+  }
+
+  function _evolutionLedgerOwnerSave(actorId, ownerAgentId) {
+    if (!actorId || !ownerAgentId) return;
+    try {
+      localStorage.setItem(
+        EVOLUTION_LEDGER_LOCATOR_PREFIX +
+          encodeURIComponent(String(actorId)),
+        String(ownerAgentId)
+      );
+    } catch (_) {}
   }
 
   function _studioSessionAccountValid(session) {
@@ -180,7 +204,7 @@ ETB.router = (function () {
   function _agentControlAssertContext(context, allowExpired) {
     if (!context) {
       var missingContextError = new Error(
-        'authenticated Agent Control operation context is required'
+        'authenticated Extella Evolution operation context is required'
       );
       missingContextError.code = 'ACCOUNT_CONTEXT_REQUIRED';
       throw missingContextError;
@@ -188,14 +212,14 @@ ETB.router = (function () {
     if (!context.actorId || context.epoch !== _agentControlSessionEpoch ||
         String(_studioCurrentUserId() || '') !== context.actorId) {
       var accountError = new Error(
-        'authenticated account changed; Agent Control operation was fenced before commit'
+        'authenticated account changed; Evolution Console operation was fenced before commit'
       );
       accountError.code = 'ACCOUNT_SESSION_CHANGED';
       throw accountError;
     }
     if (!allowExpired && Date.now() > context.deadlineAt) {
       var deadlineError = new Error(
-        'operation deadline exceeded; outcome is unknown until the ledger is reloaded'
+        'Evolution Console operation deadline exceeded; outcome is unknown until the ledger is reloaded'
       );
       deadlineError.code = 'OPERATION_OUTCOME_UNKNOWN';
       throw deadlineError;
@@ -284,7 +308,7 @@ ETB.router = (function () {
     return ETB.api.kvSet(
       key,
       expected,
-      description || 'Extella Agent Control Center v1',
+      description || 'Extella Evolution v1',
       { agentId: ownerAgentId }
     ).then(function (response) {
       // Once kvSet has returned, an exact read-back reconciles the outcome even
@@ -744,7 +768,7 @@ ETB.router = (function () {
                 shard.key,
                 shard.value,
                 ownerAgentId,
-                'Extella Agent Control Center v1 — immutable verified shard',
+                'Extella Evolution v1 — immutable verified shard',
                 context
               );
             });
@@ -756,7 +780,7 @@ ETB.router = (function () {
           AGENT_CONTROL_LEDGER_KEY,
           stored.index,
           ownerAgentId,
-          'Extella Agent Control Center v1 — active pointer index',
+          'Extella Evolution v1 — active pointer index',
           context
         );
       });
@@ -1126,11 +1150,52 @@ ETB.router = (function () {
   }
 
   function _agentControlPlatformStatus() {
+    var evolutionAdapter = ETB.evolutionAdapter || {};
+    // Native writes stay fail-closed until the platform exposes a durable
+    // intent log and a compare-and-swap commit for the shared Evolution
+    // ledger. Method presence alone is not a transaction boundary.
+    var nativeWritesReady = false;
     return {
       managedAdapter: 'AVAILABLE',
+      evolutionLabAdapter:
+        typeof evolutionAdapter.runClassTest === 'function' ?
+          'AVAILABLE' : 'PLATFORM_UNAVAILABLE',
+      classActivationAdapter:
+        nativeWritesReady &&
+        typeof evolutionAdapter.activateClassStage === 'function' ?
+          'AVAILABLE' : 'PLATFORM_UNAVAILABLE',
+      classObservationAdapter:
+        typeof evolutionAdapter.observeClassChange === 'function' ?
+          'AVAILABLE' : 'PLATFORM_UNAVAILABLE',
+      classRollbackAdapter:
+        nativeWritesReady &&
+        typeof evolutionAdapter.rollbackClassChange === 'function' ?
+          'AVAILABLE' : 'PLATFORM_UNAVAILABLE',
+      scheduleStateAdapter:
+        typeof evolutionAdapter.prepareScheduleBulkSpec === 'function' ?
+          'AVAILABLE' : 'PLATFORM_UNAVAILABLE',
+      bulkActivationAdapter:
+        nativeWritesReady &&
+        typeof evolutionAdapter.activateBulkStage === 'function' ?
+          'AVAILABLE' : 'PLATFORM_UNAVAILABLE',
+      bulkRollbackAdapter:
+        nativeWritesReady &&
+        typeof evolutionAdapter.rollbackBulkOperation === 'function' ?
+          'AVAILABLE' : 'PLATFORM_UNAVAILABLE',
+      nativeScheduleAdapter:
+        nativeWritesReady &&
+        typeof evolutionAdapter.prepareScheduleBulkSpec === 'function' &&
+        typeof evolutionAdapter.activateBulkStage === 'function' &&
+        typeof evolutionAdapter.observeBulkOperation === 'function' &&
+        typeof evolutionAdapter.rollbackBulkOperation === 'function' ?
+          'AVAILABLE' : 'PLATFORM_UNAVAILABLE',
+      bulkObservationAdapter:
+        typeof evolutionAdapter.observeBulkOperation === 'function' ?
+          'AVAILABLE' : 'PLATFORM_UNAVAILABLE',
       nativeBundleVersioning: 'PLATFORM_UNAVAILABLE',
       nativeAtomicPublish: 'PLATFORM_UNAVAILABLE',
       nativeRunVersionBinding: 'PLATFORM_UNAVAILABLE',
+      nativeDurableIntent: 'PLATFORM_UNAVAILABLE',
       multiDeviceCompareAndSwap: 'PLATFORM_UNAVAILABLE',
       auditIntegrity: 'KV_READBACK_VERIFIED_NOT_TAMPER_EVIDENT',
       organizationScope: 'PLATFORM_RBAC_UNAVAILABLE',
@@ -1431,6 +1496,2279 @@ ETB.router = (function () {
     return Promise.reject(new Error('unsupported Agent Control action'));
   }
 
+  function _evolutionError(code, message) {
+    var error = new Error(message || code);
+    error.code = code;
+    return error;
+  }
+
+  function _evolutionMapLimit(items, limit, worker) {
+    var rows = Array.isArray(items) ? items : [];
+    var output = new Array(rows.length);
+    var cursor = 0;
+    var count = Math.max(1, Math.min(Number(limit || 4), rows.length || 1));
+    function consume() {
+      var index;
+      if (cursor >= rows.length) return Promise.resolve();
+      index = cursor;
+      cursor += 1;
+      return Promise.resolve().then(function () {
+        return worker(rows[index], index);
+      }).then(function (value) {
+        output[index] = value;
+        return consume();
+      });
+    }
+    var workers = [];
+    while (workers.length < count) workers.push(consume());
+    return Promise.all(workers).then(function () { return output; });
+  }
+
+  function _evolutionBundle() {
+    var bundle = ETB.evolutionStandardsBundle;
+    return bundle && typeof bundle === 'object' ? bundle : {};
+  }
+
+  function _evolutionProductionStandardsAvailable(
+    bundle,
+    actorId,
+    accountScoped
+  ) {
+    var policy = bundle && bundle.runtime_policy || {};
+    return Boolean(
+      bundle &&
+      accountScoped === true &&
+      bundle.schema === 'extella.evolution.standards_bundle.v1' &&
+      bundle.data_mode === 'PRODUCTION' &&
+      bundle.delivery_mode === 'ACCOUNT_SCOPED_HOST_PROVIDER' &&
+      String(bundle.owner_account_id || '') === String(actorId || '') &&
+      String(actorId || '') &&
+      bundle.production_eligible === true &&
+      bundle.live_projection_allowed === true &&
+      policy.live_projection === 'ALLOWED' &&
+      policy.production_merge === 'ALLOWED' &&
+      Array.isArray(bundle.agents) &&
+      Array.isArray(bundle.unbound_passports)
+    );
+  }
+
+  function _evolutionVerifyProviderBundle(bundle, context) {
+    var pinned = _evolutionBundle();
+    var pinnedStandards = pinned.standards || {};
+    var suppliedStandards = bundle && bundle.standards || {};
+    var pinnedArtifacts = pinnedStandards.artifacts || {};
+    var suppliedArtifacts = suppliedStandards.artifacts || {};
+    var roles = [
+      'checker',
+      'builder',
+      'passport_template',
+      'cabinet_widget',
+      'help_widget'
+    ];
+    var attestation = bundle && bundle.attestation || {};
+    var mismatch = roles.some(function (role) {
+      return !pinnedArtifacts[role] || !suppliedArtifacts[role] ||
+        String(pinnedArtifacts[role].sha256 || '') !==
+          String(suppliedArtifacts[role].sha256 || '');
+    });
+    if (mismatch ||
+        String(suppliedStandards.git_commit || '') !==
+          String(pinnedStandards.git_commit || '') ||
+        !bundle.passport_template ||
+        !pinned.passport_template ||
+        String(bundle.passport_template.sha256 || '') !==
+          String(pinned.passport_template.sha256 || '') ||
+        attestation.schema !==
+          'extella.evolution.standards_bundle.attestation.v1' ||
+        attestation.type !== 'HOST_PROVIDER_CONTENT_HASH' ||
+        Object.prototype.hasOwnProperty.call(attestation, 'signature') ||
+        String(attestation.owner_account_id || '') !== context.actorId ||
+        String(attestation.standards_git_commit || '') !==
+          String(pinnedStandards.git_commit || '') ||
+        !/^[a-f0-9]{64}$/.test(
+          String(attestation.content_sha256 || '')
+        )) {
+      return Promise.reject(_evolutionError(
+        'PRODUCTION_STANDARDS_ATTESTATION_MISMATCH',
+        'account-scoped Agent Passport registry does not match the pinned canonical standards'
+      ));
+    }
+    var content = _evolutionClone(bundle);
+    delete content.attestation;
+    return ETB.evolutionConsole.sha256(content).then(function (hash) {
+      if (hash !== attestation.content_sha256) {
+        throw _evolutionError(
+          'PRODUCTION_STANDARDS_CONTENT_MISMATCH',
+          'account-scoped Agent Passport registry content hash is invalid'
+        );
+      }
+      return bundle;
+    });
+  }
+
+  function _evolutionUnboundPassports(bundle) {
+    var rows = bundle && bundle.unbound_passports;
+    var sources = bundle && bundle.sources &&
+      bundle.sources.passports;
+    var seen = {};
+    if (!Array.isArray(rows) || !Array.isArray(sources)) {
+      throw _evolutionError(
+        'PRODUCTION_UNBOUND_PASSPORTS_INVALID',
+        'production Agent Passport bundle must declare unbound passports and sources'
+      );
+    }
+    var normalized = rows.map(function (row) {
+      var keys = row && typeof row === 'object' && !Array.isArray(row) ?
+        Object.keys(row).sort() : [];
+      var sourceId = String(row && row.source_passport_id || '');
+      var sourcePath = String(row && row.source_path || '');
+      var passportHash = String(row && row.passport_sha256 || '');
+      var passportCanonicalHash = String(
+        row && row.passport_canonical_sha256 || ''
+      );
+      var passport = row && row.passport;
+      var agent = passport && passport.agent;
+      var report = row && row.checker_report;
+      var issues = report && report.issues;
+      var sourceMatches = sources.filter(function (source) {
+        return source && source.source_passport_id === sourceId &&
+          source.path === sourcePath &&
+          source.sha256 === passportHash &&
+          source.platform_agent_id === null &&
+          ETB.evolutionConsole.canonical(
+            Object.keys(source).sort()
+          ) === ETB.evolutionConsole.canonical([
+            'path',
+            'platform_agent_id',
+            'sha256',
+            'source_passport_id'
+          ].sort());
+      });
+      var missingIdIssue = Array.isArray(issues) && issues.some(function (
+        issue
+      ) {
+        return issue && issue.code === 'AGENT_PLATFORM_ID_REQUIRED' &&
+          issue.severity === 'error' &&
+          issue.path === 'agent.platform_agent_id';
+      });
+      if (ETB.evolutionConsole.canonical(keys) !==
+            ETB.evolutionConsole.canonical([
+              'checker_report',
+              'passport',
+              'passport_canonical_sha256',
+              'passport_sha256',
+              'source_passport_id',
+              'source_path'
+            ].sort()) ||
+          !/^passport_[a-f0-9]{32}$/.test(sourceId) || seen[sourceId] ||
+          !sourcePath || sourcePath !== sourcePath.trim() ||
+          sourcePath.length > 1024 || /^[\\/]/.test(sourcePath) ||
+          /(^|[\\/])\.\.([\\/]|$)|[\u0000-\u001f\u007f]/.test(sourcePath) ||
+          !/^[a-f0-9]{64}$/.test(passportHash) ||
+          !/^[a-f0-9]{64}$/.test(passportCanonicalHash) ||
+          !passport || typeof passport !== 'object' ||
+          Array.isArray(passport) || !agent || typeof agent !== 'object' ||
+          Array.isArray(agent) ||
+          String(agent.platform_agent_id || '').trim() ||
+          !report || report.schema !==
+            'extella.agent_passport.check_report.v1' ||
+          report.ready !== false || !missingIdIssue ||
+          sourceMatches.length !== 1) {
+        throw _evolutionError(
+          'PRODUCTION_UNBOUND_PASSPORTS_INVALID',
+          'unbound Agent Passport remediation source is invalid'
+        );
+      }
+      seen[sourceId] = true;
+      return {
+        sourcePassportId: sourceId,
+        sourcePath: sourcePath,
+        passportSha256: passportHash,
+        passportCanonicalSha256: passportCanonicalHash,
+        passport: _evolutionClone(passport),
+        checkerReport: _evolutionClone(report)
+      };
+    });
+    return Promise.all(normalized.map(function (row) {
+      return Promise.all([
+        ETB.evolutionConsole.sha256(row.passport),
+        ETB.evolutionConsole.sha256({
+          path: row.sourcePath,
+          passport_sha256: row.passportSha256
+        })
+      ]).then(function (hashes) {
+        if (hashes[0] !== row.passportCanonicalSha256 ||
+            'passport_' + hashes[1].slice(0, 32) !==
+              row.sourcePassportId) {
+          throw _evolutionError(
+            'PRODUCTION_UNBOUND_PASSPORTS_INVALID',
+            'unbound Agent Passport content or source identity is invalid'
+          );
+        }
+        return row;
+      });
+    })).then(function (verified) {
+      return verified.sort(function (left, right) {
+      return left.sourcePassportId < right.sourcePassportId ? -1 :
+        (left.sourcePassportId > right.sourcePassportId ? 1 : 0);
+      });
+    });
+  }
+
+  function _evolutionStableIdRequiredForUi(rows) {
+    return (rows || []).map(function (row) {
+      var agent = row.passport && row.passport.agent || {};
+      return {
+        sourcePassport: row.sourcePassportId,
+        sourcePath: row.sourcePath,
+        name: String(agent.name || row.sourcePath),
+        passportSha256: row.passportSha256,
+        passportCanonicalSha256: row.passportCanonicalSha256,
+        checkerIssues: _evolutionClone(
+          row.checkerReport && row.checkerReport.issues || []
+        )
+      };
+    });
+  }
+
+  function _evolutionLoadStandardsForActor(context, platformAgentIds) {
+    var provider = ETB.evolutionStandardsProvider;
+    if (!provider || typeof provider.loadForActor !== 'function') {
+      return Promise.resolve({
+        bundle: null,
+        accountScoped: false,
+        unboundPassports: [],
+        error: {
+          platformAgentId: null,
+          code: 'PRODUCTION_STANDARDS_UNAVAILABLE',
+          message: 'account-scoped Agent Passport registry provider is unavailable'
+        }
+      });
+    }
+    return Promise.resolve().then(function () {
+      _agentControlAssertContext(context);
+      return provider.loadForActor({
+        actorId: context.actorId,
+        epoch: context.epoch,
+        platformAgentIds: (platformAgentIds || []).slice()
+      });
+    }).then(function (bundle) {
+      _agentControlAssertContext(context);
+      if (!bundle || typeof bundle !== 'object') {
+        throw _evolutionError(
+          'PRODUCTION_STANDARDS_UNAVAILABLE',
+          'account-scoped Agent Passport registry provider returned no bundle'
+        );
+      }
+      return _evolutionVerifyProviderBundle(bundle, context)
+        .then(function (verified) {
+          return _evolutionUnboundPassports(verified)
+            .then(function (unboundPassports) {
+              return {
+                bundle: verified,
+                accountScoped: true,
+                unboundPassports: unboundPassports,
+                error: null
+              };
+            });
+        });
+    }).catch(function (error) {
+      if (error && (error.code === 'ACCOUNT_SESSION_CHANGED' ||
+          error.code === 'OPERATION_OUTCOME_UNKNOWN')) throw error;
+      return {
+        bundle: null,
+        accountScoped: false,
+        unboundPassports: [],
+        error: {
+          platformAgentId: null,
+          code: String(error && error.code ||
+            'PRODUCTION_STANDARDS_UNAVAILABLE'),
+          message: String(error && error.message ||
+            'account-scoped Agent Passport registry unavailable')
+        }
+      };
+    });
+  }
+
+  function _evolutionLiveStandards(bundle, actorId, accountScoped) {
+    if (!_evolutionProductionStandardsAvailable(
+          bundle,
+          actorId,
+          accountScoped
+        )) {
+      return [];
+    }
+    return bundle.agents.map(function (row) {
+      var copy = JSON.parse(JSON.stringify(row || {}));
+      copy.platformAgentId = String(
+        copy.platform_agent_id || copy.platformAgentId || ''
+      );
+      copy.passport_present = Boolean(
+        copy.passport_present === true || copy.passport_sha256
+      );
+      return copy;
+    });
+  }
+
+  function _evolutionStandardsSummary(bundle, actorId, accountScoped) {
+    var standards = bundle && bundle.standards || {};
+    var artifacts = standards.artifacts || {};
+    var checker = artifacts.checker || {};
+    var builder = artifacts.builder || {};
+    var productionAvailable =
+      _evolutionProductionStandardsAvailable(
+        bundle,
+        actorId,
+        accountScoped
+      );
+    return {
+      schema: String(bundle && bundle.schema || ''),
+      dataMode: String(bundle && bundle.data_mode || 'UNAVAILABLE'),
+      deliveryMode: String(bundle && bundle.delivery_mode ||
+        'STATIC_BUILD_ARTIFACT'),
+      accountScoped: accountScoped === true,
+      productionEligible: productionAvailable,
+      liveProjectionAllowed: productionAvailable,
+      commit: String(standards.git_commit || ''),
+      checkerSha256: String(checker.sha256 || ''),
+      builderSha256: String(builder.sha256 || ''),
+      contentSha256: productionAvailable ?
+        String(bundle.attestation && bundle.attestation.content_sha256 || '') :
+        ''
+    };
+  }
+
+  function _evolutionExactAgentRow(row) {
+    var id = _agentControlAgentId(row);
+    if (!id) throw _evolutionError(
+      'PLATFORM_AGENT_ID_REQUIRED',
+      'agent/list returned an agent without a stable id'
+    );
+    return {
+      platform_agent_id: id,
+      name: String((row && (row.name || row.agent_name)) || id),
+      provider: String((row && row.provider) || ''),
+      model: String((row && row.model) || ''),
+      category: String((row && row.category) || ''),
+      role: String((row && (row.role || row.category)) || ''),
+      tools: Array.isArray(row && row.tools) ?
+        row.tools.map(String) : [],
+      instructions: String((row && row.instructions) || ''),
+      created_at: String((row && (row.created_at || row.createdAt)) || ''),
+      updated_at: String((row && (row.updated_at || row.updatedAt)) || ''),
+      last_activity_at: String((row && (
+        row.last_activity_at || row.lastActivityAt
+      )) || '')
+    };
+  }
+
+  function _evolutionLoadPlatformFleet(context) {
+    return _agentControlApiRead(context, function () {
+      return ETB.api.agentsList();
+    }).then(function (response) {
+      _studioApiOk(response, 'Evolution Console agent/list');
+      var listed = _agentControlAgentRows(response);
+      var byId = {};
+      var normalized = listed.map(function (row) {
+        var exact = _evolutionExactAgentRow(row);
+        if (byId[exact.platform_agent_id]) {
+          throw _evolutionError(
+            'DUPLICATE_PLATFORM_AGENT_ID',
+            'agent/list returned duplicate stable id ' +
+              exact.platform_agent_id
+          );
+        }
+        byId[exact.platform_agent_id] = true;
+        return exact;
+      });
+      return _evolutionMapLimit(normalized, 4, function (listedRow) {
+        return _agentControlApiRead(context, function () {
+          return ETB.api.agentGetScoped(listedRow.platform_agent_id);
+        }).then(function (detailResponse) {
+          _studioApiOk(detailResponse, 'Evolution Console agent/get');
+          var detail = detailResponse && detailResponse.agent ||
+            detailResponse || {};
+          var exact = _evolutionExactAgentRow(detail);
+          if (exact.platform_agent_id !== listedRow.platform_agent_id) {
+            throw _evolutionError(
+              'PLATFORM_AGENT_ID_MISMATCH',
+              'agent/get returned a different stable id'
+            );
+          }
+          return { ok: true, row: exact };
+        }).catch(function (error) {
+          if (error && (error.code === 'ACCOUNT_SESSION_CHANGED' ||
+              error.code === 'OPERATION_OUTCOME_UNKNOWN')) throw error;
+          return {
+            ok: false,
+            row: listedRow,
+            error: {
+              code: String(error && error.code ||
+                'PLATFORM_AGENT_DETAIL_FAILED'),
+              message: String(error && error.message ||
+                'agent/get failed')
+            }
+          };
+        });
+      });
+    }).then(function (results) {
+      _agentControlAssertContext(context);
+      return {
+        rows: results.map(function (result) { return result.row; }),
+        errors: results.filter(function (result) {
+          return !result.ok;
+        }).map(function (result) {
+          return {
+            platformAgentId: result.row.platform_agent_id,
+            code: result.error.code,
+            message: result.error.message
+          };
+        })
+      };
+    });
+  }
+
+  function _evolutionDiscoverLedger(scanIds, context) {
+    var ids = Array.from(new Set((scanIds || []).map(String))).filter(Boolean)
+      .sort();
+    var rememberedOwner = _evolutionLedgerOwnerLoad(context.actorId);
+    if (rememberedOwner && ids.indexOf(rememberedOwner) === -1) {
+      return _agentControlReadLedger(rememberedOwner, context)
+        .then(function (ledger) {
+          if (ledger) {
+            return {
+              ledger: ledger,
+              ownerAgentId: rememberedOwner,
+              errors: [{
+                platformAgentId: rememberedOwner,
+                code: 'EVOLUTION_LEDGER_OWNER_MIGRATION_REQUIRED',
+                message: 'Evolution history was recovered from a non-live owner; verified owner migration is required before any mutation'
+              }]
+            };
+          }
+          return {
+            ledger: null,
+            ownerAgentId: rememberedOwner,
+            errors: [{
+              platformAgentId: rememberedOwner,
+              code: 'EVOLUTION_LEDGER_OWNER_UNAVAILABLE',
+              message: 'the remembered Evolution ledger owner is no longer a live platform agent; recovery or verified owner migration is required'
+            }]
+          };
+        }).catch(function (error) {
+          if (error && (error.code === 'ACCOUNT_SESSION_CHANGED' ||
+              error.code === 'OPERATION_OUTCOME_UNKNOWN')) throw error;
+          return {
+            ledger: null,
+            ownerAgentId: rememberedOwner,
+            errors: [{
+              platformAgentId: rememberedOwner,
+              code: 'EVOLUTION_LEDGER_OWNER_UNAVAILABLE',
+              message: String(error && error.message ||
+                'the remembered Evolution ledger owner cannot be read; recovery or verified owner migration is required')
+            }]
+          };
+        });
+    }
+    if (rememberedOwner && ids.indexOf(rememberedOwner) !== -1) {
+      ids = [rememberedOwner].concat(ids.filter(function (id) {
+        return id !== rememberedOwner;
+      }));
+    }
+    return _evolutionMapLimit(ids, 4, function (id) {
+      return _agentControlReadLedger(id, context).then(function (ledger) {
+        return { ownerAgentId: id, ledger: ledger, error: null };
+      }).catch(function (error) {
+        if (error && (error.code === 'ACCOUNT_SESSION_CHANGED' ||
+            error.code === 'OPERATION_OUTCOME_UNKNOWN')) throw error;
+        return {
+          ownerAgentId: id,
+          ledger: null,
+          error: {
+            code: String(error && error.code || 'LEDGER_READ_FAILED'),
+            message: String(error && error.message || 'ledger read failed')
+          }
+        };
+      });
+    }).then(function (rows) {
+      var found = rows.filter(function (row) { return Boolean(row.ledger); });
+      var errors = rows.filter(function (row) { return Boolean(row.error); })
+        .map(function (row) {
+          return {
+            platformAgentId: row.ownerAgentId,
+            code: row.error.code,
+            message: row.error.message
+          };
+        });
+      if (found.length > 1) {
+        var canonical = ETB.agentControl.canonical(found[0].ledger);
+        if (found.some(function (row) {
+          return ETB.agentControl.canonical(row.ledger) !== canonical;
+        })) {
+          errors.push({
+            platformAgentId: null,
+            code: 'MULTIPLE_MANAGED_LEDGERS',
+            message: 'more than one distinct managed ledger exists in this account'
+          });
+          return { ledger: null, ownerAgentId: null, errors: errors };
+        }
+      }
+      if (found.length) {
+        _evolutionLedgerOwnerSave(
+          context.actorId,
+          found[0].ledger.ownerAgentId
+        );
+      }
+      return {
+        ledger: found.length ? found[0].ledger : null,
+        ownerAgentId: found.length ? found[0].ledger.ownerAgentId :
+          (ids[0] || null),
+        errors: errors
+      };
+    });
+  }
+
+  function _evolutionIssueRows(row, standardsAvailable) {
+    var checker = row && row.checker || {};
+    var output = [];
+    if (!standardsAvailable) return output;
+    function append(values, fallbackSeverity) {
+      (Array.isArray(values) ? values : []).forEach(function (issue) {
+        if (issue && typeof issue === 'object') {
+          output.push({
+            code: String(issue.code || ''),
+            severity: String(issue.severity || fallbackSeverity),
+            path: String(issue.path || ''),
+            message_ru: String(issue.message_ru || issue.message || ''),
+            message_en: String(issue.message_en || issue.message || '')
+          });
+        } else {
+          output.push({
+            code: '',
+            severity: fallbackSeverity,
+            path: '',
+            message_ru: String(issue || ''),
+            message_en: String(issue || '')
+          });
+        }
+      });
+    }
+    append(checker.errors, 'error');
+    append(checker.warnings, 'warning');
+    if (row.standardStatus === 'PASSPORT_MISSING') {
+      output.push({
+        code: 'PASSPORT_MISSING',
+        severity: 'error',
+        path: '',
+        message_ru: 'Agent Passport отсутствует',
+        message_en: 'Agent Passport is missing'
+      });
+    } else if (row.standardStatus === 'DEAD_REFERENCE') {
+      output.push({
+        code: 'DEAD_REFERENCE',
+        severity: 'error',
+        path: 'agent.platform_agent_id',
+        message_ru: 'Агент есть в реестре, но отсутствует на платформе',
+        message_en: 'The agent exists in the registry but is absent from the platform'
+      });
+    }
+    return output;
+  }
+
+  function _evolutionSharedForUi(map, complete) {
+    var byAgent = {};
+    Object.keys(map && map.byAgentId || {}).forEach(function (id) {
+      byAgent[id] = map.byAgentId[id].map(function (row) {
+        return row.geneId;
+      });
+    });
+    return {
+      complete: complete === true,
+      snapshotId: String(map && map.mapSha256 || ''),
+      genes: (map && map.genes || []).map(function (gene) {
+        var versions = Array.from(new Set((gene.consumers || [])
+          .map(function (consumer) { return consumer.activeVersion; })
+          .filter(Boolean))).sort();
+        return {
+          geneId: gene.geneId,
+          kind: gene.kind,
+          objectId: gene.objectId,
+          name: gene.displayName,
+          version: versions.length === 1 ? versions[0] :
+            (versions.length ? 'MIXED' : null),
+          consumerAgentIds: gene.consumerAgentIds,
+          consumers: (gene.consumers || []).map(function (consumer) {
+            return {
+              platformAgentId: consumer.platformAgentId,
+              activeVersion: consumer.activeVersion,
+              lastChangedAt: consumer.lastChangedAt
+            };
+          }),
+          lastChanged: gene.lastChangedAt
+        };
+      }),
+      byAgent: byAgent
+    };
+  }
+
+  function _evolutionProjectionForUi(
+    fleet,
+    shared,
+    complete,
+    snapshotId,
+    standardsAvailable
+  ) {
+    var sharedByAgent = shared && shared.byAgent || {};
+    var rows = fleet.rows.map(function (row) {
+      var model = row.model || {};
+      var issues = _evolutionIssueRows(row, standardsAvailable);
+      var status = !standardsAvailable ? 'UNKNOWN' :
+        (row.standardStatus === 'PASS' ? 'PASS' :
+        (row.standardStatus === 'PASSPORT_MISSING' ? 'MISSING' : 'FAIL'));
+      var geneIds = standardsAvailable ?
+        (sharedByAgent[row.platformAgentId] || []) : [];
+      return {
+        agentId: row.platformAgentId,
+        name: row.name || row.platformAgentId,
+        platformPresent: row.platformPresent,
+        registryPresent: standardsAvailable ? row.passportPresent : null,
+        provider: model.provider || '',
+        model: model.model || '',
+        qwenConfirmed: /qwen/i.test(String(model.model || '')),
+        owner: row.owner,
+        ownerSource: row.facts && row.facts.owner &&
+          row.facts.owner.source || null,
+        activeVersion: row.activeVersion,
+        activeVersionSource: row.facts && row.facts.activeVersion &&
+          row.facts.activeVersion.source || null,
+        lastActivity: row.lastActivity,
+        lastActivitySource: row.facts && row.facts.lastActivity &&
+          row.facts.lastActivity.source || null,
+        activityState: row.lastActivityState === 'KNOWN' ?
+          'KNOWN' : 'UNKNOWN',
+        capabilityCount: row.capabilityCount,
+        capabilityCountSource: row.facts && row.facts.capabilityCount &&
+          row.facts.capabilityCount.source || null,
+        sharedGeneIds: geneIds,
+        sharedGeneState: standardsAvailable &&
+          row.hasSharedGenesState === 'KNOWN' ?
+          'KNOWN' : 'UNKNOWN',
+        standard: {
+          status: status,
+          canonicalStatus: standardsAvailable ?
+            row.standardStatus : 'UNKNOWN',
+          issueCount: issues.length,
+          issues: issues
+        },
+        reconciliation: !standardsAvailable ?
+          'REGISTRY_UNAVAILABLE' : (row.platformPresent ?
+          (row.passportPresent ? 'BOTH' : 'PLATFORM_ONLY') :
+          'REGISTRY_ONLY')
+      };
+    });
+    return {
+      complete: complete === true,
+      snapshotId: snapshotId,
+      rows: rows,
+      counters: {
+        total: rows.length,
+        failed: rows.filter(function (row) {
+          return row.standard.status === 'FAIL' ||
+            row.standard.status === 'MISSING';
+        }).length,
+        ownerless: rows.filter(function (row) {
+          return row.registryPresent === true && !row.owner;
+        }).length,
+        withShared: rows.filter(function (row) {
+          return row.sharedGeneIds.length > 0;
+        }).length
+      },
+      mutationsAllowed: complete === true
+    };
+  }
+
+  function _evolutionReceiptRows(ledger) {
+    var receipts = ledger && ledger.evolution &&
+      ledger.evolution.receipts || {};
+    return Object.keys(receipts).sort(function (leftId, rightId) {
+      var left = receipts[leftId] || {};
+      var right = receipts[rightId] || {};
+      var leftAt = Date.parse(String(left.at || ''));
+      var rightAt = Date.parse(String(right.at || ''));
+      if (!isFinite(leftAt)) leftAt = 0;
+      if (!isFinite(rightAt)) rightAt = 0;
+      if (leftAt !== rightAt) return leftAt - rightAt;
+      return leftId < rightId ? -1 : (leftId > rightId ? 1 : 0);
+    }).map(function (id) {
+      return receipts[id];
+    });
+  }
+
+  function _evolutionFleetLoad(context) {
+    var bundle;
+    var standardsRows;
+    var standardsAvailable;
+    var standardsResult;
+    var platformResult;
+    var ledgerResult;
+    var fleet;
+    var sharedMap;
+    return _evolutionLoadPlatformFleet(context).then(function (loaded) {
+      platformResult = loaded;
+      return _evolutionLoadStandardsForActor(
+        context,
+        platformResult.rows.map(function (row) {
+          return row.platform_agent_id;
+        })
+      );
+    }).then(function (loaded) {
+      standardsResult = loaded;
+      bundle = standardsResult.bundle;
+      standardsAvailable = _evolutionProductionStandardsAvailable(
+        bundle,
+        context.actorId,
+        standardsResult.accountScoped
+      );
+      if (standardsResult.accountScoped && !standardsAvailable &&
+          !standardsResult.error) {
+        standardsResult.error = {
+          platformAgentId: null,
+          code: 'PRODUCTION_STANDARDS_ACCOUNT_MISMATCH',
+          message: 'account-scoped Agent Passport registry failed schema, policy or actor binding'
+        };
+      }
+      standardsRows = _evolutionLiveStandards(
+        bundle,
+        context.actorId,
+        standardsResult.accountScoped
+      );
+      var scanIds = platformResult.rows.map(function (row) {
+        return row.platform_agent_id;
+      });
+      // The managed KV owner must be a verified live platform agent. A
+      // registry-only dead reference is a bulk target, never a credential
+      // scope or a candidate ledger owner.
+      return _evolutionDiscoverLedger(scanIds, context);
+    }).then(function (discovered) {
+      ledgerResult = discovered;
+      fleet = ETB.evolutionConsole.buildFleetProjection(
+        platformResult.rows,
+        standardsRows,
+        { ledger: discovered.ledger }
+      );
+      return ETB.evolutionConsole.buildSharedGenesMap(fleet, []);
+    }).then(function (map) {
+      sharedMap = map;
+      return ETB.evolutionConsole.sha256({
+        actorId: context.actorId,
+        epoch: context.epoch,
+        fleet: fleet,
+        sharedMapSha256: map.mapSha256,
+        activeVersionByAgent: ledgerResult.ledger ?
+          ledgerResult.ledger.activeVersionByAgent : {},
+        platformErrors: platformResult.errors,
+        ledgerErrors: ledgerResult.errors,
+        standardsError: standardsResult.error,
+        stableIdRequired: _evolutionStableIdRequiredForUi(
+          standardsResult.unboundPassports
+        ),
+        standards: _evolutionStandardsSummary(
+          bundle,
+          context.actorId,
+          standardsResult.accountScoped
+        )
+      });
+    }).then(function (snapshotHash) {
+      var complete = platformResult.errors.length === 0 &&
+        ledgerResult.errors.length === 0 && standardsAvailable;
+      var sharedUi = _evolutionSharedForUi(
+        sharedMap,
+        standardsAvailable
+      );
+      var projection = _evolutionProjectionForUi(
+        fleet,
+        sharedUi,
+        complete,
+        'fleet_' + snapshotHash.slice(0, 32),
+        standardsAvailable
+      );
+      _evolutionFleetSession = {
+        actorId: context.actorId,
+        epoch: context.epoch,
+        snapshotId: projection.snapshotId,
+        complete: complete,
+        standardsAvailable: standardsAvailable,
+        unboundPassports: standardsResult.unboundPassports,
+        unboundPassportsById: standardsResult.unboundPassports.reduce(
+          function (acc, row) {
+            acc[row.sourcePassportId] = row;
+            return acc;
+          },
+          {}
+        ),
+        ownerAgentId: ledgerResult.ledger ?
+          ledgerResult.ownerAgentId :
+          (platformResult.rows[0] &&
+            platformResult.rows[0].platform_agent_id || null),
+        ledger: ledgerResult.ledger,
+        platformRows: platformResult.rows,
+        platformById: platformResult.rows.reduce(function (acc, row) {
+          acc[row.platform_agent_id] = row;
+          return acc;
+        }, {}),
+        fleet: fleet,
+        sharedMap: sharedMap,
+        standardsBundle: bundle,
+        standardsById: standardsRows.reduce(function (acc, row) {
+          acc[row.platformAgentId] = row;
+          return acc;
+        }, {})
+      };
+      return {
+        actorId: context.actorId,
+        projection: projection,
+        shared: sharedUi,
+        standards: _evolutionStandardsSummary(
+          bundle,
+          context.actorId,
+          standardsResult.accountScoped
+        ),
+        stableIdRequired: _evolutionStableIdRequiredForUi(
+          standardsResult.unboundPassports
+        ),
+        ledger: ledgerResult.ledger,
+        receipts: _evolutionReceiptRows(ledgerResult.ledger),
+        errors: platformResult.errors.concat(ledgerResult.errors).concat(
+          standardsResult.error ? [standardsResult.error] : []
+        ),
+        platform: _agentControlPlatformStatus()
+      };
+    });
+  }
+
+  function _evolutionRequireSession(data, context, requireComplete) {
+    var session = _evolutionFleetSession;
+    if (!session || session.actorId !== context.actorId ||
+        session.epoch !== context.epoch) {
+      throw _evolutionError(
+        'FLEET_SNAPSHOT_REQUIRED',
+        'reload a current account-bound fleet snapshot first'
+      );
+    }
+    if (String(data && data.snapshotId || '') !== session.snapshotId) {
+      throw _evolutionError(
+        'FLEET_SNAPSHOT_MISMATCH',
+        'operation must bind the exact current fleet snapshot'
+      );
+    }
+    if (requireComplete && !session.complete) {
+      throw _evolutionError(
+        'FLEET_SNAPSHOT_INCOMPLETE',
+        'incomplete fleet snapshot blocks every mutation'
+      );
+    }
+    return session;
+  }
+
+  function _evolutionCreateBaseLedger(session, context) {
+    if (!session.ownerAgentId || session.platformRows.length < 2) {
+      return Promise.reject(_evolutionError(
+        'MANAGED_LEDGER_BASELINE_UNAVAILABLE',
+        'at least two exact platform agents are required for the shared ledger'
+      ));
+    }
+    var agents = [];
+    var inventories = {};
+    var fleetRows = session.fleet && session.fleet.rows || [];
+    return Promise.all(fleetRows.map(function (fleetRow) {
+      var id = fleetRow.platformAgentId;
+      var live = session.platformById[id] || null;
+      var model = fleetRow.model || {};
+      var shared = session.sharedMap && session.sharedMap.byAgentId &&
+        session.sharedMap.byAgentId[id] || [];
+      var exactAgent = {
+        id: id,
+        name: fleetRow.name || id,
+        role: live && (live.role || live.category) ||
+          'registry_reference',
+        provider: live ? live.provider : model.provider,
+        model: live ? live.model : model.model,
+        tools: live ? live.tools : [],
+        instructions: live ? live.instructions : '',
+        source: live ? 'PLATFORM' : 'AGENT_PASSPORT_REGISTRY',
+        sharedGeneIds: shared.map(function (gene) {
+          return gene.geneId;
+        }).sort()
+      };
+      return Promise.all([
+        ETB.agentControl.sha256(exactAgent.instructions),
+        ETB.agentControl.sha256(
+          ETB.agentControl.canonical(exactAgent)
+        )
+      ]).then(function (hashes) {
+        agents.push({
+          id: id,
+          name: exactAgent.name,
+          role: exactAgent.role,
+          provider: exactAgent.provider,
+          model: exactAgent.model,
+          tools: exactAgent.tools,
+          instructionsSha256: hashes[0]
+        });
+        inventories[id] = {
+          agent: {
+            id: id,
+            name: exactAgent.name,
+            role: exactAgent.role,
+            provider: exactAgent.provider,
+            model: exactAgent.model,
+            tools: exactAgent.tools,
+            instructionsSha256: hashes[0]
+          },
+          knowledge: [],
+          localRules: [],
+          capabilities: [],
+          processes: [],
+          hashes: { platformAgent: hashes[1] },
+          counts: {
+            knowledge: 0,
+            rules: 0,
+            capabilities: Number(fleetRow.capabilityCount || 0),
+            processes: 0
+          }
+        };
+      });
+    })).then(function () {
+      agents.sort(function (left, right) {
+        return left.id < right.id ? -1 : left.id > right.id ? 1 : 0;
+      });
+      return ETB.agentControl.newLedger(agents, inventories, {
+        ownerAgentId: session.ownerAgentId,
+        ownerAccountId: context.actorId,
+        actorId: context.actorId,
+        now: new Date().toISOString()
+      });
+    });
+  }
+
+  function _evolutionEnsureFleetLedger(session, ledger, context) {
+    var fleetIds = (session.fleet && session.fleet.rows || [])
+      .map(function (row) { return row.platformAgentId; }).sort();
+    var missing = fleetIds.filter(function (id) {
+      return !ledger.agents || !ledger.agents[id];
+    });
+    if (!missing.length) return Promise.resolve(ledger);
+    if (String(ledger.ownerAccountId || '') !== context.actorId) {
+      return Promise.reject(_evolutionError(
+        'MANAGED_LEDGER_ACCOUNT_MISMATCH',
+        'managed ledger belongs to a different authenticated account'
+      ));
+    }
+    return _evolutionCreateBaseLedger(session, context)
+      .then(function (fullBaseline) {
+        var next = _evolutionClone(ledger);
+        var versionId = fullBaseline.baselineVersionId;
+        var fullVersion = fullBaseline.versions[versionId];
+        var existingVersion = next.versions[versionId];
+        if (existingVersion) {
+          if (existingVersion.immutable !== true ||
+              existingVersion.bundleSha256 !== fullVersion.bundleSha256 ||
+              ETB.agentControl.canonical(existingVersion.bundle) !==
+                ETB.agentControl.canonical(fullVersion.bundle)) {
+            throw _evolutionError(
+              'FLEET_BASELINE_VERSION_COLLISION',
+              'fleet baseline version id refers to different content'
+            );
+          }
+        } else {
+          next.versions[versionId] = _evolutionClone(fullVersion);
+        }
+        missing.forEach(function (id) {
+          next.agents[id] = _evolutionClone(fullBaseline.agents[id]);
+          next.activeVersionByAgent[id] = versionId;
+        });
+        next.audit = Array.isArray(next.audit) ? next.audit : [];
+        next.audit.push({
+          type: 'FLEET_BASELINE_EXPANDED',
+          status: 'SUCCESS',
+          actorId: context.actorId,
+          at: new Date().toISOString(),
+          versionId: versionId,
+          bundleSha256: fullVersion.bundleSha256,
+          addedAgentIds: missing
+        });
+        ETB.agentControl.validateLedger(next);
+        return next;
+      });
+  }
+
+  function _evolutionReadOrCreateLedger(session, context) {
+    return _agentControlReadLedger(
+      session.ownerAgentId,
+      context
+    ).then(function (ledger) {
+      if (!ledger) return _evolutionCreateBaseLedger(session, context);
+      return _evolutionEnsureFleetLedger(session, ledger, context);
+    });
+  }
+
+  function _evolutionPersist(session, ledger, context) {
+    return _agentControlWriteLedger(
+      session.ownerAgentId,
+      ledger,
+      context
+    ).then(function (saved) {
+      _evolutionLedgerOwnerSave(
+        context.actorId,
+        saved.ownerAgentId || session.ownerAgentId
+      );
+      session.ledger = saved;
+      session.complete = false;
+      session.snapshotId = '';
+      _evolutionFleetSession = null;
+      return saved;
+    });
+  }
+
+  function _evolutionClone(value) {
+    return value == null ? value : JSON.parse(JSON.stringify(value));
+  }
+
+  function _evolutionPassportDraft(data, context) {
+    var session = _evolutionRequireSession(data, context, false);
+    var id = String(data && data.agentId || '');
+    var sourcePassportId = String(data && data.sourcePassport || '').trim();
+    var sourcePassport = sourcePassportId &&
+      session.unboundPassportsById &&
+      session.unboundPassportsById[sourcePassportId];
+    var listed = session.platformById[id];
+    var fleetRow = session.fleet && session.fleet.rows.filter(
+      function (row) { return row.platformAgentId === id; }
+    )[0];
+    if (!session.standardsAvailable) {
+      return Promise.reject(_evolutionError(
+        'AGENT_PASSPORT_REGISTRY_REQUIRED',
+        'a production Agent Passport registry is required before declaring a passport missing'
+      ));
+    }
+    if (sourcePassportId && !sourcePassport) {
+      return Promise.reject(_evolutionError(
+        'AGENT_PASSPORT_SOURCE_NOT_FOUND',
+        'the selected unbound Agent Passport is not in the exact current production registry'
+      ));
+    }
+    if (!listed || !fleetRow || !fleetRow.platformPresent ||
+        fleetRow.passportPresent !== false ||
+        fleetRow.standardStatus !== 'PASSPORT_MISSING') {
+      return Promise.reject(_evolutionError(
+        'AGENT_PASSPORT_NOT_MISSING',
+        'passport draft is available only for an exact live agent missing from the production Agent Passport registry'
+      ));
+    }
+    return _agentControlApiRead(context, function () {
+      return ETB.api.agentGetScoped(id);
+    }).then(function (response) {
+      _studioApiOk(response, 'passport draft agent/get');
+      var detail = _evolutionExactAgentRow(
+        response && response.agent || response || {}
+      );
+      if (detail.platform_agent_id !== id) {
+        throw _evolutionError(
+          'PLATFORM_AGENT_ID_MISMATCH',
+          'passport draft identity changed after fleet snapshot'
+        );
+      }
+      var template = session.standardsBundle &&
+        session.standardsBundle.passport_template ||
+        _evolutionBundle().passport_template;
+      if (!sourcePassport && (!template || !template.parsed ||
+          template.draft_state !== 'NOT_VALIDATED')) {
+        throw _evolutionError(
+          'CANONICAL_PASSPORT_TEMPLATE_UNAVAILABLE',
+          'the pinned canonical Agent Passport template is unavailable'
+        );
+      }
+      var draft = sourcePassport ?
+        _evolutionClone(sourcePassport.passport) :
+        _evolutionClone(template.parsed);
+      draft.agent = draft.agent || {};
+      draft.agent.platform_agent_id = id;
+      if (!sourcePassport) {
+        draft.agent.name = detail.name;
+        draft.agent.model_profile = detail.model;
+        if (Object.prototype.hasOwnProperty.call(
+              draft.agent,
+              'platform_provider'
+            )) {
+          draft.agent.platform_provider = detail.provider;
+        }
+        if (Object.prototype.hasOwnProperty.call(
+              draft.agent,
+              'declared_instructions'
+            )) {
+          draft.agent.declared_instructions = detail.instructions;
+        }
+      }
+      return {
+        filename: 'agent_passport_' +
+          id.replace(/[^A-Za-z0-9._-]/g, '_') + '.yaml',
+        draft: draft,
+        status: 'NOT_VALIDATED',
+        templateSha256: String(template && template.sha256 || ''),
+        sourcePassport: sourcePassport ?
+          sourcePassport.sourcePassportId : null,
+        sourcePath: sourcePassport ? sourcePassport.sourcePath : null,
+        sourcePassportSha256: sourcePassport ?
+          sourcePassport.passportSha256 : null,
+        sourcePassportCanonicalSha256: sourcePassport ?
+          sourcePassport.passportCanonicalSha256 : null,
+        liveFields: {
+          platform_agent_id: id,
+          name: detail.name,
+          provider: detail.provider,
+          model: detail.model,
+          instructions: detail.instructions
+        }
+      };
+    });
+  }
+
+  function _evolutionCabinetGet(data, context) {
+    var session = _evolutionRequireSession(data, context, false);
+    var id = String(data && data.agentId || '');
+    var standard = session.standardsById &&
+      session.standardsById[id];
+    var cabinet = standard && standard.cabinet;
+    var fleetRow = session.fleet && session.fleet.rows &&
+      session.fleet.rows.filter(function (row) {
+        return row.platformAgentId === id;
+      })[0];
+    if (!session.standardsAvailable || !standard ||
+        !fleetRow || fleetRow.platformPresent !== true ||
+        fleetRow.passportPresent !== true ||
+        fleetRow.standardStatus !== 'PASS' ||
+        standard.passport_ready !== true || !cabinet ||
+        cabinet.schema !== 'extella.agent_cabinet.v1.1') {
+      return Promise.reject(_evolutionError(
+        'AGENT_CABINET_UNAVAILABLE',
+        'a canonical generated Agent Cabinet is unavailable for this exact account agent'
+      ));
+    }
+    return Promise.resolve({
+      agentId: id,
+      cabinet: _evolutionClone(cabinet),
+      sharedGeneIds: (session.sharedMap.byAgentId[id] || [])
+        .map(function (row) { return row.geneId; }),
+      sharedGeneMapSha256: session.sharedMap.mapSha256
+    });
+  }
+
+  function _evolutionLastReceipt(ledger) {
+    var rows = _evolutionReceiptRows(ledger);
+    return rows.length ? rows[rows.length - 1] : null;
+  }
+
+  function _evolutionReceiptById(ledger, receiptId) {
+    var receipts = ledger && ledger.evolution &&
+      ledger.evolution.receipts || {};
+    return receiptId && receipts[receiptId] || null;
+  }
+
+  function _evolutionActivationReceiptId(activation) {
+    var completedIndex;
+    var stage;
+    if (!activation) return null;
+    completedIndex = Number(activation.nextStageIndex || 0) - 1;
+    stage = completedIndex >= 0 && activation.stages &&
+      activation.stages[completedIndex];
+    return stage && stage.summaryReceiptId ||
+      activation.planReceiptId || null;
+  }
+
+  function _evolutionEscalationActionReceipt(ledger, change, action) {
+    var receiptId = null;
+    if (!change) return null;
+    if (action === 'escalation_accept') {
+      receiptId = change.acceptanceReceiptId;
+    } else if (action === 'escalation_test') {
+      receiptId = change.test && change.test.receiptId;
+    } else if (action === 'escalation_approve') {
+      receiptId = change.approval && change.approval.receiptId;
+    } else if (action === 'escalation_stage') {
+      receiptId = _evolutionActivationReceiptId(change.activation);
+    } else if (action === 'escalation_publish') {
+      receiptId = change.publication && change.publication.receiptId;
+    } else if (action === 'escalation_observe') {
+      receiptId = change.observation && change.observation.receiptId;
+    } else if (action === 'escalation_rollback') {
+      receiptId = change.rollback && change.rollback.receiptId;
+    }
+    return _evolutionReceiptById(ledger, receiptId);
+  }
+
+  function _evolutionBulkActionReceipt(ledger, operation, action) {
+    var receiptId = null;
+    if (!operation) return null;
+    if (action === 'bulk_preview') {
+      receiptId = operation.impactReceiptId;
+    } else if (action === 'bulk_confirm') {
+      receiptId = operation.confirmation &&
+        operation.confirmation.receiptId;
+    } else if (action === 'bulk_stage') {
+      receiptId = _evolutionActivationReceiptId(operation.activation);
+    } else if (action === 'bulk_publish') {
+      receiptId = operation.publication &&
+        operation.publication.receiptId;
+    } else if (action === 'bulk_observe') {
+      receiptId = operation.observation &&
+        operation.observation.receiptId;
+    } else if (action === 'bulk_rollback') {
+      receiptId = operation.rollback && operation.rollback.receiptId;
+    }
+    return _evolutionReceiptById(ledger, receiptId);
+  }
+
+  function _evolutionMutation(data, context, change) {
+    var session;
+    try {
+      session = _evolutionRequireSession(data, context, true);
+    } catch (error) {
+      return Promise.reject(error);
+    }
+    return _agentControlSerialize(
+      'evolution_console_account',
+      context,
+      function () {
+        // Re-read the account-bound provider, platform fleet, every agent/get,
+        // Shared Genes map and current ledger inside the serialized mutation.
+        // The deterministic snapshot must still equal the caller's snapshot;
+        // any added consumer, Passport change, pointer change or platform drift
+        // fences the operation before an adapter or ledger write.
+        return _evolutionFleetLoad(context).then(function () {
+          session = _evolutionRequireSession(data, context, true);
+          return _evolutionReadOrCreateLedger(session, context);
+        })
+          .then(function (ledger) {
+            return change(ledger, session);
+          }).then(function (ledger) {
+            return _evolutionPersist(session, ledger, context);
+          });
+      }
+    );
+  }
+
+  function _evolutionExactIds(values, code, label) {
+    var rows = Array.isArray(values) ? values : [];
+    var seen = {};
+    var output = [];
+    if (!rows.length) {
+      throw _evolutionError(code, label + ' must not be empty');
+    }
+    rows.forEach(function (value) {
+      var id = String(value == null ? '' : value).trim();
+      if (!id || id.length > 240 || /[*?\[\]{}]/.test(id) || seen[id]) {
+        throw _evolutionError(
+          code,
+          label + ' must contain unique exact stable IDs'
+        );
+      }
+      seen[id] = true;
+      output.push(id);
+    });
+    return output.sort();
+  }
+
+  function _evolutionSameIds(left, right) {
+    return ETB.evolutionConsole.canonical(left || []) ===
+      ETB.evolutionConsole.canonical(right || []);
+  }
+
+  function _evolutionRequireClosedKeys(value, keys, code, label) {
+    var actual;
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      throw _evolutionError(code, label + ' must be an object');
+    }
+    actual = Object.keys(value).sort();
+    if (!_evolutionSameIds(actual, keys.slice().sort())) {
+      throw _evolutionError(
+        code,
+        label + ' contains unsupported or missing fields'
+      );
+    }
+  }
+
+  function _evolutionExactVersion(value, code, label) {
+    var version = String(value == null ? '' : value);
+    if (!version || version !== version.trim() || version.length > 120 ||
+        /[\u0000-\u001f\u007f*?\[\]{}]/.test(version)) {
+      throw _evolutionError(code, label + ' must be an exact version');
+    }
+    return version;
+  }
+
+  function _evolutionNativeWriteMethod(method) {
+    return method === 'activateClassStage' ||
+      method === 'rollbackClassChange' ||
+      method === 'activateBulkStage' ||
+      method === 'rollbackBulkOperation';
+  }
+
+  function _evolutionCallAdapter(method, payload, code, message) {
+    var adapter = ETB.evolutionAdapter;
+    if (_evolutionNativeWriteMethod(method)) {
+      return Promise.reject(_evolutionError(
+        'DURABLE_EVOLUTION_TRANSACTION_UNAVAILABLE',
+        'native Evolution writes require durable intent recovery and multi-device ledger compare-and-swap'
+      ));
+    }
+    if (!adapter || typeof adapter[method] !== 'function') {
+      return Promise.reject(_evolutionError(code, message));
+    }
+    return Promise.resolve().then(function () {
+      return adapter[method](_evolutionClone(payload));
+    }).then(function (result) {
+      if (!result || typeof result !== 'object') {
+        throw _evolutionError(
+          code,
+          message + '; adapter returned no exact evidence'
+        );
+      }
+      return result;
+    });
+  }
+
+  function _evolutionDeriveFullClassCandidate(
+    ledger,
+    session,
+    geneId,
+    desiredVersion,
+    canonicalTargets,
+    currentVersionByAgent
+  ) {
+    var allIds = _evolutionExactIds(
+      Object.keys(ledger && ledger.agents || {}),
+      'CABINET_FULL_CANDIDATE_INVALID',
+      'managed ledger agent ids'
+    );
+    var root = null;
+    var rootCanonical = null;
+    var agents = {};
+    allIds.forEach(function (id) {
+      var versionId = ledger.activeVersionByAgent &&
+        ledger.activeVersionByAgent[id];
+      var version = versionId && ledger.versions &&
+        ledger.versions[versionId];
+      var bundle = version && version.bundle;
+      var entry = bundle && bundle.agents && bundle.agents[id];
+      var globalRoot;
+      if (!version || version.immutable !== true || !bundle ||
+          bundle.schemaVersion !== 'agent-configuration-bundle.v1' ||
+          !entry || typeof entry !== 'object' ||
+          String(entry.agentId || '') !== id ||
+          !entry.agent || String(entry.agent.id || '') !== id) {
+        throw _evolutionError(
+          'CABINET_FULL_CANDIDATE_INVALID',
+          'exact full immutable Agent bundle is unavailable for ' + id
+        );
+      }
+      globalRoot = _evolutionClone(bundle);
+      delete globalRoot.agents;
+      delete globalRoot.evolutionChange;
+      if (!root) {
+        root = globalRoot;
+        rootCanonical = ETB.evolutionConsole.canonical(globalRoot);
+      } else if (ETB.evolutionConsole.canonical(globalRoot) !==
+          rootCanonical) {
+        throw _evolutionError(
+          'CABINET_FULL_CANDIDATE_GLOBAL_CONFLICT',
+          'active Agent bundles disagree on shared global configuration'
+        );
+      }
+      agents[id] = _evolutionClone(entry);
+    });
+    root.agents = agents;
+    root.evolutionChange = {
+      schemaVersion: 'extella.evolution.shared_gene_change.v1',
+      sharedGeneId: geneId,
+      desiredVersion: desiredVersion,
+      affectedAgentIds: canonicalTargets,
+      beforeVersionByAgent: _evolutionClone(currentVersionByAgent),
+      sharedGeneMapSha256: String(session.sharedMap.mapSha256 || '')
+    };
+    return root;
+  }
+
+  function _evolutionValidateEscalationContract(
+    contract,
+    session,
+    actor,
+    ledger
+  ) {
+    var supplied = contract && typeof contract === 'object' ?
+      _evolutionClone(contract) : {};
+    _evolutionRequireClosedKeys(
+      supplied,
+      [
+        'candidate_id',
+        'candidate_sha256',
+        'candidate_bundle',
+        'scope',
+        'source_agent_id',
+        'shared_gene_id',
+        'shared_gene_map_sha256',
+        'affected_agent_ids',
+        'affected_count',
+        'actor_id'
+      ],
+      'CABINET_ESCALATION_CONTRACT_INVALID',
+      'Agent Cabinet escalation contract'
+    );
+    var geneId = String(supplied.shared_gene_id || '').trim();
+    var sourceAgentId = String(supplied.source_agent_id || '').trim();
+    var gene = session.sharedMap && session.sharedMap.byGeneId &&
+      session.sharedMap.byGeneId[geneId];
+    var sourceFleetRow = session.fleet && session.fleet.rows &&
+      session.fleet.rows.filter(function (row) {
+        return row.platformAgentId === sourceAgentId;
+      })[0];
+    var sourceStandard = session.standardsById &&
+      session.standardsById[sourceAgentId];
+    if (!gene) {
+      throw _evolutionError(
+        'CABINET_SHARED_GENE_NOT_FOUND',
+        'Agent Cabinet escalation must select an exact current Shared Gene'
+      );
+    }
+    var canonicalTargets = _evolutionExactIds(
+      gene.consumerAgentIds,
+      'CABINET_SHARED_GENE_CLASS_INVALID',
+        'Shared Gene consumer class'
+    );
+    if (!sourceFleetRow || sourceFleetRow.platformPresent !== true ||
+        sourceFleetRow.passportPresent !== true ||
+        sourceFleetRow.standardStatus !== 'PASS' ||
+        !sourceStandard || sourceStandard.passport_ready !== true ||
+        !sourceStandard.cabinet ||
+        sourceStandard.cabinet.schema !== 'extella.agent_cabinet.v1.1') {
+      throw _evolutionError(
+        'CABINET_SOURCE_AGENT_UNAVAILABLE',
+        'Agent Cabinet escalation source must be an exact current live Agent Passport'
+      );
+    }
+    var suppliedTargets = _evolutionExactIds(
+      supplied.affected_agent_ids,
+      'AFFECTED_AGENT_IDS_REQUIRED',
+      'affected agent ids'
+    );
+    if (!_evolutionSameIds(canonicalTargets, suppliedTargets) ||
+        canonicalTargets.indexOf(sourceAgentId) === -1) {
+      throw _evolutionError(
+        'CABINET_SHARED_GENE_CLASS_MISMATCH',
+        'Agent Cabinet escalation must bind the entire exact Shared Gene consumer class'
+      );
+    }
+    if (String(supplied.shared_gene_map_sha256 || '') !==
+          String(session.sharedMap.mapSha256 || '') ||
+        Number(supplied.affected_count) !== canonicalTargets.length - 1) {
+      throw _evolutionError(
+        'CABINET_SHARED_GENE_IMPACT_STALE',
+        'Agent Cabinet impact count or Shared Genes map snapshot is stale'
+      );
+    }
+    var candidate = supplied.candidate_bundle;
+    _evolutionRequireClosedKeys(
+      supplied.scope,
+      ['kind'],
+      'CABINET_ESCALATION_SCOPE_INVALID',
+      'Agent Cabinet escalation scope'
+    );
+    if (supplied.scope.kind !== 'class') {
+      throw _evolutionError(
+        'CABINET_ESCALATION_SCOPE_INVALID',
+        'Agent Cabinet escalation scope must be the entire class'
+      );
+    }
+    if (String(supplied.actor_id || '') !== actor) {
+      throw _evolutionError(
+        'CABINET_ESCALATION_ACTOR_MISMATCH',
+        'Agent Cabinet escalation actor must match the authenticated account'
+      );
+    }
+    if (!/^[A-Za-z0-9._-]{1,240}$/.test(
+          String(supplied.candidate_id || '')
+        ) || !/^[a-f0-9]{64}$/.test(
+          String(supplied.candidate_sha256 || '')
+        )) {
+      throw _evolutionError(
+        'CABINET_CANDIDATE_IDENTITY_INVALID',
+        'candidate id and SHA-256 must be exact'
+      );
+    }
+    _evolutionRequireClosedKeys(
+      candidate,
+      ['schemaVersion', 'agents', 'sharedGene'],
+      'CABINET_CANDIDATE_SCHEMA_INVALID',
+      'candidate bundle'
+    );
+    if (candidate.schemaVersion !==
+          'managed-agent-class-candidate.v1') {
+      throw _evolutionError(
+        'CABINET_CANDIDATE_SCHEMA_INVALID',
+        'candidate bundle schemaVersion is unsupported'
+      );
+    }
+    _evolutionRequireClosedKeys(
+      candidate.sharedGene,
+      ['id', 'version'],
+      'CABINET_CANDIDATE_SHARED_GENE_INVALID',
+      'candidate Shared Gene'
+    );
+    var desiredVersion = _evolutionExactVersion(
+      candidate.sharedGene.version,
+      'CABINET_CANDIDATE_VERSION_INVALID',
+      'candidate Shared Gene version'
+    );
+    if (String(candidate.sharedGene.id || '') !== geneId) {
+      throw _evolutionError(
+        'CABINET_CANDIDATE_CLASS_MISMATCH',
+        'candidate bundle must contain the selected Shared Gene'
+      );
+    }
+    _evolutionRequireClosedKeys(
+      candidate.agents,
+      canonicalTargets,
+      'CABINET_CANDIDATE_CLASS_MISMATCH',
+      'candidate agent class'
+    );
+    var canonicalAgents = {};
+    var currentVersionByAgent = {};
+    canonicalTargets.forEach(function (id) {
+      var candidateAgent = candidate.agents[id];
+      var currentConsumer = (gene.consumers || []).filter(function (row) {
+        return String(row.platformAgentId || row.agentId || '') === id;
+      })[0];
+      var currentVersion = currentConsumer &&
+        currentConsumer.activeVersion != null ?
+        String(currentConsumer.activeVersion) :
+        (gene.activeVersionByAgent &&
+          gene.activeVersionByAgent[id] != null ?
+          String(gene.activeVersionByAgent[id]) : '');
+      if (!currentVersion) {
+        throw _evolutionError(
+          'CABINET_SHARED_GENE_VERSION_UNKNOWN',
+          'current Shared Gene version is unavailable for ' + id
+        );
+      }
+      _evolutionRequireClosedKeys(
+        candidateAgent,
+        ['platform_agent_id', 'sharedGene'],
+        'CABINET_CANDIDATE_AGENT_INVALID',
+        'candidate agent ' + id
+      );
+      _evolutionRequireClosedKeys(
+        candidateAgent.sharedGene,
+        ['id', 'fromVersion', 'version'],
+        'CABINET_CANDIDATE_AGENT_INVALID',
+        'candidate agent Shared Gene ' + id
+      );
+      if (String(candidateAgent.platform_agent_id || '') !== id ||
+          String(candidateAgent.sharedGene.id || '') !== geneId ||
+          String(candidateAgent.sharedGene.fromVersion || '') !==
+            currentVersion ||
+          String(candidateAgent.sharedGene.version || '') !==
+            desiredVersion) {
+        throw _evolutionError(
+          'CABINET_CANDIDATE_AGENT_MISMATCH',
+          'candidate agent does not bind the exact current and desired Shared Gene versions for ' + id
+        );
+      }
+      canonicalAgents[id] = {
+        platform_agent_id: id,
+        sharedGene: {
+          id: geneId,
+          fromVersion: currentVersion,
+          version: desiredVersion
+        }
+      };
+      currentVersionByAgent[id] = currentVersion;
+    });
+    var requestedCandidate = {
+      schemaVersion: 'managed-agent-class-candidate.v1',
+      agents: canonicalAgents,
+      sharedGene: {
+        id: geneId,
+        version: desiredVersion
+      }
+    };
+    if (ETB.evolutionConsole.canonical(candidate) !==
+        ETB.evolutionConsole.canonical(requestedCandidate)) {
+      throw _evolutionError(
+        'CABINET_CANDIDATE_SCHEMA_INVALID',
+        'candidate request is not the exact closed Shared Gene patch'
+      );
+    }
+    var fullCandidate = _evolutionDeriveFullClassCandidate(
+      ledger,
+      session,
+      geneId,
+      desiredVersion,
+      canonicalTargets,
+      currentVersionByAgent
+    );
+    return Promise.all([
+      ETB.evolutionConsole.sha256(requestedCandidate),
+      ETB.evolutionConsole.sha256(fullCandidate)
+    ]).then(function (hashes) {
+      if (hashes[0] !== String(supplied.candidate_sha256 || '')) {
+        throw _evolutionError(
+          'CABINET_CANDIDATE_REQUEST_HASH_MISMATCH',
+          'Agent Cabinet candidate request SHA-256 is invalid'
+        );
+      }
+      if (String(supplied.candidate_id || '') !== 'candidate_' +
+          geneId.replace(/[^A-Za-z0-9._-]/g, '_') + '_' +
+          hashes[0].slice(0, 16)) {
+        throw _evolutionError(
+          'CABINET_CANDIDATE_REQUEST_ID_MISMATCH',
+          'Agent Cabinet candidate request id is invalid'
+        );
+      }
+      return {
+        candidate_id: 'candidate_' +
+          geneId.replace(/[^A-Za-z0-9._-]/g, '_') + '_' +
+          hashes[1].slice(0, 16),
+        candidate_sha256: hashes[1],
+        candidate_bundle: fullCandidate,
+        scope: { kind: 'class' },
+        source_agent_id: sourceAgentId,
+        shared_gene_id: geneId,
+        shared_gene_map_sha256:
+          String(session.sharedMap.mapSha256 || ''),
+        affected_agent_ids: canonicalTargets,
+        affected_count: canonicalTargets.length - 1,
+        actor_id: actor
+      };
+    });
+  }
+
+  function _evolutionManagedState(ledger, id) {
+    var versionId = ledger.activeVersionByAgent &&
+      ledger.activeVersionByAgent[id];
+    var version = versionId && ledger.versions &&
+      ledger.versions[versionId];
+    if (!version || !version.bundleSha256) {
+      throw _evolutionError(
+        'BULK_EXACT_BASELINE_REQUIRED',
+        'exact managed baseline is unavailable for ' + id
+      );
+    }
+    return {
+      managed_version_id: versionId,
+      managed_bundle_sha256: version.bundleSha256
+    };
+  }
+
+  function _evolutionBuildBulkSpec(data, session, ledger, actor) {
+    var operationType = String(data && data.operationType || '');
+    var targets = _evolutionExactIds(
+      data && data.targetIds,
+      'BULK_TARGETS_REQUIRED',
+      'bulk target ids'
+    );
+    var fleetById = (session.fleet && session.fleet.rows || [])
+      .reduce(function (acc, row) {
+        acc[row.platformAgentId] = row;
+        return acc;
+      }, {});
+    targets.forEach(function (id) {
+      if (!fleetById[id] || !ledger.agents[id]) {
+        throw _evolutionError(
+          'BULK_TARGET_NOT_IN_CURRENT_FLEET',
+          'bulk target is not in the exact current fleet and managed ledger: ' +
+            id
+        );
+      }
+    });
+    var spec = {
+      operation_id: _agentControlEventId('evolution_bulk'),
+      operation_type: operationType,
+      target_agent_ids: targets,
+      impact: {},
+      payload: {},
+      before_state_by_target: {},
+      desired_state_by_target: {},
+      actor_id: actor
+    };
+    if (operationType === 'shared_gene_change') {
+      var geneId = String(data && data.sharedGeneId || '').trim();
+      var desiredVersion = _evolutionExactVersion(
+        data && data.desiredVersion,
+        'BULK_SHARED_GENE_VERSION_REQUIRED',
+        'desired Shared Gene version'
+      );
+      var gene = session.sharedMap && session.sharedMap.byGeneId &&
+        session.sharedMap.byGeneId[geneId];
+      if (!gene || !_evolutionSameIds(
+            targets,
+            (gene.consumerAgentIds || []).slice().sort()
+          )) {
+        throw _evolutionError(
+          'BULK_SHARED_GENE_CLASS_MISMATCH',
+          'Shared Gene bulk change must target its entire exact current consumer class'
+        );
+      }
+      var consumerById = (gene.consumers || []).reduce(function (acc, row) {
+        acc[row.platformAgentId] = row;
+        return acc;
+      }, {});
+      targets.forEach(function (id) {
+        var consumer = consumerById[id];
+        if (!consumer || !consumer.activeVersion) {
+          throw _evolutionError(
+            'BULK_SHARED_GENE_BASELINE_UNKNOWN',
+            'exact active Shared Gene version is unavailable for ' + id
+          );
+        }
+        var managed = _evolutionManagedState(ledger, id);
+        spec.before_state_by_target[id] = {
+          shared_gene_id: geneId,
+          active_gene_version: consumer.activeVersion,
+          managed_version_id: managed.managed_version_id,
+          managed_bundle_sha256: managed.managed_bundle_sha256
+        };
+        spec.desired_state_by_target[id] = {
+          shared_gene_id: geneId,
+          active_gene_version: desiredVersion
+        };
+      });
+      spec.impact = {
+        shared_gene_id: geneId,
+        exact_target_count: targets.length,
+        exact_target_ids: targets,
+        previous_versions_by_agent: targets.reduce(function (acc, id) {
+          acc[id] = consumerById[id].activeVersion;
+          return acc;
+        }, {}),
+        desired_version: desiredVersion
+      };
+      spec.payload = {
+        action: 'shared_gene_change',
+        shared_gene_id: geneId,
+        desired_version: desiredVersion,
+        shared_gene_map_sha256: session.sharedMap.mapSha256
+      };
+      return Promise.resolve(spec);
+    }
+    if (operationType === 'dead_reference_remove') {
+      return Promise.all(targets.map(function (id) {
+        var row = fleetById[id];
+        var registryEntry = session.standardsById &&
+          session.standardsById[id];
+        if (row.platformPresent || !row.passportPresent) {
+          throw _evolutionError(
+            'BULK_DEAD_REFERENCE_TARGET_MISMATCH',
+            'dead-reference removal accepts only registry-only agents'
+          );
+        }
+        if (id === ledger.ownerAgentId) {
+          throw _evolutionError(
+            'EVOLUTION_LEDGER_OWNER_MIGRATION_REQUIRED',
+            'the Evolution ledger owner cannot be removed before a verified owner migration'
+          );
+        }
+        if (!registryEntry || String(registryEntry.platformAgentId || '') !==
+            id) {
+          throw _evolutionError(
+            'BULK_DEAD_REFERENCE_BASELINE_MISSING',
+            'exact Agent Passport registry entry is unavailable for ' + id
+          );
+        }
+        var managed = _evolutionManagedState(ledger, id);
+        var exactEntry = _evolutionClone(registryEntry);
+        return ETB.evolutionConsole.sha256(exactEntry).then(
+          function (entryHash) {
+            spec.before_state_by_target[id] = {
+              registry_present: true,
+              platform_present: false,
+              registry_entry_sha256: entryHash,
+              registry_entry: exactEntry,
+              registry_bundle_content_sha256:
+                session.standardsBundle &&
+                session.standardsBundle.attestation &&
+                session.standardsBundle.attestation.content_sha256 || null,
+              managed_version_id: managed.managed_version_id,
+              managed_bundle_sha256: managed.managed_bundle_sha256
+            };
+            spec.desired_state_by_target[id] = {
+              registry_present: false,
+              platform_present: false
+            };
+          }
+        );
+      })).then(function () {
+        spec.impact = {
+          reconciliation: 'REGISTRY_ONLY',
+          exact_target_count: targets.length,
+          exact_target_ids: targets,
+          consequence: 'remove exact dead references from the Agent Passport registry'
+        };
+        spec.payload = {
+          action: 'dead_reference_remove',
+          fleet_snapshot_id: session.snapshotId
+        };
+        return spec;
+      });
+    }
+    if (operationType === 'schedule_pause' ||
+        operationType === 'schedule_resume') {
+      return _evolutionCallAdapter(
+        'prepareScheduleBulkSpec',
+        {
+          operationType: operationType,
+          targetAgentIds: targets,
+          actorId: actor,
+          fleetSnapshotId: session.snapshotId
+        },
+        'NATIVE_SCHEDULE_ADAPTER_UNAVAILABLE',
+        'schedule state requires a connected exact platform adapter'
+      ).then(function (adapterSpec) {
+        adapterSpec.operation_id = spec.operation_id;
+        adapterSpec.operation_type = operationType;
+        adapterSpec.target_agent_ids = targets;
+        adapterSpec.actor_id = actor;
+        return adapterSpec;
+      });
+    }
+    return Promise.reject(_evolutionError(
+      'BULK_OPERATION_TYPE_UNSUPPORTED',
+      'unsupported Evolution Console bulk operation type'
+    ));
+  }
+
+  function _evolutionEscalationAction(action, data, context) {
+    var candidateId = String(data && data.candidateId || '');
+    return _evolutionMutation(data, context, function (ledger, session) {
+      var actor = context.actorId;
+      var opts = { actorId: actor, now: new Date().toISOString() };
+      var change = ledger.evolution && ledger.evolution.escalations &&
+        ledger.evolution.escalations[candidateId];
+      if (action === 'escalation_accept') {
+        return _evolutionValidateEscalationContract(
+          data.contract,
+          session,
+          actor,
+          ledger
+        ).then(function (contract) {
+          return ETB.evolutionConsole.acceptCabinetEscalation(
+            ledger,
+            contract,
+            opts
+          );
+        });
+      }
+      if (!change) {
+        return Promise.reject(_evolutionError(
+          'CABINET_ESCALATION_NOT_FOUND',
+          'Agent Cabinet escalation was not found in the shared ledger'
+        ));
+      }
+      if (action === 'escalation_test') {
+        return _evolutionCallAdapter(
+          'runClassTest',
+          {
+            candidateId: candidateId,
+            candidateBundle: change.candidateBundle,
+            candidateBundleSha256: change.candidateBundleSha256,
+            affectedAgentIds: change.affectedAgentIds,
+            targetListSha256: change.targetListSha256,
+            baselineVersionByAgent: change.baselineVersionByAgent,
+            actorId: actor
+          },
+          'EVOLUTION_LAB_ADAPTER_UNAVAILABLE',
+          'Evolution Lab evidence must come from a connected exact host adapter'
+        ).then(function (adapterResult) {
+          return ETB.evolutionConsole.recordClassTest(
+            ledger,
+            candidateId,
+            adapterResult.evidence,
+            opts
+          );
+        });
+      }
+      if (action === 'escalation_approve') {
+        return ETB.evolutionConsole.approveClassChange(
+          ledger,
+          candidateId,
+          {
+            target_agent_ids: change.affectedAgentIds,
+            target_list_sha256: change.targetListSha256,
+            candidate_sha256: change.candidateBundleSha256,
+            test_receipt_sha256: change.test &&
+              change.test.receiptSha256,
+            actor_id: actor
+          },
+          opts
+        );
+      }
+      if (action === 'escalation_stage') {
+        if (change.status === 'APPROVED') {
+          return ETB.evolutionConsole.planClassActivation(
+            ledger,
+            candidateId,
+            {
+              stages: change.affectedAgentIds.map(function (id) {
+                return [id];
+              }),
+              actor_id: actor
+            },
+            opts
+          );
+        }
+        var stage = change.activation &&
+          change.activation.stages[change.activation.nextStageIndex];
+        if (!stage) {
+          return Promise.reject(_evolutionError(
+            'CLASS_STAGE_NOT_AVAILABLE',
+            'no exact next class activation stage is available'
+          ));
+        }
+        return _evolutionCallAdapter(
+          'activateClassStage',
+          {
+            candidateId: candidateId,
+            candidateBundle: change.candidateBundle,
+            candidateBundleSha256: change.candidateBundleSha256,
+            stageIndex: stage.index,
+            targetAgentIds: stage.targetAgentIds,
+            actorId: actor
+          },
+          'CLASS_ACTIVATION_ADAPTER_UNAVAILABLE',
+          'class activation requires a connected exact host adapter'
+        ).then(function (adapterResult) {
+          return ETB.evolutionConsole.activateClassStage(
+            ledger,
+            candidateId,
+            stage.index,
+            adapterResult.results,
+            opts
+          );
+        });
+      }
+      if (action === 'escalation_publish') {
+        return ETB.evolutionConsole.publishClassChange(
+          ledger,
+          candidateId,
+          opts
+        );
+      }
+      if (action === 'escalation_observe') {
+        return _evolutionCallAdapter(
+          'observeClassChange',
+          {
+            candidateId: candidateId,
+            candidateBundleSha256: change.candidateBundleSha256,
+            affectedAgentIds: change.affectedAgentIds,
+            activeVersionByAgent: change.affectedAgentIds.reduce(
+              function (acc, id) {
+                acc[id] = ledger.activeVersionByAgent[id];
+                return acc;
+              },
+              {}
+            ),
+            actorId: actor
+          },
+          'CLASS_OBSERVATION_ADAPTER_UNAVAILABLE',
+          'class observation requires exact host adapter evidence'
+        ).then(function (adapterResult) {
+          return ETB.evolutionConsole.recordClassObservation(
+            ledger,
+            candidateId,
+            adapterResult.observation,
+            opts
+          );
+        });
+      }
+      if (action === 'escalation_rollback') {
+        var activated = change.activation &&
+          change.activation.activatedAgentIds || [];
+        return _evolutionCallAdapter(
+          'rollbackClassChange',
+          {
+            candidateId: candidateId,
+            targetAgentIds: activated,
+            baselineVersionByAgent: change.baselineVersionByAgent,
+            baselineVersionSha256ByAgent:
+              change.baselineVersionSha256ByAgent,
+            actorId: actor
+          },
+          'CLASS_ROLLBACK_ADAPTER_UNAVAILABLE',
+          'class rollback requires exact host adapter read-back'
+        ).then(function (adapterResult) {
+          var resultIds = _evolutionExactIds(
+            (adapterResult.results || []).map(function (row) {
+              if (!row || row.status !== 'SUCCESS') {
+                throw _evolutionError(
+                  'CLASS_ROLLBACK_RESULT_INVALID',
+                  'every activated class target must report exact rollback SUCCESS'
+                );
+              }
+              return row.agent_id || row.platformAgentId;
+            }),
+            'CLASS_ROLLBACK_RESULTS_REQUIRED',
+            'class rollback result ids'
+          );
+          if (!_evolutionSameIds(resultIds, activated.slice().sort())) {
+            throw _evolutionError(
+              'CLASS_ROLLBACK_TARGET_MISMATCH',
+              'class rollback results must match every activated target'
+            );
+          }
+          return ETB.evolutionConsole.rollbackClassChange(
+            ledger,
+            candidateId,
+            adapterResult.results,
+            opts
+          );
+        });
+      }
+      return Promise.reject(_evolutionError(
+        'EVOLUTION_ACTION_UNSUPPORTED',
+        'unsupported Agent Cabinet escalation action'
+      ));
+    }).then(function (ledger) {
+      var escalation = ledger.evolution.escalations[
+        candidateId || ledger.evolution.currentEscalationId
+      ];
+      return {
+        status: escalation && escalation.status,
+        escalation: escalation,
+        receipt: _evolutionEscalationActionReceipt(
+          ledger,
+          escalation,
+          action
+        ),
+        snapshotInvalidated: true,
+        platform: _agentControlPlatformStatus()
+      };
+    });
+  }
+
+  function _evolutionBulkAction(action, data, context) {
+    var operationId = String(data && data.operationId || '');
+    return _evolutionMutation(data, context, function (ledger, session) {
+      var actor = context.actorId;
+      var opts = { actorId: actor, now: new Date().toISOString() };
+      var extension = ledger.evolution || {};
+      var operation = extension.bulkOperations &&
+        extension.bulkOperations[operationId];
+      if (action === 'bulk_preview') {
+        return _evolutionBuildBulkSpec(
+          data,
+          session,
+          ledger,
+          actor
+        ).then(function (spec) {
+          return ETB.evolutionConsole.createBulkOperation(
+            ledger,
+            spec,
+            opts
+          );
+        });
+      }
+      if (!operation) {
+        return Promise.reject(_evolutionError(
+          'BULK_OPERATION_NOT_FOUND',
+          'bulk operation was not found in the shared ledger'
+        ));
+      }
+      if (action === 'bulk_confirm') {
+        var confirmedTargets = _evolutionExactIds(
+          data.targetIds,
+          'BULK_CONFIRMATION_TARGETS_REQUIRED',
+          'bulk confirmation target ids'
+        );
+        if (!_evolutionSameIds(
+              confirmedTargets,
+              operation.targetAgentIds
+            )) {
+          throw _evolutionError(
+            'BULK_CONFIRMATION_MISMATCH',
+            'bulk confirmation must bind the exact previewed target list'
+          );
+        }
+        return ETB.evolutionConsole.confirmBulkOperation(
+          ledger,
+          operationId,
+          {
+            target_agent_ids: confirmedTargets,
+            target_list_sha256: operation.targetListSha256,
+            impact_sha256: operation.impactSha256,
+            payload_sha256: operation.payloadSha256,
+            actor_id: actor
+          },
+          opts
+        );
+      }
+      if (action === 'bulk_stage') {
+        if (operation.status === 'CONFIRMED') {
+          return ETB.evolutionConsole.planBulkActivation(
+            ledger,
+            operationId,
+            {
+              stages: operation.targetAgentIds.map(function (id) {
+                return [id];
+              }),
+              actor_id: actor
+            },
+            opts
+          );
+        }
+        var stage = operation.activation &&
+          operation.activation.stages[
+            operation.activation.nextStageIndex
+          ];
+        if (!stage) {
+          return Promise.reject(_evolutionError(
+            'BULK_STAGE_NOT_AVAILABLE',
+            'no exact next bulk activation stage is available'
+          ));
+        }
+        return _evolutionCallAdapter(
+          'activateBulkStage',
+          {
+            operationId: operationId,
+            operationType: operation.operationType,
+            payload: operation.payload,
+            stageIndex: stage.index,
+            targetAgentIds: stage.targetAgentIds,
+            beforeStateByTarget: operation.beforeStateByTarget,
+            desiredStateByTarget: operation.desiredStateByTarget,
+            actorId: actor
+          },
+          'BULK_ACTIVATION_ADAPTER_UNAVAILABLE',
+          'bulk activation requires a connected exact host adapter'
+        ).then(function (adapterResult) {
+          return ETB.evolutionConsole.activateBulkStage(
+            ledger,
+            operationId,
+            stage.index,
+            adapterResult.results,
+            opts
+          );
+        });
+      }
+      if (action === 'bulk_publish') {
+        return ETB.evolutionConsole.publishBulkOperation(
+          ledger,
+          operationId,
+          opts
+        );
+      }
+      if (action === 'bulk_observe') {
+        return _evolutionCallAdapter(
+          'observeBulkOperation',
+          {
+            operationId: operationId,
+            operationType: operation.operationType,
+            targetAgentIds: operation.targetAgentIds,
+            desiredStateSha256ByTarget:
+              operation.desiredStateSha256ByTarget,
+            actorId: actor
+          },
+          'BULK_OBSERVATION_ADAPTER_UNAVAILABLE',
+          'bulk observation requires exact host adapter evidence'
+        ).then(function (adapterResult) {
+          return ETB.evolutionConsole.recordBulkObservation(
+            ledger,
+            operationId,
+            adapterResult.observation,
+            opts
+          );
+        });
+      }
+      if (action === 'bulk_rollback') {
+        var activated = operation.activation &&
+          operation.activation.activatedAgentIds || [];
+        return _evolutionCallAdapter(
+          'rollbackBulkOperation',
+          {
+            operationId: operationId,
+            operationType: operation.operationType,
+            targetAgentIds: activated,
+            beforeStateByTarget: operation.beforeStateByTarget,
+            beforeStateSha256ByTarget:
+              operation.beforeStateSha256ByTarget,
+            actorId: actor
+          },
+          'BULK_ROLLBACK_ADAPTER_UNAVAILABLE',
+          'bulk rollback requires exact host adapter read-back'
+        ).then(function (adapterResult) {
+          return ETB.evolutionConsole.rollbackBulkOperation(
+            ledger,
+            operationId,
+            adapterResult.results,
+            opts
+          );
+        });
+      }
+      return Promise.reject(_evolutionError(
+        'EVOLUTION_ACTION_UNSUPPORTED',
+        'unsupported gated bulk action'
+      ));
+    }).then(function (ledger) {
+      var operation = ledger.evolution.bulkOperations[
+        operationId || ledger.evolution.currentBulkOperationId
+      ];
+      return {
+        operation: operation,
+        receipt: _evolutionBulkActionReceipt(
+          ledger,
+          operation,
+          action
+        ),
+        snapshotInvalidated: true,
+        platform: _agentControlPlatformStatus()
+      };
+    });
+  }
+
+  function _evolutionConsoleAction(data) {
+    var action = String(data && data.action || '');
+    var actorId = _studioCurrentUserId();
+    if (!actorId) {
+      return Promise.reject(_evolutionError(
+        'ACCOUNT_CONTEXT_REQUIRED',
+        'authenticated Evolution Console account is required'
+      ));
+    }
+    var context = _agentControlContext(actorId, data && data.reqId);
+    if (action === 'fleet_load') return _evolutionFleetLoad(context);
+    if (action === 'passport_draft') {
+      try {
+        return _evolutionPassportDraft(data, context);
+      } catch (error) {
+        return Promise.reject(error);
+      }
+    }
+    if (action === 'cabinet_get') {
+      try {
+        return _evolutionCabinetGet(data, context);
+      } catch (error) {
+        return Promise.reject(error);
+      }
+    }
+    if (action.indexOf('escalation_') === 0) {
+      return _evolutionEscalationAction(action, data, context);
+    }
+    if (action.indexOf('bulk_') === 0) {
+      return _evolutionBulkAction(action, data, context);
+    }
+    return Promise.reject(_evolutionError(
+      'EVOLUTION_ACTION_UNSUPPORTED',
+      'unsupported Evolution Console action'
+    ));
+  }
+
   function _studioReadObjects(session) {
     var marker = String(session.marker || '').toUpperCase();
     return Promise.all([
@@ -1511,7 +3849,7 @@ ETB.router = (function () {
     // later switch back to its owner can retry with the correct credential.
     if (!_studioSessionAccountValid(session)) return;
     if (session.hostInstanceId === STUDIO_HOST_INSTANCE &&
-        _activeId === 'profit-growth-scenario') return;
+        _activeId === 'capability-studio-scenario') return;
     _studioConfirmedCleanup(session).catch(function () {
       if ((attempt || 0) < 11) {
         setTimeout(function () {
@@ -1529,17 +3867,23 @@ ETB.router = (function () {
       // delivered. The iframe also receives an explicit reset on clear/switch,
       // so cached previews from the previous account cannot remain authoritative.
       _agentControlSessionEpoch += 1;
-      var controlEntry = _cache['profit-growth-scenario'];
-      var controlIframe = controlEntry && controlEntry.panel &&
-        controlEntry.panel.querySelector('iframe');
-      if (controlIframe && controlIframe.contentWindow) {
-        try {
-          controlIframe.contentWindow.postMessage({
-            type: 'etb_account_reset',
-            reason: ev && ev.reason || 'session_change'
-          }, '*');
-        } catch (_) {}
-      }
+      _evolutionFleetSession = null;
+      [
+        'profit-growth-scenario',
+        'capability-studio-scenario'
+      ].forEach(function (pluginId) {
+        var entry = _cache[pluginId];
+        var iframe = entry && entry.panel &&
+          entry.panel.querySelector('iframe');
+        if (iframe && iframe.contentWindow) {
+          try {
+            iframe.contentWindow.postMessage({
+              type: 'etb_account_reset',
+              reason: ev && ev.reason || 'session_change'
+            }, '*');
+          } catch (_) {}
+        }
+      });
       if (ev.token && !ev.cleared && window.__etbResendInit) {
         window.__etbResendInit(ev.token);
       }
@@ -2104,9 +4448,15 @@ ETB.router = (function () {
       var htmlBlob = new Blob([ui.html], { type: 'text/html' });
       blobUrl = URL.createObjectURL(htmlBlob);
       var iframe = document.createElement('iframe');
-      // The Studio is bridge-only. An opaque sandboxed origin prevents its
-      // scripts from reading host globals such as window._extellaApiToken.
-      if (_isBuiltinCapabilityStudio()) {
+      // Tokenless Evolution and demo surfaces are bridge-only. An opaque
+      // sandboxed origin prevents their scripts from reading host globals such
+      // as window._extellaApiToken.
+      if (_isBuiltinEvolutionConsole()) {
+        iframe.setAttribute(
+          'sandbox',
+          'allow-scripts allow-downloads'
+        );
+      } else if (_isBuiltinCapabilityStudio()) {
         iframe.setAttribute('sandbox', 'allow-scripts');
       }
       iframe.src = blobUrl;
@@ -2227,6 +4577,19 @@ ETB.router = (function () {
       return null;
     }
     function _isBuiltinCapabilityStudio() {
+      var builtins = ETB.registry && ETB.registry.getBuiltin ? ETB.registry.getBuiltin() : [];
+      var canonical = builtins.filter(function (item) {
+        return item && item.id === 'capability-studio-scenario';
+      })[0];
+      return Boolean(
+        canonical &&
+        plugin === canonical &&
+        plugin.trust_tier === 'verified' &&
+        ui.type === 'html' &&
+        ui.tokenless === true
+      );
+    }
+    function _isBuiltinEvolutionConsole() {
       var builtins = ETB.registry && ETB.registry.getBuiltin ? ETB.registry.getBuiltin() : [];
       var canonical = builtins.filter(function (item) {
         return item && item.id === 'profit-growth-scenario';
@@ -2350,9 +4713,9 @@ ETB.router = (function () {
           reply4({ type: 'etb_agents_result', reqId: reqId4, ok: false, error: (err && err.message) || 'agents failed' });
         }
       } else if (e.data.type === 'etb_agent_control') {
-        // Agent Control Center bridge. The tokenless iframe can request only
-        // schema-bound control-plane operations; all API access, account
-        // validation, hashing and verified KV read-back remain in the host.
+        // Retired legacy bridge. Evolution Console must never reach the old
+        // two-agent mutation path because it bypasses fleet snapshots, the
+        // canonical Shared Genes class and Evolution Loop gates.
         var src7 = _srcIframe(e);
         if (!src7) return;
         var reqId7 = e.data.reqId;
@@ -2361,28 +4724,49 @@ ETB.router = (function () {
             try { src7.contentWindow.postMessage(msg, '*'); } catch (_) {}
           }
         }
-        if (!_isBuiltinCapabilityStudio()) {
-          reply7({
-            type: 'etb_agent_control_result',
-            reqId: reqId7,
+        reply7({
+          type: 'etb_agent_control_result',
+          reqId: reqId7,
+          ok: false,
+          error: 'legacy bridge retired; use etb_evolution_console',
+          errorCode: 'LEGACY_AGENT_CONTROL_BRIDGE_RETIRED'
+        });
+        return;
+      } else if (e.data.type === 'etb_evolution_console') {
+        // Evolution Console is tokenless. The host owns the credential, exact
+        // account-bound fleet reads, canonical standards projection and the
+        // single verified managed ledger.
+        var src8 = _srcIframe(e);
+        if (!src8) return;
+        var reqId8 = e.data.reqId;
+        function reply8(msg) {
+          if (src8 && src8.contentWindow) {
+            try { src8.contentWindow.postMessage(msg, '*'); } catch (_) {}
+          }
+        }
+        if (!_isBuiltinEvolutionConsole()) {
+          reply8({
+            type: 'etb_evolution_console_result',
+            reqId: reqId8,
             ok: false,
             error: 'bridge not granted to this plugin'
           });
           return;
         }
-        _agentControlAction(e.data).then(function (result) {
-          reply7({
-            type: 'etb_agent_control_result',
-            reqId: reqId7,
+        _evolutionConsoleAction(e.data).then(function (result) {
+          reply8({
+            type: 'etb_evolution_console_result',
+            reqId: reqId8,
             ok: true,
             result: result
           });
         }).catch(function (error) {
-          reply7({
-            type: 'etb_agent_control_result',
-            reqId: reqId7,
+          reply8({
+            type: 'etb_evolution_console_result',
+            reqId: reqId8,
             ok: false,
-            error: (error && error.message) || 'Agent Control operation failed',
+            error: (error && error.message) ||
+              'Evolution Console operation failed',
             errorCode: error && error.code || null
           });
         });
@@ -2937,65 +5321,61 @@ ETB.router = (function () {
       ]}
     },
     'profit-growth-scenario': {
-      title: { ru: 'Как работает Центр управления агентами', en: 'How the Agent Control Center works' },
+      title: { ru: 'Как работает Evolution Console', en: 'How Evolution Console works' },
       sub: {
-        ru: 'Управляемая версия конфигурации агентов: черновик → проверка → публикация → запуск → откат',
-        en: 'A managed version of your agents’ configuration: draft → test → publish → run → rollback'
+        ru: 'Консоль управления парком агентов',
+        en: 'Agent fleet management console'
       },
       steps: {
         ru: [
-          'Выбираете двух подтверждённых Qwen-агентов; хост сверяет их точный ID, провайдера и модель.',
-          'Снимается baseline-версия: снимок агентов, концепты и правила, видимые эксперты — с полными хэшами.',
-          'Правите правило как <b>черновик</b> и проверяете его на полигоне (например, кейсы маржи 18/20/30%).',
-          'Публикация возможна только при неизменном черновике и пройденной проверке; один коммит переключает конфигурацию.',
-          'Каждый запуск даёт квитанцию (кто, когда, версия, сработавшие правила); откат возвращает точную прежнюю версию.'
+          'Evolution Console считывает весь парк текущего аккаунта и связывает Agent Passport с живым агентом только по стабильному ID.',
+          'Риски приходят из канонического <code>check_agent_passport.py</code>; карта Shared Genes использует точные списки потребителей.',
+          'Изменения класса и массовые операции проходят Evolution Loop: Evidence → Candidate → Test → Approval → Activation → Observation → Rollback.'
         ],
         en: [
-          'You pick two verified Qwen agents; the host re-checks their exact ID, provider and model.',
-          'A baseline version is captured: agent snapshot, concepts and rules, visible experts — with full hashes.',
-          'You edit a rule as a <b>draft</b> and test it on the playground (e.g. margin cases 18/20/30%).',
-          'Publish is allowed only with an unchanged draft and a passed test; one commit switches the configuration.',
-          'Every run yields a receipt (who, when, version, fired rules); rollback restores the exact prior version.'
+          'Evolution Console reads the whole current-account fleet and joins Agent Passport to a live agent only by stable ID.',
+          'Risks come from canonical <code>check_agent_passport.py</code>; the Shared Genes map uses exact consumer lists.',
+          'Class changes and bulk operations follow the Evolution Loop: Evidence → Candidate → Test → Approval → Activation → Observation → Rollback.'
         ]
       },
       sure: {
         ru: [
-          'Каждая версия и каждый запуск связаны точными хэшами SHA-256 — видно, что именно опубликовано и откуда.',
-          'Полигон проверяет правило <b>без вызова агента и эксперта и без внешних записей</b> (ноль записей).',
-          'Работают только подтверждённые Qwen-агенты; Claude/Anthropic исключены.',
-          'Публикация — только при неизменном черновике и пройденной проверке; откат возвращает точную прежнюю версию.'
+          'Evolution Console и Agent Cabinet используют один расчёт рисков и один журнал версий.',
+          'Preview, approval и каждая Evolution Receipt связаны с точным SHA-256 и неизменившимся списком целей.'
         ],
         en: [
-          'Every version and run are bound by exact SHA-256 hashes — you see what was published and from where.',
-          'The playground checks a rule <b>without calling the agent or expert and with no external writes</b> (zero writes).',
-          'Only verified Qwen agents run; Claude/Anthropic are excluded.',
-          'Publish only with an unchanged draft and a passed test; rollback restores the exact prior version.'
+          'Evolution Console and Agent Cabinet use one risk calculation and one version ledger.',
+          'Preview, approval, and every Evolution Receipt are bound to an exact SHA-256 and unchanged target list.'
         ]
       },
       nope: {
         ru: [
-          'Это <b>управляемая надстройка</b>, а не встроенное версионирование агентов в самой Extella — платформа не исполняет версии нативно.',
-          'Ролей и прав (RBAC) пока нет: уровень организации <b>виден, но заблокирован</b> до появления реестра/ролей платформы.',
-          'Журнал <b>не защищён от подделки</b> (нет tamper-evidence) — это доказуемость через хэши, а не криптографическая неизменяемость.',
-          'Полигон проверяет срабатывание правила, но не запускает реального агента — это не сквозной прогон боевого действия.'
+          'Ролей и разграничения доступа пока нет.',
+          'Журнал не защищён от подделки (не tamper-evident).',
+          'Видны только управляемые запуски; прямые чаты с агентом не отслеживаются.',
+          'Расходы — оценка, не биллинговый факт.',
+          'Риски считает стандарт Extella, а не платформа.',
+          'Между аккаунтами видимости нет.'
         ],
         en: [
-          'This is a <b>managed layer</b>, not native agent versioning inside Extella — the platform does not execute versions natively.',
-          'There are no roles/RBAC yet: the organization scope is <b>visible but locked</b> until the platform has a registry/roles.',
-          'The audit log is <b>not tamper-evident</b> — it is provable via hashes, not cryptographic immutability.',
-          'The playground checks that a rule fires, but does not run the real agent — it is not an end-to-end live action.'
+          'Roles and access separation are not available yet.',
+          'The log is not tamper-evident.',
+          'Only managed runs are visible; direct agent chats are not traced.',
+          'Cost is an estimate, not a billing fact.',
+          'Risks come from the Extella standard, not the platform.',
+          'There is no cross-account visibility.'
         ]
       },
       who: {
-        title: { ru: 'Кто раскрывает и откатывает', en: 'Who publishes and rolls back' },
+        title: { ru: 'Кто подтверждает и откатывает', en: 'Who approves and rolls back' },
         items: {
           ru: [
-            'Публикацию и откат выполняете вы; один коммит переключает конфигурацию обоих агентов.',
-            'Откат возвращает точную неизменную прежнюю версию — без создания копии.'
+            'Изменение подтверждает человек с текущей сессией; роли платформой пока не различаются.',
+            'Rollback возвращает точную предыдущую managed-версию.'
           ],
           en: [
-            'You publish and roll back; one commit switches both agents’ configuration.',
-            'Rollback restores the exact immutable prior version — without making a copy.'
+            'A person in the current session approves; the platform does not distinguish roles yet.',
+            'Rollback restores the exact previous managed version.'
           ]
         }
       }

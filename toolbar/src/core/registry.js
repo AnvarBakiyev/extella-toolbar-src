@@ -12,6 +12,8 @@ ETB.registry = (function () {
   // try/catch → tombstone НЕ персистился и удалённые плагины воскресали при синке
   var REMOVED_KEY   = 'etb_plugins_removed_v1';
   var REMOVING_KEY  = 'etb_removing_v1';  // tombstone: id помечен на удаление, пока файл реестра на устройстве ещё есть — не возвращаем при syncFromDevice
+  var EVOLUTION_STUDIO_OWNERSHIP_MIGRATION_KEY =
+    'etb_evolution_studio_ownership_migration_v1';
   function _loadRemoving(){ try { return JSON.parse(localStorage.getItem(REMOVING_KEY) || '[]'); } catch(e){ return []; } }
   function _saveRemoving(a){ try { localStorage.setItem(REMOVING_KEY, JSON.stringify(a)); } catch(e){} }
 
@@ -53,6 +55,36 @@ ETB.registry = (function () {
     if (a.indexOf(id) !== -1) _saveRemoved(a.filter(function (x) { return x !== id; }));
   }
 
+  function _isLegacyCapabilityStudioOwner(plugin) {
+    var definitions = plugin &&
+      (plugin.expert_defs || plugin.expertDefs) || [];
+    var names = (plugin && Array.isArray(plugin.experts) ?
+      plugin.experts : []).map(String);
+    definitions.forEach(function (definition) {
+      if (definition && definition.name) names.push(String(definition.name));
+    });
+    return Boolean(
+      plugin &&
+      plugin.id === 'profit-growth-scenario' &&
+      plugin.owned_experts === true &&
+      names.indexOf('xtl_capability_studio_profitability_v1') !== -1
+    );
+  }
+
+  function _installCapabilityStudioOwnership() {
+    var installed = _loadInstalled();
+    if (installed.indexOf('capability-studio-scenario') === -1) {
+      installed.push('capability-studio-scenario');
+      _saveInstalled(installed);
+    }
+    try {
+      localStorage.setItem(
+        EVOLUTION_STUDIO_OWNERSHIP_MIGRATION_KEY,
+        'done'
+      );
+    } catch (e) {}
+  }
+
   // ── Bootstrap: auto-install plugins with init:true ────────────
   (function _bootstrap() {
     var installed = _loadInstalled();
@@ -63,6 +95,29 @@ ETB.registry = (function () {
     autoIds.forEach(function (id) {
       if (merged.indexOf(id) === -1) merged.push(id);
     });
+    // Before Evolution Console became a fleet-only surface, its stable plugin
+    // id provisioned the Capability Studio profitability Expert. On the first
+    // launch after the split, transfer that already-installed UI ownership to
+    // Capability Studio so the Expert is not orphaned. Fresh installs are not
+    // affected because this migration marker is written on their first launch.
+    var ownershipMigrationDone = false;
+    try {
+      ownershipMigrationDone =
+        localStorage.getItem(EVOLUTION_STUDIO_OWNERSHIP_MIGRATION_KEY) ===
+          'done';
+    } catch (e) {}
+    if (!ownershipMigrationDone) {
+      if (installed.indexOf('profit-growth-scenario') !== -1 &&
+          merged.indexOf('capability-studio-scenario') === -1) {
+        merged.push('capability-studio-scenario');
+      }
+      try {
+        localStorage.setItem(
+          EVOLUTION_STUDIO_OWNERSHIP_MIGRATION_KEY,
+          'done'
+        );
+      } catch (e) {}
+    }
     if (merged.length !== installed.length) _saveInstalled(merged);
   })();
 
@@ -227,6 +282,13 @@ ETB.registry = (function () {
         var added = [], deviceIds = {}, removing = _loadRemoving();
         list.forEach(function (m) {
           if (!m || !m.id) return;
+          // Recovery path for an empty/cleared local cache: the pre-split
+          // device manifest is authoritative evidence that this exact Expert
+          // belonged to Capability Studio. Run even if the one-time bootstrap
+          // marker was already written before async device sync completed.
+          if (_isLegacyCapabilityStudioOwner(m)) {
+            _installCapabilityStudioOwnership();
+          }
           // Без-target ран уходит на дефолтный таргет АККАУНТА — на общем
           // аккаунте (invite-токены) это устройство ВЛАДЕЛЬЦА, и коллегам
           // приезжали его личные карточки. Фолбэк вправе только восстановить

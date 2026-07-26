@@ -1,0 +1,1244 @@
+{
+  "agents": [
+    {
+      "cabinet": {
+        "actual_behaviour": {
+          "evidence_sources": [
+            {
+              "id": "run_history",
+              "what_en": "Process run history (what ran, when, and with which result)",
+              "what_ru": "История прогонов процессов (что запускалось, когда, с каким результатом)"
+            },
+            {
+              "id": "upc_steps",
+              "what_en": "Step-by-step process logs: which steps ran and what they returned",
+              "what_ru": "Пошаговые журналы процесса: какие шаги выполнялись и что вернули"
+            },
+            {
+              "id": "ledger_receipts",
+              "what_en": "Evolution Receipts from the managed ledger: draft, test, publication, rollback",
+              "what_ru": "Evolution Receipts управляемого журнала: черновик, тест, публикация, откат"
+            },
+            {
+              "id": "activity_center",
+              "what_en": "Device activity log",
+              "what_ru": "Журнал активности устройства"
+            }
+          ],
+          "limits": {
+            "en": [
+              "Only runs through the managed loop are visible: direct chats with the agent on the platform are not traced (no native tracing).",
+              "Cost and tokens are an estimate from our own receipts, not a billing fact.",
+              "The log is not tamper-evident: the platform does not provide that yet.",
+              "There are no «view only» / «run only» roles — access separation awaits a platform role model.",
+              "Agent-to-agent chains are only partly visible — there is no end-to-end tracing between agents."
+            ],
+            "ru": [
+              "Видны только запуски через управляемый контур: прямые разговоры с агентом в чате платформы не отслеживаются (нативной трассировки нет).",
+              "Расходы и токены — оценка по нашим квитанциям, а не биллинговый факт.",
+              "Журнал не защищён от подделки: tamper-evident аудита платформа пока не даёт.",
+              "Ролей «только смотреть» / «только запускать» нет — разграничение доступа ждёт платформенной модели ролей.",
+              "Цепочки «агент вызвал агента» видны частично — сквозной трассировки между агентами нет."
+            ]
+          },
+          "shown_en": "routes from the latest managed runs: which rules fired, which capabilities were called, and where the agent diverged from the declared path",
+          "shown_ru": "маршруты последних управляемых запусков: какие правила сработали, какие способности вызывались, где агент отклонился от заявленного пути"
+        },
+        "declared_behaviour": {
+          "steps": [
+            {
+              "autonomy": "A0",
+              "capability": "read_only_registry_probe",
+              "side_effects": "none"
+            }
+          ]
+        },
+        "evolution": {
+          "cycle": [
+            {
+              "step": "describe",
+              "what_en": "Describe the desired change in plain language",
+              "what_ru": "Описать желаемое изменение обычным языком"
+            },
+            {
+              "step": "classify",
+              "what_en": "Classify what changes: knowledge, rule, capability, or Shared Gene",
+              "what_ru": "Определить, что меняется: знание, правило, способность или Shared Gene"
+            },
+            {
+              "step": "scope",
+              "what_en": "Choose the scope: this agent only / group / all connected agents",
+              "what_ru": "Выбрать область: только этот агент / группа / все связанные агенты"
+            },
+            {
+              "step": "draft",
+              "what_en": "Create a new version as a draft (it does not run in production)",
+              "what_ru": "Создать новую версию как черновик (в production не исполняется)"
+            },
+            {
+              "step": "impact",
+              "what_en": "Show affected steps, dependencies, and ALL affected agents",
+              "what_ru": "Показать затрагиваемые этапы, зависимости и ВСЕХ затронутых агентов"
+            },
+            {
+              "step": "compare",
+              "what_en": "Run old and new versions on identical cases and compare decisions, cost, and errors",
+              "what_ru": "Прогнать прежнюю и новую версии на одинаковых кейсах, сравнить решения/стоимость/ошибки"
+            },
+            {
+              "step": "publish",
+              "what_en": "Publish the change (only an unchanged draft with a successful test)",
+              "what_ru": "Опубликовать изменение (только неизменившийся черновик с успешным тестом)"
+            },
+            {
+              "step": "observe",
+              "what_en": "Observe the result on real managed runs",
+              "what_ru": "Наблюдать результат на реальных запусках"
+            },
+            {
+              "step": "rollback",
+              "what_en": "Restore the exact previous version",
+              "what_ru": "Вернуть точную предыдущую версию"
+            }
+          ],
+          "ledger_en": "the same managed version ledger as Evolution Console (Agent Cabinet is its single-agent projection, not a second version mechanism)",
+          "ledger_ru": "тот же управляемый журнал версий, что в Evolution Console (Agent Cabinet — его проекция по одному агенту, а не второй механизм версий)",
+          "shared_change_guard": {
+            "candidates": [],
+            "choices_en": [
+              "Create a local version",
+              "Change the whole class",
+              "Cancel"
+            ],
+            "choices_ru": [
+              "Создать локальную версию",
+              "Изменить весь класс",
+              "Отмена"
+            ],
+            "legacy_candidates": [],
+            "must_show_en": "the list of ALL affected agents and a choice: local copy or whole-class change",
+            "must_show_ru": "список ВСЕХ затронутых агентов и выбор: локальная копия или изменение всего класса",
+            "prompt_en": "This mechanism is used by {N} more agents. Create a local version for this agent only, or change the whole class?",
+            "prompt_ru": "Этот механизм используют ещё {N} агентов. Создать локальную версию только для этого агента или изменить весь класс?",
+            "trigger": "изменение объекта с provenance=global"
+          }
+        },
+        "passport": {
+          "attention": {
+            "external_or_physical": [],
+            "human_required": [],
+            "legacy_global_capabilities": [],
+            "shared_genes": []
+          },
+          "budgets": {
+            "max_delegation_depth": 0,
+            "max_duration_ms": 30000,
+            "max_external_actions": 0,
+            "max_llm_tokens": 4000
+          },
+          "genome": [
+            {
+              "autonomy": "A0",
+              "capability": "read_only_registry_probe",
+              "concepts": [],
+              "confirmation": "never",
+              "element_type": "capability",
+              "evidence": null,
+              "expert": null,
+              "gene_id": null,
+              "help_surface": "Evolution Console demo help",
+              "limits": [
+                "DEMO_FIXTURE only; never deletes a live platform agent"
+              ],
+              "name": "read_only_registry_probe",
+              "permissions": [],
+              "provenance": "agent",
+              "rollback": null,
+              "rules": [],
+              "shared_handler": null,
+              "side_effects": "none",
+              "targets": [],
+              "version": "1.0.0"
+            }
+          ],
+          "identity": {
+            "active_version": "1.0.0",
+            "bundle_id": "demo-bundle-dead-reference-v1",
+            "business_goal": "Prove a registry-only stable ID is reported as a dead reference",
+            "data_classification": "synthetic demo data",
+            "declared_instructions": "Registry-only fixture with no matching platform metadata row.",
+            "dependency_lock": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+            "hosting": "DEMO_FIXTURE",
+            "interfaces": [
+              "Evolution Console demo"
+            ],
+            "languages": [
+              "ru",
+              "en"
+            ],
+            "model_profile": "qwen-plus",
+            "name": "Dead Reference Demo Agent",
+            "owner": "Demo Owner",
+            "platform_agent_id": "agent_demo_fixture_dead_reference",
+            "platform_provider": "alibaba"
+          },
+          "operations": {
+            "evidence_retention": "test run",
+            "owner_on_call": "Demo Owner",
+            "success_metric": "dead reference is detected only by stable ID"
+          }
+        },
+        "schema": "extella.agent_cabinet.v1.1"
+      },
+      "capability_count": 1,
+      "checker_report": {
+        "counts": {
+          "errors": 0,
+          "issues": 0,
+          "warnings": 0
+        },
+        "issues": [],
+        "ready": true,
+        "schema": "extella.agent_passport.check_report.v1"
+      },
+      "has_shared_genes": false,
+      "passport_present": true,
+      "passport_ready": true,
+      "passport_sha256": "ce91190b551d1228529ba4f4cf5535c5615b27a2cb6bc35e08aa19b66c8fac9a",
+      "platform_agent_id": "agent_demo_fixture_dead_reference",
+      "platform_metadata": null,
+      "platform_status": "DEAD_REFERENCE",
+      "shared_genes": []
+    },
+    {
+      "cabinet": null,
+      "capability_count": null,
+      "checker_report": {
+        "counts": {
+          "errors": 1,
+          "issues": 1,
+          "warnings": 0
+        },
+        "issues": [
+          {
+            "code": "AGENT_MODEL_PROFILE_QWEN_REQUIRED",
+            "message_en": "agent.model_profile = 'gpt-4o': client agents must use Qwen",
+            "message_ru": "agent.model_profile = «gpt-4o»: клиентские агенты работают только на Qwen",
+            "path": "agent.model_profile",
+            "severity": "error"
+          }
+        ],
+        "ready": false,
+        "schema": "extella.agent_passport.check_report.v1"
+      },
+      "has_shared_genes": null,
+      "last_activity_at": "2026-07-25T11:00:00Z",
+      "passport_present": true,
+      "passport_ready": false,
+      "passport_sha256": "f495d6c6e85754d0f0ebb06a75c29e3eb55065da0cf3425d1059ca6c2741318c",
+      "platform_agent_id": "agent_demo_fixture_non_qwen",
+      "platform_metadata": {
+        "fixture_metadata_marker": "NON_QWEN_BY_STABLE_ID",
+        "instructions": "This fixture must fail the canonical Qwen gate.",
+        "last_activity_at": "2026-07-25T11:00:00Z",
+        "model": "gpt-4o",
+        "name": "Invalid Non-Qwen Demo Agent",
+        "platform_agent_id": "agent_demo_fixture_non_qwen",
+        "provider": "openai"
+      },
+      "platform_status": "PRESENT",
+      "shared_genes": []
+    },
+    {
+      "cabinet": {
+        "actual_behaviour": {
+          "evidence_sources": [
+            {
+              "id": "run_history",
+              "what_en": "Process run history (what ran, when, and with which result)",
+              "what_ru": "История прогонов процессов (что запускалось, когда, с каким результатом)"
+            },
+            {
+              "id": "upc_steps",
+              "what_en": "Step-by-step process logs: which steps ran and what they returned",
+              "what_ru": "Пошаговые журналы процесса: какие шаги выполнялись и что вернули"
+            },
+            {
+              "id": "ledger_receipts",
+              "what_en": "Evolution Receipts from the managed ledger: draft, test, publication, rollback",
+              "what_ru": "Evolution Receipts управляемого журнала: черновик, тест, публикация, откат"
+            },
+            {
+              "id": "activity_center",
+              "what_en": "Device activity log",
+              "what_ru": "Журнал активности устройства"
+            }
+          ],
+          "limits": {
+            "en": [
+              "Only runs through the managed loop are visible: direct chats with the agent on the platform are not traced (no native tracing).",
+              "Cost and tokens are an estimate from our own receipts, not a billing fact.",
+              "The log is not tamper-evident: the platform does not provide that yet.",
+              "There are no «view only» / «run only» roles — access separation awaits a platform role model.",
+              "Agent-to-agent chains are only partly visible — there is no end-to-end tracing between agents."
+            ],
+            "ru": [
+              "Видны только запуски через управляемый контур: прямые разговоры с агентом в чате платформы не отслеживаются (нативной трассировки нет).",
+              "Расходы и токены — оценка по нашим квитанциям, а не биллинговый факт.",
+              "Журнал не защищён от подделки: tamper-evident аудита платформа пока не даёт.",
+              "Ролей «только смотреть» / «только запускать» нет — разграничение доступа ждёт платформенной модели ролей.",
+              "Цепочки «агент вызвал агента» видны частично — сквозной трассировки между агентами нет."
+            ]
+          },
+          "shown_en": "routes from the latest managed runs: which rules fired, which capabilities were called, and where the agent diverged from the declared path",
+          "shown_ru": "маршруты последних управляемых запусков: какие правила сработали, какие способности вызывались, где агент отклонился от заявленного пути"
+        },
+        "declared_behaviour": {
+          "steps": [
+            {
+              "autonomy": "A1",
+              "capability": "read_only_summary",
+              "side_effects": "none"
+            }
+          ]
+        },
+        "evolution": {
+          "cycle": [
+            {
+              "step": "describe",
+              "what_en": "Describe the desired change in plain language",
+              "what_ru": "Описать желаемое изменение обычным языком"
+            },
+            {
+              "step": "classify",
+              "what_en": "Classify what changes: knowledge, rule, capability, or Shared Gene",
+              "what_ru": "Определить, что меняется: знание, правило, способность или Shared Gene"
+            },
+            {
+              "step": "scope",
+              "what_en": "Choose the scope: this agent only / group / all connected agents",
+              "what_ru": "Выбрать область: только этот агент / группа / все связанные агенты"
+            },
+            {
+              "step": "draft",
+              "what_en": "Create a new version as a draft (it does not run in production)",
+              "what_ru": "Создать новую версию как черновик (в production не исполняется)"
+            },
+            {
+              "step": "impact",
+              "what_en": "Show affected steps, dependencies, and ALL affected agents",
+              "what_ru": "Показать затрагиваемые этапы, зависимости и ВСЕХ затронутых агентов"
+            },
+            {
+              "step": "compare",
+              "what_en": "Run old and new versions on identical cases and compare decisions, cost, and errors",
+              "what_ru": "Прогнать прежнюю и новую версии на одинаковых кейсах, сравнить решения/стоимость/ошибки"
+            },
+            {
+              "step": "publish",
+              "what_en": "Publish the change (only an unchanged draft with a successful test)",
+              "what_ru": "Опубликовать изменение (только неизменившийся черновик с успешным тестом)"
+            },
+            {
+              "step": "observe",
+              "what_en": "Observe the result on real managed runs",
+              "what_ru": "Наблюдать результат на реальных запусках"
+            },
+            {
+              "step": "rollback",
+              "what_en": "Restore the exact previous version",
+              "what_ru": "Вернуть точную предыдущую версию"
+            }
+          ],
+          "ledger_en": "the same managed version ledger as Evolution Console (Agent Cabinet is its single-agent projection, not a second version mechanism)",
+          "ledger_ru": "тот же управляемый журнал версий, что в Evolution Console (Agent Cabinet — его проекция по одному агенту, а не второй механизм версий)",
+          "shared_change_guard": {
+            "candidates": [
+              {
+                "gene_id": "rule.demo.stable-approval-guard",
+                "kind": "rule",
+                "name": "Stable demo approval guard",
+                "version": "1.0.0"
+              }
+            ],
+            "choices_en": [
+              "Create a local version",
+              "Change the whole class",
+              "Cancel"
+            ],
+            "choices_ru": [
+              "Создать локальную версию",
+              "Изменить весь класс",
+              "Отмена"
+            ],
+            "legacy_candidates": [],
+            "must_show_en": "the list of ALL affected agents and a choice: local copy or whole-class change",
+            "must_show_ru": "список ВСЕХ затронутых агентов и выбор: локальная копия или изменение всего класса",
+            "prompt_en": "This mechanism is used by {N} more agents. Create a local version for this agent only, or change the whole class?",
+            "prompt_ru": "Этот механизм используют ещё {N} агентов. Создать локальную версию только для этого агента или изменить весь класс?",
+            "trigger": "изменение объекта с provenance=global"
+          }
+        },
+        "passport": {
+          "attention": {
+            "external_or_physical": [],
+            "human_required": [],
+            "legacy_global_capabilities": [],
+            "shared_genes": [
+              {
+                "consumer_agent_id": "agent_demo_fixture_valid_alpha",
+                "gene_id": "rule.demo.stable-approval-guard",
+                "kind": "rule",
+                "name": "Stable demo approval guard",
+                "provenance": "global",
+                "version": "1.0.0"
+              }
+            ]
+          },
+          "budgets": {
+            "max_delegation_depth": 0,
+            "max_duration_ms": 30000,
+            "max_external_actions": 0,
+            "max_llm_tokens": 4000
+          },
+          "genome": [
+            {
+              "autonomy": "A1",
+              "capability": "read_only_summary",
+              "concepts": [],
+              "confirmation": "never",
+              "element_type": "capability",
+              "evidence": null,
+              "expert": null,
+              "gene_id": null,
+              "help_surface": "Evolution Console demo help",
+              "limits": [
+                "DEMO_FIXTURE only; never reads or changes live customer data"
+              ],
+              "name": "read_only_summary",
+              "permissions": [],
+              "provenance": "agent",
+              "rollback": null,
+              "rules": [],
+              "shared_handler": null,
+              "side_effects": "none",
+              "targets": [],
+              "version": "1.0.0"
+            },
+            {
+              "autonomy": null,
+              "capability": null,
+              "concepts": [],
+              "confirmation": null,
+              "consumer_agent_id": "agent_demo_fixture_valid_alpha",
+              "element_type": "rule",
+              "evidence": null,
+              "expert": null,
+              "gene_id": "rule.demo.stable-approval-guard",
+              "help_surface": null,
+              "limits": [],
+              "name": "Stable demo approval guard",
+              "permissions": [],
+              "provenance": "global",
+              "rollback": null,
+              "rules": [],
+              "shared_handler": null,
+              "side_effects": null,
+              "targets": [],
+              "version": "1.0.0"
+            }
+          ],
+          "identity": {
+            "active_version": "1.0.0",
+            "bundle_id": "demo-bundle-alpha-v1",
+            "business_goal": "Demonstrate an exact standards adapter join",
+            "data_classification": "synthetic demo data",
+            "declared_instructions": "Read-only demo instructions for alpha.",
+            "dependency_lock": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "hosting": "DEMO_FIXTURE",
+            "interfaces": [
+              "Evolution Console demo"
+            ],
+            "languages": [
+              "ru",
+              "en"
+            ],
+            "model_profile": "qwen-3.7",
+            "name": "Duplicate Demo Operator",
+            "owner": "Demo Owner",
+            "platform_agent_id": "agent_demo_fixture_valid_alpha",
+            "platform_provider": "alibaba"
+          },
+          "operations": {
+            "evidence_retention": "test run",
+            "owner_on_call": "Demo Owner",
+            "success_metric": "deterministic fixture bundle is generated"
+          }
+        },
+        "schema": "extella.agent_cabinet.v1.1"
+      },
+      "capability_count": 1,
+      "checker_report": {
+        "counts": {
+          "errors": 0,
+          "issues": 0,
+          "warnings": 0
+        },
+        "issues": [],
+        "ready": true,
+        "schema": "extella.agent_passport.check_report.v1"
+      },
+      "has_shared_genes": true,
+      "last_activity_at": "2026-07-25T08:00:00Z",
+      "passport_present": true,
+      "passport_ready": true,
+      "passport_sha256": "b3373f0845bf75302a023ac4a9ac9efae8639ba33cfed469b145fb7fae2703fe",
+      "platform_agent_id": "agent_demo_fixture_valid_alpha",
+      "platform_metadata": {
+        "fixture_metadata_marker": "ALPHA_BY_STABLE_ID",
+        "instructions": "Read-only demo instructions for alpha.",
+        "last_activity_at": "2026-07-25T08:00:00Z",
+        "model": "qwen-3.7",
+        "name": "Duplicate Demo Operator",
+        "platform_agent_id": "agent_demo_fixture_valid_alpha",
+        "provider": "alibaba"
+      },
+      "platform_status": "PRESENT",
+      "shared_genes": [
+        {
+          "consumer_agent_id": "agent_demo_fixture_valid_alpha",
+          "gene_id": "rule.demo.stable-approval-guard",
+          "kind": "rule",
+          "name": "Stable demo approval guard",
+          "provenance": "global",
+          "version": "1.0.0"
+        }
+      ]
+    },
+    {
+      "cabinet": {
+        "actual_behaviour": {
+          "evidence_sources": [
+            {
+              "id": "run_history",
+              "what_en": "Process run history (what ran, when, and with which result)",
+              "what_ru": "История прогонов процессов (что запускалось, когда, с каким результатом)"
+            },
+            {
+              "id": "upc_steps",
+              "what_en": "Step-by-step process logs: which steps ran and what they returned",
+              "what_ru": "Пошаговые журналы процесса: какие шаги выполнялись и что вернули"
+            },
+            {
+              "id": "ledger_receipts",
+              "what_en": "Evolution Receipts from the managed ledger: draft, test, publication, rollback",
+              "what_ru": "Evolution Receipts управляемого журнала: черновик, тест, публикация, откат"
+            },
+            {
+              "id": "activity_center",
+              "what_en": "Device activity log",
+              "what_ru": "Журнал активности устройства"
+            }
+          ],
+          "limits": {
+            "en": [
+              "Only runs through the managed loop are visible: direct chats with the agent on the platform are not traced (no native tracing).",
+              "Cost and tokens are an estimate from our own receipts, not a billing fact.",
+              "The log is not tamper-evident: the platform does not provide that yet.",
+              "There are no «view only» / «run only» roles — access separation awaits a platform role model.",
+              "Agent-to-agent chains are only partly visible — there is no end-to-end tracing between agents."
+            ],
+            "ru": [
+              "Видны только запуски через управляемый контур: прямые разговоры с агентом в чате платформы не отслеживаются (нативной трассировки нет).",
+              "Расходы и токены — оценка по нашим квитанциям, а не биллинговый факт.",
+              "Журнал не защищён от подделки: tamper-evident аудита платформа пока не даёт.",
+              "Ролей «только смотреть» / «только запускать» нет — разграничение доступа ждёт платформенной модели ролей.",
+              "Цепочки «агент вызвал агента» видны частично — сквозной трассировки между агентами нет."
+            ]
+          },
+          "shown_en": "routes from the latest managed runs: which rules fired, which capabilities were called, and where the agent diverged from the declared path",
+          "shown_ru": "маршруты последних управляемых запусков: какие правила сработали, какие способности вызывались, где агент отклонился от заявленного пути"
+        },
+        "declared_behaviour": {
+          "steps": [
+            {
+              "autonomy": "A1",
+              "capability": "read_only_summary",
+              "side_effects": "none"
+            }
+          ]
+        },
+        "evolution": {
+          "cycle": [
+            {
+              "step": "describe",
+              "what_en": "Describe the desired change in plain language",
+              "what_ru": "Описать желаемое изменение обычным языком"
+            },
+            {
+              "step": "classify",
+              "what_en": "Classify what changes: knowledge, rule, capability, or Shared Gene",
+              "what_ru": "Определить, что меняется: знание, правило, способность или Shared Gene"
+            },
+            {
+              "step": "scope",
+              "what_en": "Choose the scope: this agent only / group / all connected agents",
+              "what_ru": "Выбрать область: только этот агент / группа / все связанные агенты"
+            },
+            {
+              "step": "draft",
+              "what_en": "Create a new version as a draft (it does not run in production)",
+              "what_ru": "Создать новую версию как черновик (в production не исполняется)"
+            },
+            {
+              "step": "impact",
+              "what_en": "Show affected steps, dependencies, and ALL affected agents",
+              "what_ru": "Показать затрагиваемые этапы, зависимости и ВСЕХ затронутых агентов"
+            },
+            {
+              "step": "compare",
+              "what_en": "Run old and new versions on identical cases and compare decisions, cost, and errors",
+              "what_ru": "Прогнать прежнюю и новую версии на одинаковых кейсах, сравнить решения/стоимость/ошибки"
+            },
+            {
+              "step": "publish",
+              "what_en": "Publish the change (only an unchanged draft with a successful test)",
+              "what_ru": "Опубликовать изменение (только неизменившийся черновик с успешным тестом)"
+            },
+            {
+              "step": "observe",
+              "what_en": "Observe the result on real managed runs",
+              "what_ru": "Наблюдать результат на реальных запусках"
+            },
+            {
+              "step": "rollback",
+              "what_en": "Restore the exact previous version",
+              "what_ru": "Вернуть точную предыдущую версию"
+            }
+          ],
+          "ledger_en": "the same managed version ledger as Evolution Console (Agent Cabinet is its single-agent projection, not a second version mechanism)",
+          "ledger_ru": "тот же управляемый журнал версий, что в Evolution Console (Agent Cabinet — его проекция по одному агенту, а не второй механизм версий)",
+          "shared_change_guard": {
+            "candidates": [
+              {
+                "gene_id": "rule.demo.stable-approval-guard",
+                "kind": "rule",
+                "name": "Stable demo approval guard",
+                "version": "1.0.0"
+              }
+            ],
+            "choices_en": [
+              "Create a local version",
+              "Change the whole class",
+              "Cancel"
+            ],
+            "choices_ru": [
+              "Создать локальную версию",
+              "Изменить весь класс",
+              "Отмена"
+            ],
+            "legacy_candidates": [],
+            "must_show_en": "the list of ALL affected agents and a choice: local copy or whole-class change",
+            "must_show_ru": "список ВСЕХ затронутых агентов и выбор: локальная копия или изменение всего класса",
+            "prompt_en": "This mechanism is used by {N} more agents. Create a local version for this agent only, or change the whole class?",
+            "prompt_ru": "Этот механизм используют ещё {N} агентов. Создать локальную версию только для этого агента или изменить весь класс?",
+            "trigger": "изменение объекта с provenance=global"
+          }
+        },
+        "passport": {
+          "attention": {
+            "external_or_physical": [],
+            "human_required": [],
+            "legacy_global_capabilities": [],
+            "shared_genes": [
+              {
+                "consumer_agent_id": "agent_demo_fixture_valid_beta",
+                "gene_id": "rule.demo.stable-approval-guard",
+                "kind": "rule",
+                "name": "Stable demo approval guard",
+                "provenance": "global",
+                "version": "1.0.0"
+              }
+            ]
+          },
+          "budgets": {
+            "max_delegation_depth": 0,
+            "max_duration_ms": 30000,
+            "max_external_actions": 0,
+            "max_llm_tokens": 4000
+          },
+          "genome": [
+            {
+              "autonomy": "A1",
+              "capability": "read_only_summary",
+              "concepts": [],
+              "confirmation": "never",
+              "element_type": "capability",
+              "evidence": null,
+              "expert": null,
+              "gene_id": null,
+              "help_surface": "Evolution Console demo help",
+              "limits": [
+                "DEMO_FIXTURE only; never reads or changes live customer data"
+              ],
+              "name": "read_only_summary",
+              "permissions": [],
+              "provenance": "agent",
+              "rollback": null,
+              "rules": [],
+              "shared_handler": null,
+              "side_effects": "none",
+              "targets": [],
+              "version": "1.1.0"
+            },
+            {
+              "autonomy": null,
+              "capability": null,
+              "concepts": [],
+              "confirmation": null,
+              "consumer_agent_id": "agent_demo_fixture_valid_beta",
+              "element_type": "rule",
+              "evidence": null,
+              "expert": null,
+              "gene_id": "rule.demo.stable-approval-guard",
+              "help_surface": null,
+              "limits": [],
+              "name": "Stable demo approval guard",
+              "permissions": [],
+              "provenance": "global",
+              "rollback": null,
+              "rules": [],
+              "shared_handler": null,
+              "side_effects": null,
+              "targets": [],
+              "version": "1.0.0"
+            }
+          ],
+          "identity": {
+            "active_version": "1.1.0",
+            "bundle_id": "demo-bundle-beta-v1",
+            "business_goal": "Prove duplicate names never drive metadata joins",
+            "data_classification": "synthetic demo data",
+            "declared_instructions": "Read-only demo instructions for beta.",
+            "dependency_lock": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "hosting": "DEMO_FIXTURE",
+            "interfaces": [
+              "Evolution Console demo"
+            ],
+            "languages": [
+              "ru",
+              "en"
+            ],
+            "model_profile": "alibaba/qwen-max",
+            "name": "Duplicate Demo Operator",
+            "owner": "Demo Owner",
+            "platform_agent_id": "agent_demo_fixture_valid_beta",
+            "platform_provider": "alibaba"
+          },
+          "operations": {
+            "evidence_retention": "test run",
+            "owner_on_call": "Demo Owner",
+            "success_metric": "stable-ID metadata join is exact"
+          }
+        },
+        "schema": "extella.agent_cabinet.v1.1"
+      },
+      "capability_count": 1,
+      "checker_report": {
+        "counts": {
+          "errors": 0,
+          "issues": 0,
+          "warnings": 0
+        },
+        "issues": [],
+        "ready": true,
+        "schema": "extella.agent_passport.check_report.v1"
+      },
+      "has_shared_genes": true,
+      "last_activity_at": "2026-07-25T09:00:00Z",
+      "passport_present": true,
+      "passport_ready": true,
+      "passport_sha256": "ec654cd4f78ff11166f90ce022e445802c8c4fb748a65f86f02c788eca33c098",
+      "platform_agent_id": "agent_demo_fixture_valid_beta",
+      "platform_metadata": {
+        "fixture_metadata_marker": "BETA_BY_STABLE_ID",
+        "instructions": "Read-only demo instructions for beta.",
+        "last_activity_at": "2026-07-25T09:00:00Z",
+        "model": "qwen-max",
+        "name": "Duplicate Demo Operator",
+        "platform_agent_id": "agent_demo_fixture_valid_beta",
+        "provider": "alibaba"
+      },
+      "platform_status": "PRESENT",
+      "shared_genes": [
+        {
+          "consumer_agent_id": "agent_demo_fixture_valid_beta",
+          "gene_id": "rule.demo.stable-approval-guard",
+          "kind": "rule",
+          "name": "Stable demo approval guard",
+          "provenance": "global",
+          "version": "1.0.0"
+        }
+      ]
+    },
+    {
+      "cabinet": {
+        "actual_behaviour": {
+          "evidence_sources": [
+            {
+              "id": "run_history",
+              "what_en": "Process run history (what ran, when, and with which result)",
+              "what_ru": "История прогонов процессов (что запускалось, когда, с каким результатом)"
+            },
+            {
+              "id": "upc_steps",
+              "what_en": "Step-by-step process logs: which steps ran and what they returned",
+              "what_ru": "Пошаговые журналы процесса: какие шаги выполнялись и что вернули"
+            },
+            {
+              "id": "ledger_receipts",
+              "what_en": "Evolution Receipts from the managed ledger: draft, test, publication, rollback",
+              "what_ru": "Evolution Receipts управляемого журнала: черновик, тест, публикация, откат"
+            },
+            {
+              "id": "activity_center",
+              "what_en": "Device activity log",
+              "what_ru": "Журнал активности устройства"
+            }
+          ],
+          "limits": {
+            "en": [
+              "Only runs through the managed loop are visible: direct chats with the agent on the platform are not traced (no native tracing).",
+              "Cost and tokens are an estimate from our own receipts, not a billing fact.",
+              "The log is not tamper-evident: the platform does not provide that yet.",
+              "There are no «view only» / «run only» roles — access separation awaits a platform role model.",
+              "Agent-to-agent chains are only partly visible — there is no end-to-end tracing between agents."
+            ],
+            "ru": [
+              "Видны только запуски через управляемый контур: прямые разговоры с агентом в чате платформы не отслеживаются (нативной трассировки нет).",
+              "Расходы и токены — оценка по нашим квитанциям, а не биллинговый факт.",
+              "Журнал не защищён от подделки: tamper-evident аудита платформа пока не даёт.",
+              "Ролей «только смотреть» / «только запускать» нет — разграничение доступа ждёт платформенной модели ролей.",
+              "Цепочки «агент вызвал агента» видны частично — сквозной трассировки между агентами нет."
+            ]
+          },
+          "shown_en": "routes from the latest managed runs: which rules fired, which capabilities were called, and where the agent diverged from the declared path",
+          "shown_ru": "маршруты последних управляемых запусков: какие правила сработали, какие способности вызывались, где агент отклонился от заявленного пути"
+        },
+        "declared_behaviour": {
+          "steps": [
+            {
+              "autonomy": "A1",
+              "capability": "read_only_summary",
+              "side_effects": "none"
+            }
+          ]
+        },
+        "evolution": {
+          "cycle": [
+            {
+              "step": "describe",
+              "what_en": "Describe the desired change in plain language",
+              "what_ru": "Описать желаемое изменение обычным языком"
+            },
+            {
+              "step": "classify",
+              "what_en": "Classify what changes: knowledge, rule, capability, or Shared Gene",
+              "what_ru": "Определить, что меняется: знание, правило, способность или Shared Gene"
+            },
+            {
+              "step": "scope",
+              "what_en": "Choose the scope: this agent only / group / all connected agents",
+              "what_ru": "Выбрать область: только этот агент / группа / все связанные агенты"
+            },
+            {
+              "step": "draft",
+              "what_en": "Create a new version as a draft (it does not run in production)",
+              "what_ru": "Создать новую версию как черновик (в production не исполняется)"
+            },
+            {
+              "step": "impact",
+              "what_en": "Show affected steps, dependencies, and ALL affected agents",
+              "what_ru": "Показать затрагиваемые этапы, зависимости и ВСЕХ затронутых агентов"
+            },
+            {
+              "step": "compare",
+              "what_en": "Run old and new versions on identical cases and compare decisions, cost, and errors",
+              "what_ru": "Прогнать прежнюю и новую версии на одинаковых кейсах, сравнить решения/стоимость/ошибки"
+            },
+            {
+              "step": "publish",
+              "what_en": "Publish the change (only an unchanged draft with a successful test)",
+              "what_ru": "Опубликовать изменение (только неизменившийся черновик с успешным тестом)"
+            },
+            {
+              "step": "observe",
+              "what_en": "Observe the result on real managed runs",
+              "what_ru": "Наблюдать результат на реальных запусках"
+            },
+            {
+              "step": "rollback",
+              "what_en": "Restore the exact previous version",
+              "what_ru": "Вернуть точную предыдущую версию"
+            }
+          ],
+          "ledger_en": "the same managed version ledger as Evolution Console (Agent Cabinet is its single-agent projection, not a second version mechanism)",
+          "ledger_ru": "тот же управляемый журнал версий, что в Evolution Console (Agent Cabinet — его проекция по одному агенту, а не второй механизм версий)",
+          "shared_change_guard": {
+            "candidates": [
+              {
+                "gene_id": "rule.demo.stable-approval-guard",
+                "kind": "rule",
+                "name": "Stable demo approval guard",
+                "version": "1.0.0"
+              }
+            ],
+            "choices_en": [
+              "Create a local version",
+              "Change the whole class",
+              "Cancel"
+            ],
+            "choices_ru": [
+              "Создать локальную версию",
+              "Изменить весь класс",
+              "Отмена"
+            ],
+            "legacy_candidates": [],
+            "must_show_en": "the list of ALL affected agents and a choice: local copy or whole-class change",
+            "must_show_ru": "список ВСЕХ затронутых агентов и выбор: локальная копия или изменение всего класса",
+            "prompt_en": "This mechanism is used by {N} more agents. Create a local version for this agent only, or change the whole class?",
+            "prompt_ru": "Этот механизм используют ещё {N} агентов. Создать локальную версию только для этого агента или изменить весь класс?",
+            "trigger": "изменение объекта с provenance=global"
+          }
+        },
+        "passport": {
+          "attention": {
+            "external_or_physical": [],
+            "human_required": [],
+            "legacy_global_capabilities": [],
+            "shared_genes": [
+              {
+                "consumer_agent_id": "agent_demo_fixture_warning_only",
+                "gene_id": "rule.demo.stable-approval-guard",
+                "kind": "rule",
+                "name": "Stable demo approval guard",
+                "provenance": "global",
+                "version": "1.0.0"
+              }
+            ]
+          },
+          "budgets": {
+            "max_delegation_depth": 0,
+            "max_duration_ms": 30000,
+            "max_external_actions": 0,
+            "max_llm_tokens": 4000
+          },
+          "genome": [
+            {
+              "autonomy": "A1",
+              "capability": "read_only_summary",
+              "concepts": [],
+              "confirmation": "never",
+              "element_type": "capability",
+              "evidence": null,
+              "expert": null,
+              "gene_id": null,
+              "help_surface": "Evolution Console demo help",
+              "limits": [
+                "DEMO_FIXTURE only; never reads or changes live customer data"
+              ],
+              "name": "read_only_summary",
+              "permissions": [],
+              "provenance": "agent",
+              "rollback": null,
+              "rules": [],
+              "shared_handler": null,
+              "side_effects": "none",
+              "targets": [],
+              "version": "1.0.0"
+            },
+            {
+              "autonomy": null,
+              "capability": null,
+              "concepts": [],
+              "confirmation": null,
+              "consumer_agent_id": "agent_demo_fixture_warning_only",
+              "element_type": "rule",
+              "evidence": null,
+              "expert": null,
+              "gene_id": "rule.demo.stable-approval-guard",
+              "help_surface": null,
+              "limits": [],
+              "name": "Stable demo approval guard",
+              "permissions": [],
+              "provenance": "global",
+              "rollback": null,
+              "rules": [],
+              "shared_handler": null,
+              "side_effects": null,
+              "targets": [],
+              "version": "1.0.0"
+            }
+          ],
+          "identity": {
+            "active_version": "1.0.0",
+            "bundle_id": null,
+            "business_goal": "Prove warnings do not suppress a valid Agent Cabinet",
+            "data_classification": "synthetic demo data",
+            "declared_instructions": "Read-only demo instructions with one passport warning.",
+            "dependency_lock": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "hosting": "DEMO_FIXTURE",
+            "interfaces": [
+              "Evolution Console demo"
+            ],
+            "languages": [
+              "ru",
+              "en"
+            ],
+            "model_profile": "qwen-plus",
+            "name": "Warning-only Demo Agent",
+            "owner": "Demo Owner",
+            "platform_agent_id": "agent_demo_fixture_warning_only",
+            "platform_provider": "dashscope"
+          },
+          "operations": {
+            "evidence_retention": "test run",
+            "owner_on_call": "Demo Owner",
+            "success_metric": "warning report and Cabinet are both preserved"
+          }
+        },
+        "schema": "extella.agent_cabinet.v1.1"
+      },
+      "capability_count": 1,
+      "checker_report": {
+        "counts": {
+          "errors": 0,
+          "issues": 1,
+          "warnings": 1
+        },
+        "issues": [
+          {
+            "code": "AGENT_IMMUTABLE_BUNDLE_ID_RECOMMENDED",
+            "message_en": "agent.immutable_bundle_id is blank — without it, the exact deployed bundle cannot be proven",
+            "message_ru": "agent.immutable_bundle_id пуст — без него не доказать, какая именно сборка стоит у клиента",
+            "path": "agent.immutable_bundle_id",
+            "severity": "warning"
+          }
+        ],
+        "ready": true,
+        "schema": "extella.agent_passport.check_report.v1"
+      },
+      "has_shared_genes": true,
+      "last_activity_at": "2026-07-25T10:00:00Z",
+      "passport_present": true,
+      "passport_ready": true,
+      "passport_sha256": "f538c2ed9e2148bbac736476d857c940e2b2586e72f7fafbb81978875d0e98bb",
+      "platform_agent_id": "agent_demo_fixture_warning_only",
+      "platform_metadata": {
+        "fixture_metadata_marker": "WARNING_BY_STABLE_ID",
+        "instructions": "Read-only demo instructions with one passport warning.",
+        "last_activity_at": "2026-07-25T10:00:00Z",
+        "model": "qwen-plus",
+        "name": "Warning-only Demo Agent",
+        "platform_agent_id": "agent_demo_fixture_warning_only",
+        "provider": "dashscope"
+      },
+      "platform_status": "PRESENT",
+      "shared_genes": [
+        {
+          "consumer_agent_id": "agent_demo_fixture_warning_only",
+          "gene_id": "rule.demo.stable-approval-guard",
+          "kind": "rule",
+          "name": "Stable demo approval guard",
+          "provenance": "global",
+          "version": "1.0.0"
+        }
+      ]
+    }
+  ],
+  "data_mode": "DEMO_FIXTURE",
+  "live_projection_allowed": false,
+  "passport_template": {
+    "artifact_path": "templates/agent_passport.yaml",
+    "draft_state": "NOT_VALIDATED",
+    "parsed": {
+      "agent": {
+        "business_goal": "",
+        "data_classification": "",
+        "declared_instructions": "",
+        "dependency_lock_sha256": "",
+        "hosting_profile": "",
+        "immutable_bundle_id": "",
+        "interfaces": [],
+        "languages": [
+          "ru",
+          "en"
+        ],
+        "model_profile": "qwen-3.7",
+        "name": "",
+        "owner": "",
+        "platform_agent_id": "",
+        "platform_provider": "",
+        "version": "0.1.0"
+      },
+      "budgets": {
+        "max_delegation_depth": 0,
+        "max_duration_ms": 30000,
+        "max_external_actions": 0,
+        "max_llm_tokens": 0
+      },
+      "capabilities": [
+        {
+          "approval_binding": "",
+          "autonomy": "A0",
+          "completeness_contract": "",
+          "concepts": [],
+          "confirmation": "never",
+          "cspl": "",
+          "data_fields": [],
+          "data_residency": "",
+          "evidence_schema": "",
+          "expert": "",
+          "global": false,
+          "help_surface": "",
+          "idempotency": "unsupported",
+          "input_schema": {},
+          "limits": [],
+          "name": "",
+          "output_schema": {},
+          "permissions": [],
+          "reconciliation": "",
+          "retry_policy": "none",
+          "rollback": "",
+          "rules": [],
+          "scope": "agent",
+          "side_effects": "none",
+          "targets": [],
+          "version": ""
+        }
+      ],
+      "operations": {
+        "alerts": [],
+        "evidence_retention": "",
+        "owner_on_call": "",
+        "success_metric": ""
+      },
+      "shared_genes": []
+    },
+    "sha256": "63a963e9a9db399d130a4035500b769e16eb082f3013f8fd46a1ebc20b92d8af"
+  },
+  "production_eligible": false,
+  "runtime_policy": {
+    "live_projection": "FORBIDDEN",
+    "production_merge": "FORBIDDEN",
+    "purpose": "BUILD_TIME_DEMO_FIXTURE_ONLY"
+  },
+  "schema": "extella.evolution.standards_bundle.v1",
+  "shared_gene_index": {
+    "by_agent": {
+      "agent_demo_fixture_dead_reference": [],
+      "agent_demo_fixture_non_qwen": [],
+      "agent_demo_fixture_valid_alpha": [
+        "rule.demo.stable-approval-guard"
+      ],
+      "agent_demo_fixture_valid_beta": [
+        "rule.demo.stable-approval-guard"
+      ],
+      "agent_demo_fixture_warning_only": [
+        "rule.demo.stable-approval-guard"
+      ]
+    },
+    "complete": true,
+    "content_sha256": "56cd619e6d91887b41eced92b19dac11ab38837c44dcc282e9c28f413b8cdba9",
+    "data_mode": "DEMO_FIXTURE",
+    "genes": [
+      {
+        "consumer_agent_ids": [
+          "agent_demo_fixture_valid_alpha",
+          "agent_demo_fixture_valid_beta",
+          "agent_demo_fixture_warning_only"
+        ],
+        "consumer_count": 3,
+        "gene_id": "rule.demo.stable-approval-guard",
+        "kind": "rule",
+        "name": "Stable demo approval guard",
+        "provenance": "global",
+        "version": "1.0.0"
+      }
+    ],
+    "provenance": "DECLARED_VALID_AGENT_PASSPORTS",
+    "schema": "extella.shared_genes.map.v1"
+  },
+  "sources": {
+    "passports": [
+      {
+        "path": "fixtures/passports/dead-reference.fixture",
+        "platform_agent_id": "agent_demo_fixture_dead_reference",
+        "sha256": "ce91190b551d1228529ba4f4cf5535c5615b27a2cb6bc35e08aa19b66c8fac9a"
+      },
+      {
+        "path": "fixtures/passports/invalid-non-qwen.fixture",
+        "platform_agent_id": "agent_demo_fixture_non_qwen",
+        "sha256": "f495d6c6e85754d0f0ebb06a75c29e3eb55065da0cf3425d1059ca6c2741318c"
+      },
+      {
+        "path": "fixtures/passports/valid-alpha.fixture",
+        "platform_agent_id": "agent_demo_fixture_valid_alpha",
+        "sha256": "b3373f0845bf75302a023ac4a9ac9efae8639ba33cfed469b145fb7fae2703fe"
+      },
+      {
+        "path": "fixtures/passports/valid-beta.fixture",
+        "platform_agent_id": "agent_demo_fixture_valid_beta",
+        "sha256": "ec654cd4f78ff11166f90ce022e445802c8c4fb748a65f86f02c788eca33c098"
+      },
+      {
+        "path": "fixtures/passports/warning-only.fixture",
+        "platform_agent_id": "agent_demo_fixture_warning_only",
+        "sha256": "f538c2ed9e2148bbac736476d857c940e2b2586e72f7fafbb81978875d0e98bb"
+      }
+    ],
+    "platform_agents": {
+      "path": "fixtures/platform-agents.fixture",
+      "sha256": "d072271c289db71d3b4676c4f60185ecb0c6b0c5e048548582ed5524ddc7681d"
+    },
+    "registry": {
+      "path": "fixture-registry.fixture",
+      "schema": "extella.evolution.demo_fixture_registry.v1",
+      "sha256": "c839cd58f2b029dc2f3129fd43d424ed625b5553a4203be94d99c0ade2e82254"
+    },
+    "standards_pin": {
+      "path": "standards-pin.fixture",
+      "schema": "extella.evolution.standards_pin.v1",
+      "sha256": "c2e52a9fade5b42bd59584bbc85925827d258ee5fc18c6a2777ada39db4a8b07"
+    }
+  },
+  "standards": {
+    "artifacts": {
+      "builder": {
+        "path": "tools/build_agent_cabinet.py",
+        "sha256": "5ebce7065973fc48e15815ac0803fb7a28c9384d5135299c5de3858eca55c009"
+      },
+      "cabinet_widget": {
+        "path": "templates/cabinet_widget.js",
+        "sha256": "c1331705dbc9fa44a4f6afb844e938e3bf37155a5aa0af07994f6769a6dd32f4",
+        "source": "// Canonical Agent Cabinet renderer for Extella Evolution.\n// Input: tools/build_agent_cabinet.py output (schema extella.agent_cabinet.v1.1).\n// Three tabs: Agent Passport · Actual behaviour · Evolution Loop.\n// Agent Cabinet is generated from Agent Passport; do not hand-write one per agent.\n\nvar CAB_T = {\n  ru: {\n    tabs: ['Agent Passport', 'Фактическое поведение', 'Evolution Loop'],\n    state: 'Agent Genome — геном агента', attention: 'Требует внимания',\n    own: 'только этот агент', shared: 'Shared Gene — затронет класс',\n    declared: 'Как должен работать (заявлено)', sources: 'Источники доказательств',\n    limits: 'Чего Agent Cabinet НЕ показывает', cycle: 'Evolution Loop — цикл управляемого изменения',\n    guard: 'Защита от массовой поломки', version: 'Активная версия', owner: 'Владелец',\n    agentId: 'Platform Agent ID', provider: 'Поставщик / модель', limitsCol: 'Границы', type: 'Тип',\n    legacy: 'Legacy capability.global (не используется для точного N)',\n    outward: 'действия наружу или с техникой', human: 'обязателен человек',\n    sharedOfAgent: 'Shared Genes этого агента', wired: 'подключает продукт'\n  },\n  en: {\n    tabs: ['Agent Passport', 'Actual behaviour', 'Evolution Loop'],\n    state: 'Agent Genome', attention: 'Needs attention',\n    own: 'this agent only', shared: 'Shared Gene — affects the class',\n    declared: 'How it is supposed to work (declared)', sources: 'Evidence sources',\n    limits: 'What Agent Cabinet does NOT show', cycle: 'Evolution Loop',\n    guard: 'Protection against mass breakage', version: 'Active version', owner: 'Owner',\n    agentId: 'Platform Agent ID', provider: 'Provider / model', limitsCol: 'Limits', type: 'Type',\n    legacy: 'Legacy capability.global (not used for the exact consumer count)',\n    outward: 'outward or physical actions', human: 'human required',\n    sharedOfAgent: 'Shared Genes of this agent', wired: 'wired by the product'\n  }\n};\n\nfunction cabLang(){\n  return (typeof WLANG !== 'undefined' && WLANG === 'en') ? 'en' : 'ru';\n}\n\nfunction cabEsc(value){\n  return String(value == null ? '' : value).replace(/[&<>\"']/g, function(ch){\n    return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[ch];\n  });\n}\n\nfunction cabLocalized(row, field, lang){\n  row = row || {};\n  var localized = row[field + '_' + lang];\n  if(localized != null) return localized;\n  return row[field] == null ? '' : row[field];\n}\n\nfunction cabList(values){\n  return (Array.isArray(values) ? values : []).map(cabEsc).join(', ');\n}\n\nfunction cabGeneLabel(gene){\n  if(typeof gene === 'string') return cabEsc(gene);\n  gene = gene || {};\n  var kind = gene.kind || gene.element_type || 'gene';\n  var name = gene.name || gene.capability || '—';\n  var id = gene.gene_id || '—';\n  return cabEsc(name) + ' <span style=\"color:var(--silver,#8c8c8c)\">[' +\n    cabEsc(kind) + ' · ' + cabEsc(id) + ']</span>';\n}\n\nfunction renderCabinet(cab, hostId, tab){\n  var host = document.getElementById(hostId); if(!host || !cab) return;\n  var L = cabLang(), T = CAB_T[L], p = cab.passport || {}, i = p.identity || {};\n  tab = tab || 'passport';\n  var h = '<div style=\"display:flex;gap:8px;margin-bottom:14px\">';\n  ['passport','actual','evolution'].forEach(function(k, n){\n    h += '<button type=\"button\" data-cab-tab=\"' + k + '\" class=\"btn ' +\n      (tab===k?'gold':'ghost') + ' sm\">' + cabEsc(T.tabs[n]) + '</button>';\n  });\n  h += '</div>';\n  h += '<div style=\"font:700 18px var(--sans)\">' + cabEsc(i.name || '—') + '</div>' +\n       '<div style=\"font-size:12.5px;color:var(--silver,#8c8c8c);margin-bottom:12px\">' +\n       cabEsc(T.owner) + ': ' + cabEsc(i.owner || '—') + ' · ' +\n       cabEsc(T.agentId) + ': ' + cabEsc(i.platform_agent_id || '—') + ' · ' +\n       cabEsc(T.version) + ': ' + cabEsc(i.active_version || '—') + ' · ' +\n       cabEsc(T.provider) + ': ' + cabEsc(i.platform_provider || '—') + ' / ' +\n       cabEsc(i.model_profile || '—') + ' · ' + (cabList(i.languages) || '—') + '</div>';\n\n  if(tab === 'passport'){\n    h += '<div class=\"card\" style=\"margin-bottom:12px\"><div style=\"font-weight:700;margin-bottom:8px\">' +\n      cabEsc(T.state) + '</div><table style=\"width:100%;font-size:12px;border-collapse:collapse\">';\n    (p.genome || []).forEach(function(s){\n      var shared = s.provenance === 'global';\n      var effect = s.side_effects ?\n        cabEsc(s.side_effects) + ' / ' + cabEsc(s.confirmation || '—') : '—';\n      h += '<tr style=\"border-top:1px solid var(--line,#ebe8e1)\">' +\n           '<td style=\"padding:5px 4px\"><b>' + cabEsc(s.name || s.capability || '—') +\n           '</b> <span style=\"color:var(--silver)\">v' + cabEsc(s.version || '—') + '</span>' +\n           (s.gene_id ? '<br><span style=\"color:var(--silver)\">' + cabEsc(s.gene_id) + '</span>' : '') +\n           '</td><td style=\"padding:5px 4px\">' + cabEsc(T.type) + ': ' +\n           cabEsc(s.element_type || 'capability') + '</td>' +\n           '<td style=\"padding:5px 4px\">' + cabEsc(s.autonomy || '—') + '</td>' +\n           '<td style=\"padding:5px 4px;color:' + (shared?'#a5632a':'var(--silver)') + '\">' +\n           cabEsc(shared ? T.shared : T.own) + '</td>' +\n           '<td style=\"padding:5px 4px\">' + effect + '</td>' +\n           '<td style=\"padding:5px 4px\">' + cabEsc(T.limitsCol) + ': ' +\n           (Array.isArray(s.limits) ? s.limits.length : 0) + '</td></tr>';\n    });\n    h += '</table></div>';\n    var a = p.attention || {};\n    var genes = (a.shared_genes || []).map(cabGeneLabel).join(', ') || '—';\n    h += '<div class=\"card\" style=\"border-left:3px solid #a5632a\"><div style=\"font-weight:700;margin-bottom:8px\">' +\n         cabEsc(T.attention) + '</div><div style=\"font-size:12.5px;line-height:1.7\">' +\n         '• ' + cabEsc(T.shared) + ': ' + genes + '<br>' +\n         '• ' + cabEsc(T.legacy) + ': ' + (cabList(a.legacy_global_capabilities) || '—') + '<br>' +\n         '• ' + cabEsc(T.outward) + ': ' + (cabList(a.external_or_physical) || '—') + '<br>' +\n         '• ' + cabEsc(T.human) + ': ' + (cabList(a.human_required) || '—') + '</div></div>';\n  }\n\n  if(tab === 'actual'){\n    var d = cab.declared_behaviour || {}, ac = cab.actual_behaviour || {};\n    h += '<div class=\"card\" style=\"margin-bottom:12px\"><div style=\"font-weight:700;margin-bottom:8px\">' +\n         cabEsc(T.declared) + '</div><div style=\"font-size:12.5px;line-height:1.7\">' +\n         (d.steps || []).map(function(s,n){\n           return (n+1) + '. ' + cabEsc(s.capability || '—') + ' (' +\n             cabEsc(s.autonomy || '—') + ', ' + cabEsc(s.side_effects || '—') + ')';\n         }).join('<br>') + '</div></div>';\n    h += '<div class=\"card\" style=\"margin-bottom:12px\"><div style=\"font-weight:700;margin-bottom:8px\">' +\n         cabEsc(T.sources) + '</div><div style=\"font-size:12.5px;line-height:1.7\">• ' +\n         (ac.evidence_sources || []).map(function(s){\n           return cabEsc(cabLocalized(s, 'what', L));\n         }).join('<br>• ') + '</div></div>';\n    h += '<div class=\"card\" style=\"border-left:3px solid #a5632a\"><div style=\"font-weight:700;margin-bottom:8px\">' +\n         cabEsc(T.limits) + '</div><div style=\"font-size:12.5px;line-height:1.7\">• ' +\n         ((ac.limits || {})[L] || []).map(cabEsc).join('<br>• ') + '</div></div>';\n  }\n\n  if(tab === 'evolution'){\n    var e = cab.evolution || {}, g = e.shared_change_guard || {};\n    h += '<div class=\"card\" style=\"margin-bottom:12px\"><div style=\"font-weight:700;margin-bottom:8px\">' +\n         cabEsc(T.cycle) + '</div><div style=\"font-size:12.5px;line-height:1.7\">' +\n         (e.cycle || []).map(function(s,n){\n           return '<b>' + (n+1) + '.</b> ' + cabEsc(cabLocalized(s, 'what', L));\n         }).join('<br>') + '</div></div>';\n    var q = String((L==='en' ? g.prompt_en : g.prompt_ru) || '');\n    var ch = (L==='en' ? g.choices_en : g.choices_ru) || [];\n    q = q.replace('{N}', String(g.affected_count != null ? g.affected_count : 'N'));\n    var candidates = (g.candidates || []).map(cabGeneLabel).join(', ') || '—';\n    h += '<div class=\"card\" style=\"border-left:3px solid #a5632a\"><div style=\"font-weight:700;margin-bottom:8px\">' +\n         cabEsc(T.guard) + '</div><div style=\"font-size:13px;line-height:1.6;margin-bottom:10px\">' +\n         cabEsc(q) + '</div><div style=\"display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px\">' +\n         ch.map(function(c,n){\n           return '<button type=\"button\" class=\"btn ' + (n===0?'gold':'ghost') +\n             ' sm\" disabled title=\"' + cabEsc(T.wired) + '\">' + cabEsc(c) + '</button>';\n         }).join('') + '</div><div style=\"font-size:12px;color:var(--silver,#8c8c8c)\">' +\n         cabEsc(cabLocalized(g, 'must_show', L)) + '<br><b>' +\n         cabEsc(T.sharedOfAgent) + ':</b> ' + candidates + '</div></div>';\n  }\n\n  host.innerHTML = h;\n  Array.prototype.forEach.call(host.querySelectorAll('[data-cab-tab]'), function(button){\n    button.addEventListener('click', function(){\n      renderCabinet(cab, hostId, button.getAttribute('data-cab-tab'));\n    });\n  });\n}\n",
+        "source_encoding": "utf-8"
+      },
+      "checker": {
+        "path": "tools/check_agent_passport.py",
+        "sha256": "7fe28ebbea5067144ee1b13af6acd7b3f5bcf784ee780eca44e0919adaeb22d8"
+      },
+      "help_widget": {
+        "path": "templates/help_widget.js",
+        "sha256": "4f3273d9bfaf0873ef490f8dff15b6e50fc379f69c095852a93d5a2f649c0f9f",
+        "source": "// Canonical «? Как это работает / How it works» widget for Extella Evolution.\n// Fill HELP on BOTH languages and add:\n//   <button type=\"button\" data-help-key=\"my_surface\">? Как это работает</button>\n// Bind its click event to openHelp('my_surface') and call\n// helpFirstTime('my_surface') when the surface first opens.\n//\n// Requires el(id) -> document.getElementById and this container:\n//   <div id=\"xtl_help\" style=\"display:none;position:fixed;inset:0;z-index:9996;background:rgba(12,14,18,.55);overflow:auto;padding:34px 18px\">\n//     <div style=\"max-width:720px;margin:0 auto;background:#f5f3ee;border-radius:16px;padding:26px 28px 22px\">\n//       <div id=\"xtl_help_body\"></div>\n//     </div>\n//   </div>\n\n// nope (honest limits) is mandatory. Agent Passport checker enforces limits\n// and help_surface for every capability.\nvar HELP = {\n  my_surface: {\n    ru: {\n      icon: '\\u2699\\uFE0F', title: 'Как работает <моя возможность>',\n      sub: 'Одна фраза: какую боль снимает',\n      steps: ['Человек делает …', 'Система делает …', 'На выходе …'],\n      sure: ['Что реально проверено и можно показать'],\n      nope: ['ЧЕГО НЕ ОБЕЩАЕМ — минимум одна честная граница'],\n      who: { title: 'Кто может раскрыть или откатить', items: ['…'] },\n      extra: 'Ссылка на подробный документ для службы безопасности — при необходимости'\n    },\n    en: {\n      icon: '\\u2699\\uFE0F', title: 'How <my capability> works',\n      sub: 'One line: which pain it removes',\n      steps: ['The person does …', 'The system does …', 'The result is …'],\n      sure: ['What is actually verified and can be demonstrated'],\n      nope: ['WHAT WE DO NOT PROMISE — at least one honest limit'],\n      who: { title: 'Who can reveal the data or roll the change back', items: ['…'] },\n      extra: 'Link to the detailed document for the security team, if needed'\n    }\n  }\n};\n\nvar HELP_T = {\n  ru: {\n    how: 'Как это работает', sure: 'Что гарантировано',\n    nope: 'Чего мы НЕ обещаем — важно знать', ok: 'Понятно'\n  },\n  en: {\n    how: 'How it works', sure: 'What is guaranteed',\n    nope: 'What we do NOT promise — important', ok: 'Got it'\n  }\n};\n\nfunction helpLang(){\n  return (typeof WLANG !== 'undefined' && WLANG === 'en') ? 'en' : 'ru';\n}\n\nfunction helpEsc(value){\n  return String(value == null ? '' : value).replace(/[&<>\"']/g, function(ch){\n    return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[ch];\n  });\n}\n\nfunction helpItems(values){\n  return (Array.isArray(values) ? values : []).map(helpEsc);\n}\n\nfunction _helpCard(color){\n  return '<div class=\"card\" style=\"' +\n    (color ? 'border-left:3px solid ' + color + ';' : '') +\n    'margin-bottom:12px\">';\n}\n\nfunction openHelp(key){\n  var L = helpLang(), T = HELP_T[L];\n  var d = (HELP[key] || {})[L], box = el('xtl_help_body'), wrap = el('xtl_help');\n  if(!d || !box || !wrap) return;\n  var steps = helpItems(d.steps), sure = helpItems(d.sure), nope = helpItems(d.nope);\n  var h = '<div style=\"display:flex;align-items:flex-start;gap:12px;margin-bottom:14px\">' +\n      '<div style=\"font-size:26px;line-height:1\">' + helpEsc(d.icon) + '</div><div>' +\n      '<div style=\"font:700 19px var(--sans);color:var(--ink,#0a0a0a)\">' +\n      helpEsc(d.title) + '</div><div style=\"font-size:12.5px;color:var(--silver,#8c8c8c)\">' +\n      helpEsc(d.sub) + '</div></div><button type=\"button\" data-help-close ' +\n      'class=\"btn ghost sm\" style=\"margin-left:auto\" aria-label=\"' + helpEsc(T.ok) +\n      '\">✕</button></div>';\n  h += _helpCard('') + '<div style=\"font-weight:700;font-size:13.5px;margin-bottom:8px\">' +\n       helpEsc(T.how) + '</div><div style=\"font-size:12.5px;line-height:1.65;color:var(--ink,#0a0a0a)\">' +\n       steps.map(function(s,i){ return '<b>' + (i+1) + '.</b> ' + s; }).join('<br>') + '</div></div>';\n  h += _helpCard('#1f7a4d') + '<div style=\"font-weight:700;font-size:13.5px;margin-bottom:8px\">' +\n       helpEsc(T.sure) + '</div><div style=\"font-size:12.5px;line-height:1.7;color:var(--ink,#0a0a0a)\">• ' +\n       sure.join('<br>• ') + '</div></div>';\n  h += _helpCard('#a5632a') + '<div style=\"font-weight:700;font-size:13.5px;margin-bottom:8px\">' +\n       helpEsc(T.nope) + '</div><div style=\"font-size:12.5px;line-height:1.7;color:var(--ink,#0a0a0a)\">• ' +\n       nope.join('<br>• ') + '</div></div>';\n  if(d.who){\n    h += _helpCard('') + '<div style=\"font-weight:700;font-size:13.5px;margin-bottom:8px\">' +\n      helpEsc(d.who.title) + '</div><div style=\"font-size:12.5px;line-height:1.7;color:var(--ink,#0a0a0a)\">• ' +\n      helpItems(d.who.items).join('<br>• ') + '</div></div>';\n  }\n  if(d.extra){\n    h += '<div style=\"font-size:11.5px;color:var(--silver,#8c8c8c);line-height:1.6;margin-bottom:14px\">' +\n      helpEsc(d.extra) + '</div>';\n  }\n  h += '<button type=\"button\" data-help-close class=\"btn gold\">' + helpEsc(T.ok) + '</button>';\n  box.innerHTML = h;\n  Array.prototype.forEach.call(box.querySelectorAll('[data-help-close]'), function(button){\n    button.addEventListener('click', closeHelp);\n  });\n  wrap.style.display = 'block';\n}\n\nfunction closeHelp(){\n  var h = el('xtl_help'); if(h) h.style.display = 'none';\n}\n\nfunction helpFirstTime(key){\n  try{\n    if(localStorage.getItem('xtl_help_seen_' + key) === '1') return;\n    localStorage.setItem('xtl_help_seen_' + key, '1');\n  }catch(e){} // private mode/storage denial: show help without failing\n  openHelp(key);\n}\n",
+        "source_encoding": "utf-8"
+      },
+      "passport_template": {
+        "path": "templates/agent_passport.yaml",
+        "sha256": "63a963e9a9db399d130a4035500b769e16eb082f3013f8fd46a1ebc20b92d8af"
+      }
+    },
+    "git_commit": "4d8d759feeac8e27ca6fe94fb1925220406984d0"
+  }
+}
