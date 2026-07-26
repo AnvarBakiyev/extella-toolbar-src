@@ -88,7 +88,7 @@ function copyValue(block, key) {
   return normalized(match[2]);
 }
 
-test('Evolution Console opens with overview, attention, and agent list in that order', () => {
+test('Evolution Console opens with overview, attention, and automation list in that order', () => {
   const views = viewTags();
   assert.ok(views.length >= 2, 'overview must remain separate from deeper views');
 
@@ -123,7 +123,7 @@ test('Evolution Console opens with overview, attention, and agent list in that o
 test('the overview registry exposes no more than five visible columns', () => {
   const overview = viewSource('overview');
   const registryTable = openingTags(overview, 'table').find(
-    (tag) => attribute(tag.source, 'data-evolution-registry') === 'fleet',
+    (tag) => attribute(tag.source, 'data-evolution-registry') === 'automations',
   );
   assert.ok(registryTable, 'overview must contain the fleet registry table');
 
@@ -150,7 +150,7 @@ test('the overview registry exposes no more than five visible columns', () => {
     'every visible registry column needs a stable semantic marker',
   );
   assert.equal(new Set(columns).size, columns.length);
-  for (const essentialColumn of ['agent', 'status', 'action']) {
+  for (const essentialColumn of ['automation', 'availability', 'composition']) {
     assert.ok(
       columns.includes(essentialColumn),
       `registry must keep its ${essentialColumn} column`,
@@ -244,7 +244,8 @@ test('registry rows stay concise and delegate one-agent work to Agent Cabinet', 
     'function statusMark(',
     renderStart,
   );
-  const renderFleet = consoleHtml.slice(renderStart, renderEnd);
+  const componentStart = consoleHtml.indexOf('function renderComponentGroup(');
+  const renderFleet = consoleHtml.slice(componentStart, renderEnd);
   assert.match(
     renderFleet,
     /data-action="open-agent-cabinet"/,
@@ -339,10 +340,10 @@ test('the simplified overview has matching human copy in Russian and English', (
   const ru = languageBlock('ru', 'en');
   const en = languageBlock('en');
   const copyContract = {
-    overviewTitle: ['Ваши агенты', 'Your agents'],
+    overviewTitle: ['Ваши автоматизации', 'Your automations'],
     attentionTitle: ['Что требует внимания', 'Needs attention'],
-    inventory: ['Агенты', 'Agents'],
-    attentionItems: ['задач требуют внимания', 'attention items'],
+    inventory: ['Автоматизации', 'Automations'],
+    attentionItems: ['типов расхождений', 'discrepancy types'],
     needsAttention: ['требуют внимания', 'need attention'],
     viewReason: ['Посмотреть причины', 'Review issues'],
     openCabinet: ['Открыть Agent Cabinet', 'Open Agent Cabinet'],

@@ -206,6 +206,46 @@ ETB.registry = (function () {
     // tiny fython expert executed on the device. Each manifest is merged into
     // the custom registry (which caches in localStorage for instant/offline UI).
     // Best-effort: resolves to the array of synced manifests, never rejects.
+    //
+    // Evolution Console uses the separate strict scanner below. The scanner
+    // Expert is provisioned by the release/integration layer; opening or
+    // refreshing Console never saves an Expert, deletes a file, or mutates the
+    // browser registry cache.
+    scanDeviceManifests: function (deviceId) {
+      var exactDeviceId = String(deviceId || '').trim();
+      var fnName = '_etb_evolution_registry_scan_v1';
+      if (!exactDeviceId) {
+        return Promise.reject(new Error(
+          'current device id is required for the read-only registry scan'
+        ));
+      }
+      return ETB.api.runExpert(fnName, {}, {
+        target: exactDeviceId,
+        timeout: 20,
+        global: true
+      }).then(function (response) {
+        var raw = response && (response.result || response.output);
+        var parsed = raw;
+        if (typeof raw === 'string') {
+          try { parsed = JSON.parse(raw); }
+          catch (_) { throw new Error('device registry scanner returned invalid JSON'); }
+        }
+        if (!parsed || typeof parsed !== 'object' ||
+            !Array.isArray(parsed.entries) ||
+            !Number.isInteger(Number(parsed.matched_count)) ||
+            !Number.isInteger(Number(parsed.ignored_backup_count)) ||
+            !Number.isInteger(Number(parsed.rejected_count))) {
+          throw new Error('device registry scanner returned an invalid contract');
+        }
+        return {
+          entries: parsed.entries,
+          matchedCount: Number(parsed.matched_count),
+          backupFilesIgnored: Number(parsed.ignored_backup_count),
+          invalidFilesIgnored: Number(parsed.rejected_count)
+        };
+      });
+    },
+
     syncFromDevice: function (deviceId, onlyId) {
       var self = this;
       var fnName = '_etb_registry_read';

@@ -2,6 +2,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
@@ -11,6 +12,10 @@ const toolbarRoot = path.resolve(__dirname, '..');
 const scenarioRoot = path.join(toolbarRoot, 'plugins', 'scenarios');
 const evolutionManifestPath = path.join(scenarioRoot, 'profit-growth.json');
 const evolutionHtmlPath = path.join(scenarioRoot, 'evolution-console.html');
+const evolutionScannerPath = path.join(
+  scenarioRoot,
+  'evolution-registry-scanner.py',
+);
 const studioManifestPath = path.join(scenarioRoot, 'capability-studio.json');
 const studioHtmlPath = path.join(scenarioRoot, 'profit-growth.html');
 const routerPath = path.join(toolbarRoot, 'src', 'core', 'router.js');
@@ -19,6 +24,7 @@ const evolutionManifest = JSON.parse(
   fs.readFileSync(evolutionManifestPath, 'utf8'),
 );
 const evolutionHtml = fs.readFileSync(evolutionHtmlPath, 'utf8');
+const evolutionScanner = fs.readFileSync(evolutionScannerPath, 'utf8');
 const studioManifest = JSON.parse(
   fs.readFileSync(studioManifestPath, 'utf8'),
 );
@@ -38,16 +44,35 @@ function inlineScripts(html) {
 test('Evolution Console manifest keeps exact product naming and a read-only surface contract', () => {
   assert.equal(evolutionManifest.id, 'profit-growth-scenario');
   assert.equal(evolutionManifest.name, 'Evolution Console');
-  assert.equal(evolutionManifest.tagline, 'Консоль управления парком агентов');
-  assert.equal(evolutionManifest.version, '0.4.0');
+  assert.equal(evolutionManifest.tagline, 'Единый реестр автоматизаций');
+  assert.equal(
+    evolutionManifest.description,
+    'Поверхность Extella Evolution для единого read-only реестра автоматизаций пользователя: каталог и установки разделены, отставшие версии и мёртвые ссылки вычисляются автоматически.',
+  );
+  assert.equal(evolutionManifest.version, '0.5.0');
   assert.equal(evolutionManifest.trust_tier, 'verified');
   assert.equal(evolutionManifest.ui.type, 'html');
   assert.equal(evolutionManifest.ui.htmlFile, 'evolution-console.html');
   assert.equal(evolutionManifest.ui.tokenless, true);
   assert.equal(evolutionManifest.ui.expectsHealth, true);
-  assert.equal(evolutionManifest.owned_experts, false);
-  assert.deepEqual(evolutionManifest.expert_defs, []);
-  assert.deepEqual(evolutionManifest.experts, []);
+  assert.equal(evolutionManifest.owned_experts, true);
+  assert.deepEqual(evolutionManifest.experts, [
+    '_etb_evolution_registry_scan_v1',
+  ]);
+  assert.equal(evolutionManifest.expert_defs.length, 1);
+  assert.equal(
+    evolutionManifest.expert_defs[0].name,
+    '_etb_evolution_registry_scan_v1',
+  );
+  assert.equal(
+    evolutionManifest.expert_defs[0].codeFile,
+    'evolution-registry-scanner.py',
+  );
+  assert.equal(evolutionManifest.expert_defs[0].global, true);
+  assert.equal(
+    evolutionManifest.expert_defs[0].sourceSha256,
+    crypto.createHash('sha256').update(evolutionScanner).digest('hex'),
+  );
   assert.ok(
     evolutionManifest.capabilities.every(
       (capability) => capability.external_writes === false,
@@ -57,11 +82,28 @@ test('Evolution Console manifest keeps exact product naming and a read-only surf
     evolutionManifest.capabilities.map((capability) => capability.id).sort(),
     [
       'agent_passport_risks',
+      'automation_registry',
       'evolution_lab',
       'evolution_loop',
-      'fleet_inventory',
       'shared_genes_map',
     ],
+  );
+  assert.equal(
+    evolutionManifest.capabilities.find(
+      (capability) => capability.id === 'automation_registry',
+    ).expert_name,
+    '_etb_evolution_registry_scan_v1',
+  );
+  assert.match(evolutionScanner, /<id>\.json|strict|fullmatch/);
+  assert.doesNotMatch(
+    evolutionScanner,
+    /\bos\.(?:remove|unlink|rmdir)\b|\bshutil\.rmtree\b|open\([^)]*,\s*["'](?:w|a|x)/,
+  );
+  assert.equal(
+    evolutionManifest.capabilities.find(
+      (capability) => capability.id === 'automation_registry',
+    ).version,
+    'EVOLUTION_AUTOMATION_REGISTRY_V1',
   );
 
   const completeSurface = `${JSON.stringify(evolutionManifest)}\n${evolutionHtml}`;
@@ -83,6 +125,16 @@ test('Evolution Console manifest keeps exact product naming and a read-only surf
     );
   }
   assert.doesNotMatch(completeSurface, /Центр управления агентами/);
+  assert.match(evolutionHtml, /catalogUnknown:'Каталог недоступен'/);
+  assert.match(
+    evolutionHtml,
+    /installationUnknown:'Установка не подтверждена'/,
+  );
+  assert.match(evolutionHtml, /catalogUnknown:'Catalog unavailable'/);
+  assert.match(
+    evolutionHtml,
+    /installationUnknown:'Installation not confirmed'/,
+  );
 });
 
 test('Evolution Console HTML has valid inline scripts and unique document IDs', () => {
@@ -165,7 +217,10 @@ test('Evolution Console status meaning is explicit without relying on color', ()
     evolutionHtml,
     /function statusMark\(kind\)\{return kind==='good'\?'✓':kind==='bad'\?'✕':'⚠';\}/,
   );
-  assert.match(evolutionHtml, /p\.complete\?'✓ COMPLETE ':'✕ INCOMPLETE '/);
+  assert.match(
+    evolutionHtml,
+    /registryProjection\.complete===true\?'✓ '\+t\('complete'\):'⚠ '\+t\('registryIncomplete'\)/,
+  );
   assert.match(
     evolutionHtml,
     /ready\?'✓ PRODUCTION READY · ':'⚠ PRODUCTION BLOCKED · '/,
@@ -244,6 +299,23 @@ test('Evolution Console CSV export neutralizes spreadsheet formulas and quotes c
   assert.equal(context.cell('@SUM(A1:A2)'), '"\'@SUM(A1:A2)"');
 });
 
+test('automation registry surface exposes no automation state-changing action', () => {
+  assert.match(
+    evolutionHtml,
+    /Реестр только читает источники и вычисляет расхождения/,
+  );
+  assert.match(
+    evolutionHtml,
+    /The registry only reads sources and computes discrepancies/,
+  );
+  assert.doesNotMatch(evolutionHtml, /data-automation-action=/);
+  assert.doesNotMatch(
+    router,
+    /action === 'automation_(?:enable|disable|update|rollback|delete|install)'/,
+  );
+  assert.match(router, /action === 'automation_registry_load'/);
+});
+
 test('Evolution Console contains fleet context only and delegates one-agent view to Agent Cabinet', () => {
   for (const forbiddenPersonalControl of [
     'controlAgent1',
@@ -280,6 +352,8 @@ test('Evolution Console clears every account-bound UI slice before a new init', 
   const resetSource = evolutionHtml.slice(resetStart, resetEnd);
 
   for (const clearedField of [
+    'state.automationRegistry=null',
+    'state.automationRegistryError=null',
     'state.actorId=null',
     'state.projection=null',
     'state.stableIdRequired=[]',
@@ -323,6 +397,14 @@ test('Evolution Console clears every account-bound UI slice before a new init', 
 });
 
 test('Evolution Console uses exact API fields and canonical checker facts', () => {
+  assert.match(evolutionHtml, /row\.automation_id\|\|''/);
+  assert.match(evolutionHtml, /row\.flags&&typeof row\.flags==='object'/);
+  assert.match(evolutionHtml, /flags\.installed_stale===true/);
+  assert.match(evolutionHtml, /flags\.dead_reference===true/);
+  assert.match(evolutionHtml, /versions\.declared\|\|row\.version_declared/);
+  assert.match(evolutionHtml, /versions\.installed\|\|row\.version_installed/);
+  assert.match(evolutionHtml, /installed_stale · /);
+  assert.match(evolutionHtml, /dead_reference · /);
   assert.match(evolutionHtml, /e\.candidateBundleSha256\|\|e\.candidate_sha256/);
   assert.doesNotMatch(evolutionHtml, /draftSha256|draft_sha256/);
   assert.match(evolutionHtml, /r\.type\|\|'Evolution Receipt'/);
@@ -338,15 +420,6 @@ test('Evolution Console uses exact API fields and canonical checker facts', () =
   assert.match(
     evolutionHtml,
     /r\.platformPresent===true&&r\.registryPresent===false&&r\.standard\.status==='MISSING'/,
-  );
-  assert.match(evolutionHtml, /r\.activeVersionSource\|\|'UNKNOWN'/);
-  assert.match(evolutionHtml, /versionSource==='EVOLUTION_LEDGER'/);
-  assert.match(evolutionHtml, /versionSource==='AGENT_PASSPORT'/);
-  assert.match(evolutionHtml, /r\.lastActivitySource==='PLATFORM'/);
-  assert.match(evolutionHtml, /r\.ownerSource\|\|t\('sourceUnknown'\)/);
-  assert.match(
-    evolutionHtml,
-    /r\.capabilityCountSource\|\|t\('sourceUnknown'\)/,
   );
   assert.match(
     evolutionHtml,
@@ -412,7 +485,7 @@ test('Stable-ID-required passports bind only an explicit source Passport to an e
   );
   assert.match(
     evolutionHtml,
-    /if\(action!=='fleet_load'&&state\.projection&&!payload\.snapshotId\)/,
+    /if\(action!=='fleet_load'&&action!=='automation_registry_load'&&state\.projection&&!payload\.snapshotId\)/,
     'passport draft requests must inherit the exact current snapshotId',
   );
 });
@@ -496,7 +569,7 @@ test('Shared Genes and Cabinet build an exact class escalation outside the canon
 
 test('Bulk preview targets only current visible canonical rows and is adapter-gated', () => {
   assert.match(evolutionHtml, /function eligibleBulkRows\(\)/);
-  assert.match(evolutionHtml, /var type=el\('bulkType'\)\.value,rows=visibleRows\(\)/);
+  assert.match(evolutionHtml, /var type=el\('bulkType'\)\.value,rows=legacyVisibleRows\(\)/);
   assert.match(
     evolutionHtml,
     /ids\.some\(function\(id\)\{return allowed\.indexOf\(id\)===-1;\}\)/,
