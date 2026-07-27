@@ -209,8 +209,8 @@ ETB.evolutionAutomationRegistry = (function () {
     },
     COMPOSER_REFERENCE_MISMATCH: {
       severity: 'warning',
-      ru: 'Запись установки Композитора расходится с карточкой устройства.',
-      en: 'The Composer installation record disagrees with the device card.'
+      ru: 'Запись быстрой сборки расходится с карточкой устройства.',
+      en: 'The quick-build installation record disagrees with the device card.'
     },
     CATALOG_INSTALLATION_MISMATCH: {
       severity: 'warning',
