@@ -236,7 +236,7 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
     <button id="navMy" onclick="setMode('my')">Найти</button>
     <button id="navWizard" onclick="setMode('wizard')" style="display:none">Мастер</button>
     <button id="navAuto" onclick="setMode('automations')">Автоматизации</button>
-    <button id="navCore" onclick="setMode('core')" style="display:none">🧬 Процессное ядро</button>
+    <button id="navCore" onclick="setMode('core')" style="display:none">Процессное ядро</button>
   </div>
   <div class="spacer"></div>
   <button class="btn ghost" id="agentBadge" onclick="openAgentManager()" title="Для какого агента строим (концепты, правила, память — в его мозг)">Агент…</button>
@@ -273,7 +273,7 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
   <div style="max-width:660px">
     <div style="font-size:14px;color:var(--silver,#889);line-height:1.55;margin:10px 0 16px">Мастер расспросит о задаче и построит процесс: откуда брать данные, по какому расписанию, кому слать готовый отчёт. Час разговора — и дальше процесс работает без тебя.</div>
     <button class="btn gold" style="padding:12px 22px;font-size:15px" onclick="agentGate().then(()=>{setMode('wizard');newSession();})">Пройти интервью с Мастером →</button>
-    <button class="btn ghost" style="padding:12px 18px;font-size:14px;margin-left:8px" onclick="openHelp('wizard')" title="Что делает Конструктор, что гарантирует, а что нет">? Как это работает</button>
+    <button class="btn ghost" style="padding:12px 18px;font-size:14px;margin-left:8px" onclick="openHelp('wizard')" title="Что делает Конструктор, что гарантирует, а что нет">Как это работает</button>
     <div style="display:flex;flex-wrap:wrap;gap:6px;margin:16px 0 4px">
       <span class="chip-ex" onclick="buildProcessFromTask(this.textContent)">дебиторка 28 филиалов каждый понедельник директору</span>
       <span class="chip-ex" onclick="buildProcessFromTask(this.textContent)">отвечать клиентам в Telegram 24/7</span>
@@ -294,11 +294,11 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
         <div style="font:700 20px var(--sans);color:var(--ink,#0a0a0a)">Команда</div>
         <div style="font-size:12.5px;color:var(--silver,#889)">общий контур: процессы, витрина и кабинеты — одни на всех участников. Роли и права — на подходе.</div>
       </div>
-      <button class="btn ghost" style="margin-left:auto;padding:8px 16px" onclick="openHelp('team')" title="Что делает, что гарантирует, а что нет">? Как это работает</button>
-      <button class="btn ghost" style="padding:8px 16px" onclick="closeTeam()">✕ Закрыть</button>
+      <button class="btn ghost" style="margin-left:auto;padding:8px 16px" onclick="openHelp('team')" title="Что делает, что гарантирует, а что нет">Как это работает</button>
+      <button class="btn ghost" style="padding:8px 16px" onclick="closeTeam()">Закрыть</button>
     </div>
     <div class="card" style="border-left:3px solid var(--gold,#c9a35c);margin-bottom:14px">
-      <div style="font-weight:700;font-size:13.5px;margin-bottom:6px">➕ Пригласить</div>
+      <div style="font-weight:700;font-size:13.5px;margin-bottom:6px">Пригласить</div>
       <div style="font-size:12px;color:var(--silver);margin-bottom:8px">Приглашение — именной ключ доступа к этому контуру. Показывается один раз: передайте лично (не по открытым каналам). Отозвать можно в любой момент.</div>
       <div style="display:flex;gap:8px">
         <input id="teamName" class="sess-select" placeholder="имя (например, Гульжан)" style="flex:1;max-width:none" onkeydown="if(event.key==='Enter')teamInvite()">
@@ -319,19 +319,19 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
         <div style="font:700 20px var(--sans);color:var(--ink,#0a0a0a)">Псевдоанонимизация</div>
         <div style="font-size:12.5px;color:var(--silver,#889)">ПДн заменяются стабильными токенами локально на этом устройстве — без ИИ-моделей, файлы никуда не отправляются</div>
       </div>
-      <button class="btn ghost" style="margin-left:auto;padding:8px 16px" onclick="openAnonHelp()" title="Что делает обезличивание, что гарантирует, а что нет">? Как это работает</button>
-      <button class="btn ghost" style="padding:8px 16px" onclick="closeAnonStudio()">✕ Закрыть</button>
+      <button class="btn ghost" style="margin-left:auto;padding:8px 16px" onclick="openAnonHelp()" title="Что делает обезличивание, что гарантирует, а что нет">Как это работает</button>
+      <button class="btn ghost" style="padding:8px 16px" onclick="closeAnonStudio()">Закрыть</button>
     </div>
     <div class="card" style="border-left:3px solid var(--gold,#c9a35c);margin-bottom:14px">
       <div style="font-weight:700;font-size:13.5px;margin-bottom:6px">1. Файлы</div>
       <div style="font-size:12px;color:var(--silver);margin-bottom:8px">Поддерживаются txt / md / csv / log / xlsx / xlsm / docx / pdf (PDF вернётся очищенным текстом). Одно значение — один токен во всех файлах задания: связи в данных сохраняются без раскрытия личности. Маскируются: ИИН и БИН (с проверкой контрольного разряда), телефоны, email, IBAN, БИК, счета и договоры, имена, адреса, прочие длинные номера.</div>
       <input type="file" id="anonFileInp" multiple style="display:none" onchange="anonFiles(this.files)">
-      <button class="btn ghost sm" onclick="el('anonFileInp').click()">➕ Выбрать файлы</button>
+      <button class="btn ghost sm" onclick="el('anonFileInp').click()">Выбрать файлы</button>
       <div id="anonFileList" style="margin-top:8px;font-size:13px"><div style="color:var(--silver);font-size:12px">файлы пока не выбраны</div></div>
       <div style="margin-top:10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-        <button class="btn gold sm" id="anonRunBtn" onclick="anonRun()" disabled>🛡️ Обезопасить файлы</button>
+        <button class="btn gold sm" id="anonRunBtn" onclick="anonRun()" disabled>Обезопасить файлы</button>
         <label style="font-size:12px;color:var(--silver);display:flex;align-items:center;gap:5px"><input type="checkbox" id="anonAggr" checked> маскировать все ФИО (агрессивно — может задеть заголовки)</label>
-        <label style="font-size:12px;color:var(--silver);display:flex;align-items:center;gap:5px" title="По умолчанию таблица соответствий остаётся ТОЛЬКО на этом устройстве, и агенты раскрывают токены локально (эксперт wz_anon_reveal). Галка выгружает её в вашу Extella зашифрованной ключом устройства — нужно ТОЛЬКО если раскрывать данные будут с ДРУГОГО устройства. Стойкость шифра зависит от вашего PIN."><input type="checkbox" id="anonShare"> 🔐 дать ключ агентам и на других устройствах (в облако, шифр ключом устройства)</label>
+        <label style="font-size:12px;color:var(--silver);display:flex;align-items:center;gap:5px" title="По умолчанию таблица соответствий остаётся ТОЛЬКО на этом устройстве, и агенты раскрывают токены локально (эксперт wz_anon_reveal). Галка выгружает её в твою Extella зашифрованной ключом устройства — нужно ТОЛЬКО если раскрывать данные будут с ДРУГОГО устройства. Стойкость шифра зависит от твоего PIN."><input type="checkbox" id="anonShare">дать ключ агентам и на других устройствах (в облако, шифр ключом устройства)</label>
         <span class="statusline" id="anonSt"></span>
       </div>
     </div>
@@ -349,7 +349,7 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
     <div id="xtl_help_body"></div>
     <div style="display:flex;align-items:center;gap:10px;margin-top:4px">
       <button class="btn gold" onclick="closeHelp()">Понятно</button>
-      <span style="font-size:11.5px;color:var(--silver,#889)">Это окно всегда можно открыть кнопкой «? Как это работает»</span>
+      <span style="font-size:11.5px;color:var(--silver,#889)">Это окно всегда можно открыть кнопкой «Как это работает»</span>
     </div>
   </div>
 </div>
@@ -363,14 +363,14 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
         <div style="font:700 20px var(--sans);color:var(--ink,#0a0a0a)">Студия языков</div>
         <div style="font-size:12.5px;color:var(--silver,#889)">предметные языки твоего аккаунта: программа словами дела → проверенный исполняемый результат</div>
       </div>
-      <button class="btn ghost" style="margin-left:auto;padding:8px 16px" onclick="openHelp('cspl')" title="Что делает, что гарантирует, а что нет">? Как это работает</button>
-      <button class="btn ghost" style="padding:8px 16px" onclick="closeCsplStudio()">✕ Закрыть</button>
+      <button class="btn ghost" style="margin-left:auto;padding:8px 16px" onclick="openHelp('cspl')" title="Что делает, что гарантирует, а что нет">Как это работает</button>
+      <button class="btn ghost" style="padding:8px 16px" onclick="closeCsplStudio()">Закрыть</button>
     </div>
     <div class="card" style="border-left:3px solid var(--gold,#c9a35c);margin-bottom:14px">
-      <div style="font-weight:700;font-size:13.5px;margin-bottom:6px">✨ Создать язык словами</div>
-      <div style="font-size:12px;color:var(--silver);margin-bottom:8px">Опишите, какой отчётный язык нужен: какие колонки обязательны, какой фильтр по умолчанию, что считать итогом. Проектировщик соберёт спецификацию поверх проверенного ядра и зарегистрирует язык ТОЛЬКО после контрольных прогонов.</div>
+      <div style="font-weight:700;font-size:13.5px;margin-bottom:6px">Создать язык словами</div>
+      <div style="font-size:12px;color:var(--silver);margin-bottom:8px">Опиши, какой отчётный язык нужен: какие колонки обязательны, какой фильтр по умолчанию, что считать итогом. Мастер соберёт спецификацию поверх проверенного ядра и зарегистрирует язык ТОЛЬКО после контрольных прогонов.</div>
       <textarea id="csplCreateDesc" placeholder="например: язык отчёта по просроченной дебиторке — обязательны колонки Филиал, Сумма долга, Дней просрочки; по умолчанию показывать только строки с просрочкой больше 30 дней; итог — сумма долга; группировать по филиалу" style="width:100%;height:72px;font-size:13px;border:1px solid var(--cream-dark);border-radius:8px;padding:8px"></textarea>
-      <div style="margin-top:8px"><button class="btn gold sm" onclick="csplCreate()">✨ Спроектировать и зарегистрировать</button><span class="statusline" id="csplCreateSt"></span></div>
+      <div style="margin-top:8px"><button class="btn gold sm" onclick="csplCreate()">Спроектировать и зарегистрировать</button><span class="statusline" id="csplCreateSt"></span></div>
       <div id="csplCreateOut" style="margin-top:8px;font-size:12.5px"></div>
     </div>
     <div id="csplList"><div class="empty"><span class="spin"></span> загружаю языки…</div></div>
@@ -387,8 +387,8 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
         <div style="font:700 20px var(--sans);color:var(--ink,#0a0a0a)">Студия Композитора</div>
         <div style="font-size:12.5px;color:var(--silver,#889)">задача словами → сборка из блоков → результат</div>
       </div>
-      <button class="btn ghost" style="margin-left:auto;padding:8px 16px" onclick="openHelp('composer')" title="Что делает, что гарантирует, а что нет">? Как это работает</button>
-      <button class="btn ghost" style="padding:8px 16px" onclick="closeCompStudio()">✕ Закрыть</button>
+      <button class="btn ghost" style="margin-left:auto;padding:8px 16px" onclick="openHelp('composer')" title="Что делает, что гарантирует, а что нет">Как это работает</button>
+      <button class="btn ghost" style="padding:8px 16px" onclick="closeCompStudio()">Закрыть</button>
     </div>
     <div style="border:1px solid var(--cream-dark,#d8d2c8);border-radius:14px;padding:18px 20px;background:var(--paper,#fff)">
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">
@@ -418,7 +418,7 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
     <input id="mySearchInput" placeholder="напр. перевести документы · распознать речь · MCP для Slack"
       style="flex:1;padding:14px 16px;border:1px solid var(--cream-dark,#d8d2c8);border-radius:6px;background:#fff;color:var(--ink,#0a0a0a);font-size:15px"
       onkeydown="if(event.key==='Enter')capSearch(this.value,'mySearchOut')">
-    <button class="btn gold" style="padding:0 22px;font-size:15px" onclick="capSearch(el('mySearchInput').value,'mySearchOut')">🔎 Искать</button>
+    <button class="btn gold" style="padding:0 22px;font-size:15px" onclick="capSearch(el('mySearchInput').value,'mySearchOut')">Искать</button>
   </div>
   <div id="mySearchOut" style="margin:8px 0 18px"></div>
   <div style="display:flex;align-items:center;gap:10px;margin:22px 0 8px">
@@ -450,7 +450,7 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
 </div>
 
 <div class="main" id="main">
-  <div id="noSession" class="empty">Создайте новую сессию или выбери существующую, чтобы начать.</div>
+  <div id="noSession" class="empty">Создайте новую проект или выбери существующую, чтобы начать.</div>
 
   <!-- ИНТЕРВЬЮ -->
   <section id="view-interview" class="hide">
@@ -463,7 +463,7 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
       <div style="font-size:12.5px;color:var(--silver);margin:-4px 0 8px">Опишите задачу одной фразой — конспект перестроится под неё (вместо стандартного списка).</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <input id="qtask" class="sess-select" style="flex:1;max-width:none;min-width:240px" placeholder="напр.: контроль дебиторки 28 филиалов из 1С с еженедельной сводкой директору">
-        <button class="btn gold sm" onclick="genQuestions()">⚡ Подобрать вопросы</button>
+        <button class="btn gold sm" onclick="genQuestions()">Подобрать вопросы</button>
       </div>
       <span class="statusline" id="stQGen"></span>
     </div>
@@ -475,7 +475,7 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
     <div class="card">
       <div class="kicker">Файлы-образцы</div>
       <div id="fileList" style="margin-bottom:10px"><span style="color:var(--silver);font-size:13px">Пока ничего не приложено.</span></div>
-      <label class="btn ghost sm" style="display:inline-block">📎 Приложить файл<input type="file" id="fileInput" multiple style="display:none" onchange="uploadFiles(this.files)"></label>
+      <label class="btn ghost sm" style="display:inline-block">Приложить файл<input type="file" id="fileInput" multiple style="display:none" onchange="uploadFiles(this.files)"></label>
       <span class="statusline" id="stFiles" style="margin-left:10px"></span>
     </div>
     <div class="toolbar">
@@ -491,7 +491,7 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
     <h1>План твоего процесса</h1>
     <p class="lede">План собирается ИИ-архитектором строго из каталога возможностей Extella: ничего выдуманного. Всё, чего платформе не хватает, честно показано в «Разрывах».</p>
     <div class="toolbar" style="margin-top:0">
-      <button class="btn gold" id="genBtn" onclick="generateBlueprint()">⚙ Собрать план</button>
+      <button class="btn gold" id="genBtn" onclick="generateBlueprint()">Собрать план</button>
       <button class="btn ghost" onclick="gotoStage('spec')" id="toSpecBtn" disabled>Дальше: техзадание →</button>
       <span class="statusline" id="stBlueprint"></span>
     </div>
@@ -508,10 +508,10 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
   <section id="view-spec" class="hide">
     <div class="kicker">Шаг 3 · Техзадание</div>
     <h1>Техзадание проекта</h1>
-    <p class="lede">Живой документ: собирается из всего, что накоплено в сессии — интервью, план, решения, комментарии. Наведи на раздел, чтобы оставить комментарий; правки — через Мастера («изменить в ТЗ…») или комментарием.</p>
+    <p class="lede">Живой документ: собирается из всего, что накоплено в проекта — интервью, план, решения, комментарии. Наведи на раздел, чтобы оставить комментарий; правки — через Мастера («изменить в ТЗ…») или комментарием.</p>
     <div class="toolbar" style="margin-top:0">
       <button class="btn gold" id="specBtn" onclick="regenerateSpec()">⟳ Обновить ТЗ</button>
-      <button class="btn ghost" onclick="askAssistant('Хочу внести изменение в техзадание: ')">💬 Попросить изменение</button>
+      <button class="btn ghost" onclick="askAssistant('Хочу внести изменение в техзадание: ')">Попросить изменение</button>
       <button class="btn ghost" onclick="gotoStage('test')">Дальше: стройка →</button>
       <span class="statusline" id="stSpec"></span>
     </div>
@@ -530,7 +530,7 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
   <section id="view-test" class="hide">
     <div class="kicker">Шаг 4 · Стройка</div>
     <h1>Соберём процесс</h1>
-    <p class="lede">Нажмите одну кнопку — платформа сама соберёт процесс по техзаданию: составит план, построит компоненты и проверит их. Отдельные чаты и команды не нужны. В конце — проверка безопасности перед запуском.</p>
+    <p class="lede">Нажми одну кнопку — платформа сама соберёт процесс по техзаданию: составит план, построит компоненты и проверит их. Отдельные чаты и команды не нужны. В конце — проверка безопасности перед запуском.</p>
     <div class="card" id="buildRunner"></div>
     <div id="buildProgress"></div>
     <div class="toolbar" id="buildFoot" style="display:none">
@@ -600,10 +600,10 @@ const QUESTIONS = [
   {id:"knowledge_base", q:"Правовая / справочная база", hint:"На какой документ опирается процесс: Трудовой / Гражданский / Налоговый кодекс РК, регламент, стандарт, политика — или ничего"},
   {id:"owner", q:"Владелец процесса", hint:"Кто отвечает, кого можно привлечь на калибровку"}
 ];
-// P2: адаптивный конспект — вопросы из сессии (сгенерены Qwen под задачу), фолбэк — статичный список
+// P2: адаптивный конспект — вопросы из проекта (сгенерены Qwen под задачу), фолбэк — статичный список
 function _qs(){ var qn=S.session&&S.session.questionnaire; return (qn&&qn.length)?qn:QUESTIONS; }
 async function genQuestions(){
-  if(!S.sessionId){ toast('Сначала создайте сессию процесса','err'); return; }
+  if(!S.sessionId){ toast('Сначала создайте проект процесса','err'); return; }
   var t=(el('qtask')&&el('qtask').value||'').trim();
   if(!t){ toast('Опишите задачу одной фразой','err'); return; }
   el('stQGen').innerHTML='<span class="spin"></span> подбираю вопросы под задачу…';
@@ -611,7 +611,7 @@ async function genQuestions(){
   if(r&&r.status==='success'){
     S._dcAuto=false;  // новый смысл задачи делает прежний аудит файла устаревшим
     await reloadSession();
-    el('stQGen').textContent='✓ конспект перестроен: '+r.count+' вопросов под твою задачу';
+    el('stQGen').textContent='конспект перестроен: '+r.count+' вопросов под твою задачу';
     render();
   } else {
     el('stQGen').textContent='не вышло: '+((r&&r.message)||'')+' — остался стандартный конспект';
@@ -725,7 +725,7 @@ function _agentGateRender(list, broken, why){
     + (rows ? '<div style="margin:12px 0 4px;font-size:12px;color:var(--silver)">Или выбери существующего:</div>'+rows : '')
     + '<div style="display:flex;gap:8px;margin-top:12px">'
     + '<button class="btn gold" style="flex:1" onclick="agentGateCreate()">＋ Создать агента (Qwen)</button>'
-    + '<button class="btn ghost" style="flex:0 0 40%" onclick="agentGateLink()">🔗 Вставить ID агента</button></div>'
+    + '<button class="btn ghost" style="flex:0 0 40%" onclick="agentGateLink()">Вставить ID агента</button></div>'
     + '<div id="agentGateMsg" style="font-size:12.5px;color:var(--silver);margin-top:10px">Впиши имя выше и нажми «Создать».</div>';
   el("modBack").classList.add("open");
   var ob=el("modOkBtn"); if(ob) ob.textContent="Позже";
@@ -735,7 +735,7 @@ async function _agentGateVerify(id, msgEl){
   if(msgEl) msgEl.innerHTML='<span class="spin"></span> проверяю, отвечает ли агент…';
   var chk; try{ chk=await jget('/x/agent_check'+(id?('?agent_id='+encodeURIComponent(id)):'')); }catch(e){ chk=null; }
   if(chk && chk.ok){
-    if(msgEl) msgEl.innerHTML='<span style="color:#2f9e56">✓ агент отвечает — всё готово</span>';
+    if(msgEl) msgEl.innerHTML='<span style="color:#2f9e56">агент отвечает — всё готово</span>';
     await refreshAgentBadge();
     setTimeout(function(){ modCancel(); }, 900);
     return true;
@@ -789,7 +789,7 @@ async function refreshAgentBadge(){
   try{ _agents = await fetch("/x/agents").then(r=>r.json()); }catch(e){ _agents={agents:[],current:""}; }
   const b=el("agentBadge"); if(!b) return;
   if(_agents && _agents.platform_ready===false){
-    b.textContent = _agents.auth_required ? "⚠ Запусти Extella" : "⚠ Нет связи";
+    b.textContent = _agents.auth_required ? "Запусти Extella" : "Нет связи";
     b.style.color="#a33b2f"; b.style.fontWeight="700";
     return;
   }
@@ -814,18 +814,18 @@ async function openAgentManager(){
     return '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid '+(on?'var(--gold,#c9a35c)':'var(--cream-dark,#e5e0d5)')+';border-radius:9px;margin-bottom:6px;background:'+(on?'#c9a35c14':'transparent')+'">'+
       '<div style="flex:1"><div style="font-weight:600;font-size:13px">'+(on?'✓ ':'')+esc(a.name)+'</div>'+
       '<div style="font-size:11px;color:var(--silver,#889)">'+esc(a.id)+' · '+(a.source==='created'?'создан визардом':'привязан')+'</div></div>'+
-      (on?'<button class="btn ghost" style="padding:4px 10px;font-size:12px" onclick="openBrain()">🧠 Мозг</button><span style="font-size:11px;color:var(--gold,#a97e35);font-weight:600">строим сюда</span>':
+      (on?'<button class="btn ghost" style="padding:4px 10px;font-size:12px" onclick="openBrain()">Мозг</button><span style="font-size:11px;color:var(--gold,#a97e35);font-weight:600">строим сюда</span>':
           '<button class="btn ghost" style="padding:4px 10px;font-size:12px" onclick="agentSelect(\''+a.id+'\')">Выбрать</button>')+
       '<button class="btn ghost" title="Убрать из визарда" style="padding:4px 8px;font-size:12px" onclick="agentUnlink(\''+a.id+'\')">✕</button>'+
     '</div>';
-  }).join('') || '<div style="font-size:13px;color:var(--silver,#889);padding:6px 0 12px">Пока ни одного агента. Создайте нового (это копия платформенной Qwen) или привяжите существующего по id.</div>';
+  }).join('') || '<div style="font-size:13px;color:var(--silver,#889);padding:6px 0 12px">Пока ни одного агента. Создай нового (это копия платформенной Qwen) или привяжи существующего по id.</div>';
   resetModInput();
-  el("modTitle").textContent="🤖 Для какого агента строим";
+  el("modTitle").textContent="Для какого агента строим";
   el("modHint").innerHTML="Концепты, правила и память процессов копятся в МОЗГ выбранного агента. Эксперты и данные — общие для всех.";
   el("modInput").outerHTML='<input id="modInput" type="hidden">'+list+
     '<div style="display:flex;gap:8px;margin-top:12px">'+
     '<button class="btn gold" style="flex:1" onclick="agentCreate()">＋ Создать агента (Qwen)</button>'+
-    '<button class="btn ghost" style="flex:1" onclick="agentLink()">🔗 Привязать по id</button></div>';
+    '<button class="btn ghost" style="flex:1" onclick="agentLink()">Привязать по id</button></div>';
   el("modBack").classList.add("open");
   const ob=el("modOkBtn"); if(ob) ob.textContent="Закрыть";
   _modCb=null;
@@ -835,7 +835,7 @@ async function agentCreate(){
   ask("Имя нового агента","Создам копию доступного Qwen. Подойдёт любая рабочая версия, провайдер, пользовательский ключ и API-endpoint; перед выбором проверю фактический ответ.","",async (nm)=>{
     if(!nm) return; busy("Создаю агента (копия Qwen)…");
     const r=await jpost("/x/agent_create",{name:nm}); busyOff();
-    if(r.status==="success"){ toast("✓ Агент создан и выбран","ok"); await refreshAgentBadge(); openAgentManager(); }
+    if(r.status==="success"){ toast("Агент создан и выбран","ok"); await refreshAgentBadge(); openAgentManager(); }
     else toast("Не удалось: "+(r.message||"ошибка"),"err");
   });
 }
@@ -844,7 +844,7 @@ async function agentLink(){
   ask("Привязать агента по id","Вставь agent_… существующего агента Extella (например, копию Qwen). Проверю и привяжу.","",async (id)=>{
     if(!id) return; busy("Привязываю…");
     const r=await jpost("/x/agent_link",{agent_id:id.trim()}); busyOff();
-    if(r.status==="success"){ toast("✓ Агент привязан и выбран","ok"); await refreshAgentBadge(); openAgentManager(); }
+    if(r.status==="success"){ toast("Агент привязан и выбран","ok"); await refreshAgentBadge(); openAgentManager(); }
     else toast("Не удалось: "+(r.message||"ошибка"),"err");
   });
 }
@@ -889,29 +889,29 @@ function _brainRender(res, seq){
   el("modHint").innerHTML="Знания и правила этого агента (его личный мозг). Концепты — что он знает о клиенте; правила — как он должен действовать/говорить. Эксперты (умения) — общий граф платформы.";
   var voiceN=rs.filter(function(r){return /\[голос\]/.test(r.text);}).length;
   var voiceBox='<div style="background:linear-gradient(135deg,#c9a35c14,transparent);border:1px solid var(--gold,#c9a35c);border-radius:9px;padding:9px 11px;margin-bottom:12px">'+
-    '<div style="font-weight:700;font-size:13px">🎙 Голос агента '+(voiceN?'<span style="color:var(--silver,#889);font-weight:400">выучен, '+voiceN+' правил</span>':'<span style="color:var(--silver,#889);font-weight:400">не задан</span>')+'</div>'+
+    '<div style="font-weight:700;font-size:13px">Голос агента '+(voiceN?'<span style="color:var(--silver,#889);font-weight:400">выучен, '+voiceN+' правил</span>':'<span style="color:var(--silver,#889);font-weight:400">не задан</span>')+'</div>'+
     '<div style="font-size:11.5px;color:var(--silver,#889);margin:2px 0 7px">Дайте 2–4 примера, как пишет клиент — агент выучит стиль (тон, длина, обороты) и будет отвечать так же.</div>'+
-    '<button class="btn gold" style="padding:5px 12px;font-size:12px" onclick="voiceLearn()">🎙 Обучить по примерам</button>'+
+    '<button class="btn gold" style="padding:5px 12px;font-size:12px" onclick="voiceLearn()">Обучить по примерам</button>'+
     (voiceN?' <button class="btn ghost" style="padding:5px 12px;font-size:12px" onclick="voiceTry()">▶ Примерить голос</button>':'')+'</div>';
   el("modInput").outerHTML='<input id="modInput" type="hidden">'+voiceBox+
-    sec("📚 Знания (концепты)","Факты о клиенте, данных, определения. Копятся сами (контур), вручную и из документа.",cs,"del_concept","add_concept").replace('＋ добавить словами</button>','＋ добавить словами</button> <button class="btn ghost" style="padding:5px 10px;font-size:12px;margin-top:2px" onclick="knowledgeLearn()">📚 Загрузить знание компании</button> <button class="btn ghost" style="padding:5px 10px;font-size:12px;margin-top:2px" onclick="knowledgeFromSource()">🔌 Знание из источника</button>')+
+    sec("Знания (концепты)","Факты о клиенте, данных, определения. Копятся сами (контур), вручную и из документа.",cs,"del_concept","add_concept").replace('＋ добавить словами</button>','＋ добавить словами</button> <button class="btn ghost" style="padding:5px 10px;font-size:12px;margin-top:2px" onclick="knowledgeLearn()">Загрузить знание компании</button> <button class="btn ghost" style="padding:5px 10px;font-size:12px;margin-top:2px" onclick="knowledgeFromSource()">Знание из источника</button>')+
     (function(){
       var srcs=res.sources||[];
       if(!srcs.length) return '';
-      return '<div style="margin-bottom:12px"><div style="font-weight:700;font-size:13px">🔄 Источники знаний (обновляются)</div>'+
+      return '<div style="margin-bottom:12px"><div style="font-weight:700;font-size:13px">Источники знаний (обновляются)</div>'+
         '<div style="font-size:11.5px;color:var(--silver,#889);margin:2px 0 6px">Мозг агента освежается свежими данными по расписанию — знание не устаревает.</div>'+
         srcs.map(function(x){
           var nd=x.next_due?(' · след. '+String(x.next_due).slice(0,16).replace("T"," ")):'';
           return '<div style="display:flex;gap:8px;align-items:center;padding:6px 8px;border:1px solid var(--cream-dark,#e5e0d5);border-radius:7px;margin-bottom:4px">'+
             '<div style="flex:1;font-size:12px"><b>'+esc(String(x.description||x.gen_id).slice(0,60))+'</b><div style="font-size:11px;color:var(--silver,#889)">'+(x.facts||0)+' фактов · каждые '+(x.interval_hours||24)+'ч'+esc(nd)+'</div></div>'+
-            '<button class="btn ghost" style="padding:4px 9px;font-size:12px" onclick="knowledgeRefresh(\''+esc(x.gen_id)+'\')">🔄 Обновить</button>'+
+            '<button class="btn ghost" style="padding:4px 9px;font-size:12px" onclick="knowledgeRefresh(\''+esc(x.gen_id)+'\')">Обновить</button>'+
             '<button class="btn ghost" style="padding:4px 8px;font-size:12px" onclick="knowledgeSourceRemove(\''+esc(x.gen_id)+'\')">✕</button></div>';
         }).join('')+'</div>';
     })()+
-    sec("📏 Правила","Как действовать и каким голосом отвечать (регламент, тон). Правила с 🎙 [голос] — выученный стиль.",rs,"del_rule","add_rule")+
+    sec("Правила","Как действовать и каким голосом отвечать (регламент, тон). Правила с 🎙 [голос] — выученный стиль.",rs,"del_rule","add_rule")+
     (function(){
       var sk=res.skills||{}, ex=sk.experts||[];
-      return '<div style="margin-bottom:6px"><div style="font-weight:700;font-size:13px">🛠 Умения '+
+      return '<div style="margin-bottom:6px"><div style="font-weight:700;font-size:13px">Умения '+
         '<span style="color:var(--silver,#889);font-weight:400">'+ex.length+' в '+(sk.processes||0)+' процесс.</span></div>'+
         '<div style="font-size:11.5px;color:var(--silver,#889);margin:2px 0 6px">Эксперты, которыми агент владеет через свои процессы. Сам граф экспертов — общий для платформы, любой можно задействовать в новом процессе.</div>'+
         (ex.length?ex.map(function(e){return '<div style="font-size:11.5px;color:var(--ink-soft);padding:2px 8px;border:1px solid var(--cream-dark,#e5e0d5);border-radius:6px;margin-bottom:3px;display:inline-block;margin-right:4px"><b>'+esc(e.name)+'</b></div>';}).join(''):
@@ -923,7 +923,7 @@ function _brainRender(res, seq){
 async function openBrain(){
   const seq=++_brainOpenSeq;
   resetModInput();
-  el("modTitle").textContent="🧠 Мозг агента";
+  el("modTitle").textContent="Мозг агента";
   el("modHint").textContent="Загружаю знания, правила, голос и умения. Окно можно закрыть — загрузка не заблокирует Wizard.";
   el("modInput").outerHTML='<input id="modInput" type="hidden"><div style="padding:18px 4px;font-size:13px;color:var(--ink-soft)"><span class="spin"></span> Читаю мозг агента…</div>';
   el("modBack").classList.add("open");
@@ -955,7 +955,7 @@ async function brainAdd(op){
   ask(isC?"Новое знание (концепт)":"Новое правило", isC?"Факт/определение для мозга агента, напр.: «CPL считаем как бюджет ÷ лиды»":"Правило поведения/голоса, напр.: «Всегда отвечать на языке клиента»","",async (t)=>{
     if(!t) return; busy("Записываю в мозг…");
     const r=await jpost("/x/brain_edit",{op:op,text:t}); busyOff();
-    if(r.status==="success"){ toast("✓ Записано","ok"); openBrain(); } else toast("Не удалось: "+(r.message||""),"err");
+    if(r.status==="success"){ toast("Записано","ok"); openBrain(); } else toast("Не удалось: "+(r.message||""),"err");
   });
 }
 async function brainDel(op,id){
@@ -965,15 +965,15 @@ async function brainDel(op,id){
   if(r.status==="success"){ openBrain(); } else toast("Не удалось удалить","err");
 }
 async function voiceLearn(){
-  askBig("🎙 Примеры голоса клиента","Вставь 2–4 реальных сообщения или письма, как пишет клиент (разделяй пустой строкой). Агент выучит стиль.","",async (txt)=>{
+  askBig("Примеры голоса клиента","Вставь 2–4 реальных сообщения или письма, как пишет клиент (разделяй пустой строкой). Агент выучит стиль.","",async (txt)=>{
     if(!txt||!txt.trim()) return;
     const samples=txt.split(/\n\s*\n/).map(s=>s.trim()).filter(Boolean);
     busy("Учу голос по примерам…");
     const r=await jpost("/x/voice_learn",{samples:samples}); busyOff();
     const res=(r&&r.result)||{};
     if(r.status==="success"){
-      toast("✓ Голос выучен: +"+(res.saved||0)+" правил","ok");
-      ask("🎙 Голос выучен", "Стиль: "+(res.summary||"")+"\n\nПравила голоса:\n• "+((res.rules||[]).join("\n• "))+"\n\nОни записаны в мозг агента (раздел Правила). Открыть мозг?", "", ()=>openBrain());
+      toast("Голос выучен: +"+(res.saved||0)+" правил","ok");
+      ask("Голос выучен", "Стиль: "+(res.summary||"")+"\n\nПравила голоса:\n• "+((res.rules||[]).join("\n• "))+"\n\nОни записаны в мозг агента (раздел Правила). Открыть мозг?", "", ()=>openBrain());
     } else toast("Не удалось: "+(r.message||res.err||""),"err");
   });
 }
@@ -982,23 +982,23 @@ async function voiceTry(){
     if(!sit) return; busy("Генерю ответ в голосе агента…");
     const r=await jpost("/x/voice_try",{situation:sit}); busyOff();
     const res=(r&&r.result)||{};
-    if(r.status==="success") ask("🎙 Ответ в голосе агента", res.reply||"(пусто)","",()=>openBrain());
+    if(r.status==="success") ask("Ответ в голосе агента", res.reply||"(пусто)","",()=>openBrain());
     else toast("Не удалось: "+(r.message||res.err||""),"err");
   });
 }
 async function knowledgeLearn(){
-  askBig("📚 Знание компании","Вставь текст: FAQ, прайс, регламент, описание продукта или услуги, правила доставки. Агент разберёт его на факты и запомнит.","",async (txt)=>{
+  askBig("Знание компании","Вставь текст: FAQ, прайс, регламент, описание продукта или услуги, правила доставки. Агент разберёт его на факты и запомнит.","",async (txt)=>{
     if(!txt||!txt.trim()) return; busy("Разбираю знание на факты…");
     const r=await jpost("/x/knowledge_learn",{text:txt}); busyOff();
     const res=(r&&r.result)||{};
     if(r.status==="success"){
-      toast("✓ Запомнено фактов: "+(res.saved||0),"ok");
+      toast("Запомнено фактов: "+(res.saved||0),"ok");
       openBrain();
     } else toast("Не удалось: "+(r.message||res.err||""),"err");
   });
 }
 async function knowledgeFromSource(){
-  ask("🔌 Источник данных — описание","Опишите источник словами (напр.: «список товаров с ценами из нашего JSON API»). Extella сама напишет и запустит подключение.","",async (desc)=>{
+  ask("Источник данных — описание","Опишите источник словами (напр.: «список товаров с ценами из нашего JSON API»). Extella сама напишет и запустит подключение.","",async (desc)=>{
     if(!desc) return;
     ask("Адрес источника (URL)","Ссылка на API/данные (если есть). Ключ/токен — отдельно, если нужен.","",async (url)=>{
       ask("Обновлять автоматически?","Период обновления в часах (напр. 24 — раз в сутки). Пусто — взять данные разово, без обновления.","",async (per)=>{
@@ -1007,7 +1007,7 @@ async function knowledgeFromSource(){
         const r=await jpost("/x/knowledge_from_source",{description:desc, endpoint:(url||"").trim(), save:hrs>0, interval_hours:hrs}); busyOff();
         const res=(r&&r.result)||{};
         if(r.status==="success"){
-          toast("✓ Запомнено фактов: "+(res.saved||0)+(res.saved_source?(" · обновление каждые "+res.saved_source.interval_hours+"ч"):""),"ok");
+          toast("Запомнено фактов: "+(res.saved||0)+(res.saved_source?(" · обновление каждые "+res.saved_source.interval_hours+"ч"):""),"ok");
           openBrain();
         } else toast("Не удалось: "+(r.message||res.err||"источник не отдал данных"),"err");
       });
@@ -1020,7 +1020,7 @@ async function knowledgeRefresh(gid){
   const r=await jpost("/x/knowledge_refresh",{gen_id:gid}); busyOff();
   if(seq!==_brainOpenSeq || !el("modBack").classList.contains("open")) return;
   const res=(r&&r.result)||{};
-  if(r.status==="success"){ toast("✓ Обновлено фактов: "+(res.saved||0),"ok"); openBrain(); }
+  if(r.status==="success"){ toast("Обновлено фактов: "+(res.saved||0),"ok"); openBrain(); }
   else toast("Не удалось: "+(r.message||res.err||""),"err");
 }
 async function knowledgeSourceRemove(gid){
@@ -1046,28 +1046,28 @@ function resetModInput(){ _modClearExtras(); var ob=el("modOkBtn"); if(ob) ob.te
 /* ================= EN/RU (демо на английский) ================= */
 var WLANG = (function(){ try { return localStorage.getItem('wz_lang') || 'ru'; } catch(e){ return 'ru'; } })();
 var WT = {
-  navWizard:{ru:'Мастер',en:'Wizard'}, navAuto:{ru:'Автоматизации',en:'Automations'}, navCore:{ru:'🧬 Процессное ядро',en:'🧬 Process core'},
+  navWizard:{ru:'Мастер',en:'Wizard'}, navAuto:{ru:'Автоматизации',en:'Automations'}, navCore:{ru:'Процессное ядро',en:'Process core'},
   newSess:{ru:'+ Новый проект',en:'+ New session'}, assistant:{ru:'Мастер',en:'Assistant'},
   kicker:{ru:'Мои автоматизации',en:'My automations'}, h1:{ru:'Твои собранные процессы',en:'Business process automations'},
   lede:{ru:'Каждый процесс: схема работы, запуск сейчас или по расписанию, история прогонов и результаты, публикация в витрину.',en:'Composed processes: logic as a flow, run now or on a schedule, logs and run results, a production agent, publishing.'},
-  run:{ru:'▶ Запустить сейчас',en:'▶ Run now'}, configure:{ru:'⚙ Настроить словами',en:'⚙ Configure in words'},
+  run:{ru:'▶ Запустить сейчас',en:'▶ Run now'}, configure:{ru:'Настроить словами',en:'Configure in words'},
   deployAg:{ru:'Развернуть агента',en:'Deploy agent'}, updateAg:{ru:'Обновить агента',en:'Update agent'},
-  share:{ru:'🔗 Поделиться',en:'🔗 Publish'}, edit:{ru:'✎ Изменить',en:'✎ Edit'},
+  share:{ru:'Поделиться',en:'Publish'}, edit:{ru:'Изменить',en:'Edit'},
   tSource:{ru:'Источник',en:'Source'}, tSchedule:{ru:'Расписание',en:'Schedule'}, tDeliver:{ru:'Куда слать результат',en:'Where to send results'}, tInbound:{ru:'Входящие',en:'Inbound'},
   cfgTitle:{ru:'Настроить словами',en:'Configure in words'},
   cfgHint:{ru:'Опишите, что мониторить (можно по-английски). Напр.: «watch OpenAI, Anthropic, LangChain and r/LocalLLaMA, post a daily digest to Slack».',en:'Describe what to monitor. E.g.: "watch OpenAI, Anthropic, LangChain and r/LocalLLaMA, post a daily digest to Slack".'},
   cfgBusy:{ru:'Понимаю запрос — агент собирает конфиг…',en:'Understanding your request — the agent is building the config…'},
-  cfgToast:{ru:'✓ Конфиг собран агентом',en:'✓ Config built by the agent'}, cfgOkTitle:{ru:'Готово ✓ — процесс настроен',en:'Done ✓ — process configured'},
+  cfgToast:{ru:'Конфиг собран агентом',en:'Config built by the agent'}, cfgOkTitle:{ru:'Готово ✓ — процесс настроен',en:'Done ✓ — process configured'},
   cfgOkBody:{ru:'Агент понял запрос и заполнил конфиг:\n\n',en:'The agent understood your request and filled the config:\n\n'},
   cfgFail:{ru:'Не удалось: ',en:'Failed: '},
   shTitle:{ru:'Опубликовать в магазин',en:'Publish to the store'},
   shHint:{ru:'Соберём Process Pack (репозиторий + карточка) и опубликуем в раздел «AI Автоматизации» витрины. Продолжить?',en:'We\'ll build a Process Pack (repository + card) and publish it to the "AI Automations" section of the store. Continue?'},
   shBusy:{ru:'Публикую в магазин — генерю пак и карточку…',en:'Publishing to the store — generating the pack and card…'},
-  shToast:{ru:'✓ Опубликовано в магазин',en:'✓ Published to the store'}, shOkTitle:{ru:'Опубликовано ✓',en:'Published ✓'},
+  shToast:{ru:'Опубликовано в магазин',en:'Published to the store'}, shOkTitle:{ru:'Опубликовано ✓',en:'Published ✓'},
   shOkCard:{ru:'Карточка появилась в витрине → «AI Автоматизации».\n',en:'The card appeared in the store → "AI Automations".\n'},
   shRepo:{ru:'Репозиторий: ',en:'Repository: '}, shLocal:{ru:'Пак собран локально.',en:'Pack built locally.'},
   shFail:{ru:'Ошибка публикации: ',en:'Publish error: '}, noAnswer:{ru:'нет ответа',en:'no response'},
-  connHdr:{ru:'🔌 Подключения',en:'🔌 Connections'},
+  connHdr:{ru:'Подключения',en:'Connections'},
   connSub:{ru:'Подключаешь один раз — статус виден здесь. В процессах ниже просто выбираешь из подключённого.',en:'Connect once — status stays here. In the processes below you just pick from what\'s connected.'},
   connOut:{ru:'Каналы вывода',en:'Output channels'}, connIn:{ru:'Источники данных',en:'Data sources'},
   chipTest:{ru:'тест',en:'test'}, chipConnect:{ru:'подключить',en:'connect'},
@@ -1092,7 +1092,7 @@ var _I18N_DICT = {
   "Собрать": "Build",
   "Найти": "Find",
   "Найти и поставить": "Find & install",
-  "? Как это работает": "? How it works",
+  "Как это работает": "How it works",
   "Нужно разовое дело, а не постоянный процесс? Открой ": "Need a one-off task, not a standing process? Open ",
   "Твои собранные процессы": "Your assembled processes",
   "Каждый процесс: схема работы, запуск сейчас или по расписанию, история прогонов и результаты, публикация в витрину.": "Each process: its flow, run now or on schedule, run history and results, publish to the store.",
@@ -1109,7 +1109,7 @@ var _I18N_DICT = {
   "Спроектировать бизнес-процесс": "Design a business process",
   "пригласить в общий контур": "invite into the shared workspace",
   "общий контур: процессы, витрина и кабинеты — одни на всех участников. Роли и права — на подходе.": "shared workspace: processes, showcase and cabinets are common for all members. Roles and permissions are coming.",
-  "➕ Пригласить": "➕ Invite",
+  "Пригласить": "Invite",
   "Приглашение — именной ключ доступа к этому контуру. Показывается один раз: передайте лично (не по открытым каналам). Отозвать можно в любой момент.": "An invite is a named access key to this workspace. Shown once: hand it over personally (not via open channels). Can be revoked anytime.",
   "Создать приглашение": "Create invite",
   "Где исполняется": "Where it runs",
@@ -1119,9 +1119,9 @@ var _I18N_DICT = {
   "это устройство": "this device",
   "паспортов устройств пока нет": "no device passports yet",
   "Паспорта устройств": "Device passports",
-  "✨ Создать язык словами": "✨ Create a language in words",
-  "✨ Спроектировать и зарегистрировать": "✨ Design and register",
-  "Опишите, какой отчётный язык нужен: какие колонки обязательны, какой фильтр по умолчанию, что считать итогом. Проектировщик соберёт спецификацию поверх проверенного ядра и зарегистрирует язык ТОЛЬКО после контрольных прогонов.": "Describe the reporting language you need: which columns are mandatory, the default filter, what counts as the total. The designer builds a specification on top of the verified core and registers the language ONLY after control runs.",
+  "Создать язык словами": "Create a language in words",
+  "Спроектировать и зарегистрировать": "Design and register",
+  "Опиши, какой отчётный язык нужен: какие колонки обязательны, какой фильтр по умолчанию, что считать итогом. Мастер соберёт спецификацию поверх проверенного ядра и зарегистрирует язык ТОЛЬКО после контрольных прогонов.": "Describe the reporting language you need: which columns are mandatory, the default filter, what counts as the total. The Master builds a specification on top of the verified core and registers the language ONLY after control runs.",
   "свои предметные языки": "your own domain languages",
   "предметные языки твоего аккаунта: программа словами дела → проверенный исполняемый результат": "your account's domain languages: a program in business terms → a verified executable result",
   "Создание нового языка словами (генеративный builder) — следующий этап Студии; сегодня языки регистрируются с обязательными контрольными прогонами (fixtures-гейт).": "Creating a new language in words (generative builder) is the Studio's next stage; today languages are registered with mandatory control runs (fixtures gate).",
@@ -1131,12 +1131,12 @@ var _I18N_DICT = {
   "Системное приложение — нельзя удалить": "System app — cannot be removed",
   "Студия Композитора": "Composer Studio",
   "задача словами → сборка из блоков → результат": "task in words → assembly from blocks → result",
-  "✕ Закрыть": "✕ Close",
+  "Закрыть": "Close",
   "Workspace-сервер спит — откройте карточку Workspace в тулбаре, она его поднимет": "The Workspace server is asleep — open the Workspace card in the toolbar to wake it up",
-  "Мои": "📦 My",
+  "Мои": "My",
   "Мастер": "Wizard",
   "Автоматизации": "Automations",
-  "🧬 Процессное ядро": "🧬 Process core",
+  "Процессное ядро": "Process core",
   "+ Новый проект": "+ New session",
   "Language / Язык": "Language",
   "Мастер": "Assistant",
@@ -1145,31 +1145,31 @@ var _I18N_DICT = {
   "Каждый процесс: схема работы, запуск сейчас или по расписанию, история прогонов и результаты, публикация в витрину.": "Assembled processes: logic as a diagram, run now or on a schedule, logs and run results, a production agent, publishing.",
   "Создать автоматизацию": "Create automation",
   "Что хотите поручить Extella?": "What do you want to hand off to Extella?",
-  "⚡ Собрать задачу из готовых блоков": "⚡ Assemble a task from ready-made blocks",
+  "Собрать задачу из готовых блоков": "Assemble a task from ready-made blocks",
   "Разбор файлов, дайджесты, поиск, отчёты. Композитор подберёт блоки из твоей библиотеки, доустановит недостающее — и сразу запустит.": "File parsing, digests, search, reports. The Composer picks blocks from your library, installs what's missing — and runs it right away.",
   "найти забытые подписки в банковских выписках": "find forgotten subscriptions in bank statements",
   "следить за конкурентами и слать дайджест": "monitor competitors and send a digest",
   "превратить папку PDF в базу знаний": "turn a PDF folder into a knowledge base",
   "опишите задачу одной фразой…": "describe the task in one phrase…",
   "Собрать": "Assemble",
-  "🏢 Спроектировать бизнес-процесс": "🏢 Design a business process",
+  "Спроектировать бизнес-процесс": "Design a business process",
   "Процесс, который живёт в компании постоянно: данные из твоих систем, расписание, получатели, рабочий агент 24/7. Мастер проведёт интервью и построит под тебя.": "A process that lives in the company permanently: data from your systems, a schedule, recipients, a production agent 24/7. The Wizard runs the interview and builds it for you.",
   "дебиторка 28 филиалов каждый понедельник директору": "receivables for 28 branches every Monday to the director",
   "сводка заявок на закуп из 1С": "summary of purchase requests from 1C",
   "отвечать клиентам в Telegram 24/7": "answer customers in Telegram 24/7",
   "Пройти интервью с Мастером →": "Take the Wizard interview →",
-  "Найти и поставить": "📦 My library",
+  "Найти и поставить": "My library",
   "Найди что угодно. Extella поставит.": "Find anything. Extella installs it.",
   "Ищи умения по всему интернету: модели, инструменты, подключения, навыки. Ставятся одним кликом — установленное появится здесь.": "Search for capabilities across the whole internet — local models (HuggingFace), MCP servers (npm), CLI tools (GitHub), skills (Smithery). Installs with one click; what's installed appears here.",
   "напр. перевести документы · распознать речь · MCP для Slack": "e.g. translate documents · transcribe speech · MCP for Slack",
-  "🔎 Искать": "🔎 Search",
+  "Искать": "Search",
   "Установлено": "Installed",
   "↻ Обновить": "↻ Refresh",
   "загружаю…": "loading…",
   "Ров продукта": "Product moat",
   "Процессное ядро": "Process core",
   "Мы строим шесть универсальных процессных модулей один раз — каждая отрасль переиспользует их, добавляя лишь тонкий регуляторный слой. Продаём отраслью, строим процессами.": "We build six universal process modules once — each industry reuses them, adding only a thin regulatory layer. We sell by industry, build by process.",
-  "Создайте новую сессию или выбери существующую, чтобы начать.": "Create a new session or select an existing one to get started.",
+  "Создайте новую проект или выбери существующую, чтобы начать.": "Create a new session or select an existing one to get started.",
   "Шаг 1 · Интервью": "Step 1 · Interview",
   "Расскажи о своём процессе": "Tell us about your process",
   "Главный способ — разговор с Мастером справа: он проведёт интервью и сам заполнит конспект ниже. Любой пункт конспекта можно поправить руками — кликните по нему. Приложи файлы-образцы (выгрузки, шаблоны) — это сильно ускорит проектирование.": "The main way is a conversation with the Assistant on the right: it runs the interview and fills in the notes below itself. Any item in the notes can be edited by hand — click on it. Attach sample files (exports, templates) — it greatly speeds up the design.",
@@ -1177,27 +1177,27 @@ var _I18N_DICT = {
   "Заполняется сам по ходу разговора с Мастером. Руками правьте, когда хотите уточнить формулировку или добавить то, о чём он не спросил.": "Fills in by itself as you talk with the Assistant. Edit by hand when you want to refine the wording or add something it didn't ask about.",
   "Файлы-образцы": "Sample files",
   "Пока ничего не приложено.": "Nothing attached yet.",
-  "📎 Приложить файл": "📎 Attach file",
+  "Приложить файл": "Attach file",
   "Сохранить конспект": "Save notes",
   "Завершить интервью → План": "Finish interview → Plan",
   "Шаг 2 · План процесса": "Step 2 · Process plan",
   "План твоего процесса": "Your process plan",
   "План собирается ИИ-архитектором строго из каталога возможностей Extella: ничего выдуманного. Всё, чего платформе не хватает, честно показано в «Разрывах».": "The plan is assembled by an AI architect strictly from Extella's capability catalog: nothing made up. Everything the platform lacks is shown honestly in 'Gaps'.",
-  "⚙ Собрать план": "⚙ Assemble plan",
+  "Собрать план": "Assemble plan",
   "Дальше: техзадание →": "Next: spec →",
   "Шаг 3 · Техзадание": "Step 3 · Spec",
   "Техзадание проекта": "Project spec",
-  "Живой документ: собирается из всего, что накоплено в сессии — интервью, план, решения, комментарии. Наведи на раздел, чтобы оставить комментарий; правки — через Мастера («изменить в ТЗ…») или комментарием.": "A living document: assembled from everything gathered in the session — interview, plan, decisions, comments. Hover over a section to leave a comment; edits go through the Assistant ('change in the spec…') or via a comment, and the team applies them.",
+  "Живой документ: собирается из всего, что накоплено в проекта — интервью, план, решения, комментарии. Наведи на раздел, чтобы оставить комментарий; правки — через Мастера («изменить в ТЗ…») или комментарием.": "A living document: assembled from everything gathered in the session — interview, plan, decisions, comments. Hover over a section to leave a comment; edits go through the Assistant ('change in the spec…') or via a comment, and the team applies them.",
   "⟳ Обновить ТЗ": "⟳ Update spec",
   "Хочу внести изменение в техзадание: ": "I want to make a change to the spec: ",
-  "💬 Попросить изменение": "💬 Request a change",
+  "Попросить изменение": "Request a change",
   "Дальше: тест →": "Next: test →",
   "Дальше: стройка →": "Next: build →",
   "Схема процесса — как это будет работать": "Process diagram — how it will work",
   "Комментарии к ТЗ": "Comments on the spec",
   "Шаг 4 · Стройка": "Step 4 · Build",
   "Соберём процесс": "Assemble the process",
-  "Нажмите одну кнопку — платформа сама соберёт процесс по техзаданию: составит план, построит компоненты и проверит их. Отдельные чаты и команды не нужны. В конце — проверка безопасности перед запуском.": "Press one button — the platform assembles the process from the spec on its own: it drafts a plan, builds the components and tests them. Separate chats and commands aren't needed. At the end — a security check before launch.",
+  "Нажми одну кнопку — платформа сама соберёт процесс по техзаданию: составит план, построит компоненты и проверит их. Отдельные чаты и команды не нужны. В конце — проверка безопасности перед запуском.": "Press one button — the platform assembles the process from the spec on its own: it drafts a plan, builds the components and tests them. Separate chats and commands aren't needed. At the end — a security check before launch.",
   "Дальше: запуск →": "Next: launch →",
   "Шаг 5 · Запуск": "Step 5 · Launch",
   "Запуск процесса": "Process launch",
@@ -1233,11 +1233,11 @@ var _I18N_DICT = {
   "Стройка": "Build",
   "Запуск": "Launch",
   "▶ Запустить сейчас": "▶ Run now",
-  "⚙ Настроить словами": "⚙ Configure in words",
+  "Настроить словами": "Configure in words",
   "Развернуть агента": "Deploy agent",
   "Обновить агента": "Update agent",
-  "🔗 Поделиться": "🔗 Publish",
-  "✎ Изменить": "✎ Edit",
+  "Поделиться": "Publish",
+  "Изменить": "Edit",
   "Источник": "Source",
   "Расписание": "Schedule",
   "Куда слать результат": "Where to send results",
@@ -1245,21 +1245,21 @@ var _I18N_DICT = {
   "Настроить словами": "Configure in words",
   "Опишите, что мониторить (можно по-английски). Напр.: «watch OpenAI, Anthropic, LangChain and r/LocalLLaMA, post a daily digest to Slack».": "Describe what to monitor (English is fine). E.g.: «watch OpenAI, Anthropic, LangChain and r/LocalLLaMA, post a daily digest to Slack».",
   "Понимаю запрос — агент собирает конфиг…": "Understanding your request — the agent is building the config…",
-  "✓ Конфиг собран агентом": "✓ Config built by the agent",
+  "Конфиг собран агентом": "Config built by the agent",
   "Готово ✓ — процесс настроен": "Done ✓ — process configured",
   "Агент понял запрос и заполнил конфиг:": "The agent understood your request and filled in the config:",
   "Не удалось: ": "Failed: ",
   "Опубликовать в магазин": "Publish to the store",
   "Соберём Process Pack (репозиторий + карточка) и опубликуем в раздел «AI Автоматизации» витрины. Продолжить?": "We'll build a Process Pack (repository + card) and publish it to the «AI Automations» section of the store. Continue?",
   "Публикую в магазин — генерю пак и карточку…": "Publishing to the store — generating the pack and card…",
-  "✓ Опубликовано в магазин": "✓ Published to the store",
+  "Опубликовано в магазин": "Published to the store",
   "Опубликовано ✓": "Published ✓",
   "Карточка появилась в витрине → «AI Автоматизации».": "The card appeared in the store → «AI Automations».",
   "Репозиторий: ": "Repository: ",
   "Пак собран локально.": "Pack built locally.",
   "Ошибка публикации: ": "Publish error: ",
   "нет ответа": "no response",
-  "🔌 Подключения": "🔌 Connections",
+  "Подключения": "Connections",
   "Подключаешь один раз — статус виден здесь. В процессах ниже просто выбираешь из подключённого.": "Connect once — the status stays here. In the processes below you just pick from what's connected.",
   "Каналы вывода": "Output channels",
   "Источники данных": "Data sources",
@@ -1273,16 +1273,16 @@ var _I18N_DICT = {
   "нет расписания/прогонов": "no schedule / runs",
   "прогон": "run",
   "— выбрать проект —": "— select session —",
-  "Новая сессия": "New session",
+  "Новая проект": "New session",
   "Название клиента или процесса — как в договоре/чате": "Client or process name — as in the contract/chat",
   "Не удалось создать проект: ": "Failed to create session: ",
-  "✓ Проект создан — расскажи Мастеру о задаче": "✓ Session created — tell the Assistant about your task",
+  "Проект создан — расскажи Мастеру о задаче": "Session created — tell the Assistant about your task",
   "Данные клиента": "Client data",
   "файл / выгрузка": "file / export",
   " · результат": " · result",
   "Не удалось создать проект: ": "Failed to create project: ",
   "Проект создан — отправь сообщение Мастеру, чтобы начать интервью по пробелу": "Project created — send a message to the Assistant to start the interview about the gap",
-  "🏢 Похоже на бизнес-процесс": "🏢 Looks like a business process",
+  "Похоже на бизнес-процесс": "Looks like a business process",
   " — такие надёжнее строить через интервью с Мастером.": " — these are more reliably built through an interview with the Wizard.",
   "Пройти интервью →": "Take the interview →",
   "по смыслу задачи": "based on the task's meaning",
@@ -1292,23 +1292,23 @@ var _I18N_DICT = {
   "модель": "model",
   "модели": "models",
   "Не всё нашлось в твоей библиотеке — можно доустановить или достроить:": "Not everything was found in your library — you can install what's missing or build it:",
-  "🌐 Найти в интернете": "🌐 Find online",
-  "🧩 Достроить Мастером": "🧩 Build the rest with the Wizard",
-  "⚙ Технические детали (для любопытных)": "⚙ Technical details (for the curious)",
+  "Найти в интернете": "Find online",
+  "Достроить Мастером": "Build the rest with the Wizard",
+  "Технические детали (для любопытных)": "Technical details (for the curious)",
   "Собрано из твоих блоков:": "Assembled from your blocks:",
   "＋ Сохранить как автоматизацию": "＋ Save as automation",
   "«Запустить» — прогнать разово, результат покажу здесь. «Сохранить» — добавить в «Мои», чтобы ставить на расписание и слать в Telegram/почту.": "«Run» — run it once, I'll show the result here. «Save» — add it to «Mine» to schedule it and send it to Telegram/email.",
   "Уже сохранено — открой «Автоматизации»": "Already saved — open «Automations»",
-  "✓ Сохранено в «Мои автоматизации»": "✓ Saved to «My automations»",
-  "✓ В автоматизациях — открыть": "✓ In automations — open",
+  "Сохранено в «Мои автоматизации»": "Saved to «My automations»",
+  "В автоматизациях — открыть": "In automations — open",
   "Ошибка: ": "Error: ",
   "ищу по HuggingFace · npm · GitHub · Smithery…": "searching HuggingFace · npm · GitHub · Smithery…",
   "Ничего подходящего не нашлось. Уточни запрос.": "Nothing suitable found. Refine your query.",
   "Установить": "Install",
   "ставлю…": "installing…",
-  "✓ установлено · в «Мои»": "✓ installed · in «Mine»",
+  "установлено · в «Мои»": "installed · in «Mine»",
   "⏳ ставится… · в «Мои»": "⏳ installing… · in «Mine»",
-  "✓ добавлено в «Мои»": "✓ added to «Mine»",
+  "добавлено в «Мои»": "added to «Mine»",
   "не установилось": "installation failed",
   "Пока пусто. Найди способность выше и установи — она появится здесь.": "Empty for now. Find a capability above and install it — it'll appear here.",
   "● установлено": "● installed",
@@ -1330,7 +1330,7 @@ var _I18N_DICT = {
   "решено": "Resolved",
   "Комментарий для команды…": "Comment for the team…",
   "Добавить": "Add",
-  "✓ Сохранить": "✓ Save",
+  "Сохранить": "Save",
   "конспект пуст — поговори с Мастером или заполни пункт": "the outline is empty — talk to the Assistant or fill in an item",
   "сохраняю через платформу…": "saving via the platform…",
   "ошибка: ": "error: ",
@@ -1338,11 +1338,11 @@ var _I18N_DICT = {
   "гость": "Guest",
   "Ваше имя": "Your name",
   "Подпись для комментариев (запомним)": "Signature for comments (we'll remember)",
-  "Сначала создайте сессию": "Create a session first",
+  "Сначала создайте проект": "Create a session first",
   "ИИ-архитектор собирает план (≈20–60 с)…": "The AI architect is assembling the plan (≈20–60 s)…",
   "Проверка данных": "Data check",
   "Проверю, поддерживает ли твой файл описанный процесс.": "I'll check whether your file supports the described process.",
-  "🔎 Проверить данные": "🔎 Check data",
+  "Проверить данные": "Check data",
   "файл поддерживает процесс": "the file supports the process",
   "файл не поддерживает процесс": "the file doesn't support the process",
   "нет файла": "no file",
@@ -1371,10 +1371,10 @@ var _I18N_DICT = {
   "Как закрываем:": "How we close it:",
   "Открытые вопросы": "Open questions",
   "Не удалось обновить ТЗ": "Couldn't update the spec",
-  "✓ ТЗ обновлено": "✓ Spec updated",
-  "✓ Техзадание обновлено": "✓ Spec updated",
-  "собираю ТЗ из сессии…": "assembling the spec from the session…",
-  "Текст ТЗ ещё не собран. Нажми «Обновить ТЗ» — документ соберётся из интервью, плана и решений сессии.": "The spec text isn't assembled yet. Click «Update spec» — the document will be assembled from the interview, the plan and the session's decisions.",
+  "ТЗ обновлено": "Spec updated",
+  "Техзадание обновлено": "Spec updated",
+  "собираю ТЗ из проекта…": "assembling the spec from the session…",
+  "Текст ТЗ ещё не собран. Нажми «Обновить ТЗ» — документ соберётся из интервью, плана и решений проекта.": "The spec text isn't assembled yet. Click «Update spec» — the document will be assembled from the interview, the plan and the session's decisions.",
   "Дополните фразу в чате и нажми →": "Complete the phrase in the chat and press →",
   "Биллинг / платежи": "Billing / payments",
   "Возвраты / компенсации": "Refunds / compensation",
@@ -1447,7 +1447,7 @@ var _I18N_DICT = {
   "Сначала соберите план процесса (шаг «План»).": "First assemble the process plan (the \"Plan\" step).",
   "Идёт сборка…": "Assembling…",
   "↻ Собрать заново": "↻ Assemble again",
-  "🔨 Построить процесс": "🔨 Build process",
+  "Построить процесс": "Build process",
   "Платформа сама составит план, построит компоненты и проверит их. Это займёт несколько минут — можно не ждать у экрана, прогресс сохраняется.": "The platform drafts the plan, builds the components and verifies them itself. This takes a few minutes — you don't need to wait at the screen, progress is saved.",
   "запускаю сборку…": "starting the assembly…",
   "Не удалось запустить сборку:": "Couldn't start the assembly:",
@@ -1463,14 +1463,14 @@ var _I18N_DICT = {
   "пройдена с замечаниями": "passed with remarks",
   "Процесс ещё не построен.": "The process isn't built yet.",
   "Вернитесь на шаг «Стройка» и нажми «Построить процесс».": "Go back to the \"Build\" step and click \"Build process\".",
-  "✓ Проверка безопасности пройдена — можно запускать.": "✓ Safety check passed — you can launch.",
-  "❌ Проверка требует вмешательства команды Extella — запуск заблокирован.": "❌ The check requires the Extella team's intervention — launch is blocked.",
-  "⚠️ Проверка пройдена с замечаниями — подтвердите перед запуском.": "⚠️ Check passed with remarks — confirm before launching.",
+  "Проверка безопасности пройдена — можно запускать.": "Safety check passed — you can launch.",
+  "Проверка требует вмешательства команды Extella — запуск заблокирован.": "The check requires the Extella team's intervention — launch is blocked.",
+  "Проверка пройдена с замечаниями — подтвердите перед запуском.": "Check passed with remarks — confirm before launching.",
   "Проверка перед запуском": "Pre-launch check",
-  "✓ Процесс запущен.": "✓ Process launched.",
-  "Компоненты собраны и одобрены. Для работы 24/7 по расписанию команда Extella один раз настроит машину-исполнитель (Listener) — это последний технический шаг вне вашего пути.": "Components are assembled and approved. For 24/7 scheduled operation, the Extella team sets up the executor machine (Listener) once — the last technical step outside your journey.",
-  "🚀 Запустить процесс": "🚀 Launch process",
-  "📊 Результат на твоих данных (пробный прогон)": "📊 Result on your data (trial run)",
+  "Процесс запущен.": "Process launched.",
+  "Компоненты собраны и одобрены. Для работы 24/7 по расписанию команда Extella один раз настроит машину-исполнитель (Listener) — это последний технический шаг вне твоего пути.": "Components are assembled and approved. For 24/7 scheduled operation, the Extella team sets up the executor machine (Listener) once — the last technical step outside your journey.",
+  "Запустить процесс": "Launch process",
+  "Результат на твоих данных (пробный прогон)": "Result on your data (trial run)",
   "позиций": "items",
   "общая сумма": "total sum",
   "Оркестратор процесса:": "Process orchestrator:",
@@ -1483,24 +1483,24 @@ var _I18N_DICT = {
   "проверяю и запускаю…": "checking and launching…",
   "Аудит отметил на подтверждение:": "The audit flagged for confirmation:",
   "Запустить процесс?": "Launch the process?",
-  "🚀 Процесс запущен": "🚀 Process launched",
-  "✅ Одобрить запуск": "✅ Approve launch",
+  "Процесс запущен": "Process launched",
+  "Одобрить запуск": "Approve launch",
   "проверяю и одобряю…": "checking and approving…",
   "Одобрить запуск процесса?": "Approve the process for launch?",
-  "✅ Процесс одобрен — сделайте первый прогон": "✅ Process approved — do the first run",
-  "✓ Процесс одобрен и готов.": "✓ Process approved and ready.",
+  "Процесс одобрен — сделайте первый прогон": "Process approved — do the first run",
+  "Процесс одобрен и готов.": "Process approved and ready.",
   "Компоненты собраны, состав зафиксирован. Одобрение — не запуск: сделайте первый прогон, чтобы увидеть реальный результат.": "Components are assembled, the composition is locked. Approval is not a run: do the first run to see the real result.",
   "▶ Сделать первый прогон": "▶ Do the first run",
   "прогон идёт…": "run in progress…",
   "Ошибка прогона:": "Run error:",
-  "✓ Прогон выполнен:": "✓ Run completed:",
+  "Прогон выполнен:": "Run completed:",
   "Не удалось одобрить:": "Approval failed:",
   "Ошибка:": "Error:",
   "Мастер думает и записывает ответы в проект — это нормально, до ~минуты…": "The assistant is thinking and saving answers to the project — this is normal, up to ~a minute…",
   "Мастер думает и записывает ответы — это нормально, до ~минуты…": "The assistant is thinking and saving answers — this is normal, up to ~a minute…",
   "Идёт важная работа: помощник сохраняет ответы в проект. Подождите, не закрывайте…": "Important work in progress: the assistant is saving answers to the project. Please wait, don't close…",
   "⤵ Перенести ответы в конспект": "⤵ Move answers into the outline",
-  "✓ Перенесено": "✓ Moved",
+  "Перенесено": "Moved",
   "1С (файл)": "1C (file)",
   "1С (сервер)": "1C (server)",
   "Сводки и ответы приходят в чат Telegram": "Summaries and replies arrive in a Telegram chat",
@@ -1526,7 +1526,7 @@ var _I18N_DICT = {
   "путь к файлу выгрузки": "path to the export file",
   "Прямо из 1С на твоём сервере": "Straight from 1C on your server",
   "адрес сервера и логин WinRM": "server address and WinRM login",
-  "✓ подключено": "✓ connected",
+  "подключено": "connected",
   "найдено в Travel-паке": "found in the Travel pack",
   "проверить": "test",
   "отключить": "disconnect",
@@ -1541,24 +1541,24 @@ var _I18N_DICT = {
   "Поиск туров и подборки для клиентов турагентства": "Tour search and selections for travel agency clients",
   "Понадобится: JWT из кабинета pro.tourvisor.ru → Настройки → Интеграции": "Needed: JWT from the pro.tourvisor.ru account → Settings → Integrations",
   "＋ найдено: WhatsApp": "＋ found: WhatsApp",
-  "⚠ токен Tourvisor истекает": "⚠ Tourvisor token expiring",
+  "токен Tourvisor истекает": "Tourvisor token expiring",
   "пока ничего не подключено": "nothing connected yet",
   "Tourvisor — JWT-токен": "Tourvisor — JWT token",
   "Возьмите в кабинете pro.tourvisor.ru → Настройки → Интеграции. Токен живёт ~год.": "Get it in the pro.tourvisor.ru account → Settings → Integrations. The token lives ~a year.",
   "Сохраняю токен Tourvisor…": "Saving Tourvisor token…",
-  "✓ Токен Tourvisor обновлён": "✓ Tourvisor token updated",
+  "Токен Tourvisor обновлён": "Tourvisor token updated",
   "проверяю…": "testing…",
-  "✓ Tourvisor отвечает": "✓ Tourvisor responds",
+  "Tourvisor отвечает": "Tourvisor responds",
   "· городов вылета:": "· departure cities:",
   "Tourvisor не ответил — проверьте токен": "Tourvisor didn't respond — check the token",
   "WhatsApp — кому слать по умолчанию": "WhatsApp — who to send to by default",
   "Номер получателя, напр. 77001234567 (можно пропустить — спросим при доставке).": "Recipient number, e.g. 77001234567 (you can skip it — we'll ask on delivery).",
   "Переношу подключение в общий сейф…": "Moving the connection to the shared vault…",
-  "✓ WhatsApp теперь общее подключение": "✓ WhatsApp is now a shared connection",
+  "WhatsApp теперь общее подключение": "WhatsApp is now a shared connection",
   "Отключаю…": "Disconnecting…",
   "Отключено": "Disconnected",
   "Проверяю связь…": "Testing connection…",
-  "✓ Связь есть": "✓ Connection works",
+  "Связь есть": "Connection works",
   "Не подтверждено:": "Not confirmed:",
   "проверьте данные": "check the details",
   "обновить в Подключениях": "update in Connections",
@@ -1566,14 +1566,14 @@ var _I18N_DICT = {
   "Процесс": "Process",
   "● активен": "● active",
   "⏸ пауза": "⏸ paused",
-  "🔒 заморожен": "🔒 frozen",
-  "🧳 Работа": "🧳 Work",
-  "🧭 Процесс": "🧭 Process",
+  "заморожен": "frozen",
+  "Работа": "Work",
+  "Процесс": "Process",
   "Настройка": "Settings",
   "Правила": "Rules",
   "Шаблон": "Template",
   "Прогоны": "Runs",
-  "✕ Закрыть": "✕ Close",
+  "Закрыть": "Close",
   "Доменная работа этого пака — лиды, подборки, рассылки, договоры.": "This pack's domain work — leads, selections, mailouts, contracts.",
   "открыть в отдельном окне ↗": "open in a separate window ↗",
   "нужно:": "needs:",
@@ -1587,21 +1587,21 @@ var _I18N_DICT = {
   "Сгенерированы Мастером под твой процесс. Влияют на то, как собирается результат.": "Generated by the Wizard for your process. They affect how the result is assembled.",
   "Сохранить настройки": "Save settings",
   "Мастер может выделить настройки этого процесса (пороги, имена, период) — чтобы менять их прямо тут.": "The Wizard can surface this process's settings (thresholds, names, period) — so you can change them right here.",
-  "✨ Сгенерировать настройки": "✨ Generate settings",
+  "Сгенерировать настройки": "Generate settings",
   "Что делает": "What it does",
   "Собранный процесс.": "Assembled process.",
   "Как проходит процесс": "How the process works",
   "Шаги собраны Мастером под твою задачу. Правки данных/получателей — во вкладках; переделать шаги — «Открыть в Мастере».": "Steps assembled by the Wizard for your task. Edit data/recipients in the tabs; to redo the steps — \"Open in Wizard\".",
   "Пересобираю поля процесса…": "Rebuilding process fields…",
   "Мастер выделяет настройки процесса…": "The Wizard is surfacing the process settings…",
-  "✓ Поля готовы": "✓ Fields ready",
+  "Поля готовы": "Fields ready",
   "Ошибка": "Error",
   "Сохраняю настройки…": "Saving settings…",
-  "✓ Настройки сохранены": "✓ Settings saved",
+  "Настройки сохранены": "Settings saved",
   "эту автоматизацию": "this automation",
   "Уйдёт в архив (можно вернуть), расписание снимется, из витрины уберётся. Продолжить?": "It will go to the archive (can be restored), the schedule will be removed, and it will disappear from the showcase. Continue?",
   "Убираю в архив…": "Moving to archive…",
-  "✓ Автоматизация убрана в архив": "✓ Automation moved to archive",
+  "Автоматизация убрана в архив": "Automation moved to archive",
   "Источник: ": "Source: ",
   "Источник: входящие каналы (пак)": "Source: inbound channels (pack)",
   "Источник: файл вручную": "Source: file manually",
@@ -1612,10 +1612,10 @@ var _I18N_DICT = {
   "скачать отчёт": "download report",
   "Ещё не запускалось. Нажми «Запустить сейчас».": "Not run yet. Click \"Run now\".",
   "Рабочая панель пака": "Pack work panel",
-  "Вся доменная работа — лиды, подборки, рассылки, договоры — на вкладке «🧳 Работа».": "All domain work — leads, selections, mailings, contracts — is on the \"🧳 Work\" tab.",
-  "🧳 К работе →": "🧳 To work →",
+  "Вся доменная работа — лиды, подборки, рассылки, договоры — на вкладке «🧳 Работа».": "All domain work — leads, selections, mailings, contracts — is on the \"Work\" tab.",
+  "К работе →": "To work →",
   "Готовность": "Readiness",
-  "⚙ Под капотом — как устроено": "⚙ Under the hood — how it works",
+  "Под капотом — как устроено": "Under the hood — how it works",
   "умения не размечены": "skills not tagged",
   "компоненты не переданы": "components not provided",
   "Живая база знаний": "Live knowledge base",
@@ -1636,10 +1636,10 @@ var _I18N_DICT = {
   "Изменить": "Change",
   "⏰ Настроить расписание и канал": "⏰ Set up schedule and channel",
   "Реальный крон на устройстве/VPS 24/7 (sched-тик).": "Real cron on the device/VPS 24/7 (sched tick).",
-  "Нет свободных подключённых каналов. Подключи канал в блоке <b>🔌 Подключения</b> вверху страницы.": "No free connected channels. Connect a channel in the <b>🔌 Connections</b> block at the top of the page.",
+  "Нет свободных подключённых каналов. Подключи канал в блоке <b>Подключения</b> вверху страницы.": "No free connected channels. Connect a channel in the <b>Connections</b> block at the top of the page.",
   "Выбери подключённый канал:": "Select a connected channel:",
   "Сохраняю получателей…": "Saving recipients…",
-  "✓ Получатели обновлены": "✓ Recipients updated",
+  "Получатели обновлены": "Recipients updated",
   "Убрать получателя": "Remove recipient",
   "Пока никто — результат никуда не отправляется. Добавьте получателя.": "No one yet — the result isn't sent anywhere. Add a recipient.",
   "Кому отправлять результат": "Who to send the result to",
@@ -1661,7 +1661,7 @@ var _I18N_DICT = {
   "Открыть в Мастере": "Open in Wizard",
   "Опасная зона": "Danger zone",
   "Убрать автоматизацию из списка. Уходит в архив (можно вернуть), расписание снимается.": "Remove the automation from the list. It goes to the archive (can be restored) and the schedule is removed.",
-  "🗑 Удалить автоматизацию": "🗑 Delete automation",
+  "Удалить автоматизацию": "Delete automation",
   "Применяются сразу: при каждом прогоне Qwen собирает бриф, строго соблюдая эти правила.": "Applied immediately: on each run, Qwen assembles the brief, strictly following these rules.",
   "Сохраняются в проект процесса. Применяются к LLM-шагам процесса; при пересборке через Мастера правила учитываются в постройке.": "Saved into the process project. Applied to the process's LLM steps; on rebuild via the Wizard, the rules are taken into account in the build.",
   "Правил пока нет. Например: «не предлагать варианты дороже бюджета», «сводку начинать с итога», «писать только по-русски».": "No rules yet. For example: \"don't suggest options above budget\", \"start the summary with the total\", \"write in Russian only\".",
@@ -1676,19 +1676,19 @@ var _I18N_DICT = {
   "поле (напр. валюта)": "field (e.g. currency)",
   "значение (напр. тенге)": "value (e.g. tenge)",
   "Сохраняю правила…": "Saving rules…",
-  "✓ Правила сохранены": "✓ Rules saved",
-  "✓ Правила сохранены · понято как фильтр: ": "✓ Rules saved · understood as filter: ",
-  "✅ Extella: {name} — процесс отработал.\nПозиций: {count}\nСумма: {sum} ₸": "✅ Extella: {name} — process has run.\nItems: {count}\nTotal: {sum} ₸",
+  "Правила сохранены": "Rules saved",
+  "Правила сохранены · понято как фильтр: ": "Rules saved · understood as filter: ",
+  "Extella: {name} — процесс отработал.\nПозиций: {count}\nСумма: {sum} ₸": "Extella: {name} — process has run.\nItems: {count}\nTotal: {sum} ₸",
   "Шаблон сообщения получателям": "Message template for recipients",
   "Текст, который уходит получателям после каждого прогона (ручного и по расписанию). Плейсхолдеры: <code>{name}</code> — имя, <code>{count}</code> — позиций, <code>{sum}</code> — сумма, <code>{date}</code> — дата. Пусто — стандартный текст.": "Text sent to recipients after each run (manual and scheduled). Placeholders: <code>{name}</code> — name, <code>{count}</code> — items, <code>{sum}</code> — total, <code>{date}</code> — date. Empty — standard text.",
   "Сохранить шаблон": "Save template",
   "Так увидит получатель:": "This is what the recipient will see:",
   "Сохраняю шаблон…": "Saving template…",
-  "✓ Шаблон сохранён": "✓ Template saved",
+  "Шаблон сохранён": "Template saved",
   "загружаю автоматизации…": "loading automations…",
   "Пока нет собранных автоматизаций. Собери процесс в Мастере (шаг «Стройка»).": "No assembled automations yet. Assemble a process in the \"Wizard\" (the \"Build\" step).",
   "запусков ещё не было": "no runs yet",
-  "✓ проверен": "✓ verified",
+  "проверен": "verified",
   "! с замечаниями": "! with remarks",
   "агент 24/7": "24/7 agent",
   "Открыть →": "Open →",
@@ -1697,7 +1697,7 @@ var _I18N_DICT = {
   " находок. Открываю бриф…": " signals. Opening brief…",
   "Последний прогон: ": "Last run: ",
   " не прошла: ": " failed: ",
-  "✓ Прогон завершён": "✓ Run complete",
+  "Прогон завершён": "Run complete",
   "Каждые 2 минуты (тест)": "Every 2 minutes (test)",
   "Каждый час": "Every hour",
   "Ежедневно": "Daily",
@@ -1706,19 +1706,19 @@ var _I18N_DICT = {
   "Слать в ": "Send to ",
   "— результат не слать —": "— don't send the result —",
   "Куда слать результат:": "Where to send the result:",
-  "Каналы вывода не подключены. Чтобы слать результат — подключите канал в блоке <b>🔌 Подключения</b> вверху страницы.": "Output channels aren't connected. To send the result — connect a channel in the <b>🔌 Connections</b> block at the top of the page.",
+  "Каналы вывода не подключены. Чтобы слать результат — подключите канал в блоке <b>Подключения</b> вверху страницы.": "Output channels aren't connected. To send the result — connect a channel in the <b>Connections</b> block at the top of the page.",
   "Расписание запуска": "Run schedule",
   "Процесс будет запускаться сам на постоянно включённом сервере (Listener) и складывать результат в логи.": "The process will run on its own on an always-on server (Listener) and store the result in the logs.",
   "Как часто запускать:": "How often to run:",
   "— без расписания (только вручную) —": "— no schedule (manual only) —",
-  "✓ Расписание: ": "✓ Schedule: ",
+  "Расписание: ": "Schedule: ",
   "Расписание снято": "Schedule removed",
   "Сохраняю расписание…": "Saving schedule…",
   "Снимаю расписание…": "Removing schedule…",
   "Приём входящих сообщений": "Receiving inbound messages",
   "Процесс сможет запускаться по входящему сообщению и отвечать в тот же чат — сотрудник на связи 24/7.": "The process can be triggered by an inbound message and reply in the same chat — like a live 24/7 assistant.",
   "Для приёма входящих нужен подключённый канал (пока — Telegram).": "Receiving inbound messages needs a connected channel (Telegram for now).",
-  "Подключи <b>Telegram</b> в блоке <b>🔌 Подключения</b> вверху страницы, потом вернись сюда и включи опрос.": "Connect <b>Telegram</b> in the <b>🔌 Connections</b> block at the top of the page, then come back here and enable polling.",
+  "Подключи <b>Telegram</b> в блоке <b>Подключения</b> вверху страницы, потом вернись сюда и включи опрос.": "Connect <b>Telegram</b> in the <b>Connections</b> block at the top of the page, then come back here and enable polling.",
   "Канал приёма:": "Receiving channel:",
   "Как принимать входящие:": "How to receive inbound:",
   "<b>Опрос</b> — проще, в канале ничего не настраивать, работает даже за фаерволом. Небольшая задержка (до одного тика).": "<b>Polling</b> — simpler, nothing to configure in the channel, works even behind a firewall. Small delay (up to one tick).",
@@ -1729,14 +1729,14 @@ var _I18N_DICT = {
   "Адрес вебхука (скопируйте)": "Webhook address (copy it)",
   "Публичный шлюз ещё поднимается — адрес закреплён за вами. ": "The public gateway is still coming up — the address is reserved for you. ",
   "Вставьте этот адрес в настройках канала/CRM.": "Paste this address into the channel/CRM settings.",
-  "✓ Опрос включён — напишите боту, ответ придёт в течение ~2 минут": "✓ Polling enabled — message the bot, the reply will arrive within ~2 minutes",
+  "Опрос включён — напишите боту, ответ придёт в течение ~2 минут": "Polling enabled — message the bot, the reply will arrive within ~2 minutes",
   "черновик · не сохранён": "draft · not saved",
-  "✕ начать заново": "✕ start over",
+  "начать заново": "start over",
   "Чтобы заработало, осталось:": "To make it work, you still need:",
   "Поправьте словами в чате ниже — или:": "Fix it in words in the chat below — or:",
-  "🌐 Найти блок в интернете": "🌐 Find a block online",
-  "🧩 Достроить Мастером": "🧩 Finish with the Wizard",
-  "⚙ Технические детали (для любопытных)": "⚙ Technical details (for the curious)",
+  "Найти блок в интернете": "Find a block online",
+  "Достроить Мастером": "Finish with the Wizard",
+  "Технические детали (для любопытных)": "Technical details (for the curious)",
   "Собрано из твоих блоков:": "Assembled from your blocks:",
   "▶ Запустить сейчас": "▶ Run now",
   "＋ Сохранить как автоматизацию": "＋ Save as automation",
@@ -1759,7 +1759,7 @@ var _I18N_DICT = {
   "Понадобится: путь к файлу выгрузки": "Needed: path to the export file",
   "Понадобится: адрес сервера и логин WinRM": "Needed: server address and WinRM login",
   "⏸ на паузе": "⏸ paused",
-  "🟡 нужна помощь": "🟡 needs attention",
+  "нужна помощь": "needs attention",
   "● работает": "● running",
   "○ запуск вручную": "○ manual runs",
   "⏳ прогон идёт…": "⏳ run in progress…",
@@ -1770,7 +1770,7 @@ var _I18N_DICT = {
   "⏸ На паузе — автозапуски остановлены, настройки сохранены": "⏸ Paused — auto-runs stopped, settings kept",
   "▶ Возобновлено — следующий запуск через интервал": "▶ Resumed — next run in one interval",
   "На паузе входящие обращения обрабатываться НЕ будут (накопленные за паузу не получат ответов). Поставить на паузу?": "While paused, incoming messages will NOT be processed (backlog accumulated during the pause will not be answered). Pause now?",
-  "🧩 Состав·Доводка": "🧩 Makeup·Refine",
+  "Состав·Доводка": "Makeup·Refine",
   "загружаю состав…": "loading makeup…",
   "Состав — из чего собрано": "Makeup — what it's built from",
   "Доводка словами — Композитор пересоберёт": "Refine in words — the Composer will rebuild",
@@ -1783,7 +1783,7 @@ var _I18N_DICT = {
   "Стройка прервана перезапуском сервиса — прежняя версия работает. Повторите правку.": "The build was interrupted by a service restart — the previous version keeps working. Repeat the change.",
   "Откат прерван перезапуском сервиса — повторите откат.": "The rollback was interrupted by a service restart — repeat the rollback.",
   "Применяются при каждом прогоне: стадии процесса получают правила и поля владельца (контракт параметров).": "Applied on every run: the process stages receive the owner's rules and fields (params contract).",
-  "⚠ Сохраняются, но НА ПРОГОНЫ ПОКА НЕ ВЛИЯЮТ: процесс собран до контракта параметров. Любая пересборка (чат внизу → Строитель) обновит его — после этого правила заработают сразу.": "⚠ Saved, but they DO NOT affect runs yet: the process was built before the params contract. Any rebuild (chat below → Builder) upgrades it — after that, rules apply immediately.",
+  "Сохраняются, но НА ПРОГОНЫ ПОКА НЕ ВЛИЯЮТ: процесс собран до контракта параметров. Любая пересборка (чат внизу → Строитель) обновит его — после этого правила заработают сразу.": "Saved, but they DO NOT affect runs yet: the process was built before the params contract. Any rebuild (chat below → Builder) upgrades it — after that, rules apply immediately.",
   "Версии и правки": "Versions & changes",
   "Правок пока не было — процесс в исходной версии.": "No changes yet — the process is in its original version.",
   "↩ Откатить последнюю правку": "↩ Roll back the last change",
@@ -1794,41 +1794,41 @@ var _I18N_DICT = {
   "Вопросы под твою задачу": "Questions tailored to your task",
   "Опишите задачу одной фразой — конспект перестроится под неё (вместо стандартного списка).": "Describe the task in one phrase — the brief will be rebuilt around it (instead of the standard list).",
   "напр.: контроль дебиторки 28 филиалов из 1С с еженедельной сводкой директору": "e.g.: receivables control for 28 branches from 1C with a weekly summary to the director",
-  "⚡ Подобрать вопросы": "⚡ Tailor the questions",
+  "Подобрать вопросы": "Tailor the questions",
   "подбираю вопросы под задачу…": "tailoring questions to the task…",
-  "Сначала создайте сессию процесса": "Create a process session first",
+  "Сначала создайте проект процесса": "Create a process session first",
   "Опишите задачу одной фразой": "Describe the task in one phrase",
   "Бриф последнего прогона": "Latest run brief",
-  "📄 Открыть бриф целиком": "📄 Open the full brief",
+  "Открыть бриф целиком": "Open the full brief",
   "Что будет делать эта автоматизация": "What this automation will do",
   "▶ Сделать первый прогон": "▶ Do the first run",
   "После первого прогона здесь появится живой результат.": "After the first run, the live result will appear here.",
   "Процесс собран и готов к первому прогону.": "The process is built and ready for its first run.",
   "Этапы процесса": "Process stages",
   "▶ Собрать сейчас": "▶ Run now",
-  "⚙ Изменить словами": "⚙ Change in words",
+  "Изменить словами": "Change in words",
   "Скажи, что поменять: «шли ещё на email» · «поставь еженедельно» · «добавь колонку…»": "Say what to change: \"also send to email\" · \"make it weekly\" · \"add a column…\"",
   "разбираю…": "thinking…",
   "Отменено.": "Cancelled.",
   "Это правка логики — пересоберу композицию на месте (карточка и расписание сохранятся).": "This changes the logic — I'll rebuild the composition in place (card and schedule are kept).",
   "Это изменение шагов процесса": "This changes the process steps",
   "Это правка логики процесса": "This changes the process logic",
-  " — такие правки делает Строитель с записью решения в сессию.": " — such changes are made by the Builder with the decision recorded in the session.",
+  " — такие правки делает Строитель с записью решения в проект.": " — such changes are made by the Builder with the decision recorded in the session.",
   "Пересобрать": "Rebuild",
   "Открыть в Мастере": "Open in Wizard",
   "Применить": "Apply",
   "Отмена": "Cancel",
-  "✓ Шаблон сообщения обновлён": "✓ Message template updated",
-  "✓ Расписание снято": "✓ Schedule removed",
+  "Шаблон сообщения обновлён": "Message template updated",
+  "Расписание снято": "Schedule removed",
   "⏸ На паузе": "⏸ Paused",
   "▶ Возобновлено": "▶ Resumed",
   "Задание Строителю набрано — отправь сообщение Мастеру": "The Builder task is drafted — send the message to the Assistant",
-  "🔧 Пересобрать Строителем": "🔧 Rebuild with the Builder",
+  "Пересобрать Строителем": "Rebuild with the Builder",
   "стройка идёт…": "building…",
   "Строитель принимает правку…": "The Builder is taking the change…",
   " — сравните бриф с прежним (он в «Запуске»)": " — compare the brief with the previous one (it's in \"Launch\")",
   "▶ Пробный прогон": "▶ Trial run",
-  "⚠ Сохраняются, но НА ПРОГОНЫ ПОКА НЕ ВЛИЯЮТ: построенный процесс исполняет свой код. Чтобы правило заработало — пересборка через Мастера/Строителя (напишите правку в чат внизу — он направит).": "⚠ Saved, but they DO NOT affect runs yet: the built process executes its own code. To make a rule take effect, rebuild via the Wizard/Builder (type the change into the chat below — it will route you).",
+  "Сохраняются, но НА ПРОГОНЫ ПОКА НЕ ВЛИЯЮТ: построенный процесс исполняет свой код. Чтобы правило заработало — пересборка через Мастера/Строителя (напишите правку в чат внизу — он направит).": "Saved, but they DO NOT affect runs yet: the built process executes its own code. To make a rule take effect, rebuild via the Wizard/Builder (type the change into the chat below — it will route you).",
   "Текст, который уходит получателям после каждого прогона (ручного и по расписанию). Плейсхолдеры:": "Text sent to recipients after every run (manual and scheduled). Placeholders:",
   "— имя,": "— name,",
   "— позиций,": "— items,",
@@ -1869,7 +1869,7 @@ var _I18N_RULES = [
   ["Результаты прогона · ([\\d.,]+) мин машинного времени", "Run results · $1 min of machine time"],
   ["Критерии чек-листа", "Checklist criteria"],
   ["(\\d+) н/п", "$1 N/A"],
-  ["⚠ токен до (\\d{4}-\\d{2}-\\d{2}) \\((\\d+) дн\\.\\)", "⚠ token until $1 ($2 days)"],
+  ["токен до (\\d{4}-\\d{2}-\\d{2}) \\((\\d+) дн\\.\\)", "token until $1 ($2 days)"],
   ["токен (.+?) истёк", "token $1 expired"],
   ["токен (.+?) истекает через (\\d+) дн\\.", "token $1 expires in $2 days"],
   ["⬇ доустановлено под задачу: (\\d+) модел\\S*", "⬇ installed for this task: $1 model(s)"],
@@ -1900,7 +1900,7 @@ var _I18N_RULES = [
   ["Расписание: Ежедневно", "Schedule: Daily"],
   ["Расписание: Еженедельно", "Schedule: Weekly"],
   ["Расписание: Ежемесячно", "Schedule: Monthly"],
-  ["✅ Extella: ([\\s\\S]+?) — процесс отработал\\.\\nПозиций: ([\\s\\S]*?)\\nСумма: ([\\s\\S]*)", "✅ Extella: $1 — process completed.\nItems: $2\nSum: $3"],
+  ["Extella: ([\\s\\S]+?) — процесс отработал\\.\\nПозиций: ([\\s\\S]*?)\\nСумма: ([\\s\\S]*)", "Extella: $1 — process completed.\nItems: $2\nSum: $3"],
   ["Источник: ([\\s\\S]+)", "Source: $1"],
   ["Получатели: ([\\s\\S]+)", "Recipients: $1"],
   ["Понадобится: ([\\s\\S]+)", "Needed: $1"]
@@ -1999,24 +1999,24 @@ function newSession(){
     await refreshSessions(sid);
     await loadSession(sid);
     busyOff();
-    toast("✓ Проект создан — расскажи Мастеру о задаче", "ok");
+    toast("Проект создан — расскажи Мастеру о задаче", "ok");
     if(!el("chat").classList.contains("open")) toggleChat();
   });
 }
-// Убрать сессию. Раньше убрать НЕДОСТРОЕННУЮ сессию было нечем: удаление жило только в кабинете
+// Убрать проект. Раньше убрать НЕДОСТРОЕННУЮ проект было нечем: удаление жило только в кабинете
 // «Автоматизаций», а туда попадают лишь собранные процессы. Брошенные на интервью/плане копились
 // в селекторе навсегда (у Анвара их 24) — искать среди них рабочую становилось невозможно.
 // Удаление = АРХИВ: файлы уезжают в sessions_archive, возврат — через «Архив» в Автоматизациях.
 async function deleteSession(){
   var sid = (el("sessSelect")||{}).value || S.sessionId;
   if(!sid){ toast("Сначала выбери проект в списке","err"); return; }
-  // Имя берём по ЗНАЧЕНИЮ, а не по выделению: сессия, открытая по прямой ссылке, в списке может
+  // Имя берём по ЗНАЧЕНИЮ, а не по выделению: проект, открытая по прямой ссылке, в списке может
   // отсутствовать — тогда selectedOptions[0] это «— выбрать проект —», и диалог удаления предложил бы
   // убрать заглушку. В окне подтверждения удаления такой текст недопустим.
   var opt = Array.prototype.find.call((el("sessSelect")||{options:[]}).options,
                                       function(o){ return o.value === sid; });
   var nm = (opt && opt.textContent) ? opt.textContent.split(" · ")[0]
-         : ((S.session && (S.session.process_name || S.session.client_name)) || "эту сессию");
+         : ((S.session && (S.session.process_name || S.session.client_name)) || "эту проект");
   var st = (S.sessionId===sid && S.session) ? S.session.stage : null;
   var live = (st==="built" || st==="launched");
   ask("Убрать «"+nm+"»?",
@@ -2045,7 +2045,7 @@ async function loadSession(sid){
   // говорит, что ничего не выбрано. Синхронизируем всегда — иначе и 🗑 непонятно, что удалит.
   var _ss = el("sessSelect");
   if(_ss && _ss.value !== sid) _ss.value = sid;
-  await loadChatHistory(sid);                 // подтянуть стенограмму разговора этой сессии
+  await loadChatHistory(sid);                 // подтянуть стенограмму разговора этой проекта
   S.session = await jget("/x/session?id="+encodeURIComponent(sid));
   S.blueprint = null; S.spec = null;
   try{ const bp = await jget("/x/blueprint?session_id="+encodeURIComponent(sid)); if(usableBlueprintDoc(bp)) S.blueprint = bp; }catch(e){}
@@ -2062,10 +2062,10 @@ async function loadSession(sid){
   }
   // иначе — Мастер (интервью/blueprint/spec/test/launch).
   // ВСЕГДА уходим из чужого режима. Раньше здесь стоял белый список ("composer"/"my"/"core"), и в нём не было
-  // "automations": выбор недостроенной сессии ИЗ «Автоматизаций» не переключал экран вообще — со стороны
-  // «сессию выбрал, план не открылся, как попасть в Мастер — непонятно» (Гульжан, 19.07).
+  // "automations": выбор недостроенной проекта ИЗ «Автоматизаций» не переключал экран вообще — со стороны
+  // «проект выбрал, план не открылся, как попасть в Мастер — непонятно» (Гульжан, 19.07).
   // Кабинет — оверлей поверх всего: сам по себе он не закрывается. Без этой строки человек выбирал
-  // сессию, режим честно менялся на Мастер, а на экране оставался кабинет ДРУГОГО процесса — ровно
+  // проект, режим честно менялся на Мастер, а на экране оставался кабинет ДРУГОГО процесса — ровно
   // то же ощущение «ничего не произошло», только хуже: показанное относится к чужой автоматизации.
   if(typeof closeWzCabinet === "function") closeWzCabinet();
   setMode("wizard");
@@ -2194,7 +2194,7 @@ async function renderInstalled(){
   // 3) уже работают — тихой строкой (не требует действий)
   if(work.length){
     H+='<div style="margin-top:12px;font-size:12.5px;color:var(--silver,#889)">'
-      +'✓ Уже работают в автоматизациях: '+work.map(function(r){return esc(r.title);}).join(', ')+'.</div>';
+      +'Уже работают в автоматизациях: '+work.map(function(r){return esc(r.title);}).join(', ')+'.</div>';
   }
   // 4) пропали — тихой строкой
   if(missing.length){
@@ -2213,7 +2213,7 @@ async function removeBlock(btn, bid){
   if(!confirm('Убрать кубик из сборки? Его можно собрать заново, когда способность вернётся.')) return;
   btn.disabled=true; btn.textContent='Убираю…';
   var r; try{ r=await jpost('/x/block_remove',{id:bid}); }catch(e){ r={status:'error',message:String(e&&e.message||e)}; }
-  if(r&&r.status==='success'){ toast('✓ Кубик убран','ok'); renderInstalled(); }
+  if(r&&r.status==='success'){ toast('Кубик убран','ok'); renderInstalled(); }
   else { btn.disabled=false; btn.textContent='Убрать'; toast('Не удалось убрать: '+((r&&r.message)||'мост не ответил'),'err'); }
 }
 async function makeBlock(btn, idx){
@@ -2227,7 +2227,7 @@ async function makeBlock(btn, idx){
   catch(e){ r={status:'error', message:String(e&&e.message||e)}; }
   if(r&&r.status==='success'){
     note.style.color='var(--ink,#0a0a0a)';
-    note.textContent='✓ Готово: '+((r.made||[]).join(', ')||'кубик добавлен')+'. Теперь его можно использовать в сборке.';
+    note.textContent='Готово: '+((r.made||[]).join(', ')||'кубик добавлен')+'. Теперь его можно использовать в сборке.';
     if(btn) btn.remove();
     toast('✓ «'+it.title+'» стало кубиком','ok');
     setTimeout(renderInstalled, 1200);
@@ -2282,7 +2282,7 @@ async function teamInvite(){
 async function teamRevoke(fullName){
   if(!confirm((WLANG==='en'?'Revoke access for ':'Отозвать доступ: ')+fullName.replace('invite: ','')+'?')) return;
   var r; try{ r=await jpost('/x/team_revoke',{name:fullName}); }catch(e){ r={status:'error',message:String(e)}; }
-  if(r&&r.status==='success'){ toast((WLANG==='en'?'✓ Access revoked':'✓ Доступ отозван'),'ok'); renderTeam(); }
+  if(r&&r.status==='success'){ toast((WLANG==='en'?'Access revoked':'Доступ отозван'),'ok'); renderTeam(); }
   else toast('Ошибка: '+((r&&r.message)||''),'err');
 }
 // ── Псевдоанонимизация v1: локальные детерминированные замены (без LLM); файлы не покидают устройство ──
@@ -2305,7 +2305,7 @@ var XTL_HELP = {
       'Первый прогон даёт готовый отчёт. Дальше ставите расписание — и процесс работает без вас.'
     ],
     sure: [
-      'Собирается на <b>ваших</b> данных, а не на выдуманном примере.',
+      'Собирается на <b>твоих</b> данных, а не на выдуманном примере.',
       'Каждый шаг проверяется живым запуском, прежде чем попасть в готовый процесс.',
       'Если результат не сошёлся — процесс <b>честно останавливается</b> и говорит, что именно не так. Частичный результат не выдаётся за готовый.',
       'Расчёты идут на этом компьютере; думает платформенная модель Qwen — отдельные ключи и оплата ИИ не нужны.',
@@ -2331,7 +2331,7 @@ var XTL_HELP = {
     sure: [
       'Собирает только из <b>проверенных блоков</b>, которые уже установлены у вас.',
       'Чего не хватает — предложит установить; молча ничего на компьютер не ставит.',
-      'Блоки читают и считают. Наружу (письма, записи в чужие системы) — только с вашим подтверждением.'
+      'Блоки читают и считают. Наружу (письма, записи в чужие системы) — только с твоим подтверждением.'
     ],
     nope: [
       'Не пишет новый код под уникальную задачу — для этого Конструктор процессов.',
@@ -2402,7 +2402,7 @@ var XTL_HELP = {
     ],
     who: { title: 'Кто может вернуть данные обратно', items: [
       '<b>Только этот компьютер</b> — здесь лежит ключ. Агент работает с замаскированным текстом; для файлов исходный текст ему не возвращается вовсе.',
-      'Галочка «дать ключ агентам и на других устройствах» нужна <b>только</b> если раскрывать данные будут с другой машины: тогда таблица уходит в ваш аккаунт в зашифрованном виде. По умолчанию выключена — правильный режим для чувствительных документов.'
+      'Галочка «дать ключ агентам и на других устройствах» нужна <b>только</b> если раскрывать данные будут с другой машины: тогда таблица уходит в твой аккаунт в зашифрованном виде. По умолчанию выключена — правильный режим для чувствительных документов.'
     ]},
     extra: 'Для службы безопасности заказчика есть полное описание: модель угроз, перечень того, что переписывается в каждом формате, и доказательства проверок — документ <code>PRIVACY_GATEWAY_PHASE1.md</code>. Полное разделение ролей — следующий этап, требует поддержки платформы.'
   }
@@ -2678,7 +2678,7 @@ async function anonReveal(encPath){
 async function anonDelete(job){
   if(!confirm(WLANG==='en'?'Delete this job (source files, safe copies and mapping table)?':'Удалить задание целиком — исходники, безопасные копии и таблицу соответствий?')) return;
   var r; try{ r=await jpost('/x/anon_delete',{job_id:job}); }catch(e){ r={status:'error',message:String(e)}; }
-  if(r&&r.status==='success'){ toast(WLANG==='en'?'✓ Job deleted':'✓ Задание удалено','ok'); if(_anonJob.id===job){ _anonJob={id:'',files:[]}; renderAnonFiles(); var res=el('anonResult'); if(res) res.innerHTML=''; } renderAnonJobs(); }
+  if(r&&r.status==='success'){ toast(WLANG==='en'?'Job deleted':'Задание удалено','ok'); if(_anonJob.id===job){ _anonJob={id:'',files:[]}; renderAnonFiles(); var res=el('anonResult'); if(res) res.innerHTML=''; } renderAnonJobs(); }
   else toast('Ошибка: '+((r&&r.message)||''),'err');
 }
 // ── CSPL Studio S3: языки аккаунта + проба компиляции ──
@@ -2827,7 +2827,7 @@ function _intentProcess(t){
   return hits.length>=2 ? hits : null;
 }
 function _procHintHTML(why){
-  return '<div class="cmp-step" style="border-color:var(--gold,#c60);flex-wrap:wrap;gap:8px">🏢 Похоже на бизнес-процесс'+(why?' ('+esc(why)+')':'')+' — такие надёжнее строить через интервью с Мастером.'+
+  return '<div class="cmp-step" style="border-color:var(--gold,#c60);flex-wrap:wrap;gap:8px">Похоже на бизнес-процесс'+(why?' ('+esc(why)+')':'')+' — такие надёжнее строить через интервью с Мастером.'+
     ' <button class="btn ghost" style="padding:5px 12px;font-size:12px;margin-left:auto" onclick="buildProcessFromTask()">Пройти интервью →</button></div>';
 }
 // Qwen-классификатор намерения (инкр.5-full): уточняет эвристику. Обновляет бокс подсказки асинхронно.
@@ -2858,8 +2858,8 @@ async function buildProcessFromTask(taskArg){
 // кто уже работает, — шум. Сам живой пример остался в пустой витрине и в фолбэке композитора.
 async function firstWin(btn, example){
   example = example || "ads";
-  var META = { ads:{title:"Ежедневный отчёт по рекламным бюджетам", chip:"📊 Реклама"},
-               subs:{title:"Забытые подписки в банковской выписке", chip:"💳 Подписки"} };
+  var META = { ads:{title:"Ежедневный отчёт по рекламным бюджетам", chip:"Реклама"},
+               subs:{title:"Забытые подписки в банковской выписке", chip:"Подписки"} };
   var meta = META[example] || META.ads;
   var lbl = btn ? btn.innerHTML : "";
   if(btn){ btn.disabled=true; btn.innerHTML='<span class="spin"></span> Extella собирает результат на демо-данных…'; }
@@ -2868,7 +2868,7 @@ async function firstWin(btn, example){
   if(r && r.digest){
     showBrief(r.digest, {kicker:"Extella · Первая победа (демо)", title:meta.title,
       subtitle:"Собрано и посчитано Extella на синтетических данных за секунды — без настройки и подключений.",
-      chips:["🧠 Qwen", meta.chip, "⚡ 1 клик"]});
+      chips:["Qwen", meta.chip, "⚡ 1 клик"]});
     // Поля сборки на столе визарда больше нет (визард ≠ композитор), поэтому подсветка
     // указывала бы в пустоту. После демо направляем туда, где действительно собирают своё.
     var fi=el("composerInput");
@@ -2882,7 +2882,7 @@ async function firstWin(btn, example){
 function _emptyShowcase(){
   var chips=['сводка по заявкам каждое утро','найти забытые подписки в выписках','сверить счета-фактуры с актами'];
   return '<div style="max-width:680px;background:linear-gradient(135deg,#c9a35c18,var(--paper,#fff));border:1px solid var(--gold,#c9a35c);border-radius:8px;padding:24px 26px">'+
-    '<div class="kicker" style="color:var(--gold,#a97e35)">✨ Здесь появятся твои автоматизации</div>'+
+    '<div class="kicker" style="color:var(--gold,#a97e35)">Здесь появятся твои автоматизации</div>'+
     '<div style="font-size:20px;font-weight:800;color:var(--ink,#0a0a0a);margin:6px 0 8px">Пока их нет — но результат можно увидеть прямо сейчас</div>'+
     '<div style="font-size:13.5px;color:var(--ink-soft);line-height:1.55;margin-bottom:16px">'+
       'Автоматизация — это процесс, который работает сам: берёт данные, считает и присылает готовый отчёт. '+
@@ -2945,7 +2945,7 @@ async function composeNow(){
     // первым, что человек читает после отказа.
     var _tech = _cmpErr((r&&r.message)||"compose failed");
     _body().innerHTML = '<div class="cmp-step" style="border-color:var(--bad,#c33)">'
-      + '<b>⚠ Не удалось собрать из готовых блоков</b>'
+      + '<b>Не удалось собрать из готовых блоков</b>'
       + '<div style="font-size:11.5px;color:var(--silver);margin-top:4px">'+esc(_tech)+'</div></div>'
       + (_mh.length
           ? '<div style="margin-top:10px;font-size:13px;color:var(--nav)"><b>Чего не хватило:</b></div>'
@@ -2957,7 +2957,7 @@ async function composeNow(){
                     : 'Быстрая сборка из готовых блоков не справилась. Мастер спросит подробности и спроектирует процесс.')
       + '</div>'
       + '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">'
-      + '<button class="btn gold sm" onclick="buildProcessFromTask(window._composerTask||\'\')">🧩 Собрать через Мастера →</button></div>';
+      + '<button class="btn gold sm" onclick="buildProcessFromTask(window._composerTask||\'\')">Собрать через Мастера →</button></div>';
     return;
   }
   // верстак-чат: черновик flow можно доводить словами (полный чат по сборке)
@@ -2981,11 +2981,11 @@ function _composeWorkbench(r){
       '<div style="width:100%;font-size:12.5px;color:#7a5b1a;margin-bottom:2px">Чтобы заработало, осталось:</div>'+
       '<ul style="margin:0 0 6px 18px;font-size:12.5px;color:#7a5b1a;width:100%">'+mh.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>'+
       '<div style="width:100%;font-size:12px;color:var(--silver)">Поправьте словами в чате ниже — или:</div>'+
-      ' <button class="btn ghost" style="padding:5px 12px;font-size:12px" onclick="capSearch(window._composerCapQ||\'\',\'composerCapOut\')">🌐 Найти блок в интернете</button>'+
-      ' <button class="btn ghost" style="padding:5px 12px;font-size:12px" onclick="buildGapWithWizard()">🧩 Достроить Мастером</button></div>'
+      ' <button class="btn ghost" style="padding:5px 12px;font-size:12px" onclick="capSearch(window._composerCapQ||\'\',\'composerCapOut\')">Найти блок в интернете</button>'+
+      ' <button class="btn ghost" style="padding:5px 12px;font-size:12px" onclick="buildGapWithWizard()">Достроить Мастером</button></div>'
     : '';
   var rawRows = (r.steps||[]).map(function(s){ return '<div style="font-size:12px;color:var(--silver,#889);padding:3px 0"><code>'+esc(s.expert)+'</code> '+esc(JSON.stringify(s.params).slice(0,90))+'</div>'; }).join('');
-  var raw = rawRows ? '<details style="margin-top:12px"><summary style="cursor:pointer;font-size:12px;color:var(--silver,#889);list-style:none">⚙ Технические детали (для любопытных)</summary><div style="margin-top:6px">'+rawRows+'</div></details>' : '';
+  var raw = rawRows ? '<details style="margin-top:12px"><summary style="cursor:pointer;font-size:12px;color:var(--silver,#889);list-style:none">Технические детали (для любопытных)</summary><div style="margin-top:6px">'+rawRows+'</div></details>' : '';
   var em = (card.name||'').match(/^\s*(\p{Emoji})/u); em = em?em[1]:'⚡';
   var nm = esc((card.name||st.task).replace(/^\s*\p{Emoji}\s*/u,''));
   var desc = esc(card.description || st.task);
@@ -2995,7 +2995,7 @@ function _composeWorkbench(r){
     : '<div style="margin:6px 0"><span style="display:inline-block;background:var(--cream);border:1px solid var(--cream-dark);border-radius:6px 12px 12px 2px;padding:6px 11px;font-size:13px;max-width:82%">'+esc(m.text)+'</span></div>'; };
   var thread = (st.chat||[]).map(bubble).join('');
   (el('composeBody')||el('composerOut')).innerHTML =
-    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="font-size:11.5px;background:rgba(128,128,128,.12);color:var(--silver);border-radius:999px;padding:3px 10px">черновик · не сохранён</span><a href="#" onclick="resetCompose();return false" style="font-size:12px;color:var(--silver);margin-left:auto">✕ начать заново</a></div>'+
+    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="font-size:11.5px;background:rgba(128,128,128,.12);color:var(--silver);border-radius:999px;padding:3px 10px">черновик · не сохранён</span><a href="#" onclick="resetCompose();return false" style="font-size:12px;color:var(--silver);margin-left:auto">начать заново</a></div>'+
     '<div style="border:1px solid var(--cream-dark,#d8d2c8);border-radius:6px;padding:16px 18px;background:var(--paper,#fff);margin-bottom:12px">'+
       '<div style="display:flex;align-items:center;gap:10px"><span style="font-size:26px">'+em+'</span><div style="font:700 17px var(--sans)">'+nm+'</div></div>'+
       '<div style="font-size:13.5px;color:var(--ink-soft);line-height:1.5;margin:8px 0 12px">'+desc+'</div>'+
@@ -3032,7 +3032,7 @@ async function composeChat(){
   }
 }
 function resetCompose(){ window._composeState=null; var out=el('composerOut'); if(out) out.innerHTML=''; var ci=el('composerInput'); if(ci){ ci.value=''; ci.focus(); } }
-// Инкр.3 (B-lite): собранная задача → «Мои автоматизации» (сессия-обёртка wz_flow_run) → кабина
+// Инкр.3 (B-lite): собранная задача → «Мои автоматизации» (проект-обёртка wz_flow_run) → кабина
 async function saveComposedFlow(flowId, btn){
   if(btn){ if(btn.disabled) return; btn.disabled=true; }
   var meta = COMPOSED[flowId]||{};
@@ -3040,8 +3040,8 @@ async function saveComposedFlow(flowId, btn){
                                       components:(meta.chips||[]).map(function(c){return String(c).replace(/^[^\s]+\s/,'');})});
   if(btn) btn.disabled=false;
   if(r && r.status==="success"){
-    toast(r.existing?"Уже сохранено — открой «Автоматизации»":"✓ Сохранено в «Мои автоматизации»","ok");
-    if(btn){ btn.textContent="✓ В автоматизациях — открыть"; btn.onclick=function(){ setMode('automations'); }; btn.disabled=false; }
+    toast(r.existing?"Уже сохранено — открой «Автоматизации»":"Сохранено в «Мои автоматизации»","ok");
+    if(btn){ btn.textContent="В автоматизациях — открыть"; btn.onclick=function(){ setMode('automations'); }; btn.disabled=false; }
   } else toast("Ошибка: "+((r&&r.message)||""),"err");
 }
 async function runComposed(flowId, btn){
@@ -3055,8 +3055,8 @@ async function runComposed(flowId, btn){
     var warns = r.warnings||[];
     var degraded = r.degraded || (r.run_status && r.run_status!=="success");
     if(msg) msg.innerHTML = degraded
-      ? '<span style="color:#c93">⚠ done with '+warns.length+' warning'+(warns.length===1?'':'s')+'</span>'
-      : '✓ done — opening result';
+      ? '<span style="color:#c93">done with '+warns.length+' warning'+(warns.length===1?'':'s')+'</span>'
+      : 'done — opening result';
     var opts = Object.assign({}, COMPOSED[flowId]||{}, {warnings: warns});
     showBrief(r.digest, opts);
   } else {
@@ -3102,7 +3102,7 @@ async function capInstall(mountId,i,btn){
   var card=el('capc-'+mountId+'-'+i);
   if(r && r.status!=='error'){
     var st=r.install_status||'linked';
-    var lbl = st==='installed' ? '✓ установлено · в «Мои»' : (st==='installing' ? '⏳ ставится… · в «Мои»' : '✓ добавлено в «Мои»');
+    var lbl = st==='installed' ? 'установлено · в «Мои»' : (st==='installing' ? '⏳ ставится… · в «Мои»' : 'добавлено в «Мои»');
     if(card){ var slot=card.querySelector('div[style*="flex:0 0 auto"]'); if(slot) slot.innerHTML='<span style="color:var(--ok,#2a2);font-size:13px;font-weight:600">'+lbl+'</span>'; card.style.borderColor='var(--ok,#2a2)'; }
   } else {
     if(btn){ btn.disabled=false; btn.innerHTML='Повторить'; }
@@ -3219,7 +3219,7 @@ function renderBrief(){
       </div>
       <div class="brief-edit">
         <textarea id="ans-${q.id}" oninput="S.drafts['${q.id}']=this.value">${esc(ans)}</textarea>
-        <div style="margin-top:6px"><button class="btn gold sm" onclick="saveAnswers()">✓ Сохранить</button></div>
+        <div style="margin-top:6px"><button class="btn gold sm" onclick="saveAnswers()">Сохранить</button></div>
         ${threadHTML("q:"+q.id)}
       </div>
     </div>`;
@@ -3235,7 +3235,7 @@ function renderBrief(){
       </div>
       <div class="brief-edit">
         <textarea id="ans-${id}" oninput="S.drafts['${id}']=this.value">${esc(ans)}</textarea>
-        <div style="margin-top:6px"><button class="btn gold sm" onclick="saveAnswers()">✓ Сохранить</button></div>
+        <div style="margin-top:6px"><button class="btn gold sm" onclick="saveAnswers()">Сохранить</button></div>
       </div>
     </div>`;
   }).join("");
@@ -3312,7 +3312,7 @@ function renderFiles(){
     : `<span style="color:var(--silver);font-size:13px">Пока ничего не приложено.</span>`;
 }
 async function uploadFiles(fileList){
-  if(!S.sessionId){ toast("Сначала создайте сессию", "err"); return; }
+  if(!S.sessionId){ toast("Сначала создайте проект", "err"); return; }
   for(const f of fileList){
     if(f.size > 25*1024*1024){ toast(f.name+": больше 25 МБ, пропускаю", "err"); continue; }
     setStatus("stFiles","<span class='spin'></span>загружаю "+esc(f.name)+"…");
@@ -3322,7 +3322,7 @@ async function uploadFiles(fileList){
     S._dcAuto = false;
     toast("✓ "+f.name+" приложен", "ok");
     // помощник узнаёт о файле
-    sendChatSilent(`[К сессии приложен файл-образец: ${r.path}. Посмотри при проектировании; если это выгрузка/шаблон — учти структуру.]`);
+    sendChatSilent(`[К проекта приложен файл-образец: ${r.path}. Посмотри при проектировании; если это выгрузка/шаблон — учти структуру.]`);
   }
   setStatus("stFiles","");
   await reloadSession(); render();
@@ -3365,7 +3365,7 @@ function dataCheckHTML(){
   if(!dc){
     return `<div class="card"><div class="kicker">Проверка данных</div>
       <div style="font-size:13.5px;color:var(--nav)">Проверю, поддерживает ли твой файл описанный процесс.</div>
-      <div style="margin-top:8px"><button class="btn ghost sm" id="dcBtn" onclick="runDataCheck()">🔎 Проверить данные</button> <span class="statusline" id="stDC"></span></div></div>`;
+      <div style="margin-top:8px"><button class="btn ghost sm" id="dcBtn" onclick="runDataCheck()">Проверить данные</button> <span class="statusline" id="stDC"></span></div></div>`;
   }
   const v = dc.verdict;
   const badge = v==="yes"?`<span class="badge ok">файл поддерживает процесс</span>`
@@ -3424,11 +3424,11 @@ function renderBlueprint(){
       var CX={source:'Источник данных',capability:'Добыча способности — модель/репо/навык',knowledge_voice:'Знание компании и голос',trust:'Доверие к суждению',action:'Действие и общение',artifact:'Оформление результата (Excel/PPT/док)',orchestration:'Оркестрация процесса'};
       var nm=CX[bp.crux_layer.layer]||bp.crux_layer.layer;
       return '<div style="background:var(--gold-bg);border:1px solid #eddfc4;border-left:3px solid var(--gold);border-radius:6px;padding:12px 16px;margin-top:16px">'+
-        '<div style="font:600 11px var(--mono,monospace);letter-spacing:.08em;color:var(--gold)">🎯 Главное в этой задаче</div>'+
+        '<div style="font:600 11px var(--mono,monospace);letter-spacing:.08em;color:var(--gold)">Главное в этой задаче</div>'+
         '<div style="font-size:15px;font-weight:700;margin:4px 0 2px">'+esc(nm)+'</div>'+
         (bp.crux_layer.why?'<div style="font-size:13px;color:var(--ink-soft)">'+esc(bp.crux_layer.why)+'</div>':'')+
         '<div style="font-size:12px;color:var(--silver);margin-top:6px">Сюда визард вложит стройку в первую очередь — остальное леса.</div>'+
-        (bp.crux_layer.layer==='trust'?'<button class="btn gold sm" style="margin-top:10px;font-size:12.5px" onclick="trustCheck(\'\')">🎯 Проверить доверие на примерах</button>':'')+
+        (bp.crux_layer.layer==='trust'?'<button class="btn gold sm" style="margin-top:10px;font-size:12.5px" onclick="trustCheck(\'\')">Проверить доверие на примерах</button>':'')+
         '</div>';
     })() : ''}
 
@@ -3485,12 +3485,12 @@ function extTitle(id){ if(!CATALOG) return id; const e=(CATALOG.delivery_extensi
 /* ================= ТЗ (spec) ================= */
 async function regenerateSpec(){
   el("specBtn").disabled = true;
-  setStatus("stSpec","<span class='spin'></span>собираю ТЗ из сессии…");
+  setStatus("stSpec","<span class='spin'></span>собираю ТЗ из проекта…");
   const r = await jpost("/x/expert",{expert_name:"wz_project_spec",params:{session_id:S.sessionId}});
   el("specBtn").disabled = false;
   if(r.status!=="success"){ setStatus("stSpec","ошибка: "+esc(r.message||"")); toast("Не удалось обновить ТЗ","err"); return; }
-  setStatus("stSpec","✓ ТЗ обновлено");
-  toast("✓ Техзадание обновлено","ok");
+  setStatus("stSpec","ТЗ обновлено");
+  toast("Техзадание обновлено","ok");
   await reloadSession();
   S._specStamp = _bpStamp();   // #15: запоминаем план, по которому собран ТЗ — для детекции устаревания
   render();
@@ -3538,11 +3538,11 @@ function renderSpec(){
     el("specSchemaCard").style.display = "none";
   }
   if(!S.spec){
-    el("specArea").innerHTML = `<div class="empty">Текст ТЗ ещё не собран. Нажми «Обновить ТЗ» — документ соберётся из интервью, плана и решений сессии.</div>`;
+    el("specArea").innerHTML = `<div class="empty">Текст ТЗ ещё не собран. Нажми «Обновить ТЗ» — документ соберётся из интервью, плана и решений проекта.</div>`;
   } else {
     // #15: ТЗ мог отстать от плана (blueprint менялся после сборки ТЗ) — честно предупреждаем
     var _stale = (S._specStamp!==undefined) && (S._specStamp !== _bpStamp());
-    var _warn = _stale ? `<div class="card gap-card" style="margin-bottom:10px">⚠ План процесса менялся после сборки этого ТЗ — нажми «Обновить ТЗ», чтобы пересобрать по свежему плану.</div>` : "";
+    var _warn = _stale ? `<div class="card gap-card" style="margin-bottom:10px">План процесса менялся после сборки этого ТЗ — нажми «Обновить ТЗ», чтобы пересобрать по свежему плану.</div>` : "";
     el("specArea").innerHTML = _warn + `<div class="spec-doc">${mdToHtml(S.spec)}</div>`;
   }
   el("specComments").innerHTML = threadHTML("spec:doc");
@@ -3778,7 +3778,7 @@ function renderDemoRunner(){
     <div style="font-size:12px;color:var(--silver);margin-top:8px">Каждая стадия — трассируемый запуск на платформе. Данные полностью синтетические.</div>`;
 }
 async function startDemo(){
-  if(!S.sessionId){ toast("Сначала создайте сессию", "err"); return; }
+  if(!S.sessionId){ toast("Сначала создайте проект", "err"); return; }
   const r = await jpost("/x/demo_run",{session_id:S.sessionId,
     industry:(S.libIndustry||""),   // WZ-05: отрасль не выбрана → базовый чек-лист, не навязанный airline
     n_dialogues:parseInt(el("demoN").value),
@@ -3896,8 +3896,8 @@ function renderTest(){
   el("buildRunner").innerHTML = `
     <div class="kicker">Сборка процесса</div>
     <div style="font-size:14px;margin-bottom:10px">${bp? "Процесс: <b>"+esc(bp.process_name)+"</b>" : "Сначала соберите план процесса (шаг «План»)."}</div>
-    <button class="btn gold" id="buildBtn" onclick="startBuild()" ${(!bp||running||waiting)?"disabled":""}>${running?"Идёт сборка…":waiting?"Ждёт твоего ответа ↓":(lb?"↻ Собрать заново":"🔨 Построить процесс")}</button>
-    ${noFiles&&bp?`<button class="btn ghost" style="margin-left:8px" onclick="genSample()">⚗️ Сгенерировать пример данных</button>`:""}
+    <button class="btn gold" id="buildBtn" onclick="startBuild()" ${(!bp||running||waiting)?"disabled":""}>${running?"Идёт сборка…":waiting?"Ждёт твоего ответа ↓":(lb?"↻ Собрать заново":"Построить процесс")}</button>
+    ${noFiles&&bp?`<button class="btn ghost" style="margin-left:8px" onclick="genSample()">Сгенерировать пример данных</button>`:""}
     <span class="statusline" id="stBuild" style="margin-left:10px"></span>
     <div style="font-size:12px;color:var(--silver);margin-top:8px">Платформа сама составит план, создаст чернового эксперта, запустит его на образцах и опубликует только после приёмки. Одна попытка может занять до 15 минут, всего возможно четыре; экран можно закрыть — прогресс сохраняется.${noFiles?' Файла-образца пока нет: приложите свой или сгенерируйте синтетический — он помечается и не заменяет приёмку на реальных данных.':''}</div>`;
   if(waiting){ renderOwnerWait(waiting); el("buildFoot").style.display="none"; }
@@ -3906,7 +3906,7 @@ function renderTest(){
   else el("buildProgress").innerHTML = "";
 }
 async function startBuild(){
-  if(!S.sessionId){ toast("Сначала создайте сессию","err"); return; }
+  if(!S.sessionId){ toast("Сначала создайте проект","err"); return; }
   el("buildBtn").disabled = true;
   setStatus("stBuild","<span class='spin'></span>запускаю сборку…");
   const r = await jpost("/x/build",{session_id:S.sessionId});
@@ -3926,13 +3926,13 @@ async function startBuild(){
 }
 async function genSample(){
   // §20.3: синтетический файл-образец из интервью (Qwen); маркируется synthetic
-  if(!S.sessionId){ toast("Сначала создайте сессию","err"); return; }
+  if(!S.sessionId){ toast("Сначала создайте проект","err"); return; }
   busy("Генерирую синтетический пример данных…");
   let r; try{ r = await jpost("/x/gen_sample",{session_id:S.sessionId}); }
   catch(e){ r={status:"error",message:String(e)}; }
   busyOff();
   if(!r || r.status!=="success"){ toast("Не удалось сгенерировать: "+((r&&r.message)||""),"err"); return; }
-  toast("⚗️ Пример создан: "+r.name+" ("+r.rows+" строк, синтетика) — можно строить","ok");
+  toast("Пример создан: "+r.name+" ("+r.rows+" строк, синтетика) — можно строить","ok");
   await reloadSession(); render();
 }
 async function pollBuild(){
@@ -4170,10 +4170,10 @@ function renderBuildResult(lb){
   el("buildProgress").innerHTML = `
     <div class="card">
       <div class="kicker">${agentic?'Задача решена и упакована':'Процесс собран'} ${(lb.needs_review&&lb.needs_review.length)?"— есть шаги на доводку":"✓"}</div>
-      ${agentic?`<div style="font-size:13.5px;margin-bottom:10px;padding:10px 12px;background:var(--gold-bg);border-radius:8px"><b>🧠 Агентная стройка:</b> Qwen получила полное ТЗ и все файлы, решила задачу целиком, запустила решение на образцах и только после приёмки упаковала его в эксперта.${confidence?` Уверенность приёмки: <b>${Math.round(confidence*100)}%</b>.`:''}</div>`:''}
+      ${agentic?`<div style="font-size:13.5px;margin-bottom:10px;padding:10px 12px;background:var(--gold-bg);border-radius:8px"><b>Агентная стройка:</b> Qwen получила полное ТЗ и все файлы, решила задачу целиком, запустила решение на образцах и только после приёмки упаковала его в эксперта.${confidence?` Уверенность приёмки: <b>${Math.round(confidence*100)}%</b>.`:''}</div>`:''}
       <div style="margin-bottom:8px">Построено компонентов: <b>${experts.length}</b> ${vbadge}</div>
       <div style="font-size:13px;color:var(--nav)">${experts.map(e=>`<code style="background:var(--cream);padding:1px 6px;border-radius:4px;margin:2px;display:inline-block">${esc(e)}</code>`).join(" ")}</div>
-      ${(lb.needs_review&&lb.needs_review.length)?`<div style="font-size:13px;margin-top:10px;padding:10px 12px;border:1px solid #e0b48a;border-radius:6px;background:rgba(224,168,94,.08)"><b>⚠ Требуют доводки (${lb.needs_review.length}):</b> собраны и запустились, но результат по смыслу сомнителен — проверьте и поправьте словами в кабинете.<ul class="plain" style="margin-top:6px">${lb.needs_review.map(r=>`<li><b>${esc(r.title||r.expert)}</b> — ${esc(r.why||'')}</li>`).join("")}</ul></div>`:""}
+      ${(lb.needs_review&&lb.needs_review.length)?`<div style="font-size:13px;margin-top:10px;padding:10px 12px;border:1px solid #e0b48a;border-radius:6px;background:rgba(224,168,94,.08)"><b>Требуют доводки (${lb.needs_review.length}):</b> собраны и запустились, но результат по смыслу сомнителен — проверьте и поправьте словами в кабинете.<ul class="plain" style="margin-top:6px">${lb.needs_review.map(r=>`<li><b>${esc(r.title||r.expert)}</b> — ${esc(r.why||'')}</li>`).join("")}</ul></div>`:""}
       ${(aud.issues&&aud.issues.length)?`<div style="font-size:13px;color:var(--warn);margin-top:8px"><b>На подтверждение:</b><ul class="plain">${aud.issues.map(i=>`<li>${esc(i)}</li>`).join("")}</ul></div>`:`<div style="font-size:13px;color:var(--ok);margin-top:8px">Проверка безопасности замечаний не нашла.</div>`}
       <!-- #4: после сборки человек не понимал, что дальше. Явный следующий шаг — кабинет, где живёт
            чат доводки («Скажи, что поменять») и запуск. Идея Анвара: доводить и запускать словами там. -->
@@ -4186,7 +4186,7 @@ function renderBuildResult(lb){
 }
 // #4: единый переход в кабинет текущего собранного процесса (там чат доводки и запуск).
 async function goToCabinet(){
-  var sid=S.sessionId; if(!sid){ toast('Нет активной сессии','err'); return; }
+  var sid=S.sessionId; if(!sid){ toast('Нет активной проекта','err'); return; }
   try{
     var d=await jget('/x/automations'); var list=(d&&d.automations)||[];
     var idx=list.findIndex(function(a){return a.session_id===sid;});
@@ -4208,9 +4208,9 @@ function renderLaunch(){
     gate = `<div class="card gap-card"><b>Процесс ещё не построен.</b> Вернитесь на шаг «Стройка» и нажми «Построить процесс».</div>`;
   } else {
     const aud = lb.audit||{}; const v = aud.verdict;
-    const vtext = v==="allow" ? "✓ Проверка безопасности пройдена — можно запускать."
-      : v==="escalate" ? "❌ Проверка требует вмешательства команды Extella — запуск заблокирован."
-      : "⚠️ Проверка пройдена с замечаниями — подтвердите перед запуском.";
+    const vtext = v==="allow" ? "Проверка безопасности пройдена — можно запускать."
+      : v==="escalate" ? "Проверка требует вмешательства команды Extella — запуск заблокирован."
+      : "Проверка пройдена с замечаниями — подтвердите перед запуском.";
     gate = `
       <div class="card">
         <div class="kicker">Проверка перед запуском</div>
@@ -4220,19 +4220,19 @@ function renderLaunch(){
       </div>
       ${launched ? `<div class="card pack-card">
           ${runs.length
-            ? `<b>✓ Готово — автоматизация работает.</b> Первый прогон сделан${lastRunAt?(" ("+esc(lastRunAt)+")"):""}. Дальше она живёт в кабинете: расписание, повторные прогоны, пауза и результаты во времени.`
-            : `<b>✓ Процесс одобрен и готов.</b> Компоненты собраны, состав зафиксирован. Одобрение — не запуск: сделай первый прогон, чтобы увидеть результат на твоих данных.`}
-          ${!(S.session.source&&S.session.source.kind) ? `<div style="background:#fdf6e7;border:1px solid #f0d9a0;border-radius:5px;padding:9px 12px;margin-top:10px;font-size:12.5px;color:#7a5b1a">⚠ Данные пока загружаются <b>вручную файлом</b>. Чтобы процесс работал сам 24/7 — откройте кабинет → «Настройка» → «Привязать источник» → «✨ Любой источник» (своё API / CRM / рекламный кабинет).</div>` : ""}
+            ? `<b>Готово — автоматизация работает.</b> Первый прогон сделан${lastRunAt?(" ("+esc(lastRunAt)+")"):""}. Дальше она живёт в кабинете: расписание, повторные прогоны, пауза и результаты во времени.`
+            : `<b>Процесс одобрен и готов.</b> Компоненты собраны, состав зафиксирован. Одобрение — не запуск: сделай первый прогон, чтобы увидеть результат на твоих данных.`}
+          ${!(S.session.source&&S.session.source.kind) ? `<div style="background:#fdf6e7;border:1px solid #f0d9a0;border-radius:5px;padding:9px 12px;margin-top:10px;font-size:12.5px;color:#7a5b1a">Данные пока загружаются <b>вручную файлом</b>. Чтобы процесс работал сам 24/7 — откройте кабинет → «Настройка» → «Привязать источник» → «✨ Любой источник» (своё API / CRM / рекламный кабинет).</div>` : ""}
           <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
             ${runs.length
-              ? `<button class="btn gold" onclick="openWzCabinetBySid('${esc(S.sessionId)}')">Открыть кабинет →</button><button class="btn ghost" onclick="openReport()">📄 Открыть отчёт</button><button class="btn ghost" onclick="doFirstRun()">↻ Прогон ещё раз</button>`
+              ? `<button class="btn gold" onclick="openWzCabinetBySid('${esc(S.sessionId)}')">Открыть кабинет →</button><button class="btn ghost" onclick="openReport()">Открыть отчёт</button><button class="btn ghost" onclick="doFirstRun()">↻ Прогон ещё раз</button>`
               : `<button class="btn gold" onclick="doFirstRun()">▶ Сделать первый прогон</button><button class="btn ghost" onclick="openWzCabinetBySid('${esc(S.sessionId)}')">Открыть кабинет →</button>`}
             <span class="statusline" id="stFirstRun"></span>
           </div>
           <div id="firstRunOut" style="margin-top:8px"></div>
           <div style="font-size:12px;color:var(--silver);margin-top:10px">Автоматизация теперь в разделе «Автоматизации» — там расписание, повторные прогоны, пауза и все результаты.</div>
         </div>`
-        : `<div class="toolbar"><button class="btn gold" id="launchBtn" onclick="doLaunch()" ${v==="escalate"?"disabled":""}>✅ Одобрить запуск</button><span class="statusline" id="stLaunch"></span></div>`}`;
+        : `<div class="toolbar"><button class="btn gold" id="launchBtn" onclick="doLaunch()" ${v==="escalate"?"disabled":""}>Одобрить запуск</button><span class="statusline" id="stLaunch"></span></div>`}`;
   }
   // сводка результата прогона (из вертикального среза сборки)
   const sm = lb && lb.slice_summary;
@@ -4242,7 +4242,7 @@ function renderLaunch(){
     const breakdowns = Object.entries(sm).filter(([k,v])=>k.startsWith("by_") && v && typeof v==="object" && Object.keys(v).length && Object.keys(v).length<=8);
     summaryCard = `
     <div class="card pack-card">
-      <div class="kicker">📊 Результат на твоих данных (пробный прогон)</div>
+      <div class="kicker">Результат на твоих данных (пробный прогон)</div>
       <div style="display:flex;gap:26px;flex-wrap:wrap;margin:6px 0 10px">
         ${sm.total_count!=null?`<div><div style="font-size:24px;font-weight:700">${fmt(sm.total_count)}</div><div style="font-size:12px;color:var(--silver)">позиций</div></div>`:""}
         ${sm.total_sum!=null?`<div><div style="font-size:24px;font-weight:700;color:var(--gold)">${fmt(sm.total_sum)}</div><div style="font-size:12px;color:var(--silver)">общая сумма</div></div>`:""}
@@ -4281,7 +4281,7 @@ async function doLaunch(){
   }
   if(r.status!=="success"){ setStatus("stLaunch",""); toast("Не удалось одобрить: "+(r.message||""),"err"); el("launchBtn").disabled=false; return; }
   setStatus("stLaunch","");
-  toast("✅ Процесс одобрен — сделайте первый прогон","ok");
+  toast("Процесс одобрен — сделайте первый прогон","ok");
   await reloadSession(); render();
 }
 async function doFirstRun(){
@@ -4296,7 +4296,7 @@ async function doFirstRun(){
     return;
   }
   if(r.digest) showBrief(r.digest, _reportBriefOpts((r.run||{}).at));   // модал с результатом первого прогона
-  // персистим прогон в сессию (runs[]) и перерисовываем шаг «Запуск» в финиш-режим:
+  // персистим прогон в проект (runs[]) и перерисовываем шаг «Запуск» в финиш-режим:
   // «Готово — работает» + главная дверь «Открыть кабинет →», где автоматизация живёт дальше
   await reloadSession();
   if(S.view==="launch") render();
@@ -4309,7 +4309,7 @@ function _reportBriefOpts(at){
     kicker: 'Extella · Отчёт прогона',
     title: (bp && bp.process_name) || (S.session && S.session.client_name) || 'Отчёт прогона',
     subtitle: 'Результат прогона автоматизации' + (at?(' · '+String(at).slice(0,16).replace("T"," ")):'') + '.',
-    chips: experts.length ? ['🧩 '+experts.length+(experts.length===1?' компонент':' компонентов'),'🧠 Qwen'] : ['🧠 Qwen']
+    chips: experts.length ? ['🧩 '+experts.length+(experts.length===1?' компонент':' компонентов'),'Qwen'] : ['Qwen']
   };
 }
 // Скачивание отчёта с render-check: мост проверяет, что файл реально открывается; битый → предложить
@@ -4329,7 +4329,7 @@ async function dlReport(encPath){
     }
     const j = await r.json().catch(()=>({}));
     if(r.status===422 && j.code==="artifact_corrupt"){
-      ask("⚠ Отчёт повреждён", (j.reason||"файл битый")+".\n\nЛучше переиграть прогон. Скачать файл как есть (для отладки)?","",()=>{
+      ask("Отчёт повреждён", (j.reason||"файл битый")+".\n\nЛучше переиграть прогон. Скачать файл как есть (для отладки)?","",()=>{
         window.open("/x/download?"+q+"&force=1","_blank");
       });
     } else toast(j.message||"Файл недоступен","err");
@@ -4370,7 +4370,7 @@ function pushMsg(cls, text){
 }
 const GREETING_HTML = '<div class="msg bot">Привет! Помогу спроектировать твой ИИ-процесс на Extella. Расскажи своими словами, какая задача или боль привела тебя сюда — остальное я спрошу сам, а конспект слева буду заполнять по ходу разговора. Руками его править не нужно (но можно — если хочешь уточнить).</div>';
 async function loadChatHistory(sid){
-  // Один непрерывный чат на сессию: подгружаем сохранённую стенограмму (память держит мост, не платформа).
+  // Один непрерывный чат на проект: подгружаем сохранённую стенограмму (память держит мост, не платформа).
   const log = el("chatLog");
   S.chatRespId = null;
   log.innerHTML = GREETING_HTML;               // всегда начинаем с приветствия
@@ -4442,15 +4442,15 @@ function _addTransferBtn(bubble, answers){
   var btn = document.createElement("button");
   btn.className = "btn gold sm apply"; btn.textContent = "⤵ Перенести ответы в конспект";
   btn.onclick = async ()=>{
-    if(!S.sessionId){ toast("Сначала создайте сессию", "err"); return; }
+    if(!S.sessionId){ toast("Сначала создайте проект", "err"); return; }
     await jpost("/x/expert",{expert_name:"wz_session",params:{action:"save_answers",session_id:S.sessionId,payload_json:JSON.stringify(answers)}});
     await reloadSession(); S.view="interview"; render();
-    btn.textContent = "✓ Перенесено"; btn.disabled = true;
+    btn.textContent = "Перенесено"; btn.disabled = true;
   };
   bubble.appendChild(btn);
 }
 async function _extractAndSaveAnswers(btn){
-  if(!S.sessionId){ toast("Сначала создайте сессию", "err"); return; }
+  if(!S.sessionId){ toast("Сначала создайте проект", "err"); return; }
   btn.disabled = true; var old = btn.textContent; btn.innerHTML = "<span class='spin'></span> собираю ответы…";
   var ask = "Собери ВСЕ ответы клиента из нашего разговора и верни СТРОГО JSON без пояснений и без markdown-заборов: "
     + '{"pain":{"question":"боль","answer":"…"},"process_today":{"question":"как сейчас","answer":"…"},'
@@ -4467,7 +4467,7 @@ async function _extractAndSaveAnswers(btn){
   }
   await jpost("/x/expert",{expert_name:"wz_session",params:{action:"save_answers",session_id:S.sessionId,payload_json:JSON.stringify(answers)}});
   await reloadSession(); S.view="interview"; render();
-  btn.textContent = "✓ Перенесено ("+Object.keys(answers).length+")";
+  btn.textContent = "Перенесено ("+Object.keys(answers).length+")";
 }
 
 /* ================= автоматизации ================= */
@@ -4508,9 +4508,9 @@ async function renderConnections(){
   const _pill = (c,bg,t)=>`<span style="font-size:11.5px;color:${c};background:${bg};border-radius:999px;padding:3px 9px">${t}</span>`;
   const connStatus = (e)=>{
     if(!e) return '';
-    if(e.last_ok===false) return _pill('#c33','rgba(197,51,51,.12)','⚠ не подтверждено');
+    if(e.last_ok===false) return _pill('#c33','rgba(197,51,51,.12)','не подтверждено');
     if(e.last_ok===true){ const stale = e.validated_at && (Date.now()-new Date(e.validated_at).getTime())>30*86400000;
-      return _pill('#2f9e56','rgba(47,158,86,.12)', stale?('✓ проверено '+_ago(e.validated_at)):'✓ проверено'); }
+      return _pill('#2f9e56','rgba(47,158,86,.12)', stale?('проверено '+_ago(e.validated_at)):'проверено'); }
     return _pill('#8a8577','rgba(138,133,119,.14)','● подключено, не проверено');
   };
   const card = (key,label,fn)=>{
@@ -4540,8 +4540,8 @@ async function renderConnections(){
       let days=null, dstr='';
       if(tv.expires){ days=Math.floor((new Date(tv.expires)-Date.now())/86400000); dstr=String(tv.expires).slice(0,10); }
       if(days!=null && days<0){ st='<span style="font-size:11.5px;color:#c0392b;background:rgba(192,57,43,.12);border-radius:999px;padding:3px 9px">токен истёк '+esc(dstr)+'</span>'; }
-      else if(days!=null && days<=7){ st='<span style="font-size:11.5px;color:#C57E33;background:rgba(197,126,51,.13);border-radius:999px;padding:3px 9px">⚠ токен до '+esc(dstr)+' ('+days+' дн.)</span>'; }
-      else { st='<span style="font-size:11.5px;color:#2f9e56;background:rgba(47,158,86,.12);border-radius:999px;padding:3px 9px">✓ подключено'+(dstr?' · до '+esc(dstr):'')+'</span>'; }
+      else if(days!=null && days<=7){ st='<span style="font-size:11.5px;color:#C57E33;background:rgba(197,126,51,.13);border-radius:999px;padding:3px 9px">токен до '+esc(dstr)+' ('+days+' дн.)</span>'; }
+      else { st='<span style="font-size:11.5px;color:#2f9e56;background:rgba(47,158,86,.12);border-radius:999px;padding:3px 9px">подключено'+(dstr?' · до '+esc(dstr):'')+'</span>'; }
       act='<a href="#" onclick="tvTest();return false" style="color:#2f9e56;font-size:12.5px">проверить</a> <button class="btn ghost sm" style="font-size:12px;padding:5px 12px;margin-left:8px" onclick="connectTourvisor()">Обновить токен</button>';
     } else {
       act='<button class="btn ghost sm" style="font-size:12px;padding:5px 12px" onclick="connectTourvisor()">Подключить</button>';
@@ -4558,7 +4558,7 @@ async function renderConnections(){
   const onNames = [...OUT_CH,...IN_SRC].filter(c=>vaulted.includes(c[0])).map(c=>c[1]);
   if(tv) onNames.push('Tourvisor');
   const sumTxt = onNames.length
-    ? `${onNames.join(', ')}${found.length?` · <span style=\"color:#C57E33\">＋ найдено: WhatsApp</span>`:''}${tvWarn?` · <span style=\"color:#C57E33\">⚠ токен Tourvisor истекает</span>`:''}`
+    ? `${onNames.join(', ')}${found.length?` · <span style=\"color:#C57E33\">＋ найдено: WhatsApp</span>`:''}${tvWarn?` · <span style=\"color:#C57E33\">токен Tourvisor истекает</span>`:''}`
     : (WLANG==='en'?'nothing connected yet':'пока ничего не подключено');
   bar.innerHTML = `<details style="border:1px solid rgba(128,128,128,.25);border-radius:6px;padding:10px 14px;margin:0 0 16px"${(found.length||tvWarn)?' open':''}>
     <summary style="cursor:pointer;list-style:none;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap">${_wt('connHdr')} <span style="font-weight:400;font-size:12.5px;color:var(--silver,#889)">— ${sumTxt}</span></summary>
@@ -4578,7 +4578,7 @@ function connectTourvisor(){
     busy("Сохраняю токен Tourvisor…");
     const r = await jpost("/x/tourvisor_token",{jwt:jwt.trim()});
     busyOff();
-    if(r&&r.status==="success"){ toast("✓ Токен Tourvisor обновлён"+(r.expires?" · до "+String(r.expires).slice(0,10):""),"ok"); renderConnections(); }
+    if(r&&r.status==="success"){ toast("Токен Tourvisor обновлён"+(r.expires?" · до "+String(r.expires).slice(0,10):""),"ok"); renderConnections(); }
     else toast("Ошибка: "+((r&&r.message)||""),"err");
   });
 }
@@ -4589,7 +4589,7 @@ async function tvTest(){
   let n=0, ok=false;
   try{ const d=(r&&r.result)?(typeof r.result==="string"?JSON.parse(r.result):r.result):r; ok=(d.status==="success"||d.ok); const dep=d.data&&(d.data.departures||d.data); n=Array.isArray(dep)?dep.length:0; }catch(e){}
   if(out) out.innerHTML=old;
-  toast(ok?("✓ Tourvisor отвечает"+(n?" · городов вылета: "+n:"")):"Tourvisor не ответил — проверьте токен", ok?"ok":"err");
+  toast(ok?("Tourvisor отвечает"+(n?" · городов вылета: "+n:"")):"Tourvisor не ответил — проверьте токен", ok?"ok":"err");
 }
 // адопция найденного подключения (WhatsApp из Travel-пака) в общий сейф — секрет переносится серверно
 function adoptConn(key){
@@ -4598,7 +4598,7 @@ function adoptConn(key){
     busy("Переношу подключение в общий сейф…");
     const r = await jpost("/x/secret_adopt",{connector:"whatsapp", to:(to||"").trim()});
     busyOff();
-    if(r&&r.status==="success"){ toast("✓ WhatsApp теперь общее подключение","ok"); renderConnections(); }
+    if(r&&r.status==="success"){ toast("WhatsApp теперь общее подключение","ok"); renderConnections(); }
     else toast("Ошибка: "+((r&&r.message)||""),"err");
   });
 }
@@ -4614,7 +4614,7 @@ async function testConn(key,isSrc){
   const r = isSrc ? await jpost("/x/source_test",{kind:key}) : await jpost("/x/connector_test",{connector:key});
   busyOff();
   const res=(r&&r.result)||{};
-  if(res.ok) toast("✓ Связь есть"+(res.bot?(" @"+res.bot):(res.rows_estimate!=null?(" (~"+res.rows_estimate+" строк)"):(res.account?(" ("+res.account+")"):""))),"ok");
+  if(res.ok) toast("Связь есть"+(res.bot?(" @"+res.bot):(res.rows_estimate!=null?(" (~"+res.rows_estimate+" строк)"):(res.account?(" ("+res.account+")"):""))),"ok");
   else toast("Не подтверждено: "+(res.err||"проверьте данные"),"err");
 }
 async function renderMonitor(){
@@ -4709,18 +4709,18 @@ async function openWzCabinetBySid(sid){
 }
 function closeWzCabinet(){ _wzCabI=-1; var o=el('wz_cab'); if(o)o.remove(); }
 function wzCabTab(t){ _wzCabTab=t; _wzCabRender(); }
-// ── C1 Пульт: честный статус жизни — из реальности (сессия/расписание/монитор), не из витрины ──
+// ── C1 Пульт: честный статус жизни — из реальности (проект/расписание/монитор), не из витрины ──
 function _wzLife(a){
   var sid=(a&&a.session_id)||'';
   if(window._runningSid===sid) return {k:'running', label:'⏳ прогон идёт…', color:'#F5C26B'};
   if(a.paused) return {k:'paused', label:'⏸ на паузе', color:'#F5C26B'};
   var mon=(window.MONITOR_BY_SID||{})[sid];
   if(mon && mon.health && mon.health!=='ok')
-    return {k:'attention', label:'🟡 нужна помощь', color:'#F5C26B', reason:(mon.reasons&&mon.reasons[0])||''};
+    return {k:'attention', label:'нужна помощь', color:'#F5C26B', reason:(mon.reasons&&mon.reasons[0])||''};
   // #24: фолбэк без монитора — плохой последний прогон = нужна помощь (кабинет мог открыться до прогрева MONITOR_BY_SID)
   var _lr=a.last_run||(a.runs&&a.runs[0]);
   if(_lr && _lr.status && _lr.status!=='success')
-    return {k:'attention', label:'🟡 нужна помощь', color:'#F5C26B', reason:'последний прогон: '+String(_lr.status)};
+    return {k:'attention', label:'нужна помощь', color:'#F5C26B', reason:'последний прогон: '+String(_lr.status)};
   if((a.schedule&&a.schedule.period)||a.inbound) return {k:'active', label:'● работает', color:'#7ee2a1'};
   return {k:'manual', label:'○ запуск вручную', color:'rgba(255,255,255,.8)'};
 }
@@ -4762,8 +4762,8 @@ function _wzCabRender(){
   // «Работа» пака остаётся отдельной — там РАБОТАЮТ (лиды, договоры), а не управляют
   // автоматизацией. А «Процесс» (что делает, этапы) перестал быть вкладкой: его читают
   // один раз, а место он занимал всегда → свёрнутый блок в Обзоре.
-  var domainTab = a.panel_url ? [['panel','🧳 Работа']] : [];
-  if(a.flow_id) domainTab.push(['compose','🧩 Состав·Доводка']);   // C2: композиция — доводка не теряется после сохранения
+  var domainTab = a.panel_url ? [['panel','Работа']] : [];
+  if(a.flow_id) domainTab.push(['compose','Состав·Доводка']);   // C2: композиция — доводка не теряется после сохранения
   // UX: кабина отвечает на три вопроса по порядку — работает ли и что выдало (Обзор),
   // как это устроено (Настройка), что было (История). Шесть вкладок наросли по мере
   // появления способностей и развели ОДНО действие по трём местам: «Собрать сейчас»,
@@ -4782,7 +4782,7 @@ function _wzCabRender(){
           _wzLifeRow(a)+
           '<div style="margin-top:6px;font:500 10px var(--mono,monospace);color:rgba(255,255,255,.55)">'+esc(a.orchestrator||a.session_id||'')+'</div>'+
         '</div>'+
-        '<button onclick="closeWzCabinet()" style="border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.14);color:#fff;border-radius:9px;padding:8px 14px;cursor:pointer;font:600 13px var(--sans);flex-shrink:0;position:relative">✕ Закрыть</button>'+
+        '<button onclick="closeWzCabinet()" style="border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.14);color:#fff;border-radius:9px;padding:8px 14px;cursor:pointer;font:600 13px var(--sans);flex-shrink:0;position:relative">Закрыть</button>'+
       '</div>'+
     '</div>'+
     // Чат доводки — БОКОВОЙ панелью (как «Мастер» в Мастере), а не полоской внизу: заметен, виден
@@ -4794,7 +4794,7 @@ function _wzCabRender(){
       '</div>'+
       '<div id="wz_cab_chatside" style="width:380px;flex-shrink:0;border-left:1px solid var(--cream-dark);background:var(--paper);display:flex;flex-direction:column;min-height:0">'+
         '<div style="padding:13px 18px;border-bottom:1px solid var(--cream-dark);flex-shrink:0">'+
-          '<div style="font:700 14px var(--sans)">💬 Доводка</div>'+
+          '<div style="font:700 14px var(--sans)">Доводка</div>'+
           '<div style="font-size:11.5px;color:var(--silver);margin-top:2px">Поправьте словами — процесс или мозг агента</div>'+
         '</div>'+
         '<div id="cabchat_thread" style="flex:1;overflow-y:auto;padding:14px 18px"></div>'+
@@ -4856,7 +4856,7 @@ async function cabChat(){
       : '';
     _cabPush(_cabA('Отчёт будет выглядеть так:'+ch+rj+flHtml+note+
       ' <button class="btn gold sm" style="padding:3px 12px;font-size:11.5px;margin-top:6px" onclick="cabReportApply()">Применить к отчёту</button>'+
-      ' <button class="btn ghost sm" style="padding:3px 10px;font-size:11.5px" onclick="cabReportPreview(this)">👁 Посмотреть документ</button>'+
+      ' <button class="btn ghost sm" style="padding:3px 10px;font-size:11.5px" onclick="cabReportPreview(this)">Посмотреть документ</button>'+
       ' <button class="btn ghost sm" style="padding:3px 10px;font-size:11.5px" onclick="cabCancel()">Отмена</button>'));
     return;
   }
@@ -4880,8 +4880,8 @@ async function cabChat(){
     _cabPush(_cabA('Это правка логики — пересоберу композицию на месте (карточка и расписание сохранятся).'+_cabBtns('Пересобрать')));
   } else {
     window._cabAct={op:'master', args:{message:msg}};
-    _cabPush(_cabA((r.depth==='strong'?'Это изменение шагов процесса':'Это правка логики процесса')+' — такие правки делает Строитель с записью решения в сессию.'+
-      ' <button class="btn gold sm" style="padding:3px 12px;font-size:11.5px" onclick="cabApplyKind(\'rebuild\')">🔧 Пересобрать Строителем</button>'+
+    _cabPush(_cabA((r.depth==='strong'?'Это изменение шагов процесса':'Это правка логики процесса')+' — такие правки делает Строитель с записью решения в проект.'+
+      ' <button class="btn gold sm" style="padding:3px 12px;font-size:11.5px" onclick="cabApplyKind(\'rebuild\')">Пересобрать Строителем</button>'+
       ' <button class="btn ghost sm" style="padding:3px 10px;font-size:11.5px" onclick="cabApplyKind(\'master\')">Открыть в Мастере</button>'+
       ' <button class="btn ghost sm" style="padding:3px 10px;font-size:11.5px" onclick="cabCancel()">Отмена</button>'));
   }
@@ -4894,12 +4894,12 @@ async function cabReportPreview(btn){
   if(btn){ btn.disabled=true; btn.textContent='собираю…'; }
   var r;
   try{ r=await jpost('/x/report_spec_ask_preview',{sid:a.session_id, spec:spec}, 120000); }catch(e){ r=null; }
-  if(btn){ btn.disabled=false; btn.textContent='👁 Посмотреть документ'; }
+  if(btn){ btn.disabled=false; btn.textContent='Посмотреть документ'; }
   if(!r||r.status!=='success'){ _cabPush(_cabA('Превью не собралось: '+esc((r&&r.message)||''))); return; }
   var miss=(r.missing||[]).length
     ? ' <span style="color:#C57E33">Разрезов по '+esc((r.missing||[]).join(', '))+' в последнем прогоне не было — в превью их нет.</span>' : '';
   _cabPush(_cabA('Превью собрано по числам прогона от '+esc(String(r.based_on||'').slice(0,16).replace('T',' '))+'.'+miss+
-    ' <button class="btn gold sm" style="padding:3px 12px;font-size:11.5px" onclick="dlReport(\''+encodeURIComponent(r.path).replace(/'/g,"%27")+'\')">📄 Открыть '+(r.format==='docx'?'Word':'PDF')+'</button>'));
+    ' <button class="btn gold sm" style="padding:3px 12px;font-size:11.5px" onclick="dlReport(\''+encodeURIComponent(r.path).replace(/'/g,"%27")+'\')">Открыть '+(r.format==='docx'?'Word':'PDF')+'</button>'));
 }
 async function cabReportApply(){
   var a=AUTOS[_wzCabI], spec=window._cabReportSpec;
@@ -4907,7 +4907,7 @@ async function cabReportApply(){
   window._cabReportSpec=null;
   var r=await jpost('/x/report_spec_set',{sid:a.session_id, spec:spec}, 30000);
   if(!r||r.status!=='success'){ _cabPush(_cabA('Не сохранилось: '+esc((r&&r.message)||''))); return; }
-  _cabPush(_cabA('✓ Вид отчёта сохранён'+(r.supported===false?' (применится после пересборки процесса)':' — следующий прогон соберёт PDF по-новому')+'.'));
+  _cabPush(_cabA('Вид отчёта сохранён'+(r.supported===false?' (применится после пересборки процесса)':' — следующий прогон соберёт PDF по-новому')+'.'));
 }
 function cabApplyKind(k){ if(window._cabAct) window._cabAct.op=k; cabApply(); }
 function cabCancel(){ window._cabAct=null; _cabPush(_cabA('Отменено.')); }
@@ -4919,16 +4919,16 @@ async function cabApply(){
   var MAP={'Каждый час':60,'Ежедневно':1440,'Еженедельно':10080,'Ежемесячно':43200};
   if(act.op==='recipients'){
     var r=await jpost('/x/recipients',{session_id:a.session_id, recipients:act.args.recipients||[]});
-    if(r&&r.status==='success'){ a.recipients=act.args.recipients||[]; _cabPush(_cabA('✓ Получатели: '+(a.recipients.join(', ')||'никого'))); _wzCabRender(); }
+    if(r&&r.status==='success'){ a.recipients=act.args.recipients||[]; _cabPush(_cabA('Получатели: '+(a.recipients.join(', ')||'никого'))); _wzCabRender(); }
     else _cabPush(_cabA('Ошибка: '+esc((r&&r.message)||'')));
   } else if(act.op==='schedule'){
     var p=act.args.period||'';
     var r2=await jpost('/x/schedule',{session_id:a.session_id, period:p, interval_min:MAP[p]||0});
-    if(r2&&r2.status==='success'){ a.schedule=p?{period:p,interval_min:MAP[p]}:null; _cabPush(_cabA(p?('✓ Расписание: '+esc(p)):'✓ Расписание снято')); _wzCabRender(); }
+    if(r2&&r2.status==='success'){ a.schedule=p?{period:p,interval_min:MAP[p]}:null; _cabPush(_cabA(p?('Расписание: '+esc(p)):'Расписание снято')); _wzCabRender(); }
     else _cabPush(_cabA('Ошибка: '+esc((r2&&r2.message)||'')));
   } else if(act.op==='template'){
     var r3=await jpost('/x/message_template',{session_id:a.session_id, template:act.args.template||''});
-    if(r3&&r3.status==='success'){ a.message_template=act.args.template||''; _cabPush(_cabA('✓ Шаблон сообщения обновлён')); }
+    if(r3&&r3.status==='success'){ a.message_template=act.args.template||''; _cabPush(_cabA('Шаблон сообщения обновлён')); }
     else _cabPush(_cabA('Ошибка: '+esc((r3&&r3.message)||'')));
   } else if(act.op==='pause'||act.op==='resume'){
     var r4=await jpost('/x/pause',{session_id:a.session_id, paused:act.op==='pause'});
@@ -4939,7 +4939,7 @@ async function cabApply(){
     var rb=await jpost('/x/brain_edit',{op:act.args.brain_op, text:act.args.text||''});
     if(rb&&rb.status==='success'){
       var _an=(rb.agent&&rb.agent.name)||'агента';
-      _cabPush(_cabA('✓ Запомнил в мозг «'+esc(_an)+'»: '+(act.args.brain_op==='add_rule'?'правило':'знание')+' добавлено. '
+      _cabPush(_cabA('Запомнил в мозг «'+esc(_an)+'»: '+(act.args.brain_op==='add_rule'?'правило':'знание')+' добавлено. '
         +'Посмотреть/убрать — кнопка <b>«Мозг»</b> в шапке.'));
     } else _cabPush(_cabA('Не записал в мозг: '+esc((rb&&rb.message)||'агент не выбран?')));
   } else if(act.op==='compose'){
@@ -4956,13 +4956,13 @@ async function cabApply(){
       _wzCabRender();
     } else _cabPush(_cabA('Не вышло: '+esc((r5&&(r5.reply||r5.message))||'')));
   } else if(act.op==='rebuild'){
-    // C4.2: авто-Строитель — blueprint правится, решение пишется в сессию, штатная пересборка
+    // C4.2: авто-Строитель — blueprint правится, решение пишется в проект, штатная пересборка
     _cabPush('<div id="cabchat_wait" style="margin:5px 0;color:var(--silver);font-size:12.5px"><span class="spin"></span> Строитель принимает правку…</div>');
     var rr=await jpost('/x/rebuild',{session_id:a.session_id, change:act.args.message});
     window._cabChat.items=window._cabChat.items.filter(function(h){return h.indexOf('cabchat_wait')<0;});
     var wr=el('cabchat_wait'); if(wr) wr.remove();
     if(!rr||rr.status!=='success'){ _cabPush(_cabA('Строитель не взял правку: '+esc((rr&&rr.message)||''))); return; }
-    _cabPush(_cabA('🔧 Решение записано: «'+esc(rr.decision||'')+'». Пересобираю стадию «'+esc(rr.stage_title||rr.stage_id||'')+'»'+(rr.paused_for_build?' (процесс на паузе до конца стройки)':'')+' — обычно 1–3 мин…'));
+    _cabPush(_cabA('Решение записано: «'+esc(rr.decision||'')+'». Пересобираю стадию «'+esc(rr.stage_title||rr.stage_id||'')+'»'+(rr.paused_for_build?' (процесс на паузе до конца стройки)':'')+' — обычно 1–3 мин…'));
     _cabPush('<div id="cabchat_build" style="margin:5px 0;color:var(--silver);font-size:12.5px"><span class="spin"></span> стройка идёт…</div>');
     var bid=rr.build_id, t0=Date.now();
     (function pollB(){
@@ -5007,7 +5007,7 @@ async function cabApply(){
               '<div style="color:var(--silver);font-size:11px;margin-top:3px">Сравнение с последним живым прогоном — данные могли отличаться; включение по-прежнему за вами.</div></div>';
           }
         }catch(e){ sdiff=''; }
-        _cabPush(_cabA('✓ Пересобрано. Решение в сессии, прежние версии — в истории сборок.'+sdiff+
+        _cabPush(_cabA('Пересобрано. Решение в проекта, прежние версии — в истории сборок.'+sdiff+
           ' <button class="btn gold sm" style="padding:3px 12px;font-size:11.5px" onclick="wzCabTab(\'overview\');runProcess(_wzCabI)">▶ Пробный прогон</button>'+
           '<span style="font-size:11px;color:var(--silver)"> — сравните бриф с прежним (он в «Запуске»)</span>'));
       });
@@ -5018,7 +5018,7 @@ async function cabApply(){
     await loadSession(a.session_id);
     if(!el('chat').classList.contains('open')) toggleChat();
     var ci=el('chatInput');
-    if(ci){ ci.value='Прошу изменить процесс «'+(a.process_name||a.client_name||'')+'»: '+task+'. Пересобери соответствующую стадию и запиши решение в сессию.'; ci.focus(); }
+    if(ci){ ci.value='Прошу изменить процесс «'+(a.process_name||a.client_name||'')+'»: '+task+'. Пересобери соответствующую стадию и запиши решение в проект.'; ci.focus(); }
     toast('Задание набрано — отправь сообщение Мастеру','ok');
   }
 }
@@ -5042,7 +5042,7 @@ function _wzCabReviewCard(a){
   if(!nr.length) return '';
   window._cabReview=nr;                          // для кнопок «Поправить словами» (по индексу)
   return '<div style="border:1px solid #e0b48a;border-radius:14px;padding:16px 18px;background:rgba(224,168,94,.09);margin-bottom:14px">'
-    +'<div style="font:700 14px var(--sans);margin-bottom:4px">⚠ Шаги, которые стоит довести ('+nr.length+')</div>'
+    +'<div style="font:700 14px var(--sans);margin-bottom:4px">Шаги, которые стоит довести ('+nr.length+')</div>'
     +'<div style="font-size:12.5px;color:var(--ink-soft);margin-bottom:10px">Они собрались и запускаются, но результат по смыслу сомнителен. Поправьте словами в чате внизу — например: «в поиске поставщиков ищи по названиям товаров, не по суммам».</div>'
     +nr.map(function(r,i){
       return '<div style="padding:7px 0;border-top:1px dashed #e0b48a;font-size:13px">'
@@ -5156,7 +5156,7 @@ function _wzCabStages(a){
 function _wzCabHow(a){
   // «Как устроено» — свёрнуто: читают один раз, а место занимало всегда.
   var st=_wzCabStages(a);
-  return '<details style="max-width:720px;margin-bottom:14px"><summary style="cursor:pointer;color:var(--nav);font:600 13px var(--sans);padding:6px 0;list-style:none">🧭 Как устроено — что делает и из каких шагов</summary>'+
+  return '<details style="max-width:720px;margin-bottom:14px"><summary style="cursor:pointer;color:var(--nav);font:600 13px var(--sans);padding:6px 0;list-style:none">Как устроено — что делает и из каких шагов</summary>'+
     '<div style="margin-top:8px">'+
     _wzCard(_wzH('Что делает')+'<div style="font-size:14px;line-height:1.6;color:var(--ink-soft)">'+esc(a.goal||a.process_name||'Собранный процесс.')+'</div>')+
     (st?_wzCard(_wzH('Шаги процесса')+
@@ -5190,7 +5190,7 @@ function _wzCabPanelFields(a){
   }
   return _wzCard(_wzH('Настройки процесса')+
     '<div style="font-size:13px;color:var(--silver);margin-bottom:10px">Мастер может выделить настройки этого процесса (пороги, имена, период) — чтобы менять их прямо тут.</div>'+
-    '<button class="btn ghost sm" onclick="genPanel('+i+')">✨ Сгенерировать настройки</button>');
+    '<button class="btn ghost sm" onclick="genPanel('+i+')">Сгенерировать настройки</button>');
 }
 
 async function genPanel(i, regen){
@@ -5198,7 +5198,7 @@ async function genPanel(i, regen){
   busy(regen?"Пересобираю поля процесса…":"Мастер выделяет настройки процесса…");
   var r=await jpost("/x/gen_panel",{session_id:a.session_id});
   busyOff();
-  if(r&&r.status==="success"){ a.panel_manifest=r.panel_manifest; toast("✓ Поля готовы","ok"); if(_wzCabI>=0) _wzCabRender(); }
+  if(r&&r.status==="success"){ a.panel_manifest=r.panel_manifest; toast("Поля готовы","ok"); if(_wzCabI>=0) _wzCabRender(); }
   else toast("Ошибка: "+((r&&r.message)||""),"err");
 }
 async function savePanelFields(i){
@@ -5212,7 +5212,7 @@ async function savePanelFields(i){
   busy("Сохраняю настройки…");
   var r=await jpost("/x/rules",{session_id:a.session_id, rules:a.rules||[], fields:flds});
   busyOff();
-  if(r&&r.status==="success"){ a.fields=r.fields; toast("✓ Настройки сохранены","ok"); if(_wzCabI>=0) _wzCabRender(); }
+  if(r&&r.status==="success"){ a.fields=r.fields; toast("Настройки сохранены","ok"); if(_wzCabI>=0) _wzCabRender(); }
   else toast("Ошибка: "+((r&&r.message)||""),"err");
 }
 async function deleteAutomation(i){
@@ -5222,7 +5222,7 @@ async function deleteAutomation(i){
     busy("Убираю в архив…");
     var r=await jpost("/x/automation_delete",{session_id:a.session_id});
     busyOff();
-    if(r&&r.status==="success"){ toast("✓ Автоматизация убрана в архив","ok"); closeWzCabinet(); AUTOS.splice(i,1); renderAutomations(); }
+    if(r&&r.status==="success"){ toast("Автоматизация убрана в архив","ok"); closeWzCabinet(); AUTOS.splice(i,1); renderAutomations(); }
     else toast("Ошибка: "+((r&&r.message)||""),"err");
   });
 }
@@ -5237,7 +5237,7 @@ async function _wzDigestLoad(sid){
   box.innerHTML='<div style="border-top:1px dashed var(--cream-dark);padding-top:10px;margin-top:2px">'+
     '<div style="font-size:11px;color:var(--silver);letter-spacing:.05em;margin-bottom:6px">Бриф последнего прогона</div>'+
     '<div style="font-size:12.5px;color:var(--ink-soft);white-space:pre-wrap;max-height:150px;overflow:hidden">'+esc(prev)+'</div>'+
-    '<button class="btn ghost sm" style="margin-top:8px" onclick="showBrief(window._wzLastDigest,{kicker:\'Extella · Отчёт прогона\',title:(AUTOS[_wzCabI]&&(AUTOS[_wzCabI].process_name||AUTOS[_wzCabI].client_name))||\'Отчёт прогона\'})">📄 Открыть бриф целиком</button></div>';
+    '<button class="btn ghost sm" style="margin-top:8px" onclick="showBrief(window._wzLastDigest,{kicker:\'Extella · Отчёт прогона\',title:(AUTOS[_wzCabI]&&(AUTOS[_wzCabI].process_name||AUTOS[_wzCabI].client_name))||\'Отчёт прогона\'})">Открыть бриф целиком</button></div>';
 }
 function _wzSourceBanner(a, i){
   var inp=_wzRuntime(a).input||{};
@@ -5250,7 +5250,7 @@ function _wzSourceBanner(a, i){
     '<div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-soft)">'+
       '<div style="flex:1;min-width:200px"><b>Чтобы попробовать сейчас</b> — подключать ничего не нужно: нажмите «Сделать первый прогон» ниже, процесс отработает на файле.</div>'+
       '<div style="flex:1;min-width:200px"><b>Чтобы работал сам 24/7</b> — подключите живой источник (своё API / CRM / рекламный кабинет).<br>'+
-        '<button class="btn ghost sm" style="font-size:12px;margin-top:6px;white-space:nowrap" onclick="sourceProcess('+i+')">✨ Подключить источник</button></div>'+
+        '<button class="btn ghost sm" style="font-size:12px;margin-top:6px;white-space:nowrap" onclick="sourceProcess('+i+')">Подключить источник</button></div>'+
     '</div></div>';
 }
 // ── ЖАНРЫ ПРОЦЕССОВ ───────────────────────────────────────────────────────────
@@ -5338,7 +5338,7 @@ function _wzCabLaunch(a){
   var panelCard = a.panel_url ? _wzCard(
       _wzH('Рабочая панель пака')+
       '<div style="font-size:13.5px;color:var(--ink-soft);margin-bottom:10px">Вся доменная работа — лиды, подборки, рассылки, договоры — на вкладке «🧳 Работа».</div>'+
-      '<button class="btn gold" style="font-size:14px;padding:10px 20px" onclick="wzCabTab(\'panel\')">🧳 К работе →</button>') : '';
+      '<button class="btn gold" style="font-size:14px;padding:10px 20px" onclick="wzCabTab(\'panel\')">К работе →</button>') : '';
   // Мультитаргет T1: «Где исполняется» — карта из фактов (расписание→VPS, ручной→мост)
   // + живые паспорта устройств (/x/targets), дозагрузка асинхронно
   var execCard = _wzCard(
@@ -5346,7 +5346,7 @@ function _wzCabLaunch(a){
       '<div style="font-size:13px">'+
       (a.schedule&&a.schedule.period?'⏰ По расписанию — <b>Хостинг Extella (VPS, 24/7)</b><br>':'')+
       '▶ Вручную — <b>это устройство</b> (мост визарда)'+
-      (a.knowledge_pack&&a.knowledge_pack.pack_id?'<br>📚 База знаний <code>'+esc(a.knowledge_pack.pack_id)+'</code> — на устройстве прогона':'')+
+      (a.knowledge_pack&&a.knowledge_pack.pack_id?'<br>База знаний <code>'+esc(a.knowledge_pack.pack_id)+'</code> — на устройстве прогона':'')+
       '</div><div id="wz_targets_'+i+'" style="margin-top:8px;font-size:12px;color:var(--silver)"><span class="spin"></span></div>'+
       '<div id="wz_place_'+i+'" style="margin-top:12px;border-top:1px solid var(--cream-dark);padding-top:10px"><span class="spin"></span></div>');
   setTimeout(function(){ _wzTargetsLoad(i); _wzPlaceLoad(i, a.session_id); }, 60);
@@ -5373,7 +5373,7 @@ function _wzCabLaunch(a){
   return panelCard + _wzCard(
       _wzH('Готовность')+'<div>'+ready+'</div>'+
       '<div style="margin-top:14px"><button class="btn gold" onclick="runProcess('+i+')" style="font-size:15px;padding:10px 22px">▶ Запустить сейчас</button>'+
-      '<button class="btn ghost" style="margin-left:8px" onclick="configureProcess('+i+')">⚙ Изменить словами</button></div>'+
+      '<button class="btn ghost" style="margin-left:8px" onclick="configureProcess('+i+')">Изменить словами</button></div>'+
       nudge+
       '<div id="autoRun-'+i+'" style="margin-top:10px"></div>')
     + result
@@ -5415,8 +5415,8 @@ function _wzPlaceRender(i){
   var mark=d.supported===false
       ? '<span style="color:#C57E33">процесс собран до появления карты — назначения сохранятся, но применятся после пересборки</span>'
       : (d.confirmed
-          ? (onePlace?'<span style="color:#2f9e56">✓ Готово: все '+(d.stages||[]).length+' шагов выполняются на «'+esc((oneDev&&oneDev.label)||'выбранном устройстве')+'». Ничего менять не нужно.</span>'
-                     :'<span style="color:#2f9e56">✓ Готово: Extella знает, где выполнять каждый шаг.</span>')
+          ? (onePlace?'<span style="color:#2f9e56">Готово: все '+(d.stages||[]).length+' шагов выполняются на «'+esc((oneDev&&oneDev.label)||'выбранном устройстве')+'». Ничего менять не нужно.</span>'
+                     :'<span style="color:#2f9e56">Готово: Extella знает, где выполнять каждый шаг.</span>')
           : (onePlace?'<span style="color:#C57E33">Все шаги будут выполняться на «'+esc((oneDev&&oneDev.label)||'этом устройстве')+'». Если это верно, оставьте предложение.</span>'
                      :'<span style="color:#C57E33">Extella предложила устройства для шагов. Проверьте только шаги, которые зависят от локальной почты, файла или 1С.</span>'));
   var actions='<div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">'+
@@ -5514,7 +5514,7 @@ async function addRecipient(i){
   var conn=await ensureConn();
   var cur=(a.recipients||[]);
   var avail=_RCPT_CH.filter(function(c){return conn.includes(c[0]) && cur.indexOf(c[0])<0;});
-  if(!avail.length){ slot.innerHTML='<div style="font-size:12.5px;color:#888;margin-top:8px">Нет свободных подключённых каналов. Подключи канал в блоке <b>🔌 Подключения</b> вверху страницы.</div>'; return; }
+  if(!avail.length){ slot.innerHTML='<div style="font-size:12.5px;color:#888;margin-top:8px">Нет свободных подключённых каналов. Подключи канал в блоке <b>Подключения</b> вверху страницы.</div>'; return; }
   slot.innerHTML='<div style="font-size:12.5px;color:var(--silver);margin:10px 0 6px">Выбери подключённый канал:</div><div style="display:flex;flex-wrap:wrap;gap:6px">'+avail.map(function(c){
      return '<button class="btn ghost sm" onclick="pickRecipient('+i+',\''+c[0]+'\')">'+chEmoji(c[0])+' '+c[1]+'</button>';
   }).join('')+'</div>';
@@ -5534,7 +5534,7 @@ async function _saveRecipients(a,list){
   busy('Сохраняю получателей…');
   var r=await jpost('/x/recipients',{session_id:a.session_id, recipients:list});
   busyOff();
-  if(r&&r.status==='success'){ a.recipients=r.recipients||list; toast('✓ Получатели обновлены','ok'); if(_wzCabI>=0) _wzCabRender(); }
+  if(r&&r.status==='success'){ a.recipients=r.recipients||list; toast('Получатели обновлены','ok'); if(_wzCabI>=0) _wzCabRender(); }
   else toast('Ошибка: '+((r&&r.message)||''),'err');
 }
 function _wzSectionLabel(txt){
@@ -5571,7 +5571,7 @@ function _wzCabSettings(a){
       (bits.length?'<div style="font-size:12px;color:var(--silver);margin-bottom:4px">'+bits.join(' · ')+'</div>':'')+
       (cols.length
         ? '<div style="font-size:12px;color:var(--silver);margin-bottom:10px">колонки: '+esc(cols.slice(0,10).join(', '))+(cols.length>10?' …':'')+'</div>'
-        : '<div style="font-size:12.5px;color:#C57E33;margin-bottom:10px">⚠ структура источника неизвестна — процесс не заметит, если колонки изменятся. Привяжите источник заново.</div>');
+        : '<div style="font-size:12.5px;color:#C57E33;margin-bottom:10px">структура источника неизвестна — процесс не заметит, если колонки изменятся. Привяжите источник заново.</div>');
     srcActions='<button class="btn ghost sm" onclick="sourceProcess('+_wzCabI+')">Сменить источник</button> '+
       '<button class="btn ghost sm" onclick="inboundProcess('+_wzCabI+')">Входящие сообщения</button>';
   } else if(_inp.kind==='local_folder') {
@@ -5621,7 +5621,7 @@ function _wzCabSettings(a){
   var dangerCard = _wzCard(
      '<div style="font:700 12px var(--sans);color:#c0392b;letter-spacing:.06em;margin-bottom:8px">Опасная зона</div>'+
      '<div style="font-size:12.5px;color:var(--silver);margin-bottom:10px">Убрать автоматизацию из списка. Уходит в архив (можно вернуть), расписание снимается.</div>'+
-     '<button class="btn ghost sm" style="color:#c0392b;border-color:#e0a0a0" onclick="deleteAutomation('+_wzCabI+')">🗑 Удалить автоматизацию</button>');
+     '<button class="btn ghost sm" style="color:#c0392b;border-color:#e0a0a0" onclick="deleteAutomation('+_wzCabI+')">Удалить автоматизацию</button>');
   // Настройка = один связный ответ на вопрос «как это устроено»: ЧТО процесс ест,
   // по КАКИМ правилам считает, КОМУ и КАК отдаёт, КОГДА и ГДЕ исполняется.
   // Раньше эта логика была разорвана на четыре вкладки (Настройка/Правила/Шаблон/Процесс),
@@ -5644,7 +5644,7 @@ async function saveTargetReq(i){
             local_only:!!(el('wz_tr_local-'+i)||{}).checked,
             device:((el('wz_tr_dev-'+i)||{}).value||'').trim()};
   var r=await jpost('/x/target_requirements', body);
-  if(r&&r.status==='success'){ a.target_requirements=r.target_requirements||null; toast('✓ Требования к устройству сохранены','ok'); }
+  if(r&&r.status==='success'){ a.target_requirements=r.target_requirements||null; toast('Требования к устройству сохранены','ok'); }
   else toast('Ошибка: '+((r&&r.message)||''),'err');
 }
 async function rollbackProcess(i){
@@ -5682,7 +5682,7 @@ var _WZADAPT={};
 function _wzDriftDialog(a, r){
   var prop=r.adapter_proposal||{}, keys=Object.keys(prop);
   if(!keys.length){
-    ask("⚠ Источник изменил структуру",
+    ask("Источник изменил структуру",
         (r.message||"колонки изменились")+"\n\nПрогон остановлен, чтобы не считать по чужой схеме.","",function(){});
     return;
   }
@@ -5720,11 +5720,11 @@ async function _wzAdapterConfirm(a){
   busyOff();
   if(!r||r.status!=='success'){ toast('Адаптер не сохранился: '+((r&&r.message)||''),'err'); return; }
   if(r.supported===false){ toast('Адаптер сохранён (v'+r.v+'), но применится после пересборки процесса','ok'); return; }
-  toast('✓ Адаптер v'+r.v+' подтверждён — запускаю процесс','ok');
+  toast('Адаптер v'+r.v+' подтверждён — запускаю процесс','ok');
   runProcess(_wzCabI);
 }
 // A6: правила живут на платформе (переживают потерю этого Мака и видны с другого устройства),
-// файл сессии — только кэш. При открытии вкладки подтягиваем правду; молчит платформа —
+// файл проекта — только кэш. При открытии вкладки подтягиваем правду; молчит платформа —
 // работаем по кэшу и говорим об этом прямо, а не показываем пустой список.
 async function _wzRulesSync(a){
   if(!a||!a.session_id||a._rulesSynced) return;
@@ -5743,7 +5743,7 @@ function _wzCabRules(a){
     ? 'Применяются сразу: при каждом прогоне Qwen собирает бриф, строго соблюдая эти правила.'
     : ((a.params_contract>=1)
        ? 'Применяются при каждом прогоне: стадии процесса получают правила и поля владельца (контракт параметров).'
-       : '⚠ Сохраняются, но НА ПРОГОНЫ ПОКА НЕ ВЛИЯЮТ: процесс собран до контракта параметров. Любая пересборка (чат внизу → Строитель) обновит его — после этого правила заработают сразу.');
+       : 'Сохраняются, но НА ПРОГОНЫ ПОКА НЕ ВЛИЯЮТ: процесс собран до контракта параметров. Любая пересборка (чат внизу → Строитель) обновит его — после этого правила заработают сразу.');
   var ruleRows = rules.length ? rules.map(function(r,ri){
     return '<div style="display:flex;align-items:center;gap:8px;background:var(--cream);border:1px solid var(--cream-dark);border-radius:5px;padding:8px 12px;margin-bottom:6px">'+
       '<span style="font-size:14px;flex:1">'+esc(r)+'</span>'+
@@ -5756,7 +5756,7 @@ function _wzCabRules(a){
       '<button onclick="removeField('+i+','+fi+')" title="убрать поле" style="border:none;background:transparent;color:var(--silver);cursor:pointer;font-size:16px;line-height:1">✕</button></div>';
   }).join('') : '<div style="color:var(--silver);font-size:13px;margin-bottom:8px">Полей пока нет. Например: «валюта — тенге», «директор — Рустам», «филиалов — 28».</div>';
   var whereNote = a.rules_stale
-      ? '<span style="color:#C57E33">⚠ Платформа сейчас не отвечает — показаны правила из локального кэша; правки не сохранятся, пока связь не вернётся.</span>'
+      ? '<span style="color:#C57E33">Платформа сейчас не отвечает — показаны правила из локального кэша; правки не сохранятся, пока связь не вернётся.</span>'
       : (a.rules_src==='platform'
          ? 'Хранятся в Extella, а не на этом компьютере: видны с любого устройства и переживут его потерю.'
          : '');
@@ -5791,9 +5791,9 @@ async function _saveRules(a){
     a.rules_src = r.synced ? 'platform' : 'cache'; a.rules_stale = !r.synced;
     a.filters_note = r.filters_note || '';
     if(r.synced===false) toast('⚠ '+(r.sync_note||'сохранено только на этом устройстве'),'err');
-    else if(st) toast('✓ Правила сохранены · жёстко исполняется: '+st,'ok');
+    else if(st) toast('Правила сохранены · жёстко исполняется: '+st,'ok');
     else if(r.filters_note) toast('Правила сохранены. '+r.filters_note,'ok');
-    else toast('✓ Правила сохранены','ok');
+    else toast('Правила сохранены','ok');
     if(_wzCabI>=0) _wzCabRender();
   }
   else toast('Ошибка: '+((r&&r.message)||''),'err');
@@ -5803,7 +5803,7 @@ async function removeRule(i,ri){ var a=AUTOS[i]; if(!a) return; a.rules=(a.rules
 async function addField(i){ var a=AUTOS[i]; if(!a) return; var k=(el('wz_newfk-'+i)||{}).value||'', v=(el('wz_newfv-'+i)||{}).value||''; k=k.trim(); v=v.trim(); if(!k||!v) return; a.fields=a.fields||{}; a.fields[k]=v; await _saveRules(a); }
 async function removeField(i,fi){ var a=AUTOS[i]; if(!a||!a.fields) return; var k=Object.keys(a.fields)[fi]; if(k===undefined) return; delete a.fields[k]; await _saveRules(a); }
 // ── вкладка «Шаблон сообщения»: текст доставки per-automation с плейсхолдерами ──
-var _TPL_DEFAULT='✅ Extella: {name} — процесс отработал.\nДата: {date}';
+var _TPL_DEFAULT='Extella: {name} — процесс отработал.\nДата: {date}';
 function _wzTplDefault(a){
   var out=(_wzRuntime(a).output||{}), tpl=_TPL_DEFAULT;
   if(out.supports_count) tpl+='\nРезультат: {count}';
@@ -5842,7 +5842,7 @@ async function saveTemplate(i){
   busy('Сохраняю шаблон…');
   var r=await jpost('/x/message_template',{session_id:a.session_id, template:tpl});
   busyOff();
-  if(r&&r.status==='success'){ a.message_template=r.template; toast('✓ Шаблон сохранён','ok'); var pv=el('wz_tplprev-'+i); if(pv&&r.preview) pv.textContent=r.preview; }
+  if(r&&r.status==='success'){ a.message_template=r.template; toast('Шаблон сохранён','ok'); var pv=el('wz_tplprev-'+i); if(pv&&r.preview) pv.textContent=r.preview; }
   else toast('Ошибка: '+((r&&r.message)||''),'err');
 }
 
@@ -5887,7 +5887,7 @@ async function renderAutomations(){
     return `<div class="auto-tile" onclick="openWzCabinet(${i})">
       ${_wzHeroHTML(a)}
       <div class="tile-badges">
-        <span class="tile-badge ${a.audit==="allow"?"ok":"warn"}">${a.audit==="allow"?"✓ проверен":"! с замечаниями"}</span>
+        <span class="tile-badge ${a.audit==="allow"?"ok":"warn"}">${a.audit==="allow"?"проверен":"! с замечаниями"}</span>
         ${a.paused?`<span class="tile-badge" style="background:rgba(197,126,51,.14);color:#C57E33">⏸ ${WLANG==='en'?'paused':'пауза'}</span>`:((window.MONITOR_BY_SID||{})[a.session_id]&&(window.MONITOR_BY_SID||{})[a.session_id].health!=='ok'?`<span class="tile-badge" style="background:rgba(224,176,64,.16);color:#a67c1a">🟡 ${WLANG==='en'?'needs attention':'нужна помощь'}</span>`:"")}
         ${(a.schedule&&a.schedule.period)?`<span class="tile-badge ok">⏰ ${esc(a.schedule.period)}</span>`:""}
         ${a.production_agent?`<span class="tile-badge ok">агент 24/7</span>`:""}
@@ -5910,7 +5910,7 @@ async function _wzArchiveRow(){
   var d; try{ d=await jget('/x/archive'); }catch(e){ d=null; }
   var n=((d&&d.archived)||[]).length;
   if(!n){ box.innerHTML=''; return; }
-  box.innerHTML='🗄 В архиве: <b>'+n+'</b> — <a href="#" onclick="openArchive();return false" style="color:#c60">посмотреть и вернуть</a>';
+  box.innerHTML='В архиве: <b>'+n+'</b> — <a href="#" onclick="openArchive();return false" style="color:#c60">посмотреть и вернуть</a>';
 }
 async function openArchive(){
   var d; try{ d=await jget('/x/archive'); }catch(e){ d=null; }
@@ -5926,7 +5926,7 @@ async function openArchive(){
       '</div>';
   }).join(''):'<div style="color:var(--silver);font-size:13px;padding:10px 0">Архив пуст.</div>';
   resetModInput();
-  el("modTitle").textContent="🗄 Архив автоматизаций";
+  el("modTitle").textContent="Архив автоматизаций";
   el("modHint").innerHTML="Удалённые процессы не пропадают. Возвращаются <b>на паузе</b> — расписание и приём входящих не включаются сами, чтобы вернувшийся процесс не начал слать письма клиенту без твоего ведома.";
   el("modInput").outerHTML='<input id="modInput" type="hidden"><div style="max-height:340px;overflow-y:auto">'+rows+'</div>';
   el("modBack").classList.add("open");
@@ -5939,7 +5939,7 @@ async function restoreArchived(sid){
   busyOff();
   if(!r||r.status!=='success'){ toast('Не вернулось: '+((r&&r.message)||''),'err'); return; }
   modCancel();
-  toast('✓ Вернулась — '+(r.note||'на паузе'),'ok');
+  toast('Вернулась — '+(r.note||'на паузе'),'ok');
   await renderAutomations();
 }
 function _mdInline(s){
@@ -5987,12 +5987,12 @@ function mdToHtml(md){
 function closeBrief(){ var m=el("briefModal"); if(m) m.style.display="none"; }
 // человекочитаемые чипы блоков автоматизации (id эксперта -> эмодзи + имя)
 var COMPONENT_LABELS={
-  fin_scan_statements:'💳 Bank statements', svc_github_releases:'🐙 GitHub monitor',
-  svc_rss:'📡 RSS blogs', svc_reddit:'👽 Reddit', svc_hackernews:'📰 Hacker News',
-  svc_currency:'💱 Currency', svc_weather:'🌤 Weather', kp_ingest:'📥 Knowledge ingest',
-  kp_ask:'📚 Knowledge base', cap_pdftotext_to_txt_batch:'📄 PDF→text',
-  cap_ghostscript_compress_pdf_batch:'🗜 PDF compress', cap_ocr_searchable_batch:'🔎 OCR',
-  cap_local_ask:'🧠 Local Qwen'
+  fin_scan_statements:'Bank statements', svc_github_releases:'GitHub monitor',
+  svc_rss:'RSS blogs', svc_reddit:'Reddit', svc_hackernews:'Hacker News',
+  svc_currency:'Currency', svc_weather:'Weather', kp_ingest:'Knowledge ingest',
+  kp_ask:'Knowledge base', cap_pdftotext_to_txt_batch:'PDF→text',
+  cap_ghostscript_compress_pdf_batch:'PDF compress', cap_ocr_searchable_batch:'OCR',
+  cap_local_ask:'Local Qwen'
 };
 function compChip(id){ return COMPONENT_LABELS[id] || ('⚙️ '+id); }
 // stash личности собранных композитором автоматизаций: flow_id -> {kicker,title,subtitle,chips}
@@ -6018,7 +6018,7 @@ function showBrief(md, opts){
   var warns=(custom && opts.warnings && opts.warnings.length) ? opts.warnings : [];
   var warnBox = warns.length
     ? '<div style="background:#fdf6e7;border:1px solid #f0d9a0;border-radius:6px;padding:10px 14px;margin:0 0 16px;font-size:12.5px;color:#7a5b1a">'+
-      '<b>⚠ Ran with '+warns.length+' warning'+(warns.length===1?'':'s')+':</b><ul style="margin:6px 0 0;padding-left:18px">'+
+      '<b>Ran with '+warns.length+' warning'+(warns.length===1?'':'s')+':</b><ul style="margin:6px 0 0;padding-left:18px">'+
       warns.map(function(w){return '<li>'+esc(String(w))+'</li>';}).join("")+'</ul></div>'
     : '';
   m.innerHTML='<style>#briefModal .bb h2{font-size:18px;margin:22px 0 8px;color:#1c1a17}#briefModal .bb h3{font-size:15px;margin:16px 0 6px;color:#1c1a17}#briefModal .bb ol{padding-left:20px}#briefModal .bb ol li{margin:5px 0}#briefModal .bb table{border-collapse:collapse;width:100%;font-size:13px;margin:6px 0}#briefModal .bb th{text-align:left;background:#faf7f2;border-bottom:2px solid #ece4d7;padding:8px 9px;color:#7a7264;font-size:11px;letter-spacing:.3px}#briefModal .bb td{border-bottom:1px solid #f0eae0;padding:8px 9px;vertical-align:top}#briefModal .bb a{color:#C67E34;text-decoration:none}#briefModal .bb ul{padding-left:18px}#briefModal .bb li{margin:5px 0}#briefModal .bb code{background:#f2ede4;border-radius:4px;padding:1px 4px;font-size:12.5px}#briefModal .bb hr{border:none;border-top:1px solid #eee6da;margin:18px 0}#briefModal .bb p{margin:8px 0}</style>'+
@@ -6065,7 +6065,7 @@ async function runProcess(i){
   const dl = run.report_xlsx?` · <a href="#" onclick="dlReport('${encodeURIComponent(run.report_xlsx).replace(/'/g,"%27")}');return false" style="color:#c60">скачать отчёт</a>`:"";
   const _dl = Array.isArray(r.delivered) ? r.delivered : (r.delivered?[r.delivered]:[]);
   const dlv = _dl.length ? " · " + _dl.map(d=>d.ok?`<span style="color:var(--ok,#2a2)">→ ${esc(chName(d.channel))} ✓</span>`:`<span style="color:var(--bad,#c33)">→ ${esc(chName(d.channel))} не прошла: ${esc(d.err||"")}</span>`).join(" · ") : "";
-  out.innerHTML = `<div class="card pack-card" style="margin:6px 0"><b>✓ Прогон завершён</b> · позиций ${fmt(run.total_count)} · сумма <b>${fmt(run.total_sum)}</b>${dl}${dlv}</div>`;
+  out.innerHTML = `<div class="card pack-card" style="margin:6px 0"><b>Прогон завершён</b> · позиций ${fmt(run.total_count)} · сумма <b>${fmt(run.total_sum)}</b>${dl}${dlv}</div>`;
   // обновляем строку «последний прогон» ЭТОЙ карточки на месте (без перерисовки всего списка)
   const rr = el("runrow-"+i);
   if(rr) rr.innerHTML = `Последний прогон: ${esc((run.at||"").slice(0,16).replace("T"," "))} · ${esc(run.status)} · сумма ${fmt(run.total_sum)}${dl}`;
@@ -6094,7 +6094,7 @@ async function scheduleProcess(i){
     + `<option value="" ${!curDel?"selected":""}>— результат не слать —</option>`;
   const delBlock = connCh.length
     ? `<div style="font-size:13px;text-align:left;margin-bottom:6px">Куда слать результат:</div><select id="modDeliver" class="sess-select" style="width:100%;max-width:none;margin-bottom:8px">${delOpts}</select>`
-    : `<input id="modDeliver" type="hidden" value=""><div style="font-size:12px;color:#888;text-align:left;margin-bottom:8px">Каналы вывода не подключены. Чтобы слать результат — подключите канал в блоке <b>🔌 Подключения</b> вверху страницы.</div>`;
+    : `<input id="modDeliver" type="hidden" value=""><div style="font-size:12px;color:#888;text-align:left;margin-bottom:8px">Каналы вывода не подключены. Чтобы слать результат — подключите канал в блоке <b>Подключения</b> вверху страницы.</div>`;
   el("modTitle").textContent = "Расписание запуска";
   el("modHint").innerHTML = "Процесс будет запускаться сам на постоянно включённом сервере (Listener) и складывать результат в логи.";
   el("modInput").outerHTML =
@@ -6109,7 +6109,7 @@ async function scheduleProcess(i){
     busy(im?"Сохраняю расписание…":"Снимаю расписание…");
     const r = await jpost("/x/schedule",{session_id:a.session_id, period:label, interval_min:im, deliver:deliver});
     busyOff();
-    if(r.status==="success"){ toast(im?("✓ Расписание: "+label+(deliver?" → "+deliver:"")):"Расписание снято","ok"); renderAutomations(); }
+    if(r.status==="success"){ toast(im?("Расписание: "+label+(deliver?" → "+deliver:"")):"Расписание снято","ok"); renderAutomations(); }
     else toast("Ошибка: "+(r.message||""),"err");
   };
 }
@@ -6129,7 +6129,7 @@ async function inboundProcess(i){
     el("modInput").outerHTML =
         `<input id="modInput" type="hidden">`
       + `<div style="font-size:13px;color:#888;text-align:left;margin-bottom:6px">Для приёма входящих нужен подключённый канал (пока — Telegram).</div>`
-      + `<div style="font-size:12.5px;text-align:left">Подключи <b>Telegram</b> в блоке <b>🔌 Подключения</b> вверху страницы, потом вернись сюда и включи опрос.</div>`;
+      + `<div style="font-size:12.5px;text-align:left">Подключи <b>Telegram</b> в блоке <b>Подключения</b> вверху страницы, потом вернись сюда и включи опрос.</div>`;
     el("modBack").classList.add("open");
     _modCb = async ()=>{ modCancel(); };
     return;
@@ -6154,7 +6154,7 @@ async function inboundProcess(i){
     else if(ib.mode==="webhook"){
       toast("Вебхук зарезервирован","ok");
       if(ib.hook_url) ask("Адрес вебхука (скопируйте)", (ib.gateway_status==="pending_gateway"?"Публичный шлюз ещё поднимается — адрес закреплён за вами. ":"")+"Вставьте этот адрес в настройках канала/CRM.", ib.hook_url, ()=>{});
-    } else { toast("✓ Опрос включён — напишите боту, ответ придёт в течение ~2 минут","ok"); }
+    } else { toast("Опрос включён — напишите боту, ответ придёт в течение ~2 минут","ok"); }
     renderAutomations();
   };
 }
@@ -6182,11 +6182,11 @@ async function sourceProcess(i){
           + (curKind?`<label class="opt" style="color:#999"><input type="radio" name="srcAct" value="off"><span>Отвязать источник (вернуться к загрузке файла)</span></label>`:``);
   } else {
     body += `<div style="font-size:13px;color:#888;text-align:left;margin-bottom:6px">Пока не подключён ни один источник данных.</div>`
-          + `<div style="font-size:12.5px;text-align:left">Подключи источник в блоке <b>🔌 Подключения</b> вверху страницы (Google Sheets — просто по ссылке), потом вернись сюда и выбери его.</div>`;
+          + `<div style="font-size:12.5px;text-align:left">Подключи источник в блоке <b>Подключения</b> вверху страницы (Google Sheets — просто по ссылке), потом вернись сюда и выбери его.</div>`;
     if(curKind) body += `<label class="opt" style="color:#999;margin-top:6px"><input type="radio" name="srcAct" value="off"><span>Отвязать текущий источник</span></label>`;
   }
   body += `<div style="margin-top:12px;border-top:1px dashed var(--cream-dark);padding-top:10px">`
-        + `<button class="btn gold sm" style="font-size:12.5px" onclick="modCancel();genSource(${i})">✨ Любой источник — по описанию</button>`
+        + `<button class="btn gold sm" style="font-size:12.5px" onclick="modCancel();genSource(${i})">Любой источник — по описанию</button>`
         + `<div style="font-size:11.5px;color:var(--silver);margin-top:5px">Нет в списке? Опишите API и вставьте ключ — Extella сама соберёт подключение и покажет первые строки.</div></div>`;
   el("modInput").outerHTML = body;
   el("modBack").classList.add("open");
@@ -6212,7 +6212,7 @@ async function sourceProcess(i){
     let r; try{ r = await jpost("/x/source_bind",{session_id:a.session_id, kind:kind}, 75000); }
     finally{ busyOff(); }
     if(r.status!=="success"){ toast("Не удалось привязать: "+(r.message||"источник не отдал данные"),"err"); return; }
-    toast("✓ Источник подключён"+(r.rows!=null?(", строк: "+r.rows):""),"ok");
+    toast("Источник подключён"+(r.rows!=null?(", строк: "+r.rows):""),"ok");
     renderAutomations();
   };
 }
@@ -6242,7 +6242,7 @@ async function checkSheetLink(){
     return '<div style="color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(row.join(' · '))+'</div>';
   }).join('');
   out.innerHTML = (r.columns||[]).length
-    ? '<div style="color:#2f9e56;margin-bottom:4px">✓ Нашёл: строк '+esc(String(r.rows))+', колонки:</div>'+
+    ? '<div style="color:#2f9e56;margin-bottom:4px">Нашёл: строк '+esc(String(r.rows))+', колонки:</div>'+
       '<div style="font-weight:600;margin-bottom:4px">'+esc(head)+'</div>'+prevRows+
       '<div style="color:var(--silver);margin-top:4px">Это твои данные? Тогда нажми OK — привяжу этот лист.</div>'
     : '<span style="color:#C57E33">'+esc(r.warning||'в листе нет заголовков — укажите ссылку на лист с данными')+'</span>';
@@ -6255,7 +6255,7 @@ var GEN_RECIPES = {
   custom:{label:"Свой API (ключ/токен) — подходит большинству", group:"Общее", endpoint:"", auth:"bearer", token_url:"",
     recipe:"Любой REST API с ключом или токеном — CRM, учётная система, твой сервис. Вставь адрес и ключ ниже."},
   meta:{label:"Meta Ads (Facebook)", group:"Рекламные кабинеты", endpoint:"https://graph.facebook.com/v19.0/act_ВАШ_ID/insights?fields=campaign_name,spend,impressions,clicks&date_preset=yesterday", auth:"bearer", token_url:"",
-    recipe:"Meta Business Settings → «Системные пользователи» → создайте системного пользователя, дайте доступ к рекламному аккаунту, сгенерируйте токен со scope <b>ads_read</b>. Такой токен не истекает. Вставь его ниже и укажи act_&lt;ваш ID&gt; в адресе."},
+    recipe:"Meta Business Settings → «Системные пользователи» → создайте системного пользователя, дайте доступ к рекламному аккаунту, сгенерируйте токен со scope <b>ads_read</b>. Такой токен не истекает. Вставь его ниже и укажи act_&lt;твой ID&gt; в адресе."},
   google_ads:{label:"Google Ads", group:"Рекламные кабинеты", endpoint:"https://googleads.googleapis.com/v16/customers/ВАШ_ID/googleAds:search", auth:"oauth_refresh", token_url:"https://oauth2.googleapis.com/token",
     recipe:"Один раз получите <b>refresh_token</b> через OAuth Playground (scope adwords) + <b>client_id/secret</b> из Google Cloud + <b>developer_token</b> из Google Ads API Center. Access-токен система обновит сама. developer_token допишите в описании."},
   yandex:{label:"Яндекс Директ", group:"Рекламные кабинеты", endpoint:"https://api.direct.yandex.com/json/v5/reports", auth:"bearer", token_url:"",
@@ -6292,7 +6292,7 @@ function genSource(i){
   var st = 'class="sess-select" style="width:100%;max-width:none;margin-bottom:8px"';
   var opts = _genRecipeOpts();
   resetModInput();
-  el("modTitle").textContent = "✨ Подключи любой источник";
+  el("modTitle").textContent = "Подключи любой источник";
   el("modHint").innerHTML = "Опишите источник — Extella сама соберёт подключение и покажет первые реальные строки перед сохранением. Ключевые/токен-API работают сразу; для рекламных кабинетов (OAuth) — по рецепту (разовый токен), система держит его свежим.";
   el("modInput").outerHTML =
       `<input id="modInput" type="hidden">`
@@ -6359,7 +6359,7 @@ function genSourceGate(i, r){
       busy("Привязываю источник к процессу…");
       var b = await jpost("/x/source_bind",{session_id:AUTOS[i].session_id, kind:r.kind});
       busyOff();
-      if(b.status==="success"){ toast("✓ Источник подключён"+(b.rows!=null?(", строк: "+b.rows):""),"ok"); renderAutomations(); }
+      if(b.status==="success"){ toast("Источник подключён"+(b.rows!=null?(", строк: "+b.rows):""),"ok"); renderAutomations(); }
       else toast("Не удалось привязать: "+(b.message||""),"err");
     };
   } else {
@@ -6371,7 +6371,7 @@ function genSourceGate(i, r){
 function trustCheck(prefillTask){
   var st='class="sess-select" style="width:100%;max-width:none;margin-bottom:8px"';
   resetModInput();
-  el("modTitle").textContent="🎯 Проверка доверия — воспроизводимость";
+  el("modTitle").textContent="Проверка доверия — воспроизводимость";
   el("modHint").innerHTML="Как задача судит? Дайте инструкцию, ожидаемые поля и несколько примеров. Прогоним несколько раз и покажем, где определение размыто — <b>без эталона</b>.";
   el("modInput").outerHTML=
       '<input id="modInput" type="hidden">'
@@ -6399,7 +6399,7 @@ function renderTrustReport(res, delta){
   var rows=(res.fields||[]).map(function(f,fi){
     var lg=LG[f.light]||LG.gray;
     var flaky=(f.flaky||[]).length? '<div style="font-size:12px;color:var(--silver);margin-top:5px;line-height:1.5">'+f.flaky.map(function(fl){return '⚠ «'+esc(fl.item)+'» → '+esc((fl.answers||[]).join(' · '));}).join('<br>')+'</div>':'';
-    var refine=(f.light==='red'||f.light==='amber')?'<button class="btn ghost sm" style="font-size:11.5px;padding:3px 10px;margin-top:6px" onclick="refineField('+fi+')">✏ Уточнить определение</button>':'';
+    var refine=(f.light==='red'||f.light==='amber')?'<button class="btn ghost sm" style="font-size:11.5px;padding:3px 10px;margin-top:6px" onclick="refineField('+fi+')">Уточнить определение</button>':'';
     var agr=(f.agreement!=null)?'<span style="font-size:12px;color:var(--silver);margin-left:8px">согласие с эталоном '+f.agreement+'%</span>':'';
     return '<div style="border:1px solid var(--cream-dark);border-radius:6px;padding:10px 14px;margin-bottom:8px">'+
       '<div style="display:flex;align-items:center;gap:8px"><span style="font-size:16px">'+lg[0]+'</span>'+
@@ -6409,12 +6409,12 @@ function renderTrustReport(res, delta){
   window._tcFields=res.fields||[];
   var hasGold=(res.fields||[]).some(function(f){return f.agreement!=null;});
   var ov=(res.overall==null?'':' · общая '+res.overall+'%');
-  var deltaNote=delta?'<div style="background:rgba(47,158,86,.10);border:1px solid rgba(47,158,86,.3);border-radius:5px;padding:8px 12px;margin-bottom:10px;font-size:12.5px;color:#237a44">✎ Уточнено «'+esc(delta.field)+'»: воспроизводимость '+esc(delta.before)+'% → <b>'+esc(delta.after)+'%</b></div>':'';
+  var deltaNote=delta?'<div style="background:rgba(47,158,86,.10);border:1px solid rgba(47,158,86,.3);border-radius:5px;padding:8px 12px;margin-bottom:10px;font-size:12.5px;color:#237a44">Уточнено «'+esc(delta.field)+'»: воспроизводимость '+esc(delta.before)+'% → <b>'+esc(delta.after)+'%</b></div>':'';
   resetModInput();
   el("modTitle").textContent="Где суждению можно доверять";
   el("modHint").innerHTML="Прогонов: "+esc(res.runs)+ov+" · "+(hasGold?"воспроизводимость + согласие с эталоном":"без эталона")+". 🟢 стабильно · 🟡 шатко · 🔴 размыто.";
   el("modInput").outerHTML='<input id="modInput" type="hidden">'+deltaNote+rows+
-    '<div style="margin-top:8px"><button class="btn ghost sm" style="font-size:12px" onclick="trustGolden()">✓ Сверить с эталоном</button>'+
+    '<div style="margin-top:8px"><button class="btn ghost sm" style="font-size:12px" onclick="trustGolden()">Сверить с эталоном</button>'+
     '<span style="font-size:12px;color:var(--silver);margin-left:8px">Воспроизводимость = согласие с собой. Эталон = согласие с человеком (по желанию).</span></div>';
   el("modBack").classList.add("open");
   var ob=el("modOkBtn"); if(ob) ob.textContent="Готово";
@@ -6428,7 +6428,7 @@ function trustGolden(){
     return '<div style="border-bottom:1px solid var(--cream);padding:7px 0"><div style="font-size:12.5px;margin-bottom:4px">'+(i+1)+') '+esc(String(s).slice(0,80))+'</div>'+flds+'</div>';
   }).join('');
   resetModInput();
-  el("modTitle").textContent="✓ Эталон — как правильно";
+  el("modTitle").textContent="Эталон — как правильно";
   el("modHint").innerHTML="Впиши ПРАВИЛЬНЫЙ ответ там, где знаешь (можно не для всех строк). Сверим ответ модели с твоим — это согласие с человеком поверх воспроизводимости.";
   el("modInput").outerHTML='<input id="modInput" type="hidden"><div style="max-height:300px;overflow:auto">'+rows+'</div>';
   el("modBack").classList.add("open");
@@ -6468,7 +6468,7 @@ function refineField(fi){
 function goalLoop(){
   var st='class="sess-select" style="width:100%;max-width:none;margin-bottom:8px"';
   resetModInput();
-  el("modTitle").textContent="🔁 Контур — цель → сам доведёт";
+  el("modTitle").textContent="Контур — цель → сам доведёт";
   el("modHint").innerHTML="Поставьте цель. Система сама планирует шаг → выполняет → проверяет доверием → идёт дальше, пока не достигнет цели или не упрётся в человека. Первый срез (эксперимент, 2–5 итераций).";
   el("modInput").outerHTML='<input id="modInput" type="hidden"><textarea id="glGoal" '+st.replace('margin-bottom:8px','height:80px;margin-bottom:8px')+' placeholder="Цель одной фразой. Напр.: составь чек-лист проверки договора аренды на риски арендатора"></textarea>';
   el("modBack").classList.add("open");
@@ -6489,7 +6489,7 @@ function renderGoalJournal(res){
     var k=KM[j.kind]||['·',String(j.kind)];
     var code=j.code?'<details style="margin-top:3px"><summary style="cursor:pointer;font-size:11px;color:var(--silver)">код локального sandbox-шага (не эксперт Extella)</summary><pre style="white-space:pre-wrap;font-size:10.5px;background:var(--cream);padding:6px;border-radius:5px;max-height:130px;overflow:auto;margin-top:4px">'+esc(String(j.code))+'</pre></details>':'';
     var lc=(j.learned&&((j.learned.concepts||[]).length||(j.learned.rules||[]).length))?
-      '<div style="font-size:11px;color:var(--petrol,#2a6b6b);margin-top:3px">🧠 выучено: '+
+      '<div style="font-size:11px;color:var(--petrol,#2a6b6b);margin-top:3px">выучено: '+
       esc([].concat((j.learned.concepts||[]).map(function(c){return c.k+'='+c.v}),(j.learned.rules||[])).join(' · ').slice(0,180))+'</div>':'';
     var att=(j.attempts&&j.attempts.length>1)?'<div style="margin-top:4px"><div style="font-size:11px;color:var(--silver);margin-bottom:2px">Само-исправление ('+j.attempts.length+' поптыт.):</div>'+j.attempts.map(function(a){
       var mk=a.ok?'✅':'↻';
@@ -6505,9 +6505,9 @@ function renderGoalJournal(res){
   }).join('');
   var mem=res.memory||{}, mc=mem.concepts||[], mr=mem.rules||[];
   var sv=res.saved_to_agent;
-  var savedLine=(sv&&(sv.concepts||sv.rules))?'<div style="margin-top:5px;padding-top:5px;border-top:1px dashed var(--cream-dark,#e5e0d5);color:var(--petrol,#2a6b6b);font-weight:600">💾 Цель доказанно достигнута — сохранено в мозг агента «'+esc(sv.name||sv.id)+'»: '+(sv.concepts||0)+' концепт., '+(sv.rules||0)+' правил</div>':'';
+  var savedLine=(sv&&(sv.concepts||sv.rules))?'<div style="margin-top:5px;padding-top:5px;border-top:1px dashed var(--cream-dark,#e5e0d5);color:var(--petrol,#2a6b6b);font-weight:600">Цель доказанно достигнута — сохранено в мозг агента «'+esc(sv.name||sv.id)+'»: '+(sv.concepts||0)+' концепт., '+(sv.rules||0)+' правил</div>':'';
   var memPanel=(mc.length||mr.length)?'<div style="background:var(--cream);border-radius:8px;padding:9px 12px;margin-bottom:10px;font-size:12px">'+
-    '<div style="font-weight:600;margin-bottom:4px">🧠 Память контура (накоплена по ходу)</div>'+
+    '<div style="font-weight:600;margin-bottom:4px">Память контура (накоплена по ходу)</div>'+
     (mc.length?'<div style="color:var(--ink-soft)"><b>Концепты:</b> '+esc(mc.map(function(c){return c.k+'='+c.v}).join(' · ').slice(0,300))+'</div>':'')+
     (mr.length?'<div style="color:var(--ink-soft);margin-top:2px"><b>Правила:</b> '+esc(mr.join(' · ').slice(0,300))+'</div>':'')+
     savedLine+'</div>':'';
@@ -6540,7 +6540,7 @@ function connectEmail(){
           const t = await jpost("/x/connector_test",{connector:"email"});
           busyOff();
           const res=(t&&t.result)||{};
-          if(res.ok) toast("✓ Email подключён ("+(res.smtp||host)+")","ok");
+          if(res.ok) toast("Email подключён ("+(res.smtp||host)+")","ok");
           else toast("Сохранено, связь не подтверждена: "+(res.err||"проверьте данные"),"err");
         });
       });
@@ -6550,7 +6550,7 @@ function connectEmail(){
 function connectTelegram(){
   el("modTitle").textContent = "Подключить Telegram";
   el("modHint").innerHTML = "Выбери способ подключения.";
-  el("modInput").outerHTML = `<select id="modInput" class="sess-select" style="width:100%;max-width:none;margin-bottom:8px"><option value="bot">Бот (BotFather) — уведомления в чат/канал</option><option value="mtproto">Аккаунт (сессия) — слать как пользователь</option></select><div style="font-size:12px;color:#888;margin-bottom:6px">Бот — проще и безопаснее для уведомлений. Аккаунт — когда нужно писать людям в ЛС / читать входящие.</div>`;
+  el("modInput").outerHTML = `<select id="modInput" class="sess-select" style="width:100%;max-width:none;margin-bottom:8px"><option value="bot">Бот (BotFather) — уведомления в чат/канал</option><option value="mtproto">Аккаунт (проект) — слать как пользователь</option></select><div style="font-size:12px;color:#888;margin-bottom:6px">Бот — проще и безопаснее для уведомлений. Аккаунт — когда нужно писать людям в ЛС / читать входящие.</div>`;
   el("modBack").classList.add("open");
   var _tgOk=el("modOkBtn"); if(_tgOk) _tgOk.textContent="Продолжить →";
   _modCb = ()=>{ const m = (el("modInput")||{}).value; if(m==="mtproto") connectTelegramSession(); else connectTelegramBot(); };
@@ -6566,10 +6566,10 @@ function connectTelegramBot(){
       const s = await jpost("/x/secret_set",{connector:"telegram", value:JSON.stringify({token:token, chat_id:chat})});
       if(s.status!=="success"){ busyOff(); toast("Не удалось сохранить: "+(s.message||""),"err"); return; }
       // сразу шлём реальное приветствие в чат — чтобы было ВИДНО, что связь работает (а не молчаливый getMe)
-      const t = await jpost("/x/connector_send",{connector:"telegram", text:"✅ Extella подключён к этому чату. Сюда будут приходить результаты процессов."});
+      const t = await jpost("/x/connector_send",{connector:"telegram", text:"Extella подключён к этому чату. Сюда будут приходить результаты процессов."});
       busyOff();
       const res=(t&&t.result)||{};
-      if(res.ok) toast("✓ Telegram подключён — проверьте: в чат пришло приветствие","ok");
+      if(res.ok) toast("Telegram подключён — проверьте: в чат пришло приветствие","ok");
       else toast("Не удалось отправить в чат: "+(res.err||"проверь токен и chat_id (нужен числовой id твоего чата с ботом)"),"err");
     });
   });
@@ -6595,7 +6595,7 @@ async function completeTgLogin(lid, code, password){
     ask("Пароль облака Telegram (2FA)", "У аккаунта включена двухэтапная проверка — введите пароль.", "", (pw)=>{ if(pw) completeTgLogin(lid, code, pw); });
     return;
   }
-  if(r.status==="success") toast("✓ Telegram-аккаунт подключён: "+(r.acct||""),"ok");
+  if(r.status==="success") toast("Telegram-аккаунт подключён: "+(r.acct||""),"ok");
   else toast("Вход не удался: "+(r.message||""),"err");
 }
 async function _saveConn(connector, obj, label){
@@ -6647,7 +6647,7 @@ function connectGSheets(){
     const t = await jpost("/x/source_test",{kind:"src_gsheets"});
     busyOff();
     const res=(t&&t.result)||{};
-    if(res.ok) toast("✓ Google Sheets подключён"+(res.rows_estimate!=null?(" (~"+res.rows_estimate+" строк)"):""),"ok");
+    if(res.ok) toast("Google Sheets подключён"+(res.rows_estimate!=null?(" (~"+res.rows_estimate+" строк)"):""),"ok");
     else toast("Сохранено, доступ не подтверждён: "+(res.err||"проверьте доступ к таблице"),"err");
   };
 }
@@ -6663,7 +6663,7 @@ function connectBitrix24(){
     const t = await jpost("/x/source_test",{kind:"src_bitrix24"});
     busyOff();
     const res=(t&&t.result)||{};
-    if(res.ok) toast("✓ Bitrix24 подключён"+(res.account?(" ("+res.account+")"):""),"ok");
+    if(res.ok) toast("Bitrix24 подключён"+(res.account?(" ("+res.account+")"):""),"ok");
     else toast("Сохранено, доступ не подтверждён: "+(res.err||"проверьте URL/права вебхука"),"err");
   });
 }
@@ -6726,7 +6726,7 @@ function connectAmocrm(){
     if(s.status!=="success"){ busyOff(); toast("Не удалось сохранить: "+(s.message||""),"err"); return; }
     const t=await jpost("/x/source_test",{kind:"src_amocrm"}); busyOff();
     const res=(t&&t.result)||{};
-    if(res.ok) toast("✓ amoCRM подключён"+(res.account?(" ("+res.account+")"):""),"ok");
+    if(res.ok) toast("amoCRM подключён"+(res.account?(" ("+res.account+")"):""),"ok");
     else toast("Сохранено, доступ не подтверждён: "+(res.err||"проверьте адрес/токен"),"err");
   };
 }
@@ -6895,7 +6895,7 @@ function setStatus(id, html){ el(id).innerHTML = html; }
   else if(_deepApp==='team') openTeam();
   else if(_deepApp==='workspaces') openWorkspaces();
   else if(_deepApp==='anon') openAnonStudio();
-  // Мастер (интервью-чат) — только когда работаем над сессией в Мастере;
+  // Мастер (интервью-чат) — только когда работаем над проектом в Мастере;
   // на экране «Создать» он не к месту (там свой вход) — не открываем.
   if(deep && !el("chat").classList.contains("open")) toggleChat();
   // Гейт агента при входе УБРАН (решение Эллы 21.07): человек сначала свободно
