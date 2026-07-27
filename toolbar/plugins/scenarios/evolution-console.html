@@ -67,7 +67,7 @@
     .metric,.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
     .metric{padding:16px;text-align:left;color:var(--body);width:100%}.metric strong{font-size:29px;display:block;color:var(--ink)}
     .metric span{color:var(--muted)}button.metric{cursor:pointer}button.metric:hover{border-color:var(--petrol-border)}
-    button.metric:focus-visible,.attention-item:focus-visible,.filter-chip:focus-visible,.tab:focus-visible,
+    button.metric:focus-visible,.attention-item:focus-visible,.filter-chip:focus-visible,.tab:focus-visible,.fleet-summary button:focus-visible,.automation-card>summary:focus-visible,
     .ghost:focus-visible,.primary:focus-visible,.danger:focus-visible,.advanced-nav summary:focus-visible{
       outline:2px solid var(--gold);outline-offset:2px}
     .card{padding:16px}.card-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:13px}
@@ -86,7 +86,9 @@
       border-radius:12px;background:var(--panel2);color:var(--good)}.overview-links{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:15px}
     .context-link{border:0;background:transparent;color:var(--petrol);padding:4px 0;font-weight:700;cursor:pointer}
     .inventory-tools{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:12px}
-    .search-wrap{min-width:260px;flex:1}.search-wrap input{width:100%}.quick-filters{display:flex;gap:5px;flex-wrap:wrap}
+    .search-wrap{min-width:260px;flex:1}.search-wrap input{width:100%;min-height:38px;border:1px solid var(--line);border-radius:9px;
+      background:var(--panel2);color:var(--ink);padding:8px 10px}.search-wrap input::placeholder{color:var(--muted)}
+    .quick-filters{display:flex;gap:5px;flex-wrap:wrap}
     .filter-chip{border:1px solid var(--line);border-radius:999px;padding:7px 10px;background:transparent;color:var(--muted);cursor:pointer}
     .filter-chip.on{border-color:var(--petrol-border);color:var(--petrol);background:var(--panel2)}
     .more-filters{position:relative}.more-filters summary,.export-menu summary{cursor:pointer;color:var(--muted);padding:8px 4px}
@@ -109,6 +111,34 @@
     .component-items li,.risk-codes li{color:var(--muted);word-break:break-word}.component-items code{word-break:break-all}
     .schedule-facts,.action-gates{display:grid;gap:5px;margin-top:5px}.schedule-facts .state{margin:2px 4px 0 0}
     .action-gate{display:grid;grid-template-columns:auto 1fr;align-items:start;gap:7px}.action-gate small{margin:2px 0 0;color:var(--muted)}
+    .fleet-summary{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:15px;padding:12px 15px;
+      border:1px solid var(--line);border-radius:13px;background:var(--panel);box-shadow:var(--shadow)}
+    .fleet-summary span,.fleet-summary button{display:inline-flex;align-items:baseline;gap:5px;color:var(--muted)}
+    .fleet-summary strong{color:var(--ink);font-size:18px}.fleet-summary button{border:0;background:transparent;padding:0;cursor:pointer}
+    .scope-switch{display:inline-flex;gap:4px;padding:4px;border:1px solid var(--line);border-radius:12px;background:var(--panel2)}
+    .scope-switch .filter-chip{border:0;border-radius:8px}.scope-switch .filter-chip.on{background:var(--panel);color:var(--ink)}
+    .console-tools{margin-top:12px}.console-tools>summary,.technical-details>summary,.composition>summary{
+      width:max-content;color:var(--petrol);cursor:pointer;font-weight:700}
+    .console-tools-body{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-top:10px;padding:12px;
+      border:1px solid var(--line);border-radius:11px;background:var(--panel2)}
+    .console-advanced-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.console-advanced-actions .tab{
+      border-color:var(--line);color:var(--ink)}.lab-empty{max-width:680px}.lab-empty p{margin:6px 0 14px;color:var(--muted)}
+    .automation-list{display:grid;gap:10px}.automation-card{border:1px solid var(--line);border-radius:14px;background:var(--panel2);overflow:hidden}
+    .automation-card[open]{border-color:var(--petrol-border)}.automation-card>summary{display:grid;
+      grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:14px;padding:15px;cursor:pointer;list-style:none}
+    .automation-card>summary::-webkit-details-marker{display:none}.automation-card>summary:hover{background:var(--panel)}
+    .automation-card-title{display:grid;gap:3px;min-width:0}.automation-card-title b{color:var(--ink);font-size:16px}
+    .automation-card-title small{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .automation-card-next{color:var(--gold);font-weight:750;white-space:nowrap}.automation-card[open] .automation-card-next{display:none}
+    .automation-card-body{display:grid;gap:12px;padding:0 15px 15px;border-top:1px solid var(--line)}
+    .automation-card-section{padding-top:13px}.automation-card-section h3{margin:0 0 7px;color:var(--ink);font-size:13px}
+    .automation-card-section p{margin:4px 0;color:var(--muted)}.automation-card-section .automation-state{margin-top:0}
+    .automation-state-summary{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.automation-state-summary small{color:var(--muted)}
+    .technical-details{margin-top:2px;padding-top:10px;border-top:1px solid var(--line)}
+    .technical-details-body{display:grid;gap:10px;margin-top:9px;padding:11px;border:1px solid var(--line);
+      border-radius:10px;background:var(--panel)}.technical-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+    .technical-grid>div{padding:8px;border-left:2px solid var(--line);background:var(--panel2)}
+    .technical-grid small{display:block;color:var(--muted)}.technical-grid b{display:block;margin-top:2px;color:var(--ink)}
     .empty{padding:34px;text-align:center;color:var(--muted)}.split{display:grid;grid-template-columns:1fr 1fr;gap:14px}
     .stable-id-card{margin-top:14px}.stable-id-entry .form{margin-top:11px}.stable-id-entry select{width:100%}
     .risk-list,.gene-list,.receipt-list{display:grid;gap:9px}.risk,.gene,.receipt{padding:12px;border:1px solid var(--line);
@@ -134,6 +164,7 @@
       .metrics{grid-template-columns:1fr 1fr 1fr}.split{grid-template-columns:1fr}.flow{grid-template-columns:1fr 1fr 1fr}.attention-list{grid-template-columns:1fr}}
     @media(max-width:700px){main{padding:18px 15px 34px}.top{padding:12px}.metrics{grid-template-columns:1fr}.hero{display:block}.top-actions{margin-left:auto}
       .tabs{flex-wrap:wrap;overflow:visible}.inventory-tools{display:block}.quick-filters{margin:10px 0}.search-wrap{min-width:0}.tools>*{max-width:100%}.flow{grid-template-columns:1fr 1fr}
+      .automation-card>summary{grid-template-columns:1fr auto}.automation-card-title{grid-column:1}.automation-card>summary>.state{grid-column:1}.automation-card-next{grid-column:2;grid-row:1/3}.technical-grid{grid-template-columns:1fr}
       .attention-item{grid-template-columns:auto 1fr}.attention-next{grid-column:2}.advanced-nav summary{white-space:nowrap}
       .table-wrap{overflow:visible;border:0}.table-wrap table{display:block;min-width:0}.table-wrap thead{display:none}.table-wrap tbody{display:grid;gap:10px}
       .table-wrap tr[data-registry-row]{display:grid;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel2)}
@@ -146,17 +177,8 @@
     <header class="top">
       <div class="brand"><span class="mark">E</span><span><b>Extella Evolution</b><small data-t="consoleSub"></small></span></div>
       <nav class="tabs" id="tabs" data-aria="mainNavigation">
-        <button class="tab on" type="button" data-view="fleet" data-t="overview"></button>
-        <details class="advanced-nav" id="advancedNav" data-nav-tier="advanced">
-          <summary data-t="advanced"></summary>
-          <div class="advanced-menu">
-            <button class="tab" type="button" data-view="genes">Shared Genes</button>
-            <button class="tab" type="button" data-view="escalations" data-t="escalations"></button>
-            <button class="tab" type="button" data-view="risks" data-t="riskDetails"></button>
-            <button class="tab" type="button" data-view="bulk" data-t="bulk"></button>
-            <button class="tab" type="button" data-view="receipts">Evolution Receipts</button>
-          </div>
-        </details>
+        <button class="tab on" type="button" data-view="fleet" data-primary-surface="console" data-t="automationsNav"></button>
+        <button class="tab" type="button" data-view="lab" data-primary-surface="lab">Evolution Lab</button>
       </nav>
       <div class="top-actions">
         <button class="ghost" id="langBtn">EN</button>
@@ -171,62 +193,61 @@
       <section class="view on" id="fleetView" data-evolution-view="overview" data-default-view="true">
         <div class="hero">
           <div><div class="eyebrow">Extella Evolution · Evolution Console</div><h1 data-t="overviewTitle"></h1><p class="lead" data-t="overviewLead"></p></div>
-          <div class="status"><span class="badge" id="registryScopeBadge">CURRENT DEVICE</span><span class="badge" id="registryCheckedBadge">—</span>
-            <details class="more-filters"><summary data-t="dataDetails"></summary><div class="status"><span class="badge" id="snapshotBadge">SNAPSHOT —</span><span class="badge" id="standardsBadge">STANDARD —</span></div><ul class="component-items" id="registrySourceErrors"></ul></details>
-          </div>
+          <button class="ghost" type="button" id="refreshBtn" data-t="refresh"></button>
         </div>
-        <div class="metrics" data-ux="overview-summary" data-overview-region="summary">
-          <article class="metric"><strong id="countTotal">—</strong><span data-t="allAutomations"></span></article>
-          <button class="metric" type="button" data-summary-filter="installed"><strong id="countInstalled">—</strong><span data-t="installed"></span></button>
-          <button class="metric" type="button" data-summary-filter="catalog"><strong id="countCatalog">—</strong><span data-t="catalogAvailable"></span></button>
-          <button class="metric" type="button" data-summary-attention><strong id="countAttention">—</strong><span data-t="attentionItems"></span></button>
-        </div>
-
-        <section class="card attention-card" id="attentionSection" tabindex="-1" data-ux="attention" data-overview-region="attention">
-          <div class="card-head"><div><h2 data-t="attentionTitle"></h2><p data-t="attentionLead"></p></div></div>
-          <div class="attention-list" id="attentionList" data-attention-list="actionable" aria-live="polite"></div>
-        </section>
-
-        <div class="overview-links">
-          <button class="context-link" type="button" id="sharedGenesShortcut"><span id="countShared">—</span> <span data-t="sharedGenesShortcut"></span> →</button>
+        <div class="fleet-summary" data-ux="overview-summary" data-overview-region="summary" aria-live="polite">
+          <span><strong id="countWorking">—</strong><span data-t="workingCount"></span></span>
+          <span aria-hidden="true">·</span>
+          <span><strong id="countNotRunning">—</strong><span data-t="notRunningCount"></span></span>
+          <span aria-hidden="true">·</span>
+          <button type="button" data-summary-attention><strong id="countAttention">—</strong><span data-t="attentionCount"></span></button>
         </div>
 
         <section class="card" id="fleetRegistry" data-ux="fleet-registry" data-overview-region="registry" aria-busy="true">
           <div class="card-head">
             <div><h2 data-t="inventory"></h2><p id="snapshotNote"></p></div>
-            <div class="tools">
-              <button class="ghost" type="button" id="refreshBtn" data-t="refresh"></button>
-              <details class="export-menu"><summary data-t="export"></summary><div class="export-actions"><button class="ghost" type="button" id="jsonBtn">JSON</button><button class="ghost" type="button" id="csvBtn">CSV</button></div></details>
-            </div>
           </div>
           <div class="inventory-tools">
-            <label class="search-wrap"><span class="sr-only" data-t="search"></span><input id="searchInput" type="search" data-ph="search"></label>
-            <div class="quick-filters" role="group" data-aria="quickFilters">
-              <button class="filter-chip on" type="button" data-fleet-filter="" data-t="filterAll" aria-pressed="true"></button>
-              <button class="filter-chip" type="button" data-fleet-filter="installed" data-t="installed" aria-pressed="false"></button>
-              <button class="filter-chip" type="button" data-fleet-filter="catalog" data-t="catalogAvailable" aria-pressed="false"></button>
-              <button class="filter-chip" type="button" data-fleet-filter="attention" data-t="needsAttention" aria-pressed="false"></button>
+            <div class="scope-switch" role="group" data-aria="automationScope">
+              <button class="filter-chip on" type="button" data-fleet-filter="installed" aria-pressed="true"><span data-t="myAutomations"></span> <strong id="countInstalled">—</strong></button>
+              <button class="filter-chip" type="button" data-fleet-filter="catalog" aria-pressed="false"><span data-t="catalog"></span> <strong id="countCatalog">—</strong></button>
             </div>
-            <details class="more-filters">
-              <summary data-t="moreFilters"></summary>
+            <label class="search-wrap"><span class="sr-only" data-t="search"></span><input id="searchInput" type="search" data-ph="search"></label>
+          </div>
+          <div class="automation-list" id="fleetRows" role="list" data-aria="inventory"><div class="empty" data-t="loading"></div></div>
+          <details class="console-tools" id="advancedNav" data-nav-tier="advanced">
+            <summary data-t="advancedConsole"></summary>
+            <div class="console-advanced-actions">
+              <button class="tab" type="button" data-view="genes">Shared Genes</button>
+              <button class="tab" type="button" data-view="escalations" data-t="escalations"></button>
+              <button class="tab" type="button" data-view="bulk" data-t="bulk"></button>
+              <button class="tab" type="button" data-view="receipts">Evolution Receipts</button>
+              <button class="tab" type="button" data-view="risks" data-t="technicalDetails"></button>
+            </div>
+          </details>
+          <details class="console-tools">
+            <summary data-t="technicalDetails"></summary>
+            <div class="console-tools-body">
+              <div class="status"><span class="badge" id="registryScopeBadge">CURRENT DEVICE</span><span class="badge" id="registryCheckedBadge">—</span><span class="badge" id="snapshotBadge">SNAPSHOT —</span><span class="badge" id="standardsBadge">STANDARD —</span></div>
               <label><span class="sr-only" data-t="moreFilters"></span><select id="filterSelect">
                 <option value="" data-t="filterAll"></option>
-                <option value="installed" data-t="installed"></option>
+                <option value="installed" data-t="installed" selected></option>
                 <option value="catalog" data-t="catalogAvailable"></option>
                 <option value="attention" data-t="needsAttention"></option>
                 <option value="stale" data-t="versionBehind"></option>
                 <option value="dead" data-t="filterDead"></option>
                 <option value="orphan" data-t="orphaned"></option>
               </select></label>
-            </details>
-          </div>
-          <div class="table-wrap" role="region" data-aria="inventory"><table data-ux="fleet-table" data-evolution-registry="automations">
-            <caption class="sr-only" data-t="inventory"></caption>
-            <thead><tr><th scope="col" data-registry-column="automation" data-t="automation"></th><th scope="col" data-registry-column="availability" data-t="availability"></th><th scope="col" data-registry-column="versions" data-t="versions"></th>
-              <th scope="col" data-registry-column="attention" data-t="attention"></th><th scope="col" data-registry-column="composition" data-t="composition"></th></tr></thead>
-            <tbody id="fleetRows"><tr><td colspan="5" class="empty" data-t="loading"></td></tr></tbody>
-          </table></div>
+              <details class="export-menu"><summary data-t="export"></summary><div class="export-actions"><button class="ghost" type="button" id="jsonBtn">JSON</button><button class="ghost" type="button" id="csvBtn">CSV</button></div></details>
+              <ul class="component-items" id="registrySourceErrors"></ul>
+            </div>
+          </details>
         </section>
+      </section>
+
+      <section class="view" id="labView" data-evolution-view="lab">
+        <div class="hero"><div><div class="eyebrow">Extella Evolution · Evolution Lab</div><h1 data-t="evolutionLabTitle"></h1><p class="lead" data-t="evolutionLabLead"></p></div></div>
+        <section class="card lab-empty"><h2 data-t="labEmptyTitle"></h2><p data-t="labEmptyText"></p><button class="ghost tab" type="button" data-view="fleet" data-t="backAutomations"></button></section>
       </section>
 
       <section class="view" id="risksView" data-evolution-view="risks">
@@ -311,9 +332,13 @@
     var PREVIEW = new URLSearchParams(location.search).get('preview') === '1';
     var I18N = {
       ru:{
-        consoleSub:'Evolution Console · реестр автоматизаций',fleet:'Парк',overview:'Обзор',advanced:'Дополнительно',risks:'Риски',riskDetails:'Причины рисков',escalations:'Эскалации',bulk:'Массовые операции',
+        consoleSub:'Evolution Console',fleet:'Парк',overview:'Обзор',automationsNav:'Автоматизации',advanced:'Дополнительно',risks:'Риски',riskDetails:'Причины рисков',escalations:'Эскалации',bulk:'Массовые операции',
         how:'? Как это работает',demo:'DEMO: данные и Evolution Receipts существуют только в памяти страницы; платформа не читается и не изменяется.',
-        overviewTitle:'Ваши автоматизации',overviewLead:'Сразу видно, что доступно в каталоге, что установлено на этом устройстве, где отстала версия и где компонент больше не найден.',
+        overviewTitle:'Ваши автоматизации',overviewLead:'Здесь видно, что работает, что остановлено и где нужна ваша помощь.',
+        myAutomations:'Мои автоматизации',catalog:'Каталог',automationScope:'Установленные автоматизации или каталог',workingCount:'работают',notRunningCount:'не запущены',attentionCount:'требуют внимания',
+        advancedConsole:'Расширенные возможности Evolution Console',evolutionLabTitle:'Безопасная проверка изменений',evolutionLabLead:'Evolution Lab сравнивает поведение до и после изменения, не затрагивая работающие автоматизации.',labEmptyTitle:'Нет изменения для проверки',labEmptyText:'Evolution Lab откроет сравнение, когда в Evolution Console или Agent Cabinet будет подготовлено конкретное изменение.',backAutomations:'Вернуться к автоматизациям',
+        openAutomation:'Открыть',reviewAutomation:'Разобраться',catalogDetails:'Подробнее',descriptionMissing:'Описание пока не добавлено.',whatItDoes:'Что делает',stateAndRuns:'Состояние и последние запуски',technicalEvidence:'Технические сведения',chooseAutomation:'Выберите автоматизацию, чтобы открыть подробности.',
+        stateUnavailableSummary:'Данные о работе пока недоступны.',stateCheckUnavailableText:'Действия временно недоступны: сначала нужно проверить состояние автоматизации.',notRunningText:'Автоматизация сейчас не выполняет задачи.',updateAvailable:'Доступно обновление.',scheduleMissingHuman:'Расписание не найдено.',linkedComponentMissing:'Не найден связанный компонент.',
         allAutomations:'всего автоматизаций',installed:'установлены',catalogAvailable:'доступны в каталоге',automation:'Автоматизация',availability:'Доступность',versions:'Версии',composition:'Состав',
         declaredVersion:'Заявленная',installedVersion:'Установленная',versionBehind:'Версия отстала',deadReference:'Мёртвая ссылка',orphaned:'Сирота',catalogOnly:'Только в каталоге',installedOnly:'Только установлена',
         availableYes:'Доступна',availableNo:'Не в каталоге',catalogUnknown:'Каталог недоступен',catalogRecordInvalid:'запись отклонена',installedYes:'Установлена',installedNo:'Не установлена',installationUnknown:'Установка не подтверждена',stateUnknown:'Состояние автоматизации',sourceMismatch:'Расхождение источников',noSourceErrors:'Ошибок источников нет',
@@ -342,9 +367,9 @@
         refresh:'Обновить снимок',search:'Поиск автоматизации по имени или ID',filterAll:'Все автоматизации',filterFailed:'Не проходят стандарт',filterOwnerless:'Без владельца',
         filterNonQwen:'Не Qwen',filterShared:'Есть Shared Genes',filterInactive:'Нет активности 30 дней',filterDead:'Мёртвые ссылки',agent:'Агент',owner:'Владелец',
         model:'Модель и поставщик',activeVersion:'Активная версия',standard:'Стандарт',lastActivity:'Последняя активность',capabilities:'Способности',
-        automationWorking:'Работает',automationStateUnavailable:'Состояние недоступно',automationNotRunning:'Не запущена',stateDetails:'Факты состояния',lastRun:'Последний запуск',lastResult:'Последний результат',lastError:'Последняя ошибка',
+        automationWorking:'Работает',automationStateUnavailable:'Не удалось проверить состояние',automationNotRunning:'Не запущена',stateDetails:'Факты состояния',lastRun:'Последний запуск',lastResult:'Последний результат',lastError:'Последняя ошибка',
         resultOk:'успешно',resultFailed:'ошибка',resultPartial:'частично',scheduleOperational:'Работа расписания',scheduleReference:'Ссылка планировщика',scheduleActive:'Работает',schedulePaused:'Приостановлено',scheduleNone:'Расписания нет',scheduleReferencePresent:'Ссылка жива',scheduleReferenceMissing:'Мёртвая ссылка',scheduleReferenceNotApplicable:'Внутреннее расписание',
-        automationActions:'Действия автоматизации',actionEnableDisable:'Включить / выключить',actionUpdate:'Обновить',actionRollback:'Откатить',actionStateRequired:'Действие заблокировано: достоверное состояние автоматизации не получено.',actionNotImplemented:'Действие пока недоступно: Evolution Console работает в режиме чтения.',
+        automationActions:'Действия автоматизации',actionEnableDisable:'Включить / выключить',actionUpdate:'Обновить',actionRollback:'Откатить',actionStateRequired:'Действия временно недоступны: сначала нужно проверить состояние автоматизации.',actionNotImplemented:'Изменение автоматизации пока недоступно в Evolution Console.',
         loading:'Читаю каталог, карточки текущего устройства и состав автоматизаций…',openCabinet:'Открыть Agent Cabinet',createDraft:'Создать черновик Agent Passport',unknown:'неизвестно',
         riskTitle:'Риски — результат единого стандарта',riskLead:'Ошибки и предупреждения приходят из закреплённого check_agent_passport.py. Evolution Console не повторяет и не исправляет его правила.',
         riskByAgent:'Проверка по агентам',riskCanonical:'Код, тяжесть, путь и текст принадлежат canonical checker.',missingPassports:'Agent Passport отсутствует',
@@ -378,9 +403,13 @@
         managedVerified:'managed / verified',declaredFact:'declared',platformFact:'PLATFORM fact',pinnedFact:'pinned standards fact',sourceUnknown:'source UNKNOWN'
       },
       en:{
-        consoleSub:'Evolution Console · automation registry',fleet:'Fleet',overview:'Overview',advanced:'More',risks:'Risks',riskDetails:'Risk details',escalations:'Escalations',bulk:'Bulk operations',
+        consoleSub:'Evolution Console',fleet:'Fleet',overview:'Overview',automationsNav:'Automations',advanced:'More',risks:'Risks',riskDetails:'Risk details',escalations:'Escalations',bulk:'Bulk operations',
         how:'? How it works',demo:'DEMO: data and Evolution Receipts exist only in this page memory; the platform is neither read nor changed.',
-        overviewTitle:'Your automations',overviewLead:'See what is available in the catalog, what is installed on this device, which version is behind, and which declared component can no longer be found.',
+        overviewTitle:'Your automations',overviewLead:'See what is working, what is stopped, and where your attention is needed.',
+        myAutomations:'My automations',catalog:'Catalog',automationScope:'Installed automations or catalog',workingCount:'working',notRunningCount:'not running',attentionCount:'need attention',
+        advancedConsole:'Advanced Evolution Console capabilities',evolutionLabTitle:'Test changes safely',evolutionLabLead:'Evolution Lab compares behavior before and after a change without affecting working automations.',labEmptyTitle:'No change to test',labEmptyText:'Evolution Lab will open a comparison after a specific change is prepared in Evolution Console or Agent Cabinet.',backAutomations:'Back to automations',
+        openAutomation:'Open',reviewAutomation:'Review',catalogDetails:'Details',descriptionMissing:'No description has been added yet.',whatItDoes:'What it does',stateAndRuns:'Status and recent runs',technicalEvidence:'Technical details',chooseAutomation:'Choose an automation to open its details.',
+        stateUnavailableSummary:'Status data is not available yet.',stateCheckUnavailableText:'Actions are temporarily unavailable until the automation’s status can be checked.',notRunningText:'The automation is not running tasks right now.',updateAvailable:'Update available.',scheduleMissingHuman:'Schedule could not be found.',linkedComponentMissing:'A linked component could not be found.',
         allAutomations:'total automations',installed:'installed',catalogAvailable:'available in catalog',automation:'Automation',availability:'Availability',versions:'Versions',composition:'Composition',
         declaredVersion:'Declared',installedVersion:'Installed',versionBehind:'Version behind',deadReference:'Dead reference',orphaned:'Orphan',catalogOnly:'Catalog only',installedOnly:'Installed only',
         availableYes:'Available',availableNo:'Not in catalog',catalogUnknown:'Catalog unavailable',catalogRecordInvalid:'record rejected',installedYes:'Installed',installedNo:'Not installed',installationUnknown:'Installation not confirmed',stateUnknown:'Automation state',sourceMismatch:'Source discrepancy',noSourceErrors:'No source errors',
@@ -409,9 +438,9 @@
         refresh:'Refresh snapshot',search:'Search automations by name or ID',filterAll:'All automations',filterFailed:'Fail the standard',filterOwnerless:'Without an owner',
         filterNonQwen:'Not Qwen',filterShared:'Has Shared Genes',filterInactive:'No activity for 30 days',filterDead:'Dead references',agent:'Agent',owner:'Owner',
         model:'Model and provider',activeVersion:'Active version',standard:'Standard',lastActivity:'Last activity',capabilities:'Capabilities',
-        automationWorking:'Working',automationStateUnavailable:'State unavailable',automationNotRunning:'Not running',stateDetails:'State facts',lastRun:'Last run',lastResult:'Last result',lastError:'Last error',
+        automationWorking:'Working',automationStateUnavailable:'Couldn’t check status',automationNotRunning:'Not running',stateDetails:'State facts',lastRun:'Last run',lastResult:'Last result',lastError:'Last error',
         resultOk:'succeeded',resultFailed:'failed',resultPartial:'partial',scheduleOperational:'Schedule operation',scheduleReference:'Scheduler reference',scheduleActive:'Working',schedulePaused:'Paused',scheduleNone:'No schedule',scheduleReferencePresent:'Reference alive',scheduleReferenceMissing:'Dead reference',scheduleReferenceNotApplicable:'Internal schedule',
-        automationActions:'Automation actions',actionEnableDisable:'Enable / disable',actionUpdate:'Update',actionRollback:'Roll back',actionStateRequired:'Action blocked: a trustworthy automation state was not obtained.',actionNotImplemented:'Action is not available yet: Evolution Console is read-only.',
+        automationActions:'Automation actions',actionEnableDisable:'Enable / disable',actionUpdate:'Update',actionRollback:'Roll back',actionStateRequired:'Actions are temporarily unavailable until the automation’s status can be checked.',actionNotImplemented:'Changing the automation is not yet available in Evolution Console.',
         loading:'Reading the catalog, current-device cards, and automation composition…',openCabinet:'Open Agent Cabinet',createDraft:'Create Agent Passport draft',unknown:'unknown',
         riskTitle:'Risks are the result of one standard',riskLead:'Errors and warnings come from the pinned check_agent_passport.py. The Console neither repeats nor patches its rules.',
         riskByAgent:'Checks by agent',riskCanonical:'Code, severity, path and text belong to the canonical checker.',missingPassports:'Missing Agent Passport',
@@ -471,23 +500,24 @@
       if(window.HELP){
         HELP.evolution_console={
           ru:{icon:'◇',title:'Как работает Evolution Console',sub:'Единый реестр автоматизаций',
-            steps:['Сводит каталог, строгие карточки текущего устройства, platform agents, Experts и объявленные расписания в одну read-only проекцию.','Отдельно показывает «доступна в каталоге» и «установлена», а отставание версии и мёртвые ссылки считает из фактов.','Внутренний агент остаётся компонентом автоматизации; его Agent Cabinet открывается только из раскрытого состава.'],
-            sure:['Версия не считается отставшей без двух сравнимых SemVer-фактов.','Файлы-бэкапы и карточки, имя файла которых не равно automation_id, не входят в реестр.'],
-            nope:['Этот экран не включает, не выключает, не обновляет и не откатывает автоматизации.','Неизвестное состояние не подменяется успешным.','Расхождения источников не сглаживаются и не удаляются молча.','Между аккаунтами видимости нет.'],
-            who:{title:'Кто подтверждает и откатывает',items:['Изменение подтверждает человек с текущей сессией; роли платформой пока не различаются.','Rollback возвращает точную предыдущую managed-версию.']}},
+            steps:['Сначала показывает установленные автоматизации: что работает, что не запущено и где нужна помощь.','Карточка раскрывает состояние, последние запуски, расписания и состав только по запросу.','Agent Cabinet открывается из состава конкретной автоматизации; Evolution Lab используется для безопасной проверки подготовленного изменения.'],
+            sure:['Каталог отделён от установленных автоматизаций.','Если состояние проверить нельзя, Evolution Console пишет об этом прямо и блокирует зависимые действия.'],
+            nope:['Этот экран пока не включает, не выключает, не обновляет и не откатывает автоматизации.','Неизвестное состояние не подменяется успешным.','Между аккаунтами видимости нет.'],
+            who:{title:'Где находятся подробности',items:['Технические коды, версии и источники скрыты в «Технических сведениях».','Внутренний агент открывается в готовом Agent Cabinet, а не дублируется в Evolution Console.']}},
           en:{icon:'◇',title:'How Evolution Console works',sub:'Unified automation registry',
-            steps:['It reconciles the catalog, strict current-device cards, platform agents, Experts, and declared schedules into one read-only projection.','It shows “available in catalog” separately from “installed” and computes version lag and dead references from evidence.','An internal agent remains an automation component; its Agent Cabinet opens only from the expanded composition.'],
-            sure:['A version is never marked behind without two comparable SemVer facts.','Backup files and cards whose filename does not match automation_id never enter the registry.'],
-            nope:['This screen does not enable, disable, update, or roll back automations.','Unknown state is never replaced with success.','Source discrepancies are neither smoothed over nor silently removed.','There is no cross-account visibility.'],
-            who:{title:'Who approves and rolls back',items:['A person in the current session approves; the platform does not distinguish roles yet.','Rollback restores the exact previous managed version.']}}
+            steps:['It first shows installed automations: what is working, what is not running, and where attention is needed.','A card reveals status, recent runs, schedules, and composition only when requested.','Agent Cabinet opens from a specific automation’s composition; Evolution Lab safely tests a prepared change.'],
+            sure:['The catalog is separate from installed automations.','If status cannot be checked, Evolution Console says so and blocks dependent actions.'],
+            nope:['This screen does not yet enable, disable, update, or roll back automations.','Unknown status is never replaced with success.','There is no cross-account visibility.'],
+            who:{title:'Where details live',items:['Technical codes, versions, and sources are hidden under “Technical details”.','An internal agent opens in the existing Agent Cabinet instead of being duplicated in Evolution Console.']}}
         };
       }
     }
     function showError(msg){var n=el('errorBox');n.textContent=String(msg||'');n.classList.toggle('on',!!msg);}
     function setView(view){
+      var advanced=el('advancedNav'),advancedActive=['genes','escalations','risks','bulk','receipts'].indexOf(view)!==-1;
       document.querySelectorAll('.view').forEach(function(n){var active=n.id===view+'View';n.classList.toggle('on',active);n.setAttribute('aria-hidden',active?'false':'true');});
-      document.querySelectorAll('.tab').forEach(function(n){var active=n.dataset.view===view;n.classList.toggle('on',active);if(active)n.setAttribute('aria-current','page');else n.removeAttribute('aria-current');});
-      var advanced=el('advancedNav'),advancedActive=['genes','escalations','risks','bulk','receipts'].indexOf(view)!==-1;advanced.classList.toggle('has-active',advancedActive);advanced.open=false;
+      document.querySelectorAll('.tab').forEach(function(n){var active=n.dataset.view===view||(n.dataset.primarySurface==='console'&&advancedActive);n.classList.toggle('on',active);if(active)n.setAttribute('aria-current','page');else n.removeAttribute('aria-current');});
+      advanced.classList.toggle('has-active',advancedActive);advanced.open=false;
       if(advancedActive)ensureLegacyFleet();
     }
     function standardDataMode(){var s=state.standards||{};return String(s.dataMode||s.data_mode||'UNAVAILABLE');}
@@ -519,7 +549,7 @@
       var mode=standardDataMode(),ready=productionReady(),s=state.standards||{},banner=el('demoBanner');
       var technical='data_mode='+mode+' · delivery_mode='+(s.deliveryMode||s.delivery_mode||'UNAVAILABLE')+' · account_scoped='+(s.accountScoped===true?'true':'false');
       banner.textContent=PREVIEW?t('demo'):t('readOnlyBoundary');
-      banner.title=technical;banner.classList.toggle('on',true);
+      banner.title=technical;banner.classList.toggle('on',PREVIEW);
       el('escalationBoundary').textContent=t('evidenceBoundary')+' '+t('adapterBoundary')+' evolutionLabAdapter='+(state.platform&&state.platform.evolutionLabAdapter||'UNAVAILABLE')+' · classActivationAdapter='+(state.platform&&state.platform.classActivationAdapter||'UNAVAILABLE')+' · classObservationAdapter='+(state.platform&&state.platform.classObservationAdapter||'UNAVAILABLE')+' · classRollbackAdapter='+(state.platform&&state.platform.classRollbackAdapter||'UNAVAILABLE')+' · nativeDurableIntent='+(state.platform&&state.platform.nativeDurableIntent||'PLATFORM_UNAVAILABLE')+' · multiDeviceCompareAndSwap='+(state.platform&&state.platform.multiDeviceCompareAndSwap||'PLATFORM_UNAVAILABLE');
       el('bulkBoundary').textContent=t('adapterBoundary')+' scheduleStateAdapter='+(state.platform&&state.platform.scheduleStateAdapter||'UNAVAILABLE')+' · bulkActivationAdapter='+(state.platform&&state.platform.bulkActivationAdapter||'UNAVAILABLE')+' · bulkObservationAdapter='+(state.platform&&state.platform.bulkObservationAdapter||'UNAVAILABLE')+' · bulkRollbackAdapter='+(state.platform&&state.platform.bulkRollbackAdapter||'UNAVAILABLE')+' · nativeDurableIntent='+(state.platform&&state.platform.nativeDurableIntent||'PLATFORM_UNAVAILABLE')+' · multiDeviceCompareAndSwap='+(state.platform&&state.platform.multiDeviceCompareAndSwap||'PLATFORM_UNAVAILABLE');
     }
@@ -642,11 +672,18 @@
       return {allowed:rows.length>0&&unavailable.length===0,installed_count:rows.length,blocked_ids:unavailable.map(function(row){return String(row.automation_id||'UNKNOWN');})};
     }
     function automationRisks(row){return Array.isArray(row&&row.risks)?row.risks:[];}
+    function automationNeedsAttention(row){
+      var flags=automationFlags(row),status=automationOperationalStatus(row);
+      if(flags.installed!==true)return false;
+      return status!=='WORKING'||flags.installed_stale===true||
+        flags.dead_reference!==false||row.orphan===true||row.orphaned===true||
+        automationRisks(row).length>0;
+    }
     function visibleRows(){var p=state.automationRegistry;if(!p)return[];var q=el('searchInput').value.trim().toLowerCase(),f=el('filterSelect').value;return p.rows.filter(function(r){
       var flags=automationFlags(r),risks=automationRisks(r),haystack=[r.automation_id,automationName(r),r.name&&r.name.ru,r.name&&r.name.en].join(' ').toLowerCase();
       if(q&&haystack.indexOf(q)===-1)return false;
       if(f==='installed'&&flags.installed!==true)return false;if(f==='catalog'&&flags.catalog!==true)return false;
-      if(f==='attention'&&!risks.length&&!flags.installed_stale&&flags.dead_reference===false)return false;
+      if(f==='attention'&&!automationNeedsAttention(r))return false;
       if(f==='stale'&&!flags.installed_stale)return false;if(f==='dead'&&flags.dead_reference!==true)return false;
       if(f==='orphan'&&!(r.orphan===true||r.orphaned===true||risks.some(function(risk){return String(risk&&risk.code||risk)==='orphaned';})))return false;
       return true;});}
@@ -732,21 +769,21 @@
     }
     function localizedStateError(error){
       if(unknownFact(error))return esc(t('unknown'));
-      if(typeof error!=='object')return '<code>'+esc(factText(error))+'</code> · '+esc(t('unknown'));
+      if(typeof error!=='object')return esc(factText(error));
       var code=factText(error.code),message=error[WLANG==='en'?'message_en':'message_ru']||error[WLANG==='en'?'messageEn':'messageRu']||error[WLANG==='en'?'en':'ru'];
-      return '<code>'+esc(code)+'</code> · '+esc(factText(message));
+      return esc(factText(message))+' <small class="mono">'+esc(code)+'</small>';
     }
     function automationStatePresentation(row){
       var status=automationOperationalStatus(row);
       if(status==='WORKING')return {status:status,kind:'good',mark:'✓',label:t('automationWorking')};
-      if(status==='STATE_UNAVAILABLE')return {status:status,kind:'bad',mark:'✕',label:t('automationStateUnavailable')};
+      if(status==='STATE_UNAVAILABLE')return {status:status,kind:'warn',mark:'⚠',label:t('automationStateUnavailable')};
       if(status==='NOT_RUNNING')return {status:status,kind:'warn',mark:'○',label:t('automationNotRunning')};
       return {status:'UNKNOWN',kind:'warn',mark:'⚠',label:t('unknown')};
     }
     function renderAutomationState(row){
       var source=automationStateObject(row),view=automationStatePresentation(row),activeVersion=source.active_version!=null?source.active_version:source.activeVersion,lastRun=source.last_run!=null?source.last_run:source.lastRun,lastResult=source.last_result!=null?source.last_result:source.lastResult,lastError=source.last_error!=null?source.last_error:source.lastError;
-      var explanation=(view.status==='STATE_UNAVAILABLE'||view.status==='UNKNOWN')?'<small class="state-gate-explanation">'+esc(t('actionStateRequired'))+'</small>':'';
-      return '<div class="automation-state" data-automation-state="'+esc(view.status)+'"><span class="state '+esc(view.kind)+'">'+esc(view.mark)+' '+esc(view.label)+' · '+esc(view.status)+'</span>'+
+      var explanation=(view.status==='STATE_UNAVAILABLE'||view.status==='UNKNOWN')?'<small class="state-gate-explanation">'+esc(t('stateCheckUnavailableText'))+'</small>':'';
+      return '<div class="automation-state" data-automation-state="'+esc(view.status)+'"><div class="automation-state-summary"><span class="state '+esc(view.kind)+'"><span aria-hidden="true">'+esc(view.mark)+'</span> '+esc(view.label)+'</span></div>'+
         '<div class="automation-state-facts" aria-label="'+esc(t('stateDetails'))+'">'+
           '<span class="automation-state-fact" data-state-field="active_version"><small>'+esc(t('activeVersion'))+'</small><b class="mono">'+esc(factText(activeVersion))+'</b></span>'+
           '<span class="automation-state-fact" data-state-field="last_run"><small>'+esc(t('lastRun'))+'</small><b>'+esc(fmtTime(lastRun))+'</b></span>'+
@@ -764,16 +801,16 @@
     function scheduleReferencePresentation(item){
       var status=String(item&&typeof item==='object'?(item.reference_status||item.referenceStatus||'UNKNOWN'):'UNKNOWN').toUpperCase();
       if(status==='PRESENT')return {status:status,kind:'good',mark:'✓',label:t('scheduleReferencePresent')};
-      if(status==='MISSING')return {status:status,kind:'bad',mark:'✕',label:'dead_reference · '+t('scheduleReferenceMissing')};
+      if(status==='MISSING')return {status:status,kind:'bad',mark:'✕',label:t('scheduleMissingHuman')};
       if(status==='NOT_APPLICABLE')return {status:status,kind:'',mark:'○',label:t('scheduleReferenceNotApplicable')};
       return {status:'UNKNOWN',kind:'warn',mark:'⚠',label:t('unknown')};
     }
     function renderScheduleItem(item){
       var operational=scheduleOperationalPresentation(item),reference=scheduleReferencePresentation(item),ref=item&&typeof item==='object'?(item.scheduler_ref||item.schedulerRef):null;
-      return '<li data-schedule-operational="'+esc(operational.status)+'" data-schedule-reference="'+esc(reference.status)+'"><code>'+esc(componentLabel(item))+'</code>'+
-        (unknownFact(ref)?'':'<small class="mono">'+esc(factText(ref))+'</small>')+
-        '<div class="schedule-facts"><span class="state '+esc(operational.kind)+'">'+esc(operational.mark)+' '+esc(t('scheduleOperational'))+': '+esc(operational.label)+' · '+esc(operational.status)+'</span>'+
-        '<span class="state '+esc(reference.kind)+'">'+esc(reference.mark)+' '+esc(t('scheduleReference'))+': '+esc(reference.label)+' · '+esc(reference.status)+'</span></div></li>';
+      return '<li data-schedule-operational="'+esc(operational.status)+'" data-schedule-reference="'+esc(reference.status)+'"><b>'+esc(componentLabel(item))+'</b>'+
+        '<div class="schedule-facts"><span class="state '+esc(operational.kind)+'"><span aria-hidden="true">'+esc(operational.mark)+'</span> '+esc(operational.label)+'</span>'+
+        (reference.status==='PRESENT'||reference.status==='NOT_APPLICABLE'?'':'<span class="state '+esc(reference.kind)+'"><span aria-hidden="true">'+esc(reference.mark)+'</span> '+esc(reference.label)+'</span>')+'</div>'+
+        '<details class="technical-details"><summary>'+esc(t('technicalEvidence'))+'</summary><div class="technical-details-body"><span class="mono">'+esc(t('scheduleOperational'))+': '+esc(operational.status)+'</span><span class="mono">'+esc(t('scheduleReference'))+': '+esc(reference.status)+'</span>'+(unknownFact(ref)?'':'<span class="mono">'+esc(factText(ref))+'</span>')+'</div></details></li>';
     }
     function componentArrays(components){
       var source=components&&typeof components==='object'?components:{};
@@ -811,15 +848,11 @@
       var source=row&&row.action_gates&&typeof row.action_gates==='object'?row.action_gates:(row&&row.actionGates&&typeof row.actionGates==='object'?row.actionGates:(automationStateObject(row).action_gates||{})),status=automationOperationalStatus(row);
       return '<div class="component-group"><b>'+esc(t('automationActions'))+'</b><div class="action-gates">'+[
         ['enable_disable',t('actionEnableDisable')],['update',t('actionUpdate')],['rollback',t('actionRollback')]
-      ].map(function(spec){var gate=source[spec[0]]&&typeof source[spec[0]]==='object'?source[spec[0]]:{},code=String(gate.reason_code||gate.reasonCode||(status==='STATE_UNAVAILABLE'||status==='UNKNOWN'?'STATE_REQUIRED':'NOT_IMPLEMENTED'));return '<span class="action-gate" data-action-gate="'+esc(spec[0])+'"><button class="ghost sm" type="button" disabled>'+esc(spec[1])+'</button><small><code>'+esc(code)+'</code> · '+esc(actionGateMessage(gate,status))+'</small></span>';}).join('')+'</div></div>';
+      ].map(function(spec){var gate=source[spec[0]]&&typeof source[spec[0]]==='object'?source[spec[0]]:{},code=String(gate.reason_code||gate.reasonCode||(status==='STATE_UNAVAILABLE'||status==='UNKNOWN'?'STATE_REQUIRED':'NOT_IMPLEMENTED'));return '<span class="action-gate" data-action-gate="'+esc(spec[0])+'"><b>'+esc(spec[1])+'</b><small>'+esc(actionGateMessage(gate,status))+' <code>'+esc(code)+'</code></small></span>';}).join('')+'</div></div>';
     }
     function renderAutomationComposition(row){
-      var groups=componentArrays(row.components),order=['platform_agents','experts','services','schedules','integrations','knowledge','rules'];
-      if(!groups.schedules.length&&Array.isArray(automationStateObject(row).schedules))groups.schedules=automationStateObject(row).schedules;
+      var groups=componentArrays(row.components),order=['platform_agents','experts','services','integrations','knowledge','rules'];
       var body=order.map(function(key){return renderComponentGroup(key,groups[key]);}).join('');
-      var discrepancies=Array.isArray(row.discrepancies)?row.discrepancies:[];
-      body+='<div class="component-group"><b>'+esc(t('sourceMismatch'))+' · '+discrepancies.length+'</b><ul class="component-items">'+(discrepancies.length?discrepancies.map(function(item){return '<li>'+esc(automationRiskText(item))+'</li>';}).join(''):'<li>'+esc(t('noData'))+'</li>')+'</ul></div>';
-      body+=renderAutomationActionGates(row);
       return '<details class="composition" data-internal-agents="collapsed"><summary>'+esc(t('composition'))+'</summary><div class="composition-body">'+body+'</div></details>';
     }
     function renderAutomationRisks(row){
@@ -831,33 +864,79 @@
       risks.forEach(function(risk){var code=automationRiskCode(risk);if(!code||['installed_stale','dead_reference','orphaned','INSTALLED_VERSION_STALE','PLATFORM_AGENT_MISSING','EXPERT_MISSING','CATALOG_ORPHAN'].indexOf(code)!==-1)return;badges.push('<span class="state warn">⚠ '+esc(code)+'</span>');});
       return badges.length?'<div class="state-stack">'+badges.join('')+'</div><ul class="risk-codes">'+risks.map(function(risk){return '<li>'+esc(automationRiskText(risk))+'</li>';}).join('')+'</ul>':'<span class="state good">✓ '+esc(t('noAutomationRisks'))+'</span>';
     }
+    function automationDescription(row){
+      var value=row&&row.description;
+      if(value&&typeof value==='object')value=value[WLANG]||value.ru||value.en;
+      return unknownFact(value)?t('descriptionMissing'):String(value);
+    }
+    function automationHasMissingSchedule(row){
+      var schedules=componentArrays(row&&row.components).schedules;
+      if(!schedules.length&&Array.isArray(automationStateObject(row).schedules))schedules=automationStateObject(row).schedules;
+      return schedules.some(function(item){return String(item&&typeof item==='object'?(item.reference_status||item.referenceStatus||''):'').toUpperCase()==='MISSING';});
+    }
+    function automationCardLine(row){
+      var flags=automationFlags(row),status=automationOperationalStatus(row),source=automationStateObject(row),lastRun=source.last_run!=null?source.last_run:source.lastRun,lastResult=source.last_result!=null?source.last_result:source.lastResult,risks=automationRisks(row);
+      if(flags.installed!==true)return automationDescription(row);
+      if(status==='STATE_UNAVAILABLE'||status==='UNKNOWN')return t('stateUnavailableSummary');
+      if(status==='NOT_RUNNING')return t('notRunningText');
+      if(automationHasMissingSchedule(row))return t('scheduleMissingHuman');
+      if(flags.dead_reference===true)return t('linkedComponentMissing');
+      if(flags.dead_reference==='UNKNOWN')return t('registryIncompleteText');
+      if(flags.installed_stale===true)return t('updateAvailable');
+      if(risks.length)return automationRiskText(risks[0]);
+      return t('lastRun')+': '+fmtTime(lastRun)+' · '+t('lastResult')+': '+resultText(lastResult);
+    }
+    function automationCardPresentation(row){
+      var installed=automationFlags(row).installed;
+      if(installed==='UNKNOWN')return {status:'UNKNOWN',kind:'warn',mark:'⚠',label:t('installationUnknown')};
+      if(installed!==true)return {status:'CATALOG',kind:'',mark:'○',label:t('installedNo')};
+      return automationStatePresentation(row);
+    }
+    function renderAutomationSchedules(row){
+      var groups=componentArrays(row&&row.components),items=groups.schedules;
+      if(!items.length&&Array.isArray(automationStateObject(row).schedules))items=automationStateObject(row).schedules;
+      return '<ul class="component-items">'+(items.length?items.map(renderScheduleItem).join(''):'<li>'+esc(t('noData'))+'</li>')+'</ul>';
+    }
+    function renderAutomationTechnical(row){
+      var flags=automationFlags(row),versions=row&&row.versions&&typeof row.versions==='object'?row.versions:{},discrepancies=Array.isArray(row&&row.discrepancies)?row.discrepancies:[],catalogLabel=flags.catalog==='UNKNOWN'?t('catalogUnknown'):(flags.catalog===true?t('availableYes'):t('availableNo')),installedLabel=flags.installed==='UNKNOWN'?t('installationUnknown'):(flags.installed===true?t('installedYes'):t('installedNo'));
+      return '<details class="technical-details" data-technical-details="collapsed"><summary>'+esc(t('technicalEvidence'))+'</summary><div class="technical-details-body">'+
+        '<div class="technical-grid"><div><small>ID</small><b class="mono">'+esc(row&&row.automation_id||t('unknown'))+'</b></div><div><small>'+esc(t('availability'))+'</small><b>'+esc(catalogLabel)+' · '+esc(installedLabel)+'</b></div><div><small>'+esc(t('declaredVersion'))+'</small><b class="mono">'+esc(versions.declared||row&&row.version_declared||t('unknown'))+'</b></div><div><small>'+esc(t('installedVersion'))+'</small><b class="mono">'+esc(versions.installed||row&&row.version_installed||t('unknown'))+'</b></div></div>'+
+        renderAutomationRisks(row)+
+        '<div class="component-group"><b>'+esc(t('sourceMismatch'))+' · '+esc(discrepancies.length)+'</b><ul class="component-items">'+(discrepancies.length?discrepancies.map(function(item){return '<li>'+esc(automationRiskText(item))+'</li>';}).join(''):'<li>'+esc(t('noData'))+'</li>')+'</ul></div>'+
+        renderAutomationActionGates(row)+'</div></details>';
+    }
+    function renderAutomationCard(row){
+      var id=String(row&&row.automation_id||''),flags=automationFlags(row),view=automationCardPresentation(row),needsAttention=automationNeedsAttention(row),action=flags.installed==='UNKNOWN'?t('reviewAutomation'):(flags.installed!==true?t('catalogDetails'):(needsAttention?t('reviewAutomation'):t('openAutomation')));
+      var stateContent=flags.installed===true?renderAutomationState(row):'<p>'+esc(t(flags.installed==='UNKNOWN'?'installationUnknown':'installedNo'))+'</p>';
+      return '<details class="automation-card" data-registry-row="'+esc(id)+'" role="listitem"><summary data-automation-card-summary="'+esc(id)+'"><span class="automation-card-title"><b>'+esc(automationName(row))+'</b><small>'+esc(automationCardLine(row))+'</small></span><span class="state '+esc(view.kind)+'" data-automation-state-summary="'+esc(view.status)+'"><span aria-hidden="true">'+esc(view.mark)+'</span> '+esc(view.label)+'</span><span class="automation-card-next">'+esc(action)+' →</span></summary>'+
+        '<div class="automation-card-body">'+
+          '<section class="automation-card-section"><h3>'+esc(t('whatItDoes'))+'</h3><p>'+esc(automationDescription(row))+'</p></section>'+
+          '<section class="automation-card-section"><h3>'+esc(t('stateAndRuns'))+'</h3>'+stateContent+'</section>'+
+          '<section class="automation-card-section"><h3>'+esc(t('schedules'))+'</h3>'+renderAutomationSchedules(row)+'</section>'+
+          '<section class="automation-card-section">'+renderAutomationComposition(row)+'</section>'+
+          renderAutomationTechnical(row)+
+        '</div></details>';
+    }
     function renderFleet(){
       var registryProjection=state.automationRegistry,registry=el('fleetRegistry');
-      if(!registryProjection){['countTotal','countInstalled','countCatalog','countAttention','countShared'].forEach(function(id){el(id).textContent='—';});
+      if(!registryProjection){['countWorking','countNotRunning','countAttention','countInstalled','countCatalog'].forEach(function(id){el(id).textContent='—';});
         el('registryScopeBadge').textContent='CURRENT DEVICE';el('registryScopeBadge').className='badge';
         el('registryCheckedBadge').textContent=t('lastChecked')+' · '+t('unknown');el('registryCheckedBadge').className='badge';
         el('registrySourceErrors').innerHTML='<li>'+esc(t('noData'))+'</li>';
-        el('snapshotNote').textContent=state.automationRegistryError||t('loading');el('fleetRows').innerHTML='<tr><td colspan="5" class="empty">'+esc(state.automationRegistryError||t('noData'))+'</td></tr>';
+        el('snapshotNote').textContent=state.automationRegistryError||t('loading');el('fleetRows').innerHTML='<div class="empty">'+esc(state.automationRegistryError||t('noData'))+'</div>';
         el('jsonBtn').disabled=true;el('csvBtn').disabled=true;registry.setAttribute('aria-busy',state.automationRegistryError?'false':'true');syncFilterControls();renderBulkTargetPicker();return;}
-      var allRows=registryProjection.rows||[],installedCount=allRows.filter(function(row){return automationFlags(row).installed===true;}).length,catalogCount=allRows.filter(function(row){return automationFlags(row).catalog===true;}).length;
+      var allRows=registryProjection.rows||[],installedRows=allRows.filter(function(row){return automationFlags(row).installed===true;}),installedCount=installedRows.length,catalogCount=allRows.filter(function(row){return automationFlags(row).catalog===true;}).length;
       el('jsonBtn').disabled=false;el('csvBtn').disabled=false;registry.setAttribute('aria-busy','false');
-      el('countTotal').textContent=registryCounter('total',allRows.length);el('countInstalled').textContent=registryCounter('installed',installedCount);el('countCatalog').textContent=registryCounter('catalog',catalogCount);el('countAttention').textContent=attentionCategoryCount();
-      el('countShared').textContent=state.projection&&state.projection.counters?state.projection.counters.withShared:'—';
+      el('countWorking').textContent=installedRows.filter(function(row){return automationOperationalStatus(row)==='WORKING';}).length;
+      el('countNotRunning').textContent=installedRows.filter(function(row){return automationOperationalStatus(row)==='NOT_RUNNING';}).length;
+      el('countAttention').textContent=installedRows.filter(automationNeedsAttention).length;
+      el('countInstalled').textContent='('+registryCounter('installed',installedCount)+')';el('countCatalog').textContent='('+registryCounter('catalog',catalogCount)+')';
       el('registryScopeBadge').textContent=String(registryProjection.scope||'CURRENT_DEVICE');el('registryScopeBadge').className='badge '+(registryProjection.complete===true?'good':'warn');
       el('registryCheckedBadge').textContent=t('lastChecked')+' · '+fmtTime(registryProjection.checked_at||registryProjection.checkedAt);el('registryCheckedBadge').className='badge';
       var sourceErrors=Array.isArray(registryProjection.source_errors)?registryProjection.source_errors:[];el('registrySourceErrors').innerHTML=sourceErrors.length?sourceErrors.map(function(error){return '<li><code>'+esc(error&&error.source||'UNKNOWN')+'</code> · <code>'+esc(error&&error.code||'SOURCE_UNAVAILABLE')+'</code></li>';}).join(''):'<li>✓ '+esc(t('noSourceErrors'))+'</li>';
-      var rows=visibleRows();el('snapshotNote').textContent=t('showing')+' '+rows.length+' '+t('of')+' '+allRows.length+' · '+(registryProjection.complete===true?'✓ '+t('complete'):'⚠ '+t('registryIncomplete'));
-      el('fleetRows').innerHTML=rows.length?rows.map(function(row){
-        var id=String(row.automation_id||''),flags=automationFlags(row),catalogKind=flags.catalog===true&&flags.catalog_valid===true?'good':'warn',installedKind=flags.installed===true?'good':'warn';
-        var versions=row.versions&&typeof row.versions==='object'?row.versions:{};
-        var catalogLabel=flags.catalog==='UNKNOWN'?t('catalogUnknown'):(flags.catalog===true?t('availableYes')+(flags.catalog_valid===true?'':' · '+t('catalogRecordInvalid')):t('availableNo'));
-        var installedLabel=flags.installed==='UNKNOWN'?t('installationUnknown'):(flags.installed===true?t('installedYes'):t('installedNo'));
-        return '<tr data-registry-row="'+esc(id)+'"><th scope="row"><span class="mobile-label">'+esc(t('automation'))+'</span><b>'+esc(automationName(row))+'</b><span class="cell-meta"><small class="mono">'+esc(id||t('unknown'))+'</small></span>'+renderAutomationState(row)+'</th>'+
-          '<td><span class="mobile-label">'+esc(t('availability'))+'</span><div class="state-stack"><span class="state '+catalogKind+'">'+esc(statusMark(catalogKind))+' '+esc(catalogLabel)+'</span><span class="state '+installedKind+'">'+esc(statusMark(installedKind))+' '+esc(installedLabel)+'</span></div><small class="mono">'+esc(row.availability||t('unknown'))+'</small></td>'+
-          '<td><span class="mobile-label">'+esc(t('versions'))+'</span><div class="component-summary"><small>'+esc(t('declaredVersion'))+'</small><b class="mono">'+esc(versions.declared||row.version_declared||t('unknown'))+'</b><small>'+esc(t('installedVersion'))+'</small><b class="mono">'+esc(versions.installed||row.version_installed||t('unknown'))+'</b></div></td>'+
-          '<td><span class="mobile-label">'+esc(t('attention'))+'</span>'+renderAutomationRisks(row)+'</td>'+
-          '<td><span class="mobile-label">'+esc(t('composition'))+'</span>'+renderAutomationComposition(row)+'</td></tr>';
-      }).join(''):'<tr><td colspan="5" class="empty">'+esc(t(allRows.length?'noMatches':'noData'))+'</td></tr>';
+      var rows=visibleRows();el('snapshotNote').textContent=t('chooseAutomation');
+      rows=rows.slice().sort(function(left,right){var attention=Number(automationNeedsAttention(right))-Number(automationNeedsAttention(left));return attention||automationName(left).localeCompare(automationName(right));});
+      el('fleetRows').innerHTML=rows.length?rows.map(renderAutomationCard).join(''):'<div class="empty">'+esc(t(allRows.length?'noMatches':'noData'))+'</div>';
       el('fleetRows').querySelectorAll('[data-cab]').forEach(function(button){button.onclick=function(){state.cabinetTrigger=button;openCabinet(button.dataset.cab);};});
       syncFilterControls();renderBulkTargetPicker();
     }
@@ -929,10 +1008,10 @@
       el('bulkActions').innerHTML=stateBlocked?'<span class="state-gate-explanation" data-bulk-state-gate="STATE_REQUIRED">'+esc(t('scheduleStateRequired'))+'</span>':actions.map(function(a){return '<span><button class="'+(a[0]==='bulk_rollback'?'danger':'primary')+'" data-bulk-action="'+a[0]+'" '+(a[2]?'':'disabled')+'>'+esc(a[1])+'</button><small class="mono">'+esc(a[3])+'='+(a[2]?'AVAILABLE':'PLATFORM_UNAVAILABLE')+'</small></span>';}).join('');el('bulkActions').querySelectorAll('[data-bulk-action]').forEach(function(b){b.onclick=function(){runBulkAction(b.dataset.bulkAction);};});
     }
     function renderReceipts(){el('receiptList').innerHTML=state.receipts.length?state.receipts.slice().reverse().map(function(r){return '<article class="receipt"><b>'+esc(r.type||'Evolution Receipt')+'</b><p>'+esc(fmtTime(r.at))+' · '+esc(r.status||'RECORDED')+'</p><code>'+esc(r.sha256||'—')+'</code></article>';}).join(''):'<div class="empty">'+esc(t('noData'))+'</div>';}
-    function renderAll(){renderFleet();renderAttention();renderRisks();renderStableIdRequired();renderGenes();renderEscalations();renderBulk();renderReceipts();renderBoundary();el('escalationEvidence').textContent=state.lastEscalationEvidence?JSON.stringify(state.lastEscalationEvidence,null,2):'—';}
+    function renderAll(){renderFleet();renderRisks();renderStableIdRequired();renderGenes();renderEscalations();renderBulk();renderReceipts();renderBoundary();el('escalationEvidence').textContent=state.lastEscalationEvidence?JSON.stringify(state.lastEscalationEvidence,null,2):'—';}
     async function loadFleet(){
       showError('');state.automationRegistryError=null;el('fleetRegistry').setAttribute('aria-busy','true');el('fleetRows').innerHTML='<tr><td colspan="5" class="empty">'+esc(t('loading'))+'</td></tr>';
-      try{var result=await request('automation_registry_load',{});if(!applyAutomationRegistryResult(result))throw new Error(t('registryIncomplete'));return true;}
+      try{var result=await request('automation_registry_load',{});if(!applyAutomationRegistryResult(result))throw new Error(t('registryIncomplete'));ensureLegacyFleet();return true;}
       catch(e){state.automationRegistry=null;state.automationRegistryError=e&&e.message||t('registryIncomplete');clearLegacyFleet();renderAll();el('fleetRegistry').setAttribute('aria-busy','false');showError(state.automationRegistryError);return false;}
     }
     function ensureLegacyFleet(){
@@ -1026,19 +1105,18 @@
       state.automationRegistry=null;state.automationRegistryError=null;state.legacyLoading=false;state.actorId=null;state.projection=null;state.stableIdRequired=[];state.stableTargetBySource=Object.create(null);state.shared=null;state.standards=null;state.platform=null;state.ledger=null;state.escalations=[];state.bulkOperations=[];state.bulk=null;state.receipts=[];state.draft=null;
       state.cabinetAgentId=null;state.cabinetGeneId=null;state.cabinetArtifactBase=null;state.currentEscalationId=null;state.selectedEscalationId=null;state.currentBulkOperationId=null;state.selectedBulkOperationId=null;state.selectedBulkGeneId=null;state.selectedBulkIds=[];state.lastEscalationEvidence=null;state.lastBulkEvidence=null;
       state.lastLoadedAt=null;state.focusRiskAgentId=null;state.cabinetTrigger=null;
-      el('searchInput').value='';el('filterSelect').value='';el('bulkType').value='shared_gene_change';el('bulkVersionInput').value='';el('cabinetVersionInput').value='';
+      el('searchInput').value='';el('filterSelect').value='installed';el('bulkType').value='shared_gene_change';el('bulkVersionInput').value='';el('cabinetVersionInput').value='';
       el('standardsBadge').textContent='STANDARD —';el('standardsBadge').className='badge';el('cabinetTitle').textContent='Agent Cabinet';el('cabinetHost').innerHTML='';el('cabinetGeneSelect').innerHTML='';el('cabinetImpact').textContent='';el('cabinetEscalateBtn').disabled=true;
       el('advancedNav').open=false;el('cabinetOverlay').classList.remove('on');window._cab=null;setView('fleet');renderAll();showError(message||'');
     }
     document.querySelectorAll('.tab').forEach(function(b){b.onclick=function(){setView(b.dataset.view);};});
     document.querySelectorAll('[data-summary-filter]').forEach(function(b){b.onclick=function(){applyFleetFilter(b.dataset.summaryFilter,true);};});
     document.querySelectorAll('[data-summary-view]').forEach(function(b){b.onclick=function(){setView(b.dataset.summaryView);};});
-    document.querySelectorAll('[data-summary-attention]').forEach(function(b){b.onclick=function(){el('attentionSection').scrollIntoView({behavior:'smooth',block:'start'});el('attentionSection').focus({preventScroll:true});};});
+    document.querySelectorAll('[data-summary-attention]').forEach(function(b){b.onclick=function(){applyFleetFilter('attention',true);};});
     document.querySelectorAll('[data-fleet-filter]').forEach(function(b){b.onclick=function(){applyFleetFilter(b.dataset.fleetFilter,false);};});
     el('langBtn').onclick=function(){WLANG=WLANG==='ru'?'en':'ru';applyLanguage();renderAll();if(el('cabinetOverlay').classList.contains('on'))updateCabinetImpact();};
     el('helpBtn').onclick=function(){if(typeof openHelp==='function')openHelp('evolution_console');};el('refreshBtn').onclick=loadFleet;
     el('searchInput').oninput=function(){renderFleet();renderBulk();};el('filterSelect').onchange=function(){syncFilterControls();renderFleet();renderBulk();};el('jsonBtn').onclick=function(){exportRows('json');};el('csvBtn').onclick=function(){exportRows('csv');};
-    el('sharedGenesShortcut').onclick=function(){setView('genes');};
     el('geneObjectBtn').onclick=function(){state.geneView='object';renderGenes();};el('geneAgentBtn').onclick=function(){state.geneView='agent';renderGenes();};
     el('bulkType').onchange=function(){state.selectedBulkIds=[];state.lastBulkEvidence=null;renderFleet();renderBulk();};el('bulkGeneSelect').onchange=function(){state.selectedBulkGeneId=el('bulkGeneSelect').value||null;state.selectedBulkIds=[];state.lastBulkEvidence=null;renderFleet();renderBulk();};
     el('bulkVersionInput').oninput=function(){state.lastBulkEvidence=null;renderBulkTargetPicker();renderBulk();};el('bulkPreviewBtn').onclick=createBulkPreview;

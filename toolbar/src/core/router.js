@@ -2553,7 +2553,8 @@ ETB.router = (function () {
       );
       // The primary automation registry path performs read/compute only.
       // Agent Passport, Shared Genes, Agent Cabinet and Evolution Loop are
-      // loaded separately if a person opens an advanced agent-level view.
+      // loaded separately through fleet_load, so the automation composition
+      // and advanced views reuse the same canonical generated artifacts.
       return {
         actorId: context.actorId,
         registry: registry,

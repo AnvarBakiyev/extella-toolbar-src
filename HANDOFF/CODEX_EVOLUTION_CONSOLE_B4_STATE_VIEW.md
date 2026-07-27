@@ -46,8 +46,8 @@ Evolution Console показывает `active_version`, `last_run`, `last_resul
 неполным, но достоверные per-row факты сохраняются.
 
 Действия автоматизации остаются read-only. При `STATE_UNAVAILABLE` и
-`UNKNOWN` они показываются отключёнными с `STATE_REQUIRED` и двуязычным
-объяснением.
+`UNKNOWN` интерфейс показывает `STATE_REQUIRED` и двуязычное объяснение,
+но не рисует неработающие кнопки.
 
 ### Расписания
 
@@ -73,6 +73,39 @@ Evolution Console показывает `active_version`, `last_run`, `last_resul
 router заново читает authoritative Automation Registry. Прямой bridge-вызов,
 устаревший UI payload, неизвестная установка, несопоставленная цель,
 `STATE_UNAVAILABLE` и `UNKNOWN` блокируются до adapter/ledger write.
+
+## B4.1 — упрощённый MVP
+
+Первый экран перестроен вокруг бизнес-автоматизаций пользователя, а не
+внутренних агентов и инженерных расхождений:
+
+- по умолчанию открыты `Мои автоматизации`; `Каталог` — отдельный соседний
+  режим;
+- сверху остаётся одна строка: сколько автоматизаций работает, не запущено и
+  требует внимания;
+- реестр заменён свёрнутыми карточками. В заголовке карточки видны имя,
+  человеческое состояние и один следующий шаг;
+- внутри карточки по запросу доступны назначение, четыре B4-факта состояния,
+  расписания и состав;
+- машинные коды, версии, ID, source errors, риски и action gates находятся в
+  свёрнутых `Технических сведениях`;
+- `Agent Cabinet` открывается только из состава конкретной автоматизации и
+  продолжает использовать канонический сгенерированный артефакт; обычный
+  путь карточки сам подгружает read-only fleet projection, поэтому CTA не
+  зависит от посещения расширенного раздела;
+- `Shared Genes`, эскалации, массовые операции и `Evolution Receipts`
+  сохранены как расширенные сценарии Evolution Console, но убраны с первого
+  уровня;
+- `Evolution Lab` оставлен второй продуктовой поверхностью. Пока конкретное
+  изменение не подготовлено в Evolution Console или Agent Cabinet, Lab честно
+  показывает пустое состояние и не синтезирует успешный тест.
+
+Машинная трёхзначность `WORKING` / `NOT_RUNNING` /
+`STATE_UNAVAILABLE`, две оси расписания и серверные fail-closed гейты не
+изменены. На пользовательском слое эти значения переведены на человеческий
+язык; `UNKNOWN` по-прежнему остаётся неизвестным. В том числе
+`installed=UNKNOWN` показывается как «Установка не подтверждена», а не как
+достоверное «Не установлена».
 
 ## Изменённые файлы
 
@@ -116,22 +149,25 @@ Runtime и проекция:
 
 В browser-preview одновременно проверены `WORKING`, `NOT_RUNNING` и
 `STATE_UNAVAILABLE`, `NO_SCHEDULE + MISSING`, три объяснённых action gate,
-RU/EN-копия, отсутствие console errors и горизонтального переполнения.
+RU/EN-копия, отдельные `Каталог` и `Evolution Lab`, переход в `Agent Cabinet`
+только из состава и отсутствие горизонтального переполнения при 1280×720 и
+390×844.
 
 ## Гейты
 
 Зелёные:
 
-- полный toolbar suite: **187/187**, failed 0, skipped 0;
+- полный toolbar suite: **188/188**, failed 0, skipped 0;
 - canonical `npm run build`: PASS;
 - `npm run test:reproducible`: PASS,
-  SHA-256 `ff1477d47ccc1201508e530845b5bf15219c1388c38cff3d4b9b439abf939ffc`,
-  `toolbar/build/toolbar.js` — 9 680 289 bytes;
+  SHA-256 `b901916655b3bd1e78f3649357ec35ead8ecd4dbcfa76342facdaff15f823d37`,
+  `toolbar/build/toolbar.js` — 9 738 023 bytes;
 - `check_brand_copy.py --strict`: `ИТОГ: БРЕНД СОБЛЮДЁН`
   (checker оставил только предупреждения на JavaScript `!`);
 - `npm run test:account-scope`: PASS;
 - `npm run test:managed-runtime`: PASS;
 - syntax checks, Python compile и `git diff --check`: PASS;
+- финальный adversarial-аудит: оставшихся P0–P2 нет;
 - scanner source SHA-256:
   `8105169ded773e00e3ab383159d6b01d8b274a0f9a8a96e0c394379f25082d1d`.
 
@@ -151,7 +187,7 @@ dependency-изменения не применялись.
 
 ## Release и deploy
 
-Версия сценария: `0.6.0`.
+Версия сценария: `0.7.0`.
 
 Owned Expert `_etb_evolution_registry_scan_v1` изменён. Интегратор обязан
 доставить его точные bytes в signed Extella Client upgrade, обновить
