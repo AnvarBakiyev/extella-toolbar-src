@@ -445,8 +445,16 @@ const LIBRARY_DIST = path.join(ROOT, '..', 'modules', 'library', 'dist', 'index.
 
 function buildLibrary() {
   if (!fs.existsSync(LIBRARY_DIST)) {
-    console.warn(`  ⚠ Library build not found at ${path.relative(ROOT, LIBRARY_DIST)} ` +
-      `— run \`npm run build -w @extella/library\` first. Library tab will be empty.`);
+    // Предупреждение в длинном логе — не защита. Живой урок 25-27.07.2026: с 25.07 все
+    // релизные артефакты собирались БЕЗ библиотеки (1.1 МБ контента), потому что этот
+    // warning никто не читал; у коллег вкладка «Библиотека» была пустой два дня.
+    // Поэтому в релизном режиме сборка ПАДАЕТ, а не тихо отдаёт пустую строку.
+    const msg = `Library build not found at ${path.relative(ROOT, LIBRARY_DIST)} — ` +
+      `run \`npm install && npm run build -w @extella/library\` before building release artifacts.`;
+    if (RELEASE_ARTIFACTS) {
+      throw new Error('LIBRARY_MISSING_IN_RELEASE: ' + msg);
+    }
+    console.warn(`  ⚠ ${msg} Library tab will be empty (dev build only).`);
     return '';
   }
   const html = readFile(LIBRARY_DIST);
