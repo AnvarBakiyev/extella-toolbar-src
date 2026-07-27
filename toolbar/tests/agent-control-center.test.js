@@ -865,11 +865,11 @@ test('ACC-11: unknown shared dependency fails closed instead of reporting zero i
   );
 });
 
-test('build loads the ES5 Evolution cores and standards provider after api.js', () => {
+test('build loads the ES5 Evolution cores, MCP contract and providers after api.js', () => {
   const build = fs.readFileSync(buildPath, 'utf8');
   assert.match(
     build,
-    /'api\.js',\s*\n\s*'agent-control\.js',\s*\n\s*'evolution-console\.js',\s*\n\s*'evolution-automation-registry\.js',\s*\n\s*'evolution-standards-provider\.js',\s*\n\s*'install-prompt\.js'/,
+    /'api\.js',\s*\n\s*'agent-control\.js',\s*\n\s*'evolution-console\.js',\s*\n\s*'evolution-automation-registry\.js',\s*\n\s*'evolution-mcp-contract\.js',\s*\n\s*'evolution-standards-provider\.js',\s*\n\s*'install-prompt\.js'[\s\S]*?'registry\.js',\s*\n\s*'evolution-automation-registry-provider\.js',\s*\n\s*'evolution-mcp-registry-provider\.js',\s*\n\s*'evolution-mcp-read-gateway\.js',\s*\n\s*'plugins\.js',\s*\n\s*'router\.js'/,
   );
   assert.match(
     build,

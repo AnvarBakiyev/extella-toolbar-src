@@ -4070,6 +4070,58 @@ ETB.router = (function () {
     if (action === 'automation_registry_load') {
       return _evolutionAutomationRegistryLoad(context);
     }
+    if (action === 'mcp_read') {
+      try {
+        if (!ETB.evolutionMcpReadGateway ||
+            typeof ETB.evolutionMcpReadGateway.create !== 'function' ||
+            !ETB.evolutionMcpRegistryProvider ||
+            typeof ETB.evolutionMcpRegistryProvider.load !== 'function') {
+          throw _evolutionError(
+            'EVOLUTION_MCP_READ_UNAVAILABLE',
+            'the read-only Evolution MCP Gateway is unavailable'
+          );
+        }
+        var gateway = ETB.evolutionMcpReadGateway.create({
+          actorId: context.actorId,
+          // Extella currently exposes the authenticated account as the
+          // isolation boundary, so account_id and tenant_id are the same exact
+          // host-owned value in this adapter.
+          accountId: context.actorId,
+          tenantId: context.actorId,
+          now: function () {
+            return new Date().toISOString();
+          },
+          assertContext: function () {
+            _agentControlAssertContext(context);
+          },
+          loadAutomationRegistry: function () {
+            return _evolutionAutomationRegistryLoad(context);
+          },
+          loadMcpRegistry: function () {
+            return ETB.evolutionMcpRegistryProvider.load({
+              actorId: context.actorId,
+              accountId: context.actorId,
+              assertContext: function () {
+                _agentControlAssertContext(context);
+              }
+            });
+          },
+          hash: ETB.evolutionConsole.sha256
+        });
+        return gateway.invoke(
+          data && data.tool,
+          data && data.arguments || {},
+          {
+            actorId: context.actorId,
+            accountId: context.actorId,
+            tenantId: context.actorId,
+            requestId: context.operationId
+          }
+        );
+      } catch (error) {
+        return Promise.reject(error);
+      }
+    }
     if (action === 'fleet_load') return _evolutionFleetLoad(context);
     if (action === 'passport_draft') {
       try {

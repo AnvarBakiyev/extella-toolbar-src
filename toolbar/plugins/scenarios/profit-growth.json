@@ -7,7 +7,7 @@
   "description": "Evolution Console показывает, что работает, что остановлено и где нужна помощь. Каталог отделён от установленных автоматизаций, а неизвестное состояние не подменяется успехом.",
   "category": "business",
   "type": "application",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "eye": "Extella Evolution",
   "pills": [
     "Автоматизации",
@@ -36,6 +36,13 @@
       "description": "Read-only проекция каталога, установок, фактического состояния, версий, состава и вычисляемых рисков автоматизаций пользователя.",
       "expert_name": "_etb_evolution_registry_scan_v1",
       "version": "EVOLUTION_AUTOMATION_REGISTRY_V2",
+      "external_writes": false
+    },
+    {
+      "id": "mcp_read_inventory",
+      "name": "MCP-состав автоматизаций",
+      "description": "Read-only состав MCP Connections, Tool Contracts, MCP Extensions, effective Tool Bindings и Run Evidence без credential values и вызова инструментов.",
+      "version": "EVOLUTION_MCP_READ_CONTRACT_V1",
       "external_writes": false
     },
     {

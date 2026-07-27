@@ -94,7 +94,7 @@
     .more-filters{position:relative}.more-filters summary,.export-menu summary{cursor:pointer;color:var(--muted);padding:8px 4px}
     .more-filters select{margin-top:7px;min-width:220px}.export-menu{position:relative}.export-actions{position:absolute;right:0;top:100%;
       z-index:4;display:flex;gap:6px;padding:7px;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow)}
-    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}table{width:100%;border-collapse:collapse;min-width:920px}
+    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}.table-wrap table{width:100%;border-collapse:collapse;min-width:920px}
     th,td{text-align:left;padding:10px 11px;border-bottom:1px solid var(--line);vertical-align:top}
     th{position:sticky;top:0;background:var(--panel2);color:var(--muted);font-size:11px;z-index:2}
     td small{display:block;color:var(--muted);margin-top:3px}.cell-meta{display:grid;gap:2px;margin-top:5px}.mobile-label{display:none}.mono{font-family:var(--mono);font-size:11px}
@@ -107,6 +107,10 @@
     .state-gate-explanation{padding:7px;border:1px solid var(--warn);border-radius:8px;color:var(--warn);background:var(--panel2)}
     .composition{margin-top:4px}.composition summary{color:var(--petrol);cursor:pointer;font-weight:700}
     .composition-body{display:grid;gap:10px;margin-top:9px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--panel2)}
+    .mcp-overview{display:grid;gap:8px}.mcp-overview-head{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+    .mcp-counts{color:var(--muted);font-size:12px}.mcp-list{display:grid;gap:6px;margin:0;padding:0;list-style:none}
+    .mcp-list li{padding:8px;border:1px solid var(--line);border-radius:9px;background:var(--panel)}
+    .mcp-list small{display:block;color:var(--muted);margin-top:3px}.mcp-agent-bindings{display:flex;gap:6px;flex-wrap:wrap}
     .component-group b{display:block;color:var(--ink);font-size:12px}.component-items,.risk-codes{display:grid;gap:5px;margin:6px 0 0;padding:0;list-style:none}
     .component-items li,.risk-codes li{color:var(--muted);word-break:break-word}.component-items code{word-break:break-all}
     .schedule-facts,.action-gates{display:grid;gap:5px;margin-top:5px}.schedule-facts .state{margin:2px 4px 0 0}
@@ -155,7 +159,8 @@
       max-height:340px;overflow:auto;font:11px/1.55 var(--mono)}
     .overlay{display:none;position:fixed;inset:0;z-index:100;background:color-mix(in srgb,#000000 76%,transparent);padding:24px;overflow:auto}
     .overlay.on{display:block}.dialog{max-width:1040px;margin:0 auto;background:var(--bg);border:1px solid var(--line);
-      border-radius:18px;padding:18px;box-shadow:var(--shadow)}.dialog-top{display:flex;justify-content:space-between;gap:12px;margin-bottom:14px}
+      border-radius:18px;padding:18px;box-shadow:var(--shadow)}#cabinetHost{min-width:0;max-width:100%;overflow-x:auto}
+    .dialog-top{display:flex;justify-content:space-between;gap:12px;margin-bottom:14px}
     #xtl_help{display:none;position:fixed;inset:0;z-index:110;background:color-mix(in srgb,#000000 78%,transparent);overflow:auto;padding:30px 18px}
     #xtl_help>div{max-width:760px;margin:0 auto;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:24px}
     .sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;
@@ -340,6 +345,7 @@
         openAutomation:'Открыть',reviewAutomation:'Разобраться',catalogDetails:'Подробнее',descriptionMissing:'Описание пока не добавлено.',whatItDoes:'Что делает',stateAndRuns:'Состояние и последние запуски',technicalEvidence:'Технические сведения',chooseAutomation:'Выберите автоматизацию, чтобы открыть подробности.',
         stateUnavailableSummary:'Данные о работе пока недоступны.',stateCheckUnavailableText:'Действия временно недоступны: сначала нужно проверить состояние автоматизации.',notRunningText:'Автоматизация сейчас не выполняет задачи.',updateAvailable:'Доступно обновление.',scheduleMissingHuman:'Расписание не найдено.',linkedComponentMissing:'Не найден связанный компонент.',
         allAutomations:'всего автоматизаций',installed:'установлены',catalogAvailable:'доступны в каталоге',automation:'Автоматизация',availability:'Доступность',versions:'Версии',composition:'Состав',
+        automationTools:'Инструменты автоматизации',mcpLoading:'Читаю состав инструментов…',mcpUnavailable:'Состав инструментов пока не подтверждён',mcpIncomplete:'Показаны только подтверждённые данные; остальное неизвестно.',mcpConnectionOne:'подключение',mcpConnectionFew:'подключения',mcpConnections:'подключений',mcpToolOne:'инструмент',mcpToolFew:'инструмента',mcpTools:'инструментов',mcpExtensionOne:'MCP Extension',mcpExtensionFew:'MCP Extensions',mcpExtensions:'MCP Extensions',readOnlyTool:'только чтение',reversibleTool:'обратимое действие',externalTool:'внешнее действие',connectionUp:'подключение работает',connectionDown:'подключение не отвечает',connectionUnknown:'состояние подключения неизвестно',toolBindings:'Привязки Agent Cabinet',toolBinding:'привязка',toolBindingsFew:'привязки',toolBindingsMany:'привязок',noTools:'Подтверждённых инструментов нет',lastToolRun:'Последний вызов',retry:'Повторить',
         declaredVersion:'Заявленная',installedVersion:'Установленная',versionBehind:'Версия отстала',deadReference:'Мёртвая ссылка',orphaned:'Сирота',catalogOnly:'Только в каталоге',installedOnly:'Только установлена',
         availableYes:'Доступна',availableNo:'Не в каталоге',catalogUnknown:'Каталог недоступен',catalogRecordInvalid:'запись отклонена',installedYes:'Установлена',installedNo:'Не установлена',installationUnknown:'Установка не подтверждена',stateUnknown:'Состояние автоматизации',sourceMismatch:'Расхождение источников',noSourceErrors:'Ошибок источников нет',
         platform_agents:'Внутренние агенты',experts:'Experts',services:'Службы',schedules:'Расписания',integrations:'Интеграции',knowledge:'Знания',rules:'Правила',optional:'необязательный',
@@ -411,6 +417,7 @@
         openAutomation:'Open',reviewAutomation:'Review',catalogDetails:'Details',descriptionMissing:'No description has been added yet.',whatItDoes:'What it does',stateAndRuns:'Status and recent runs',technicalEvidence:'Technical details',chooseAutomation:'Choose an automation to open its details.',
         stateUnavailableSummary:'Status data is not available yet.',stateCheckUnavailableText:'Actions are temporarily unavailable until the automation’s status can be checked.',notRunningText:'The automation is not running tasks right now.',updateAvailable:'Update available.',scheduleMissingHuman:'Schedule could not be found.',linkedComponentMissing:'A linked component could not be found.',
         allAutomations:'total automations',installed:'installed',catalogAvailable:'available in catalog',automation:'Automation',availability:'Availability',versions:'Versions',composition:'Composition',
+        automationTools:'Automation tools',mcpLoading:'Reading tool composition…',mcpUnavailable:'Tool composition is not yet proven',mcpIncomplete:'Only proven data is shown; everything else is unknown.',mcpConnectionOne:'connection',mcpConnectionFew:'connections',mcpConnections:'connections',mcpToolOne:'tool',mcpToolFew:'tools',mcpTools:'tools',mcpExtensionOne:'MCP Extension',mcpExtensionFew:'MCP Extensions',mcpExtensions:'MCP Extensions',readOnlyTool:'read only',reversibleTool:'reversible action',externalTool:'external action',connectionUp:'connection is working',connectionDown:'connection is unavailable',connectionUnknown:'connection status is unknown',toolBindings:'Agent Cabinet bindings',toolBinding:'binding',toolBindingsFew:'bindings',toolBindingsMany:'bindings',noTools:'No tools have been proven',lastToolRun:'Latest call',retry:'Retry',
         declaredVersion:'Declared',installedVersion:'Installed',versionBehind:'Version behind',deadReference:'Dead reference',orphaned:'Orphan',catalogOnly:'Catalog only',installedOnly:'Installed only',
         availableYes:'Available',availableNo:'Not in catalog',catalogUnknown:'Catalog unavailable',catalogRecordInvalid:'record rejected',installedYes:'Installed',installedNo:'Not installed',installationUnknown:'Installation not confirmed',stateUnknown:'Automation state',sourceMismatch:'Source discrepancy',noSourceErrors:'No source errors',
         platform_agents:'Internal agents',experts:'Experts',services:'Services',schedules:'Schedules',integrations:'Integrations',knowledge:'Knowledge',rules:'Rules',optional:'optional',
@@ -487,7 +494,8 @@
       stableIdRequired:[],stableTargetBySource:Object.create(null),escalations:[],bulk:null,receipts:[],draft:null,geneView:'object',accountEpoch:0,
       cabinetAgentId:null,cabinetGeneId:null,cabinetArtifactBase:null,currentEscalationId:null,selectedEscalationId:null,
       bulkOperations:[],currentBulkOperationId:null,selectedBulkOperationId:null,selectedBulkGeneId:null,selectedBulkIds:[],
-      lastEscalationEvidence:null,lastBulkEvidence:null,lastLoadedAt:null,focusRiskAgentId:null,cabinetTrigger:null
+      lastEscalationEvidence:null,lastBulkEvidence:null,lastLoadedAt:null,focusRiskAgentId:null,cabinetTrigger:null,
+      mcpByAutomation:Object.create(null),mcpEpoch:0
     };
 
     function applyLanguage(){
@@ -590,7 +598,7 @@
           {
             automation_id:'extella_contract_agent',name:{ru:'Kazakh Lawyer',en:'Kazakh Lawyer'},version_declared:'1.0.0',version_installed:'0.1.0',availability:'installed_stale',
             versions:{declared:'1.0.0',catalog:'1.0.0',installed:'0.1.0'},flags:{catalog:true,catalog_valid:true,installed:true,installed_stale:true,dead_reference:false},enabled:false,statuses:{catalog:'active',installed:'active',effective:'active'},
-            components:{platform_agents:[{id:'demo_agent_01',state:'PRESENT',declared:true,orphan:false}],experts:[],schedules:[]},
+            components:{platform_agents:[{id:'agent_demo_fixture_valid_alpha',state:'PRESENT',declared:true,orphan:false}],experts:[],schedules:[]},
             state:{source:'LOCAL_STATE_CONTRACT',operational_status:'NOT_RUNNING',active_version:'0.1.0',last_run:'2026-07-26T10:30:00Z',last_result:'failed',last_error:{code:'MANUAL_STOP',message_ru:'Автоматизация остановлена владельцем.',message_en:'The automation was stopped by its owner.'},checked_at:'2026-07-27T12:00:00Z'},
             action_gates:demoActionGates('NOT_IMPLEMENTED'),
             risks:[{code:'INSTALLED_VERSION_STALE',severity:'warning',ru:'Установленная версия отстала.',en:'The installed version is behind.'}],discrepancies:['INSTALLED_VERSION_STALE'],updated_at:'2026-07-27T12:00:00Z'
@@ -598,7 +606,7 @@
           {
             automation_id:'extella_travel_agency',name:{ru:'Агент турагентства',en:'Travel Agency Agent'},version_declared:'0.1.0',version_installed:'0.1.0',availability:'installed',
             versions:{declared:'0.1.0',catalog:'0.1.0',installed:'0.1.0'},flags:{catalog:true,catalog_valid:true,installed:true,installed_stale:false,dead_reference:true},enabled:true,statuses:{catalog:'active',installed:'active',effective:'active'},
-            components:{platform_agents:[{id:'demo_agent_02',state:'PRESENT',declared:true,orphan:false}],experts:[],schedules:[{id:'campaigns_birthday',scheduler_ref:'sched:wz_20260709_travel',operational_status:'NO_SCHEDULE',reference_status:'MISSING',active:false,next_run:null,required:true}]},
+            components:{platform_agents:[{id:'agent_demo_fixture_valid_beta',state:'PRESENT',declared:true,orphan:false}],experts:[],schedules:[{id:'campaigns_birthday',scheduler_ref:'sched:wz_20260709_travel',operational_status:'NO_SCHEDULE',reference_status:'MISSING',active:false,next_run:null,required:true}]},
             state:{source:'LOCAL_STATE_CONTRACT',operational_status:'WORKING',active_version:'0.1.0',last_run:'2026-07-27T09:00:00Z',last_result:'ok',last_error:null,checked_at:'2026-07-27T12:00:00Z'},
             action_gates:demoActionGates('NOT_IMPLEMENTED'),
             risks:[{code:'SCHEDULE_REFERENCE_MISSING',severity:'error',ru:'Объявленное расписание не найдено в индексе планировщика.',en:'The declared schedule was not found in the scheduler index.'}],discrepancies:['SCHEDULE_REFERENCE_MISSING'],updated_at:'2026-07-27T12:00:00Z'
@@ -606,7 +614,8 @@
         ],counters:{total:3,catalog:3,installed:3,installed_stale:2,dead_reference:2,with_risks:3,orphans:0},source_errors:[]};
     }
     function demoProjection(){
-      var rows=[];for(var i=1;i<=15;i++){var id='demo_agent_'+String(i).padStart(2,'0'),valid=i<=3;
+      var reviewedIds=['agent_demo_fixture_valid_alpha','agent_demo_fixture_valid_beta','agent_demo_fixture_warning_only'];
+      var rows=[];for(var i=1;i<=15;i++){var id=reviewedIds[i-1]||'demo_agent_'+String(i).padStart(2,'0'),valid=i<=3;
         rows.push({agentId:id,name:'Demo Agent '+String(i).padStart(2,'0'),platformPresent:true,registryPresent:valid,
           provider:i===14?'anthropic':i===15?'custom':'alibaba',model:i===14?'claude-sonnet':i===15?'extella_test_llm':'qwen3.7-max',
           qwenConfirmed:i<14,owner:valid?'Demo Owner':null,ownerSource:valid?'AGENT_PASSPORT':null,activeVersion:valid?'1.0.'+i:null,activeVersionSource:valid?'AGENT_PASSPORT':null,
@@ -616,9 +625,20 @@
           reconciliation:valid?'BOTH':'PLATFORM_ONLY'});}
       return {complete:true,snapshotId:'demo_snapshot_15',rows:rows,counters:{total:15,failed:12,ownerless:12,withShared:3},mutationsAllowed:false};
     }
+    function demoMcpComposition(automationId){
+      var isTravel=automationId==='extella_travel_agency',p={kind:'local',source_id:'extella_travel_agency.passport',source_version:'0.1.0',sha256:'1111111111111111111111111111111111111111111111111111111111111111'};
+      var connections=isTravel?[{connection_id:'connection.travel.catalog',automation_id:automationId,name:{ru:'Каталог туров',en:'Travel catalog'},transport:'streamable_http',endpoint:'https://mcp.example.test/travel',credential_ref:'credential:extella/travel-catalog',health:{status:'UP',checked_at:'2026-07-27T11:58:00Z'},provenance:p}]:[];
+      var tools=isTravel?[{tool_id:'tool.travel.search',automation_id:automationId,connection_id:'connection.travel.catalog',name:{ru:'Найти тур',en:'Search trips'},version:'1.0.0',input_schema:{type:'object',additionalProperties:false,properties:{destination:{type:'string'}}},output_schema:{type:'object',additionalProperties:false,properties:{offers:{type:'array'}}},risk_class:'read',side_effects:'none',timeout_ms:5000,permissions:['travel:read'],provenance:p}]:[];
+      var extensions=isTravel?[{extension_id:'extension.travel.audit',automation_ids:[automationId],name:{ru:'Аудит поиска',en:'Search audit'},version:'1.0.0',hooks:['authorize','after_call'],package_sha256:'2222222222222222222222222222222222222222222222222222222222222222',provenance:{kind:'shared',source_id:'shared.extension.travel.audit',source_version:'1.0.0',sha256:'3333333333333333333333333333333333333333333333333333333333333333'}}]:[];
+      var bindings=isTravel?[{binding_id:'binding.travel.search',automation_id:automationId,platform_agent_id:'agent_demo_fixture_valid_beta',tool_id:'tool.travel.search',extension_ids:['extension.travel.audit'],enabled:true,permission_policy:{allow:['travel:read'],deny:[]},provenance:p}]:[];
+      var evidence=isTravel?[{evidence_id:'evidence.travel.search.001',automation_id:automationId,platform_agent_id:'agent_demo_fixture_valid_beta',tool_id:'tool.travel.search',binding_id:'binding.travel.search',occurred_at:'2026-07-27T11:55:00Z',status:'SUCCEEDED',latency_ms:184,cost:null,input_sha256:'4444444444444444444444444444444444444444444444444444444444444444',output_sha256:'5555555555555555555555555555555555555555555555555555555555555555',provenance:p}]:[];
+      var row=demoAutomationRegistry().rows.find(function(item){return item.automation_id===automationId;}),agents=componentArrays(row&&row.components).platform_agents.map(function(item){var id=String(item&&item.id||'');return {platform_agent_id:id||null,component_state:item&&item.state||'UNKNOWN',tool_binding_count:bindings.filter(function(binding){return binding.platform_agent_id===id;}).length};});
+      return {schema:'extella.evolution.mcp_read_response.v1',tool:'automations.get_composition',request_id:'demo_mcp_read',context:{actor_id:'demo_actor',account_id:'demo_actor',tenant_id:'demo_actor'},snapshot:{schema:'extella.evolution.mcp_read_snapshot.v1',snapshot_id:'mcp_read_demo_fixture',captured_at:'2026-07-27T12:00:00Z',complete:true,sources:[{id:'automation_registry',schema:'extella.evolution.automation_registry.v1',checked_at:'2026-07-27T12:00:00Z',complete:true},{id:'mcp_registry',schema:'extella.evolution.mcp_registry.v1',checked_at:'2026-07-27T12:00:00Z',complete:true}]},data:{complete:true,automation_id:automationId,components:clone(row&&row.components||{}),mcp:{complete:true,connections:connections,tools:tools,extensions:extensions,bindings:bindings,run_evidence:evidence},agent_cabinet:{surface:'Agent Cabinet',agents:agents}},warnings:[]};
+    }
     function mockRequest(action,payload){
       if(action==='automation_registry_load')return {actorId:'demo_actor',registry:demoAutomationRegistry(),legacy:mockRequest('fleet_load',payload)};
-      if(action==='fleet_load')return {actorId:'demo_actor',projection:demoProjection(),stableIdRequired:[{sourcePassport:'demo_unbound_passport',sourcePath:'agents/demo-unbound.yaml',name:'Demo unbound Agent Passport',passportSha256:'0000000000000000000000000000000000000000000000000000000000000000',checkerIssues:[{code:'AGENT_PLATFORM_ID_REQUIRED',severity:'error',path:'agent.platform_agent_id',message_ru:'Нужен стабильный platform_agent_id',message_en:'A stable platform_agent_id is required'}]}],shared:{complete:true,snapshotId:'demo_genes_1',genes:[{geneId:'shared.demo.approval_guard',kind:'rule',name:'Approval guard',version:'1.0.0',consumerAgentIds:['demo_agent_01','demo_agent_02','demo_agent_03'],consumers:[{platformAgentId:'demo_agent_01',activeVersion:'1.0.0'},{platformAgentId:'demo_agent_02',activeVersion:'1.0.0'},{platformAgentId:'demo_agent_03',activeVersion:'1.0.0'}],lastChanged:'2026-07-20T10:00:00Z'}],byAgent:{demo_agent_01:['shared.demo.approval_guard'],demo_agent_02:['shared.demo.approval_guard'],demo_agent_03:['shared.demo.approval_guard']}},standards:{dataMode:'DEMO_FIXTURE',deliveryMode:'STATIC_BUILD_ARTIFACT',accountScoped:false,productionEligible:false,liveProjectionAllowed:false,commit:'demo-standards',checkerSha256:'demo'},platform:{evolutionLabAdapter:'PLATFORM_UNAVAILABLE',classActivationAdapter:'PLATFORM_UNAVAILABLE',classObservationAdapter:'PLATFORM_UNAVAILABLE',classRollbackAdapter:'PLATFORM_UNAVAILABLE',scheduleStateAdapter:'PLATFORM_UNAVAILABLE',nativeScheduleAdapter:'PLATFORM_UNAVAILABLE',bulkActivationAdapter:'PLATFORM_UNAVAILABLE',bulkObservationAdapter:'PLATFORM_UNAVAILABLE',bulkRollbackAdapter:'PLATFORM_UNAVAILABLE'},ledger:{ownerAccountId:'demo_actor',evolution:{currentEscalationId:'demo_candidate_1',escalations:{demo_candidate_1:{candidateId:'demo_candidate_1',status:'PENDING_CLASS_DECISION',candidateBundleSha256:'0000000000000000000000000000000000000000000000000000000000000000',affectedAgentIds:['demo_agent_01','demo_agent_02','demo_agent_03'],actorId:'demo_actor'}},bulkOperations:{},receipts:{}}},receipts:[]};
+      if(action==='fleet_load')return {actorId:'demo_actor',projection:demoProjection(),stableIdRequired:[{sourcePassport:'demo_unbound_passport',sourcePath:'agents/demo-unbound.yaml',name:'Demo unbound Agent Passport',passportSha256:'0000000000000000000000000000000000000000000000000000000000000000',checkerIssues:[{code:'AGENT_PLATFORM_ID_REQUIRED',severity:'error',path:'agent.platform_agent_id',message_ru:'Нужен стабильный platform_agent_id',message_en:'A stable platform_agent_id is required'}]}],shared:{complete:true,snapshotId:'demo_genes_1',genes:[{geneId:'shared.demo.approval_guard',kind:'rule',name:'Approval guard',version:'1.0.0',consumerAgentIds:['agent_demo_fixture_valid_alpha','agent_demo_fixture_valid_beta','agent_demo_fixture_warning_only'],consumers:[{platformAgentId:'agent_demo_fixture_valid_alpha',activeVersion:'1.0.0'},{platformAgentId:'agent_demo_fixture_valid_beta',activeVersion:'1.0.0'},{platformAgentId:'agent_demo_fixture_warning_only',activeVersion:'1.0.0'}],lastChanged:'2026-07-20T10:00:00Z'}],byAgent:{agent_demo_fixture_valid_alpha:['shared.demo.approval_guard'],agent_demo_fixture_valid_beta:['shared.demo.approval_guard'],agent_demo_fixture_warning_only:['shared.demo.approval_guard']}},standards:{dataMode:'DEMO_FIXTURE',deliveryMode:'STATIC_BUILD_ARTIFACT',accountScoped:false,productionEligible:false,liveProjectionAllowed:false,commit:'demo-standards',checkerSha256:'demo'},platform:{evolutionLabAdapter:'PLATFORM_UNAVAILABLE',classActivationAdapter:'PLATFORM_UNAVAILABLE',classObservationAdapter:'PLATFORM_UNAVAILABLE',classRollbackAdapter:'PLATFORM_UNAVAILABLE',scheduleStateAdapter:'PLATFORM_UNAVAILABLE',nativeScheduleAdapter:'PLATFORM_UNAVAILABLE',bulkActivationAdapter:'PLATFORM_UNAVAILABLE',bulkObservationAdapter:'PLATFORM_UNAVAILABLE',bulkRollbackAdapter:'PLATFORM_UNAVAILABLE'},ledger:{ownerAccountId:'demo_actor',evolution:{currentEscalationId:'demo_candidate_1',escalations:{demo_candidate_1:{candidateId:'demo_candidate_1',status:'PENDING_CLASS_DECISION',candidateBundleSha256:'0000000000000000000000000000000000000000000000000000000000000000',affectedAgentIds:['agent_demo_fixture_valid_alpha','agent_demo_fixture_valid_beta','agent_demo_fixture_warning_only'],actorId:'demo_actor'}},bulkOperations:{},receipts:{}}},receipts:[]};
+      if(action==='mcp_read'){var args=payload&&payload.arguments||{};if(payload.tool!=='automations.get_composition'||!args.automation_id)throw new Error('Unsupported preview MCP read');return demoMcpComposition(args.automation_id);}
       if(action==='passport_draft')return {filename:'agent_passport_'+payload.agentId+'.json',draft:{agent:{platform_agent_id:payload.agentId,name:'Demo Agent',owner:'',business_goal:'',model_profile:'qwen3.7-max',version:'0.1.0',languages:['ru','en']},capabilities:[],shared_genes:[],budgets:{max_duration_ms:null,max_llm_tokens:null,max_delegation_depth:null,max_external_actions:null},operations:{success_metric:'',owner_on_call:''},draft_status:'NOT_VALIDATED'}};
       if(action.indexOf('escalation_')===0||action.indexOf('bulk_')===0)throw new Error(t('productionRequired'));
       throw new Error('Unsupported preview action '+action);
@@ -850,10 +870,65 @@
         ['enable_disable',t('actionEnableDisable')],['update',t('actionUpdate')],['rollback',t('actionRollback')]
       ].map(function(spec){var gate=source[spec[0]]&&typeof source[spec[0]]==='object'?source[spec[0]]:{},code=String(gate.reason_code||gate.reasonCode||(status==='STATE_UNAVAILABLE'||status==='UNKNOWN'?'STATE_REQUIRED':'NOT_IMPLEMENTED'));return '<span class="action-gate" data-action-gate="'+esc(spec[0])+'"><b>'+esc(spec[1])+'</b><small>'+esc(actionGateMessage(gate,status))+' <code>'+esc(code)+'</code></small></span>';}).join('')+'</div></div>';
     }
+    function mcpName(row){var name=row&&row.name;return name&&typeof name==='object'?String(name[WLANG]||name.ru||name.en||t('unknown')):factText(name);}
+    function mcpRiskText(row){var risk=String(row&&row.risk_class||'').toLowerCase();return risk==='read'?t('readOnlyTool'):risk==='reversible_write'?t('reversibleTool'):risk==='irreversible_or_external_write'?t('externalTool'):t('unknown');}
+    function mcpHealth(row){
+      var status=String(row&&row.health&&row.health.status||'UNKNOWN').toUpperCase();
+      if(status==='UP')return {kind:'good',mark:'✓',label:t('connectionUp')};
+      if(status==='DOWN')return {kind:'bad',mark:'✕',label:t('connectionDown')};
+      return {kind:'warn',mark:'⚠',label:t('connectionUnknown')};
+    }
+    function countText(count,one,few,many){
+      if(WLANG==='en')return String(count)+' '+t(count===1?one:many);
+      var mod10=count%10,mod100=count%100,key=mod10===1&&mod100!==11?one:(mod10>=2&&mod10<=4&&(mod100<12||mod100>14)?few:many);
+      return String(count)+' '+t(key);
+    }
+    function renderMcpCompositionContent(automationId){
+      var entry=state.mcpByAutomation[automationId];
+      if(!entry||entry.status==='loading')return '<p>'+esc(t('mcpLoading'))+'</p>';
+      if(entry.status==='error')return '<p><span class="state warn"><span aria-hidden="true">⚠</span> '+esc(t('mcpUnavailable'))+'</span></p><p>'+esc(entry.message||t('mcpIncomplete'))+'</p><button class="ghost sm" type="button" data-mcp-retry="'+esc(automationId)+'">'+esc(t('retry'))+'</button>';
+      var response=entry.response||{},data=response.data||{},mcp=data.mcp||{},connections=Array.isArray(mcp.connections)?mcp.connections:[],tools=Array.isArray(mcp.tools)?mcp.tools:[],extensions=Array.isArray(mcp.extensions)?mcp.extensions:[],bindings=Array.isArray(mcp.bindings)?mcp.bindings:[],evidence=Array.isArray(mcp.run_evidence)?mcp.run_evidence.slice():[];
+      var incomplete=data.complete!==true||!response.snapshot||response.snapshot.complete!==true;
+      var connectionRows=connections.map(function(connection){var health=mcpHealth(connection);return '<li><b>'+esc(mcpName(connection))+'</b><small><span class="state '+esc(health.kind)+'"><span aria-hidden="true">'+esc(health.mark)+'</span> '+esc(health.label)+'</span></small></li>';}).join('');
+      var toolRows=tools.map(function(tool){return '<li><b>'+esc(mcpName(tool))+'</b><small>'+esc(mcpRiskText(tool))+' · v'+esc(tool.version||t('unknown'))+'</small></li>';}).join('');
+      var agentCounts={};bindings.forEach(function(binding){var id=String(binding&&binding.platform_agent_id||'');if(id&&binding.enabled===true)agentCounts[id]=(agentCounts[id]||0)+1;});
+      var bindingRows=Object.keys(agentCounts).sort().map(function(id){return '<span class="consumer"><code>'+esc(id)+'</code> · '+esc(countText(agentCounts[id],'toolBinding','toolBindingsFew','toolBindingsMany'))+'</span>';}).join('');
+      evidence.sort(function(left,right){return String(right&&right.occurred_at||'').localeCompare(String(left&&left.occurred_at||''));});
+      var latest=evidence[0],technical='<details class="technical-details"><summary>'+esc(t('technicalEvidence'))+'</summary><div class="technical-details-body">'+
+        connections.map(function(row){return '<span class="mono">MCP Connection · '+esc(row.connection_id)+' · '+esc(row.transport||t('unknown'))+'</span>';}).join('')+
+        tools.map(function(row){return '<span class="mono">Tool Contract · '+esc(row.tool_id)+' · '+esc(row.risk_class||t('unknown'))+' · '+esc(row.provenance&&row.provenance.kind||t('unknown'))+'</span>';}).join('')+
+        extensions.map(function(row){return '<span class="mono">MCP Extension · '+esc(row.extension_id)+' · v'+esc(row.version||t('unknown'))+'</span>';}).join('')+
+        bindings.map(function(row){return '<span class="mono">Tool Binding · '+esc(row.binding_id)+' · '+esc(row.platform_agent_id||t('unknown'))+'</span>';}).join('')+
+        '</div></details>';
+      return '<div class="mcp-overview"><div class="mcp-overview-head"><b>'+esc(t('automationTools'))+'</b><span class="mcp-counts">'+esc(countText(connections.length,'mcpConnectionOne','mcpConnectionFew','mcpConnections'))+' · '+esc(countText(tools.length,'mcpToolOne','mcpToolFew','mcpTools'))+' · '+esc(countText(extensions.length,'mcpExtensionOne','mcpExtensionFew','mcpExtensions'))+'</span></div>'+
+        (incomplete?'<p><span class="state warn"><span aria-hidden="true">⚠</span> '+esc(t('mcpIncomplete'))+'</span></p>':'')+
+        (connectionRows?'<ul class="mcp-list">'+connectionRows+'</ul>':'')+
+        (toolRows?'<ul class="mcp-list">'+toolRows+'</ul>':'<p>'+esc(t('noTools'))+'</p>')+
+        (bindingRows?'<div><b>'+esc(t('toolBindings'))+'</b><div class="mcp-agent-bindings">'+bindingRows+'</div></div>':'')+
+        (latest?'<p><b>'+esc(t('lastToolRun'))+':</b> '+esc(resultText(latest.status))+' · '+esc(fmtTime(latest.occurred_at))+'</p>':'')+
+        technical+'</div>';
+    }
+    function renderMcpCompositionHost(automationId){
+      var host=Array.from(el('fleetRows').querySelectorAll('[data-mcp-composition]')).find(function(node){return node.dataset.mcpComposition===automationId;});if(!host)return;
+      host.innerHTML=renderMcpCompositionContent(automationId);var retry=host.querySelector('[data-mcp-retry]');if(retry)retry.onclick=function(){delete state.mcpByAutomation[automationId];loadMcpComposition(automationId);};
+    }
+    async function loadMcpComposition(automationId){
+      var existing=state.mcpByAutomation[automationId],epoch=state.accountEpoch,mcpEpoch=state.mcpEpoch;if(existing&&['loading','ready'].indexOf(existing.status)!==-1)return;
+      state.mcpByAutomation[automationId]={status:'loading'};renderMcpCompositionHost(automationId);
+      try{
+        var response=await request('mcp_read',{tool:'automations.get_composition',arguments:{automation_id:automationId}});
+        if(epoch!==state.accountEpoch||mcpEpoch!==state.mcpEpoch)return;
+        if(!response||response.schema!=='extella.evolution.mcp_read_response.v1'||response.tool!=='automations.get_composition'||!response.data||response.data.automation_id!==automationId||!response.data.mcp)throw new Error(t('mcpUnavailable'));
+        state.mcpByAutomation[automationId]={status:'ready',response:response};
+      }catch(error){if(epoch!==state.accountEpoch||mcpEpoch!==state.mcpEpoch)return;state.mcpByAutomation[automationId]={status:'error',message:error&&error.message||t('mcpUnavailable')};}
+      renderMcpCompositionHost(automationId);
+    }
     function renderAutomationComposition(row){
-      var groups=componentArrays(row.components),order=['platform_agents','experts','services','integrations','knowledge','rules'];
-      var body=order.map(function(key){return renderComponentGroup(key,groups[key]);}).join('');
-      return '<details class="composition" data-internal-agents="collapsed"><summary>'+esc(t('composition'))+'</summary><div class="composition-body">'+body+'</div></details>';
+      var automationId=String(row&&row.automation_id||''),groups=componentArrays(row.components),order=['platform_agents','experts','services','integrations','knowledge','rules'];
+      var body=order.filter(function(key){return groups[key].length>0;}).map(function(key){return renderComponentGroup(key,groups[key]);}).join('');
+      if(!body)body='<p>'+esc(t('noData'))+'</p>';
+      body+='<div class="component-group" data-mcp-composition="'+esc(automationId)+'">'+renderMcpCompositionContent(automationId)+'</div>';
+      return '<details class="composition" data-internal-agents="collapsed" data-automation-composition="'+esc(automationId)+'"><summary>'+esc(t('composition'))+'</summary><div class="composition-body">'+body+'</div></details>';
     }
     function renderAutomationRisks(row){
       var flags=automationFlags(row),risks=automationRisks(row),badges=[];
@@ -938,6 +1013,7 @@
       rows=rows.slice().sort(function(left,right){var attention=Number(automationNeedsAttention(right))-Number(automationNeedsAttention(left));return attention||automationName(left).localeCompare(automationName(right));});
       el('fleetRows').innerHTML=rows.length?rows.map(renderAutomationCard).join(''):'<div class="empty">'+esc(t(allRows.length?'noMatches':'noData'))+'</div>';
       el('fleetRows').querySelectorAll('[data-cab]').forEach(function(button){button.onclick=function(){state.cabinetTrigger=button;openCabinet(button.dataset.cab);};});
+      el('fleetRows').querySelectorAll('[data-automation-composition]').forEach(function(details){details.ontoggle=function(){if(details.open)loadMcpComposition(details.dataset.automationComposition);};});
       syncFilterControls();renderBulkTargetPicker();
     }
     function statusMark(kind){return kind==='good'?'✓':kind==='bad'?'✕':'⚠';}
@@ -1010,7 +1086,7 @@
     function renderReceipts(){el('receiptList').innerHTML=state.receipts.length?state.receipts.slice().reverse().map(function(r){return '<article class="receipt"><b>'+esc(r.type||'Evolution Receipt')+'</b><p>'+esc(fmtTime(r.at))+' · '+esc(r.status||'RECORDED')+'</p><code>'+esc(r.sha256||'—')+'</code></article>';}).join(''):'<div class="empty">'+esc(t('noData'))+'</div>';}
     function renderAll(){renderFleet();renderRisks();renderStableIdRequired();renderGenes();renderEscalations();renderBulk();renderReceipts();renderBoundary();el('escalationEvidence').textContent=state.lastEscalationEvidence?JSON.stringify(state.lastEscalationEvidence,null,2):'—';}
     async function loadFleet(){
-      showError('');state.automationRegistryError=null;el('fleetRegistry').setAttribute('aria-busy','true');el('fleetRows').innerHTML='<tr><td colspan="5" class="empty">'+esc(t('loading'))+'</td></tr>';
+      showError('');state.automationRegistryError=null;state.mcpEpoch++;state.mcpByAutomation=Object.create(null);el('fleetRegistry').setAttribute('aria-busy','true');el('fleetRows').innerHTML='<tr><td colspan="5" class="empty">'+esc(t('loading'))+'</td></tr>';
       try{var result=await request('automation_registry_load',{});if(!applyAutomationRegistryResult(result))throw new Error(t('registryIncomplete'));ensureLegacyFleet();return true;}
       catch(e){state.automationRegistry=null;state.automationRegistryError=e&&e.message||t('registryIncomplete');clearLegacyFleet();renderAll();el('fleetRegistry').setAttribute('aria-busy','false');showError(state.automationRegistryError);return false;}
     }
@@ -1021,7 +1097,7 @@
     }
     async function refreshAfterMutation(kind,result){
       if(kind==='escalation')state.lastEscalationEvidence=result;else state.lastBulkEvidence=result;
-      state.automationRegistry=null;state.automationRegistryError=null;state.legacyLoading=false;state.actorId=null;state.projection=null;state.stableIdRequired=[];state.stableTargetBySource=Object.create(null);state.shared=null;state.standards=null;state.platform=null;state.ledger=null;state.escalations=[];state.currentEscalationId=null;state.selectedEscalationId=null;state.bulkOperations=[];state.currentBulkOperationId=null;state.selectedBulkOperationId=null;state.bulk=null;state.receipts=[];renderAll();
+      state.automationRegistry=null;state.automationRegistryError=null;state.legacyLoading=false;state.actorId=null;state.projection=null;state.stableIdRequired=[];state.stableTargetBySource=Object.create(null);state.shared=null;state.standards=null;state.platform=null;state.ledger=null;state.escalations=[];state.currentEscalationId=null;state.selectedEscalationId=null;state.bulkOperations=[];state.currentBulkOperationId=null;state.selectedBulkOperationId=null;state.bulk=null;state.receipts=[];state.mcpEpoch++;state.mcpByAutomation=Object.create(null);renderAll();
       if(!await loadFleet())throw new Error('Mutation completed, but the required fresh fleet snapshot could not be loaded.');
       if(kind==='escalation')setView('escalations');else setView('bulk');
     }
@@ -1104,7 +1180,7 @@
       state.accountEpoch++;state.pending.forEach(function(p){clearTimeout(p.timer);p.reject(new Error('Account context changed; stale result discarded.'));});state.pending.clear();
       state.automationRegistry=null;state.automationRegistryError=null;state.legacyLoading=false;state.actorId=null;state.projection=null;state.stableIdRequired=[];state.stableTargetBySource=Object.create(null);state.shared=null;state.standards=null;state.platform=null;state.ledger=null;state.escalations=[];state.bulkOperations=[];state.bulk=null;state.receipts=[];state.draft=null;
       state.cabinetAgentId=null;state.cabinetGeneId=null;state.cabinetArtifactBase=null;state.currentEscalationId=null;state.selectedEscalationId=null;state.currentBulkOperationId=null;state.selectedBulkOperationId=null;state.selectedBulkGeneId=null;state.selectedBulkIds=[];state.lastEscalationEvidence=null;state.lastBulkEvidence=null;
-      state.lastLoadedAt=null;state.focusRiskAgentId=null;state.cabinetTrigger=null;
+      state.lastLoadedAt=null;state.focusRiskAgentId=null;state.cabinetTrigger=null;state.mcpEpoch++;state.mcpByAutomation=Object.create(null);
       el('searchInput').value='';el('filterSelect').value='installed';el('bulkType').value='shared_gene_change';el('bulkVersionInput').value='';el('cabinetVersionInput').value='';
       el('standardsBadge').textContent='STANDARD —';el('standardsBadge').className='badge';el('cabinetTitle').textContent='Agent Cabinet';el('cabinetHost').innerHTML='';el('cabinetGeneSelect').innerHTML='';el('cabinetImpact').textContent='';el('cabinetEscalateBtn').disabled=true;
       el('advancedNav').open=false;el('cabinetOverlay').classList.remove('on');window._cab=null;setView('fleet');renderAll();showError(message||'');

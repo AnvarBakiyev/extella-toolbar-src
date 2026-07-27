@@ -52,7 +52,7 @@ test('Evolution Console manifest keeps exact product naming and a read-only surf
     evolutionManifest.description,
     'Evolution Console показывает, что работает, что остановлено и где нужна помощь. Каталог отделён от установленных автоматизаций, а неизвестное состояние не подменяется успехом.',
   );
-  assert.equal(evolutionManifest.version, '0.7.0');
+  assert.equal(evolutionManifest.version, '0.8.0');
   assert.deepEqual(evolutionManifest.pills, [
     'Автоматизации',
     'Состояние',
@@ -93,6 +93,7 @@ test('Evolution Console manifest keeps exact product naming and a read-only surf
       'automation_registry',
       'evolution_lab',
       'evolution_loop',
+      'mcp_read_inventory',
       'shared_genes_map',
     ],
   );
@@ -112,6 +113,12 @@ test('Evolution Console manifest keeps exact product naming and a read-only surf
       (capability) => capability.id === 'automation_registry',
     ).version,
     'EVOLUTION_AUTOMATION_REGISTRY_V2',
+  );
+  assert.equal(
+    evolutionManifest.capabilities.find(
+      (capability) => capability.id === 'mcp_read_inventory',
+    ).version,
+    'EVOLUTION_MCP_READ_CONTRACT_V1',
   );
 
   const completeSurface = `${JSON.stringify(evolutionManifest)}\n${evolutionHtml}`;
@@ -395,7 +402,7 @@ test('B4 automation state is three-valued, factual, localized, and fail-closed',
     'function renderAutomationActionGates(row)',
   );
   const actionGateEnd = evolutionHtml.indexOf(
-    'function renderAutomationComposition(row)',
+    'function mcpName(row)',
     actionGateStart,
   );
   assert.ok(actionGateStart >= 0 && actionGateEnd > actionGateStart);

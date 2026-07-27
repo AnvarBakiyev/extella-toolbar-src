@@ -317,7 +317,7 @@ test('automation action evidence is text-only while fail-closed reasons remain',
     'function renderAutomationActionGates(row)',
   );
   const actionsEnd = consoleHtml.indexOf(
-    'function renderAutomationComposition(row)',
+    'function mcpName(row)',
     actionsStart,
   );
   assert.ok(actionsStart >= 0 && actionsEnd > actionsStart);
@@ -396,7 +396,7 @@ test('Agent Cabinet is available only from collapsed automation composition', ()
   );
   assert.match(
     compositionRenderer,
-    /<details class="composition" data-internal-agents="collapsed">/,
+    /<details class="composition" data-internal-agents="collapsed"[^>]*>/,
   );
   assert.doesNotMatch(
     compositionRenderer,
