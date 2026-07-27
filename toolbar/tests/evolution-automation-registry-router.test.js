@@ -45,7 +45,7 @@ function plain(value) {
 test('router maps the provider snapshot into the exact pure projection input', () => {
   const mapProjection = loadMapper();
   const result = plain(mapProjection({
-    schemaVersion: 'extella.evolution.automation-registry-sources.v1',
+    schemaVersion: 'extella.evolution.automation-registry-sources.v2',
     collectedAt: '2026-07-26T20:00:00.000Z',
     complete: false,
     sources: {
@@ -55,6 +55,9 @@ test('router maps the provider snapshot into the exact pure projection input', (
       platformAgents: { available: true, errors: [] },
       platformExperts: { available: true, errors: [] },
       schedules: { available: true, errors: [] },
+      automationStates: { available: true, errors: [] },
+      automationRuns: { available: true, errors: [] },
+      schedulerIndex: { available: true, errors: [] },
       deviceCards: { available: false, errors: [{}] },
     },
     catalogItems: [{ id: 'extella_1c_agent' }],
@@ -82,6 +85,26 @@ test('router maps the provider snapshot into the exact pure projection input', (
       descriptor: { automationId: 'ignored_failed_schedule' },
       value: true,
     }],
+    runtimeStateRows: [{
+      automationId: 'extella_1c_agent',
+      runtime: {
+        configured: true,
+        state: { available: false, responded: true },
+      },
+    }],
+    automationStateFacts: [{
+      automationId: 'extella_1c_agent',
+      available: true,
+      present: true,
+      value: { enabled: true, status: 'active' },
+    }],
+    automationRunFacts: [{
+      automationId: 'extella_1c_agent',
+      available: true,
+      present: true,
+      value: { latest: { ts: 1785100000000, ok: true }, count: 1 },
+    }],
+    schedulerIndexSids: ['wz_20260709_travel'],
     errors: [{
       source: '_mkt_automations',
       code: 'GLOBAL_KV_SOURCE_UNAVAILABLE',
@@ -114,6 +137,26 @@ test('router maps the provider snapshot into the exact pure projection input', (
     automation_id: 'extella_travel_agency',
     active: false,
   }]);
+  assert.deepEqual(result.runtimeStates, [{
+    automation_id: 'extella_1c_agent',
+    runtime: {
+      configured: true,
+      state: { available: false, responded: true },
+    },
+  }]);
+  assert.deepEqual(result.automationStates, [{
+    automation_id: 'extella_1c_agent',
+    available: true,
+    present: true,
+    value: { enabled: true, status: 'active' },
+  }]);
+  assert.deepEqual(result.automationRuns, [{
+    automation_id: 'extella_1c_agent',
+    available: true,
+    present: true,
+    value: { latest: { ts: 1785100000000, ok: true }, count: 1 },
+  }]);
+  assert.deepEqual(result.schedulerIndexSids, ['wz_20260709_travel']);
   assert.deepEqual(result.sourceErrors, [{
     source: 'catalog',
     code: 'GLOBAL_KV_SOURCE_UNAVAILABLE',
@@ -130,6 +173,10 @@ test('router maps the provider snapshot into the exact pure projection input', (
     platform_agents: true,
     experts: true,
     schedules: true,
+    runtime_state: false,
+    automation_state: true,
+    automation_runs: true,
+    scheduler_index: true,
     local_installed: true,
     composer_installed: true,
   });
@@ -154,7 +201,7 @@ test('provider contract rejects a contradictory complete source snapshot', () =>
   const mapProjection = loadMapper();
   assert.throws(
     () => mapProjection({
-      schemaVersion: 'extella.evolution.automation-registry-sources.v1',
+      schemaVersion: 'extella.evolution.automation-registry-sources.v2',
       collectedAt: '2026-07-26T20:00:00.000Z',
       complete: true,
       sources: {
@@ -164,6 +211,9 @@ test('provider contract rejects a contradictory complete source snapshot', () =>
         platformAgents: { available: true, errors: [] },
         platformExperts: { available: true, errors: [] },
         schedules: { available: true, errors: [] },
+        automationStates: { available: true, errors: [] },
+        automationRuns: { available: true, errors: [] },
+        schedulerIndex: { available: true, errors: [] },
         deviceCards: { available: true, errors: [] },
       },
       catalogItems: [],
@@ -171,6 +221,10 @@ test('provider contract rejects a contradictory complete source snapshot', () =>
       platformAgentRows: [],
       platformExpertRows: [],
       scheduleFacts: [],
+      runtimeStateRows: [],
+      automationStateFacts: [],
+      automationRunFacts: [],
+      schedulerIndexSids: [],
       browserInstalledIds: [],
       composerInstalledItems: [],
       errors: [],

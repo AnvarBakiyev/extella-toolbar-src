@@ -47,9 +47,9 @@ test('Evolution Console manifest keeps exact product naming and a read-only surf
   assert.equal(evolutionManifest.tagline, 'Единый реестр автоматизаций');
   assert.equal(
     evolutionManifest.description,
-    'Поверхность Extella Evolution для единого read-only реестра автоматизаций пользователя: каталог и установки разделены, отставшие версии и мёртвые ссылки вычисляются автоматически.',
+    'Поверхность Extella Evolution для честного read-only реестра автоматизаций пользователя: каталог и установки разделены, состояние не выдумывается, отставшие версии и мёртвые ссылки вычисляются автоматически.',
   );
-  assert.equal(evolutionManifest.version, '0.5.0');
+  assert.equal(evolutionManifest.version, '0.6.0');
   assert.equal(evolutionManifest.trust_tier, 'verified');
   assert.equal(evolutionManifest.ui.type, 'html');
   assert.equal(evolutionManifest.ui.htmlFile, 'evolution-console.html');
@@ -103,7 +103,7 @@ test('Evolution Console manifest keeps exact product naming and a read-only surf
     evolutionManifest.capabilities.find(
       (capability) => capability.id === 'automation_registry',
     ).version,
-    'EVOLUTION_AUTOMATION_REGISTRY_V1',
+    'EVOLUTION_AUTOMATION_REGISTRY_V2',
   );
 
   const completeSurface = `${JSON.stringify(evolutionManifest)}\n${evolutionHtml}`;
@@ -314,6 +314,140 @@ test('automation registry surface exposes no automation state-changing action', 
     /action === 'automation_(?:enable|disable|update|rollback|delete|install)'/,
   );
   assert.match(router, /action === 'automation_registry_load'/);
+});
+
+test('B4 automation state is three-valued, factual, localized, and fail-closed', () => {
+  for (const status of ['WORKING', 'STATE_UNAVAILABLE', 'NOT_RUNNING']) {
+    assert.match(
+      evolutionHtml,
+      new RegExp(`'${status}'`),
+      `${status} must remain an explicit machine-readable state`,
+    );
+  }
+  for (const copy of [
+    "automationWorking:'Работает'",
+    "automationStateUnavailable:'Состояние недоступно'",
+    "automationNotRunning:'Не запущена'",
+    "automationWorking:'Working'",
+    "automationStateUnavailable:'State unavailable'",
+    "automationNotRunning:'Not running'",
+  ]) {
+    assert.match(evolutionHtml, new RegExp(regexEscape(copy)));
+  }
+  assert.match(
+    evolutionHtml,
+    /function automationOperationalStatus\(row\)[\s\S]{0,320}\['WORKING','STATE_UNAVAILABLE','NOT_RUNNING'\]/,
+  );
+  assert.match(evolutionHtml, /data-automation-state=/);
+  for (const field of [
+    'active_version',
+    'last_run',
+    'last_result',
+    'last_error',
+  ]) {
+    assert.match(
+      evolutionHtml,
+      new RegExp(`data-state-field="${field}"`),
+      `${field} must be rendered as an explicit state fact`,
+    );
+  }
+  assert.match(
+    evolutionHtml,
+    /function unknownFact\(v\)\{return v==null\|\|v===''[\s\S]{0,80}UNKNOWN/,
+  );
+  assert.match(
+    evolutionHtml,
+    /function factText\(v\)\{return unknownFact\(v\)\?t\('unknown'\):String\(v\);\}/,
+  );
+  assert.match(
+    evolutionHtml,
+    /error\[WLANG==='en'\?'message_en':'message_ru'\]/,
+    'last_error must select the service-provided localized message',
+  );
+  assert.match(evolutionHtml, /<code>'\+esc\(code\)\+'<\/code> · /);
+  assert.match(evolutionHtml, /row&&row\.action_gates/);
+  assert.match(
+    evolutionHtml,
+    /\['enable_disable',t\('actionEnableDisable'\)\],\['update',t\('actionUpdate'\)\],\['rollback',t\('actionRollback'\)\]/,
+  );
+  assert.match(evolutionHtml, /data-action-gate=/);
+  assert.match(
+    evolutionHtml,
+    /<button class="ghost sm" type="button" disabled>/,
+    'automation controls are explanatory, disabled controls only',
+  );
+  assert.match(
+    evolutionHtml,
+    /view\.status==='STATE_UNAVAILABLE'\|\|view\.status==='UNKNOWN'/,
+  );
+  assert.doesNotMatch(evolutionHtml, /data-automation-action=/);
+});
+
+test('B4 schedule status separates operation from reference integrity', () => {
+  assert.match(
+    evolutionHtml,
+    /operational_status:'NO_SCHEDULE',reference_status:'MISSING'/,
+    'preview must exercise the live Travel no-schedule plus dead-reference case',
+  );
+  assert.match(evolutionHtml, /scheduleNone:'Расписания нет'/);
+  assert.match(evolutionHtml, /scheduleNone:'No schedule'/);
+  assert.match(
+    evolutionHtml,
+    /if\(status==='NO_SCHEDULE'\)return \{status:status,kind:'',mark:'○',label:t\('scheduleNone'\)\}/,
+    'NO_SCHEDULE must stay neutral rather than masquerading as working or error',
+  );
+  assert.match(
+    evolutionHtml,
+    /if\(status==='MISSING'\)return \{status:status,kind:'bad',mark:'✕',label:'dead_reference · '\+t\('scheduleReferenceMissing'\)\}/,
+  );
+  assert.match(evolutionHtml, /data-schedule-operational=/);
+  assert.match(evolutionHtml, /data-schedule-reference=/);
+  assert.match(evolutionHtml, /item\.operational_status\|\|item\.operationalStatus/);
+  assert.match(evolutionHtml, /item\.reference_status\|\|item\.referenceStatus/);
+});
+
+test('B4 keeps an unknown dead-reference fact unknown in UI and exports', () => {
+  assert.match(
+    evolutionHtml,
+    /dead_reference:triFlag\(flags\.dead_reference\)/,
+  );
+  assert.match(
+    evolutionHtml,
+    /f==='dead'&&flags\.dead_reference!==true/,
+  );
+  assert.match(
+    evolutionHtml,
+    /flags\.dead_reference==='UNKNOWN'[^;]+dead_reference · /,
+  );
+});
+
+test('B4 schedule bulk flow rechecks automation state before every dependent step', () => {
+  assert.match(evolutionHtml, /function scheduleAutomationStateGate\(\)/);
+  assert.match(
+    evolutionHtml,
+    /state\.automationRegistry\.rows\.filter\(function\(row\)\{return automationFlags\(row\)\.installed===true;\}\)/,
+  );
+  assert.match(
+    evolutionHtml,
+    /allowed:rows\.length>0&&unavailable\.length===0/,
+  );
+  assert.match(
+    evolutionHtml,
+    /scheduleAdapterAvailable\(\)&&scheduleAutomationStateGate\(\)\.allowed/,
+  );
+  assert.match(
+    evolutionHtml,
+    /scheduleOperation&&!scheduleStateGate\.allowed\?t\('scheduleStateRequired'\)/,
+  );
+  assert.match(
+    evolutionHtml,
+    /if\(\(type==='schedule_pause'\|\|type==='schedule_resume'\)&&!scheduleAutomationStateGate\(\)\.allowed\)\{showError\(t\('scheduleStateRequired'\)\);return;\}/,
+  );
+  assert.match(
+    evolutionHtml,
+    /if\(bulkOperationRequiresAutomationState\(state\.bulk\)&&!scheduleAutomationStateGate\(\)\.allowed\)throw new Error\(t\('scheduleStateRequired'\)\)/,
+  );
+  assert.match(evolutionHtml, /data-bulk-state-gate="STATE_REQUIRED"/);
 });
 
 test('Evolution Console contains fleet context only and delegates one-agent view to Agent Cabinet', () => {

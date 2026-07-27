@@ -4,10 +4,10 @@
   "featured": true,
   "name": "Evolution Console",
   "tagline": "Единый реестр автоматизаций",
-  "description": "Поверхность Extella Evolution для единого read-only реестра автоматизаций пользователя: каталог и установки разделены, отставшие версии и мёртвые ссылки вычисляются автоматически.",
+  "description": "Поверхность Extella Evolution для честного read-only реестра автоматизаций пользователя: каталог и установки разделены, состояние не выдумывается, отставшие версии и мёртвые ссылки вычисляются автоматически.",
   "category": "business",
   "type": "application",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "eye": "Extella Evolution",
   "pills": [
     "Автоматизации",
@@ -33,9 +33,9 @@
     {
       "id": "automation_registry",
       "name": "Реестр автоматизаций",
-      "description": "Read-only проекция каталога, установок, версий, состава и вычисляемых рисков автоматизаций пользователя.",
+      "description": "Read-only проекция каталога, установок, фактического состояния, версий, состава и вычисляемых рисков автоматизаций пользователя.",
       "expert_name": "_etb_evolution_registry_scan_v1",
-      "version": "EVOLUTION_AUTOMATION_REGISTRY_V1",
+      "version": "EVOLUTION_AUTOMATION_REGISTRY_V2",
       "external_writes": false
     },
     {
@@ -67,12 +67,12 @@
   "expert_defs": [
     {
       "name": "_etb_evolution_registry_scan_v1",
-      "description": "Read-only strict scanner for top-level current-device automation cards. It ignores backup-shaped files and never mutates the device registry.",
+      "description": "Read-only strict scanner for top-level current-device automation cards and bounded localhost state contracts. It ignores backup-shaped files and never mutates the device registry or automation state.",
       "cspl": "fython",
       "global": true,
       "kwargs": {},
       "codeFile": "evolution-registry-scanner.py",
-      "sourceSha256": "ab76ee5633353ebec87825b672eeb28c3b1c931c5426da26bda46370fff68134"
+      "sourceSha256": "8105169ded773e00e3ab383159d6b01d8b274a0f9a8a96e0c394379f25082d1d"
     }
   ],
   "conceptTexts": [],

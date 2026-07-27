@@ -259,6 +259,72 @@ test('registry rows stay concise and delegate one-agent work to Agent Cabinet', 
   );
 });
 
+test('the primary automation row explains state before exposing deeper composition', () => {
+  const renderStart = consoleHtml.indexOf('function renderFleet()');
+  const renderEnd = consoleHtml.indexOf('function statusMark(', renderStart);
+  assert.ok(renderStart >= 0 && renderEnd > renderStart);
+  const renderFleet = consoleHtml.slice(renderStart, renderEnd);
+  assert.match(
+    renderFleet,
+    /renderAutomationState\(row\)/,
+    'automation state belongs in the primary fleet row',
+  );
+
+  const stateStart = consoleHtml.indexOf('function renderAutomationState(row)');
+  const stateEnd = consoleHtml.indexOf(
+    'function scheduleOperationalPresentation(',
+    stateStart,
+  );
+  assert.ok(stateStart >= 0 && stateEnd > stateStart);
+  const stateRenderer = consoleHtml.slice(stateStart, stateEnd);
+  for (const field of [
+    'active_version',
+    'last_run',
+    'last_result',
+    'last_error',
+  ]) {
+    assert.match(stateRenderer, new RegExp(`data-state-field="${field}"`));
+  }
+  assert.match(stateRenderer, /actionStateRequired/);
+  assert.doesNotMatch(
+    stateRenderer,
+    /enabled\s*\?\s*['"]WORKING/,
+    'the UI must not infer working from a cached boolean',
+  );
+});
+
+test('schedule and automation action details use plain-language fail-closed explanations', () => {
+  const compositionStart = consoleHtml.indexOf(
+    'function renderAutomationComposition(row)',
+  );
+  const compositionEnd = consoleHtml.indexOf(
+    'function renderAutomationRisks(',
+    compositionStart,
+  );
+  assert.ok(compositionStart >= 0 && compositionEnd > compositionStart);
+  const composition = consoleHtml.slice(compositionStart, compositionEnd);
+  assert.match(composition, /renderAutomationActionGates\(row\)/);
+
+  const actionsStart = consoleHtml.indexOf(
+    'function renderAutomationActionGates(row)',
+  );
+  assert.ok(actionsStart >= 0 && actionsStart < compositionStart);
+  const actionRenderer = consoleHtml.slice(actionsStart, compositionStart);
+  assert.match(actionRenderer, /type="button" disabled/);
+  assert.match(actionRenderer, /actionGateMessage\(gate,status\)/);
+  assert.doesNotMatch(actionRenderer, /onclick|data-automation-action/);
+
+  const scheduleStart = consoleHtml.indexOf('function renderScheduleItem(item)');
+  const scheduleEnd = consoleHtml.indexOf(
+    'function componentArrays(',
+    scheduleStart,
+  );
+  assert.ok(scheduleStart >= 0 && scheduleEnd > scheduleStart);
+  const scheduleRenderer = consoleHtml.slice(scheduleStart, scheduleEnd);
+  assert.match(scheduleRenderer, /scheduleOperational/);
+  assert.match(scheduleRenderer, /scheduleReference/);
+});
+
 test('the attention metric and attention cards share one aggregation', () => {
   const overview = viewSource('overview');
   assert.match(overview, /\bdata-summary-attention\b/);
@@ -348,6 +414,14 @@ test('the simplified overview has matching human copy in Russian and English', (
     viewReason: ['Посмотреть причины', 'Review issues'],
     openCabinet: ['Открыть Agent Cabinet', 'Open Agent Cabinet'],
     advanced: ['Дополнительно', 'More'],
+    automationWorking: ['Работает', 'Working'],
+    automationStateUnavailable: ['Состояние недоступно', 'State unavailable'],
+    automationNotRunning: ['Не запущена', 'Not running'],
+    scheduleNone: ['Расписания нет', 'No schedule'],
+    actionStateRequired: [
+      'Действие заблокировано: достоверное состояние автоматизации не получено.',
+      'Action blocked: a trustworthy automation state was not obtained.',
+    ],
   };
 
   for (const [key, [ruValue, enValue]] of Object.entries(copyContract)) {

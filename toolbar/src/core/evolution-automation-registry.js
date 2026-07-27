@@ -8,6 +8,8 @@ ETB.evolutionAutomationRegistry = (function () {
   var SCHEMA = 'extella.evolution.automation_registry.v1';
   var UNKNOWN = 'UNKNOWN';
   var ID_RE = /^[a-z0-9][a-z0-9._-]{1,79}$/;
+  var ISO_TIMESTAMP_RE =
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,9})?)?(?:Z|[+-]\d{2}:\d{2})?$/;
   var SEMVER_RE =
     /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/;
   var RELEASE_STATUSES = {
@@ -45,7 +47,7 @@ ETB.evolutionAutomationRegistry = (function () {
           id: 'job-pack-scheduler',
           kind: 'in-service',
           interval_s: 30,
-          state: 'UNKNOWN'
+          state: 'NOT_APPLICABLE'
         }],
         integrations: [
           { kind: '1c-com', external_writes: false, state: 'UNKNOWN' },
@@ -112,16 +114,19 @@ ETB.evolutionAutomationRegistry = (function () {
         }],
         schedules: [
           {
-            id: 'sched:wz_20260709_travel',
+            id: 'campaigns_birthday',
+            scheduler_sid: 'sched:wz_20260709_travel',
             kind: 'external-cron',
+            required: true,
             interval_s: 900,
             state: 'UNKNOWN'
           },
           {
-            id: 'ta:inbound:enabled',
-            kind: 'external-cron',
+            id: 'inbound_poller',
+            kind: 'internal-bridge',
+            required: false,
             interval_s: 60,
-            state: 'UNKNOWN'
+            state: 'NOT_APPLICABLE'
           }
         ],
         integrations: [
@@ -241,6 +246,26 @@ ETB.evolutionAutomationRegistry = (function () {
       severity: 'error',
       ru: 'Один из источников снимка недоступен.',
       en: 'One of the snapshot sources is unavailable.'
+    },
+    STATE_CONTRACT_INVALID: {
+      severity: 'error',
+      ru: 'Операционное состояние не подтверждено полным согласованным снимком.',
+      en: 'Operational state is not proven by a complete consistent snapshot.'
+    },
+    AUTOMATION_STATE_UNAVAILABLE: {
+      severity: 'error',
+      ru: 'Состояние автоматизации недоступно; зависимые действия заблокированы.',
+      en: 'The automation state is unavailable; dependent actions are blocked.'
+    },
+    ACTIVE_VERSION_MISMATCH: {
+      severity: 'error',
+      ru: 'Активная версия расходится с версией карточки устройства.',
+      en: 'The active version differs from the device-card version.'
+    },
+    SCHEDULE_REFERENCE_MISSING: {
+      severity: 'error',
+      ru: 'Обязательная ссылка расписания отсутствует в индексе планировщика.',
+      en: 'A required schedule reference is absent from the scheduler index.'
     }
   };
 
@@ -254,6 +279,17 @@ ETB.evolutionAutomationRegistry = (function () {
 
   function stringValue(value) {
     return typeof value === 'string' ? value.trim() : '';
+  }
+
+  function isoTimestamp(value) {
+    var exact = stringValue(value);
+    var parsed;
+    if (!exact || exact !== value || exact.length > 160 ||
+        !ISO_TIMESTAMP_RE.test(exact)) {
+      return false;
+    }
+    parsed = Date.parse(exact);
+    return isFinite(parsed);
   }
 
   function canonicalId(value) {
@@ -287,6 +323,68 @@ ETB.evolutionAutomationRegistry = (function () {
       knowledge: cloneJson(source && source.knowledge, []),
       rules: cloneJson(source && source.rules, [])
     };
+  }
+
+  function manifestScheduleDeclarations(manifest) {
+    var componentSchedules = manifest && object(manifest.components) ?
+      manifest.components.schedules : null;
+    var source = [];
+    var seen = {};
+    if (Array.isArray(manifest && manifest.schedules)) {
+      source = source.concat(manifest.schedules);
+    }
+    if (Array.isArray(componentSchedules)) {
+      source = source.concat(componentSchedules);
+    }
+    return source.map(function (schedule) {
+      var projected;
+      var schedulerRef;
+      var id;
+      var kind;
+      if (!object(schedule)) return null;
+      schedulerRef = stringValue(
+        schedule.scheduler_ref || schedule.schedulerRef
+      );
+      if (!schedulerRef) {
+        schedulerRef = stringValue(schedule.kv_key || schedule.kvKey);
+        if (schedulerRef.indexOf('sched:') !== 0) schedulerRef = '';
+      }
+      id = stringValue(schedule.id);
+      if (!schedulerRef && id.indexOf('sched:') === 0) {
+        schedulerRef = id;
+      }
+      if (!id) id = schedulerRef;
+      if (!id) return null;
+      kind = stringValue(schedule.kind || schedule.location)
+        .toLowerCase().replace(/_/g, '-');
+      if (!kind && schedulerRef) kind = 'external-cron';
+      projected = {
+        id: id,
+        kind: kind || UNKNOWN,
+        required: schedule.required !== false,
+        state: UNKNOWN
+      };
+      if (schedulerRef) projected.scheduler_sid = schedulerRef;
+      if (typeof schedule.interval_s === 'number' &&
+          isFinite(schedule.interval_s)) {
+        projected.interval_s = schedule.interval_s;
+      }
+      return projected;
+    }).filter(function (schedule) {
+      var key;
+      if (!schedule) return false;
+      key = [
+        schedule.id,
+        schedule.kind,
+        schedule.scheduler_sid || '',
+        schedule.required === false ? 'optional' : 'required',
+        typeof schedule.interval_s === 'number' ?
+          String(schedule.interval_s) : ''
+      ].join('\u0000');
+      if (seen[key]) return false;
+      seen[key] = true;
+      return true;
+    });
   }
 
   function parseSemver(value) {
@@ -613,6 +711,524 @@ ETB.evolutionAutomationRegistry = (function () {
     return { state: UNKNOWN };
   }
 
+  function stateRecordId(record) {
+    return record &&
+      (record.automation_id || record.automationId || record.id);
+  }
+
+  function matchingStateRecords(records, automationId) {
+    return (records || []).filter(function (record) {
+      return canonicalId(stateRecordId(record)) === automationId;
+    });
+  }
+
+  function field(record, snake, camel) {
+    if (own(record, snake)) return { present: true, value: record[snake] };
+    if (camel && own(record, camel)) {
+      return { present: true, value: record[camel] };
+    }
+    return { present: false, value: undefined };
+  }
+
+  function localizedFact(value) {
+    if (value === null) return { valid: true, value: null };
+    if (!object(value)) {
+      return { valid: false, value: null };
+    }
+    if (stringValue(value.code) &&
+        stringValue(value.message_ru) &&
+        stringValue(value.message_en)) {
+      return {
+        valid: true,
+        value: {
+          code: stringValue(value.code),
+          message_ru: stringValue(value.message_ru),
+          message_en: stringValue(value.message_en)
+        }
+      };
+    }
+    if (!stringValue(value.ru) || !stringValue(value.en)) {
+      return { valid: false, value: null };
+    }
+    return {
+      valid: true,
+      value: {
+        ru: stringValue(value.ru),
+        en: stringValue(value.en)
+      }
+    };
+  }
+
+  function lastRunFact(value) {
+    var at;
+    if (value === null) return { valid: true, value: null };
+    if (typeof value === 'number' && isFinite(value)) {
+      return { valid: true, value: value };
+    }
+    if (typeof value === 'string' && isoTimestamp(value)) {
+      return { valid: true, value: value };
+    }
+    if (object(value)) {
+      at = own(value, 'at') ? value.at : value.ts;
+      if (typeof at === 'number' && isFinite(at)) {
+        return { valid: true, value: at };
+      }
+      if (typeof at === 'string' && isoTimestamp(at)) {
+        return { valid: true, value: at };
+      }
+    }
+    return { valid: false, value: null };
+  }
+
+  function versionFact(record) {
+    var exact = field(record, 'active_version', 'activeVersion');
+    if (!exact.present) return { present: false, valid: true, value: null };
+    if (exact.value === null) {
+      return { present: true, valid: true, value: null };
+    }
+    if (!parseSemver(exact.value)) {
+      return { present: true, valid: false, value: null };
+    }
+    return { present: true, valid: true, value: exact.value };
+  }
+
+  function runtimeStatus(record) {
+    var value = stringValue(record &&
+      (record.runtime_status || record.runtimeStatus || record.status))
+      .toUpperCase();
+    if (value === 'RUNNING') return 'RUNNING';
+    if (value === 'STOPPED' || value === 'NOT_RUNNING') {
+      return 'NOT_RUNNING';
+    }
+    return UNKNOWN;
+  }
+
+  function runtimeDesired(record) {
+    var exact = field(record, 'desired', null);
+    var value;
+    if (!exact.present) return { valid: true, value: UNKNOWN };
+    value = stringValue(exact.value).toUpperCase();
+    if (value === 'ON' || value === 'OFF') {
+      return { valid: true, value: value };
+    }
+    return { valid: false, value: UNKNOWN };
+  }
+
+  function automationEnabled(record) {
+    var exact = field(record, 'enabled', null);
+    var status;
+    if (exact.present && typeof exact.value === 'boolean') {
+      return { valid: true, value: exact.value };
+    }
+    if (exact.present) return { valid: false, value: null };
+    status = stringValue(record && record.status).toLowerCase();
+    if (status === 'active' || status === 'enabled') {
+      return { valid: true, value: true };
+    }
+    if (status === 'paused' || status === 'frozen' ||
+        status === 'disabled' || status === 'removed') {
+      return { valid: true, value: false };
+    }
+    return { valid: false, value: null };
+  }
+
+  function legacyRunFacts(record) {
+    var runs = record && record.runs;
+    var latest;
+    var lastRun;
+    var result;
+    var error = null;
+    if (!Array.isArray(runs)) return null;
+    if (!runs.length) {
+      return {
+        valid: true,
+        last_run: null,
+        last_result: null,
+        last_error: null
+      };
+    }
+    latest = runs[0];
+    if (!object(latest)) return { valid: false };
+    lastRun = lastRunFact(own(latest, 'ts') ? latest.ts : latest.ran_at);
+    if (!lastRun.valid ||
+        (latest.ok !== true && latest.ok !== false && latest.ok !== null)) {
+      return { valid: false };
+    }
+    if (latest.ok === true) {
+      result = 'ok';
+    } else if (latest.ok === false) {
+      result = 'failed';
+      error = {
+        code: 'RUN_FAILED',
+        message_ru: 'Запуск завершился ошибкой',
+        message_en: 'The run failed'
+      };
+    } else {
+      result = 'running';
+    }
+    return {
+      valid: true,
+      last_run: lastRun.value,
+      last_result: result,
+      last_error: error
+    };
+  }
+
+  function runFacts(record) {
+    var lastRun = field(record, 'last_run', 'lastRun');
+    var lastResult = field(record, 'last_result', 'lastResult');
+    var lastError = field(record, 'last_error', 'lastError');
+    var run;
+    var result;
+    var error;
+    if (!lastRun.present && !lastResult.present && !lastError.present) {
+      return legacyRunFacts(record) || { valid: false };
+    }
+    if (!lastRun.present || !lastResult.present || !lastError.present) {
+      return { valid: false };
+    }
+    run = lastRunFact(lastRun.value);
+    result = lastResult.value === null ?
+      { valid: true, value: null } :
+      (typeof lastResult.value === 'string' &&
+       stringValue(lastResult.value) ?
+        { valid: true, value: stringValue(lastResult.value) } :
+        localizedFact(lastResult.value));
+    error = localizedFact(lastError.value);
+    if (!run.valid || !result.valid || !error.valid) {
+      return { valid: false };
+    }
+    return {
+      valid: true,
+      last_run: run.value,
+      last_result: result.value,
+      last_error: error.value
+    };
+  }
+
+  function runtimeContractFacts(value) {
+    var activeVersion;
+    var lastRunValid;
+    var result;
+    var error;
+    var schedules;
+    if (!object(value) || typeof value.enabled !== 'boolean') {
+      return { valid: false };
+    }
+    activeVersion = versionFact(value);
+    lastRunValid = value.last_run === null ||
+      (typeof value.last_run === 'string' &&
+       isoTimestamp(value.last_run)) ||
+      (typeof value.last_run === 'number' && isFinite(value.last_run)) ||
+      object(value.last_run);
+    result = value.last_result === null ?
+      { valid: true, value: null } :
+      (value.last_result === 'ok' ||
+       value.last_result === 'failed' ||
+       value.last_result === 'partial' ?
+        { valid: true, value: value.last_result } :
+        { valid: false, value: null });
+    error = localizedFact(value.last_error);
+    schedules = value.schedules;
+    if (!activeVersion.present || !activeVersion.valid ||
+        !lastRunValid || !result.valid || !error.valid ||
+        !Array.isArray(schedules) ||
+        schedules.some(function (schedule) {
+          return !object(schedule) ||
+            !stringValue(schedule.id) ||
+            typeof schedule.active !== 'boolean' ||
+            (!own(schedule, 'next_run') ||
+             (schedule.next_run !== null &&
+              typeof schedule.next_run !== 'string' &&
+              !(typeof schedule.next_run === 'number' &&
+                isFinite(schedule.next_run))));
+        })) {
+      return { valid: false };
+    }
+    return {
+      valid: true,
+      enabled: value.enabled,
+      active_version: activeVersion.value,
+      last_run: null,
+      last_result: result.value,
+      last_error: error.value,
+      schedules: cloneJson(schedules, []),
+      checked_at: typeof value.checked_at === 'string' ?
+        stringValue(value.checked_at) : null
+    };
+  }
+
+  function supportingStateFact(record, kind) {
+    var value;
+    if (!object(record) ||
+        record.available !== true ||
+        typeof record.present !== 'boolean') {
+      return { valid: false, present: false, value: null };
+    }
+    if (!record.present) return { valid: true, present: false, value: null };
+    value = record.value;
+    if (!object(value)) return { valid: false, present: true, value: null };
+    if (kind === 'state') {
+      if (typeof value.enabled !== 'boolean') {
+        return { valid: false, present: true, value: null };
+      }
+      return { valid: true, present: true, value: value };
+    }
+    if (!own(value, 'latest') ||
+        !(value.latest === null || object(value.latest)) ||
+        typeof value.count !== 'number' ||
+        !isFinite(value.count) ||
+        value.count < 0) {
+      return { valid: false, present: true, value: null };
+    }
+    return { valid: true, present: true, value: value };
+  }
+
+  function operationalState(automationId, runtimeStates, automationStates,
+                            automationRuns, checkedAt) {
+    var runtimeMatches;
+    var automationMatches;
+    var runMatches;
+    var runtimeEnvelope;
+    var runtimeContract;
+    var stateSupport;
+    var runSupport;
+    var latest;
+    var lastRun;
+    var lastResult = null;
+    var stateProbe;
+    var serviceReachable = UNKNOWN;
+    var unavailableRisk = 'AUTOMATION_STATE_UNAVAILABLE';
+    function unavailable(runtimeRecord) {
+      return {
+        available: false,
+        operational_status: 'STATE_UNAVAILABLE',
+        source: UNKNOWN,
+        enabled: UNKNOWN,
+        active_version: null,
+        last_run: null,
+        last_result: null,
+        last_error: null,
+        checked_at: checkedAt,
+        service_reachable: serviceReachable,
+        contract_available: false,
+        runtime_record: runtimeRecord || null,
+        risk_code: unavailableRisk
+      };
+    }
+    runtimeMatches = matchingStateRecords(runtimeStates, automationId);
+    automationMatches = matchingStateRecords(automationStates, automationId);
+    runMatches = matchingStateRecords(automationRuns, automationId);
+    if (runtimeMatches.length !== 1 ||
+        automationMatches.length !== 1) {
+      return unavailable(
+        runtimeMatches.length === 1 ? runtimeMatches[0] : null
+      );
+    }
+    runtimeEnvelope = object(runtimeMatches[0].runtime) ?
+      runtimeMatches[0].runtime : null;
+    stateProbe = runtimeEnvelope && object(runtimeEnvelope.state) ?
+      runtimeEnvelope.state : null;
+    if (runtimeEnvelope &&
+        (object(runtimeEnvelope.health) || stateProbe)) {
+      serviceReachable = Boolean(
+        runtimeEnvelope.health &&
+        runtimeEnvelope.health.responded === true ||
+        stateProbe && stateProbe.responded === true
+      );
+    }
+    if (stateProbe && stateProbe.error_code === 'STATE_CONTRACT_INVALID') {
+      unavailableRisk = 'STATE_CONTRACT_INVALID';
+    }
+    runtimeContract = runtimeEnvelope &&
+      runtimeEnvelope.configured === true &&
+      stateProbe &&
+      stateProbe.available === true ?
+        runtimeContractFacts(stateProbe.value) : { valid: false };
+    if (stateProbe && stateProbe.available === true &&
+        !runtimeContract.valid) {
+      unavailableRisk = 'STATE_CONTRACT_INVALID';
+    }
+    stateSupport = supportingStateFact(
+      automationMatches[0],
+      'state'
+    );
+    if (!runtimeContract.valid ||
+        !stateSupport.valid ||
+        !stateSupport.present ||
+        stateSupport.value.enabled !== runtimeContract.enabled) {
+      return unavailable(runtimeContract.valid ? runtimeContract : null);
+    }
+
+    if (runMatches.length === 1) {
+      runSupport = supportingStateFact(runMatches[0], 'runs');
+      if (runSupport.valid && runSupport.present &&
+          runSupport.value.latest !== null) {
+        latest = runSupport.value.latest;
+        lastRun = lastRunFact(latest && latest.ts);
+        if (lastRun.valid &&
+            (latest.ok === true ||
+             latest.ok === false ||
+             latest.ok === null)) {
+          lastResult = latest.ok === true ? 'ok' :
+            (latest.ok === false ? 'failed' : null);
+        } else {
+          lastRun = { valid: true, value: null };
+        }
+      }
+    }
+    return {
+      available: true,
+      operational_status:
+        stateSupport.value.enabled ? 'WORKING' : 'NOT_RUNNING',
+      source: 'LOCAL_STATE_CONTRACT+AGENT_STATE',
+      enabled: stateSupport.value.enabled,
+      active_version: runtimeContract.active_version,
+      last_run: lastRun && lastRun.valid ? lastRun.value : null,
+      last_result: lastResult,
+      last_error: runtimeContract.last_error,
+      checked_at: runtimeContract.checked_at || checkedAt,
+      service_reachable: serviceReachable,
+      contract_available: true,
+      runtime_record: runtimeContract,
+      risk_code: null
+    };
+  }
+
+  function actionGates(operationalStatus) {
+    var reason = operationalStatus === 'STATE_UNAVAILABLE' ?
+      'STATE_REQUIRED' : 'NOT_IMPLEMENTED';
+    var stateRequired = reason === 'STATE_REQUIRED';
+    var gate = function () {
+      return {
+        allowed: false,
+        enabled: false,
+        reason: reason,
+        reason_code: reason,
+        message_ru: stateRequired ?
+          'Действие заблокировано: достоверное состояние автоматизации не получено.' :
+          'Действие пока недоступно: Evolution Console работает в режиме чтения.',
+        message_en: stateRequired ?
+          'Action blocked: a trustworthy automation state was not obtained.' :
+          'Action is not available yet: Evolution Console is read-only.'
+      };
+    };
+    return {
+      enable_disable: gate(),
+      start: gate(),
+      stop: gate(),
+      enable: gate(),
+      disable: gate(),
+      update: gate(),
+      rollback: gate()
+    };
+  }
+
+  function runtimeScheduleMap(runtimeRecord) {
+    var source = runtimeRecord && runtimeRecord.schedules;
+    var result = {};
+    if (Array.isArray(source)) {
+      source.forEach(function (entry) {
+        var id = stringValue(entry &&
+          (entry.id || entry.schedule_id || entry.scheduleId));
+        if (id && !result[id]) result[id] = entry;
+      });
+    } else if (object(source)) {
+      Object.keys(source).forEach(function (id) {
+        if (object(source[id])) result[id] = source[id];
+      });
+    }
+    return result;
+  }
+
+  function schedulerSid(value) {
+    value = stringValue(value);
+    if (value.indexOf('sched:') === 0) value = value.slice(6);
+    return /^[A-Za-z0-9][A-Za-z0-9:._-]{0,159}$/.test(value) ?
+      value : '';
+  }
+
+  function reviewedScheduleProjection(schedules, runtimeRecord,
+                                      runtimeAvailable, schedulerIndexSids,
+                                      schedulerAvailable, installed, row) {
+    var runtimeMap = runtimeScheduleMap(runtimeRecord);
+    var index = {};
+    (schedulerIndexSids || []).forEach(function (value) {
+      var sid = schedulerSid(value);
+      if (sid) index[sid] = true;
+    });
+    return (schedules || []).map(function (schedule) {
+      var projected = cloneJson(schedule, {});
+      var runtimeId = stringValue(schedule && schedule.id);
+      var schedulerRef = stringValue(schedule && (
+        schedule.scheduler_sid || schedule.schedulerSid
+      ));
+      var sid = schedulerSid(schedulerRef);
+      var runtimeSchedule = runtimeMap[runtimeId];
+      var kind = stringValue(schedule && schedule.kind)
+        .toLowerCase().replace(/_/g, '-');
+      var external = kind === 'external-cron';
+      var internal = kind === 'internal' ||
+        kind === 'internal-bridge' ||
+        kind === 'in-service';
+      var active;
+      var nextRun;
+      projected.scheduler_ref = schedulerRef || null;
+      projected.operational_status = UNKNOWN;
+      if (runtimeAvailable && runtimeSchedule) {
+        active = field(runtimeSchedule, 'active', null);
+        nextRun = field(runtimeSchedule, 'next_run', 'nextRun');
+        if (active.present && active.value === false &&
+            nextRun.present && nextRun.value === null) {
+          projected.operational_status = 'NO_SCHEDULE';
+          projected.active = false;
+          projected.next_run = null;
+        } else if (active.present && active.value === true) {
+          projected.operational_status = 'ACTIVE';
+          projected.active = true;
+          if (nextRun.present) projected.next_run = nextRun.value;
+        } else if (active.present && active.value === false) {
+          projected.operational_status = 'PAUSED';
+          projected.active = false;
+          if (nextRun.present) projected.next_run = nextRun.value;
+        }
+      }
+      if (internal) {
+        projected.reference_status = 'NOT_APPLICABLE';
+        projected.state = projected.operational_status === UNKNOWN ?
+          'NOT_APPLICABLE' : projected.operational_status;
+        return projected;
+      }
+      if (!external) {
+        projected.reference_status = UNKNOWN;
+        projected.state = projected.operational_status === 'NO_SCHEDULE' ?
+          'NO_SCHEDULE' : UNKNOWN;
+        return projected;
+      }
+      if (!installed) {
+        projected.reference_status = UNKNOWN;
+        projected.state = projected.operational_status === 'NO_SCHEDULE' ?
+          'NO_SCHEDULE' : UNKNOWN;
+        return projected;
+      }
+      if (!schedulerAvailable || !sid) {
+        projected.reference_status = UNKNOWN;
+        projected.state = projected.operational_status === 'NO_SCHEDULE' ?
+          'NO_SCHEDULE' : UNKNOWN;
+        return projected;
+      }
+      projected.reference_status = index[sid] ? 'PRESENT' : 'MISSING';
+      projected.state = projected.operational_status === 'NO_SCHEDULE' ?
+        'NO_SCHEDULE' : projected.reference_status;
+      if (projected.reference_status === 'MISSING' &&
+          schedule.required !== false &&
+          installed) {
+        discrepancy(row, 'SCHEDULE_REFERENCE_MISSING');
+      }
+      return projected;
+    });
+  }
+
   function composerId(record) {
     return record && (record.id || record.automation_id || record.automationId);
   }
@@ -643,6 +1259,12 @@ ETB.evolutionAutomationRegistry = (function () {
       platform_agents: true,
       experts: true,
       schedules: true,
+      runtime_state: true,
+      runtime_states: true,
+      automation_state: true,
+      automation_states: true,
+      automation_runs: true,
+      scheduler_index: true,
       local_installed: true,
       composer_installed: true
     };
@@ -725,6 +1347,14 @@ ETB.evolutionAutomationRegistry = (function () {
     var experts = Array.isArray(spec.experts) ? spec.experts : [];
     var scheduleStates = Array.isArray(spec.scheduleStates) ?
       spec.scheduleStates : [];
+    var runtimeStates = Array.isArray(spec.runtimeStates) ?
+      spec.runtimeStates : [];
+    var automationStates = Array.isArray(spec.automationStates) ?
+      spec.automationStates : [];
+    var automationRuns = Array.isArray(spec.automationRuns) ?
+      spec.automationRuns : [];
+    var schedulerIndexSids = Array.isArray(spec.schedulerIndexSids) ?
+      spec.schedulerIndexSids : [];
     var localInstalledIds = Array.isArray(spec.localInstalledIds) ?
       spec.localInstalledIds : [];
     var composerInstalledRecords =
@@ -744,6 +1374,10 @@ ETB.evolutionAutomationRegistry = (function () {
       'platformAgents',
       'experts',
       'scheduleStates',
+      'runtimeStates',
+      'automationStates',
+      'automationRuns',
+      'schedulerIndexSids',
       'localInstalledIds',
       'composerInstalledRecords',
       'sourceErrors'
@@ -768,6 +1402,18 @@ ETB.evolutionAutomationRegistry = (function () {
     var schedulesAvailable = sourceAvailable(
       spec, 'schedules', 'scheduleStates', sourceErrors
     );
+    var runtimeStatesAvailable = sourceAvailable(
+      spec, 'runtime_state', 'runtimeStates', sourceErrors
+    );
+    var automationStatesAvailable = sourceAvailable(
+      spec, 'automation_state', 'automationStates', sourceErrors
+    );
+    var automationRunsAvailable = sourceAvailable(
+      spec, 'automation_runs', 'automationRuns', sourceErrors
+    );
+    var schedulerIndexAvailable = sourceAvailable(
+      spec, 'scheduler_index', 'schedulerIndexSids', sourceErrors
+    );
     var localInstalledAvailable = sourceAvailable(
       spec, 'local_installed', 'localInstalledIds', sourceErrors
     );
@@ -783,6 +1429,10 @@ ETB.evolutionAutomationRegistry = (function () {
       platformAgentsAvailable &&
       expertsAvailable &&
       schedulesAvailable &&
+      runtimeStatesAvailable &&
+      automationStatesAvailable &&
+      automationRunsAvailable &&
+      schedulerIndexAvailable &&
       localInstalledAvailable &&
       composerInstalledAvailable;
 
@@ -853,6 +1503,8 @@ ETB.evolutionAutomationRegistry = (function () {
         migration.declaredVersion : catalogueVersionExact;
       var row;
       var reviewed = reviewedComponents(migration);
+      var declaredSchedules;
+      var operational;
       var targetVersion;
       var comparison;
 
@@ -884,6 +1536,32 @@ ETB.evolutionAutomationRegistry = (function () {
       );
       catalogFact = catalogAvailable ? cataloguePresent : UNKNOWN;
       installedFact = deviceAvailable ? deviceValid : UNKNOWN;
+      declaredSchedules = installedFact === true ?
+        manifestScheduleDeclarations(device) : [];
+      if (!declaredSchedules.length) {
+        declaredSchedules = reviewed.schedules;
+      }
+      operational = installedFact === true ? operationalState(
+        id,
+        runtimeStates,
+        automationStates,
+        automationRuns,
+        checkedAt
+      ) : {
+        available: false,
+        operational_status: UNKNOWN,
+        source: UNKNOWN,
+        enabled: UNKNOWN,
+        active_version: null,
+        last_run: null,
+        last_result: null,
+        last_error: null,
+        checked_at: checkedAt,
+        service_reachable: UNKNOWN,
+        contract_available: false,
+        runtime_record: null,
+        risk_code: null
+      };
       row = {
         automation_id: id,
         name: chooseName(id, device, catalogue, migration),
@@ -913,7 +1591,12 @@ ETB.evolutionAutomationRegistry = (function () {
             (catalogAvailable && catalogueValid ? catalogueStatusExact :
               (migration ? migration.status : UNKNOWN))
         },
-        enabled: UNKNOWN,
+        enabled: operational.enabled,
+        operational_status: operational.operational_status,
+        active_version: operational.active_version,
+        last_run: operational.last_run,
+        last_result: operational.last_result,
+        last_error: operational.last_error,
         orphan: installedFact === true ?
           (catalogAvailable ? !cataloguePresent : null) :
           (installedFact === UNKNOWN ? null : false),
@@ -924,7 +1607,7 @@ ETB.evolutionAutomationRegistry = (function () {
           schedule: schedulesAvailable ?
             scheduleFor(scheduleStates, id) : { state: UNKNOWN },
           services: reviewed.services,
-          schedules: reviewed.schedules,
+          schedules: [],
           integrations: reviewed.integrations,
           knowledge: reviewed.knowledge,
           rules: reviewed.rules
@@ -948,14 +1631,18 @@ ETB.evolutionAutomationRegistry = (function () {
           checked_at: checkedAt
         },
         state: {
-          source: UNKNOWN,
+          source: operational.source,
           status: installedFact === true ? deviceStatus :
             (catalogAvailable && catalogueValid ? catalogueStatusExact :
               (migration ? migration.status : UNKNOWN)),
-          last_run: null,
-          last_result: null,
-          last_error: null,
-          checked_at: checkedAt
+          operational_status: operational.operational_status,
+          active_version: operational.active_version,
+          last_run: operational.last_run,
+          last_result: operational.last_result,
+          last_error: operational.last_error,
+          checked_at: operational.checked_at,
+          service_reachable: operational.service_reachable,
+          contract_available: operational.contract_available
         },
         actions: {
           enable: 'NOT_IMPLEMENTED',
@@ -963,9 +1650,20 @@ ETB.evolutionAutomationRegistry = (function () {
           update: 'NOT_IMPLEMENTED',
           rollback: 'NOT_IMPLEMENTED'
         },
+        action_gates: actionGates(operational.operational_status),
         updated_at: checkedAt,
         risks: []
       };
+      row.components.schedules = reviewedScheduleProjection(
+        declaredSchedules,
+        operational.runtime_record,
+        runtimeStatesAvailable &&
+          matchingStateRecords(runtimeStates, id).length === 1,
+        schedulerIndexSids,
+        schedulerIndexAvailable,
+        installedFact === true,
+        row
+      );
 
       if (catalogAvailable && catalogMatches.length > 1) {
         complete = false;
@@ -996,6 +1694,20 @@ ETB.evolutionAutomationRegistry = (function () {
         row.evidence.migrations = migrationFields.slice();
         if (catalogueMigration) row.evidence.migrations.push('catalog');
         discrepancy(row, 'REVIEWED_MIGRATION_APPLIED');
+      }
+      if (installedFact === true &&
+          operational.operational_status === 'STATE_UNAVAILABLE') {
+        discrepancy(
+          row,
+          operational.risk_code || 'AUTOMATION_STATE_UNAVAILABLE'
+        );
+      }
+      if (installedFact === true &&
+          operational.operational_status !== 'STATE_UNAVAILABLE' &&
+          operational.active_version !== null &&
+          deviceVersion !== UNKNOWN &&
+          operational.active_version !== deviceVersion) {
+        discrepancy(row, 'ACTIVE_VERSION_MISMATCH');
       }
       if (catalogAvailable &&
           deviceAvailable &&
@@ -1085,6 +1797,20 @@ ETB.evolutionAutomationRegistry = (function () {
       if (hasMissingDeclaredComponent(row.components.platform_agents) ||
           hasMissingDeclaredComponent(row.components.experts)) {
         row.flags.dead_reference = true;
+      }
+      if (installedFact === true &&
+          row.components.schedules.some(function (schedule) {
+            return schedule.required !== false &&
+              schedule.reference_status === 'MISSING';
+          })) {
+        row.flags.dead_reference = true;
+      } else if (installedFact === true &&
+                 row.flags.dead_reference === false &&
+                 row.components.schedules.some(function (schedule) {
+                   return schedule.required !== false &&
+                     schedule.reference_status === UNKNOWN;
+                 })) {
+        row.flags.dead_reference = UNKNOWN;
       }
 
       if (row.flags.installed_stale === true) {

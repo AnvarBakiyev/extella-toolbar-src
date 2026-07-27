@@ -16,6 +16,21 @@ const scannerPath = path.join(
 );
 const scannerSource = fs.readFileSync(scannerPath, 'utf8');
 
+function runScannerHelper(name, value) {
+  const script = [
+    'import importlib.util, json',
+    'spec = importlib.util.spec_from_file_location("scanner", r"' +
+      scannerPath.replaceAll('\\', '\\\\').replaceAll('"', '\\"') + '")',
+    'module = importlib.util.module_from_spec(spec)',
+    'spec.loader.exec_module(module)',
+    `value = json.loads(${JSON.stringify(JSON.stringify(value))})`,
+    `print(json.dumps(getattr(module, ${JSON.stringify(name)})(value)))`,
+  ].join('\n');
+  const run = spawnSync('python3', ['-c', script], { encoding: 'utf8' });
+  assert.equal(run.status, 0, run.stderr);
+  return JSON.parse(run.stdout);
+}
+
 test('read-only device scanner admits only exact top-level cards and counts 102 backups', (t) => {
   const temporaryHome = fs.mkdtempSync(
     path.join(os.tmpdir(), 'evolution-registry-scanner-'),
@@ -38,6 +53,20 @@ test('read-only device scanner admits only exact top-level cards and counts 102 
         code: 'must not leave the device',
       }],
       optionalExperts: ['one_c'],
+      schedules: [{
+        id: 'daily_sync',
+        location: 'external_cron',
+        kv_key: 'sched:future_daily_sync',
+        required: true,
+      }],
+      components: {
+        schedules: [{
+          id: 'weekly_audit',
+          kind: 'external_cron',
+          scheduler_ref: 'sched:future_weekly_audit',
+          required: true,
+        }],
+      },
       install: {
         secrets: ['must not leave the device'],
       },
@@ -93,6 +122,20 @@ test('read-only device scanner admits only exact top-level cards and counts 102 
     synthAgent: { id: 'agent_expected' },
     experts: [{ name: 'wz_1c' }],
     optionalExperts: ['one_c'],
+    schedules: [{
+      id: 'daily_sync',
+      location: 'external_cron',
+      kv_key: 'sched:future_daily_sync',
+      required: true,
+    }],
+    components: {
+      schedules: [{
+        id: 'weekly_audit',
+        kind: 'external_cron',
+        scheduler_ref: 'sched:future_weekly_audit',
+        required: true,
+      }],
+    },
   });
   assert.doesNotMatch(JSON.stringify(result), /secret|must not leave/);
 });
@@ -108,4 +151,106 @@ test('scanner source has no filesystem or registry write operation', () => {
     scannerSource,
     /open\([^)]*,\s*["'](?:w|a|x)|\.write\(|json\.dump\(/,
   );
+});
+
+test('runtime probe reads bounded localhost health and state without leaking extra fields', () => {
+  const script = [
+    'import importlib.util, json',
+    'spec = importlib.util.spec_from_file_location("scanner", r"' +
+      scannerPath.replaceAll('\\', '\\\\').replaceAll('"', '\\"') + '")',
+    'module = importlib.util.module_from_spec(spec)',
+    'spec.loader.exec_module(module)',
+    'def fake_http(port, path):',
+    '  value = {"ok": True, "service": "travel", "secret": "hidden"} if path == "/api/health" else {"enabled": True, "active_version": "1.0.0", "last_run": None, "last_result": None, "last_error": None, "schedules": [{"id": "campaigns_birthday", "active": False, "next_run": None, "location": "external_cron", "note": "hidden"}], "checked_at": "2026-07-27T00:00:00Z", "secret": "hidden"}',
+    '  return {"available": True, "responded": True, "status_code": 200, "value": value, "error_code": None}',
+    'module._evolution_registry_http_json = fake_http',
+    'result = module._evolution_registry_probe_runtime({"id": "extella_travel_agency", "service": {"port": 8766, "healthPath": "/api/health", "statePath": "/api/state"}})',
+    'print(json.dumps(result, ensure_ascii=False))',
+  ].join('\n');
+  const run = spawnSync('python3', ['-c', script], {
+    encoding: 'utf8',
+  });
+  assert.equal(run.status, 0, run.stderr);
+  const result = JSON.parse(run.stdout);
+  assert.equal(result.configured, true);
+  assert.equal(result.health.available, true);
+  assert.equal(result.state.available, true);
+  assert.equal(result.state.value.active_version, '1.0.0');
+  assert.deepEqual(result.state.value.schedules, [{
+    id: 'campaigns_birthday',
+    active: false,
+    next_run: null,
+    location: 'external_cron',
+  }]);
+  assert.doesNotMatch(JSON.stringify(result), /secret|hidden/);
+});
+
+test('responding port with missing state endpoint remains an explicit unavailable state', () => {
+  const script = [
+    'import importlib.util, json',
+    'spec = importlib.util.spec_from_file_location("scanner", r"' +
+      scannerPath.replaceAll('\\', '\\\\').replaceAll('"', '\\"') + '")',
+    'module = importlib.util.module_from_spec(spec)',
+    'spec.loader.exec_module(module)',
+    'def fake_http(port, path):',
+    '  if path == "/api/health": return {"available": True, "responded": True, "status_code": 200, "value": {"ok": True}, "error_code": None}',
+    '  return {"available": False, "responded": True, "status_code": 404, "value": None, "error_code": "HTTP_STATUS"}',
+    'module._evolution_registry_http_json = fake_http',
+    'result = module._evolution_registry_probe_runtime({"id": "extella_travel_agency", "service": {"port": 8766, "healthPath": "/api/health", "statePath": "/api/state"}})',
+    'print(json.dumps(result))',
+  ].join('\n');
+  const run = spawnSync('python3', ['-c', script], {
+    encoding: 'utf8',
+  });
+  assert.equal(run.status, 0, run.stderr);
+  const result = JSON.parse(run.stdout);
+  assert.equal(result.health.available, true);
+  assert.equal(result.state.responded, true);
+  assert.equal(result.state.available, false);
+  assert.equal(result.state.status_code, 404);
+  assert.equal(result.state.error_code, 'HTTP_STATUS');
+});
+
+test('state contract preserves a null active version as an unknown fact', () => {
+  const result = runScannerHelper('_evolution_registry_safe_state', {
+    enabled: true,
+    active_version: null,
+    last_run: null,
+    last_result: null,
+    last_error: null,
+    schedules: [],
+    checked_at: null,
+  });
+
+  assert.equal(result.enabled, true);
+  assert.equal(result.active_version, null);
+});
+
+test('state contract accepts canonical last_run and rejects an unknown result', () => {
+  const canonical = {
+    enabled: true,
+    active_version: '1.0.0',
+    last_run: '2026-07-27T09:15:00.000Z',
+    last_result: 'partial',
+    last_error: null,
+    schedules: [],
+    checked_at: '2026-07-27T09:16:00.000Z',
+  };
+  const result = runScannerHelper(
+    '_evolution_registry_safe_state',
+    canonical,
+  );
+  const invalid = runScannerHelper(
+    '_evolution_registry_safe_state',
+    { ...canonical, last_result: 'healthy' },
+  );
+  const invalidTimestamp = runScannerHelper(
+    '_evolution_registry_safe_state',
+    { ...canonical, last_run: 'definitely-not-iso' },
+  );
+
+  assert.equal(result.last_run, canonical.last_run);
+  assert.equal(result.last_result, 'partial');
+  assert.equal(invalid, null);
+  assert.equal(invalidTimestamp, null);
 });

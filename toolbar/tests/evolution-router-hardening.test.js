@@ -41,6 +41,11 @@ function helperHarness() {
   );
   assert.ok(start >= 0 && end > start);
   let sequence = 0;
+  const registryHarness = {
+    result: null,
+    loads: 0,
+    contextAssertions: 0,
+  };
   const context = {
     ETB: {
       evolutionConsole: {
@@ -51,6 +56,13 @@ function helperHarness() {
       },
     },
     Promise,
+    loadAutomationRegistry() {
+      registryHarness.loads += 1;
+      return Promise.resolve(registryHarness.result);
+    },
+    assertContext() {
+      registryHarness.contextAssertions += 1;
+    },
   };
   vm.runInNewContext(`
     function _evolutionError(code, message) {
@@ -65,6 +77,12 @@ function helperHarness() {
       sequence += 1;
       return String(prefix) + '_' + sequence;
     }
+    function _evolutionAutomationRegistryLoad(context) {
+      return loadAutomationRegistry(context);
+    }
+    function _agentControlAssertContext(context) {
+      return assertContext(context);
+    }
     var sequence = 0;
     ${router.slice(start, end)}
     this.helpers = {
@@ -72,11 +90,15 @@ function helperHarness() {
       validateEscalation: _evolutionValidateEscalationContract,
       buildBulkSpec: _evolutionBuildBulkSpec,
       callAdapter: _evolutionCallAdapter,
+      scheduleStateGate: _evolutionScheduleAutomationStateGate,
+      requireCurrentScheduleState:
+        _evolutionRequireCurrentScheduleAutomationState,
       setAdapter: function (adapter) {
         ETB.evolutionAdapter = adapter;
       }
     };
   `, context, { filename: 'evolution-router-helper-slice.js' });
+  context.helpers.registryHarness = registryHarness;
   return context.helpers;
 }
 
@@ -608,6 +630,171 @@ test('schedule preview requires an adapter and native writes remain transaction-
   );
   assert.match(router, /nativeDurableIntent:\s*'PLATFORM_UNAVAILABLE'/);
   assert.match(router, /multiDeviceCompareAndSwap:\s*'PLATFORM_UNAVAILABLE'/);
+});
+
+test('schedule mutation gate accepts only current usable state for every affected installed automation', () => {
+  const helpers = helperHarness();
+  const registry = {
+    schema: 'extella.evolution.automation_registry.v1',
+    scope: 'CURRENT_DEVICE',
+    checked_at: '2026-07-27T10:00:00.000Z',
+    rows: [{
+      automation_id: 'automation_working',
+      flags: { installed: true },
+      state: { operational_status: 'WORKING' },
+      components: {
+        platform_agents: [{ id: 'agent_a', state: 'PRESENT' }],
+      },
+    }, {
+      automation_id: 'automation_stopped',
+      flags: { installed: true },
+      state: { operational_status: 'NOT_RUNNING' },
+      components: {
+        platform_agents: [{ id: 'agent_b', state: 'PRESENT' }],
+      },
+    }, {
+      automation_id: 'unrelated_unavailable',
+      flags: { installed: true },
+      state: { operational_status: 'STATE_UNAVAILABLE' },
+      components: {
+        platform_agents: [{ id: 'agent_c', state: 'PRESENT' }],
+      },
+    }],
+  };
+
+  assert.deepEqual(
+    plain(helpers.scheduleStateGate(registry, ['agent_b', 'agent_a'])),
+    {
+      checkedAt: '2026-07-27T10:00:00.000Z',
+      targetIds: ['agent_a', 'agent_b'],
+      automationIds: ['automation_stopped', 'automation_working'],
+    },
+  );
+});
+
+test('schedule mutation gate fails closed for unavailable, unknown, uninstalled and unmapped targets', async () => {
+  const helpers = helperHarness();
+  const base = {
+    schema: 'extella.evolution.automation_registry.v1',
+    scope: 'CURRENT_DEVICE',
+    checked_at: '2026-07-27T10:00:00.000Z',
+    rows: [{
+      automation_id: 'automation_exact',
+      flags: { installed: true },
+      state: { operational_status: 'WORKING' },
+      components: {
+        platform_agents: [{ id: 'agent_a', state: 'PRESENT' }],
+      },
+    }],
+  };
+  for (const status of ['STATE_UNAVAILABLE', 'UNKNOWN']) {
+    const registry = plain(base);
+    registry.rows[0].state.operational_status = status;
+    await rejectsCode(
+      () => helpers.scheduleStateGate(registry, ['agent_a']),
+      'SCHEDULE_AUTOMATION_STATE_REQUIRED',
+    );
+  }
+  const uninstalled = plain(base);
+  uninstalled.rows[0].flags.installed = false;
+  await rejectsCode(
+    () => helpers.scheduleStateGate(uninstalled, ['agent_a']),
+    'SCHEDULE_AUTOMATION_STATE_REQUIRED',
+  );
+  const ambiguousInstallation = plain(base);
+  ambiguousInstallation.rows.push({
+    automation_id: 'automation_installation_unknown',
+    flags: { installed: 'UNKNOWN' },
+    state: { operational_status: 'WORKING' },
+    components: {
+      platform_agents: [{ id: 'agent_a', state: 'PRESENT' }],
+    },
+  });
+  await rejectsCode(
+    () => helpers.scheduleStateGate(
+      ambiguousInstallation,
+      ['agent_a'],
+    ),
+    'SCHEDULE_AUTOMATION_STATE_REQUIRED',
+  );
+  await rejectsCode(
+    () => helpers.scheduleStateGate(base, ['agent_unmapped']),
+    'SCHEDULE_AUTOMATION_STATE_REQUIRED',
+  );
+  const idCollision = plain(base);
+  idCollision.rows[0].automation_id = 'agent_collision';
+  await rejectsCode(
+    () => helpers.scheduleStateGate(idCollision, ['agent_collision']),
+    'SCHEDULE_AUTOMATION_STATE_REQUIRED',
+  );
+  for (const componentState of ['MISSING', 'UNKNOWN']) {
+    const unprovenMapping = plain(base);
+    unprovenMapping.rows[0].components.platform_agents[0].state =
+      componentState;
+    await rejectsCode(
+      () => helpers.scheduleStateGate(unprovenMapping, ['agent_a']),
+      'SCHEDULE_AUTOMATION_STATE_REQUIRED',
+    );
+  }
+  await rejectsCode(
+    () => helpers.scheduleStateGate({
+      ...base,
+      scope: 'STALE_UI_COPY',
+    }, ['agent_a']),
+    'SCHEDULE_AUTOMATION_STATE_REQUIRED',
+  );
+});
+
+test('schedule mutation gate reloads authoritative Registry state and ignores stale UI evidence', async () => {
+  const helpers = helperHarness();
+  const workingRegistry = {
+    schema: 'extella.evolution.automation_registry.v1',
+    scope: 'CURRENT_DEVICE',
+    checked_at: '2026-07-27T10:00:00.000Z',
+    rows: [{
+      automation_id: 'automation_exact',
+      flags: { installed: true },
+      state: { operational_status: 'WORKING' },
+      components: {
+        platform_agents: [{ id: 'agent_a', state: 'PRESENT' }],
+      },
+    }],
+  };
+  helpers.registryHarness.result = { registry: workingRegistry };
+  await helpers.requireCurrentScheduleState(
+    { actorId: 'account_actor', staleUiRegistry: workingRegistry },
+    ['agent_a'],
+  );
+
+  const unavailableRegistry = plain(workingRegistry);
+  unavailableRegistry.checked_at = '2026-07-27T10:00:01.000Z';
+  unavailableRegistry.rows[0].state.operational_status =
+    'STATE_UNAVAILABLE';
+  helpers.registryHarness.result = { registry: unavailableRegistry };
+  await rejectsCode(
+    () => helpers.requireCurrentScheduleState(
+      { actorId: 'account_actor', staleUiRegistry: workingRegistry },
+      ['agent_a'],
+    ),
+    'SCHEDULE_AUTOMATION_STATE_REQUIRED',
+  );
+  assert.equal(helpers.registryHarness.loads, 2);
+  assert.equal(helpers.registryHarness.contextAssertions, 2);
+
+  const bulkStart = router.indexOf('  function _evolutionBulkAction');
+  const bulkEnd = router.indexOf(
+    '  function _evolutionConsoleAction',
+    bulkStart,
+  );
+  const bulkSource = router.slice(bulkStart, bulkEnd);
+  assert.match(
+    bulkSource,
+    /operationType === 'schedule_pause' \|\|\s*operationType === 'schedule_resume'[\s\S]*?_evolutionRequireCurrentScheduleAutomationState\(\s*context,\s*scheduleTargets\s*\)[\s\S]*?performBulkStep\(\)/,
+  );
+  assert.doesNotMatch(
+    bulkSource,
+    /data\.(automationRegistry|automation_registry|automationState|automation_state)/,
+  );
 });
 
 test('persisted mutation invalidates its account-bound fleet snapshot', () => {

@@ -2355,7 +2355,10 @@ ETB.router = (function () {
       PLATFORM_AGENTS: 'platform_agents',
       PLATFORM_EXPERTS: 'experts',
       DEVICE_CARDS: 'device',
-      SCHEDULE_KV: 'schedules'
+      SCHEDULE_KV: 'schedules',
+      AUTOMATION_STATE: 'automation_state',
+      AUTOMATION_RUNS: 'automation_runs',
+      SCHEDULER_INDEX: 'scheduler_index'
     };
     return names[exact] || 'UNKNOWN';
   }
@@ -2401,6 +2404,10 @@ ETB.router = (function () {
       'platformAgentRows',
       'platformExpertRows',
       'scheduleFacts',
+      'runtimeStateRows',
+      'automationStateFacts',
+      'automationRunFacts',
+      'schedulerIndexSids',
       'browserInstalledIds',
       'composerInstalledItems',
       'errors'
@@ -2412,11 +2419,14 @@ ETB.router = (function () {
       'platformAgents',
       'platformExperts',
       'schedules',
+      'automationStates',
+      'automationRuns',
+      'schedulerIndex',
       'deviceCards'
     ];
     var valid = sources &&
       sources.schemaVersion ===
-        'extella.evolution.automation-registry-sources.v1' &&
+        'extella.evolution.automation-registry-sources.v2' &&
       typeof sources.complete === 'boolean' &&
       String(sources.collectedAt || '').trim() &&
       sources.sources &&
@@ -2448,6 +2458,35 @@ ETB.router = (function () {
       scheduleStates: sources.scheduleFacts.map(
           _evolutionAutomationScheduleState
         ).filter(Boolean),
+      runtimeStates: sources.runtimeStateRows.map(function (row) {
+        return {
+          automation_id: String(row && (
+            row.automationId || row.automation_id
+          ) || ''),
+          runtime: row && row.runtime || null
+        };
+      }),
+      automationStates: sources.automationStateFacts.map(function (fact) {
+        return {
+          automation_id: String(fact && (
+            fact.automationId || fact.automation_id
+          ) || ''),
+          available: Boolean(fact && fact.available === true),
+          present: Boolean(fact && fact.present === true),
+          value: fact && fact.value || null
+        };
+      }),
+      automationRuns: sources.automationRunFacts.map(function (fact) {
+        return {
+          automation_id: String(fact && (
+            fact.automationId || fact.automation_id
+          ) || ''),
+          available: Boolean(fact && fact.available === true),
+          present: Boolean(fact && fact.present === true),
+          value: fact && fact.value || null
+        };
+      }),
+      schedulerIndexSids: sources.schedulerIndexSids.slice(),
       localInstalledIds: sources.browserInstalledIds,
       composerInstalledRecords: sources.composerInstalledItems,
       sourceErrors: sources.errors.map(function (error) {
@@ -2466,6 +2505,18 @@ ETB.router = (function () {
           sourceMap.platformExperts
         ),
         schedules: _evolutionAutomationSourceComplete(sourceMap.schedules),
+        runtime_state: _evolutionAutomationSourceComplete(
+          sourceMap.deviceCards
+        ),
+        automation_state: _evolutionAutomationSourceComplete(
+          sourceMap.automationStates
+        ),
+        automation_runs: _evolutionAutomationSourceComplete(
+          sourceMap.automationRuns
+        ),
+        scheduler_index: _evolutionAutomationSourceComplete(
+          sourceMap.schedulerIndex
+        ),
         local_installed: _evolutionAutomationSourceComplete(
           sourceMap.browserInstalled
         ),
@@ -2950,6 +3001,92 @@ ETB.router = (function () {
   function _evolutionSameIds(left, right) {
     return ETB.evolutionConsole.canonical(left || []) ===
       ETB.evolutionConsole.canonical(right || []);
+  }
+
+  function _evolutionScheduleAutomationStateGate(registry, targetIds) {
+    var targets = _evolutionExactIds(
+      targetIds,
+      'SCHEDULE_AUTOMATION_TARGETS_REQUIRED',
+      'schedule automation target ids'
+    );
+    var covered = {};
+    var affected = [];
+    if (!registry ||
+        registry.schema !== 'extella.evolution.automation_registry.v1' ||
+        registry.scope !== 'CURRENT_DEVICE' ||
+        !String(registry.checked_at || '').trim() ||
+        !Array.isArray(registry.rows)) {
+      throw _evolutionError(
+        'SCHEDULE_AUTOMATION_STATE_REQUIRED',
+        'schedule action blocked: a current authoritative Automation Registry snapshot is unavailable'
+      );
+    }
+    registry.rows.forEach(function (row) {
+      var flags = row && row.flags || {};
+      var components = row && row.components || {};
+      var componentIds = Array.isArray(components.platform_agents) ?
+        components.platform_agents.map(function (component) {
+          return component && component.state === 'PRESENT' ?
+            String(component.id || '') : '';
+        }) : [];
+      var matchedTargets = targets.filter(function (targetId) {
+        return componentIds.indexOf(targetId) !== -1;
+      });
+      if (!matchedTargets.length || flags.installed === false) return;
+      if (flags.installed !== true) {
+        throw _evolutionError(
+          'SCHEDULE_AUTOMATION_STATE_REQUIRED',
+          'schedule action blocked: installation state is unknown for an affected automation'
+        );
+      }
+      matchedTargets.forEach(function (targetId) {
+        covered[targetId] = true;
+      });
+      affected.push(row);
+    });
+    if (targets.some(function (targetId) {
+          return !covered[targetId];
+        })) {
+      throw _evolutionError(
+        'SCHEDULE_AUTOMATION_STATE_REQUIRED',
+        'schedule action blocked: every target must resolve to an installed automation in the current Automation Registry snapshot'
+      );
+    }
+    var blocked = affected.filter(function (row) {
+      var state = row && row.state || {};
+      var status = String(
+        state.operational_status || row.operational_status || 'UNKNOWN'
+      ).toUpperCase();
+      return status !== 'WORKING' && status !== 'NOT_RUNNING';
+    });
+    if (blocked.length) {
+      throw _evolutionError(
+        'SCHEDULE_AUTOMATION_STATE_REQUIRED',
+        'schedule action blocked: trustworthy current state is unavailable for affected installed automation(s)'
+      );
+    }
+    return {
+      checkedAt: String(registry.checked_at),
+      targetIds: targets,
+      automationIds: affected.map(function (row) {
+        return String(row.automation_id);
+      }).sort()
+    };
+  }
+
+  function _evolutionRequireCurrentScheduleAutomationState(
+    context,
+    targetIds
+  ) {
+    // Load the authoritative provider/projector path for every dependent
+    // schedule step. Payload/UI state is intentionally not accepted here.
+    return _evolutionAutomationRegistryLoad(context).then(function (result) {
+      _agentControlAssertContext(context);
+      return _evolutionScheduleAutomationStateGate(
+        result && result.registry,
+        targetIds
+      );
+    });
   }
 
   function _evolutionRequireClosedKeys(value, keys, code, label) {
@@ -3730,160 +3867,178 @@ ETB.router = (function () {
       var extension = ledger.evolution || {};
       var operation = extension.bulkOperations &&
         extension.bulkOperations[operationId];
-      if (action === 'bulk_preview') {
-        return _evolutionBuildBulkSpec(
-          data,
-          session,
-          ledger,
-          actor
-        ).then(function (spec) {
-          return ETB.evolutionConsole.createBulkOperation(
+      var operationType = action === 'bulk_preview' ?
+        String(data && data.operationType || '') :
+        String(operation && operation.operationType || '');
+      var scheduleTargets = action === 'bulk_preview' ?
+        data && data.targetIds :
+        operation && operation.targetAgentIds;
+      function performBulkStep() {
+        if (action === 'bulk_preview') {
+          return _evolutionBuildBulkSpec(
+            data,
+            session,
             ledger,
-            spec,
-            opts
-          );
-        });
-      }
-      if (!operation) {
-        return Promise.reject(_evolutionError(
-          'BULK_OPERATION_NOT_FOUND',
-          'bulk operation was not found in the shared ledger'
-        ));
-      }
-      if (action === 'bulk_confirm') {
-        var confirmedTargets = _evolutionExactIds(
-          data.targetIds,
-          'BULK_CONFIRMATION_TARGETS_REQUIRED',
-          'bulk confirmation target ids'
-        );
-        if (!_evolutionSameIds(
-              confirmedTargets,
-              operation.targetAgentIds
-            )) {
-          throw _evolutionError(
-            'BULK_CONFIRMATION_MISMATCH',
-            'bulk confirmation must bind the exact previewed target list'
-          );
+            actor
+          ).then(function (spec) {
+            return ETB.evolutionConsole.createBulkOperation(
+              ledger,
+              spec,
+              opts
+            );
+          });
         }
-        return ETB.evolutionConsole.confirmBulkOperation(
-          ledger,
-          operationId,
-          {
-            target_agent_ids: confirmedTargets,
-            target_list_sha256: operation.targetListSha256,
-            impact_sha256: operation.impactSha256,
-            payload_sha256: operation.payloadSha256,
-            actor_id: actor
-          },
-          opts
-        );
-      }
-      if (action === 'bulk_stage') {
-        if (operation.status === 'CONFIRMED') {
-          return ETB.evolutionConsole.planBulkActivation(
+        if (!operation) {
+          return Promise.reject(_evolutionError(
+            'BULK_OPERATION_NOT_FOUND',
+            'bulk operation was not found in the shared ledger'
+          ));
+        }
+        if (action === 'bulk_confirm') {
+          var confirmedTargets = _evolutionExactIds(
+            data.targetIds,
+            'BULK_CONFIRMATION_TARGETS_REQUIRED',
+            'bulk confirmation target ids'
+          );
+          if (!_evolutionSameIds(
+                confirmedTargets,
+                operation.targetAgentIds
+              )) {
+            throw _evolutionError(
+              'BULK_CONFIRMATION_MISMATCH',
+              'bulk confirmation must bind the exact previewed target list'
+            );
+          }
+          return ETB.evolutionConsole.confirmBulkOperation(
             ledger,
             operationId,
             {
-              stages: operation.targetAgentIds.map(function (id) {
-                return [id];
-              }),
+              target_agent_ids: confirmedTargets,
+              target_list_sha256: operation.targetListSha256,
+              impact_sha256: operation.impactSha256,
+              payload_sha256: operation.payloadSha256,
               actor_id: actor
             },
             opts
           );
         }
-        var stage = operation.activation &&
-          operation.activation.stages[
-            operation.activation.nextStageIndex
-          ];
-        if (!stage) {
-          return Promise.reject(_evolutionError(
-            'BULK_STAGE_NOT_AVAILABLE',
-            'no exact next bulk activation stage is available'
-          ));
+        if (action === 'bulk_stage') {
+          if (operation.status === 'CONFIRMED') {
+            return ETB.evolutionConsole.planBulkActivation(
+              ledger,
+              operationId,
+              {
+                stages: operation.targetAgentIds.map(function (id) {
+                  return [id];
+                }),
+                actor_id: actor
+              },
+              opts
+            );
+          }
+          var stage = operation.activation &&
+            operation.activation.stages[
+              operation.activation.nextStageIndex
+            ];
+          if (!stage) {
+            return Promise.reject(_evolutionError(
+              'BULK_STAGE_NOT_AVAILABLE',
+              'no exact next bulk activation stage is available'
+            ));
+          }
+          return _evolutionCallAdapter(
+            'activateBulkStage',
+            {
+              operationId: operationId,
+              operationType: operation.operationType,
+              payload: operation.payload,
+              stageIndex: stage.index,
+              targetAgentIds: stage.targetAgentIds,
+              beforeStateByTarget: operation.beforeStateByTarget,
+              desiredStateByTarget: operation.desiredStateByTarget,
+              actorId: actor
+            },
+            'BULK_ACTIVATION_ADAPTER_UNAVAILABLE',
+            'bulk activation requires a connected exact host adapter'
+          ).then(function (adapterResult) {
+            return ETB.evolutionConsole.activateBulkStage(
+              ledger,
+              operationId,
+              stage.index,
+              adapterResult.results,
+              opts
+            );
+          });
         }
-        return _evolutionCallAdapter(
-          'activateBulkStage',
-          {
-            operationId: operationId,
-            operationType: operation.operationType,
-            payload: operation.payload,
-            stageIndex: stage.index,
-            targetAgentIds: stage.targetAgentIds,
-            beforeStateByTarget: operation.beforeStateByTarget,
-            desiredStateByTarget: operation.desiredStateByTarget,
-            actorId: actor
-          },
-          'BULK_ACTIVATION_ADAPTER_UNAVAILABLE',
-          'bulk activation requires a connected exact host adapter'
-        ).then(function (adapterResult) {
-          return ETB.evolutionConsole.activateBulkStage(
+        if (action === 'bulk_publish') {
+          return ETB.evolutionConsole.publishBulkOperation(
             ledger,
             operationId,
-            stage.index,
-            adapterResult.results,
             opts
           );
+        }
+        if (action === 'bulk_observe') {
+          return _evolutionCallAdapter(
+            'observeBulkOperation',
+            {
+              operationId: operationId,
+              operationType: operation.operationType,
+              targetAgentIds: operation.targetAgentIds,
+              desiredStateSha256ByTarget:
+                operation.desiredStateSha256ByTarget,
+              actorId: actor
+            },
+            'BULK_OBSERVATION_ADAPTER_UNAVAILABLE',
+            'bulk observation requires exact host adapter evidence'
+          ).then(function (adapterResult) {
+            return ETB.evolutionConsole.recordBulkObservation(
+              ledger,
+              operationId,
+              adapterResult.observation,
+              opts
+            );
+          });
+        }
+        if (action === 'bulk_rollback') {
+          var activated = operation.activation &&
+            operation.activation.activatedAgentIds || [];
+          return _evolutionCallAdapter(
+            'rollbackBulkOperation',
+            {
+              operationId: operationId,
+              operationType: operation.operationType,
+              targetAgentIds: activated,
+              beforeStateByTarget: operation.beforeStateByTarget,
+              beforeStateSha256ByTarget:
+                operation.beforeStateSha256ByTarget,
+              actorId: actor
+            },
+            'BULK_ROLLBACK_ADAPTER_UNAVAILABLE',
+            'bulk rollback requires exact host adapter read-back'
+          ).then(function (adapterResult) {
+            return ETB.evolutionConsole.rollbackBulkOperation(
+              ledger,
+              operationId,
+              adapterResult.results,
+              opts
+            );
+          });
+        }
+        return Promise.reject(_evolutionError(
+          'EVOLUTION_ACTION_UNSUPPORTED',
+          'unsupported gated bulk action'
+        ));
+      }
+      if (operationType === 'schedule_pause' ||
+          operationType === 'schedule_resume') {
+        return _evolutionRequireCurrentScheduleAutomationState(
+          context,
+          scheduleTargets
+        ).then(function () {
+          return performBulkStep();
         });
       }
-      if (action === 'bulk_publish') {
-        return ETB.evolutionConsole.publishBulkOperation(
-          ledger,
-          operationId,
-          opts
-        );
-      }
-      if (action === 'bulk_observe') {
-        return _evolutionCallAdapter(
-          'observeBulkOperation',
-          {
-            operationId: operationId,
-            operationType: operation.operationType,
-            targetAgentIds: operation.targetAgentIds,
-            desiredStateSha256ByTarget:
-              operation.desiredStateSha256ByTarget,
-            actorId: actor
-          },
-          'BULK_OBSERVATION_ADAPTER_UNAVAILABLE',
-          'bulk observation requires exact host adapter evidence'
-        ).then(function (adapterResult) {
-          return ETB.evolutionConsole.recordBulkObservation(
-            ledger,
-            operationId,
-            adapterResult.observation,
-            opts
-          );
-        });
-      }
-      if (action === 'bulk_rollback') {
-        var activated = operation.activation &&
-          operation.activation.activatedAgentIds || [];
-        return _evolutionCallAdapter(
-          'rollbackBulkOperation',
-          {
-            operationId: operationId,
-            operationType: operation.operationType,
-            targetAgentIds: activated,
-            beforeStateByTarget: operation.beforeStateByTarget,
-            beforeStateSha256ByTarget:
-              operation.beforeStateSha256ByTarget,
-            actorId: actor
-          },
-          'BULK_ROLLBACK_ADAPTER_UNAVAILABLE',
-          'bulk rollback requires exact host adapter read-back'
-        ).then(function (adapterResult) {
-          return ETB.evolutionConsole.rollbackBulkOperation(
-            ledger,
-            operationId,
-            adapterResult.results,
-            opts
-          );
-        });
-      }
-      return Promise.reject(_evolutionError(
-        'EVOLUTION_ACTION_UNSUPPORTED',
-        'unsupported gated bulk action'
-      ));
+      return performBulkStep();
     }).then(function (ledger) {
       var operation = ledger.evolution.bulkOperations[
         operationId || ledger.evolution.currentBulkOperationId
