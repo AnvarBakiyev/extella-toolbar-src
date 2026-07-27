@@ -1262,12 +1262,15 @@ function notify(action, pluginId, url) {
 // (Workspace — с Рабочего стола; их рендеры остаются доступны через setc и под-навигацию).
 var CATS = [
   { id: 'desktop',  l: 'Рабочий стол' },
-  { id: 'programs', l: 'Каталог' },
-  { id: 'services', l: 'Сервисы' },
+  { id: 'programs', l: 'Сервисы' },
+  { id: 'models',   l: 'Модели' },
+  { id: 'skills',   l: 'Навыки' },
   { id: 'knowledge',l: 'Знания' },
   { id: 'agents',   l: 'Агенты' }
 ];
-var _SVC_GROUP=['programs','apps','cli','models','skills'];  // полки «Каталога» (IA Эллы) + apps для обратной совместимости setc('apps')
+// «Сервисы» (id programs) = единый каталог активов: программы + приложения(UI) + инструменты(CLI) + MCP(API).
+// Внутри — тип-фильтр _svcBar. Модели и Навыки подняты в отдельные вкладки меню (были под-сегментами).
+var _SVC_GROUP=['programs','apps','cli','services'];  // вкладка «Сервисы» подсвечена для всей группы (вкл. MCP=API)
 
 var _admView = 'catalog';
 function setAdmView(v){ _admView = v; renderGrid(); }
@@ -2515,7 +2518,7 @@ function appEmbedReload(url,ready){
 }
 var _modHF = false;  // «Поиск по Hugging Face» — перенесён из убранного режима Профи
 function _modHFset(v){ _modHF = v; if (v && !hfState.inited) { hfState.inited = true; searchHF(); } renderModels(); }
-function renderModels(){ _renderModelsCore(); _svcPrependBar(); }
+function renderModels(){ _renderModelsCore(); }
 function _renderModelsCore() {
   var g = document.getElementById('grid'); if (!g) return;
   if (_modHF) {
@@ -3221,8 +3224,9 @@ function progToolsHTML(extra){
 // search lives here too, but only in «Для профи»; «Для всех» stays curated.
 // Под-навигация объединённого раздела «Сервисы»: Программы / Инструменты / Сервисы (старое деление, не в меню).
 function _svcBar(){
-  // Уровень 2 навигации: сегмент-переключатель (тяжелее фильтров, легче вкладок)
-  var it=[['programs','Программы'],['cli','Инструменты'],['models','Модели'],['skills','Навыки']];
+  // Тип-фильтр вкладки «Сервисы»: старое деление активов доступно внутри, не грузит меню.
+  // Программы (репо+приложения UI) / Инструменты (CLI) / API (MCP-сервисы). Модели и Навыки — свои вкладки.
+  var it=[['programs','Программы'],['cli','Инструменты'],['services','API']];
   return '<div class="svc_sub" style="grid-column:1/-1;margin:0 0 16px"><div class="adm_seg" style="display:inline-flex">'+
     it.map(function(x){return '<button class="'+(cur===x[0]?'on':'')+'" onclick="setc(\''+x[0]+'\')">'+x[1]+'</button>';}).join('')+'</div></div>';
 }
@@ -4860,7 +4864,7 @@ function skCatalog(){ var byId={}; SKILLS_CATALOG.forEach(function(s){byId[s.id]
 function skGet(id){return skCatalog().filter(function(s){return s.id===id;})[0];}
 function skItem(id){return (_skReg.items||[]).filter(function(x){return x.id===id;})[0];}
 
-function renderSkillsShelf(){ _renderSkillsCore(); _svcPrependBar(); }
+function renderSkillsShelf(){ _renderSkillsCore(); }
 function _renderSkillsCore(){
   var g=document.getElementById('grid'); if(!g)return;
   // Навыки были ЕДИНСТВЕННОЙ вкладкой, которая ждала KV перед первой отрисовкой:
@@ -5298,7 +5302,7 @@ function renderServices(){
   [].forEach.call(g.querySelectorAll('[data-svdisc]'),function(b){b.onclick=function(){svDisc(b.getAttribute('data-svdisc'));};});
   renderMcpCatalog();
   _mountTabFilter('Поиск сервиса…');
-  
+  _svcPrependBar();   // MCP = сегмент «API» единой вкладки «Сервисы»
 }
 // ── Живой каталог MCP-серверов (харвест офиц. реестра → KV _mkt_mcp, шарды) ──
 var _mcpReg=null;
