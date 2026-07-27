@@ -50,9 +50,9 @@ textarea,input,select{font-family:var(--sans);font-size:14px}
 
 /* ---------- layout ---------- */
 .main{max-width:980px;margin:0 auto;padding:34px 28px 90px}
-.main.chat-open{margin-right:400px}
-body.chat-open .topbar{padding-right:412px}
-body.chat-open .stepper{padding-right:412px}
+.main.chat-open{margin-right:calc(var(--chatw,392px) + 8px)}
+body.chat-open .topbar{padding-right:calc(var(--chatw,392px) + 20px)}
+body.chat-open .stepper{padding-right:calc(var(--chatw,392px) + 20px)}
 h1{font-family:var(--serif);font-size:26px;font-weight:600;letter-spacing:-.01em;margin-bottom:6px}
 .lede{color:var(--nav);font-size:14.5px;margin-bottom:28px;max-width:640px}
 .kicker{font-size:11px;letter-spacing:.14em;color:var(--gold);font-weight:700;margin-bottom:8px}
@@ -182,8 +182,10 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
 .nav-toggle button.on{background:var(--ink);color:#fff}
 
 /* ---------- chat drawer ---------- */
-.chat{position:fixed;top:52px;right:0;bottom:0;width:392px;background:var(--paper);border-left:1px solid var(--cream-dark);border-top:1px solid var(--cream-dark);display:none;flex-direction:column;z-index:60}/* top:52 — чтобы заголовок помощника не уходил под тулбар-чром приложения (Chat/Library/Plugins) */
+.chat{position:fixed;top:52px;right:0;bottom:0;width:var(--chatw,392px);background:var(--paper);border-left:1px solid var(--cream-dark);border-top:1px solid var(--cream-dark);display:none;flex-direction:column;z-index:60}/* top:52 — чтобы заголовок помощника не уходил под тулбар-чром приложения (Chat/Library/Plugins) */
 .chat.open{display:flex}
+.chat-rsz{position:absolute;left:-3px;top:0;bottom:0;width:7px;cursor:col-resize;z-index:5}
+.chat-rsz:hover{background:rgba(198,126,52,.25)}
 .chat-head{padding:14px 18px;border-bottom:1px solid var(--cream-dark);display:flex;align-items:center;gap:10px}
 .chat-head b{font-size:13.5px}
 .chat-head .sub{font-size:11.5px;color:var(--silver)}
@@ -545,7 +547,7 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
 </div>
 
 <!-- CHAT -->
-<div class="chat" id="chat">
+<div class="chat" id="chat"><div class="chat-rsz" id="chatRsz" title="Потяни, чтобы изменить ширину"></div>
   <div class="chat-head">
     <b>Мастер Extella</b><span class="sub">ведёт интервью · заполняет конспект сам</span>
     <div class="spacer" style="flex:1"></div>
@@ -4333,6 +4335,17 @@ async function openReport(){
 }
 
 /* ================= chat ================= */
+(function(){
+  try{var w=parseInt(localStorage.getItem('wz_chat_w')||'');if(w>=320&&w<=720)document.documentElement.style.setProperty('--chatw',w+'px');}catch(e){}
+  document.addEventListener('mousedown',function(e){
+    if(!e.target||e.target.id!=='chatRsz')return;
+    e.preventDefault();
+    function mv(ev){var w=Math.min(720,Math.max(320,window.innerWidth-ev.clientX));document.documentElement.style.setProperty('--chatw',w+'px');}
+    function up(ev){document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);
+      try{localStorage.setItem('wz_chat_w',String(parseInt(getComputedStyle(document.documentElement).getPropertyValue('--chatw'))||392));}catch(e){}}
+    document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up);
+  });
+})();
 function toggleChat(){
   el("chat").classList.toggle("open");
   const open = el("chat").classList.contains("open");

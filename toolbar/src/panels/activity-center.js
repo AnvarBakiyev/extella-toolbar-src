@@ -16,7 +16,7 @@
   };
 
   var css = [
-    '#_xtlac_root{position:fixed;right:12px;bottom:12px;z-index:2147483638;font-family:-apple-system,system-ui,sans-serif;color:var(--etb-tx,#f0f0f0);pointer-events:auto}',
+    '#_xtlac_root{position:fixed;right:12px;bottom:84px;z-index:2147483638;font-family:-apple-system,system-ui,sans-serif;color:var(--etb-tx,#f0f0f0);pointer-events:auto}',
     '#_xtlac_pill{height:34px;display:flex;align-items:center;gap:8px;padding:0 12px;border:1px solid var(--etb-bd2,rgba(255,255,255,.13));border-radius:8px;background:var(--etb-s1,#111);color:var(--etb-tx,#f0f0f0);box-shadow:0 2px 20px rgba(0,0,0,.35);cursor:pointer;font:600 11px/1 -apple-system,system-ui,sans-serif;max-width:330px}',
     '#_xtlac_pill:hover{border-color:rgba(198,126,52,.55)}',
     // Ручка перетаскивания: видимая аффорданса + курсор говорят «меня можно двигать»
@@ -71,7 +71,7 @@
     '#_xtlac_empty{padding:24px 12px;text-align:center;color:var(--etb-tx2,#888);font-size:11px;line-height:1.5}',
     '@keyframes _xtlac_pulse{50%{opacity:.45;transform:scale(.86)}}',
     '@keyframes _xtlac_in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}',
-    '@media(max-width:860px){#_xtlac_root{right:8px;bottom:8px}#_xtlac_pill{max-width:150px}#_xtlac_text{display:none}#_xtlac_panel{width:min(410px,calc(100vw - 16px))}}'
+    '@media(max-width:860px){#_xtlac_root{right:8px;bottom:76px}#_xtlac_pill{max-width:150px}#_xtlac_text{display:none}#_xtlac_panel{width:min(410px,calc(100vw - 16px))}}'
   ].join('');
 
   function el(tag, attrs, text) {
