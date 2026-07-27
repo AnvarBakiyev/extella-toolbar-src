@@ -4,14 +4,19 @@
 <meta charset="UTF-8">
 <style>
   *{margin:0;padding:0;box-sizing:border-box;user-select:none}
-  html,body{width:100%;height:100%;overflow:hidden;background:#000}
+  :root{--body-bg:#0D0D0D}
+  html[data-theme="light"]{--body-bg:#FAF9F5}
+  html,body{width:100%;height:100%;overflow:hidden;background:var(--body-bg)}
   body{display:flex;align-items:center;justify-content:center;opacity:1;transition:opacity 200ms cubic-bezier(0.16,1,0.3,1)}
   body.hiding{opacity:0}
-  video{width:150px;height:auto}
+  /* Видео с собственным чёрным фоном — показываем скруглённой плиткой-иконкой:
+     на тёмной теме сливается с фоном, на светлой читается как тёмная иконка. */
+  .tile{width:150px;border-radius:16px;overflow:hidden;background:#000}
+  video{display:block;width:100%;height:auto}
 </style>
 </head>
 <body>
-  <video autoplay loop muted playsinline src="./splash.mp4"></video>
+  <div class="tile"><video autoplay loop muted playsinline src="./splash.mp4"></video></div>
   <script>
     window.loadingOverlay.onThemeChanged((theme) => {
       document.documentElement.setAttribute('data-theme', theme);
