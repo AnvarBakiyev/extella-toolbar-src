@@ -9,6 +9,9 @@
 - База: `origin/main@e1d367ae808d06b61927ac1a0b0f7df7c972a4bd`
 - Перенос простой Evolution Console v0.7: `2442ca7`
 - MCP implementation: `71b8862fc65b7ecae17cc93d5a4e6c95c9ecd504`
+- Handoff первого read slice: `f553c77`
+- Live Travel facts + MCP contract v1.1 hardening:
+  `7fce44d`
 - Версия карточки Evolution Console: `0.8.0`
 - Roadmap v0.2:
   `/Users/anvarbakiyev/Documents/Codex/EXTELLA_AGENT_CONTROL_CENTER_MCP_FIRST_ROADMAP.md`
@@ -32,10 +35,20 @@ Tool Contract, Extension, Binding и Run Evidence могли бы появить
   артефакт, созданный генератором стандартов.
 - Добавлены closed schema и validation пяти объектов:
   MCP Connection, Tool Contract, MCP Extension, Tool Binding и Run Evidence.
-- Добавлен provider, который читает один точный account-global ключ
-  `xtl_evolution:mcp_registry:v1`.
+- Добавлен provider, который читает единственный operational KV-ключ
+  `_mkt_xtl_evolution_mcp_registry_v1` только по закрытому trusted locator с
+  точным account/profile/agent scope.
 - Добавлен тонкий read-only Gateway и одна router-операция `mcp_read`.
-- Добавлены двуязычные incomplete/warning состояния и reviewed demo slice.
+- Добавлены двуязычные availability/access/incomplete состояния и reviewed
+  Travel slice без вымышленных бизнес-инструментов, Extensions, Bindings и
+  прогонов.
+- Единая account-shared platform Connection моделируется один раз с
+  `automation_ids[]`, а не копируется с вымышленными ID.
+- Legacy registry v1 читается, но без coverage никогда не получает
+  `complete: true`.
+- Исторический Run Evidence не исчезает после выключения текущего Binding.
+- Reserved registry key закрыт от общих iframe bridges как через прямой KV,
+  так и через `_etb_kv_get` / `_etb_kv_set`.
 - Карточка поднята с `0.7.0` до `0.8.0`; capability
   `mcp_read_inventory` объявляет `external_writes: false`.
 - Новый Expert не создавался.
@@ -46,14 +59,15 @@ Tool Contract, Extension, Binding и Run Evidence могли бы появить
 
 - Automation Registry:
   `extella.evolution.automation_registry.v1`, `scope=CURRENT_DEVICE`;
-- MCP registry: `extella.evolution.mcp_registry.v1`;
-- MCP KV key: `xtl_evolution:mcp_registry:v1`.
+- current MCP registry: `extella.evolution.mcp_registry.v1.1`;
+- strict legacy input: `extella.evolution.mcp_registry.v1`;
+- MCP KV key: `_mkt_xtl_evolution_mcp_registry_v1`.
 
 Схемы:
 
-- `extella.evolution.mcp_read_contract.v1`;
-- `extella.evolution.mcp_read_snapshot.v1`;
-- `extella.evolution.mcp_read_response.v1`.
+- `extella.evolution.mcp_read_contract.v1.1`;
+- `extella.evolution.mcp_read_snapshot.v1.1`;
+- `extella.evolution.mcp_read_response.v1.1`.
 
 Точный read allowlist:
 
@@ -72,7 +86,13 @@ Tool Contract, Extension, Binding и Run Evidence могли бы появить
 - страница ограничена 100 строками, cursor принадлежит текущему snapshot;
 - effective Tool Binding требует `enabled === true` и component state
   `PRESENT`;
+- `enabled: UNKNOWN` требует `bindings: PARTIAL`, affecting warning и
+  `complete: false`;
+- для каждого внутреннего агента `PRESENT` current registry обязан дать
+  точный `access_posture`; ноль Bindings не считается нулём доступа;
 - Run Evidence возвращает hashes, а не payload;
+- выключенный current Binding скрывается из effective Bindings, но его
+  проверенный исторический Run Evidence сохраняется;
 - dangling reference при полных источниках отклоняется;
 - `UNKNOWN` при неполной привязке даёт warning, скрывает неподтверждённые
   bindings/evidence и согласованно ставит
@@ -84,6 +104,25 @@ Tool Contract, Extension, Binding и Run Evidence могли бы появить
   отклоняются;
 - Gateway не имеет writer, cache, storage, execution primitive или второго
   ledger.
+
+Live source:
+
+- `automation_id: extella_travel_agency`;
+- `platform_agent_id: agent_eUSuv3enLqKkZd2lj0aeI`;
+- source SHA-256:
+  `0731b0290eaead8768f3d02693f5cc7897284c356b461ee2fb7ae59d77119b7e`;
+- 1 shared platform Connection, 48 наблюдаемых platform tools, 0 business
+  tools;
+- Tool Contracts не раскрыты; MCP Extensions и automation-scoped Bindings не
+  существуют; production Run Evidence отсутствует;
+- exact excessive-access evidence:
+  `agent_delete_mcp_extella`, `profile_delete_mcp_extella`,
+  `token_generate_mcp_extella`.
+
+Fixture
+`docs/EVOLUTION_MCP_TRAVEL_REGISTRY_V1_1.example.json` намеренно содержит
+`owner_account_id: account_demo`: trusted provisioner обязан materialize
+authenticated owner и новое `checked_at`, затем выполнить exact read-back.
 
 Полный контракт:
 `docs/EVOLUTION_MCP_READ_CONTRACT_V1.md`.
@@ -111,20 +150,21 @@ UI и manifest:
 
 ## 6. Проверки
 
-- `node --check` для трёх MCP core-модулей: passed.
-- Focused contract/Gateway/Console tests: `26/26` passed.
-- `npm test -w @extella/toolbar`: `223/223` passed,
+- `node --check` для contract, provider, Gateway, router, marketplace и
+  install prompt: passed.
+- `npm test -w @extella/toolbar`: `247/247` passed,
   `0` failed, `0` skipped.
 - `npm run build:toolbar`: passed, `111` plugin definitions.
 - `check_brand_copy.py --strict`: бренд соблюдён.
-- `npm run test:reproducible`: passed.
+- `npm run test:reproducible`: passed,
+  `cfff4d8325c519df38831ff76d029fb4cba87ffe73de59a504b14fe3046b33e0`.
 - `npm run test:managed-runtime`: passed.
 - `git diff --check`: passed.
 - Финальный независимый adversarial audit: PASS, замечаний P0–P2 нет.
 - Диагностический `toolbar/build/toolbar.js`:
   SHA-256
-  `dee8c70275b0aaa147f7ef9ccdb48e2f0f303c90e4c6add4305bc404585d3e01`,
-  `8,784,058` bytes.
+  `cfff4d8325c519df38831ff76d029fb4cba87ffe73de59a504b14fe3046b33e0`,
+  `8,853,738` bytes.
 
 Честные оговорки по гейтам:
 
@@ -148,8 +188,11 @@ UI и manifest:
 
 ## 8. Что сознательно не входит
 
-- Writer для `xtl_evolution:mcp_registry:v1`: до trusted provisioning live UI
+- Writer для `_mkt_xtl_evolution_mcp_registry_v1`: до trusted provisioning
+  live UI
   честно показывает incomplete/unknown.
+- Trusted `evolutionAdapter.getMcpRegistryLocator`: без него provider делает
+  ноль KV-чтений и возвращает `MCP_REGISTRY_SCOPE_UNAVAILABLE`.
 - Реальный `stdio` или private transport: сейчас adapter доступен через
   Desktop toolbar bridge; будущий host IPC обязан переиспользовать его.
 - Отдельная tenant identity: текущий host использует одно значение как
@@ -165,16 +208,19 @@ Evolution.
 
 ## 9. Интегратору
 
-1. Брать полной единицей `2442ca7` и `71b8862`: build order, Core, router,
-   UI, manifest, tests и contract. Не переносить только UI или только тесты.
+1. Брать ветку полной единицей до `7fce44d`: `2442ca7`, `71b8862`,
+   `f553c77`, `7fce44d` плюс следующий handoff-коммит. Не переносить только UI,
+   fixture или тесты.
 2. Merge выполняет только интегратор.
 3. После merge пересобрать из чистого checkout актуального `origin/main`.
 4. Повторить полный suite, strict brand и release gates; проверить
    `^</script>` = 0, число плагинов и release sentinels.
 5. Установить только подписанным штатным путём и провести живую приёмку в
    Xtel.
-6. Trusted provisioning MCP registry и расширение генератора Agent Cabinet
-   оформить отдельными задачами.
+6. Отдельно реализовать trusted locator adapter и provisioner с exact
+   read-back; затем провести живую проверку Travel registry в Xtel.
+7. Расширение генератора Agent Cabinet для access posture/Bindings оформить
+   отдельной задачей стандартов.
 
 Ветка не деплоилась: командный протокол запрещает release и toolbar override
 из feature-worktree.
@@ -182,8 +228,8 @@ Evolution.
 ## 10. Откат
 
 - До merge: не сливать ветку.
-- После merge: revert merge-коммита; при выборочном переносе откатить оба
-  коммита `71b8862` и `2442ca7`.
+- После merge: revert merge-коммита; при выборочном переносе откатить
+  `7fce44d`, `71b8862` и `2442ca7` вместе с их handoff-коммитами.
 - Пересобрать предыдущий подписанный release из чистого `origin/main` и
   установить штатным путём.
 - Data rollback не требуется: ветка не пишет и не мигрирует registry.
