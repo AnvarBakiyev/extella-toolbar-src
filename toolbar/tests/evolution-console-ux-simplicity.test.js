@@ -88,7 +88,7 @@ function copyValue(block, key) {
   return normalized(match[2]);
 }
 
-test('Evolution Console opens with overview, attention, and automation list in that order', () => {
+test('Evolution Console opens with one-line summary and automation cards only', () => {
   const views = viewTags();
   assert.ok(views.length >= 2, 'overview must remain separate from deeper views');
 
@@ -115,102 +115,73 @@ test('Evolution Console opens with overview, attention, and automation list in t
     .filter((region) => region.name);
   assert.deepEqual(
     regions.map((region) => region.name),
-    ['summary', 'attention', 'registry'],
-    'the first view must answer: how many, what needs attention, who is in the fleet',
+    ['summary', 'registry'],
+    'the first view must answer only: what is running and which automations exist',
+  );
+  assert.doesNotMatch(overview, /\bid\s*=\s*(['"])attentionSection\1/i);
+  assert.doesNotMatch(overview, /\bdata-attention-list\b/i);
+  assert.doesNotMatch(overview, /<table\b/i);
+  assert.match(
+    overview,
+    /<div\b[^>]*class="automation-list"[^>]*id="fleetRows"[^>]*role="list"/i,
   );
 });
 
-test('the overview registry exposes no more than five visible columns', () => {
-  const overview = viewSource('overview');
-  const registryTable = openingTags(overview, 'table').find(
-    (tag) => attribute(tag.source, 'data-evolution-registry') === 'automations',
+test('the product exposes exactly Evolution Console and Evolution Lab as primary surfaces', () => {
+  const surfaces = openingTags(consoleHtml).filter(
+    (tag) => attribute(tag.source, 'data-primary-surface'),
   );
-  assert.ok(registryTable, 'overview must contain the fleet registry table');
-
-  const tableEnd = overview.indexOf('</table>', registryTable.index);
-  assert.notEqual(tableEnd, -1, 'fleet registry table must be closed');
-  const tableSource = overview.slice(registryTable.index, tableEnd);
-  const visibleHeaders = openingTags(tableSource, 'th').filter((tag) => (
-    !hasAttribute(tag.source, 'hidden')
-    && attribute(tag.source, 'aria-hidden') !== 'true'
-    && attribute(tag.source, 'data-column-visibility') !== 'advanced'
-  ));
-
-  assert.ok(visibleHeaders.length >= 3, 'the registry must remain useful');
-  assert.ok(
-    visibleHeaders.length <= 5,
-    `expected at most 5 visible columns, found ${visibleHeaders.length}`,
+  assert.equal(surfaces.length, 2);
+  assert.deepEqual(
+    surfaces.map((tag) => attribute(tag.source, 'data-primary-surface')),
+    ['console', 'lab'],
   );
 
-  const columns = visibleHeaders.map(
-    (header) => attribute(header.source, 'data-registry-column'),
-  );
-  assert.ok(
-    columns.every(Boolean),
-    'every visible registry column needs a stable semantic marker',
-  );
-  assert.equal(new Set(columns).size, columns.length);
-  for (const essentialColumn of ['automation', 'availability', 'composition']) {
-    assert.ok(
-      columns.includes(essentialColumn),
-      `registry must keep its ${essentialColumn} column`,
-    );
-  }
-});
+  const consoleSurface = surfaces[0];
+  assert.match(consoleSurface.source, /^<button\b/i);
+  assert.equal(attribute(consoleSurface.source, 'data-view'), 'fleet');
 
-test('attention cards expose both a destination filter and an explicit action', () => {
-  const overview = viewSource('overview');
-  assert.match(overview, /\bdata-attention-list\s*=\s*(['"])actionable\1/i);
-
-  const helperStart = consoleHtml.indexOf('function attentionButton(');
-  const helperEnd = consoleHtml.indexOf(
-    'function renderAttention()',
-    helperStart,
-  );
-  assert.ok(
-    helperStart >= 0 && helperEnd > helperStart,
-    'an attention card helper must be present',
-  );
-  const cardTemplate = consoleHtml.slice(helperStart, helperEnd);
-  assert.match(cardTemplate, /data-attention-card/);
-  assert.match(cardTemplate, /data-attention-filter/);
-  assert.match(cardTemplate, /data-attention-action/);
-
+  const labSurface = surfaces[1];
+  assert.match(labSurface.source, /^<button\b/i);
+  assert.equal(attribute(labSurface.source, 'data-view'), 'lab');
   assert.match(
     consoleHtml,
-    /(?:dataset\.attentionFilter|getAttribute\(\s*['"]data-attention-filter['"]\s*\))/,
-    'attention filter contract must be wired, not decorative',
+    /<section class="view" id="labView" data-evolution-view="lab">/,
   );
+  const labButtonEnd = consoleHtml.indexOf('</button>', labSurface.index);
+  assert.notEqual(labButtonEnd, -1);
   assert.match(
-    consoleHtml,
-    /(?:dataset\.attentionAction|getAttribute\(\s*['"]data-attention-action['"]\s*\)|querySelectorAll\(\s*['"]\[data-attention-action)/,
-    'attention action contract must be wired, not decorative',
+    consoleHtml.slice(labSurface.index, labButtonEnd + '</button>'.length),
+    />\s*Evolution Lab\s*<\/button>/i,
   );
 });
 
-test('advanced Evolution navigation is separate and collapsed by default', () => {
-  const advancedNav = openingTags(consoleHtml, 'details').find(
-    (tag) => attribute(tag.source, 'data-nav-tier') === 'advanced',
+test('installed automations are selected by default and Catalog is a peer switch', () => {
+  const overview = viewSource('overview');
+  const installed = openingTags(overview, 'button').find(
+    (tag) => attribute(tag.source, 'data-fleet-filter') === 'installed',
   );
-  assert.ok(advancedNav, 'advanced navigation must have its own tier');
-  assert.equal(
-    hasAttribute(advancedNav.source, 'open'),
-    false,
-    'native disclosure must be collapsed by default',
+  const catalog = openingTags(overview, 'button').find(
+    (tag) => attribute(tag.source, 'data-fleet-filter') === 'catalog',
   );
+  assert.ok(installed, 'My automations switch is required');
+  assert.ok(catalog, 'Catalog switch is required');
+  assert.match(installed.source, /\bclass="[^"]*\bon\b[^"]*"/i);
+  assert.equal(attribute(installed.source, 'aria-pressed'), 'true');
+  assert.equal(attribute(catalog.source, 'aria-pressed'), 'false');
 
-  const advancedEnd = consoleHtml.indexOf('</details>', advancedNav.index);
-  assert.notEqual(advancedEnd, -1, 'advanced navigation must be closed');
-  const advancedSource = consoleHtml.slice(advancedNav.index, advancedEnd);
-  assert.match(advancedSource, /<summary\b[^>]*data-t="advanced"/i);
-  for (const view of ['risks', 'bulk', 'receipts']) {
-    assert.match(
-      advancedSource,
-      new RegExp(`\\bdata-view\\s*=\\s*(['"])${view}\\1`),
-      `${view} belongs to advanced navigation`,
-    );
-  }
-  assert.doesNotMatch(advancedSource, /\bdata-view\s*=\s*(['"])fleet\1/);
+  const selectedInstalled = openingTags(overview, 'option').find(
+    (tag) => (
+      attribute(tag.source, 'value') === 'installed'
+      && hasAttribute(tag.source, 'selected')
+    ),
+  );
+  assert.ok(selectedInstalled, 'installed must be the native default filter');
+  assert.match(
+    consoleHtml,
+    /el\('filterSelect'\)\.value='installed'/,
+    'account reset must restore the safe installed default',
+  );
 });
 
 test('tablet navigation receives a full flex row', () => {
@@ -221,53 +192,84 @@ test('tablet navigation receives a full flex row', () => {
   );
 });
 
-test('registry rows stay concise and delegate one-agent work to Agent Cabinet', () => {
-  const rowTemplates = [
-    ...consoleHtml.matchAll(
-      /<tr\b(?=[^>]*\bdata-registry-row\b)[\s\S]*?<\/tr>/gi,
-    ),
-  ].map((match) => match[0]);
-  assert.ok(rowTemplates.length > 0, 'a semantic registry row must be rendered');
+test('the one-line summary counts installed automations, not discrepancy categories', () => {
+  const overview = viewSource('overview');
+  for (const id of ['countWorking', 'countNotRunning', 'countAttention']) {
+    assert.match(overview, new RegExp(`\\bid="${id}"`));
+  }
 
-  const row = rowTemplates[0];
-  assert.ok(
-    (row.match(/<td\b/gi) || []).length <= 5,
-    'a registry row must contain no more than five visible cells',
+  const fleetStart = consoleHtml.indexOf('function renderFleet()');
+  const fleetEnd = consoleHtml.indexOf('function statusMark(', fleetStart);
+  assert.ok(fleetStart >= 0 && fleetEnd > fleetStart);
+  const renderFleet = consoleHtml.slice(fleetStart, fleetEnd);
+  assert.match(
+    renderFleet,
+    /installedRows\.filter\(function\(row\)\{return automationOperationalStatus\(row\)==='WORKING';\}\)\.length/,
+  );
+  assert.match(
+    renderFleet,
+    /installedRows\.filter\(function\(row\)\{return automationOperationalStatus\(row\)==='NOT_RUNNING';\}\)\.length/,
+  );
+  assert.match(
+    renderFleet,
+    /installedRows\.filter\(automationNeedsAttention\)\.length/,
   );
   assert.doesNotMatch(
-    row,
-    /check_agent_passport(?:\.py)?|checkerIssues|passportSha256|sha-?256|raw[-_ ]?evidence|<pre\b|<code\b|issue\.(?:path|code)/i,
-    'canonical checker details and raw evidence belong in a deeper view',
-  );
-  const renderStart = consoleHtml.indexOf('function renderFleet()');
-  const renderEnd = consoleHtml.indexOf(
-    'function statusMark(',
-    renderStart,
-  );
-  const componentStart = consoleHtml.indexOf('function renderComponentGroup(');
-  const renderFleet = consoleHtml.slice(componentStart, renderEnd);
-  assert.match(
     renderFleet,
-    /data-action="open-agent-cabinet"/,
-    'Agent Cabinet remains the one-agent CTA',
-  );
-
-  assert.match(
-    renderFleet,
-    /\[data-cab\][\s\S]{0,300}openCabinet\(/,
-    'the Agent Cabinet CTA must be wired to the existing cabinet',
+    /attentionCategoryCount\(\)/,
+    'the human count must not count engineering discrepancy categories',
   );
 });
 
-test('the primary automation row explains state before exposing deeper composition', () => {
-  const renderStart = consoleHtml.indexOf('function renderFleet()');
-  const renderEnd = consoleHtml.indexOf('function statusMark(', renderStart);
-  assert.ok(renderStart >= 0 && renderEnd > renderStart);
-  const renderFleet = consoleHtml.slice(renderStart, renderEnd);
+test('native automation cards hide machine enums in their closed summary', () => {
+  const cardStart = consoleHtml.indexOf('function renderAutomationCard(row)');
+  const cardEnd = consoleHtml.indexOf('function renderFleet()', cardStart);
+  assert.ok(cardStart >= 0 && cardEnd > cardStart);
+  const cardRenderer = consoleHtml.slice(cardStart, cardEnd);
   assert.match(
-    renderFleet,
-    /renderAutomationState\(row\)/,
-    'automation state belongs in the primary fleet row',
+    cardRenderer,
+    /return '<details class="automation-card"[^']*data-registry-row=/,
+  );
+  assert.doesNotMatch(
+    cardRenderer.match(/<summary[\s\S]*?<\/summary>/)?.[0] || '',
+    /\b(?:WORKING|STATE_UNAVAILABLE|NOT_RUNNING|dead_reference|installed_stale)\b/,
+    'closed card copy must contain human language only',
+  );
+  assert.doesNotMatch(
+    cardRenderer.match(/return '<details class="automation-card"[\s\S]*?';/)?.[0] || '',
+    /<details class="automation-card"[^>]*\bopen\b/,
+    'automation cards must be collapsed by default',
+  );
+  assert.match(cardRenderer, /data-automation-state-summary=/);
+  assert.match(cardRenderer, /automationCardLine\(row\)/);
+  assert.match(
+    cardRenderer,
+    /flags\.installed==='UNKNOWN'\?'installationUnknown':'installedNo'/,
+    'an unknown installation fact must not be presented as not installed',
+  );
+  assert.match(
+    consoleHtml,
+    /if\(installed==='UNKNOWN'\)return \{status:'UNKNOWN',kind:'warn',mark:'⚠',label:t\('installationUnknown'\)\}/,
+  );
+});
+
+test('opening a card reveals all four B4 facts and then collapsed technical evidence', () => {
+  const cardStart = consoleHtml.indexOf('function renderAutomationCard(row)');
+  const cardEnd = consoleHtml.indexOf('function renderFleet()', cardStart);
+  const cardRenderer = consoleHtml.slice(cardStart, cardEnd);
+  const summaryEnd = cardRenderer.indexOf('</summary>');
+  assert.ok(summaryEnd > 0);
+  assert.match(
+    cardRenderer,
+    /stateContent=flags\.installed===true\?renderAutomationState\(row\)/,
+  );
+  assert.ok(
+    cardRenderer.indexOf("'+stateContent+'") > summaryEnd,
+    'state facts must be reachable only after opening the card',
+  );
+  assert.ok(
+    cardRenderer.indexOf('renderAutomationTechnical(row)') > summaryEnd,
+    'technical evidence must be below the card summary',
   );
 
   const stateStart = consoleHtml.indexOf('function renderAutomationState(row)');
@@ -285,35 +287,48 @@ test('the primary automation row explains state before exposing deeper compositi
   ]) {
     assert.match(stateRenderer, new RegExp(`data-state-field="${field}"`));
   }
-  assert.match(stateRenderer, /actionStateRequired/);
+  assert.match(stateRenderer, /stateCheckUnavailableText/);
   assert.doesNotMatch(
     stateRenderer,
     /enabled\s*\?\s*['"]WORKING/,
     'the UI must not infer working from a cached boolean',
   );
+
+  const technicalStart = consoleHtml.indexOf(
+    'function renderAutomationTechnical(row)',
+  );
+  const technicalEnd = consoleHtml.indexOf(
+    'function renderAutomationCard(row)',
+    technicalStart,
+  );
+  const technicalRenderer = consoleHtml.slice(technicalStart, technicalEnd);
+  assert.match(
+    technicalRenderer,
+    /<details class="technical-details" data-technical-details="collapsed">/,
+  );
+  assert.doesNotMatch(
+    technicalRenderer,
+    /<details class="technical-details"[^>]*\bopen\b/,
+  );
 });
 
-test('schedule and automation action details use plain-language fail-closed explanations', () => {
-  const compositionStart = consoleHtml.indexOf(
-    'function renderAutomationComposition(row)',
-  );
-  const compositionEnd = consoleHtml.indexOf(
-    'function renderAutomationRisks(',
-    compositionStart,
-  );
-  assert.ok(compositionStart >= 0 && compositionEnd > compositionStart);
-  const composition = consoleHtml.slice(compositionStart, compositionEnd);
-  assert.match(composition, /renderAutomationActionGates\(row\)/);
-
+test('automation action evidence is text-only while fail-closed reasons remain', () => {
   const actionsStart = consoleHtml.indexOf(
     'function renderAutomationActionGates(row)',
   );
-  assert.ok(actionsStart >= 0 && actionsStart < compositionStart);
-  const actionRenderer = consoleHtml.slice(actionsStart, compositionStart);
-  assert.match(actionRenderer, /type="button" disabled/);
+  const actionsEnd = consoleHtml.indexOf(
+    'function renderAutomationComposition(row)',
+    actionsStart,
+  );
+  assert.ok(actionsStart >= 0 && actionsEnd > actionsStart);
+  const actionRenderer = consoleHtml.slice(actionsStart, actionsEnd);
   assert.match(actionRenderer, /actionGateMessage\(gate,status\)/);
-  assert.doesNotMatch(actionRenderer, /onclick|data-automation-action/);
+  assert.match(actionRenderer, /data-action-gate=/);
+  assert.doesNotMatch(actionRenderer, /<button\b|\bdisabled\b/);
+  assert.doesNotMatch(consoleHtml, /data-automation-action=/);
+});
 
+test('schedule cards keep two machine-readable axes behind human copy', () => {
   const scheduleStart = consoleHtml.indexOf('function renderScheduleItem(item)');
   const scheduleEnd = consoleHtml.indexOf(
     'function componentArrays(',
@@ -321,38 +336,29 @@ test('schedule and automation action details use plain-language fail-closed expl
   );
   assert.ok(scheduleStart >= 0 && scheduleEnd > scheduleStart);
   const scheduleRenderer = consoleHtml.slice(scheduleStart, scheduleEnd);
-  assert.match(scheduleRenderer, /scheduleOperational/);
-  assert.match(scheduleRenderer, /scheduleReference/);
+  assert.match(scheduleRenderer, /data-schedule-operational=/);
+  assert.match(scheduleRenderer, /data-schedule-reference=/);
+  assert.match(
+    scheduleRenderer,
+    /<details class="technical-details"><summary>/,
+    'raw schedule states belong behind progressive disclosure',
+  );
+  const referenceStart = consoleHtml.indexOf(
+    'function scheduleReferencePresentation(item)',
+  );
+  const referenceEnd = consoleHtml.indexOf(
+    'function renderScheduleItem(item)',
+    referenceStart,
+  );
+  const referenceRenderer = consoleHtml.slice(referenceStart, referenceEnd);
+  assert.match(
+    referenceRenderer,
+    /status==='MISSING'[\s\S]{0,120}label:t\('scheduleMissingHuman'\)/,
+  );
+  assert.doesNotMatch(referenceRenderer, /label:'dead_reference/);
 });
 
-test('the attention metric and attention cards share one aggregation', () => {
-  const overview = viewSource('overview');
-  assert.match(overview, /\bdata-summary-attention\b/);
-  assert.match(overview, /\bid\s*=\s*(['"])countAttention\1/);
-
-  const attentionStart = consoleHtml.indexOf('function renderAttention()');
-  const attentionEnd = consoleHtml.indexOf(
-    'function geneById(',
-    attentionStart,
-  );
-  const attentionSource = consoleHtml.slice(attentionStart, attentionEnd);
-  assert.match(
-    attentionSource,
-    /\battentionFacts\(\)/,
-    'attention cards must use the shared canonical aggregation',
-  );
-
-  const fleetStart = consoleHtml.indexOf('function renderFleet()');
-  const fleetEnd = consoleHtml.indexOf('function statusMark(', fleetStart);
-  const fleetSource = consoleHtml.slice(fleetStart, fleetEnd);
-  assert.match(
-    fleetSource,
-    /countAttention['"]\)\.textContent\s*=\s*attentionCategoryCount\(\)/,
-    'the metric must count the exact categories rendered below it',
-  );
-});
-
-test('the fleet registry becomes labelled cards on mobile', () => {
+test('automation cards remain cards on mobile', () => {
   const mobileBreakpoint = consoleHtml.match(
     /@media\s*\(\s*max-width\s*:\s*700px\s*\)\s*\{([\s\S]*?)\n\s*\}/,
   );
@@ -360,28 +366,63 @@ test('the fleet registry becomes labelled cards on mobile', () => {
   const mobileCss = normalized(mobileBreakpoint[1]);
   assert.match(
     mobileCss,
-    /\.table-wrap\s+thead\s*\{\s*display\s*:\s*none\s*\}/,
-    'the desktop header must not compete with mobile field labels',
+    /\.automation-card>summary\s*\{\s*grid-template-columns\s*:\s*1fr auto\s*\}/,
   );
   assert.match(
     mobileCss,
-    /tr\[data-registry-row\]\s*\{\s*display\s*:\s*grid\b/,
-    'each mobile agent must become a self-contained card',
+    /\.technical-grid\s*\{\s*grid-template-columns\s*:\s*1fr\s*\}/,
+  );
+});
+
+test('Agent Cabinet is available only from collapsed automation composition', () => {
+  const componentStart = consoleHtml.indexOf('function renderComponentGroup(');
+  const componentEnd = consoleHtml.indexOf(
+    'function actionGateMessage(',
+    componentStart,
+  );
+  const componentRenderer = consoleHtml.slice(componentStart, componentEnd);
+  assert.match(componentRenderer, /data-action="open-agent-cabinet"/);
+
+  const compositionStart = consoleHtml.indexOf(
+    'function renderAutomationComposition(row)',
+  );
+  const compositionEnd = consoleHtml.indexOf(
+    'function renderAutomationRisks(',
+    compositionStart,
+  );
+  const compositionRenderer = consoleHtml.slice(
+    compositionStart,
+    compositionEnd,
   );
   assert.match(
-    mobileCss,
-    /\.mobile-label\s*\{\s*display\s*:\s*block\b/,
-    'mobile field labels must be visible',
+    compositionRenderer,
+    /<details class="composition" data-internal-agents="collapsed">/,
+  );
+  assert.doesNotMatch(
+    compositionRenderer,
+    /<details class="composition"[^>]*\bopen\b/,
+  );
+  assert.equal(
+    (consoleHtml.match(/data-action="open-agent-cabinet"/g) || []).length,
+    1,
+    'Agent Cabinet CTA must not leak into the card summary or top navigation',
+  );
+  assert.match(
+    consoleHtml,
+    /\[data-cab\][\s\S]{0,300}openCabinet\(/,
+    'the Agent Cabinet CTA must remain wired to the canonical cabinet',
   );
 
-  const row = consoleHtml.match(
-    /<tr\b(?=[^>]*\bdata-registry-row\b)[\s\S]*?<\/tr>/i,
+  const loadStart = consoleHtml.indexOf('async function loadFleet()');
+  const loadEnd = consoleHtml.indexOf(
+    'function ensureLegacyFleet()',
+    loadStart,
   );
-  assert.ok(row, 'a semantic registry row must be rendered');
-  assert.equal(
-    (row[0].match(/class="mobile-label"/g) || []).length,
-    5,
-    'all five mobile fields need an explicit label',
+  assert.ok(loadStart >= 0 && loadEnd > loadStart);
+  assert.match(
+    consoleHtml.slice(loadStart, loadEnd),
+    /applyAutomationRegistryResult\(result\)[\s\S]{0,160}ensureLegacyFleet\(\)/,
+    'the ordinary automation-card path must load the canonical Cabinet projection',
   );
 });
 
@@ -407,20 +448,29 @@ test('the simplified overview has matching human copy in Russian and English', (
   const en = languageBlock('en');
   const copyContract = {
     overviewTitle: ['Ваши автоматизации', 'Your automations'],
-    attentionTitle: ['Что требует внимания', 'Needs attention'],
     inventory: ['Автоматизации', 'Automations'],
-    attentionItems: ['типов расхождений', 'discrepancy types'],
-    needsAttention: ['требуют внимания', 'need attention'],
-    viewReason: ['Посмотреть причины', 'Review issues'],
+    myAutomations: ['Мои автоматизации', 'My automations'],
+    catalog: ['Каталог', 'Catalog'],
+    workingCount: ['работают', 'working'],
+    notRunningCount: ['не запущены', 'not running'],
+    attentionCount: ['требуют внимания', 'need attention'],
+    openAutomation: ['Открыть', 'Open'],
+    reviewAutomation: ['Разобраться', 'Review'],
     openCabinet: ['Открыть Agent Cabinet', 'Open Agent Cabinet'],
-    advanced: ['Дополнительно', 'More'],
     automationWorking: ['Работает', 'Working'],
-    automationStateUnavailable: ['Состояние недоступно', 'State unavailable'],
+    automationStateUnavailable: [
+      'Не удалось проверить состояние',
+      'Couldn’t check status',
+    ],
     automationNotRunning: ['Не запущена', 'Not running'],
     scheduleNone: ['Расписания нет', 'No schedule'],
+    scheduleMissingHuman: [
+      'Расписание не найдено.',
+      'Schedule could not be found.',
+    ],
     actionStateRequired: [
-      'Действие заблокировано: достоверное состояние автоматизации не получено.',
-      'Action blocked: a trustworthy automation state was not obtained.',
+      'Действия временно недоступны: сначала нужно проверить состояние автоматизации.',
+      'Actions are temporarily unavailable until the automation’s status can be checked.',
     ],
   };
 
