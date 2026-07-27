@@ -728,44 +728,41 @@
     }
     // Перетаскивание по горизонтали: плашка прибита к правому нижнему углу и в
     // узких окнах перекрывала чат. Сдвиг хранится и переживает перезапуск.
-    // Перетаскивание в ОБЕ оси (просьба Эллы: чип не должен ничего перекрывать —
-    // ставится куда удобно и позиция переживает перезапуск). 0/0 = родной угол.
-    var POS_KEY = '_xtlac_pos_x', POS_KEY_Y = '_xtlac_pos_y';
-    function _applyPos(x, y) {
-      var pw = pill.offsetWidth || 160, ph = pill.offsetHeight || 36;
-      var minX = -(window.innerWidth - pw - 24);
-      x = Math.min(0, Math.max(minX, x));
-      var minY = -(window.innerHeight - ph - 24);          // вверх — отрицательное
-      y = Math.min(0, Math.max(minY, y));
-      root.style.transform = (x || y) ? ('translate(' + x + 'px,' + y + 'px)') : '';
-      return { x: x, y: y };
+    // Перетаскивание по горизонтали (решение Эллы 27.07: вертикаль убрана).
+    // Сдвиг хранится и переживает перезапуск. 0 = родной правый угол.
+    var POS_KEY = '_xtlac_pos_x';
+    try { localStorage.removeItem('_xtlac_pos_y'); } catch (e) {}
+    function _applyPos(x) {
+      var pw = pill.offsetWidth || 160;
+      var min = -(window.innerWidth - pw - 24);           // до левого края
+      x = Math.min(0, Math.max(min, x));
+      root.style.transform = x ? ('translateX(' + x + 'px)') : '';
+      return x;
     }
-    var _savedX = 0, _savedY = 0;
+    var _savedX = 0;
     try { _savedX = parseInt(localStorage.getItem(POS_KEY) || '0', 10) || 0; } catch (e) {}
-    try { _savedY = parseInt(localStorage.getItem(POS_KEY_Y) || '0', 10) || 0; } catch (e) {}
-    if (_savedX || _savedY) { var _p0 = _applyPos(_savedX, _savedY); _savedX = _p0.x; _savedY = _p0.y; }
+    if (_savedX) _savedX = _applyPos(_savedX);
     var _drag = null, _dragged = false;
     pill.addEventListener('pointerdown', function (ev) {
-      _drag = { startX: ev.clientX, startY: ev.clientY, baseX: _savedX, baseY: _savedY };
+      _drag = { startX: ev.clientX, baseX: _savedX };
       _dragged = false;
       try { pill.setPointerCapture(ev.pointerId); } catch (e) {}
     });
     pill.addEventListener('pointermove', function (ev) {
       if (!_drag) return;
-      var dx = ev.clientX - _drag.startX, dy = ev.clientY - _drag.startY;
-      if (Math.abs(dx) > 4 || Math.abs(dy) > 4) _dragged = true;
+      var dx = ev.clientX - _drag.startX;
+      if (Math.abs(dx) > 4) _dragged = true;
       if (_dragged) {
         root.classList.add('dragging');
-        var p = _applyPos(_drag.baseX + dx, _drag.baseY + dy);
-        _savedX = p.x; _savedY = p.y;
+        _savedX = _applyPos(_drag.baseX + dx);
       }
     });
     pill.addEventListener('pointerup', function () {
-      if (_dragged) { try { localStorage.setItem(POS_KEY, String(_savedX)); localStorage.setItem(POS_KEY_Y, String(_savedY)); } catch (e) {} }
+      if (_dragged) { try { localStorage.setItem(POS_KEY, String(_savedX)); } catch (e) {} }
       _drag = null;
       root.classList.remove('dragging');
     });
-    window.addEventListener('resize', function () { var p = _applyPos(_savedX, _savedY); _savedX = p.x; _savedY = p.y; });
+    window.addEventListener('resize', function () { _savedX = _applyPos(_savedX); });
     pill.addEventListener('click', function (ev) {
       if (_dragged) { _dragged = false; ev.stopPropagation(); return; }  // конец перетаскивания ≠ клик
       setOpen(!state.open);
