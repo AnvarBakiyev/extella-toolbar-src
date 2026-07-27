@@ -361,7 +361,7 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
       <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#2a6f77,#14171e);display:flex;align-items:center;justify-content:center;font-size:26px">📜</div>
       <div>
         <div style="font:700 20px var(--sans);color:var(--ink,#0a0a0a)">Студия языков</div>
-        <div style="font-size:12.5px;color:var(--silver,#889)">предметные языки вашего аккаунта: программа словами дела → проверенный исполняемый результат</div>
+        <div style="font-size:12.5px;color:var(--silver,#889)">предметные языки твоего аккаунта: программа словами дела → проверенный исполняемый результат</div>
       </div>
       <button class="btn ghost" style="margin-left:auto;padding:8px 16px" onclick="openHelp('cspl')" title="Что делает, что гарантирует, а что нет">? Как это работает</button>
       <button class="btn ghost" style="padding:8px 16px" onclick="closeCsplStudio()">✕ Закрыть</button>
@@ -789,7 +789,7 @@ async function refreshAgentBadge(){
   try{ _agents = await fetch("/x/agents").then(r=>r.json()); }catch(e){ _agents={agents:[],current:""}; }
   const b=el("agentBadge"); if(!b) return;
   if(_agents && _agents.platform_ready===false){
-    b.textContent = _agents.auth_required ? "⚠ Запустите Extella" : "⚠ Нет связи";
+    b.textContent = _agents.auth_required ? "⚠ Запусти Extella" : "⚠ Нет связи";
     b.style.color="#a33b2f"; b.style.fontWeight="700";
     return;
   }
@@ -1374,7 +1374,7 @@ var _I18N_DICT = {
   "✓ ТЗ обновлено": "✓ Spec updated",
   "✓ Техзадание обновлено": "✓ Spec updated",
   "собираю ТЗ из сессии…": "assembling the spec from the session…",
-  "Текст ТЗ ещё не собран. Нажмите «Обновить ТЗ» — документ соберётся из интервью, плана и решений сессии.": "The spec text isn't assembled yet. Click «Update spec» — the document will be assembled from the interview, the plan and the session's decisions.",
+  "Текст ТЗ ещё не собран. Нажми «Обновить ТЗ» — документ соберётся из интервью, плана и решений сессии.": "The spec text isn't assembled yet. Click «Update spec» — the document will be assembled from the interview, the plan and the session's decisions.",
   "Дополните фразу в чате и нажми →": "Complete the phrase in the chat and press →",
   "Биллинг / платежи": "Billing / payments",
   "Возвраты / компенсации": "Refunds / compensation",
@@ -1610,7 +1610,7 @@ var _I18N_DICT = {
   "Расписание: ": "Schedule: ",
   "Запуск вручную": "Manual run",
   "скачать отчёт": "download report",
-  "Ещё не запускалось. Нажмите «Запустить сейчас».": "Not run yet. Click \"Run now\".",
+  "Ещё не запускалось. Нажми «Запустить сейчас».": "Not run yet. Click \"Run now\".",
   "Рабочая панель пака": "Pack work panel",
   "Вся доменная работа — лиды, подборки, рассылки, договоры — на вкладке «🧳 Работа».": "All domain work — leads, selections, mailings, contracts — is on the \"🧳 Work\" tab.",
   "🧳 К работе →": "🧳 To work →",
@@ -1629,7 +1629,7 @@ var _I18N_DICT = {
   "Открываю бриф…": "Opening brief…",
   "бриф в приложении": "brief in the app",
   "отчёт .xlsx": "report .xlsx",
-  "Запусков пока нет. Нажмите «▶ Запустить сейчас» — история появится здесь.": "No runs yet. Click \"▶ Run now\" — the history will appear here.",
+  "Запусков пока нет. Нажми «▶ Запустить сейчас» — история появится здесь.": "No runs yet. Click \"▶ Run now\" — the history will appear here.",
   "История запусков": "Run history",
   "Текущее: ": "Current: ",
   "Расписание не задано — запуск вручную.": "Schedule not set — run manually.",
@@ -2297,11 +2297,11 @@ function closeAnonStudio(){ var st=el('anon_studio'); if(!st||st.style.display==
 var XTL_HELP = {
   wizard: {
     icon: '\U0001FA84', title: 'Как работает Конструктор процессов',
-    sub: 'Превращает ваш рабочий процесс в работника, который дальше делает работу сам',
+    sub: 'Превращает твой рабочий процесс в работника, который дальше ведёт работу',
     steps: [
       'Вы рассказываете о задаче Мастеру справа — он ведёт интервью и сам заполняет конспект. Приложите файл-образец (выгрузку, шаблон) — это главное ускорение.',
       'Из разговора собирается план и техническое задание. Всё можно поправить словами или руками.',
-      'Машина собирает процесс шаг за шагом и <b>проверяет каждый шаг реальным запуском на вашем файле</b> — не «на словах».',
+      'Машина собирает процесс шаг за шагом и <b>проверяет каждый шаг реальным запуском на твоём файле</b> — не «на словах».',
       'Первый прогон даёт готовый отчёт. Дальше ставите расписание — и процесс работает без вас.'
     ],
     sure: [
@@ -2346,11 +2346,11 @@ var XTL_HELP = {
       'Вы описываете словами: какие колонки обязательны, какой фильтр по умолчанию, что считать итогом.',
       'Модель проектирует <b>спецификацию</b> — описание правил, а не бесконтрольный код.',
       'Спецификация проверяется на контрольных примерах.',
-      'Только после успешной проверки язык регистрируется в вашем аккаунте — и им можно пользоваться снова и снова.'
+      'Только после успешной проверки язык регистрируется в твоём аккаунте — и им можно пользоваться снова и снова.'
     ],
     sure: [
       'Язык <b>не регистрируется</b>, пока не прошёл контрольные прогоны.',
-      'Исполняет проверенное ядро; ваши формулировки задают правила, а не превращаются в непредсказуемый код.',
+      'Исполняет проверенное ядро; твои формулировки задают правила, а не превращаются в непредсказуемый код.',
       'Один раз описали — дальше пользуется вся команда.'
     ],
     nope: [
@@ -3538,7 +3538,7 @@ function renderSpec(){
     el("specSchemaCard").style.display = "none";
   }
   if(!S.spec){
-    el("specArea").innerHTML = `<div class="empty">Текст ТЗ ещё не собран. Нажмите «Обновить ТЗ» — документ соберётся из интервью, плана и решений сессии.</div>`;
+    el("specArea").innerHTML = `<div class="empty">Текст ТЗ ещё не собран. Нажми «Обновить ТЗ» — документ соберётся из интервью, плана и решений сессии.</div>`;
   } else {
     // #15: ТЗ мог отстать от плана (blueprint менялся после сборки ТЗ) — честно предупреждаем
     var _stale = (S._specStamp!==undefined) && (S._specStamp !== _bpStamp());
@@ -3896,7 +3896,7 @@ function renderTest(){
   el("buildRunner").innerHTML = `
     <div class="kicker">Сборка процесса</div>
     <div style="font-size:14px;margin-bottom:10px">${bp? "Процесс: <b>"+esc(bp.process_name)+"</b>" : "Сначала соберите план процесса (шаг «План»)."}</div>
-    <button class="btn gold" id="buildBtn" onclick="startBuild()" ${(!bp||running||waiting)?"disabled":""}>${running?"Идёт сборка…":waiting?"Ждёт вашего ответа ↓":(lb?"↻ Собрать заново":"🔨 Построить процесс")}</button>
+    <button class="btn gold" id="buildBtn" onclick="startBuild()" ${(!bp||running||waiting)?"disabled":""}>${running?"Идёт сборка…":waiting?"Ждёт твоего ответа ↓":(lb?"↻ Собрать заново":"🔨 Построить процесс")}</button>
     ${noFiles&&bp?`<button class="btn ghost" style="margin-left:8px" onclick="genSample()">⚗️ Сгенерировать пример данных</button>`:""}
     <span class="statusline" id="stBuild" style="margin-left:10px"></span>
     <div style="font-size:12px;color:var(--silver);margin-top:8px">Платформа сама составит план, создаст чернового эксперта, запустит его на образцах и опубликует только после приёмки. Одна попытка может занять до 15 минут, всего возможно четыре; экран можно закрыть — прогресс сохраняется.${noFiles?' Файла-образца пока нет: приложите свой или сгенерируйте синтетический — он помечается и не заменяет приёмку на реальных данных.':''}</div>`;
@@ -5333,7 +5333,7 @@ function _wzCabLaunch(a){
       // у дайджеста ценность в тексте, а не в цифрах → бриф выше чисел
       (AR.briefFirst ? digestBox+nums : nums+digestBox)+
       (lr.report_xlsx?'<div style="margin-top:8px"><a href="#" onclick="dlReport(\''+encodeURIComponent(lr.report_xlsx).replace(/\x27/g,"%27")+'\');return false" style="color:#c60;font-size:13px">скачать отчёт</a></div>':'')
-    ) : _wzCard('<div style="color:var(--silver);font-size:13px">Ещё не запускалось. Нажмите «Запустить сейчас».</div>');
+    ) : _wzCard('<div style="color:var(--silver);font-size:13px">Ещё не запускалось. Нажми «Запустить сейчас».</div>');
   if(lr) setTimeout(function(){ _wzDigestLoad(a.session_id); }, 40);   // C3: подтянуть сохранённый дайджест
   var panelCard = a.panel_url ? _wzCard(
       _wzH('Рабочая панель пака')+
@@ -5489,7 +5489,7 @@ function _wzCabRuns(a){
       '<span style="font-size:13px;color:var(--nav)">'+esc(ok||'')+(bits.length?' · '+bits.join(' · '):'')+'</span>'+
       (files.length?'<span style="font-size:12.5px;margin-left:auto">'+files.join(' · ')+'</span>':'')+
       '</div>';
-  }).join(''):'<div style="color:var(--silver);font-size:13px;padding:12px 0">Запусков пока нет. Нажмите «▶ Запустить сейчас» — история появится здесь.</div>';
+  }).join(''):'<div style="color:var(--silver);font-size:13px;padding:12px 0">Запусков пока нет. Нажми «▶ Запустить сейчас» — история появится здесь.</div>';
   // Запуск живёт в Обзоре в единственном экземпляре — здесь он был третьей копией
   // одной кнопки. История отвечает на вопрос «что было», а не «сделай ещё раз».
   return _wzCard('<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'+_wzH('История запусков')+
