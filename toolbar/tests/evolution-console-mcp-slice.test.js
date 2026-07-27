@@ -78,7 +78,7 @@ test('Console invokes one exact read tool and validates its response identity', 
   );
   assert.match(
     load,
-    /response\.schema!=='extella\.evolution\.mcp_read_response\.v1'/,
+    /response\.schema!=='extella\.evolution\.mcp_read_response\.v1\.1'/,
   );
   assert.match(
     load,
@@ -104,12 +104,28 @@ test('incomplete MCP data remains visibly incomplete in Russian and English', ()
     'renderMcpCompositionContent',
     'renderMcpCompositionHost',
   );
+  const accessRender = functionSlice(
+    'mcpAccessContent',
+    'renderMcpCompositionContent',
+  );
   assert.match(
     render,
     /data\.complete!==true\|\|!response\.snapshot\|\|response\.snapshot\.complete!==true/,
   );
   assert.match(render, /entry\.status==='error'/);
   assert.match(render, /t\('mcpIncomplete'\)/);
+  assert.match(render, /mcpCoverageContent\(availability\)/);
+  assert.match(render, /mcpAccessContent\(access,bindings\.length\)/);
+  assert.match(render, /t\('mcpSourceWarnings'\)/);
+  assert.match(render, /mcpInventoryCount\(tools\.length,availability&&availability\.tool_contracts/);
+  assert.match(render, /availability\.tool_contracts!=='OBSERVED_EMPTY'/);
+  assert.match(accessRender, /risk==='LEAST_PRIVILEGE'\?'leastPrivilegeAccess':'unknownAccess'/);
+  assert.match(accessRender, /scopeKey=unscoped\?'unscopedAccess':scoped\?'scopedAccess':'unknownAccessScope'/);
+  assert.match(accessRender, /bindingCount===0\?/);
+  assert.match(html, /Ноль Tool Bindings не означает отсутствие доступа\./);
+  assert.match(html, /Zero Tool Bindings does not mean zero access\./);
+  assert.match(html, /уровень прав неизвестен/);
+  assert.match(html, /access level unknown/);
 });
 
 test('Tool Bindings point to Agent Cabinet without creating another Cabinet', () => {
@@ -150,7 +166,7 @@ test('Console table sizing does not force the generated Agent Cabinet off-screen
   );
 });
 
-test('reviewed demo slice is a valid secret-free MCP registry projection', () => {
+test('reviewed Travel demo shows only observed platform MCP facts', () => {
   const source = functionSlice('demoMcpComposition', 'mockRequest');
   const context = {
     ETB: {},
@@ -186,11 +202,59 @@ test('reviewed demo slice is a valid secret-free MCP registry projection', () =>
 
   const response = plain(context.demo('extella_travel_agency'));
   assert.equal(response.data.mcp.connections.length, 1);
-  assert.equal(response.data.mcp.tools.length, 1);
-  assert.equal(response.data.mcp.bindings.length, 1);
+  assert.equal(
+    response.data.mcp.connections[0].connection_id,
+    'sys__all__sys_mcp_extella',
+  );
+  assert.equal(
+    response.data.mcp.connections[0].transport,
+    null,
+  );
+  assert.equal(response.data.mcp.connections[0].platform_managed, true);
+  assert.equal(
+    response.data.mcp.connections[0].scope_boundary,
+    'ACCOUNT_SHARED_PLATFORM',
+  );
+  assert.deepEqual(
+    response.data.mcp.connections[0].automation_ids,
+    ['extella_travel_agency'],
+  );
+  assert.equal(response.data.mcp.connections[0].endpoint, null);
+  assert.equal(response.data.mcp.tools.length, 0);
+  assert.equal(response.data.mcp.extensions.length, 0);
+  assert.equal(response.data.mcp.bindings.length, 0);
+  assert.equal(response.data.mcp.run_evidence.length, 0);
+  assert.deepEqual(response.data.mcp.availability, {
+    automation_id: 'extella_travel_agency',
+    connections: 'OBSERVED',
+    tool_contracts: 'NOT_EXPOSED',
+    extensions: 'NOT_APPLICABLE',
+    bindings: 'NOT_APPLICABLE',
+    run_evidence: 'OBSERVED_EMPTY',
+  });
+  assert.equal(response.data.mcp.access_posture.length, 1);
+  assert.deepEqual(response.data.mcp.access_posture[0], {
+    platform_agent_id: 'agent_demo_fixture_valid_beta',
+    scope: 'ACCOUNT_WIDE',
+    policy: 'UNSCOPED',
+    risk: 'EXCESSIVE',
+    observed_tool_count: 48,
+    business_tool_count: 0,
+    risk_evidence_tool_ids: [
+      'agent_delete_mcp_extella',
+      'profile_delete_mcp_extella',
+      'token_generate_mcp_extella',
+    ],
+  });
+  assert.equal(response.data.complete, false);
+  assert.equal(response.snapshot.complete, false);
   assert.equal(
     response.data.agent_cabinet.agents[0].tool_binding_count,
-    1,
+    0,
+  );
+  assert.deepEqual(
+    response.data.agent_cabinet.agents[0].access_posture,
+    response.data.mcp.access_posture[0],
   );
   const generatedCabinetIds = new Set(standardsBundle.agents.map((entry) => (
     entry.platformAgentId ||
@@ -199,29 +263,31 @@ test('reviewed demo slice is a valid secret-free MCP registry projection', () =>
   )));
   assert.equal(
     generatedCabinetIds.has(
-      response.data.mcp.bindings[0].platform_agent_id,
+      response.data.agent_cabinet.agents[0].platform_agent_id,
     ),
     true,
-    'preview binding must open an existing generated Agent Cabinet',
+    'preview composition must open an existing generated Agent Cabinet',
   );
 
   const registry = {
-    schema: 'extella.evolution.mcp_registry.v1',
+    schema: 'extella.evolution.mcp_registry.v1.1',
     owner_account_id: 'demo_actor',
     checked_at: '2026-07-27T12:00:00Z',
-    complete: true,
+    complete: false,
     source: {
-      kind: 'DEMO_FIXTURE',
-      id: 'evolution.mcp.demo',
-      version: '1.0.0',
-      sha256: '9'.repeat(64),
+      kind: 'REVIEWED_LIVE_FACTS',
+      id: 'MCP_REGISTRY_FACTS_travel.md',
+      version: null,
+      sha256: '0731b0290eaead8768f3d02693f5cc7897284c356b461ee2fb7ae59d77119b7e',
     },
+    availability: [response.data.mcp.availability],
+    access_posture: response.data.mcp.access_posture,
     connections: response.data.mcp.connections,
     tools: response.data.mcp.tools,
     extensions: response.data.mcp.extensions,
     bindings: response.data.mcp.bindings,
     run_evidence: response.data.mcp.run_evidence,
-    warnings: [],
+    warnings: response.warnings,
   };
   assert.deepEqual(
     plain(context.ETB.evolutionMcpContract.validateRegistry(
@@ -233,6 +299,11 @@ test('reviewed demo slice is a valid secret-free MCP registry projection', () =>
   assert.doesNotMatch(
     JSON.stringify(registry),
     /credential_value|Bearer\s|private_key|api_key/,
+  );
+  assert.doesNotMatch(
+    JSON.stringify(registry),
+    /mcp\.example\.test|tool\.travel\.search|extension\.travel\.audit|evidence\.travel/,
+    'the preview must not invent business MCP tools, Extensions or runs',
   );
 });
 
@@ -247,7 +318,7 @@ test('manifest declares the read-only MCP inventory without adding an Expert', (
     (row) => row.id === 'mcp_read_inventory',
   );
   assert.ok(capability);
-  assert.equal(capability.version, 'EVOLUTION_MCP_READ_CONTRACT_V1');
+  assert.equal(capability.version, 'EVOLUTION_MCP_READ_CONTRACT_V1_1');
   assert.equal(capability.external_writes, false);
   assert.deepEqual(manifest.experts, ['_etb_evolution_registry_scan_v1']);
 });

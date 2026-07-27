@@ -19,6 +19,12 @@ const gatewaySource = fs.readFileSync(path.join(
   'core',
   'evolution-mcp-read-gateway.js',
 ), 'utf8');
+const travelRegistry = JSON.parse(fs.readFileSync(path.join(
+  toolbarRoot,
+  '..',
+  'docs',
+  'EVOLUTION_MCP_TRAVEL_REGISTRY_V1_1.example.json',
+), 'utf8'));
 
 function plain(value) {
   return JSON.parse(JSON.stringify(value));
@@ -110,6 +116,32 @@ function automationRegistry(complete = true) {
       code: 'SOURCE_UNAVAILABLE',
     }],
   };
+}
+
+function travelAutomationRegistry(complete = true) {
+  const registry = automationRegistry(complete);
+  registry.rows = [{
+    ...registry.rows[0],
+    automation_id: 'extella_travel_agency',
+    name: {
+      ru: 'Агент турагентства',
+      en: 'Travel Agency Agent',
+    },
+    components: {
+      ...registry.rows[0].components,
+      platform_agents: [{
+        id: 'agent_eUSuv3enLqKkZd2lj0aeI',
+        state: 'PRESENT',
+        source: 'REVIEWED_LIVE_FACTS',
+      }],
+    },
+  }];
+  registry.counters = {
+    total: 1,
+    installed: 1,
+    catalog: 1,
+  };
+  return registry;
 }
 
 function mcpRegistry(complete = true) {
@@ -310,10 +342,27 @@ test('composition reuses exact Automation Registry components and projects Agent
 
   assert.equal(
     response.schema,
-    'extella.evolution.mcp_read_response.v1',
+    'extella.evolution.mcp_read_response.v1.1',
+  );
+  assert.equal(
+    response.snapshot.schema,
+    'extella.evolution.mcp_read_snapshot.v1.1',
   );
   assert.equal(response.context.account_id, 'account_demo');
-  assert.equal(response.snapshot.complete, true);
+  assert.equal(response.snapshot.complete, false);
+  assert.equal(response.data.complete, false);
+  assert.equal(response.data.mcp.complete, false);
+  assert.deepEqual(response.data.mcp.availability, {
+    automation_id: 'automation.demo',
+    connections: 'UNKNOWN',
+    tool_contracts: 'UNKNOWN',
+    extensions: 'UNKNOWN',
+    bindings: 'UNKNOWN',
+    run_evidence: 'UNKNOWN',
+  });
+  assert.ok(response.warnings.some(
+    (row) => row.code === 'MCP_LEGACY_COVERAGE_UNAVAILABLE',
+  ));
   assert.equal(
     response.snapshot.snapshot_id,
     `mcp_read_${'f'.repeat(64)}`,
@@ -329,6 +378,7 @@ test('composition reuses exact Automation Registry components and projects Agent
     platform_agent_id: 'agent_demo',
     component_state: 'PRESENT',
     tool_binding_count: 1,
+    access_posture: null,
   }]);
   assert.equal(counters.automationReads, 1);
   assert.equal(counters.mcpReads, 1);
@@ -522,6 +572,284 @@ test('latest Run Evidence is first and contains hashes rather than payloads', as
   );
   assert.equal(response.data.items[0].output_sha256, null);
   assert.doesNotMatch(JSON.stringify(response), /input_payload|output_payload/);
+});
+
+test('composition preserves historical evidence after its binding is disabled', async () => {
+  const registry = mcpRegistry();
+  registry.bindings[0].enabled = false;
+  const { gateway } = gatewayFixture({ mcp: registry });
+
+  const composition = plain(await gateway.invoke(
+    'automations.get_composition',
+    { automation_id: 'automation.demo' },
+    callContext({ requestId: 'request_historical_evidence' }),
+  ));
+  const evidence = plain(await gateway.invoke(
+    'runs.get_evidence',
+    { automation_id: 'automation.demo' },
+    callContext({ requestId: 'request_historical_evidence_list' }),
+  ));
+
+  assert.equal(composition.data.complete, false);
+  assert.deepEqual(composition.data.mcp.bindings, []);
+  assert.deepEqual(
+    composition.data.mcp.run_evidence.map((row) => row.evidence_id).sort(),
+    ['evidence.crm.latest', 'evidence.crm.older'],
+  );
+  assert.deepEqual(
+    composition.data.mcp.run_evidence.map((row) => row.evidence_id).sort(),
+    evidence.data.items.map((row) => row.evidence_id).sort(),
+  );
+});
+
+test('Travel composition preserves honest absence and account-wide access', async () => {
+  const registry = plain(travelRegistry);
+  const { gateway } = gatewayFixture({
+    automation: travelAutomationRegistry(),
+    mcp: registry,
+  });
+  const composition = plain(await gateway.invoke(
+    'automations.get_composition',
+    { automation_id: 'extella_travel_agency' },
+    callContext({ requestId: 'request_travel_composition' }),
+  ));
+
+  assert.equal(composition.snapshot.complete, false);
+  assert.equal(composition.data.complete, false);
+  assert.equal(
+    composition.data.mcp.connections[0].connection_id,
+    'sys__all__sys_mcp_extella',
+  );
+  assert.deepEqual(composition.data.mcp.tools, []);
+  assert.deepEqual(composition.data.mcp.extensions, []);
+  assert.deepEqual(composition.data.mcp.bindings, []);
+  assert.deepEqual(composition.data.mcp.run_evidence, []);
+  assert.deepEqual(composition.data.mcp.availability, {
+    automation_id: 'extella_travel_agency',
+    connections: 'OBSERVED',
+    tool_contracts: 'NOT_EXPOSED',
+    extensions: 'NOT_APPLICABLE',
+    bindings: 'NOT_APPLICABLE',
+    run_evidence: 'OBSERVED_EMPTY',
+  });
+  assert.deepEqual(
+    composition.data.mcp.access_posture,
+    registry.access_posture,
+  );
+  assert.equal(
+    composition.data.agent_cabinet.agents[0].tool_binding_count,
+    0,
+  );
+  assert.deepEqual(
+    composition.data.agent_cabinet.agents[0].access_posture,
+    registry.access_posture[0],
+  );
+  assert.doesNotMatch(
+    JSON.stringify(composition),
+    /tool\.travel|extension\.travel|evidence\.travel|mcp\.example\.test/,
+  );
+
+  const connections = plain(await gateway.invoke(
+    'mcp.connections.list',
+    { automation_id: 'extella_travel_agency' },
+    callContext({ requestId: 'request_travel_connections' }),
+  ));
+  assert.deepEqual(connections.data.availability, registry.availability[0]);
+  assert.deepEqual(connections.data.access_posture, registry.access_posture);
+});
+
+test('one shared platform Connection projects to every declared automation consumer', async () => {
+  const registry = plain(travelRegistry);
+  registry.connections[0].automation_ids.push('automation.second');
+  registry.availability.push({
+    automation_id: 'automation.second',
+    connections: 'OBSERVED',
+    tool_contracts: 'OBSERVED_EMPTY',
+    extensions: 'OBSERVED_EMPTY',
+    bindings: 'OBSERVED_EMPTY',
+    run_evidence: 'OBSERVED_EMPTY',
+  });
+  const automations = travelAutomationRegistry();
+  automations.rows.push(automationRegistry().rows[1]);
+  automations.counters = {
+    total: 2,
+    installed: 1,
+    catalog: 2,
+  };
+  const { gateway } = gatewayFixture({
+    automation: automations,
+    mcp: registry,
+  });
+
+  const first = plain(await gateway.invoke(
+    'mcp.connections.list',
+    { automation_id: 'extella_travel_agency' },
+    callContext({ requestId: 'request_shared_connection_travel' }),
+  ));
+  const second = plain(await gateway.invoke(
+    'mcp.connections.list',
+    { automation_id: 'automation.second' },
+    callContext({ requestId: 'request_shared_connection_second' }),
+  ));
+
+  assert.deepEqual(
+    first.data.items.map((row) => row.connection_id),
+    ['sys__all__sys_mcp_extella'],
+  );
+  assert.deepEqual(
+    second.data.items.map((row) => row.connection_id),
+    ['sys__all__sys_mcp_extella'],
+  );
+});
+
+test('complete v1.1 coverage cannot omit access posture for a present agent', async () => {
+  const registry = plain(travelRegistry);
+  registry.complete = true;
+  registry.availability[0].tool_contracts = 'OBSERVED_EMPTY';
+  registry.availability[0].bindings = 'OBSERVED_EMPTY';
+  registry.access_posture = [];
+  registry.warnings = [];
+
+  await assert.rejects(
+    () => gatewayFixture({
+      automation: travelAutomationRegistry(),
+      mcp: registry,
+    }).gateway.invoke(
+      'automations.get_composition',
+      { automation_id: 'extella_travel_agency' },
+      callContext({ requestId: 'request_missing_access_posture' }),
+    ),
+    (error) => {
+      assert.equal(error.code, 'MCP_ACCESS_POSTURE_REFERENCE_MISSING');
+      return true;
+    },
+  );
+});
+
+test('foreign access posture fails closed or stays unresolved', async () => {
+  const registry = plain(travelRegistry);
+  registry.access_posture[0].platform_agent_id = 'agent_foreign';
+
+  await assert.rejects(
+    () => gatewayFixture({
+      automation: travelAutomationRegistry(),
+      mcp: registry,
+    }).gateway.invoke(
+      'automations.get_composition',
+      { automation_id: 'extella_travel_agency' },
+      callContext({ requestId: 'request_foreign_access' }),
+    ),
+    (error) => {
+      assert.equal(error.code, 'MCP_ACCESS_POSTURE_REFERENCE_DANGLING');
+      return true;
+    },
+  );
+
+  const partialAutomation = travelAutomationRegistry(false);
+  const response = plain(await gatewayFixture({
+    automation: partialAutomation,
+    mcp: registry,
+  }).gateway.invoke(
+    'automations.get_composition',
+    { automation_id: 'extella_travel_agency' },
+    callContext({ requestId: 'request_unresolved_access' }),
+  ));
+  assert.deepEqual(response.data.mcp.access_posture, []);
+  assert.equal(
+    response.data.agent_cabinet.agents[0].access_posture,
+    null,
+  );
+  assert.ok(response.warnings.some(
+    (row) => row.code === 'MCP_ACCESS_POSTURE_REFERENCE_UNRESOLVED',
+  ));
+});
+
+test('access posture from another automation cannot satisfy no-bindings coverage', async () => {
+  const registry = plain(travelRegistry);
+  registry.access_posture[0].platform_agent_id = 'agent_other_automation';
+  const automations = travelAutomationRegistry();
+  automations.rows.push({
+    ...automationRegistry().rows[0],
+    automation_id: 'automation.other',
+    components: {
+      ...automationRegistry().rows[0].components,
+      platform_agents: [{
+        id: 'agent_other_automation',
+        state: 'PRESENT',
+        source: 'AUTOMATION_PASSPORT',
+      }],
+    },
+  });
+  automations.counters.total = 2;
+  automations.counters.installed = 2;
+  automations.counters.catalog = 2;
+
+  const response = plain(await gatewayFixture({
+    automation: automations,
+    mcp: registry,
+  }).gateway.invoke(
+    'automations.get_composition',
+    { automation_id: 'extella_travel_agency' },
+    callContext({ requestId: 'request_wrong_automation_access' }),
+  ));
+
+  assert.equal(response.snapshot.complete, false);
+  assert.equal(response.data.mcp.complete, false);
+  assert.deepEqual(response.data.mcp.access_posture, []);
+  assert.ok(response.warnings.some(
+    (row) => row.code === 'MCP_ACCESS_POSTURE_REFERENCE_UNRESOLVED',
+  ));
+});
+
+test('non-affecting risk warnings do not falsify an otherwise complete snapshot', async () => {
+  const registry = plain(travelRegistry);
+  registry.complete = true;
+  registry.availability[0].tool_contracts = 'OBSERVED_EMPTY';
+  registry.warnings = [{
+    code: 'ACCOUNT_WIDE_ACCESS_REVIEW',
+    message_ru: 'Доступ требует отдельного решения владельца.',
+    message_en: 'Access requires a separate owner decision.',
+    source: 'travel.mcp.live_facts',
+    severity: 'error',
+    affects_completeness: false,
+  }];
+  const response = plain(await gatewayFixture({
+    automation: travelAutomationRegistry(),
+    mcp: registry,
+  }).gateway.invoke(
+    'automations.get_composition',
+    { automation_id: 'extella_travel_agency' },
+    callContext({ requestId: 'request_non_affecting_warning' }),
+  ));
+
+  assert.equal(response.snapshot.complete, true);
+  assert.equal(response.data.complete, true);
+  assert.equal(response.data.mcp.complete, true);
+  assert.equal(response.warnings[0].severity, 'error');
+  assert.equal(response.warnings[0].affects_completeness, false);
+});
+
+test('legacy warnings keep MCP composition incomplete even when source claims complete', async () => {
+  const registry = mcpRegistry();
+  registry.warnings = [{
+    code: 'LEGACY_SOURCE_WARNING',
+    message_ru: 'Источник требует проверки.',
+    message_en: 'The source requires review.',
+    source: 'evolution.mcp.registry',
+  }];
+  const response = plain(await gatewayFixture({ mcp: registry }).gateway.invoke(
+    'automations.get_composition',
+    { automation_id: 'automation.demo' },
+    callContext({ requestId: 'request_legacy_warning' }),
+  ));
+
+  assert.equal(response.snapshot.complete, false);
+  assert.equal(response.data.complete, false);
+  assert.equal(response.data.mcp.complete, false);
+  response.warnings.forEach((row) => {
+    assert.equal(typeof row.severity, 'string');
+    assert.equal(typeof row.affects_completeness, 'boolean');
+  });
 });
 
 test('wrong context, unknown tools and open arguments fail before source reads', async () => {

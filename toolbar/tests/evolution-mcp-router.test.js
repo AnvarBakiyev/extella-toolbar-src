@@ -13,6 +13,12 @@ const router = fs.readFileSync(path.join(
   'core',
   'router.js',
 ), 'utf8');
+const marketplace = fs.readFileSync(path.join(
+  toolbarRoot,
+  'src',
+  'panels',
+  'marketplace.js',
+), 'utf8');
 
 function plain(value) {
   return JSON.parse(JSON.stringify(value));
@@ -28,6 +34,8 @@ function actionHarness() {
     automationLoads: 0,
     mcpLoads: 0,
     contextChecks: 0,
+    locatorRequests: [],
+    providerLocator: null,
   };
   const context = {
     ETB: {
@@ -48,10 +56,24 @@ function actionHarness() {
         },
       },
       evolutionMcpRegistryProvider: {
+        REGISTRY_KEY: '_mkt_xtl_evolution_mcp_registry_v1',
         load(options) {
           captured.mcpLoads += 1;
+          captured.providerLocator = plain(options.locator);
           options.assertContext();
           return Promise.resolve({ schema: 'mcp' });
+        },
+      },
+      evolutionAdapter: {
+        getMcpRegistryLocator(request) {
+          captured.locatorRequests.push(plain(request));
+          return {
+            account_id: 'account_demo',
+            profile_id: 'default',
+            scope_agent_id: 'agent_scope_demo',
+            key: '_mkt_xtl_evolution_mcp_registry_v1',
+            global: true,
+          };
         },
       },
     },
@@ -128,6 +150,19 @@ test('router injects the canonical readers into one thin MCP read adapter', asyn
   await captured.create.loadMcpRegistry();
   assert.equal(captured.automationLoads, 1);
   assert.equal(captured.mcpLoads, 1);
+  assert.deepEqual(captured.locatorRequests, [{
+    account_id: 'account_demo',
+    profile_id: 'default',
+    key: '_mkt_xtl_evolution_mcp_registry_v1',
+    global: true,
+  }]);
+  assert.deepEqual(captured.providerLocator, {
+    account_id: 'account_demo',
+    profile_id: 'default',
+    scope_agent_id: 'agent_scope_demo',
+    key: '_mkt_xtl_evolution_mcp_registry_v1',
+    global: true,
+  });
   assert.ok(captured.contextChecks >= 1);
 });
 
@@ -146,12 +181,82 @@ test('router MCP read branch has no alternate fleet, ledger or mutation path', (
   );
   assert.match(
     source,
-    /return ETB\.evolutionMcpRegistryProvider\.load\(\{/,
+    /getMcpRegistryLocator\(\{[\s\S]*?ETB\.evolutionMcpRegistryProvider\.load\(\{/,
   );
   assert.doesNotMatch(
     source,
     /_evolutionFleetLoad|_evolutionPersist|_agentControlWrite|kvSet|bulk_|escalation_/,
   );
+});
+
+test('generic iframe KV and KV-expert bridges reserve the MCP registry key', () => {
+  const key = '_mkt_xtl_evolution_mcp_registry_v1';
+  const routerStart = router.indexOf(
+    'var reservedMcpRegistry=',
+  ) >= 0 ? router.indexOf('var reservedMcpRegistry=') :
+    router.indexOf('var reservedMcpRegistry =');
+  const routerEnd = router.indexOf(
+    "if (!okMkt && !okRuns && !okCapM)",
+    routerStart,
+  );
+  assert.ok(routerStart >= 0 && routerEnd > routerStart);
+  const routerGuard = router.slice(routerStart, routerEnd);
+  assert.match(routerGuard, new RegExp(key));
+  assert.match(routerGuard, /key reserved for the trusted Evolution MCP provider/);
+  assert.match(routerGuard, /return;/);
+
+  const marketStart = marketplace.indexOf('var _isReservedMcpRegistry');
+  const marketEnd = marketplace.indexOf(
+    'if (!_isMkt && !_isAgSt && !_isAgRuns && !_isCapMan)',
+    marketStart,
+  );
+  assert.ok(marketStart >= 0 && marketEnd > marketStart);
+  const marketGuard = marketplace.slice(marketStart, marketEnd);
+  assert.match(marketGuard, new RegExp(key));
+  assert.match(marketGuard, /key reserved for the trusted Evolution MCP provider/);
+  assert.match(marketGuard, /return;/);
+
+  const routerExpertStart = router.indexOf(
+    'var expertTargetsReservedMcpRegistry',
+  );
+  const routerExpertEnd = router.indexOf(
+    'ETB.api.runExpert(expertName, expertParams',
+    routerExpertStart,
+  );
+  assert.ok(routerExpertStart >= 0 && routerExpertEnd > routerExpertStart);
+  const routerExpertGuard = router.slice(
+    routerExpertStart,
+    routerExpertEnd,
+  );
+  assert.match(routerExpertGuard, /_etb_kv_get/);
+  assert.match(routerExpertGuard, /_etb_kv_set/);
+  assert.match(routerExpertGuard, new RegExp(key));
+  assert.match(
+    routerExpertGuard,
+    /key reserved for the trusted Evolution MCP provider/,
+  );
+  assert.match(routerExpertGuard, /return;/);
+
+  const marketExpertStart = marketplace.indexOf(
+    'var _expertTargetsReservedMcpRegistry',
+  );
+  const marketExpertEnd = marketplace.indexOf(
+    'ETB.api.runExpertAsync(_expertName, _expertParams',
+    marketExpertStart,
+  );
+  assert.ok(marketExpertStart >= 0 && marketExpertEnd > marketExpertStart);
+  const marketExpertGuard = marketplace.slice(
+    marketExpertStart,
+    marketExpertEnd,
+  );
+  assert.match(marketExpertGuard, /_etb_kv_get/);
+  assert.match(marketExpertGuard, /_etb_kv_set/);
+  assert.match(marketExpertGuard, new RegExp(key));
+  assert.match(
+    marketExpertGuard,
+    /key reserved for the trusted Evolution MCP provider/,
+  );
+  assert.match(marketExpertGuard, /return;/);
 });
 
 test('the tokenless built-in bridge has one exact mcp_read route', () => {

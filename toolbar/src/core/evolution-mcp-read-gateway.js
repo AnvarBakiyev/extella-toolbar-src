@@ -108,12 +108,15 @@ ETB.evolutionMcpReadGateway = (function () {
     return clone(value);
   }
 
-  function warning(code, messageRu, messageEn, source) {
+  function warning(code, messageRu, messageEn, source, severity,
+      affectsCompleteness) {
     return {
       code: String(code),
       message_ru: String(messageRu),
       message_en: String(messageEn),
-      source: String(source)
+      source: String(source),
+      severity: String(severity || 'warning'),
+      affects_completeness: affectsCompleteness !== false
     };
   }
 
@@ -124,6 +127,19 @@ ETB.evolutionMcpReadGateway = (function () {
         'Один из источников реестра автоматизаций недоступен.',
         'One of the Automation Registry sources is unavailable.',
         row && row.source || 'automation_registry'
+      );
+    });
+  }
+
+  function registryWarnings(registry) {
+    return registry.warnings.map(function (row) {
+      return warning(
+        row.code,
+        row.message_ru,
+        row.message_en,
+        row.source,
+        row.severity,
+        row.affects_completeness
       );
     });
   }
@@ -237,12 +253,21 @@ ETB.evolutionMcpReadGateway = (function () {
     function add(id) {
       if (id) ids[String(id)] = true;
     }
-    registry.connections.forEach(function (row) { add(row.automation_id); });
+    registry.connections.forEach(function (row) {
+      if (Array.isArray(row.automation_ids)) {
+        row.automation_ids.forEach(add);
+      } else {
+        add(row.automation_id);
+      }
+    });
     registry.tools.forEach(function (row) { add(row.automation_id); });
     registry.bindings.forEach(function (row) { add(row.automation_id); });
     registry.run_evidence.forEach(function (row) { add(row.automation_id); });
     registry.extensions.forEach(function (row) {
       row.automation_ids.forEach(add);
+    });
+    (registry.availability || []).forEach(function (row) {
+      add(row.automation_id);
     });
     return Object.keys(ids).sort();
   }
@@ -262,11 +287,15 @@ ETB.evolutionMcpReadGateway = (function () {
   function crossSourceWarnings(automationRegistry, mcpRegistry) {
     var known = {};
     var rows = {};
+    var availabilityByAutomation = {};
     var unresolved;
     var result;
     automationRegistry.rows.forEach(function (row) {
       known[String(row.automation_id)] = true;
       rows[String(row.automation_id)] = row;
+    });
+    (mcpRegistry.availability || []).forEach(function (row) {
+      availabilityByAutomation[String(row.automation_id)] = row;
     });
     unresolved = idsFromMcpRegistry(mcpRegistry).filter(function (id) {
       return !known[id];
@@ -287,6 +316,27 @@ ETB.evolutionMcpReadGateway = (function () {
         'evolution.mcp.registry'
       );
     });
+    if (!Array.isArray(mcpRegistry.availability)) {
+      result.push(warning(
+        'MCP_LEGACY_COVERAGE_UNAVAILABLE',
+        'Legacy-реестр MCP не сообщает, какие части состава были проверены.',
+        'The legacy MCP registry does not declare which composition surfaces were observed.',
+        'evolution.mcp.registry'
+      ));
+    } else {
+      var missingAvailability = automationRegistry.rows.some(function (row) {
+        var id = String(row && row.automation_id || '');
+        return !availabilityByAutomation[id];
+      });
+      if (missingAvailability) {
+        result.push(warning(
+          'MCP_AUTOMATION_AVAILABILITY_UNRESOLVED',
+          'Не для всех автоматизаций указано, какие части MCP были проверены.',
+          'Not every automation declares which MCP surfaces were observed.',
+          'evolution.mcp.registry'
+        ));
+      }
+    }
     mcpRegistry.bindings.forEach(function (binding) {
       var row = rows[binding.automation_id];
       var agentStates;
@@ -307,6 +357,53 @@ ETB.evolutionMcpReadGateway = (function () {
         'MCP_PLATFORM_AGENT_REFERENCE_UNRESOLVED',
         'Одна привязка инструмента не сопоставлена с подтверждённым внутренним агентом.',
         'A Tool Binding is unresolved against the proven internal agents.',
+        'evolution.mcp.registry'
+      ));
+    });
+    (mcpRegistry.access_posture || []).forEach(function (posture) {
+      var states = automationRegistry.rows.map(function (row) {
+        return componentAgentStates(row)[posture.platform_agent_id];
+      }).filter(Boolean);
+      if (states.indexOf('PRESENT') !== -1) return;
+      if (automationRegistry.complete === true &&
+          states.indexOf('UNKNOWN') === -1) {
+        throw error(
+          'MCP_ACCESS_POSTURE_REFERENCE_DANGLING',
+          'an access posture targets no usable internal platform_agent_id'
+        );
+      }
+      result.push(warning(
+        'MCP_ACCESS_POSTURE_REFERENCE_UNRESOLVED',
+        'Наблюдение прав доступа не сопоставлено с подтверждённым внутренним агентом.',
+        'An access observation is unresolved against the proven internal agents.',
+        'evolution.mcp.registry'
+      ));
+    });
+    (mcpRegistry.availability || []).forEach(function (availability) {
+      var row;
+      var agentStates;
+      var missingAccess;
+      row = rows[availability.automation_id];
+      if (!row) return;
+      agentStates = componentAgentStates(row);
+      missingAccess = Object.keys(agentStates).some(function (agentId) {
+        if (agentStates[agentId] !== 'PRESENT') return false;
+        return !(mcpRegistry.access_posture || []).some(function (posture) {
+          return posture.platform_agent_id === agentId;
+        });
+      });
+      if (!missingAccess) return;
+      if (automationRegistry.complete === true &&
+          mcpRegistry.complete === true) {
+        throw error(
+          'MCP_ACCESS_POSTURE_REFERENCE_MISSING',
+          'a complete automation composition needs access posture for every present agent'
+        );
+      }
+      result.push(warning(
+        'MCP_ACCESS_POSTURE_REFERENCE_UNRESOLVED',
+        'Не для каждого подтверждённого агента известен фактический доступ.',
+        'Actual access is not known for every proven internal agent.',
         'evolution.mcp.registry'
       ));
     });
@@ -349,23 +446,76 @@ ETB.evolutionMcpReadGateway = (function () {
 
   function matchingMcp(registry, automationIdValue, automationRow) {
     var agentStates = componentAgentStates(automationRow);
+    var registryComplete = registry.complete === true &&
+      !registry.warnings.some(warningAffectsCompleteness);
+    var availabilityRows = Array.isArray(registry.availability) ?
+      registry.availability.filter(function (row) {
+        return row.automation_id === automationIdValue;
+      }) : [];
+    var availability = availabilityRows[0] || null;
+    var accessCandidates = (registry.access_posture || []).filter(
+      function (row) {
+        return hasOwn(agentStates, row.platform_agent_id);
+      }
+    );
+    var accessPosture = accessCandidates.filter(function (row) {
+      return agentStates[row.platform_agent_id] === 'PRESENT';
+    });
+    var missingAccessPosture = Object.keys(agentStates).some(
+      function (agentId) {
+        if (agentStates[agentId] !== 'PRESENT') return false;
+        return !accessPosture.some(function (posture) {
+          return posture.platform_agent_id === agentId;
+        });
+      }
+    );
+    var coverageIncomplete = false;
+    if (!availability) {
+      availability = {
+        automation_id: automationIdValue,
+        connections: 'UNKNOWN',
+        tool_contracts: 'UNKNOWN',
+        extensions: 'UNKNOWN',
+        bindings: 'UNKNOWN',
+        run_evidence: 'UNKNOWN'
+      };
+      coverageIncomplete = true;
+    }
+    if (Array.isArray(registry.availability)) {
+      coverageIncomplete = coverageIncomplete || [
+        availability.connections,
+        availability.tool_contracts,
+        availability.extensions,
+        availability.bindings,
+        availability.run_evidence
+      ].some(function (state) {
+        return ['PARTIAL', 'NOT_EXPOSED', 'UNAVAILABLE', 'UNKNOWN']
+          .indexOf(state) !== -1;
+      });
+      if (missingAccessPosture) {
+        coverageIncomplete = true;
+      }
+    }
     var unresolved = registry.bindings.some(function (row) {
       return row.automation_id === automationIdValue &&
-        agentStates[row.platform_agent_id] !== 'PRESENT';
-    });
+        (agentStates[row.platform_agent_id] !== 'PRESENT' ||
+         row.enabled === 'UNKNOWN');
+    }) || accessPosture.length !== accessCandidates.length;
     var bindings = registry.bindings.filter(function (row) {
       return row.automation_id === automationIdValue &&
         row.enabled === true &&
         agentStates[row.platform_agent_id] === 'PRESENT';
     });
-    var bindingIds = {};
-    bindings.forEach(function (row) {
-      bindingIds[row.binding_id] = true;
-    });
     return {
-      complete: registry.complete === true && unresolved === false,
+      complete: registryComplete &&
+        unresolved === false &&
+        coverageIncomplete === false,
+      availability: clone(availability),
+      access_posture: clone(accessPosture),
       connections: registry.connections.filter(function (row) {
-        return row.automation_id === automationIdValue;
+        return row.automation_id === automationIdValue ||
+          (Array.isArray(row.automation_ids) &&
+           row.automation_ids.indexOf(automationIdValue) !== -1);
       }),
       tools: registry.tools.filter(function (row) {
         return row.automation_id === automationIdValue;
@@ -376,7 +526,7 @@ ETB.evolutionMcpReadGateway = (function () {
       bindings: bindings,
       run_evidence: registry.run_evidence.filter(function (row) {
         return row.automation_id === automationIdValue &&
-          bindingIds[row.binding_id] === true;
+          agentStates[row.platform_agent_id] === 'PRESENT';
       })
     };
   }
@@ -397,7 +547,12 @@ ETB.evolutionMcpReadGateway = (function () {
               return bindingRow.platform_agent_id === id &&
                 bindingRow.enabled === true;
             }
-          ).length : 0
+          ).length : 0,
+          access_posture: id ? clone(
+            composition.mcp.access_posture.filter(function (posture) {
+              return posture.platform_agent_id === id;
+            })[0] || null
+          ) : null
         };
       })
     };
@@ -481,7 +636,13 @@ ETB.evolutionMcpReadGateway = (function () {
       );
     }
     result.complete = automationRegistry.complete && scoped.complete;
+    result.availability = clone(scoped.availability);
+    result.access_posture = clone(scoped.access_posture);
     return result;
+  }
+
+  function warningAffectsCompleteness(row) {
+    return !row || row.affects_completeness !== false;
   }
 
   function create(options) {
@@ -539,7 +700,7 @@ ETB.evolutionMcpReadGateway = (function () {
           { accountId: accountId }
         );
         warnings = automationWarnings(automationRegistry)
-          .concat(clone(mcpRegistry.warnings))
+          .concat(registryWarnings(mcpRegistry))
           .concat(crossSourceWarnings(automationRegistry, mcpRegistry));
         return Promise.resolve(options.hash({
           account_id: accountId,
@@ -565,7 +726,7 @@ ETB.evolutionMcpReadGateway = (function () {
               captured_at: capturedAt,
               complete: automationRegistry.complete === true &&
                 mcpRegistry.complete === true &&
-                warnings.length === 0,
+                warnings.filter(warningAffectsCompleteness).length === 0,
               sources: [{
                 id: 'automation_registry',
                 schema: automationRegistry.schema,

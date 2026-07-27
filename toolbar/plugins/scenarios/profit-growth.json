@@ -41,8 +41,8 @@
     {
       "id": "mcp_read_inventory",
       "name": "MCP-состав автоматизаций",
-      "description": "Read-only состав MCP Connections, Tool Contracts, MCP Extensions, effective Tool Bindings и Run Evidence без credential values и вызова инструментов.",
-      "version": "EVOLUTION_MCP_READ_CONTRACT_V1",
+      "description": "Read-only состав MCP Connections, Tool Contracts, MCP Extensions, effective Tool Bindings, Run Evidence и фактических прав доступа; отсутствие данных показывается явно.",
+      "version": "EVOLUTION_MCP_READ_CONTRACT_V1_1",
       "external_writes": false
     },
     {

@@ -9,10 +9,11 @@
 ETB.evolutionMcpContract = (function () {
   'use strict';
 
-  var CONTRACT_SCHEMA = 'extella.evolution.mcp_read_contract.v1';
-  var REGISTRY_SCHEMA = 'extella.evolution.mcp_registry.v1';
-  var RESPONSE_SCHEMA = 'extella.evolution.mcp_read_response.v1';
-  var SNAPSHOT_SCHEMA = 'extella.evolution.mcp_read_snapshot.v1';
+  var CONTRACT_SCHEMA = 'extella.evolution.mcp_read_contract.v1.1';
+  var REGISTRY_SCHEMA = 'extella.evolution.mcp_registry.v1.1';
+  var LEGACY_REGISTRY_SCHEMA = 'extella.evolution.mcp_registry.v1';
+  var RESPONSE_SCHEMA = 'extella.evolution.mcp_read_response.v1.1';
+  var SNAPSHOT_SCHEMA = 'extella.evolution.mcp_read_snapshot.v1.1';
   var AUTOMATION_ID = /^[a-z0-9][a-z0-9._-]{1,79}$/;
   var OBJECT_ID = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,239}$/;
   var SEMVER =
@@ -31,7 +32,7 @@ ETB.evolutionMcpContract = (function () {
     '[?&](?:token|access[_-]?token|refresh[_-]?token|api[_-]?key|apikey|client[_-]?secret|secret|password)='
   ].join('|'), 'i');
 
-  var ROOT_KEYS = [
+  var LEGACY_ROOT_KEYS = [
     'bindings',
     'checked_at',
     'complete',
@@ -43,6 +44,25 @@ ETB.evolutionMcpContract = (function () {
     'source',
     'tools',
     'warnings'
+  ];
+  var ROOT_KEYS = LEGACY_ROOT_KEYS.concat([
+    'access_posture',
+    'availability'
+  ]);
+  var AVAILABILITY_STATES = [
+    'OBSERVED',
+    'OBSERVED_EMPTY',
+    'PARTIAL',
+    'NOT_EXPOSED',
+    'NOT_APPLICABLE',
+    'UNAVAILABLE',
+    'UNKNOWN'
+  ];
+  var INCOMPLETE_AVAILABILITY_STATES = [
+    'PARTIAL',
+    'NOT_EXPOSED',
+    'UNAVAILABLE',
+    'UNKNOWN'
   ];
   var READ_TOOLS = [
     {
@@ -278,20 +298,36 @@ ETB.evolutionMcpContract = (function () {
     seen.pop();
   }
 
-  function provenance(value, code, label) {
+  function provenance(value, code, label, allowPlatformObserved) {
     exactKeys(
       value,
       ['kind', 'sha256', 'source_id', 'source_version'],
       code,
       label
     );
-    enumValue(value.kind, ['local', 'shared'], code, label + '.kind');
+    enumValue(
+      value.kind,
+      allowPlatformObserved
+        ? ['local', 'shared', 'platform_observed']
+        : ['local', 'shared'],
+      code,
+      label + '.kind'
+    );
     exactId(value.source_id, code, label + '.source_id');
-    semver(value.source_version, code, label + '.source_version');
-    sha256(value.sha256, code, label + '.sha256');
+    if (value.kind === 'platform_observed') {
+      if (value.source_version !== null || value.sha256 !== null) {
+        fail(
+          code,
+          label + ' platform_observed provenance cannot invent version/hash'
+        );
+      }
+    } else {
+      semver(value.source_version, code, label + '.source_version');
+      sha256(value.sha256, code, label + '.sha256');
+    }
   }
 
-  function source(value) {
+  function source(value, currentSchema) {
     exactKeys(
       value,
       ['id', 'kind', 'sha256', 'version'],
@@ -300,12 +336,20 @@ ETB.evolutionMcpContract = (function () {
     );
     enumValue(
       value.kind,
-      [
-        'ACCOUNT_SCOPED_HOST_PROVIDER',
-        'AUTOMATION_PASSPORT',
-        'DEMO_FIXTURE',
-        'UNAVAILABLE'
-      ],
+      currentSchema
+        ? [
+          'ACCOUNT_SCOPED_HOST_PROVIDER',
+          'AUTOMATION_PASSPORT',
+          'DEMO_FIXTURE',
+          'REVIEWED_LIVE_FACTS',
+          'UNAVAILABLE'
+        ]
+        : [
+          'ACCOUNT_SCOPED_HOST_PROVIDER',
+          'AUTOMATION_PASSPORT',
+          'DEMO_FIXTURE',
+          'UNAVAILABLE'
+        ],
       'MCP_REGISTRY_SOURCE_INVALID',
       'registry source.kind'
     );
@@ -314,11 +358,20 @@ ETB.evolutionMcpContract = (function () {
       'MCP_REGISTRY_SOURCE_INVALID',
       'registry source.id'
     );
-    semver(
-      value.version,
-      'MCP_REGISTRY_SOURCE_INVALID',
-      'registry source.version'
-    );
+    if (value.kind === 'REVIEWED_LIVE_FACTS') {
+      if (value.version !== null) {
+        fail(
+          'MCP_REGISTRY_SOURCE_INVALID',
+          'reviewed live facts cannot invent a source version'
+        );
+      }
+    } else {
+      semver(
+        value.version,
+        'MCP_REGISTRY_SOURCE_INVALID',
+        'registry source.version'
+      );
+    }
     if (value.kind === 'UNAVAILABLE') {
       if (value.sha256 !== null) {
         fail(
@@ -426,19 +479,49 @@ ETB.evolutionMcpContract = (function () {
     });
   }
 
-  function connection(value) {
+  function connection(value, currentSchema) {
+    var sharedConsumers = false;
+    var directConsumer = false;
+    var currentKeys = [
+      'connection_id',
+      'credential_ref',
+      'endpoint',
+      'health',
+      'name',
+      'platform_managed',
+      'provenance',
+      'scope_boundary',
+      'transport'
+    ];
+    if (!object(value)) {
+      fail('MCP_CONNECTION_INVALID', 'MCP Connection must be an object');
+    }
+    if (currentSchema) {
+      sharedConsumers = hasOwn(value, 'automation_ids');
+      directConsumer = hasOwn(value, 'automation_id');
+      if (sharedConsumers === directConsumer) {
+        fail(
+          'MCP_CONNECTION_INVALID',
+          'Connection must declare exactly one consumer form'
+        );
+      }
+    }
     exactKeys(
       value,
-      [
-        'automation_id',
-        'connection_id',
-        'credential_ref',
-        'endpoint',
-        'health',
-        'name',
-        'provenance',
-        'transport'
-      ],
+      currentSchema
+        ? currentKeys.concat(
+          sharedConsumers ? ['automation_ids'] : ['automation_id']
+        )
+        : [
+          'automation_id',
+          'connection_id',
+          'credential_ref',
+          'endpoint',
+          'health',
+          'name',
+          'provenance',
+          'transport'
+        ],
       'MCP_CONNECTION_INVALID',
       'MCP Connection'
     );
@@ -447,18 +530,56 @@ ETB.evolutionMcpContract = (function () {
       'MCP_CONNECTION_INVALID',
       'connection_id'
     );
-    automationId(
-      value.automation_id,
-      'MCP_CONNECTION_INVALID',
-      'connection automation_id'
-    );
+    if (currentSchema && sharedConsumers) {
+      uniqueStrings(
+        value.automation_ids,
+        'MCP_CONNECTION_INVALID',
+        'connection automation_ids',
+        false
+      ).forEach(function (id) {
+        automationId(
+          id,
+          'MCP_CONNECTION_INVALID',
+          'connection automation_id'
+        );
+      });
+    } else {
+      automationId(
+        value.automation_id,
+        'MCP_CONNECTION_INVALID',
+        'connection automation_id'
+      );
+    }
     localizedName(value.name, 'MCP_CONNECTION_INVALID', 'connection name');
-    enumValue(
-      value.transport,
-      ['stdio', 'streamable_http', 'sse'],
-      'MCP_CONNECTION_INVALID',
-      'connection transport'
-    );
+    if (currentSchema) {
+      if (typeof value.platform_managed !== 'boolean') {
+        fail(
+          'MCP_CONNECTION_INVALID',
+          'connection platform_managed must be boolean'
+        );
+      }
+      enumValue(
+        value.scope_boundary,
+        ['AUTOMATION_SCOPED', 'ACCOUNT_SHARED_PLATFORM', 'UNKNOWN'],
+        'MCP_CONNECTION_INVALID',
+        'connection scope_boundary'
+      );
+    }
+    if (currentSchema && sharedConsumers) {
+      if (value.transport !== null) {
+        fail(
+          'MCP_CONNECTION_INVALID',
+          'account-shared platform transport must remain unknown'
+        );
+      }
+    } else {
+      enumValue(
+        value.transport,
+        ['stdio', 'streamable_http', 'sse'],
+        'MCP_CONNECTION_INVALID',
+        'connection transport'
+      );
+    }
     endpoint(value.endpoint, value.transport);
     if (value.credential_ref !== null &&
         !CREDENTIAL_REF.test(String(value.credential_ref))) {
@@ -471,8 +592,31 @@ ETB.evolutionMcpContract = (function () {
     provenance(
       value.provenance,
       'MCP_CONNECTION_INVALID',
-      'connection provenance'
+      'connection provenance',
+      currentSchema
     );
+    if (currentSchema && sharedConsumers &&
+        (value.endpoint !== null ||
+         value.credential_ref !== null ||
+         value.platform_managed !== true ||
+         value.scope_boundary !== 'ACCOUNT_SHARED_PLATFORM' ||
+         value.provenance.kind !== 'platform_observed' ||
+         value.provenance.source_version !== null ||
+         value.provenance.sha256 !== null)) {
+      fail(
+        'MCP_CONNECTION_INVALID',
+        'shared platform Connection must remain an unversioned account fact'
+      );
+    }
+    if (currentSchema && directConsumer &&
+        (value.platform_managed !== false ||
+         value.scope_boundary === 'ACCOUNT_SHARED_PLATFORM' ||
+         value.provenance.kind === 'platform_observed')) {
+      fail(
+        'MCP_CONNECTION_INVALID',
+        'direct Connection cannot claim account-shared platform provenance'
+      );
+    }
   }
 
   function tool(value) {
@@ -789,10 +933,12 @@ ETB.evolutionMcpContract = (function () {
     );
   }
 
-  function warning(value) {
+  function warning(value, currentSchema) {
     exactKeys(
       value,
-      ['code', 'message_en', 'message_ru', 'source'],
+      ['code', 'message_en', 'message_ru', 'source'].concat(
+        currentSchema ? ['affects_completeness', 'severity'] : []
+      ),
       'MCP_REGISTRY_WARNING_INVALID',
       'registry warning'
     );
@@ -818,6 +964,122 @@ ETB.evolutionMcpContract = (function () {
       'MCP_REGISTRY_WARNING_INVALID',
       'warning source'
     );
+    if (currentSchema) {
+      enumValue(
+        value.severity,
+        ['info', 'warning', 'error'],
+        'MCP_REGISTRY_WARNING_INVALID',
+        'warning severity'
+      );
+      if (typeof value.affects_completeness !== 'boolean') {
+        fail(
+          'MCP_REGISTRY_WARNING_INVALID',
+          'warning affects_completeness must be boolean'
+        );
+      }
+    }
+  }
+
+  function availability(value) {
+    exactKeys(
+      value,
+      [
+        'automation_id',
+        'bindings',
+        'connections',
+        'extensions',
+        'run_evidence',
+        'tool_contracts'
+      ],
+      'MCP_AVAILABILITY_INVALID',
+      'automation availability'
+    );
+    automationId(
+      value.automation_id,
+      'MCP_AVAILABILITY_INVALID',
+      'availability automation_id'
+    );
+    [
+      'connections',
+      'tool_contracts',
+      'extensions',
+      'bindings',
+      'run_evidence'
+    ].forEach(function (field) {
+      enumValue(
+        value[field],
+        AVAILABILITY_STATES,
+        'MCP_AVAILABILITY_INVALID',
+        'availability ' + field
+      );
+    });
+  }
+
+  function accessPosture(value) {
+    exactKeys(
+      value,
+      [
+        'business_tool_count',
+        'observed_tool_count',
+        'platform_agent_id',
+        'policy',
+        'risk',
+        'risk_evidence_tool_ids',
+        'scope'
+      ],
+      'MCP_ACCESS_POSTURE_INVALID',
+      'access posture'
+    );
+    exactId(
+      value.platform_agent_id,
+      'MCP_ACCESS_POSTURE_INVALID',
+      'access posture platform_agent_id'
+    );
+    enumValue(
+      value.scope,
+      ['AUTOMATION_SCOPED', 'ACCOUNT_WIDE', 'UNKNOWN'],
+      'MCP_ACCESS_POSTURE_INVALID',
+      'access posture scope'
+    );
+    enumValue(
+      value.policy,
+      ['SCOPED', 'UNSCOPED', 'UNKNOWN'],
+      'MCP_ACCESS_POSTURE_INVALID',
+      'access posture policy'
+    );
+    enumValue(
+      value.risk,
+      ['LEAST_PRIVILEGE', 'EXCESSIVE', 'UNKNOWN'],
+      'MCP_ACCESS_POSTURE_INVALID',
+      'access posture risk'
+    );
+    ['observed_tool_count', 'business_tool_count'].forEach(function (field) {
+      if (!Number.isInteger(value[field]) ||
+          value[field] < 0 || value[field] > 100000) {
+        fail(
+          'MCP_ACCESS_POSTURE_INVALID',
+          'access posture ' + field + ' must be between 0 and 100000'
+        );
+      }
+    });
+    if (value.business_tool_count > value.observed_tool_count) {
+      fail(
+        'MCP_ACCESS_POSTURE_INVALID',
+        'business_tool_count cannot exceed observed_tool_count'
+      );
+    }
+    var riskEvidence = uniqueStrings(
+      value.risk_evidence_tool_ids,
+      'MCP_ACCESS_POSTURE_INVALID',
+      'access posture risk_evidence_tool_ids',
+      true
+    );
+    if (value.risk === 'EXCESSIVE' && riskEvidence.length === 0) {
+      fail(
+        'MCP_ACCESS_POSTURE_INVALID',
+        'EXCESSIVE risk requires exact risk evidence tool ids'
+      );
+    }
   }
 
   function uniqueRows(rows, idField, validator, code, label) {
@@ -832,10 +1094,21 @@ ETB.evolutionMcpContract = (function () {
     return seen;
   }
 
+  function connectionAutomationIds(row) {
+    return Array.isArray(row.automation_ids)
+      ? row.automation_ids
+      : [row.automation_id];
+  }
+
+  function connectionConsumesAutomation(row, automationIdValue) {
+    return connectionAutomationIds(row).indexOf(automationIdValue) !== -1;
+  }
+
   function validateRelations(registry, maps) {
     registry.tools.forEach(function (row) {
       var linked = maps.connections[row.connection_id];
-      if (!linked || linked.automation_id !== row.automation_id) {
+      if (!linked ||
+          !connectionConsumesAutomation(linked, row.automation_id)) {
         fail(
           'MCP_TOOL_CONNECTION_DANGLING',
           'Tool Contract must reference a Connection in the same automation'
@@ -877,17 +1150,128 @@ ETB.evolutionMcpContract = (function () {
     });
   }
 
+  function rowsForAutomation(registry, field, automationId) {
+    if (field === 'connections') {
+      return registry.connections.filter(function (row) {
+        return connectionConsumesAutomation(row, automationId);
+      });
+    }
+    if (field === 'extensions') {
+      return registry.extensions.filter(function (row) {
+        return row.automation_ids.indexOf(automationId) !== -1;
+      });
+    }
+    var registryField = field === 'tool_contracts' ? 'tools' : field;
+    return registry[registryField].filter(function (row) {
+      return row.automation_id === automationId;
+    });
+  }
+
+  function validateAvailability(registry, availabilityMap) {
+    var topologyAutomationIds = {};
+    var emptyStates = [
+      'OBSERVED_EMPTY',
+      'NOT_EXPOSED',
+      'NOT_APPLICABLE',
+      'UNAVAILABLE',
+      'UNKNOWN'
+    ];
+    var fields = [
+      'connections',
+      'tool_contracts',
+      'extensions',
+      'bindings',
+      'run_evidence'
+    ];
+    registry.connections.forEach(function (row) {
+      connectionAutomationIds(row).forEach(function (automationIdValue) {
+        topologyAutomationIds[automationIdValue] = true;
+      });
+    });
+    [
+      registry.tools,
+      registry.bindings,
+      registry.run_evidence
+    ].forEach(function (rows) {
+      rows.forEach(function (row) {
+        topologyAutomationIds[row.automation_id] = true;
+      });
+    });
+    registry.extensions.forEach(function (row) {
+      row.automation_ids.forEach(function (automationIdValue) {
+        topologyAutomationIds[automationIdValue] = true;
+      });
+    });
+    Object.keys(topologyAutomationIds).forEach(function (automationIdValue) {
+      if (!availabilityMap[automationIdValue]) {
+        fail(
+          'MCP_REGISTRY_AVAILABILITY_MISSING',
+          'every automation topology row requires one availability row'
+        );
+      }
+    });
+    registry.availability.forEach(function (row) {
+      fields.forEach(function (field) {
+        var count = rowsForAutomation(
+          registry,
+          field,
+          row.automation_id
+        ).length;
+        if (row[field] === 'OBSERVED' && count === 0) {
+          fail(
+            'MCP_AVAILABILITY_INVALID',
+            'OBSERVED availability requires at least one matching row'
+          );
+        }
+        if (emptyStates.indexOf(row[field]) !== -1 && count !== 0) {
+          fail(
+            'MCP_AVAILABILITY_INVALID',
+            row[field] + ' availability forbids matching rows'
+          );
+        }
+        if (INCOMPLETE_AVAILABILITY_STATES.indexOf(row[field]) !== -1 &&
+            registry.complete !== false) {
+          fail(
+            'MCP_REGISTRY_AVAILABILITY_COMPLETENESS_INVALID',
+            row[field] + ' availability requires complete:false'
+          );
+        }
+      });
+      if (row.bindings === 'NOT_APPLICABLE' &&
+          registry.access_posture.length === 0) {
+        fail(
+          'MCP_AVAILABILITY_INVALID',
+          'bindings NOT_APPLICABLE requires an observed access posture'
+        );
+      }
+      if (registry.bindings.some(function (bindingRow) {
+        return bindingRow.automation_id === row.automation_id &&
+          bindingRow.enabled === 'UNKNOWN';
+      }) && row.bindings !== 'PARTIAL') {
+        fail(
+          'MCP_AVAILABILITY_INVALID',
+          'an UNKNOWN binding state requires PARTIAL availability'
+        );
+      }
+    });
+  }
+
   function validateRegistry(value, context) {
     var maps;
+    var currentSchema;
+    if (!object(value)) {
+      fail('MCP_REGISTRY_INVALID', 'MCP registry must be an object');
+    }
+    currentSchema = value.schema === REGISTRY_SCHEMA;
+    if (!currentSchema && value.schema !== LEGACY_REGISTRY_SCHEMA) {
+      fail('MCP_REGISTRY_INVALID', 'MCP registry schema is unsupported');
+    }
     exactKeys(
       value,
-      ROOT_KEYS,
+      currentSchema ? ROOT_KEYS : LEGACY_ROOT_KEYS,
       'MCP_REGISTRY_INVALID',
       'MCP registry'
     );
-    if (value.schema !== REGISTRY_SCHEMA) {
-      fail('MCP_REGISTRY_INVALID', 'MCP registry schema is unsupported');
-    }
     exactId(
       value.owner_account_id,
       'MCP_REGISTRY_INVALID',
@@ -908,7 +1292,7 @@ ETB.evolutionMcpContract = (function () {
     if (typeof value.complete !== 'boolean') {
       fail('MCP_REGISTRY_INVALID', 'registry complete must be boolean');
     }
-    source(value.source);
+    source(value.source, currentSchema);
     if (value.source.kind === 'UNAVAILABLE' && value.complete !== false) {
       fail(
         'MCP_REGISTRY_SOURCE_COMPLETENESS_INVALID',
@@ -918,18 +1302,38 @@ ETB.evolutionMcpContract = (function () {
     if (!Array.isArray(value.warnings)) {
       fail('MCP_REGISTRY_INVALID', 'registry warnings must be an array');
     }
-    value.warnings.forEach(warning);
+    value.warnings.forEach(function (row) {
+      warning(row, currentSchema);
+    });
     if (value.complete === false && value.warnings.length === 0) {
       fail(
         'MCP_REGISTRY_INCOMPLETE_WITHOUT_WARNING',
         'an incomplete MCP registry must explain why'
       );
     }
+    if (currentSchema && value.complete === false &&
+        !value.warnings.some(function (row) {
+          return row.affects_completeness === true;
+        })) {
+      fail(
+        'MCP_REGISTRY_INCOMPLETE_WITHOUT_WARNING',
+        'an incomplete MCP registry needs an affecting warning'
+      );
+    }
+    if (currentSchema && value.complete === true &&
+        value.warnings.some(function (row) {
+          return row.affects_completeness === true;
+        })) {
+      fail(
+        'MCP_REGISTRY_WARNING_COMPLETENESS_INVALID',
+        'a complete MCP registry cannot contain an affecting warning'
+      );
+    }
     maps = {
       connections: uniqueRows(
         value.connections,
         'connection_id',
-        connection,
+        function (row) { connection(row, currentSchema); },
         'MCP_CONNECTION_INVALID',
         'MCP Connections'
       ),
@@ -962,16 +1366,37 @@ ETB.evolutionMcpContract = (function () {
         'Run Evidence'
       )
     };
+    if (currentSchema) {
+      maps.availability = uniqueRows(
+        value.availability,
+        'automation_id',
+        availability,
+        'MCP_AVAILABILITY_INVALID',
+        'automation availability'
+      );
+      maps.accessPosture = uniqueRows(
+        value.access_posture,
+        'platform_agent_id',
+        accessPosture,
+        'MCP_ACCESS_POSTURE_INVALID',
+        'access postures'
+      );
+    }
     if (value.source.kind === 'UNAVAILABLE' &&
         (value.connections.length || value.tools.length ||
          value.extensions.length || value.bindings.length ||
-         value.run_evidence.length)) {
+         value.run_evidence.length ||
+         (currentSchema &&
+          (value.availability.length || value.access_posture.length)))) {
       fail(
         'MCP_REGISTRY_SOURCE_COMPLETENESS_INVALID',
         'an unavailable MCP registry source cannot claim topology facts'
       );
     }
     validateRelations(value, maps);
+    if (currentSchema) {
+      validateAvailability(value, maps.availability);
+    }
     assertNoSecrets(value, 'registry');
     return clone(value);
   }
@@ -998,6 +1423,8 @@ ETB.evolutionMcpContract = (function () {
         version: '1.0.0',
         sha256: null
       },
+      availability: [],
+      access_posture: [],
       connections: [],
       tools: [],
       extensions: [],
@@ -1007,7 +1434,9 @@ ETB.evolutionMcpContract = (function () {
         code: String(code || 'MCP_REGISTRY_UNAVAILABLE'),
         message_ru: 'Состав MCP пока не подтверждён источником аккаунта.',
         message_en: 'MCP composition is not yet proven by the account source.',
-        source: 'evolution.mcp.registry'
+        source: 'evolution.mcp.registry',
+        severity: 'warning',
+        affects_completeness: true
       }]
     };
   }
@@ -1019,6 +1448,7 @@ ETB.evolutionMcpContract = (function () {
   return {
     CONTRACT_SCHEMA: CONTRACT_SCHEMA,
     REGISTRY_SCHEMA: REGISTRY_SCHEMA,
+    LEGACY_REGISTRY_SCHEMA: LEGACY_REGISTRY_SCHEMA,
     RESPONSE_SCHEMA: RESPONSE_SCHEMA,
     SNAPSHOT_SCHEMA: SNAPSHOT_SCHEMA,
     READ_TOOLS: deepFreeze(clone(READ_TOOLS)),

@@ -118,7 +118,7 @@ test('Evolution Console manifest keeps exact product naming and a read-only surf
     evolutionManifest.capabilities.find(
       (capability) => capability.id === 'mcp_read_inventory',
     ).version,
-    'EVOLUTION_MCP_READ_CONTRACT_V1',
+    'EVOLUTION_MCP_READ_CONTRACT_V1_1',
   );
 
   const completeSurface = `${JSON.stringify(evolutionManifest)}\n${evolutionHtml}`;

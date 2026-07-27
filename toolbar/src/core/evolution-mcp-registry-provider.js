@@ -1,14 +1,24 @@
 // ── EXTELLA EVOLUTION · MCP REGISTRY PROVIDER ─────────────────────────────
-// Account-bound read-only provider for declared MCP topology.
+// Account-bound and explicitly scoped read-only provider for declared MCP
+// topology.
 //
-// The provider reads one exact global KV key. It has no fallback key, no
-// local cache and no write method. Missing or malformed topology remains an
+// The provider reads one exact global KV key only when a trusted, closed
+// locator names the account and owning agent scope. It has no fallback key,
+// local cache or write method. Missing or malformed topology remains an
 // explicit incomplete registry; an account mismatch fails closed.
 
 ETB.evolutionMcpRegistryProvider = (function () {
   'use strict';
 
-  var REGISTRY_KEY = 'xtl_evolution:mcp_registry:v1';
+  var REGISTRY_KEY = '_mkt_xtl_evolution_mcp_registry_v1';
+  var LOCATOR_KEYS = [
+    'account_id',
+    'global',
+    'key',
+    'profile_id',
+    'scope_agent_id'
+  ];
+  var SCOPE_AGENT_ID = /^agent_[A-Za-z0-9][A-Za-z0-9_-]{0,233}$/;
 
   function error(code, message) {
     var result = new Error(message || code);
@@ -43,10 +53,34 @@ ETB.evolutionMcpRegistryProvider = (function () {
     var status = text(response && response.status).toLowerCase();
     var httpStatus = Number(response && (
       response.httpStatus != null ? response.httpStatus :
-        response.http_status
+        response.http_status != null ? response.http_status :
+          response.status
     ));
     return status === 'error' || status === 'failed' ||
       status === 'not_found' || httpStatus >= 400;
+  }
+
+  function locatorScope(value, accountId) {
+    var keys;
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      return null;
+    }
+    keys = Object.keys(value).sort();
+    if (keys.length !== LOCATOR_KEYS.length ||
+        keys.some(function (key, index) {
+          return key !== LOCATOR_KEYS[index];
+        })) {
+      return null;
+    }
+    if (value.account_id !== accountId ||
+        value.profile_id !== 'default' ||
+        value.key !== REGISTRY_KEY ||
+        value.global !== true ||
+        typeof value.scope_agent_id !== 'string' ||
+        !SCOPE_AGENT_ID.test(value.scope_agent_id)) {
+      return null;
+    }
+    return value.scope_agent_id;
   }
 
   function responseValue(response) {
@@ -103,6 +137,7 @@ ETB.evolutionMcpRegistryProvider = (function () {
   function load(options) {
     var api;
     var accountId;
+    var scopeAgentId;
     options = options || {};
     api = options.api || ETB.api;
     accountId = text(options.accountId || options.actorId);
@@ -112,8 +147,7 @@ ETB.evolutionMcpRegistryProvider = (function () {
         'an exact authenticated account is required'
       ));
     }
-    if (!api || typeof api.kvGet !== 'function' ||
-        !ETB.evolutionMcpContract ||
+    if (!ETB.evolutionMcpContract ||
         typeof ETB.evolutionMcpContract.validateRegistry !== 'function') {
       return Promise.reject(error(
         'MCP_REGISTRY_PROVIDER_UNAVAILABLE',
@@ -125,8 +159,25 @@ ETB.evolutionMcpRegistryProvider = (function () {
     } catch (contextError) {
       return Promise.reject(contextError);
     }
+    scopeAgentId = locatorScope(options.locator, accountId);
+    if (!scopeAgentId) {
+      return Promise.resolve(unavailable(
+        accountId,
+        options,
+        'MCP_REGISTRY_SCOPE_UNAVAILABLE'
+      ));
+    }
+    if (!api || typeof api.kvGet !== 'function') {
+      return Promise.reject(error(
+        'MCP_REGISTRY_PROVIDER_UNAVAILABLE',
+        'the read-only MCP registry provider is unavailable'
+      ));
+    }
     return Promise.resolve().then(function () {
-      return api.kvGet(REGISTRY_KEY, { global: true });
+      return api.kvGet(REGISTRY_KEY, {
+        global: true,
+        agentId: scopeAgentId
+      });
     }).then(function (response) {
       var document;
       assertContext(options);
