@@ -16,7 +16,7 @@
   };
 
   var css = [
-    '#_xtlac_root{position:fixed;right:12px;bottom:84px;z-index:2147483638;font-family:-apple-system,system-ui,sans-serif;color:var(--etb-tx,#f0f0f0);pointer-events:auto}',
+    '#_xtlac_root{position:fixed;right:12px;bottom:12px;z-index:2147483638;font-family:-apple-system,system-ui,sans-serif;color:var(--etb-tx,#f0f0f0);pointer-events:auto}',
     '#_xtlac_pill{height:34px;display:flex;align-items:center;gap:8px;padding:0 12px;border:1px solid var(--etb-bd2,rgba(255,255,255,.13));border-radius:8px;background:var(--etb-s1,#111);color:var(--etb-tx,#f0f0f0);box-shadow:0 2px 20px rgba(0,0,0,.35);cursor:pointer;font:600 11px/1 -apple-system,system-ui,sans-serif;max-width:330px}',
     '#_xtlac_pill:hover{border-color:rgba(198,126,52,.55)}',
     // Ручка перетаскивания: видимая аффорданса + курсор говорят «меня можно двигать»
@@ -71,7 +71,7 @@
     '#_xtlac_empty{padding:24px 12px;text-align:center;color:var(--etb-tx2,#888);font-size:11px;line-height:1.5}',
     '@keyframes _xtlac_pulse{50%{opacity:.45;transform:scale(.86)}}',
     '@keyframes _xtlac_in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}',
-    '@media(max-width:860px){#_xtlac_root{right:8px;bottom:76px}#_xtlac_pill{max-width:150px}#_xtlac_text{display:none}#_xtlac_panel{width:min(410px,calc(100vw - 16px))}}'
+    '@media(max-width:860px){#_xtlac_root{right:8px;bottom:8px}#_xtlac_pill{max-width:150px}#_xtlac_text{display:none}#_xtlac_panel{width:min(410px,calc(100vw - 16px))}}'
   ].join('');
 
   function el(tag, attrs, text) {
@@ -728,38 +728,44 @@
     }
     // Перетаскивание по горизонтали: плашка прибита к правому нижнему углу и в
     // узких окнах перекрывала чат. Сдвиг хранится и переживает перезапуск.
-    var POS_KEY = '_xtlac_pos_x';
-    function _applyPos(x) {
-      var pw = pill.offsetWidth || 160;
-      var min = -(window.innerWidth - pw - 24);           // до левого края
-      x = Math.min(0, Math.max(min, x));                  // 0 = родной правый угол
-      root.style.transform = x ? ('translateX(' + x + 'px)') : '';
-      return x;
+    // Перетаскивание в ОБЕ оси (просьба Эллы: чип не должен ничего перекрывать —
+    // ставится куда удобно и позиция переживает перезапуск). 0/0 = родной угол.
+    var POS_KEY = '_xtlac_pos_x', POS_KEY_Y = '_xtlac_pos_y';
+    function _applyPos(x, y) {
+      var pw = pill.offsetWidth || 160, ph = pill.offsetHeight || 36;
+      var minX = -(window.innerWidth - pw - 24);
+      x = Math.min(0, Math.max(minX, x));
+      var minY = -(window.innerHeight - ph - 24);          // вверх — отрицательное
+      y = Math.min(0, Math.max(minY, y));
+      root.style.transform = (x || y) ? ('translate(' + x + 'px,' + y + 'px)') : '';
+      return { x: x, y: y };
     }
-    var _savedX = 0;
+    var _savedX = 0, _savedY = 0;
     try { _savedX = parseInt(localStorage.getItem(POS_KEY) || '0', 10) || 0; } catch (e) {}
-    if (_savedX) _applyPos(_savedX);
+    try { _savedY = parseInt(localStorage.getItem(POS_KEY_Y) || '0', 10) || 0; } catch (e) {}
+    if (_savedX || _savedY) { var _p0 = _applyPos(_savedX, _savedY); _savedX = _p0.x; _savedY = _p0.y; }
     var _drag = null, _dragged = false;
     pill.addEventListener('pointerdown', function (ev) {
-      _drag = { startX: ev.clientX, baseX: _savedX };
+      _drag = { startX: ev.clientX, startY: ev.clientY, baseX: _savedX, baseY: _savedY };
       _dragged = false;
       try { pill.setPointerCapture(ev.pointerId); } catch (e) {}
     });
     pill.addEventListener('pointermove', function (ev) {
       if (!_drag) return;
-      var dx = ev.clientX - _drag.startX;
-      if (Math.abs(dx) > 4) _dragged = true;
+      var dx = ev.clientX - _drag.startX, dy = ev.clientY - _drag.startY;
+      if (Math.abs(dx) > 4 || Math.abs(dy) > 4) _dragged = true;
       if (_dragged) {
         root.classList.add('dragging');
-        _savedX = _applyPos(_drag.baseX + dx);
+        var p = _applyPos(_drag.baseX + dx, _drag.baseY + dy);
+        _savedX = p.x; _savedY = p.y;
       }
     });
     pill.addEventListener('pointerup', function () {
-      if (_dragged) { try { localStorage.setItem(POS_KEY, String(_savedX)); } catch (e) {} }
+      if (_dragged) { try { localStorage.setItem(POS_KEY, String(_savedX)); localStorage.setItem(POS_KEY_Y, String(_savedY)); } catch (e) {} }
       _drag = null;
       root.classList.remove('dragging');
     });
-    window.addEventListener('resize', function () { _savedX = _applyPos(_savedX); });
+    window.addEventListener('resize', function () { var p = _applyPos(_savedX, _savedY); _savedX = p.x; _savedY = p.y; });
     pill.addEventListener('click', function (ev) {
       if (_dragged) { _dragged = false; ev.stopPropagation(); return; }  // конец перетаскивания ≠ клик
       setOpen(!state.open);
