@@ -6026,7 +6026,7 @@ ETB.router = (function () {
     var fab = document.createElement('div');
     fab.id = '_etb_fab_' + String(pluginId).replace(/[^a-z0-9]/gi, '_');
     fab.style.cssText = [
-      'position:absolute;bottom:14px;right:14px;z-index:10;pointer-events:auto;',
+      'position:absolute;bottom:14px;left:14px;z-index:10;pointer-events:auto;',
       'transition:opacity .15s;'
     ].join('');
     fab.innerHTML = [
@@ -6037,7 +6037,7 @@ ETB.router = (function () {
         'font-size:11px;font-family:-apple-system,system-ui,sans-serif;',
         'box-shadow:none;transition:background .12s,color .12s;',
         'display:flex;align-items:center;gap:5px;">',
-        '</span>' + _L('Починить','Repair') + '',
+        _L('Починить','Repair'),
       '</button>'
     ].join('');
     content.appendChild(fab);
