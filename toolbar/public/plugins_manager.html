@@ -1545,10 +1545,9 @@ var I18N_EN = {
   'Мой компьютер · Конструктор':'My computer · Wizard',
   'Все установленные программы в одном месте: настраивай, соединяй в связки и запускай.':'All your installed programs in one place: set up, link into workflows, and run.',
   'Покажи папку проекта — Extella поймёт, что за работа, подберёт инструменты и возьмёт рутину на себя.':"Point it at a project folder — Extella understands the work, sets up the right tools, and takes the routine off your hands.",
-  'Конструктор':'Wizard','Воркспейс':'Workspace','Композитор':'Composer','Регулярные задачи':'Scheduled tasks','Второй пилот':'Copilot','Студия языков':'Language Studio','Команда':'Team',
+  'Конструктор':'Wizard','Воркспейс':'Workspace','Регулярные задачи':'Scheduled tasks','Второй пилот':'Copilot','Студия языков':'Language Studio','Команда':'Team',
   'Собрать процесс: интервью → план → стройка → запуск':'Build a process: interview → plan → build → launch',
   'Рабочие среды: компьютер понял проект и настроился':'Workspaces: the computer understood the project and set itself up',
-  'Студия Композитора — внутри Конструктора: задача словами → готовая автоматизация':'Composer Studio — inside the Wizard: describe a task → get a working automation',
   'Автоматизации по расписанию':'Scheduled automations',
   'Пилот наблюдает экран и помогает':'The copilot watches your screen and helps',
   '⚠ Не смог проверить, какие приложения уже установлены — отметки могут быть неточными.':'⚠ Could not check which apps are already installed — the marks may be off.',
@@ -1729,7 +1728,7 @@ var I18N_EN = {
   'Договор простым языком':'Legal Text Simplifier',
   'Объяснит по-человечески и покажет, на что смотреть перед подписью':'Translate legal and contract language into plain English',
   'Был созвон, будут задачи: кто, что и к какому сроку':'Turn raw meeting notes into structured action items',
-  'Деловые письма':'Email Composer',
+  'Деловые письма':'Email builder',
   'Вежливо, по делу и без «доброго времени суток»':'Write professional emails for any occasion',
   'Резюме под вакансию':'Resume Builder & Optimizer',
   'Усилит резюме так, что его дочитают до конца':'Write and optimize your resume for any job',
@@ -3233,7 +3232,7 @@ function _svcBar(){
 function _svcPrependBar(){ var g=document.getElementById('grid'); if(g){try{g.insertAdjacentHTML('afterbegin',_svcBar());}catch(e){}} }
 // Раздел «Программы» = живой каталог с GitHub + встроенная секция «Приложения» (Pinokio-репо).
 function renderPrograms(){ _renderProgramsCore(); _mountTabFilter('Поиск по программам…'); _svcPrependBar(); _mkbLoad(); }
-// ── «Сделать блоком»: установленное → кубик Композитора прямо в «Программах» ──
+// ── «Сделать блоком»: установленное → блок автоматизаций прямо в «Программах» ──
 // Контракт моста Визарда (:8765): POST /x/installed {} → {unused[],stale[],blocks};
 // POST /x/make_block {kind,ref,purpose} → {status,made[],message}. Вся логика
 // оборачивания и живой прогон — на стороне визарда; тулбар только показывает и зовёт.
@@ -3265,7 +3264,7 @@ function _mkbLoad(){
     var action=by.installable.concat(by.not_running).concat(by.broken);  // требуют клика — карточками
     if(!action.length && !by.working.length && !by.missing.length){ slot.innerHTML=''; return; }
     var head='<div class="sect_hdr"><span class="sect_title">'+(en?'Installed & automations':'Установлено и автоматизации')+'</span><span class="sect_line"></span></div>'+
-      '<div class="sk_lead" style="grid-column:1/-1">'+(en?'What you\'ve installed and whether it\'s wired into automations — turn the rest into Composer blocks right here.':'Что установлено и участвует ли в автоматизациях — остальное превращается в блоки Композитора прямо здесь.')+
+      '<div class="sk_lead" style="grid-column:1/-1">'+(en?'What you\'ve installed and whether it\'s wired into automations — connect the rest to automations right here.':'Что установлено и участвует ли в автоматизациях — остальное можно подключить к автоматизациям прямо здесь.')+
       (d.blocks!=null?' <span style="color:var(--tx3)">· '+(en?'blocks now: ':'блоков сейчас: ')+esc(String(d.blocks))+'</span>':'')+'</div>';
     var cards=action.map(function(it,i){ return _mkbCard(it,i,en); }).join('');
     var workLine=by.working.length?'<div class="sk_lead" style="grid-column:1/-1;color:#2E7D5B;font-size:12.5px">✓ '+
@@ -3276,7 +3275,7 @@ function _mkbLoad(){
     slot.innerHTML=head+workLine+(cards?'<div class="mshelf">'+cards+'</div>':'')+missLine;
   }).catch(function(){ slot.innerHTML=''; });   // мост спит / визарда нет — молчим
 }
-// Автозамыкание «поставил приложение → оно само стало кубиком Композитора».
+// Автозамыкание «поставил приложение → оно само стало блоком автоматизаций».
 // Программы/MCP кубик получают сами (ветка cap_install визарда), а приложения
 // ставятся через app_install/app_start МИМО моста — поэтому после подтверждённого
 // старта (у нас есть url = порт подтверждён) один фоновый вызов /x/app_wrap.
@@ -3288,7 +3287,7 @@ function _mkbAutoWrap(app_id){
   var purpose=String(app_id).split('/').pop().slice(0,40);
   _mkbFetch('/x/app_wrap',{app_id:app_id,purpose:purpose},600000).then(function(d){
     if(d&&d.status==='success'){
-      wsToast((LANG==='en'?'Now a Composer block: ':'Стало блоком Композитора: ')+esc(d.expert||purpose),'ok');
+      wsToast((LANG==='en'?'Connected to automations: ':'Подключено к автоматизациям: ')+esc(d.expert||purpose),'ok');
       var slot=document.getElementById('_mkb_slot'); if(slot&&cur==='programs')_mkbLoad();   // обновить опись, если открыта
     }
     // error — молчим: приложение уже открылось, это главное; кубик можно сделать вручную кнопкой
@@ -3313,7 +3312,7 @@ function _mkbCard(it,i,en){
     (it.detail?'<div class="st_fact">'+esc(it.detail)+'</div>':'')+
     '<div class="st_foot">'+foot+'</div></div>';
 }
-// Убрать осиротевший кубик Композитора (broken: программа под ним снесена).
+// Убрать осиротевший блок автоматизаций (broken: программа под ним снесена).
 function _mkbRemoveBlock(btn,block){
   var foot=btn.parentNode; if(!foot) return;
   if(!confirm((LANG==='en'?'Remove the block «':'Убрать блок «')+block+(LANG==='en'?'»? Its capability is gone; the block would fail if run.':'»? Способность под ним исчезла, при запуске он упадёт.'))) return;
@@ -3332,7 +3331,7 @@ function _mkbMake(btn,kind,ref,purpose){
   _mkbFetch('/x/make_block',{kind:kind,ref:ref,purpose:purpose},600000).then(function(d){
     if(d&&d.status==='success'){
       var made=(d.made&&d.made.length)?d.made.join(', '):'';
-      foot.innerHTML='<span style="font-size:12.5px;color:#2E7D5B;font-weight:600">✓ '+(LANG==='en'?'Now a Composer block':'Стало блоком Композитора')+'</span>';
+      foot.innerHTML='<span style="font-size:12.5px;color:#2E7D5B;font-weight:600">✓ '+(LANG==='en'?'Connected to automations':'Подключено к автоматизациям')+'</span>';
       wsToast((LANG==='en'?'Block ready':'Блок готов')+(made?' · '+esc(made):''),'ok');
       setTimeout(_mkbLoad,800);   // перечитать картину: способность ушла в working, счётчик блоков вырос
     } else {
@@ -3341,7 +3340,7 @@ function _mkbMake(btn,kind,ref,purpose){
         ' <button class="st_btn" style="background:transparent;color:var(--tx2);border:1px solid var(--bd2)" onclick="_mkbLoad()">'+(LANG==='en'?'Retry':'Ещё раз')+'</button>';
     }
   }).catch(function(){
-    foot.innerHTML='<span style="font-size:12px;color:var(--tx3)">'+(LANG==='en'?'Composer is busy — try again in a minute':'Композитор занят — загляни через минуту')+'</span>';
+    foot.innerHTML='<span style="font-size:12px;color:var(--tx3)">'+(LANG==='en'?'Builder is busy — try again in a minute':'Сборщик занят — загляни через минуту')+'</span>';
   });
 }
 function _renderProgramsCore() {
@@ -3360,7 +3359,7 @@ function _renderProgramsCore() {
   // управляли живым каталогом и приложениями ниже — раздел выглядел несшитым.
   // Теперь тут общая шапка-фильтр (_mountTabFilter), как во всех остальных вкладках:
   // она строит чипы из реальных полок и фильтрует всё, что в разделе есть.
-  // Слот «Сделать блоком»: установленное, что ещё не стало кубиком Композитора.
+  // Слот «Сделать блоком»: установленное, что ещё не стало блоком автоматизаций.
   // Пустой якорь — наполняется асинхронно из моста Визарда (:8765 /x/installed);
   // мост спит / Визард не установлен → секция тихо не появляется.
   var _mkbSlot = (_featCat === 'all' && !_isPro) ? '<div id="_mkb_slot" style="grid-column:1/-1"></div>' : '';
@@ -3812,7 +3811,7 @@ function renderInstalledCard(p, i) {
   '</div>';
 }
 
-// ── Установлено Композитором/поиском способностей (общий KV _mkt_installed, пишет wz_capability_install) ──
+// ── Установлено сборщик/поиском способностей (общий KV _mkt_installed, пишет wz_capability_install) ──
 var _capInstReg = null, _capInstFetched = false;
 var CAPINST_KIND = {model:'модель', mcp:'MCP-сервер', cli:'CLI', skill:'навык', service:'сервис', api:'API'};
 var CAPINST_KIND_EN = {model:'model', mcp:'MCP server', cli:'CLI', skill:'skill', service:'service', api:'API'};
@@ -4231,7 +4230,7 @@ function renderDesktop(){
     icons.push({kind:'cli',cat:cat,lbl:c.name||c.id,acc:_dtAcc(cat),id:id,
       go:"cliRun('"+_dtEsc(id)+"')"});
   });
-  // 4) Способности из интернета (Композитор) → источник
+  // 4) Способности из интернета (сборщик) → источник
   (_capInstReg||[]).forEach(function(it){
     icons.push({kind:'cap',cat:'tech',lbl:it.title||it.id,acc:_dtAcc('tech'),
       id:it.id,url:it.url||'',method:it.method||'',rmKind:it.kind||'',
@@ -4284,7 +4283,7 @@ function renderDesktop(){
       '<span class="dt_ic_lbl">'+esc(s.lbl)+'</span></button>';
   }).join('');
   // Группы стола (просьба Анвара «чтобы всё было видно и отличалось»):
-  // автоматизации (собраны Визардом/Композитором) · программы (плагины витрины
+  // автоматизации (собраны Визардом/сборщик) · программы (плагины витрины
   // и приложения) · инструменты (CLI и способности из интернета).
   // Индексы для правого клика — глобальные по массиву icons (_dtReg), поэтому
   // кнопки строим с исходным i, а по группам только раскладываем.
@@ -6366,7 +6365,7 @@ function submitCliAdd(){
     }
   }).catch(function(e){b.disabled=false;b.textContent='Ещё раз';if(m)m.textContent='Не удалось передать: '+((e&&e.message)||'нет ответа от Extella');});
 }
-// Обобщённая кнопка «+ Добавить» для Программ/Моделей/Навыков, передаёт Композитору
+// Обобщённая кнопка «+ Добавить» для Программ/Моделей/Навыков, передаёт сборщик
 // (Qwen) типовую задачу; после он добавляет карточку в живой каталог соответствующего раздела.
 var ADD_KINDS={
   programs:{where:'Программы, полка «Инструменты с GitHub»',title:'Найти программу',action:'Найти программу',sub:'Опиши задачу — Extella найдёт подходящую открытую программу и покажет её карточку. Установка начнётся только после нажатия «Установить».',ph:'напр.: планировщик задач · трекер времени · генератор счетов',refresh:function(){_progReg=null;_progFetched=false;if(cur==='programs')renderPrograms();},prompt:function(v){return 'Пользователь просит добавить ПРОГРАММУ (плагин/приложение/MCP-сервер) в магазин Extella: «'+v+'». Найди подходящий ОТКРЫТЫЙ репозиторий и добавь карточку в живой каталог программ: kv_get "_mkt_programs" (global), добавь в .shelf объект {repoUrl,title,facts:[кратко по-русски],source:"github.com/<owner> · ★ N",acc:"#2F6B66",label:"MCP-инструмент"}, kv_set global. Если открытого нет, честно откажись.';}},
@@ -6408,7 +6407,7 @@ function openAddModal(kind){
   var t=document.getElementById('add_txt'); t.value=''; t.placeholder=cfg.ph; ov.style.display='flex'; t.focus();
 }
 
-// ── Детерминированный Композитор ────────────────────────────────────────────
+// ── Детерминированный сборщик ────────────────────────────────────────────
 // «Опиши задачу» для программ и моделей выполняется БЕЗ агента: витрина сама
 // ищет лучший живой источник (GitHub / работающий HF-спейс) и сама кладёт
 // карточку на полку через мост KV. Мгновенно, без кредитов, воспроизводимо.
@@ -6595,7 +6594,7 @@ function cliCard(c){
 // сбрасывается → повтор клика слал новый resolver (у Гульжан — ghostscript ×6
 // в логах, brew запускался параллельно). Держим состояние по tool, не по кнопке.
 var _cliInstalling={};
-// Установка инструмента = ставим программу + сразу оборачиваем в блок Композитора
+// Установка инструмента = ставим программу + сразу оборачиваем в блок сборщик
 // + вносим в каталог, ОДНИМ вызовом /x/cap_install моста Конструктора (тот же путь,
 // что app_wrap для приложений). Так пред-раскладывать 68 cap_-обёрток на каждый
 // аккаунт больше не нужно — чистый аккаунт клиента, появляется только установленное.
@@ -6613,7 +6612,7 @@ function installCLI(tool,btn){
       cliMarkInstalled(tool);
       if(cur==='cli'){ renderCLI(); }         // перерисовать: карточка станет «установлено»
       else if(btn){ btn.textContent='Готово ✓'; btn.style.opacity='.7'; }
-      if(out&&out.expert) wsToast('Инструмент готов — стал блоком Композитора','ok');
+      if(out&&out.expert) wsToast('Инструмент готов — стал блоком сборщик','ok');
       return;
     }
     if(!btn)return;
@@ -6672,7 +6671,7 @@ applyLang();
 rtabs();
 renderTopics();
 doSearch();
-_ensureCapInst();   // прогрев «Из интернета · Композитор» (KV _mkt_installed) — счётчик «Мои» честный сразу
+_ensureCapInst();   // прогрев «Из интернета · сборщик» (KV _mkt_installed) — счётчик «Мои» честный сразу
 // Префетч живых каталогов на старте (параллельно, идемпотентно) → вкладки открываются
 // мгновенно из кэша, без задержки KV-round-trip при первом клике.
 try { _ensureProg(); } catch (e) {}
