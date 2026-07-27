@@ -269,7 +269,7 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
   <div class="kicker">Конструктор</div>
   <h1>Опиши задачу — получи работающий процесс</h1>
   <div style="max-width:660px">
-    <div style="font-size:14px;color:var(--silver,#889);line-height:1.55;margin:10px 0 16px">Мастер расспросит о задаче, спроектирует процесс и построит его: источник данных, расписание, получатели, готовый отчёт. Это занимает около часа — и дальше процесс работает без вас.</div>
+    <div style="font-size:14px;color:var(--silver,#889);line-height:1.55;margin:10px 0 16px">Мастер расспросит о задаче и построит процесс: откуда брать данные, по какому расписанию, кому слать готовый отчёт. Час разговора — и дальше процесс работает без тебя.</div>
     <button class="btn gold" style="padding:12px 22px;font-size:15px" onclick="agentGate().then(()=>{setMode('wizard');newSession();})">Пройти интервью с Мастером →</button>
     <button class="btn ghost" style="padding:12px 18px;font-size:14px;margin-left:8px" onclick="openHelp('wizard')" title="Что делает Конструктор, что гарантирует, а что нет">? Как это работает</button>
     <div style="display:flex;flex-wrap:wrap;gap:6px;margin:16px 0 4px">
@@ -278,7 +278,7 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
       <span class="chip-ex" onclick="buildProcessFromTask(this.textContent)">ежедневная сводка по заявкам из Google Sheets</span>
     </div>
     <div style="margin-top:20px;padding-top:14px;border-top:1px solid var(--cream-dark,#e7e2d8);font-size:13px;color:var(--silver,#889)">
-      Нужна разовая задача, а не постоянный процесс? Это <a href="#" onclick="openCompStudio();return false" style="color:var(--gold,#a97e35);font-weight:600;text-decoration:none">🧩 Композитор</a> — соберёт из готовых блоков за минуту.
+      Нужно разовое дело, а не постоянный процесс? Открой <a href="#" onclick="openCompStudio();return false" style="color:var(--gold,#a97e35);font-weight:600;text-decoration:none">Композитор</a> — соберёт из готовых блоков за минуту.
     </div>
   </div>
 </div>
