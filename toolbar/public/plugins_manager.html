@@ -4179,16 +4179,18 @@ function renderDesktop(){
   // удаляемые копии, которые возвращались после синка с устройством (§4).
   var SYS_APPS=[
     {lbl:'Конструктор',      ico:'wand',     acc:'#C67E34', go:"_openWizard()",                tip:'Собрать процесс: интервью → план → стройка → запуск'},
-    {lbl:'Воркспейс',        ico:'home',     acc:'#2F6B66', soon:true, go:"setc('workspace')",           tip:'Рабочие среды: компьютер понял проект и настроился'},
-    {lbl:'Композитор',       ico:'box',      acc:'#7C5CBF', req:'extella_composer_studio', go:"notify('open','extella_composer_studio')", tip:'Студия Композитора — внутри Конструктора: задача словами → готовая автоматизация'},
     {lbl:'Автоматизации',    ico:'calendar', acc:'#3E7C4F', go:"setc('automations')",          tip:'Задачи по расписанию: отчёты, проверки, рассылки'},
-    {lbl:'Второй пилот',     ico:'bot',      acc:'#4C5FD5', soon:true, req:'copilot_ctl', go:"notify('open','copilot_ctl')", tip:'Пилот наблюдает экран и помогает'},
-    {lbl:'Студия языков',    ico:'terminal', acc:'#2A6F77', soon:true, req:'extella_cspl_studio', go:"notify('open','extella_cspl_studio')", tip:'Свои предметные языки: программа словами дела → проверенный результат'},
     {lbl:'Команда',          ico:'users',    acc:'#C9A35C', req:'extella_team', go:"notify('open','extella_team')",        tip:'Пригласить в общий контур — именные ключи доступа'},
     {lbl:'Подключения',      ico:'globe',    acc:'#2F6B66', req:'extella_connectors', go:"notify('open','extella_connectors')", tip:'Свои сервисы, CRM и кабинеты — один контур доступа'},
     {lbl:'Псевдоанонимизация',ico:'docs',    acc:'#6B7280', req:'extella_anon', go:"notify('open','extella_anon')",         tip:'Файлы с ПДн → безопасные копии: локально, без ИИ-моделей'},
-    {lbl:'Evolution Console',ico:'monitor',  acc:'#5B4FC4', go:"notify('open','profit-growth-scenario')", tip:'Консоль управления парком агентов'}
   ];
+  // Решение Анвара 27.07 (срочный релиз коллегам): на столе оставляем только готовое.
+  // Скрытые здесь карточки НЕ удалены — они доступны в Каталоге и через «Автоматизации»;
+  // прятать надо и динамические двойники, иначе они вернутся после синка с устройством.
+  var DESK_HIDDEN = ['capability-studio-scenario', 'profit-growth-scenario',
+                     'extella_composer_studio', 'extella_cspl_studio', 'copilot_ctl'];
+  function _deskHidden(id){ return DESK_HIDDEN.indexOf(String(id || '')) >= 0; }
+
   // Честность стола: если системного плагина нет в реестре устройства — ярлык
   // приглушён, а клик объясняет причину (раньше клик молча умирал на хосте).
   function _sysAvail(id){
@@ -4204,7 +4206,7 @@ function renderDesktop(){
   // 1) Агенты, собранные Визардом → открыть кабинет
   // Показываем агента только когда его состояние уже прочитано: иначе убранный
   // со стола ярлык успевает мигнуть до того, как приедет флаг hidden.
-  (_autoReg||[]).filter(function(p){ var id=_agId(p); if(!(id in _agState)) return false; var st=_agState[id]; return !(st&&st.hidden); }).forEach(function(p){
+  (_autoReg||[]).filter(function(p){ var id=_agId(p); if(_deskHidden(id)) return false; if(!(id in _agState)) return false; var st=_agState[id]; return !(st&&st.hidden); }).forEach(function(p){
     var cat=_catRuToBiz(p.category)||p._biz||'work', nm=_agCleanName(p);
     icons.push({kind:'agent',cat:cat,lbl:nm,acc:(p.accent||_dtAcc(cat)),id:_agId(p),
       ident:!!(p.accent||p.emoji||p.category),
@@ -4212,7 +4214,7 @@ function renderDesktop(){
   });
   // 2) Установленные программы (встроенные + добавленные) → открыть окно
   var instIds=gi();
-  BUILTIN_PLUGINS_DATA.filter(function(p){return instIds.indexOf(p.id)!==-1;}).concat(getCustom()).forEach(function(p){
+  BUILTIN_PLUGINS_DATA.filter(function(p){return instIds.indexOf(p.id)!==-1 && !_deskHidden(p.id);}).concat(getCustom().filter(function(p){return !_deskHidden(p&&p.id);})).forEach(function(p){
     var cu=(typeof CURATED_PROGRAMS!=='undefined'&&CURATED_PROGRAMS[p.id])||{};
     var cat=cu.biz||(typeof catOf==='function'?catOf(p):'')||'box';
     icons.push({kind:'program',cat:cat,lbl:cu.name||p.name||p.id,acc:_dtAcc(cat),id:p.id,
