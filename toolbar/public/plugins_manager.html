@@ -1659,7 +1659,7 @@ var I18N_EN = {
   'Маршрут, план и список вещей, от билетов до зарядки':'Route, plan and packing list — tickets to chargers',
   'Метод отладки':'Debugging method',
   'Модель остаётся Qwen — честный тест':'The model stays Qwen — a fair test',
-  'НОВИНКА':'NEW',
+  'Новинка':'New',
   'Навык · Бизнес':'Skill · Business',
   'Навык · Стиль':'Skill · Style',
   'Объяснение кода':'Code explainer',
@@ -2125,7 +2125,7 @@ var I18N_EN = {
   '+ Добавить навык':'+ Add skill',
   'Опиши задачу — Extella подберёт открытый инструмент, установит и добавит.':'Describe the task — Extella picks an open tool, installs and adds it.',
   '↻ Обновить каталог':'↻ Refresh catalog',
-  '🔍 Искать ещё на Hugging Face':'🔍 Search more on Hugging Face',
+  'Искать ещё на Hugging Face':'Search more on Hugging Face',
   'Убрать из витрины':'Remove from storefront','Удалить навсегда':'Delete forever','Опасная зона':'Danger zone','Автоматизации':'Automations',
   '«Убрать из витрины» прячет карточку и ярлык у тебя. «Удалить навсегда» вычищает запись из каталога автоматизаций целиком. Эксперты и данные в Extella не трогаются.':'"Remove from storefront" hides the card and icon for you. "Delete forever" wipes the entry from the automations catalog entirely. Experts and data in Extella are untouched.',
   'Собрать базу компании':'Build a company base',
@@ -2529,7 +2529,7 @@ function _renderModelsCore() {
     return;
   }
   g.innerHTML = '<div class="sk_lead" style="grid-column:1/-1">Модели с Hugging Face: найди в каталоге или вставь ссылку. Локальные модели работают у тебя на компьютере, даже без интернета.</div>' + modelsSpotlight() +
-    '<div style="grid-column:1/-1;text-align:center;margin:10px 0 0"><button class="cat_chip" onclick="_modHFset(true)">🔍 Искать ещё на Hugging Face</button></div>';
+    '<div style="grid-column:1/-1;text-align:center;margin:10px 0 0"><button class="cat_chip" onclick="_modHFset(true)">Искать ещё на Hugging Face</button></div>';
   [].forEach.call(g.querySelectorAll('[data-lminst]'),function(b){b.onclick=function(){installLocalModel(b.getAttribute('data-lminst'),b);};});
   _mountTabFilter('Поиск модели…');
 }
@@ -2621,7 +2621,7 @@ var BIZ_ORDER_ALL = ['work','marketing','money','study','home','travel','health'
 // humanize-plugins (Claude): dev/техно-утилиты помечены audience=pro и в «Для всех»
 // НЕ показываются (они в «Для профи»). Выбор Extella-200 (MCP-репо), тоже «Для профи».
 var CURATED_PROGRAMS = {
-  'profit-growth-scenario': { biz:'work', icon:'✦', name:'Evolution Console', tagline:'Консоль управления парком агентов' },
+  'profit-growth-scenario': { biz:'work', icon:'✦', name:'Консоль агентов', tagline:'Управление парком агентов: состояние, версии, запуски' },
   'capability-studio-scenario': { biz:'work', icon:'◇', name:'Студия способностей', tagline:'Отдельный демо-каталог подтверждённых возможностей' },
   'legal-simplifier': { biz:'docs', icon:'⚖️', name:'Договор простым языком', tagline:'Объяснит по-человечески и покажет, на что смотреть перед подписью' },
   'meeting-notes': { biz:'work', icon:'📝', name:'Итоги встречи', tagline:'Был созвон, будут задачи: кто, что и к какому сроку' },
@@ -2751,6 +2751,25 @@ function installFeatured(id, btn) {
   featuredError = '';
   if (btn) { btn.disabled = true; btn.textContent = 'Ставлю…'; btn.classList.add('installing'); }
   notify('install_featured', id);
+  // Канон §5: «вечный спиннер» запрещён. Если хост не ответил за 90 с — честно
+  // говорим и возвращаем кнопку, а не оставляем «Ставлю…» навсегда.
+  if (window._instTmo && window._instTmo[id]) clearTimeout(window._instTmo[id]);
+  window._instTmo = window._instTmo || {};
+  window._instTmo[id] = setTimeout(function () {
+    if (!installingIds[id]) return;              // установка дошла — таймер не нужен
+    installingIds[id] = false;
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = LANG === 'en' ? 'Try again' : 'Ещё раз';
+      btn.classList.remove('installing');
+      btn.title = LANG === 'en'
+        ? 'Extella did not respond. Reopen the app and try again.'
+        : 'Extella не ответила. Открой приложение заново и попробуй ещё раз.';
+    }
+    if (typeof wsToast === 'function') wsToast(LANG === 'en'
+      ? 'Install did not start — Extella did not respond. Try again.'
+      : 'Установка не началась — Extella не ответила. Попробуй ещё раз.', 'err');
+  }, 90000);
 }
 
 // ── Other section toggle ──────────────────────────────────────────────────
@@ -2817,7 +2836,7 @@ var TYPE_ED = {
   },
   models: {
     heroes: [
-      { label:'НОВИНКА', acc:'#2E7D5B', source:'huggingface.co/black-forest-labs · ♥ 9k', hfId:'black-forest-labs/FLUX.1-dev', stats:'запуск через HuggingFace',
+      { label:'Новинка', acc:'#2E7D5B', source:'huggingface.co/black-forest-labs · ♥ 9k', hfId:'black-forest-labs/FLUX.1-dev', stats:'запуск через HuggingFace',
         title:'Студийные изображения по одному описанию', accent:'Без сложных настроек и собственной видеокарты',
         facts:['Опиши картинку словами, студийное качество','От авторов оригинального Stable Diffusion','Через HuggingFace, без своей видеокарты'] },
       { label:'Гремит', acc:'#B5423E', source:'huggingface.co/Kwai-Kolors · ♥ 10k', hfId:'Kwai-Kolors/Kolors-Virtual-Try-On', stats:'через HuggingFace',
@@ -2828,7 +2847,7 @@ var TYPE_ED = {
         facts:['Аудио в текст за секунды, без установки'] }
     ],
     shelf: [
-      { label:'НОВИНКА', acc:'#24544F', source:'huggingface.co/jbilcke-hf · ♥ 11k', hfId:'jbilcke-hf/ai-comic-factory',
+      { label:'Новинка', acc:'#24544F', source:'huggingface.co/jbilcke-hf · ♥ 11k', hfId:'jbilcke-hf/ai-comic-factory',
         title:'Фабрика комиксов', facts:['Сюжет словами → готовые страницы комикса'] },
       { label:'Выбор Extella', acc:'#2F6B66', source:'huggingface.co/enzostvs · ♥ 16k', hfId:'enzostvs/deepsite',
         title:'DeepSite, сайт по описанию', facts:['Собирает рабочий сайт из текста, без кода'] },
@@ -4782,6 +4801,7 @@ window.addEventListener('message', function(e) {
     rtabs();
   } else if (e.data.type === 'etb_install_result') {
     delete installingIds[e.data.pluginId];
+    if(window._instTmo&&window._instTmo[e.data.pluginId]){clearTimeout(window._instTmo[e.data.pluginId]);window._instTmo[e.data.pluginId]=0;}
     featuredError = e.data.ok ? '' : (e.data.message || 'unknown error');
     // Итог установки — всегда вслух: что получилось и где искать результат
     try {
