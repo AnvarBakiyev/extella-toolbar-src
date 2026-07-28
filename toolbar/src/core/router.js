@@ -1157,6 +1157,9 @@ ETB.router = (function () {
     var nativeWritesReady = false;
     return {
       managedAdapter: 'AVAILABLE',
+      mcpRegistryLocatorAdapter:
+        typeof evolutionAdapter.getMcpRegistryLocator === 'function' ?
+          'AVAILABLE' : 'PLATFORM_UNAVAILABLE',
       evolutionLabAdapter:
         typeof evolutionAdapter.runClassTest === 'function' ?
           'AVAILABLE' : 'PLATFORM_UNAVAILABLE',
@@ -2553,7 +2556,8 @@ ETB.router = (function () {
       );
       // The primary automation registry path performs read/compute only.
       // Agent Passport, Shared Genes, Agent Cabinet and Evolution Loop are
-      // loaded separately if a person opens an advanced agent-level view.
+      // loaded separately through fleet_load, so the automation composition
+      // and advanced views reuse the same canonical generated artifacts.
       return {
         actorId: context.actorId,
         registry: registry,
@@ -4069,6 +4073,72 @@ ETB.router = (function () {
     if (action === 'automation_registry_load') {
       return _evolutionAutomationRegistryLoad(context);
     }
+    if (action === 'mcp_read') {
+      try {
+        if (!ETB.evolutionMcpReadGateway ||
+            typeof ETB.evolutionMcpReadGateway.create !== 'function' ||
+            !ETB.evolutionMcpRegistryProvider ||
+            typeof ETB.evolutionMcpRegistryProvider.load !== 'function') {
+          throw _evolutionError(
+            'EVOLUTION_MCP_READ_UNAVAILABLE',
+            'the read-only Evolution MCP Gateway is unavailable'
+          );
+        }
+        var gateway = ETB.evolutionMcpReadGateway.create({
+          actorId: context.actorId,
+          // Extella currently exposes the authenticated account as the
+          // isolation boundary, so account_id and tenant_id are the same exact
+          // host-owned value in this adapter.
+          accountId: context.actorId,
+          tenantId: context.actorId,
+          now: function () {
+            return new Date().toISOString();
+          },
+          assertContext: function () {
+            _agentControlAssertContext(context);
+          },
+          loadAutomationRegistry: function () {
+            return _evolutionAutomationRegistryLoad(context);
+          },
+          loadMcpRegistry: function () {
+            var evolutionAdapter = ETB.evolutionAdapter || {};
+            return Promise.resolve().then(function () {
+              if (typeof evolutionAdapter.getMcpRegistryLocator !==
+                  'function') return null;
+              return evolutionAdapter.getMcpRegistryLocator({
+                account_id: context.actorId,
+                profile_id: 'default',
+                key: ETB.evolutionMcpRegistryProvider.REGISTRY_KEY,
+                global: true
+              });
+            }).then(function (locator) {
+              _agentControlAssertContext(context);
+              return ETB.evolutionMcpRegistryProvider.load({
+                actorId: context.actorId,
+                accountId: context.actorId,
+                locator: locator,
+                assertContext: function () {
+                  _agentControlAssertContext(context);
+                }
+              });
+            });
+          },
+          hash: ETB.evolutionConsole.sha256
+        });
+        return gateway.invoke(
+          data && data.tool,
+          data && data.arguments || {},
+          {
+            actorId: context.actorId,
+            accountId: context.actorId,
+            tenantId: context.actorId,
+            requestId: context.operationId
+          }
+        );
+      } catch (error) {
+        return Promise.reject(error);
+      }
+    }
     if (action === 'fleet_load') return _evolutionFleetLoad(context);
     if (action === 'passport_draft') {
       try {
@@ -4944,13 +5014,29 @@ ETB.router = (function () {
         if (!src) return;
         var reqId = e.data.reqId;
         function reply(msg) { if (src && src.contentWindow) { try { src.contentWindow.postMessage(msg, '*'); } catch (_) {} } }
+        var expertName = String(e.data.name || '');
+        var expertParams = e.data.params || {};
+        var expertTargetsReservedMcpRegistry =
+          (expertName === '_etb_kv_get' ||
+           expertName === '_etb_kv_set') &&
+          String(expertParams.key || '') ===
+            '_mkt_xtl_evolution_mcp_registry_v1';
+        if (expertTargetsReservedMcpRegistry) {
+          reply({
+            type: 'etb_expert_result',
+            reqId: reqId,
+            ok: false,
+            error: 'key reserved for the trusted Evolution MCP provider'
+          });
+          return;
+        }
         if (_isBuiltinCapabilityStudio() &&
-            (plugin.experts || []).indexOf(String(e.data.name || '')) === -1) {
+            (plugin.experts || []).indexOf(expertName) === -1) {
           reply({ type: 'etb_expert_result', reqId: reqId, ok: false, error: 'expert is not allowed for Capability Studio' });
           return;
         }
         try {
-          ETB.api.runExpert(e.data.name, e.data.params || {}, { global: true })
+          ETB.api.runExpert(expertName, expertParams, { global: true })
             .then(function (res) { reply({ type: 'etb_expert_result', reqId: reqId, ok: true, res: res }); })
             .catch(function (err) { reply({ type: 'etb_expert_result', reqId: reqId, ok: false, error: (err && err.message) || 'expert failed' }); });
         } catch (err) {
@@ -4974,6 +5060,17 @@ ETB.router = (function () {
         var okMkt = key.indexOf('_mkt_') === 0;
         var okRuns = key.indexOf('agent_runs:') === 0;
         var okCapM = /^cap_[A-Za-z0-9_-]+_manifest$/.test(key);
+        var reservedMcpRegistry =
+          key === '_mkt_xtl_evolution_mcp_registry_v1';
+        if (reservedMcpRegistry) {
+          reply2({
+            type: 'etb_kv_result',
+            reqId: reqId2,
+            ok: false,
+            error: 'key reserved for the trusted Evolution MCP provider'
+          });
+          return;
+        }
         if (!okMkt && !okRuns && !okCapM) {
           reply2({ type: 'etb_kv_result', reqId: reqId2, ok: false, error: 'key not allowed' });
           return;

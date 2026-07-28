@@ -44,12 +44,20 @@ function inlineScripts(html) {
 test('Evolution Console manifest keeps exact product naming and a read-only surface contract', () => {
   assert.equal(evolutionManifest.id, 'profit-growth-scenario');
   assert.equal(evolutionManifest.name, 'Evolution Console');
-  assert.equal(evolutionManifest.tagline, 'Единый реестр автоматизаций');
+  assert.equal(
+    evolutionManifest.tagline,
+    'Ваши автоматизации — просто и честно',
+  );
   assert.equal(
     evolutionManifest.description,
-    'Поверхность Extella Evolution для честного read-only реестра автоматизаций пользователя: каталог и установки разделены, состояние не выдумывается, отставшие версии и мёртвые ссылки вычисляются автоматически.',
+    'Evolution Console показывает, что работает, что остановлено и где нужна помощь. Каталог отделён от установленных автоматизаций, а неизвестное состояние не подменяется успехом.',
   );
-  assert.equal(evolutionManifest.version, '0.6.0');
+  assert.equal(evolutionManifest.version, '0.8.0');
+  assert.deepEqual(evolutionManifest.pills, [
+    'Автоматизации',
+    'Состояние',
+    'Evolution Lab',
+  ]);
   assert.equal(evolutionManifest.trust_tier, 'verified');
   assert.equal(evolutionManifest.ui.type, 'html');
   assert.equal(evolutionManifest.ui.htmlFile, 'evolution-console.html');
@@ -85,6 +93,7 @@ test('Evolution Console manifest keeps exact product naming and a read-only surf
       'automation_registry',
       'evolution_lab',
       'evolution_loop',
+      'mcp_read_inventory',
       'shared_genes_map',
     ],
   );
@@ -104,6 +113,12 @@ test('Evolution Console manifest keeps exact product naming and a read-only surf
       (capability) => capability.id === 'automation_registry',
     ).version,
     'EVOLUTION_AUTOMATION_REGISTRY_V2',
+  );
+  assert.equal(
+    evolutionManifest.capabilities.find(
+      (capability) => capability.id === 'mcp_read_inventory',
+    ).version,
+    'EVOLUTION_MCP_READ_CONTRACT_V1_1',
   );
 
   const completeSurface = `${JSON.stringify(evolutionManifest)}\n${evolutionHtml}`;
@@ -219,7 +234,15 @@ test('Evolution Console status meaning is explicit without relying on color', ()
   );
   assert.match(
     evolutionHtml,
-    /registryProjection\.complete===true\?'✓ '\+t\('complete'\):'⚠ '\+t\('registryIncomplete'\)/,
+    /if\(status==='WORKING'\)return \{status:status,kind:'good',mark:'✓',label:t\('automationWorking'\)\}/,
+  );
+  assert.match(
+    evolutionHtml,
+    /if\(status==='STATE_UNAVAILABLE'\)return \{status:status,kind:'warn',mark:'⚠',label:t\('automationStateUnavailable'\)\}/,
+  );
+  assert.match(
+    evolutionHtml,
+    /if\(status==='NOT_RUNNING'\)return \{status:status,kind:'warn',mark:'○',label:t\('automationNotRunning'\)\}/,
   );
   assert.match(
     evolutionHtml,
@@ -326,10 +349,10 @@ test('B4 automation state is three-valued, factual, localized, and fail-closed',
   }
   for (const copy of [
     "automationWorking:'Работает'",
-    "automationStateUnavailable:'Состояние недоступно'",
+    "automationStateUnavailable:'Не удалось проверить состояние'",
     "automationNotRunning:'Не запущена'",
     "automationWorking:'Working'",
-    "automationStateUnavailable:'State unavailable'",
+    "automationStateUnavailable:'Couldn’t check status'",
     "automationNotRunning:'Not running'",
   ]) {
     assert.match(evolutionHtml, new RegExp(regexEscape(copy)));
@@ -364,17 +387,34 @@ test('B4 automation state is three-valued, factual, localized, and fail-closed',
     /error\[WLANG==='en'\?'message_en':'message_ru'\]/,
     'last_error must select the service-provided localized message',
   );
-  assert.match(evolutionHtml, /<code>'\+esc\(code\)\+'<\/code> · /);
+  assert.match(
+    evolutionHtml,
+    /esc\(factText\(message\)\)[\s\S]{0,100}<small class="mono">'\+esc\(code\)\+'<\/small>/,
+    'the localized service message stays primary while its exact error code remains reachable',
+  );
   assert.match(evolutionHtml, /row&&row\.action_gates/);
   assert.match(
     evolutionHtml,
     /\['enable_disable',t\('actionEnableDisable'\)\],\['update',t\('actionUpdate'\)\],\['rollback',t\('actionRollback'\)\]/,
   );
   assert.match(evolutionHtml, /data-action-gate=/);
-  assert.match(
-    evolutionHtml,
-    /<button class="ghost sm" type="button" disabled>/,
-    'automation controls are explanatory, disabled controls only',
+  const actionGateStart = evolutionHtml.indexOf(
+    'function renderAutomationActionGates(row)',
+  );
+  const actionGateEnd = evolutionHtml.indexOf(
+    'function mcpName(row)',
+    actionGateStart,
+  );
+  assert.ok(actionGateStart >= 0 && actionGateEnd > actionGateStart);
+  const actionGateRenderer = evolutionHtml.slice(
+    actionGateStart,
+    actionGateEnd,
+  );
+  assert.match(actionGateRenderer, /actionGateMessage\(gate,status\)/);
+  assert.doesNotMatch(
+    actionGateRenderer,
+    /<button\b|\bdisabled\b/,
+    'read-only evidence must not expose unusable automation buttons',
   );
   assert.match(
     evolutionHtml,
@@ -398,10 +438,17 @@ test('B4 schedule status separates operation from reference integrity', () => {
   );
   assert.match(
     evolutionHtml,
-    /if\(status==='MISSING'\)return \{status:status,kind:'bad',mark:'✕',label:'dead_reference · '\+t\('scheduleReferenceMissing'\)\}/,
+    /if\(status==='MISSING'\)return \{status:status,kind:'bad',mark:'✕',label:t\('scheduleMissingHuman'\)\}/,
   );
+  assert.match(evolutionHtml, /scheduleMissingHuman:'Расписание не найдено\.'/);
+  assert.match(evolutionHtml, /scheduleMissingHuman:'Schedule could not be found\.'/);
   assert.match(evolutionHtml, /data-schedule-operational=/);
   assert.match(evolutionHtml, /data-schedule-reference=/);
+  assert.match(
+    evolutionHtml,
+    /<details class="technical-details"><summary>'\+esc\(t\('technicalEvidence'\)\)\+'<\/summary>/,
+    'raw schedule enums remain reachable only after progressive disclosure',
+  );
   assert.match(evolutionHtml, /item\.operational_status\|\|item\.operationalStatus/);
   assert.match(evolutionHtml, /item\.reference_status\|\|item\.referenceStatus/);
 });
@@ -417,7 +464,12 @@ test('B4 keeps an unknown dead-reference fact unknown in UI and exports', () => 
   );
   assert.match(
     evolutionHtml,
-    /flags\.dead_reference==='UNKNOWN'[^;]+dead_reference · /,
+    /flags\.dead_reference==='UNKNOWN'/,
+  );
+  assert.match(
+    evolutionHtml,
+    /<details class="technical-details" data-technical-details="collapsed">/,
+    'unknown integrity evidence must remain available without leaking into the closed card summary',
   );
 });
 

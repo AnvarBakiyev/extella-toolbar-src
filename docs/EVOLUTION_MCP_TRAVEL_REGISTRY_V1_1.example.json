@@ -1,0 +1,94 @@
+{
+  "schema": "extella.evolution.mcp_registry.v1.1",
+  "owner_account_id": "account_demo",
+  "checked_at": "2026-07-27T22:26:38+05:00",
+  "complete": false,
+  "source": {
+    "kind": "REVIEWED_LIVE_FACTS",
+    "id": "travel.mcp.live_facts",
+    "version": null,
+    "sha256": "0731b0290eaead8768f3d02693f5cc7897284c356b461ee2fb7ae59d77119b7e"
+  },
+  "availability": [
+    {
+      "automation_id": "extella_travel_agency",
+      "connections": "OBSERVED",
+      "tool_contracts": "NOT_EXPOSED",
+      "extensions": "NOT_APPLICABLE",
+      "bindings": "NOT_APPLICABLE",
+      "run_evidence": "OBSERVED_EMPTY"
+    }
+  ],
+  "access_posture": [
+    {
+      "platform_agent_id": "agent_eUSuv3enLqKkZd2lj0aeI",
+      "scope": "ACCOUNT_WIDE",
+      "policy": "UNSCOPED",
+      "risk": "EXCESSIVE",
+      "observed_tool_count": 48,
+      "business_tool_count": 0,
+      "risk_evidence_tool_ids": [
+        "agent_delete_mcp_extella",
+        "profile_delete_mcp_extella",
+        "token_generate_mcp_extella"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "connection_id": "sys__all__sys_mcp_extella",
+      "automation_ids": [
+        "extella_travel_agency"
+      ],
+      "name": {
+        "ru": "Платформенное MCP-подключение Extella",
+        "en": "Extella platform MCP connection"
+      },
+      "transport": null,
+      "platform_managed": true,
+      "scope_boundary": "ACCOUNT_SHARED_PLATFORM",
+      "endpoint": null,
+      "credential_ref": null,
+      "health": {
+        "status": "UNKNOWN",
+        "checked_at": null
+      },
+      "provenance": {
+        "kind": "platform_observed",
+        "source_id": "travel.mcp.live_facts",
+        "source_version": null,
+        "sha256": null
+      }
+    }
+  ],
+  "tools": [],
+  "extensions": [],
+  "bindings": [],
+  "run_evidence": [],
+  "warnings": [
+    {
+      "code": "PLATFORM_TOOL_CONTRACTS_NOT_EXPOSED",
+      "message_ru": "Платформа сообщает о 48 инструментах агента, но не раскрывает их контракты и версии.",
+      "message_en": "The platform reports 48 agent tools but does not expose their contracts or versions.",
+      "source": "travel.mcp.live_facts",
+      "severity": "warning",
+      "affects_completeness": true
+    },
+    {
+      "code": "AUTOMATION_TOOL_BINDINGS_NOT_APPLICABLE",
+      "message_ru": "У этой автоматизации нет отдельных привязок инструментов: наблюдаемый агент получает общий платформенный набор уровня аккаунта.",
+      "message_en": "This automation has no tool-specific bindings: the observed agent receives an account-wide shared platform tool set.",
+      "source": "travel.mcp.live_facts",
+      "severity": "error",
+      "affects_completeness": false
+    },
+    {
+      "code": "NO_RUN_EVIDENCE_OBSERVED",
+      "message_ru": "Подтверждено, что прогонов автоматизации ещё не было.",
+      "message_en": "It is confirmed that the automation has not run yet.",
+      "source": "travel.mcp.live_facts",
+      "severity": "info",
+      "affects_completeness": false
+    }
+  ]
+}

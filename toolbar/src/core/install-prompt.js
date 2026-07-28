@@ -702,6 +702,7 @@ ETB.installPrompt = (function () {
       '=== AUTH & CREDENTIALS (if the plugin needs external API keys / tokens) ===',
       'If a credential is missing: load from KV via runExpert("_etb_kv_get", {key:"<id>_api_key"}).',
       'Save user-entered values via runExpert("_etb_kv_set", {key:"...", value:"..."}).',
+      'Never access _mkt_xtl_evolution_mcp_registry_v1: it is reserved for the trusted Evolution MCP provider.',
       'Or ask the toolbar for a native form: postMessage({type:"etb_config_request", title:"...",',
       '  fields:[{id:"<key>",label:"...",type:"password"}]}, "*") and listen for etb_config_response.',
       'Always include a Settings button so users can reconfigure without reinstalling.',

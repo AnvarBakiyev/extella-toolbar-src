@@ -433,6 +433,12 @@ ETB.marketplace = (function () {
               // найдены» были враньём по конструкции у ВСЕХ пользователей.
               var _isAgRuns = _key.indexOf('agent_runs:') === 0;
               var _isCapMan = /^cap_[A-Za-z0-9_-]+_manifest$/.test(_key);
+              var _isReservedMcpRegistry =
+                _key === '_mkt_xtl_evolution_mcp_registry_v1';
+              if (_isReservedMcpRegistry) {
+                _kerr('key reserved for the trusted Evolution MCP provider');
+                return;
+              }
               if (!_isMkt && !_isAgSt && !_isAgRuns && !_isCapMan) { _kerr('key not allowed'); return; }
               var _scope = (_isMkt || _isCapMan) ? { global: true } : {};
               if (_t === 'etb_kv_get') {
@@ -463,7 +469,23 @@ ETB.marketplace = (function () {
               // runExpertAsync: если сервер откладывает длинный прогон (kp_ingest, синтез,
               // большие пачки) в задачу — поллит её до готовности (иначе прилетает
               // «deferred, use task_id as reference» вместо результата).
-              ETB.api.runExpertAsync(e.data.name, e.data.params || {}, { global: true, maxWait: 900000, interval: 2500 })
+              var _expertName = String(e.data.name || '');
+              var _expertParams = e.data.params || {};
+              var _expertTargetsReservedMcpRegistry =
+                (_expertName === '_etb_kv_get' ||
+                 _expertName === '_etb_kv_set') &&
+                String(_expertParams.key || '') ===
+                  '_mkt_xtl_evolution_mcp_registry_v1';
+              if (_expertTargetsReservedMcpRegistry) {
+                _back({
+                  type: 'etb_expert_result',
+                  reqId: _rid,
+                  ok: false,
+                  error: 'key reserved for the trusted Evolution MCP provider'
+                });
+                return;
+              }
+              ETB.api.runExpertAsync(_expertName, _expertParams, { global: true, maxWait: 900000, interval: 2500 })
                 .then(function (res) { _back({ type: 'etb_expert_result', reqId: _rid, ok: true, res: res }); })
                 .catch(function (er) { _back({ type: 'etb_expert_result', reqId: _rid, ok: false, error: (er && er.message) || 'expert failed' }); });
             } else if (_t === 'etb_run_agent') {
