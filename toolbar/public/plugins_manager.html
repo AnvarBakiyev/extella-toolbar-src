@@ -645,8 +645,14 @@ body[data-theme="dark"] .inf .tr,html[data-theme="dark"] .inf .tr{stroke:var(--b
   <button class="bclose" onclick="notify('close')" title="Close">&#10005;</button>
 </div>
 <div class="cmdbar">
-  <input id="cmd_url" placeholder="🔍  Поиск по установленному и каталогам — или вставь ссылку из любого репозитория: установим в один клик" spellcheck="false" autocomplete="off" onkeydown="if(event.key==='Enter')cmdInstall()"/>
-  <button class="cmdgo" onclick="cmdInstall()">Установить</button>
+  <div id="cmd_search" style="display:flex;gap:10px;flex:1;min-width:0;height:55px">
+    <input id="cmd_url" placeholder="🔍  Поиск по установленному и каталогам — или вставь ссылку из любого репозитория: установим в один клик" spellcheck="false" autocomplete="off" onkeydown="if(event.key==='Enter')cmdInstall()"/>
+    <button class="cmdgo" onclick="cmdInstall()">Установить</button>
+  </div>
+  <div id="cmd_add" style="display:none;gap:12px;flex:1;min-width:0;align-items:center;height:55px">
+    <button class="cmdgo" id="cmd_add_btn" onclick="cmdSlotAdd()" style="flex-shrink:0;height:42px">+ Добавить</button>
+    <span id="cmd_add_hint" style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font:400 13px var(--sans);color:var(--tx3)"></span>
+  </div>
 </div>
 <div class="tabs" id="tabs"></div>
 <div class="scr"><div class="grid" id="grid"></div></div>
@@ -1463,10 +1469,41 @@ function syncHFFilterBar() {
   }
 }
 
+// ── Слот под шапкой: поиск на Столе / «Добавить …» на полках ──────────────
+// Раньше строка поиска пряталась на Рабочем столе — из-за этого вся навигация
+// прыгала при каждом переходе (замечание Алии). Теперь слот всегда на месте:
+// на Столе это поиск по установленному + установка по ссылке (правка команды:
+// ссылка живёт только на Столе), на каталожных вкладках — «Добавить …» своего
+// раздела. Он же заменил пунктирные плитки «Добавить» внутри сеток.
+var CMD_ADD = {
+  programs:  {l:'+ Добавить программу', l_en:'+ Add a program', h:'Опиши задачу — Extella найдёт открытую программу и покажет карточку', h_en:'Describe the task — Extella finds an open-source program and shows its card', go:function(){ openAddModal('programs'); }},
+  apps:      {l:'+ Добавить программу', l_en:'+ Add a program', h:'Опиши задачу — Extella найдёт открытую программу и покажет карточку', h_en:'Describe the task — Extella finds an open-source program and shows its card', go:function(){ openAddModal('programs'); }},
+  cli:       {l:'+ Добавить инструмент', l_en:'+ Add a tool',    h:'Обработка файлов: видео, PDF, распознавание текста', h_en:'File work: video, PDF, text recognition', go:function(){ openCliAdd(); }},
+  models:    {l:'+ Добавить модель',     l_en:'+ Add a model',   h:'Опиши, какая модель нужна, — Extella подберёт работающую', h_en:'Describe the model you need — Extella finds a working one', go:function(){ openAddModal('models'); }},
+  skills:    {l:'+ Добавить навык',      l_en:'+ Add a skill',   h:'Правило поведения для агента: как считать, о чём спрашивать, что проверять', h_en:'A rule for your agent: what to count, what to ask, what to double-check', go:function(){ openAddModal('skills'); }},
+  knowledge: {l:'+ Добавить базу',       l_en:'+ Add a base',    h:'Свои документы, по которым агент будет отвечать', h_en:'Your own documents for the agent to answer from', go:function(){ kpCreate(); }},
+  agents:    {l:'+ Создать агента',      l_en:'+ Create an agent', h:'Откроется Конструктор: опиши задачу — он соберёт и запустит агента', h_en:'The Wizard opens: describe the task and it builds and starts the agent', go:function(){ _openWizard(); }},
+  services:  {h:'Сервис включается галочкой прямо в карточке — добавлять отдельно нечего', h_en:'A service turns on with a checkbox right on its card — nothing to add separately'}
+};
+function cmdSlotAdd(){ var c = CMD_ADD[cur]; if (c && c.go) c.go(); }
+function _syncCmdSlot(){
+  var bar = document.querySelector('.cmdbar');
+  var s = document.getElementById('cmd_search'), a = document.getElementById('cmd_add');
+  if (bar) bar.style.display = 'flex';
+  if (!s || !a) return;
+  var desk = (cur === 'desktop');
+  s.style.display = desk ? 'flex' : 'none';
+  a.style.display = desk ? 'none' : 'flex';
+  if (desk) return;
+  var c = CMD_ADD[cur] || {};
+  var b = document.getElementById('cmd_add_btn'), h = document.getElementById('cmd_add_hint');
+  if (b) { b.style.display = c.l ? '' : 'none'; b.textContent = c.l ? _clT(c.l, c.l_en) : ''; }
+  if (h) h.textContent = _clT(c.h || '', c.h_en);
+}
+
 // ── Grid dispatcher ───────────────────────────────────────────────────────
 function renderGrid() {
-  var _cb = document.querySelector('.cmdbar');
-  if (_cb) _cb.style.display = (cur === 'desktop') ? 'none' : 'flex';
+  _syncCmdSlot();
   _ensureLoc();   // слой переводов (_mkt_loc) — грузится один раз, перерисовывает вкладку сам
   if (cur === 'desktop') renderDesktop();
   else if (cur === 'programs') renderPrograms();
@@ -2264,15 +2301,19 @@ function modelsSpotlight(){
   _ensureMod();
   var mh=(_modReg&&_modReg.heroes&&_modReg.heroes.length)?_modReg.heroes:TYPE_ED.models.heroes;
   var liveShelf=!!(_modReg&&_modReg.shelf&&_modReg.shelf.length);
+  // Герои сняты (BENTO_HEROES=false) — курированные модели из них не теряем:
+  // подмешиваем их в начало каталога обычными карточками, с защитой от дублей.
+  var _mbase=liveShelf?_modReg.shelf:TYPE_ED.models.shelf;
+  var _mkey=function(c){ return String((c&&(c.hfId||c.title))||'').toLowerCase(); };
+  var _mseen={}; _mbase.forEach(function(c){ _mseen[_mkey(c)]=1; });
+  var _mcards=mh.filter(function(h){ return !_mseen[_mkey(h)]; }).concat(_mbase);
   // Полный каталог работающих моделей по разделам (как Навыки), не тизер.
   var catalog=liveShelf
-    ? catalogByCatHTML(_modReg.shelf, modelCat, MODEL_ORDER, MODEL_LABEL, MODEL_ACC,
+    ? catalogByCatHTML(_mcards, modelCat, MODEL_ORDER, MODEL_LABEL, MODEL_ACC,
         'Работающие модели', 'ИИ-модели по разделам',
         'Живой каталог работающих демо HuggingFace: запускаются в облаке, своя видеокарта не нужна. Обновляется каждую неделю.', 'Работает')
-    : _shelfHTML(TYPE_ED.models.shelf, 'Модели', 'ИИ-модели: облачные и локальные');
-  return addTileHTML('models','Добавить модель')+
-    _bentoHTML(mh)+
-    catalog+
+    : _shelfHTML(_mcards, 'Модели', 'ИИ-модели: облачные и локальные');
+  return catalog+
     '<div class="sect_hdr"><span class="sect_title">Локальные модели, на твоём устройстве</span><span class="sect_line"></span></div>'+
     '<div class="sk_lead" style="grid-column:1/-1">Для русского лучше всего «Приватная модель».</div>'+
     '<div class="mshelf">'+LOCAL_MODELS.map(localModelCard).join('')+'</div>'+
@@ -2943,7 +2984,14 @@ var TYPE_ED = {
   }
 };
 
+// ГЕРОИ ОТКЛЮЧЕНЫ (решение Эллы 28.07 по правкам команды): крупные бенто-карточки
+// сверху полок сбивали навигацию и добавляли лишний уровень до каталога. Шаблон
+// каталожной вкладки теперь: лид → чипы категорий → сетка. Кураторство не потеряно —
+// курированные карточки помечены чипом «Выбор Extella» / «Проверено Extella» и идут
+// первыми в сетке. Вернуть героев = снять эту строку (разметка и стили целы).
+var BENTO_HEROES = false;
 function _bentoHTML(heroes) {
+  if (!BENTO_HEROES) return '';
   if (!heroes || !heroes.length) return '';
   var html = '<div class="bento' + (heroes.length === 1 ? ' bento_solo' : '') + '">' + _heroBig(heroes[0]);
   heroes.slice(1, 3).forEach(function (h) { html += _heroMini(h); });
@@ -2999,14 +3047,14 @@ function _mountTabFilter(placeholder){
   // Поэтому фильтр всегда ставим непосредственно перед первой полкой, которой
   // он управляет. Всё вводное содержимое остаётся выше, а результат переключения
   // начинается сразу под выбранной категорией и всегда виден.
-  // Единый шаблон полки (решение Эллы 28.07): меню → вводный блок → ПОИСК →
-  // ЧИПЫ → главные карточки (герои) → сетка. Раньше поиск падал под героев, и
-  // порядок блоков гулял от вкладки к вкладке.
+  // Единый шаблон полки (решение Эллы 28.07 + правки команды): меню → слот
+  // «Добавить …» под шапкой → вводный блок → ПОИСК → ЧИПЫ → сетка. Героев и
+  // пунктирных плиток «Добавить» внутри сетки больше нет.
   var firstShelf=shelves[0]||null;
   var firstShelfHead=firstShelf?_tfShelfHead(firstShelf):null;
   var catalogStart=firstShelfHead||firstShelf;
-  // Якорь = самый ранний из: плитка «Добавить» (tf_skip), герои, первая полка.
-  // Иначе «Добавить» оказывалась выше поиска и порядок гулял (Инструменты, Модели).
+  // Якорь = первая полка (плитки tf_skip и герои из разметки убраны — селекторы
+  // ниже просто ничего не находят, но оставлены на случай возврата героев).
   ['.mshelf.tf_skip','.bento'].forEach(function(sel){
     var el=g.querySelector(sel);
     if(el && (!catalogStart || (el.compareDocumentPosition(catalogStart) & Node.DOCUMENT_POSITION_FOLLOWING))) catalogStart=el;
@@ -3399,7 +3447,7 @@ function _renderProgramsCore() {
         '<p class="catalog_intro_text">Выбери программу и нажми «Установить» — после установки она появится на рабочем столе.</p>'+'<p class="catalog_intro_text" style="font-family:var(--mono);font-size:11.5px;color:var(--tx3);margin-top:6px">Технически это мини-приложения с интерфейсом (UI) и MCP-серверы с GitHub.</p>'+
       '</section>'
     : '';
-  var featuredHtml = _bk + _programIntro + ((_featCat === 'all' && !_isPro) ? programsSpotlight() + _mkbSlot + addTileHTML('programs','Добавить программу') : '') + renderFeaturedSection() + (_featCat !== 'all' ? addTileHTML('programs','Добавить программу') : (_isPro ? '' : progToolsHTML(_appsShelvesHTML())));
+  var featuredHtml = _bk + _programIntro + ((_featCat === 'all' && !_isPro) ? programsSpotlight() + _mkbSlot + ''/* плитка «Добавить» переехала в слот под шапкой */ : '') + renderFeaturedSection() + (_featCat !== 'all' ? ''/* плитка «Добавить» переехала в слот под шапкой */ : (_isPro ? '' : progToolsHTML(_appsShelvesHTML())));
 
   // «Для всех», curated only: no raw GitHub firehose.
   if (document.body.getAttribute('data-mode') !== 'pro') {
@@ -4238,7 +4286,9 @@ function renderDesktop(){
     {lbl:'Конструктор',      ico:'wand',     acc:'#C67E34', go:"_openWizard()",                tip:'Опиши задачу — соберём процесс, который работает по расписанию'},
     {lbl:'Быстрая сборка',   ico:'box',      acc:'#7C5CBF', go:"_openQuickBuild()",            tip:'Разовая задача из готовых блоков — результат за минуту'},
     {lbl:'Подключения',      ico:'globe',    acc:'#2F6B66', req:'extella_connectors', go:"notify('open','extella_connectors')", tip:'Свои сервисы, CRM и кабинеты — один контур доступа'},
-    {lbl:'Обезличивание',    ico:'docs',    acc:'#6B7280', req:'extella_anon', go:"notify('open','extella_anon')",         tip:'Уберём из файлов имена, телефоны и адреса — прямо на этом компьютере'},
+    // «Обезличивание» ушло со стола в Сервисы (правка команды 28.07): стол — то,
+    // чем создают, а не витрина утилит. Карточка живёт в renderServices и зовётся
+    // по-человечески — «Скрыть личные данные».
   ];
   // Решение Анвара 27.07 (срочный релиз коллегам): на столе оставляем только готовое.
   // Скрытые здесь карточки НЕ удалены — они доступны в Каталоге и через «Автоматизации»;
@@ -4257,7 +4307,10 @@ function renderDesktop(){
     }
     catch(_){ return false; }
   }
-  window._sysMissing=function(lbl){ wsToast('«'+lbl+'» ещё не установлена на этом компьютере — появится после полной установки Extella'); };
+  // Ошибка обязана говорить, что делать (замечание Алии: «непонятно, что это значит»).
+  window._sysMissing=function(lbl){ wsToast(LANG==='en'
+    ? ('“'+lbl+'” is not installed on this computer yet. Restart Extella — missing parts are fetched on start. If it is still absent, it is not part of your build yet.')
+    : ('«'+lbl+'» ещё не установлена на этом компьютере. Перезапусти Extella — недостающие части докачиваются при старте. Если и после перезапуска пусто, эта часть пока не входит в твою сборку.')); };
   window._sysSoon=function(lbl){ wsToast(LANG==='en'?('«'+lbl+'» — coming soon, in one of the next updates'):('«'+lbl+'» — скоро, в одном из ближайших обновлений')); };
   // 1) Агенты, собранные Визардом → открыть кабинет
   // Показываем агента только когда его состояние уже прочитано: иначе убранный
@@ -4939,7 +4992,6 @@ function _renderSkillsCore(){
       '<p class="catalog_intro_text">Задают дополнительные правила работы: например, отвечать короче, проверять факты или разбирать документы.</p>'+
       '<p class="catalog_intro_text">Выбери навык и укажи агента — он начнёт применять его в новых диалогах.</p>'+
     '</section>'+
-    addTileHTML('skills','Добавить навык')+
     _bentoHTML(TYPE_ED.skills.heroes)+
     _shelfHTML(TYPE_ED.skills.shelf,'Выбор Extella','Выбор Extella')+
     '<div class="sect"><h2>Навыки</h2></div>';
@@ -5084,12 +5136,7 @@ function renderCLI(){
             ? '✗ Не получилось добавить: '+esc((_cliPending.note||'нет ответа').slice(0,180).replace(/[.\s]+$/,''))+'. Попробуй описать задачу другими словами.'
             : '⏳ Ищу и собираю новый инструмент — обычно минута-другая. Итог появится здесь же.')+
         '</div>'
-      : '')+
-    '<div class="mshelf tf_skip"><div class="stile" style="--acc:var(--a);border-style:dashed;cursor:pointer" onclick="openCliAdd()">'+
-      '<span class="st_chip">✦ Добавить</span>'+
-      '<div class="st_title">+ Добавить инструмент</div>'+
-      '<div class="st_fact">Опиши задачу — Extella подберёт открытый инструмент, установит и добавит.</div>'+
-      '<div class="st_foot"><span style="font-size:11px;color:var(--tx3)">из открытых источников</span></div></div></div>';
+      : '');
   var cats=[]; all.forEach(function(c){if(cats.indexOf(c.cat)<0)cats.push(c.cat);});
   cats.forEach(function(cn){
     html+='<div class="sect_hdr"><span class="sect_title">'+esc(cn)+'</span><span class="sect_line"></span></div>';
@@ -5236,13 +5283,7 @@ function renderAgents(){
   // Разделение (решение Эллы 21.07): СОЗДАНИЕ агента = Конструктор (плитка ведёт
   // в него), НАЗНАЧЕНИЕ роли = каталог ролей ниже; «роль + умения» (agentForgeModal)
   // живёт карточкой «Универсальный помощник» в каталоге ролей.
-  var buildTiles='<div class="mshelf tf_skip">'+
-    '<div class="stile" style="--acc:var(--a);border-style:dashed;cursor:pointer" onclick="_openWizard()">'+
-      '<span class="st_chip">✦ Создать</span><div class="st_title">+ Создать агента</div>'+
-      '<div class="st_fact">Откроется Конструктор: опиши задачу — он соберёт и запустит агента.</div>'+
-      '<div class="st_foot"><span style="font-size:11px;color:var(--tx3)">Конструктор · есть на Рабочем столе</span></div></div></div>';
   var html='<section class="catalog_intro" aria-labelledby="agents_intro_title"><h2 class="catalog_intro_title" id="agents_intro_title">Агенты — твои сотрудники</h2><p class="catalog_intro_text">Агент работает вместо тебя: ведёт переписку, считает, готовит отчёты. Своего собери в Конструкторе — он расспросит о задаче и всё настроит.</p><p class="catalog_intro_text">Или возьми готовую профессию с полки ниже: продажи, поддержка, бухгалтерия, аналитика. Роль назначается на твою копию агента за минуту.</p></section>'+
-    buildTiles+
     mineHtml+
     _bentoHTML(TYPE_ED.agents.heroes)+
     '<div class="sect"><h2>Роли агентов</h2></div>'+
@@ -5348,6 +5389,22 @@ function renderServices(){
     html+='<div class="sect_hdr"><span class="sect_title">'+esc(cn)+'</span><span class="sect_line"></span></div><div class="mshelf">'+
       CATALOG_SERVICES.filter(function(s){return s.cat===cn;}).map(svCard).join('')+'</div>';
   });
+  // Локальные утилиты-плагины (переехали со стола 28.07). Карточка честная: если
+  // плагина нет в реестре устройства — приглушаем и объясняем, что делать.
+  // _sysAvail живёт в замыкании стола — здесь та же проверка по глобальным спискам.
+  var _anonOk = (function(){ try{ return gi().indexOf('extella_anon')>=0 ||
+    getCustom().some(function(p){ return p && p.id==='extella_anon'; }); }catch(_){ return false; } })();
+  html+='<div class="sect_hdr"><span class="sect_title">На твоём компьютере</span><span class="sect_line"></span></div>'+
+    // приглушать opacity бесполезно: у .stile анимация fiu с fill-mode both
+    // перебивает инлайн-стиль. Состояние честно несёт кнопка внизу карточки.
+    '<div class="mshelf"><div class="stile" style="--acc:#6B7280">'+
+      '<div class="st_top"><span class="st_ico" aria-hidden="true">'+_ico('docs')+'</span>'+
+      '<span class="st_chip">Файлы · локально</span></div>'+
+      '<div class="st_title">Скрыть личные данные</div>'+
+      '<div class="st_fact">Уберёт из файла имена, телефоны и адреса — перед тем как ты кому-то его отправишь. Файл не уходит с компьютера.</div>'+
+      '<div class="st_foot">'+(_anonOk
+        ? '<button class="st_btn" onclick="notify(\'open\',\'extella_anon\')">Открыть</button>'
+        : '<button class="st_btn ghost" onclick="_sysMissing(\'Скрыть личные данные\')">Пока недоступно</button>')+'</div></div></div>';
   html+='<div id="mcp_cat" style="display:contents"></div>';
   g.innerHTML=html;
   [].forEach.call(g.querySelectorAll('[data-svconn]'),function(b){b.onclick=function(){svConnect(b.getAttribute('data-svconn'));};});
@@ -5732,11 +5789,6 @@ function renderKnowledge(){
   var html='<section class="catalog_intro" aria-labelledby="knowledge_intro_title"><h2 class="catalog_intro_title" id="knowledge_intro_title">Знания для агента</h2><p class="catalog_intro_text">База знаний — это твои документы, по которым агент отвечает: регламенты, договоры, прайсы, кодексы.</p><p class="catalog_intro_text">Возьми готовую базу с полки ниже или собери свою из папки с файлами — сборка идёт локально, документы никуда не уходят.</p></section>'+
     _bentoHTML(TYPE_ED.knowledge.heroes);
   html+='<div class="sect"><h2>Знания</h2></div>'+
-    '<div class="sect_hdr"><span class="sect_title">Своя база из документов</span><span class="sect_line"></span></div>'+
-    '<div class="mshelf tf_skip"><div class="stile" style="--acc:var(--a);border-style:dashed;cursor:pointer" onclick="kpCreate()">'+
-      '<span class="st_chip">✦ Новая база</span><div class="st_title">+ Создать базу знаний</div>'+
-      '<div class="st_fact">Выбери папку с документами, соберу базу за пару минут.</div>'+
-      '<div class="st_foot"><span style="font-size:11px;color:var(--tx3)">локально · приватно</span></div></div></div>'+
     kpCatalogHTML();
   if(packs.length){
     html+='<div class="sect_hdr"><span class="sect_title">Мои базы знаний</span><span class="sect_line"></span></div><div class="mshelf">'+
