@@ -310,14 +310,14 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
   </div>
 </div>
 
-<!-- Псевдоанонимизация v1: детерминированные regex-замены (без LLM), файлы не покидают устройство -->
+<!-- Обезличивание v1: детерминированные regex-замены (без LLM), файлы не покидают устройство -->
 <div id="anon_studio" style="display:none;position:fixed;inset:0;z-index:9990;background:var(--cream,#f4f1ea);overflow:auto">
   <div style="max-width:860px;margin:0 auto;padding:26px 28px 70px">
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
       <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#3f4b52,#14171e);display:flex;align-items:center;justify-content:center;font-size:26px"></div>
       <div>
-        <div style="font:700 20px var(--sans);color:var(--ink,#0a0a0a)">Псевдоанонимизация</div>
-        <div style="font-size:12.5px;color:var(--silver,#889)">ПДн заменяются стабильными токенами локально на этом устройстве — без ИИ-моделей, файлы никуда не отправляются</div>
+        <div style="font:700 20px var(--sans);color:var(--ink,#0a0a0a)">Обезличивание</div>
+        <div style="font-size:12.5px;color:var(--silver,#889)">Личные данные заменяются стабильными кодами прямо на этом компьютере — без ИИ-моделей, файлы никуда не отправляются</div>
       </div>
       <button class="btn ghost" style="margin-left:auto;padding:8px 16px" onclick="openAnonHelp()" title="Что делает обезличивание, что гарантирует, а что нет">Как это работает</button>
       <button class="btn ghost" style="padding:8px 16px" onclick="closeAnonStudio()">✕ Закрыть</button>
@@ -1045,6 +1045,18 @@ function _modClearExtras(){
 function resetModInput(){ _modClearExtras(); var ob=el("modOkBtn"); if(ob) ob.textContent="OK"; var cb=el("modCancelBtn"); if(cb) cb.style.display=""; }   // чистый инпут + дефолтные кнопки
 /* ================= EN/RU (демо на английский) ================= */
 var WLANG = (function(){ try { return localStorage.getItem('wz_lang') || 'ru'; } catch(e){ return 'ru'; } })();
+// Язык окна следует за витриной: хост шлёт lang в etb_init. Раньше окно жило
+// со своим wz_lang и при EN витрины показывало мешанину (перевод есть не у всех строк).
+window.addEventListener('message', function(e){
+  try{
+    var d=e.data||{}; if(d.type!=='etb_init'||!d.lang) return;
+    var L=(String(d.lang)==='en')?'en':'ru';
+    if(L===WLANG) return;
+    WLANG=L; try{localStorage.setItem('wz_lang',L);}catch(_){}
+    if(typeof applyWLang==='function')applyWLang();
+    if(typeof applyI18N==='function')applyI18N();
+  }catch(_){}
+});
 var WT = {
   navWizard:{ru:'Мастер',en:'Wizard'}, navAuto:{ru:'Автоматизации',en:'Automations'}, navCore:{ru:'Процессное ядро',en:'Process core'},
   newSess:{ru:'+ Новый проект',en:'+ New project'}, assistant:{ru:'Мастер',en:'Wizard'},
@@ -2284,7 +2296,7 @@ async function teamRevoke(fullName){
   if(r&&r.status==='success'){ toast((WLANG==='en'?'✓ Access revoked':'✓ Доступ отозван'),'ok'); renderTeam(); }
   else toast('Ошибка: '+((r&&r.message)||''),'err');
 }
-// ── Псевдоанонимизация v1: локальные детерминированные замены (без LLM); файлы не покидают устройство ──
+// ── Обезличивание v1: локальные детерминированные замены (без LLM); файлы не покидают устройство ──
 var _anonJob = {id:'', files:[]};
 function openAnonStudio(){ var st=el('anon_studio'); if(!st) return; st.style.display='block'; document.body.style.overflow='hidden'; _anonJob={id:'',files:[]}; renderAnonFiles(); var res=el('anonResult'); if(res) res.innerHTML=''; renderAnonJobs(); anonHelpFirstTime(); }
 function closeAnonStudio(){ var st=el('anon_studio'); if(!st||st.style.display==='none') return; st.style.display='none'; document.body.style.overflow=''; closeAnonHelp(); }
@@ -2569,7 +2581,7 @@ function anonHelpFirstTime(){ helpFirstTime('anon'); }
 function renderAnonFiles(){
   var host=el('anonFileList'); if(!host) return;
   host.innerHTML=_anonJob.files.length? _anonJob.files.map(function(n){return '<div style="padding:3px 0">'+esc(n)+'</div>';}).join('')
-    : '<div style="color:var(--silver);font-size:12px">'+(WLANG==='en'?'no files yet':'файлы пока не выбраны')+'</div>';
+    : '<div style="color:var(--silver);font-size:12px">'+(WLANG==='en'?'файлы пока не выбраны':'файлы пока не выбраны')+'</div>';
   var b=el('anonRunBtn'); if(b) b.disabled=!_anonJob.files.length;
 }
 function anonFiles(list){
