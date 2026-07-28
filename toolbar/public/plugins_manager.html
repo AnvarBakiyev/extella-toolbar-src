@@ -5074,7 +5074,7 @@ function renderCLI(){
   var html='<section class="catalog_intro" aria-labelledby="cli_intro_title">'+
       '<h2 class="catalog_intro_title" id="cli_intro_title">Инструменты для файлов</h2>'+
       '<p class="catalog_intro_text">Обрабатывают документы, изображения, видео и аудио прямо на твоём компьютере — без загрузки в интернет.</p>'+
-      '<p class="catalog_intro_text">Скажи агенту, что сделать с файлами, — он выберет и запустит нужный инструмент.</p>'+
+      '<p class="catalog_intro_text">Скажи агенту, что сделать с файлами, — он выберет и запустит нужный инструмент.</p><p class="catalog_intro_text" style="font-family:var(--mono);font-size:11.5px;color:var(--tx3);margin-top:6px">Технически это утилиты командной строки (CLI): ffmpeg, pandoc, OCR и другие.</p>'+
     '</section>'+
     (_cliPending && _cliPending.t && (Date.now()-_cliPending.t < 10*60*1000)
       ? '<div style="grid-column:1/-1;border:1px solid '+(_cliPending.status==='fail'?'rgba(220,80,60,.4)':'var(--bd2)')+';border-radius:5px;padding:10px 14px;font-size:12.5px;color:var(--tx2);background:var(--s1)">'+
@@ -5340,7 +5340,7 @@ function svConnect(id){ var a=svGi(); if(a.indexOf(id)<0){a.push(id);svSi(a);} i
 function svDisc(id){ var a=svGi(); var i=a.indexOf(id); if(i>=0){a.splice(i,1);svSi(a);} if(cur==='services')renderServices(); }
 function renderServices(){
   var g=document.getElementById('grid'); if(!g)return;
-  var html='<section class="catalog_intro" aria-labelledby="services_intro_title"><h2 class="catalog_intro_title" id="services_intro_title">Живые данные для агента</h2><p class="catalog_intro_text">Курсы валют, погода, справки, перевод — чтобы агент отвечал по фактам из интернета, а не по памяти.</p><p class="catalog_intro_text">Любой сервис можно проверить прямо здесь, а кнопкой «+ Для агента» отметить те, что получит твой агент при сборке.</p></section>'+
+  var html='<section class="catalog_intro" aria-labelledby="services_intro_title"><h2 class="catalog_intro_title" id="services_intro_title">Живые данные для агента</h2><p class="catalog_intro_text">Курсы валют, погода, справки, перевод — чтобы агент отвечал по фактам из интернета, а не по памяти.</p><p class="catalog_intro_text">Любой сервис можно проверить прямо здесь, а кнопкой «+ Для агента» отметить те, что получит твой агент при сборке.</p><p class="catalog_intro_text" style="font-family:var(--mono);font-size:11.5px;color:var(--tx3);margin-top:6px">Технически это внешние API и MCP-серверы — подключаются без ключей.</p></section>'+
     _bentoHTML(TYPE_ED.services.heroes);
   html+='<div class="sect"><h2>Сервисы</h2></div>';
   var cats=[]; CATALOG_SERVICES.forEach(function(s){if(cats.indexOf(s.cat)<0)cats.push(s.cat);});
