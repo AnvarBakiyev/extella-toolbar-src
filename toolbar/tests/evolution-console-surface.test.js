@@ -19,6 +19,7 @@ const evolutionScannerPath = path.join(
 const studioManifestPath = path.join(scenarioRoot, 'capability-studio.json');
 const studioHtmlPath = path.join(scenarioRoot, 'profit-growth.html');
 const routerPath = path.join(toolbarRoot, 'src', 'core', 'router.js');
+const pluginsManagerPath = path.join(toolbarRoot, 'public', 'plugins_manager.html');
 
 const evolutionManifest = JSON.parse(
   fs.readFileSync(evolutionManifestPath, 'utf8'),
@@ -30,6 +31,7 @@ const studioManifest = JSON.parse(
 );
 const studioHtml = fs.readFileSync(studioHtmlPath, 'utf8');
 const router = fs.readFileSync(routerPath, 'utf8');
+const pluginsManager = fs.readFileSync(pluginsManagerPath, 'utf8');
 
 function regexEscape(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -52,7 +54,7 @@ test('Evolution Console manifest keeps exact product naming and a read-only surf
     evolutionManifest.description,
     'Evolution Console показывает, что работает, что остановлено и где нужна помощь. Каталог отделён от установленных автоматизаций, а неизвестное состояние не подменяется успехом.',
   );
-  assert.equal(evolutionManifest.version, '0.8.0');
+  assert.equal(evolutionManifest.version, '0.9.0');
   assert.deepEqual(evolutionManifest.pills, [
     'Автоматизации',
     'Состояние',
@@ -91,6 +93,7 @@ test('Evolution Console manifest keeps exact product naming and a read-only surf
     [
       'agent_passport_risks',
       'automation_registry',
+      'data_protection_posture',
       'evolution_lab',
       'evolution_loop',
       'mcp_read_inventory',
@@ -339,6 +342,98 @@ test('automation registry surface exposes no automation state-changing action', 
   assert.match(router, /action === 'automation_registry_load'/);
 });
 
+test('data protection is a read-only per-agent posture in Console and settings stay in Agent Cabinet', () => {
+  assert.equal(
+    evolutionManifest.capabilities.find(
+      (capability) => capability.id === 'data_protection_posture',
+    ).version,
+    'EVOLUTION_MASKING_POSTURE_V1',
+  );
+  assert.match(evolutionHtml, /id="countProtectedAgents"/);
+  assert.match(
+    evolutionHtml,
+    /protectedAgents:'с подтверждёнными PRE \+ POST'/,
+  );
+  assert.match(
+    evolutionHtml,
+    /protectedAgents:'with verified PRE \+ POST'/,
+  );
+  assert.match(evolutionHtml, /dataProtection:'Защита данных'/);
+  assert.match(evolutionHtml, /dataProtection:'Data protection'/);
+  assert.match(
+    evolutionHtml,
+    /maskingSettingsCabinet:'Настройки находятся в Agent Cabinet\.'/,
+  );
+  assert.match(
+    evolutionHtml,
+    /maskingSettingsCabinet:'Settings are in Agent Cabinet\.'/,
+  );
+  assert.match(evolutionHtml, /data-masking-posture=/);
+  assert.match(evolutionHtml, /function maskingAutomationAgentIds\(\)/);
+  assert.match(
+    evolutionHtml,
+    /automationFlags\(row\)\.installed===true/,
+    'the N/M denominator must come from installed business automations',
+  );
+  assert.match(evolutionHtml, /function maskingCoverageText\(\)/);
+  assert.match(
+    evolutionHtml,
+    /String\(snapshot\.availability\|\|''\)\.toUpperCase\(\)!=='AVAILABLE'/,
+    'an unavailable local source must render an unknown N/M numerator',
+  );
+  assert.match(
+    evolutionHtml,
+    /ids\.some\(function\(id\)\{return !rows\.some\(function\(row\)\{return String\(row&&row\.agent_id\|\|''\)===id;\}\);\}\)\)return'—\/'\+total/,
+    'a composed automation agent missing from the posture snapshot must keep N unknown',
+  );
+  assert.match(
+    evolutionHtml,
+    /capturedAt<now-5\*60\*1000\|\|capturedAt>now\+60\*1000/,
+    'stale or implausibly future posture must never stay green in the UI',
+  );
+  for (const cabinetOnlyField of [
+    'names_mode',
+    'field_hints',
+    'reveal_policy',
+    'share_key_cross_device',
+  ]) {
+    assert.doesNotMatch(
+      evolutionHtml,
+      new RegExp(regexEscape(cabinetOnlyField)),
+      `${cabinetOnlyField} must not create a second Agent Cabinet form`,
+    );
+  }
+  assert.doesNotMatch(evolutionHtml, /vault\.key|vault_key|encrypted_mapping/);
+
+  const postureStart = router.indexOf(
+    '  function _evolutionMaskingPostureLoad(',
+  );
+  const postureEnd = router.indexOf(
+    '  function _evolutionLastReceipt(',
+    postureStart,
+  );
+  assert.ok(postureStart >= 0 && postureEnd > postureStart);
+  const postureRouter = router.slice(postureStart, postureEnd);
+  assert.match(postureRouter, /loadMaskingPostures/);
+  assert.match(postureRouter, /device_only: true/);
+  assert.match(postureRouter, /profile_id: 'default'/);
+  assert.match(postureRouter, /unavailableSnapshot/);
+  assert.match(postureRouter, /now: new Date\(\)\.toISOString\(\)/);
+  assert.doesNotMatch(
+    postureRouter,
+    /kvGet|kvSet|localStorage|vault\.key|mapping|raw_audit|\btoken\b/i,
+  );
+  assert.match(router, /action === 'masking_posture_load'/);
+  assert.match(
+    pluginsManager,
+    /'profit-growth-scenario': \{[^}\n]*name:'Evolution Console'/,
+  );
+  assert.doesNotMatch(
+    pluginsManager,
+    /'profit-growth-scenario': \{[^}\n]*name:'Консоль агентов'/,
+  );
+});
+
 test('B4 automation state is three-valued, factual, localized, and fail-closed', () => {
   for (const status of ['WORKING', 'STATE_UNAVAILABLE', 'NOT_RUNNING']) {
     assert.match(
@@ -568,6 +663,7 @@ test('Evolution Console clears every account-bound UI slice before a new init', 
     assert.match(resetSource, new RegExp(regexEscape(clearedField)));
   }
   assert.match(resetSource, /state\.pending\.clear\(\)/);
+  assert.match(resetSource, /clearMaskingPostures\(\)/);
   assert.match(resetSource, /el\('cabinetHost'\)\.innerHTML=''/);
   assert.match(resetSource, /el\('cabinetOverlay'\)\.classList\.remove\('on'\)/);
   assert.match(resetSource, /window\._cab=null/);
