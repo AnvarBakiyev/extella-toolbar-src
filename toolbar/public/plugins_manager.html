@@ -1284,7 +1284,7 @@ function renderAdmin() {
   }
   var bar = '<div class="adm_bar">' +
     '<span class="adm_note">Несортированный каталог. Не проверено Extella</span>' +
-    '<button class="cat_chip' + (_admView==='catalog' ? ' on' : '') + '" onclick="setAdmView(\'catalog\')">Каталог</button>' +
+    '<button class="cat_chip' + (_admView==='catalog' ? ' on' : '') + '" onclick="setAdmView(\'catalog\')">Проверенные</button>' +
     '<button class="cat_chip' + (_admView==='hf' ? ' on' : '') + '" onclick="setAdmView(\'hf\')">Поиск по Hugging Face</button>' +
   '</div>';
   g.insertAdjacentHTML('afterbegin', bar);
@@ -1529,7 +1529,7 @@ try { if (localStorage.getItem('etb_lang') === 'en') LANG = 'en'; } catch (_) {}
 var I18N_EN = {
   // Вкладки
   'Рабочий стол':'Desktop','Программы':'Programs','Модели':'Models',
-  'Навыки':'Skills','Инструменты':'Tools','Знания':'Knowledge','Агенты':'Agents','Инструменты':'Tools','Для файлов':'For files','Подключения':'Connections','Каталог':'Catalog','Профи':'Pro','История':'History','Автозапуск':'Auto-run',
+  'Навыки':'Skills','Инструменты':'Tools','Знания':'Knowledge','Агенты':'Agents','Инструменты':'Tools','Для файлов':'For files','Подключения':'Connections','Проверенные':'Verified','Профи':'Pro','История':'History','Автозапуск':'Auto-run',
   'На Рабочий стол':'Back to Desktop',
   'Мини-программы Extella и приложения с GitHub: берёшь с полки — живут у тебя на компьютере.':'Extella mini-programs and apps from GitHub: pick one from the shelf — it lives on your computer.',
   'Готовые приложения с GitHub: клик — и Extella установит на твой компьютер. Работают локально.':'Ready-made apps from GitHub: one click and Extella installs them on your computer. They run locally.',
@@ -1555,7 +1555,7 @@ var I18N_EN = {
   '⚠ Не смог проверить, какие серверы уже подключены — отметки могут быть неточными.':'⚠ Could not check which servers are already connected — the marks may be off.',
   'Проверить ещё раз':'Try again',
   'Задачи по расписанию: отчёты, проверки, рассылки':'Scheduled tasks: reports, checks, mailouts',
-  'Пока пусто. Установи программы в «Каталоге» или собери агента в Конструкторе — они появятся здесь ярлыками.':'Nothing yet. Install programs in “Catalog” or build an agent in the Wizard — they will appear here as icons.',
+  'Пока пусто. Поставь что-нибудь во вкладке «Инструменты» или собери агента в Конструкторе — они появятся здесь ярлыками.':'Nothing yet. Install programs in “Catalog” or build an agent in the Wizard — they will appear here as icons.',
   'Открыть →':'Open →','Открыть':'Open','Запустить':'Run','Кабинет':'Cabinet','Удалить':'Remove','Открыть источник':'Open source','↗ Открыть':'↗ Open','↗ Источник':'↗ Source','⚙ Кабинет':'⚙ Cabinet','▶ Запустить':'▶ Run',
   // Секции / подписи
   'Выбор Extella':'EXTELLA PICK','Выбор Extella':'Extella pick',
@@ -3004,8 +3004,12 @@ function _mountTabFilter(placeholder){
   var firstShelf=shelves[0]||null;
   var firstShelfHead=firstShelf?_tfShelfHead(firstShelf):null;
   var catalogStart=firstShelfHead||firstShelf;
-  var hero=g.querySelector('.bento');
-  if(hero && (!catalogStart || (hero.compareDocumentPosition(catalogStart) & Node.DOCUMENT_POSITION_FOLLOWING))) catalogStart=hero;
+  // Якорь = самый ранний из: плитка «Добавить» (tf_skip), герои, первая полка.
+  // Иначе «Добавить» оказывалась выше поиска и порядок гулял (Инструменты, Модели).
+  ['.mshelf.tf_skip','.bento'].forEach(function(sel){
+    var el=g.querySelector(sel);
+    if(el && (!catalogStart || (el.compareDocumentPosition(catalogStart) & Node.DOCUMENT_POSITION_FOLLOWING))) catalogStart=el;
+  });
   if(catalogStart) g.insertBefore(bar,catalogStart);
   else if(g.firstChild) g.insertBefore(bar,g.firstChild);
   else g.appendChild(bar);
@@ -4355,7 +4359,7 @@ function renderDesktop(){
       '<div class="dt_grid" style="margin-bottom:24px">'+sysHtml+'</div>'+
       (icons.length
         ? '<div class="dt_hint">Клик — открыть или запустить. Правый клик — кабинет, настройки, удалить.</div>'+grpHtml
-        : '<div class="dt_hint">Пока пусто. Установи программы в «Каталоге» или собери агента в Конструкторе — они появятся здесь ярлыками.</div>')+
+        : '<div class="dt_hint">Пока пусто. Поставь что-нибудь во вкладке «Инструменты» или собери агента в Конструкторе — они появятся здесь ярлыками.</div>')+
     '</div>';
   rtabs();
   // Полная сборка (все источники ответили) → снапшот для мгновенного стола
