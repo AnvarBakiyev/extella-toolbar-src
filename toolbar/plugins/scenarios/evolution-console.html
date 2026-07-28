@@ -115,6 +115,7 @@
     .mcp-access p,.mcp-source-warning{margin:4px 0}.mcp-source-warning{color:var(--muted)}
     .component-group b{display:block;color:var(--ink);font-size:12px}.component-items,.risk-codes{display:grid;gap:5px;margin:6px 0 0;padding:0;list-style:none}
     .component-items li,.risk-codes li{color:var(--muted);word-break:break-word}.component-items code{word-break:break-all}
+    .masking-posture{display:grid;gap:4px;margin:7px 0 0 20px}.masking-posture small{color:var(--muted);line-height:1.35}
     .schedule-facts,.action-gates{display:grid;gap:5px;margin-top:5px}.schedule-facts .state{margin:2px 4px 0 0}
     .action-gate{display:grid;grid-template-columns:auto 1fr;align-items:start;gap:7px}.action-gate small{margin:2px 0 0;color:var(--muted)}
     .fleet-summary{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:15px;padding:12px 15px;
@@ -206,6 +207,8 @@
           <span><strong id="countWorking">—</strong><span data-t="workingCount"></span></span>
           <span aria-hidden="true">·</span>
           <span><strong id="countNotRunning">—</strong><span data-t="notRunningCount"></span></span>
+          <span aria-hidden="true">·</span>
+          <span><strong id="countProtectedAgents">—</strong><span data-t="protectedAgents"></span></span>
           <span aria-hidden="true">·</span>
           <button type="button" data-summary-attention><strong id="countAttention">—</strong><span data-t="attentionCount"></span></button>
         </div>
@@ -342,7 +345,8 @@
         consoleSub:'Evolution Console',fleet:'Парк',overview:'Обзор',automationsNav:'Автоматизации',advanced:'Дополнительно',risks:'Риски',riskDetails:'Причины рисков',escalations:'Эскалации',bulk:'Массовые операции',
         how:'? Как это работает',demo:'DEMO: данные и Evolution Receipts существуют только в памяти страницы; платформа не читается и не изменяется.',
         overviewTitle:'Ваши автоматизации',overviewLead:'Здесь видно, что работает, что остановлено и где нужна ваша помощь.',
-        myAutomations:'Мои автоматизации',catalog:'Каталог',automationScope:'Установленные автоматизации или каталог',workingCount:'работают',notRunningCount:'не запущены',attentionCount:'требуют внимания',
+        myAutomations:'Мои автоматизации',catalog:'Каталог',automationScope:'Установленные автоматизации или каталог',workingCount:'работают',notRunningCount:'не запущены',protectedAgents:'с подтверждёнными PRE + POST',attentionCount:'требуют внимания',
+        dataProtection:'Защита данных',maskingActive:'PRE + POST включены и подтверждены',maskingOff:'Выключено',maskingPartial:'Подтверждено частично',maskingUnknown:'Состояние защиты неизвестно',maskingSettingsCabinet:'Настройки находятся в Agent Cabinet.',maskingLocalSource:'Статус получен только с текущего устройства.',
         advancedConsole:'Расширенные возможности Evolution Console',evolutionLabTitle:'Безопасная проверка изменений',evolutionLabLead:'Evolution Lab сравнивает поведение до и после изменения, не затрагивая работающие автоматизации.',labEmptyTitle:'Нет изменения для проверки',labEmptyText:'Evolution Lab откроет сравнение, когда в Evolution Console или Agent Cabinet будет подготовлено конкретное изменение.',backAutomations:'Вернуться к автоматизациям',
         openAutomation:'Открыть',reviewAutomation:'Разобраться',catalogDetails:'Подробнее',descriptionMissing:'Описание пока не добавлено.',whatItDoes:'Что делает',stateAndRuns:'Состояние и последние запуски',technicalEvidence:'Технические сведения',chooseAutomation:'Выберите автоматизацию, чтобы открыть подробности.',
         stateUnavailableSummary:'Данные о работе пока недоступны.',stateCheckUnavailableText:'Действия временно недоступны: сначала нужно проверить состояние автоматизации.',notRunningText:'Автоматизация сейчас не выполняет задачи.',updateAvailable:'Доступно обновление.',scheduleMissingHuman:'Расписание не найдено.',linkedComponentMissing:'Не найден связанный компонент.',
@@ -414,7 +418,8 @@
         consoleSub:'Evolution Console',fleet:'Fleet',overview:'Overview',automationsNav:'Automations',advanced:'More',risks:'Risks',riskDetails:'Risk details',escalations:'Escalations',bulk:'Bulk operations',
         how:'? How it works',demo:'DEMO: data and Evolution Receipts exist only in this page memory; the platform is neither read nor changed.',
         overviewTitle:'Your automations',overviewLead:'See what is working, what is stopped, and where your attention is needed.',
-        myAutomations:'My automations',catalog:'Catalog',automationScope:'Installed automations or catalog',workingCount:'working',notRunningCount:'not running',attentionCount:'need attention',
+        myAutomations:'My automations',catalog:'Catalog',automationScope:'Installed automations or catalog',workingCount:'working',notRunningCount:'not running',protectedAgents:'with verified PRE + POST',attentionCount:'need attention',
+        dataProtection:'Data protection',maskingActive:'PRE + POST enabled and verified',maskingOff:'Off',maskingPartial:'Partially verified',maskingUnknown:'Protection status unknown',maskingSettingsCabinet:'Settings are in Agent Cabinet.',maskingLocalSource:'Status comes from this device only.',
         advancedConsole:'Advanced Evolution Console capabilities',evolutionLabTitle:'Test changes safely',evolutionLabLead:'Evolution Lab compares behavior before and after a change without affecting working automations.',labEmptyTitle:'No change to test',labEmptyText:'Evolution Lab will open a comparison after a specific change is prepared in Evolution Console or Agent Cabinet.',backAutomations:'Back to automations',
         openAutomation:'Open',reviewAutomation:'Review',catalogDetails:'Details',descriptionMissing:'No description has been added yet.',whatItDoes:'What it does',stateAndRuns:'Status and recent runs',technicalEvidence:'Technical details',chooseAutomation:'Choose an automation to open its details.',
         stateUnavailableSummary:'Status data is not available yet.',stateCheckUnavailableText:'Actions are temporarily unavailable until the automation’s status can be checked.',notRunningText:'The automation is not running tasks right now.',updateAvailable:'Update available.',scheduleMissingHuman:'Schedule could not be found.',linkedComponentMissing:'A linked component could not be found.',
@@ -497,7 +502,8 @@
       cabinetAgentId:null,cabinetGeneId:null,cabinetArtifactBase:null,currentEscalationId:null,selectedEscalationId:null,
       bulkOperations:[],currentBulkOperationId:null,selectedBulkOperationId:null,selectedBulkGeneId:null,selectedBulkIds:[],
       lastEscalationEvidence:null,lastBulkEvidence:null,lastLoadedAt:null,focusRiskAgentId:null,cabinetTrigger:null,
-      mcpByAutomation:Object.create(null),mcpEpoch:0
+      mcpByAutomation:Object.create(null),mcpEpoch:0,
+      maskingPostures:null,maskingLoading:false,maskingError:null,maskingEpoch:0
     };
 
     function applyLanguage(){
@@ -511,14 +517,14 @@
         HELP.evolution_console={
           ru:{icon:'◇',title:'Как работает Evolution Console',sub:'Единый реестр автоматизаций',
             steps:['Сначала показывает установленные автоматизации: что работает, что не запущено и где нужна помощь.','Карточка раскрывает состояние, последние запуски, расписания и состав только по запросу.','Agent Cabinet открывается из состава конкретной автоматизации; Evolution Lab используется для безопасной проверки подготовленного изменения.'],
-            sure:['Каталог отделён от установленных автоматизаций.','Если состояние проверить нельзя, Evolution Console пишет об этом прямо и блокирует зависимые действия.'],
+            sure:['Каталог отделён от установленных автоматизаций.','Если состояние проверить нельзя, Evolution Console пишет об этом прямо и блокирует зависимые действия.','Защита данных считается включённой только после подтверждения PRE и POST на текущем устройстве.'],
             nope:['Этот экран пока не включает, не выключает, не обновляет и не откатывает автоматизации.','Неизвестное состояние не подменяется успешным.','Между аккаунтами видимости нет.'],
-            who:{title:'Где находятся подробности',items:['Технические коды, версии и источники скрыты в «Технических сведениях».','Внутренний агент открывается в готовом Agent Cabinet, а не дублируется в Evolution Console.']}},
+            who:{title:'Где находятся подробности',items:['Технические коды, версии и источники скрыты в «Технических сведениях».','Внутренний агент и настройки защиты данных открываются в готовом Agent Cabinet, а не дублируются в Evolution Console.']}},
           en:{icon:'◇',title:'How Evolution Console works',sub:'Unified automation registry',
             steps:['It first shows installed automations: what is working, what is not running, and where attention is needed.','A card reveals status, recent runs, schedules, and composition only when requested.','Agent Cabinet opens from a specific automation’s composition; Evolution Lab safely tests a prepared change.'],
-            sure:['The catalog is separate from installed automations.','If status cannot be checked, Evolution Console says so and blocks dependent actions.'],
+            sure:['The catalog is separate from installed automations.','If status cannot be checked, Evolution Console says so and blocks dependent actions.','Data protection is enabled only after PRE and POST are verified on this device.'],
             nope:['This screen does not yet enable, disable, update, or roll back automations.','Unknown status is never replaced with success.','There is no cross-account visibility.'],
-            who:{title:'Where details live',items:['Technical codes, versions, and sources are hidden under “Technical details”.','An internal agent opens in the existing Agent Cabinet instead of being duplicated in Evolution Console.']}}
+            who:{title:'Where details live',items:['Technical codes, versions, and sources are hidden under “Technical details”.','An internal agent and its data protection settings open in the existing Agent Cabinet instead of being duplicated in Evolution Console.']}}
         };
       }
     }
@@ -627,6 +633,10 @@
           reconciliation:valid?'BOTH':'PLATFORM_ONLY'});}
       return {complete:true,snapshotId:'demo_snapshot_15',rows:rows,counters:{total:15,failed:12,ownerless:12,withShared:3},mutationsAllowed:false};
     }
+    function demoMaskingPostures(){
+      var projection=demoProjection(),ids=projection.rows.filter(function(row){return row.platformPresent===true;}).map(function(row){return row.agentId;}).sort();
+      return {schema:'extella.evolution.masking_posture_snapshot.v1',owner_account_id:'demo_actor',fleet_snapshot_id:projection.snapshotId,captured_at:new Date().toISOString(),source:'LOCAL_DEVICE',availability:'SOURCE_UNAVAILABLE',error_code:'DEMO_LOCAL_MASKING_ADAPTER_UNAVAILABLE',agents:ids.map(function(agentId){return {agent_id:agentId,status:'UNKNOWN',pre:'UNAVAILABLE',post:'UNAVAILABLE',reveal:'UNAVAILABLE',roles:'UNAVAILABLE',audit:'UNAVAILABLE',policy_version:null,risk_codes:['SOURCE_UNAVAILABLE']};})};
+    }
     function demoMcpComposition(automationId){
       var isTravel=automationId==='extella_travel_agency',agentId='agent_demo_fixture_valid_beta',sourceId='MCP_REGISTRY_FACTS_travel.md';
       var p={kind:'platform_observed',source_id:sourceId,source_version:null,sha256:null};
@@ -645,14 +655,19 @@
     function mockRequest(action,payload){
       if(action==='automation_registry_load')return {actorId:'demo_actor',registry:demoAutomationRegistry(),legacy:mockRequest('fleet_load',payload)};
       if(action==='fleet_load')return {actorId:'demo_actor',projection:demoProjection(),stableIdRequired:[{sourcePassport:'demo_unbound_passport',sourcePath:'agents/demo-unbound.yaml',name:'Demo unbound Agent Passport',passportSha256:'0000000000000000000000000000000000000000000000000000000000000000',checkerIssues:[{code:'AGENT_PLATFORM_ID_REQUIRED',severity:'error',path:'agent.platform_agent_id',message_ru:'Нужен стабильный platform_agent_id',message_en:'A stable platform_agent_id is required'}]}],shared:{complete:true,snapshotId:'demo_genes_1',genes:[{geneId:'shared.demo.approval_guard',kind:'rule',name:'Approval guard',version:'1.0.0',consumerAgentIds:['agent_demo_fixture_valid_alpha','agent_demo_fixture_valid_beta','agent_demo_fixture_warning_only'],consumers:[{platformAgentId:'agent_demo_fixture_valid_alpha',activeVersion:'1.0.0'},{platformAgentId:'agent_demo_fixture_valid_beta',activeVersion:'1.0.0'},{platformAgentId:'agent_demo_fixture_warning_only',activeVersion:'1.0.0'}],lastChanged:'2026-07-20T10:00:00Z'}],byAgent:{agent_demo_fixture_valid_alpha:['shared.demo.approval_guard'],agent_demo_fixture_valid_beta:['shared.demo.approval_guard'],agent_demo_fixture_warning_only:['shared.demo.approval_guard']}},standards:{dataMode:'DEMO_FIXTURE',deliveryMode:'STATIC_BUILD_ARTIFACT',accountScoped:false,productionEligible:false,liveProjectionAllowed:false,commit:'demo-standards',checkerSha256:'demo'},platform:{evolutionLabAdapter:'PLATFORM_UNAVAILABLE',classActivationAdapter:'PLATFORM_UNAVAILABLE',classObservationAdapter:'PLATFORM_UNAVAILABLE',classRollbackAdapter:'PLATFORM_UNAVAILABLE',scheduleStateAdapter:'PLATFORM_UNAVAILABLE',nativeScheduleAdapter:'PLATFORM_UNAVAILABLE',bulkActivationAdapter:'PLATFORM_UNAVAILABLE',bulkObservationAdapter:'PLATFORM_UNAVAILABLE',bulkRollbackAdapter:'PLATFORM_UNAVAILABLE'},ledger:{ownerAccountId:'demo_actor',evolution:{currentEscalationId:'demo_candidate_1',escalations:{demo_candidate_1:{candidateId:'demo_candidate_1',status:'PENDING_CLASS_DECISION',candidateBundleSha256:'0000000000000000000000000000000000000000000000000000000000000000',affectedAgentIds:['agent_demo_fixture_valid_alpha','agent_demo_fixture_valid_beta','agent_demo_fixture_warning_only'],actorId:'demo_actor'}},bulkOperations:{},receipts:{}}},receipts:[]};
+      if(action==='masking_posture_load')return demoMaskingPostures();
       if(action==='mcp_read'){var args=payload&&payload.arguments||{};if(payload.tool!=='automations.get_composition'||!args.automation_id)throw new Error('Unsupported preview MCP read');return demoMcpComposition(args.automation_id);}
       if(action==='passport_draft')return {filename:'agent_passport_'+payload.agentId+'.json',draft:{agent:{platform_agent_id:payload.agentId,name:'Demo Agent',owner:'',business_goal:'',model_profile:'qwen3.7-max',version:'0.1.0',languages:['ru','en']},capabilities:[],shared_genes:[],budgets:{max_duration_ms:null,max_llm_tokens:null,max_delegation_depth:null,max_external_actions:null},operations:{success_metric:'',owner_on_call:''},draft_status:'NOT_VALIDATED'}};
       if(action.indexOf('escalation_')===0||action.indexOf('bulk_')===0)throw new Error(t('productionRequired'));
       throw new Error('Unsupported preview action '+action);
     }
+    function clearMaskingPostures(){
+      state.maskingEpoch++;state.maskingPostures=null;state.maskingLoading=false;state.maskingError=null;
+    }
     function clearLegacyFleet(){
       state.legacyLoading=false;state.actorId=null;state.projection=null;state.stableIdRequired=[];state.stableTargetBySource=Object.create(null);state.shared=null;state.standards=null;state.platform=null;state.ledger=null;
       state.escalations=[];state.bulkOperations=[];state.bulk=null;state.receipts=[];state.currentEscalationId=null;state.selectedEscalationId=null;state.currentBulkOperationId=null;state.selectedBulkOperationId=null;
+      clearMaskingPostures();
       el('snapshotBadge').textContent='SNAPSHOT —';el('snapshotBadge').className='badge';el('standardsBadge').textContent='STANDARD —';el('standardsBadge').className='badge';
     }
     function validAutomationRegistry(registry){
@@ -677,6 +692,7 @@
       if(!deferRender)renderAll();var s=state.standards||{},ready=productionReady();
       el('standardsBadge').textContent=(ready?'✓ PRODUCTION READY · ':'⚠ PRODUCTION BLOCKED · ')+'STANDARD '+short(s.commit||s.checkerSha256)+' · '+standardDataMode();
       el('standardsBadge').className='badge '+(ready?'good':'warn');
+      loadMaskingPostures();
     }
     function isInactiveRow(r){
       if(!r.platformPresent||r.activityState!=='KNOWN'||!r.lastActivity||!r.lastActivitySource)return false;
@@ -854,13 +870,47 @@
     function automationLegacyAgent(agentId){
       return state.projection&&Array.isArray(state.projection.rows)&&state.projection.rows.find(function(row){return row.agentId===agentId&&row.standard&&row.standard.status==='PASS';});
     }
+    function maskingAgentPosture(agentId){
+      var rows=state.maskingPostures&&Array.isArray(state.maskingPostures.agents)?state.maskingPostures.agents:[];
+      return rows.find(function(row){return String(row&&row.agent_id||'')===agentId;})||null;
+    }
+    function maskingPresentation(record){
+      var status=String(record&&record.status||'UNKNOWN').toUpperCase();
+      if(status==='ACTIVE')return {status:status,kind:'good',mark:'✓',label:t('maskingActive')};
+      if(status==='OFF')return {status:status,kind:'',mark:'○',label:t('maskingOff')};
+      if(status==='PARTIAL')return {status:status,kind:'warn',mark:'⚠',label:t('maskingPartial')};
+      return {status:'UNKNOWN',kind:'warn',mark:'⚠',label:t('maskingUnknown')};
+    }
+    function maskingAutomationAgentIds(){
+      var rows=state.automationRegistry&&Array.isArray(state.automationRegistry.rows)?state.automationRegistry.rows:[],seen={};
+      rows.filter(function(row){return automationFlags(row).installed===true;}).forEach(function(row){
+        componentArrays(row&&row.components).platform_agents.forEach(function(item){
+          var id=String(item&&typeof item==='object'?(item.platform_agent_id||item.platformAgentId||item.id||''):item||'').trim();
+          if(id&&id.toUpperCase()!=='UNKNOWN')seen[id]=true;
+        });
+      });
+      return Object.keys(seen).sort();
+    }
+    function maskingCoverageText(){
+      var snapshot=state.maskingPostures,rows=snapshot&&Array.isArray(snapshot.agents)?snapshot.agents:[],ids=maskingAutomationAgentIds(),total=ids.length;
+      if(!total)return'—';
+      if(!snapshot||String(snapshot.availability||'').toUpperCase()!=='AVAILABLE')return'—/'+total;
+      if(ids.some(function(id){return !rows.some(function(row){return String(row&&row.agent_id||'')===id;});}))return'—/'+total;
+      return rows.filter(function(row){return ids.indexOf(String(row&&row.agent_id||''))!==-1&&String(row&&row.status||'').toUpperCase()==='ACTIVE';}).length+'/'+total;
+    }
+    function renderMaskingPosture(agentId){
+      var record=maskingAgentPosture(agentId),view=maskingPresentation(record),risks=record&&Array.isArray(record.risk_codes)?record.risk_codes:[];
+      var technical=risks.length?'<details class="technical-details"><summary>'+esc(t('technicalEvidence'))+'</summary><div class="technical-details-body">'+risks.map(function(code){return '<span class="mono">'+esc(code)+'</span>';}).join('')+'</div></details>':'';
+      return '<div class="masking-posture" data-masking-posture="'+esc(view.status)+'"><b>'+esc(t('dataProtection'))+'</b><span class="state '+esc(view.kind)+'"><span aria-hidden="true">'+esc(view.mark)+'</span> '+esc(view.label)+'</span><small>'+esc(t('maskingLocalSource'))+' '+esc(t('maskingSettingsCabinet'))+'</small>'+technical+'</div>';
+    }
     function renderComponentGroup(key,items){
       if(key==='schedules')return '<div class="component-group"><b>'+esc(t(key))+' · '+items.length+'</b><ul class="component-items">'+(items.length?items.map(renderScheduleItem).join(''):'<li>'+esc(t('noData'))+'</li>')+'</ul></div>';
       return '<div class="component-group"><b>'+esc(t(key)||key)+' · '+items.length+'</b><ul class="component-items">'+(items.length?items.map(function(item){
         var label=componentLabel(item),componentState=String(item&&item.state||''),present=item&&typeof item==='object'?(item.present===true||componentState==='PRESENT'?'✓':item.present===false||componentState==='MISSING'?'✕':'⚠'):'⚠';
         var agentId=key==='platform_agents'&&item&&typeof item==='object'?String(item.platform_agent_id||item.platformAgentId||item.id||''):'';
         var cabinet=agentId&&automationLegacyAgent(agentId)?'<div><button class="ghost sm" type="button" data-action="open-agent-cabinet" data-cab="'+esc(agentId)+'">'+esc(t('openCabinet'))+'</button></div>':'';
-        return '<li>'+esc(present)+' <code>'+esc(label)+'</code>'+(item&&item.required===false?' · '+esc(t('optional')):'')+cabinet+'</li>';
+        var masking=agentId?renderMaskingPosture(agentId):'';
+        return '<li>'+esc(present)+' <code>'+esc(label)+'</code>'+(item&&item.required===false?' · '+esc(t('optional')):'')+masking+cabinet+'</li>';
       }).join(''):'<li>'+esc(t('noData'))+'</li>')+'</ul></div>';
     }
     function actionGateMessage(gate,status){
@@ -1035,7 +1085,7 @@
     }
     function renderFleet(){
       var registryProjection=state.automationRegistry,registry=el('fleetRegistry');
-      if(!registryProjection){['countWorking','countNotRunning','countAttention','countInstalled','countCatalog'].forEach(function(id){el(id).textContent='—';});
+      if(!registryProjection){['countWorking','countNotRunning','countAttention','countProtectedAgents','countInstalled','countCatalog'].forEach(function(id){el(id).textContent='—';});
         el('registryScopeBadge').textContent='CURRENT DEVICE';el('registryScopeBadge').className='badge';
         el('registryCheckedBadge').textContent=t('lastChecked')+' · '+t('unknown');el('registryCheckedBadge').className='badge';
         el('registrySourceErrors').innerHTML='<li>'+esc(t('noData'))+'</li>';
@@ -1046,6 +1096,7 @@
       el('countWorking').textContent=installedRows.filter(function(row){return automationOperationalStatus(row)==='WORKING';}).length;
       el('countNotRunning').textContent=installedRows.filter(function(row){return automationOperationalStatus(row)==='NOT_RUNNING';}).length;
       el('countAttention').textContent=installedRows.filter(automationNeedsAttention).length;
+      el('countProtectedAgents').textContent=maskingCoverageText();
       el('countInstalled').textContent='('+registryCounter('installed',installedCount)+')';el('countCatalog').textContent='('+registryCounter('catalog',catalogCount)+')';
       el('registryScopeBadge').textContent=String(registryProjection.scope||'CURRENT_DEVICE');el('registryScopeBadge').className='badge '+(registryProjection.complete===true?'good':'warn');
       el('registryCheckedBadge').textContent=t('lastChecked')+' · '+fmtTime(registryProjection.checked_at||registryProjection.checkedAt);el('registryCheckedBadge').className='badge';
@@ -1126,8 +1177,25 @@
     }
     function renderReceipts(){el('receiptList').innerHTML=state.receipts.length?state.receipts.slice().reverse().map(function(r){return '<article class="receipt"><b>'+esc(r.type||'Evolution Receipt')+'</b><p>'+esc(fmtTime(r.at))+' · '+esc(r.status||'RECORDED')+'</p><code>'+esc(r.sha256||'—')+'</code></article>';}).join(''):'<div class="empty">'+esc(t('noData'))+'</div>';}
     function renderAll(){renderFleet();renderRisks();renderStableIdRequired();renderGenes();renderEscalations();renderBulk();renderReceipts();renderBoundary();el('escalationEvidence').textContent=state.lastEscalationEvidence?JSON.stringify(state.lastEscalationEvidence,null,2):'—';}
+    async function loadMaskingPostures(){
+      var projection=state.projection;
+      if(!projection||!projection.snapshotId)return;
+      var epoch=state.accountEpoch,requestEpoch=++state.maskingEpoch,expected=(projection.rows||[]).filter(function(row){return row&&row.platformPresent===true;}).map(function(row){return String(row.agentId||'');}).filter(Boolean).sort();
+      state.maskingLoading=true;state.maskingError=null;renderFleet();
+      try{
+        var result=await request('masking_posture_load',{});
+        if(epoch!==state.accountEpoch||requestEpoch!==state.maskingEpoch)return;
+        var actual=result&&Array.isArray(result.agents)?result.agents.map(function(row){return String(row&&row.agent_id||'');}).sort():[],capturedAt=Date.parse(result&&result.captured_at||''),now=Date.now();
+        if(!result||result.schema!=='extella.evolution.masking_posture_snapshot.v1'||result.owner_account_id!==state.actorId||result.fleet_snapshot_id!==projection.snapshotId||canonical(actual)!==canonical(expected)||!isFinite(capturedAt)||capturedAt<now-5*60*1000||capturedAt>now+60*1000)throw new Error('MASKING_POSTURE_INVALID');
+        state.maskingPostures=result;state.maskingError=null;
+      }catch(error){
+        if(epoch!==state.accountEpoch||requestEpoch!==state.maskingEpoch)return;
+        state.maskingPostures=null;state.maskingError=error&&error.message||'MASKING_POSTURE_UNAVAILABLE';
+      }
+      state.maskingLoading=false;renderFleet();
+    }
     async function loadFleet(){
-      showError('');state.automationRegistryError=null;state.mcpEpoch++;state.mcpByAutomation=Object.create(null);el('fleetRegistry').setAttribute('aria-busy','true');el('fleetRows').innerHTML='<tr><td colspan="5" class="empty">'+esc(t('loading'))+'</td></tr>';
+      showError('');state.automationRegistryError=null;state.mcpEpoch++;state.mcpByAutomation=Object.create(null);clearMaskingPostures();el('fleetRegistry').setAttribute('aria-busy','true');el('fleetRows').innerHTML='<tr><td colspan="5" class="empty">'+esc(t('loading'))+'</td></tr>';
       try{var result=await request('automation_registry_load',{});if(!applyAutomationRegistryResult(result))throw new Error(t('registryIncomplete'));ensureLegacyFleet();return true;}
       catch(e){state.automationRegistry=null;state.automationRegistryError=e&&e.message||t('registryIncomplete');clearLegacyFleet();renderAll();el('fleetRegistry').setAttribute('aria-busy','false');showError(state.automationRegistryError);return false;}
     }
@@ -1138,7 +1206,7 @@
     }
     async function refreshAfterMutation(kind,result){
       if(kind==='escalation')state.lastEscalationEvidence=result;else state.lastBulkEvidence=result;
-      state.automationRegistry=null;state.automationRegistryError=null;state.legacyLoading=false;state.actorId=null;state.projection=null;state.stableIdRequired=[];state.stableTargetBySource=Object.create(null);state.shared=null;state.standards=null;state.platform=null;state.ledger=null;state.escalations=[];state.currentEscalationId=null;state.selectedEscalationId=null;state.bulkOperations=[];state.currentBulkOperationId=null;state.selectedBulkOperationId=null;state.bulk=null;state.receipts=[];state.mcpEpoch++;state.mcpByAutomation=Object.create(null);renderAll();
+      state.automationRegistry=null;state.automationRegistryError=null;state.legacyLoading=false;state.actorId=null;state.projection=null;state.stableIdRequired=[];state.stableTargetBySource=Object.create(null);state.shared=null;state.standards=null;state.platform=null;state.ledger=null;state.escalations=[];state.currentEscalationId=null;state.selectedEscalationId=null;state.bulkOperations=[];state.currentBulkOperationId=null;state.selectedBulkOperationId=null;state.bulk=null;state.receipts=[];state.mcpEpoch++;state.mcpByAutomation=Object.create(null);clearMaskingPostures();renderAll();
       if(!await loadFleet())throw new Error('Mutation completed, but the required fresh fleet snapshot could not be loaded.');
       if(kind==='escalation')setView('escalations');else setView('bulk');
     }
@@ -1221,7 +1289,7 @@
       state.accountEpoch++;state.pending.forEach(function(p){clearTimeout(p.timer);p.reject(new Error('Account context changed; stale result discarded.'));});state.pending.clear();
       state.automationRegistry=null;state.automationRegistryError=null;state.legacyLoading=false;state.actorId=null;state.projection=null;state.stableIdRequired=[];state.stableTargetBySource=Object.create(null);state.shared=null;state.standards=null;state.platform=null;state.ledger=null;state.escalations=[];state.bulkOperations=[];state.bulk=null;state.receipts=[];state.draft=null;
       state.cabinetAgentId=null;state.cabinetGeneId=null;state.cabinetArtifactBase=null;state.currentEscalationId=null;state.selectedEscalationId=null;state.currentBulkOperationId=null;state.selectedBulkOperationId=null;state.selectedBulkGeneId=null;state.selectedBulkIds=[];state.lastEscalationEvidence=null;state.lastBulkEvidence=null;
-      state.lastLoadedAt=null;state.focusRiskAgentId=null;state.cabinetTrigger=null;state.mcpEpoch++;state.mcpByAutomation=Object.create(null);
+      state.lastLoadedAt=null;state.focusRiskAgentId=null;state.cabinetTrigger=null;state.mcpEpoch++;state.mcpByAutomation=Object.create(null);clearMaskingPostures();
       el('searchInput').value='';el('filterSelect').value='installed';el('bulkType').value='shared_gene_change';el('bulkVersionInput').value='';el('cabinetVersionInput').value='';
       el('standardsBadge').textContent='STANDARD —';el('standardsBadge').className='badge';el('cabinetTitle').textContent='Agent Cabinet';el('cabinetHost').innerHTML='';el('cabinetGeneSelect').innerHTML='';el('cabinetImpact').textContent='';el('cabinetEscalateBtn').disabled=true;
       el('advancedNav').open=false;el('cabinetOverlay').classList.remove('on');window._cab=null;setView('fleet');renderAll();showError(message||'');

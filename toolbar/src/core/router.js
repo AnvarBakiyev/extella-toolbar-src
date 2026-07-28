@@ -2887,6 +2887,76 @@ ETB.router = (function () {
     });
   }
 
+  function _evolutionMaskingPostureLoad(data, context) {
+    var session = _evolutionRequireSession(data, context, false);
+    var contract = ETB.evolutionMaskingPolicy;
+    var adapter = ETB.evolutionAdapter || {};
+    var seen = {};
+    var agentIds = session.platformRows.map(function (row) {
+      return String(row && row.platform_agent_id || '').trim();
+    }).filter(function (id) {
+      if (!id || seen[id]) return false;
+      seen[id] = true;
+      return true;
+    }).sort();
+
+    if (!contract ||
+        typeof contract.normalizeSnapshot !== 'function' ||
+        typeof contract.unavailableSnapshot !== 'function') {
+      return Promise.reject(_evolutionError(
+        'MASKING_POSTURE_CONTRACT_UNAVAILABLE',
+        'the read-only masking posture contract is unavailable'
+      ));
+    }
+
+    function unavailable(errorCode) {
+      return contract.unavailableSnapshot({
+        ownerAccountId: context.actorId,
+        fleetSnapshotId: session.snapshotId,
+        expectedAgentIds: agentIds,
+        errorCode: errorCode || 'LOCAL_MASKING_SOURCE_UNAVAILABLE'
+      });
+    }
+
+    // Evolution Console never receives policy bodies, local secret material,
+    // raw audit values or PII. The optional host adapter returns a bounded
+    // posture projection from the current local device only.
+    if (typeof adapter.loadMaskingPostures !== 'function') {
+      return Promise.resolve(
+        unavailable('LOCAL_MASKING_ADAPTER_UNAVAILABLE')
+      );
+    }
+
+    return Promise.resolve().then(function () {
+      _agentControlAssertContext(context);
+      return adapter.loadMaskingPostures({
+        owner_account_id: context.actorId,
+        profile_id: 'default',
+        fleet_snapshot_id: session.snapshotId,
+        agent_ids: agentIds,
+        device_only: true
+      });
+    }).then(function (snapshot) {
+      _agentControlAssertContext(context);
+      return contract.normalizeSnapshot(snapshot, {
+        ownerAccountId: context.actorId,
+        fleetSnapshotId: session.snapshotId,
+        expectedAgentIds: agentIds,
+        now: new Date().toISOString()
+      });
+    }).catch(function (error) {
+      var code = String(
+        error && error.code || 'LOCAL_MASKING_SOURCE_UNAVAILABLE'
+      ).toUpperCase();
+      // A context change must win over an adapter result or fallback.
+      _agentControlAssertContext(context);
+      if (!/^[A-Z][A-Z0-9_]{0,63}$/.test(code)) {
+        code = 'LOCAL_MASKING_SOURCE_UNAVAILABLE';
+      }
+      return unavailable(code);
+    });
+  }
+
   function _evolutionLastReceipt(ledger) {
     var rows = _evolutionReceiptRows(ledger);
     return rows.length ? rows[rows.length - 1] : null;
@@ -4140,6 +4210,13 @@ ETB.router = (function () {
       }
     }
     if (action === 'fleet_load') return _evolutionFleetLoad(context);
+    if (action === 'masking_posture_load') {
+      try {
+        return _evolutionMaskingPostureLoad(data, context);
+      } catch (error) {
+        return Promise.reject(error);
+      }
+    }
     if (action === 'passport_draft') {
       try {
         return _evolutionPassportDraft(data, context);

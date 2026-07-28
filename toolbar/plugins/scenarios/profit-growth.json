@@ -7,7 +7,7 @@
   "description": "Evolution Console показывает, что работает, что остановлено и где нужна помощь. Каталог отделён от установленных автоматизаций, а неизвестное состояние не подменяется успехом.",
   "category": "business",
   "type": "application",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "eye": "Extella Evolution",
   "pills": [
     "Автоматизации",
@@ -43,6 +43,13 @@
       "name": "MCP-состав автоматизаций",
       "description": "Read-only состав MCP Connections, Tool Contracts, MCP Extensions, effective Tool Bindings, Run Evidence и фактических прав доступа; отсутствие данных показывается явно.",
       "version": "EVOLUTION_MCP_READ_CONTRACT_V1_1",
+      "external_writes": false
+    },
+    {
+      "id": "data_protection_posture",
+      "name": "Защита данных",
+      "description": "Read-only статус PRE, POST и REVEAL по каждому агенту с текущего устройства; недоступные данные остаются неизвестными.",
+      "version": "EVOLUTION_MASKING_POSTURE_V1",
       "external_writes": false
     },
     {
