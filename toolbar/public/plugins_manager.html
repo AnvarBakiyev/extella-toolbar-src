@@ -644,7 +644,7 @@ body[data-theme="dark"] .inf .tr,html[data-theme="dark"] .inf .tr{stroke:var(--b
   <button class="bclose" onclick="notify('close')" title="Close">&#10005;</button>
 </div>
 <div class="cmdbar">
-  <input id="cmd_url" placeholder="🔍  Поиск по всем разделам — или вставь ссылку с GitHub / Hugging Face: программа, модель или навык установятся" spellcheck="false" autocomplete="off" onkeydown="if(event.key==='Enter')cmdInstall()"/>
+  <input id="cmd_url" placeholder="🔍  Поиск по установленному и каталогам — или вставь ссылку из любого репозитория: установим в один клик" spellcheck="false" autocomplete="off" onkeydown="if(event.key==='Enter')cmdInstall()"/>
   <button class="cmdgo" onclick="cmdInstall()">Установить</button>
 </div>
 <div class="tabs" id="tabs"></div>
@@ -1539,7 +1539,7 @@ var I18N_EN = {
   'Скажи агенту, что сделать с файлами, — он вызовет нужный.':'Tell the agent what to do with the files — it calls the right tool.',
   // Шапка / командная строка
   'Установить':'Install','Для профи':'Pro','Для всех':'For everyone',
-  '🔍  Поиск по всем разделам — или вставь ссылку с GitHub / Hugging Face: программа, модель или навык установятся':'🔍  Search across all sections — or paste a GitHub / Hugging Face link: the program, model or skill gets installed',
+  '🔍  Поиск по установленному и каталогам — или вставь ссылку из любого репозитория: установим в один клик':'🔍  Search across all sections — or paste a GitHub / Hugging Face link: the program, model or skill gets installed',
   'Свернуть':'Minimize','В окне / на весь экран':'Window / fullscreen','Светлая / тёмная тема':'Light / dark theme','Язык / Language':'Язык / Language',
   // Рабочий стол
   'Мой компьютер · Конструктор':'My computer · Wizard',
@@ -3522,11 +3522,26 @@ function _gsearch(query){
   add(_progReg&&_progReg.shelf,'Программа','programs',function(x){return x.title;},function(x){return (x.facts||[]).join(' ')||x.tagline;},function(x){return x.label;});
   add(_appReg&&_appReg.shelf,'Приложение','programs',function(x){return x.title||x.id;},function(x){return x.desc;},function(x){return x.cat;});
   add(_mcpReg&&(_mcpReg.items||_mcpReg.shelf),'MCP','services',function(x){return (x.id||'').split('/').pop();},function(x){return x.desc||x.tagline;},function(x){return x.cat;});
+  // Установленное ищем отдельным слоем и показываем ПЕРВЫМ: человек чаще ищет
+  // «где то, что я поставил», чем «что бы поставить» (просьба Эллы 28.07).
+  var mine=[];
+  try{
+    var _inst=gi();
+    BUILTIN_PLUGINS_DATA.filter(function(p){return _inst.indexOf(p.id)!==-1;}).concat(getCustom()).forEach(function(p){
+      var cu=(typeof CURATED_PROGRAMS!=='undefined'&&CURATED_PROGRAMS[p.id])||{};
+      var nm=cu.name||p.name||p.id, ds=cu.tagline||p.description||'';
+      if((nm+' '+ds).toLowerCase().indexOf(q)>=0) mine.push({type:'Программа',name:nm,desc:ds,go:"notify('open','"+String(p.id).replace(/'/g,'')+"')"});
+    });
+    var _cm={}; (typeof cliCatalog==='function'?cliCatalog():[]).forEach(function(c){_cm[c.id]=c;});
+    cliGi().forEach(function(id){ var c=_cm[id]||{id:id,name:id};
+      if(((c.name||id)+' '+(c.desc||'')).toLowerCase().indexOf(q)>=0) mine.push({type:'Инструмент',name:c.name||id,desc:c.desc||'',go:"cliRun('"+String(id).replace(/'/g,'')+"')"});
+    });
+  }catch(e){}
   var g=document.getElementById('grid'); if(!g)return;
   // «Назад» возвращает в тот раздел, из которого искали (renderGrid рисует текущий cur),
   // а не выкидывает на Рабочий стол, как делала прежняя ссылка «закрыть».
   var html=_subNavHTML([{l:_tabLabel(cur), go:'renderGrid()'},{l:'Поиск: «'+query+'»'}], 'renderGrid()')+
-    '<div class="sk_lead" style="grid-column:1/-1">Найдено: '+res.length+' по всем каталогам</div>';
+    (mine.length?('<div class="sect_hdr"><span class="sect_title">У тебя установлено · '+mine.length+'</span><span class="sect_line"></span></div><div class="mshelf">'+mine.slice(0,24).map(function(r){ return '<div class="stile" style="--acc:#2E7D5B"><span class="st_chip">'+esc(r.type)+' · установлено</span>'+'<div class="st_title">'+esc(r.name)+'</div><div class="st_fact">'+esc(r.desc)+'</div>'+'<div class="st_foot"><button class="st_btn" onclick="'+r.go+'">Открыть</button></div></div>'; }).join('')+'</div>'):'')+'<div class="sk_lead" style="grid-column:1/-1">'+(mine.length?'В каталоге: ':'Найдено: ')+res.length+'</div>';
   if(res.length){
     html+='<div class="mshelf">'+res.slice(0,80).map(function(r){
       return '<div class="stile" style="--acc:var(--a)"><span class="st_chip">'+esc(r.type)+(r.cat?' · '+esc(r.cat):'')+'</span>'+
