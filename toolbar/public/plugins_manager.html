@@ -1262,7 +1262,7 @@ function notify(action, pluginId, url) {
 // (Workspace — с Рабочего стола; их рендеры остаются доступны через setc и под-навигацию).
 var CATS = [
   { id: 'desktop',  l: 'Рабочий стол' },
-  { id: 'programs', l: 'Сервисы' },
+  { id: 'programs', l: 'Инструменты' },
   { id: 'models',   l: 'Модели' },
   { id: 'skills',   l: 'Навыки' },
   { id: 'knowledge',l: 'Знания' },
@@ -1529,7 +1529,7 @@ try { if (localStorage.getItem('etb_lang') === 'en') LANG = 'en'; } catch (_) {}
 var I18N_EN = {
   // Вкладки
   'Рабочий стол':'Desktop','Программы':'Programs','Модели':'Models',
-  'Навыки':'Skills','Инструменты':'Tools','Знания':'Knowledge','Агенты':'Agents','Сервисы':'Services','Каталог':'Catalog','Профи':'Pro','История':'History','Автозапуск':'Auto-run',
+  'Навыки':'Skills','Инструменты':'Tools','Знания':'Knowledge','Агенты':'Agents','Инструменты':'Tools','Для файлов':'For files','Подключения':'Connections','Каталог':'Catalog','Профи':'Pro','История':'History','Автозапуск':'Auto-run',
   'На Рабочий стол':'Back to Desktop',
   'Мини-программы Extella и приложения с GitHub: берёшь с полки — живут у тебя на компьютере.':'Extella mini-programs and apps from GitHub: pick one from the shelf — it lives on your computer.',
   'Готовые приложения с GitHub: клик — и Extella установит на твой компьютер. Работают локально.':'Ready-made apps from GitHub: one click and Extella installs them on your computer. They run locally.',
@@ -2998,9 +2998,14 @@ function _mountTabFilter(placeholder){
   // Поэтому фильтр всегда ставим непосредственно перед первой полкой, которой
   // он управляет. Всё вводное содержимое остаётся выше, а результат переключения
   // начинается сразу под выбранной категорией и всегда виден.
+  // Единый шаблон полки (решение Эллы 28.07): меню → вводный блок → ПОИСК →
+  // ЧИПЫ → главные карточки (герои) → сетка. Раньше поиск падал под героев, и
+  // порядок блоков гулял от вкладки к вкладке.
   var firstShelf=shelves[0]||null;
   var firstShelfHead=firstShelf?_tfShelfHead(firstShelf):null;
   var catalogStart=firstShelfHead||firstShelf;
+  var hero=g.querySelector('.bento');
+  if(hero && (!catalogStart || (hero.compareDocumentPosition(catalogStart) & Node.DOCUMENT_POSITION_FOLLOWING))) catalogStart=hero;
   if(catalogStart) g.insertBefore(bar,catalogStart);
   else if(g.firstChild) g.insertBefore(bar,g.firstChild);
   else g.appendChild(bar);
@@ -3244,7 +3249,7 @@ function progToolsHTML(extra){
 function _svcBar(){
   // Тип-фильтр вкладки «Сервисы»: старое деление активов доступно внутри, не грузит меню.
   // Программы (репо+приложения UI) / Инструменты (CLI) / API (MCP-сервисы). Модели и Навыки — свои вкладки.
-  var it=[['programs','Программы'],['cli','Инструменты'],['services','API']];
+  var it=[['programs','Программы'],['cli','Для файлов'],['services','Подключения']];
   return '<div class="svc_sub" style="grid-column:1/-1;margin:0 0 16px"><div class="adm_seg" style="display:inline-flex">'+
     it.map(function(x){return '<button class="'+(cur===x[0]?'on':'')+'" onclick="setc(\''+x[0]+'\')">'+x[1]+'</button>';}).join('')+'</div></div>';
 }
@@ -3938,6 +3943,12 @@ function _openWizard(){
 }
 // Адрес дистрибутива Конструктора — одна константа, не зашитые ссылки по коду.
 var WIZARD_DIST_BASE='https://raw.githubusercontent.com/AnvarBakiyev/extella-marketplace-pack/main/toolbar';
+// Быстрая сборка живёт внутри Конструктора отдельной панелью: открываем его
+// deep-link'ом ?app=composer (контракт хоста не менялся).
+function _openQuickBuild(){
+  _mkbFetch('/x/health',{},2500).then(function(){ notify('open','extella_adoption_wizard','?app=composer'); })
+    .catch(function(){ _wizardMissing(); });
+}
 function _wizardMissing(){
   var en=(LANG==='en');
   var mac='bash <(curl -fsSL '+WIZARD_DIST_BASE+'/install-all.sh)';
@@ -4200,9 +4211,12 @@ function renderDesktop(){
   // Их динамические двойники ниже отфильтровываются — иначе рядом появлялись
   // удаляемые копии, которые возвращались после синка с устройством (§4).
   var SYS_APPS=[
-    {lbl:'Конструктор',      ico:'wand',     acc:'#C67E34', go:"_openWizard()",                tip:'Собрать процесс: интервью → план → стройка → запуск'},
-    {lbl:'Автоматизации',    ico:'calendar', acc:'#3E7C4F', go:"setc('automations')",          tip:'Задачи по расписанию: отчёты, проверки, рассылки'},
-    {lbl:'Команда',          ico:'users',    acc:'#C9A35C', req:'extella_team', go:"notify('open','extella_team')",        tip:'Пригласить в общий контур — именные ключи доступа'},
+    // Стол = стартовый хаб (решение Эллы 28.07): только то, чем создают.
+    // «Автоматизации» убраны — вход остался кнопкой-календарём в шапке (три входа
+    // в одно место было лишним). «Команда» убрана до готовности — «скоро»-плиток
+    // на столе больше нет по канону «оставлено только готовое».
+    {lbl:'Конструктор',      ico:'wand',     acc:'#C67E34', go:"_openWizard()",                tip:'Опиши задачу — соберём процесс, который работает по расписанию'},
+    {lbl:'Быстрая сборка',   ico:'box',      acc:'#7C5CBF', go:"_openQuickBuild()",            tip:'Разовая задача из готовых блоков — результат за минуту'},
     {lbl:'Подключения',      ico:'globe',    acc:'#2F6B66', req:'extella_connectors', go:"notify('open','extella_connectors')", tip:'Свои сервисы, CRM и кабинеты — один контур доступа'},
     {lbl:'Псевдоанонимизация',ico:'docs',    acc:'#6B7280', req:'extella_anon', go:"notify('open','extella_anon')",         tip:'Файлы с ПДн → безопасные копии: локально, без ИИ-моделей'},
   ];
