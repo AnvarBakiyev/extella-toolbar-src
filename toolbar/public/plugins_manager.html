@@ -639,6 +639,7 @@ body[data-theme="dark"] .inf .tr,html[data-theme="dark"] .inf .tr{stroke:var(--b
   <button class="iconbtn" onclick="notify('mkt_min')" title="Свернуть">&#8211;</button>
   <button class="iconbtn" onclick="notify('mkt_win')" title="В окне / на весь экран"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><rect x="3" y="8" width="13" height="13" rx="1.5"/><path d="M8 5h12a1 1 0 0 1 1 1v12"/></svg></button>
   <button class="iconbtn" id="langBtn" onclick="setLang(LANG==='en'?'ru':'en')" title="Язык / Language" style="font:600 11px var(--mono,monospace);width:auto;padding:0 8px">EN</button>
+  <button class="iconbtn" id="mcpBtn" onclick="claudeConnectModal()" style="width:auto;padding:0 10px;gap:6px;font:500 12px var(--sans)" data-tip="Extella в Claude Code&#10;Одна команда в терминале — и Claude Code берёт твои программы, знания и агентов сам. Клик — покажу команду."><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M9 7V3M15 7V3"/><path d="M6 7h12v5a6 6 0 0 1-6 6 6 6 0 0 1-6-6V7Z"/><path d="M12 18v3"/></svg>Claude Code</button>
   <button class="iconbtn" id="autoBtn" onclick="setc('automations')" data-tip="Автоматизации&#10;Задачи по расписанию: отчёты, проверки, рассылки. Клик — открыть список и настроить."><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M8 2v4M16 2v4"/><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/></svg></button>
   <button class="iconbtn" id="themeBtn" onclick="toggleTheme()" title="Светлая / тёмная тема">☾</button>
   <button class="bclose" onclick="notify('close')" title="Close">&#10005;</button>
@@ -3395,7 +3396,7 @@ function _renderProgramsCore() {
     ? '<section class="catalog_intro" aria-labelledby="programs_intro_title">'+
         '<h2 class="catalog_intro_title" id="programs_intro_title">Программы для агента</h2>'+
         '<p class="catalog_intro_text">Добавляют агенту новые возможности: работу с документами, данными, изображениями и внешними сервисами.</p>'+
-        '<p class="catalog_intro_text">Выбери программу и нажми «Установить» — после установки она появится на рабочем столе.</p>'+
+        '<p class="catalog_intro_text">Выбери программу и нажми «Установить» — после установки она появится на рабочем столе.</p>'+'<p class="catalog_intro_text" style="font-family:var(--mono);font-size:11.5px;color:var(--tx3);margin-top:6px">Технически это мини-приложения с интерфейсом (UI) и MCP-серверы с GitHub.</p>'+
       '</section>'
     : '';
   var featuredHtml = _bk + _programIntro + ((_featCat === 'all' && !_isPro) ? programsSpotlight() + _mkbSlot + addTileHTML('programs','Добавить программу') : '') + renderFeaturedSection() + (_featCat !== 'all' ? addTileHTML('programs','Добавить программу') : (_isPro ? '' : progToolsHTML(_appsShelvesHTML())));
@@ -5642,6 +5643,89 @@ var _KPMODAL='background:var(--s1);color:var(--tx);max-width:560px;width:100%;bo
 var _KPOV='position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px';
 var _KPINP='width:100%;box-sizing:border-box;border:1px solid var(--bd2);border-radius:5px;padding:10px;font-family:var(--sans);font-size:14px;background:var(--bg);color:var(--tx)';
 var _KPBTN='border:1px solid var(--bd2);background:transparent;color:var(--tx);border-radius:5px;padding:8px 14px;cursor:pointer;font-family:var(--sans);font-size:13px';
+
+// ══════════════════════════════════════════════════════════════════════════
+//  Extella как коннектор для Claude Code (кнопка в шапке).
+//  Подключение = одна строка в терминале: claude mcp add --transport http …
+//  с личным ключом пользователя в заголовке X-Auth-Token. Ключ живёт только
+//  в памяти вкладки (window._etbSess, приходит от хоста сообщением etb_session),
+//  на экране показываем огрызок, в буфер кладём целиком.
+//  Двуязычие — локальным хелпером _clT, а не словарём: строки длинные и
+//  переводить их обходом DOM ненадёжно.
+// ══════════════════════════════════════════════════════════════════════════
+var CLAUDE_MCP_URL='https://api.extella.ai/mcp/';
+function _clT(ru,en){ return (LANG==='en'&&en)?en:ru; }
+function _claudeTok(){ try{ return (window._etbSess&&window._etbSess.token)||''; }catch(_){ return ''; } }
+function _claudeCmd(){
+  var t=_claudeTok(); if(!t) return '';
+  return 'claude mcp add -s user --transport http extella '+CLAUDE_MCP_URL+' --header "X-Auth-Token: '+t+'"';
+}
+function _claudeMask(t){ return t.length>14 ? t.slice(0,6)+'••••••'+t.slice(-4) : '••••••'; }
+function claudeConnectModal(){
+  var old=document.getElementById('cl_ov'); if(old)old.remove();
+  var tok=_claudeTok();
+  var lbl='font:500 11.5px/1 var(--mono,monospace);letter-spacing:.06em;color:var(--tx3);margin:16px 0 6px';
+  var body;
+  if(!tok){
+    body='<div style="color:var(--tx2);font-size:13.5px;line-height:1.6;margin-top:10px">'+
+      _clT('Не вижу ключа доступа — без него команду не собрать. Открой витрину из приложения Extella: ключ приходит вместе с ней.',
+           'No access key yet — the command needs one. Open the storefront from the Extella app: the key arrives with it.')+'</div>'+
+      '<div style="margin-top:14px;display:flex;gap:8px"><button class="st_btn" onclick="claudeConnectModal()">'+
+      _clT('Проверить ещё раз','Check again')+'</button>'+
+      '<button onclick="var o=document.getElementById(\'cl_ov\');if(o)o.remove()" style="'+_KPBTN+'">'+_clT('Закрыть','Close')+'</button></div>';
+  } else {
+    var shown='claude mcp add -s user --transport http extella '+CLAUDE_MCP_URL+' --header "X-Auth-Token: '+_claudeMask(tok)+'"';
+    body=
+      '<div style="'+lbl+'">'+_clT('шаг 1 · скопируй команду','step 1 · copy the command')+'</div>'+
+      '<div style="background:var(--bg);border:1px solid var(--bd2);border-radius:5px;padding:11px 12px;'+
+        'font:400 12.5px/1.6 var(--mono,monospace);color:var(--tx);word-break:break-all;user-select:all">'+esc(shown)+'</div>'+
+      '<div style="margin-top:10px;display:flex;gap:8px;align-items:center">'+
+        '<button class="st_btn" id="cl_copy" onclick="claudeCopyCmd(this)">'+_clT('Скопировать команду','Copy command')+'</button>'+
+        '<span style="font-size:12px;color:var(--tx3)">'+_clT('ключ подставится целиком','the full key goes to the clipboard')+'</span></div>'+
+      '<div style="'+lbl+'">'+_clT('шаг 2 · вставь в терминал','step 2 · paste it in a terminal')+'</div>'+
+      '<div style="color:var(--tx2);font-size:13.5px;line-height:1.6">'+
+        _clT('Открой терминал в любой папке и нажми Enter. Claude Code ответит «Connected».',
+             'Open a terminal in any folder and hit Enter. Claude Code answers “Connected”.')+'</div>'+
+      '<div style="'+lbl+'">'+_clT('шаг 3 · проверь','step 3 · check it')+'</div>'+
+      '<div style="color:var(--tx2);font-size:13.5px;line-height:1.6">'+
+        _clT('Набери в Claude Code <code style="font-family:var(--mono,monospace)">/mcp</code> — в списке появится extella. Дальше проси словами: он сам возьмёт нужный инструмент.',
+             'Type <code style="font-family:var(--mono,monospace)">/mcp</code> in Claude Code — extella shows up in the list. After that just ask in plain words: it picks the right tool itself.')+'</div>'+
+      '<div style="margin-top:16px;padding-top:13px;border-top:1px solid var(--bd);color:var(--tx3);font-size:12px;line-height:1.55">'+
+        _clT('В команде твой личный ключ — не выкладывай её в чаты и репозитории. Подключение живёт во всех проектах (флаг -s user); убрать — <code style="font-family:var(--mono,monospace)">claude mcp remove extella</code>.',
+             'The command carries your personal key — keep it out of chats and repos. It applies to every project (-s user); to undo — <code style="font-family:var(--mono,monospace)">claude mcp remove extella</code>.')+'</div>'+
+      '<div style="margin-top:16px;display:flex;gap:8px"><button onclick="var o=document.getElementById(\'cl_ov\');if(o)o.remove()" style="'+_KPBTN+'">'+_clT('Закрыть','Close')+'</button></div>';
+  }
+  var ov=document.createElement('div'); ov.id='cl_ov'; ov.style.cssText=_KPOV;
+  ov.innerHTML='<div style="'+_KPMODAL+'">'+
+    '<div style="font-family:var(--serif);font-size:20px;margin-bottom:5px">'+_clT('Extella в Claude Code','Extella inside Claude Code')+'</div>'+
+    '<div style="color:var(--tx2);font-size:13.5px;line-height:1.6">'+
+      _clT('Одна команда — и твои программы, модели, знания и агенты Extella становятся инструментами Claude Code. Он берёт их сам, окна переключать не надо.',
+           'One command and your Extella programs, models, knowledge and agents become tools for Claude Code. It reaches for them itself — no window switching.')+'</div>'+
+    body+'</div>';
+  ov.addEventListener('click',function(e){ if(e.target===ov) ov.remove(); });
+  document.body.appendChild(ov);
+}
+function claudeCopyCmd(btn){
+  var cmd=_claudeCmd(); if(!cmd) return;
+  var done=function(ok){
+    if(!btn)return;
+    btn.textContent = ok ? _clT('Скопировано ✓','Copied ✓') : _clT('Не вышло — выдели вручную','Copy failed — select it by hand');
+    setTimeout(function(){ btn.textContent=_clT('Скопировать команду','Copy command'); },2600);
+  };
+  var fallback=function(){
+    try{
+      var ta=document.createElement('textarea'); ta.value=cmd;
+      ta.style.cssText='position:fixed;left:-9999px;top:0'; document.body.appendChild(ta);
+      ta.select(); var ok=document.execCommand('copy'); ta.remove(); done(ok);
+    }catch(_){ done(false); }
+  };
+  try{
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(cmd).then(function(){done(true);},fallback); return;
+    }
+  }catch(_){}
+  fallback();
+}
 function renderKnowledge(){
   var g=document.getElementById('grid'); if(!g)return;
   var packs=kpGi();
