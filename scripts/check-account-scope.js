@@ -10,22 +10,6 @@ const root = path.resolve(__dirname, '..');
 // клиентские агенты только Qwen, и деньги клиента не тратятся по чужому тарифу.
 const forbiddenAbsolute = ['agent_extella_default'];
 
-// РОВНО ОДНО исключение, и оно про РАЗНЫЕ ВЕЩИ С ОДНИМ ИМЕНЕМ.
-// Запрет выше — про agent_extella_default как ИСПОЛНИТЕЛЯ: запускать на нём значит тратить
-// деньги клиента по тарифу Claude. Но у общих ключей KV этот же идентификатор служит ИМЕНЕМ
-// ПРОСТРАНСТВА ДАННЫХ: под ним пишет реестр эксперт wz_registry_rebuild, и читатель обязан
-// быть в том же скоупе, иначе получает пустого близнеца (живая проверка 28.07.2026:
-// _mkt_automations отдавал 0 записей под личным агентом и 12 под этим). Модель при чтении KV
-// не вызывается, платформа значение X-Agent-Id для KV не валидирует — денег это не стоит.
-// Разрешено ТОЛЬКО как значение скоупа в провайдере реестра и в собранных из него артефактах.
-// Запускать агента с этим id по-прежнему нельзя нигде.
-const sharedKvScopeAllowedIn = [
-  path.join('toolbar', 'src', 'core', 'evolution-automation-registry-provider.js'),
-  path.join('toolbar', 'toolbar.js'),
-  path.join('HANDOFF', 'toolbar.js'),
-];
-// Признак того, что это именно скоуп чтения, а не запуск: рядом обязана стоять наша пометка.
-const SHARED_KV_SCOPE_MARK = 'SHARED_REGISTRY_SCOPE_AGENT';
 
 // agent_extella_alibaba_default — платформенный Qwen. Разрешён ТОЛЬКО как
 // единственный документированный фолбэк в api.js (и в сгенерированных из него
@@ -65,12 +49,11 @@ for (const input of inputs) {
     const text = fs.readFileSync(file, 'utf8');
     const rel = path.relative(root, file);
     for (const value of forbiddenAbsolute) {
-      if (!text.includes(value)) continue;
-      // Исключение действует, только если файл в списке И несёт нашу пометку скоупа.
-      // Одного попадания в список мало: без пометки это снова запуск на платном Claude.
-      const isSharedScope = sharedKvScopeAllowedIn.includes(rel) && text.includes(SHARED_KV_SCOPE_MARK);
-      if (isSharedScope) continue;
-      failures.push(`${rel}: ${value} (платный Claude как исполнитель — запрещён)`);
+      // Без исключений, включая комментарии: строки этого id не должно быть даже
+      // в поставляемом артефакте, иначе следующая проверка снова покажет ложный след.
+      // 28.07.2026: исключение для скоупа общих реестров заводили и ОТМЕНИЛИ — конфликт снят
+      // переносом реестров в свободные имена, читателю закреплять агента больше не нужно.
+      if (text.includes(value)) failures.push(`${rel}: ${value} (платный Claude — запрещён)`);
     }
     if (text.includes(platformQwenFallback) && !qwenFallbackAllowedIn.includes(rel)) {
       failures.push(`${rel}: ${platformQwenFallback} — платформенный Qwen допустим только как фолбэк в api.js`);

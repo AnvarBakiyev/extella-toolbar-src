@@ -55,7 +55,7 @@ function successfulApi(calls, overrides = {}) {
     kvGet(key, scope) {
       calls.push({ method: 'kvGet', key, scope: plain(scope) });
       if (overrides.kvGet) return overrides.kvGet(key, scope);
-      if (key === '_mkt_automations') {
+      if (key === 'extella:automations:v2') {
         return Promise.resolve({
           value: JSON.stringify({
             items: [{
@@ -66,7 +66,7 @@ function successfulApi(calls, overrides = {}) {
           }),
         });
       }
-      if (key === '_mkt_installed') {
+      if (key === 'extella:installed:v2') {
         return Promise.resolve({
           value: JSON.stringify({
             items: [{ kind: 'service', id: 'extella_1c_agent' }],
@@ -211,22 +211,21 @@ test('provider reads every source with exact scopes and performs no writes', asy
 
   const catalogRead = calls.find(
     (call) => call.method === 'kvGet' &&
-      call.key === '_mkt_automations',
+      call.key === 'extella:automations:v2',
   );
   const composerRead = calls.find(
     (call) => call.method === 'kvGet' &&
-      call.key === '_mkt_installed',
+      call.key === 'extella:installed:v2',
   );
-  // Регресс 28.07.2026: общий реестр обязан читаться под КАНОНИЧЕСКИМ агентом.
-  // `global: true` общего чтения НЕ даёт — своя копия ключа у агента побеждает общую молча,
-  // и Console показывала пустой реестр при 12 целых записях.
+  // Регресс 28.07.2026: общие реестры читаются по СВОБОДНЫМ именам обычным общим чтением.
+  // Старые имена отравлены близнецами и отдавали 0 записей при 12 целых; закрепление агента
+  // лечило это, но упиралось в запрет платного Claude. Свежее имя снимает конфликт целиком —
+  // никакого agentId здесь быть не должно.
   assert.deepEqual(catalogRead.scope, {
     global: true,
-    agentId: 'agent_extella_default',
   });
   assert.deepEqual(composerRead.scope, {
     global: true,
-    agentId: 'agent_extella_default',
   });
   assert.deepEqual(
     calls.find((call) => call.method === 'expertsListScoped').scope,
@@ -522,7 +521,7 @@ test('schedule KV is read only with an explicit scope and missing scope stays vi
   const provider = loadProvider();
   const api = successfulApi(calls, {
     kvGet(key) {
-      if (key === '_mkt_automations') {
+      if (key === 'extella:automations:v2') {
         return Promise.resolve({
           value: JSON.stringify({
             items: [{
@@ -539,7 +538,7 @@ test('schedule KV is read only with an explicit scope and missing scope stays vi
           }),
         });
       }
-      if (key === '_mkt_installed') {
+      if (key === 'extella:installed:v2') {
         return Promise.resolve({ value: '{"items":[]}' });
       }
       return Promise.resolve({ value: 'true' });
@@ -555,9 +554,10 @@ test('schedule KV is read only with an explicit scope and missing scope stays vi
     },
   });
 
+  // Отбираем чтения расписаний ПО СУЩЕСТВУ, а не «всё, что не витрина»: после переноса
+  // реестров в свободные имена (28.07) исключение по префиксу _mkt_ перестало их отсекать.
   const scheduleReads = calls.filter(
-    (call) => call.method === 'kvGet' &&
-      call.key.indexOf('_mkt_') !== 0,
+    (call) => call.method === 'kvGet' && call.key.indexOf('sched:') === 0,
   );
   assert.deepEqual(scheduleReads, [{
     method: 'kvGet',
@@ -625,7 +625,7 @@ test('valid empty scheduler index proves absence while missing or invalid index 
     ...base,
     api: successfulApi(emptyCalls, {
       kvGet(key) {
-        if (key === '_mkt_automations' || key === '_mkt_installed') {
+        if (key === 'extella:automations:v2' || key === 'extella:installed:v2') {
           return Promise.resolve({ value: '{"items":[]}' });
         }
         if (key === 'sched:__index__') {
@@ -643,7 +643,7 @@ test('valid empty scheduler index proves absence while missing or invalid index 
     ...base,
     api: successfulApi(invalidCalls, {
       kvGet(key) {
-        if (key === '_mkt_automations' || key === '_mkt_installed') {
+        if (key === 'extella:automations:v2' || key === 'extella:installed:v2') {
           return Promise.resolve({ value: '{"items":[]}' });
         }
         if (key === 'sched:__index__') {

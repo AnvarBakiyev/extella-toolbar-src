@@ -133,18 +133,25 @@ ETB.evolutionAutomationRegistryProvider = (function () {
     throw new Error('source document must contain an items array');
   }
 
-  // Скоуп чтения ОБЩИХ реестров. Живая проверка 28.07.2026: `global: true` НЕ даёт общего
-  // чтения — собственная копия ключа у агента побеждает общую молча. `_mkt_automations` под
-  // личным Qwen пользователя отдавал 0 записей, под agent_extella_default — все 12. Данные были
-  // целы всё это время, Console просто спрашивала не там.
-  // Правило: писатель и читатель общего ключа обязаны работать под ОДНИМ агентом. Пишет их
-  // эксперт wz_registry_rebuild под agent_extella_default — значит и читать надо оттуда.
-  var SHARED_REGISTRY_SCOPE_AGENT = 'agent_extella_default';
+  // ОБЩИЕ РЕЕСТРЫ ЧИТАЮТСЯ ПО СВОБОДНЫМ ИМЕНАМ (перенос 28.07.2026).
+  //
+  // Было так: `_mkt_automations` отдавал 0 записей при 12 целых. Причина не в скоупе как
+  // таковом — у СТАРОГО имени накопились близнецы в разных областях, и `kv/get` отдавал не ту
+  // запись. Лечили это закреплением агента-владельца, но тот же идентификатор запрещён здесь
+  // как платный Claude — конфликт был неустраним по построению.
+  //
+  // Опыт 28.07 показал главное: `global: true` РАБОТАЕТ, если у имени нет истории. Свежий
+  // ключ, записанный одним агентом, читается всеми одинаково и без всякого закрепления.
+  // Поэтому лечим не область, а ИМЯ: зеркало в свободные имена пишет wz_registry_rebuild,
+  // а здесь остаётся обычное общее чтение — и запрещённого идентификатора тут больше нет.
+  var SHARED_REGISTRY_KEYS = {
+    automations: 'extella:automations:v2',
+    installed: 'extella:installed:v2'
+  };
 
   function readKvItems(api, key, options) {
     var scope = {
-      global: true,
-      agentId: SHARED_REGISTRY_SCOPE_AGENT
+      global: true
     };
     assertContext(options);
     return Promise.resolve().then(function () {
@@ -1195,8 +1202,8 @@ ETB.evolutionAutomationRegistryProvider = (function () {
     }
     assertContext(options);
     return Promise.all([
-      readKvItems(api, '_mkt_automations', options),
-      readKvItems(api, '_mkt_installed', options),
+      readKvItems(api, SHARED_REGISTRY_KEYS.automations, options),
+      readKvItems(api, SHARED_REGISTRY_KEYS.installed, options),
       Promise.resolve(readBrowserInstalled(defaultStorage(options), options)),
       readPlatformAgents(api, options),
       readPlatformExperts(api, options),
