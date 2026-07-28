@@ -55,7 +55,7 @@ body.chat-open .topbar{padding-right:calc(var(--chatw,392px) + 20px)}
 body.chat-open .stepper{padding-right:calc(var(--chatw,392px) + 20px)}
 h1{font-family:var(--serif);font-size:26px;font-weight:600;letter-spacing:-.01em;margin-bottom:6px}
 .lede{color:var(--nav);font-size:14.5px;margin-bottom:28px;max-width:640px}
-.kicker{font-size:11px;letter-spacing:.14em;color:var(--gold);font-weight:700;margin-bottom:8px}
+.kicker{font:500 11.5px var(--mono);letter-spacing:.06em;color:var(--silver);margin-bottom:9px}
 
 /* ---------- cards ---------- */
 .card{background:var(--paper);border:1px solid var(--cream-dark);border-radius:6px;padding:20px 22px;margin-bottom:14px}
@@ -2925,14 +2925,14 @@ async function firstWin(btn, example){
 function _emptyShowcase(){
   var chips=['сводка по заявкам каждое утро','найти забытые подписки в выписках','сверить счета-фактуры с актами'];
   return '<div style="max-width:680px;background:linear-gradient(135deg,#c9a35c18,var(--paper,#fff));border:1px solid var(--gold,#c9a35c);border-radius:8px;padding:24px 26px">'+
-    '<div class="kicker" style="color:var(--gold,#a97e35)">✨ Здесь появятся твои автоматизации</div>'+
+    '<div class="kicker" style="color:var(--gold,#a97e35)">Здесь появятся твои автоматизации</div>'+
     '<div style="font-size:20px;font-weight:800;color:var(--ink,#0a0a0a);margin:6px 0 8px">Пока их нет — но результат можно увидеть прямо сейчас</div>'+
     '<div style="font-size:13.5px;color:var(--ink-soft);line-height:1.55;margin-bottom:16px">'+
       'Автоматизация — это процесс, который работает сам: берёт данные, считает и присылает готовый отчёт. '+
-      'Посмотрите на живом примере за секунды, без настройки и подключений.</div>'+
+      'Посмотри на живом примере за секунды — без настройки и подключений.</div>'+
     '<button class="btn gold" style="padding:12px 22px;font-size:15px" onclick="firstWin(this)">▶ Показать готовый отчёт на демо-данных</button>'+
     '<div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--cream-dark)">'+
-      '<div style="font-size:13.5px;font-weight:600;margin-bottom:8px">…или сразу соберите свою — опиши задачу словами</div>'+
+      '<div style="font-size:13.5px;font-weight:600;margin-bottom:8px">…или сразу собери свою — опиши задачу словами</div>'+
       '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
         '<input id="emptyComposeInput" class="sess-select" style="flex:1;min-width:260px;max-width:none" '+
           'placeholder="например: каждое утро сводка по заявкам из Google Sheets в Telegram" '+
