@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
 <meta charset="UTF-8">
 <title>Extella Plugins</title>
@@ -4028,7 +4028,7 @@ function _dtCss(){
       'border:1px solid;box-shadow:0 2px 8px rgba(0,0,0,.06)}'+
     '.dt_ic_badge .lico{width:27px;height:27px;stroke-width:1.5}'+
     '.dt_ic_lbl{font:550 12px/1.3 var(--sans);color:var(--tx);text-align:center;max-width:104px;'+
-      'overflow-wrap:break-word;word-break:normal;hyphens:none;'+
+      'overflow-wrap:break-word;word-break:normal;hyphens:auto;text-wrap:balance;'+
       'display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}'+
     '.dt_menu{position:fixed;z-index:10000;background:var(--s1,#fff);border:1px solid var(--bd);border-radius:11px;'+
       'box-shadow:0 10px 30px rgba(0,0,0,.18);padding:5px;min-width:172px;animation:fiu .1s ease both}'+
@@ -4218,7 +4218,7 @@ function renderDesktop(){
     {lbl:'Конструктор',      ico:'wand',     acc:'#C67E34', go:"_openWizard()",                tip:'Опиши задачу — соберём процесс, который работает по расписанию'},
     {lbl:'Быстрая сборка',   ico:'box',      acc:'#7C5CBF', go:"_openQuickBuild()",            tip:'Разовая задача из готовых блоков — результат за минуту'},
     {lbl:'Подключения',      ico:'globe',    acc:'#2F6B66', req:'extella_connectors', go:"notify('open','extella_connectors')", tip:'Свои сервисы, CRM и кабинеты — один контур доступа'},
-    {lbl:'Псевдоанонимизация',ico:'docs',    acc:'#6B7280', req:'extella_anon', go:"notify('open','extella_anon')",         tip:'Файлы с ПДн → безопасные копии: локально, без ИИ-моделей'},
+    {lbl:'Обезличивание',    ico:'docs',    acc:'#6B7280', req:'extella_anon', go:"notify('open','extella_anon')",         tip:'Уберём из файлов имена, телефоны и адреса — прямо на этом компьютере'},
   ];
   // Решение Анвара 27.07 (срочный релиз коллегам): на столе оставляем только готовое.
   // Скрытые здесь карточки НЕ удалены — они доступны в Каталоге и через «Автоматизации»;
