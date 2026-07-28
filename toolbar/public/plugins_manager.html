@@ -641,7 +641,9 @@ body[data-theme="dark"] .inf .tr,html[data-theme="dark"] .inf .tr{stroke:var(--b
   <button class="iconbtn" id="langBtn" onclick="setLang(LANG==='en'?'ru':'en')" title="Язык / Language" style="font:600 11px var(--mono,monospace);width:auto;padding:0 8px">EN</button>
   <button class="iconbtn" id="mcpBtn" onclick="claudeConnectModal()" style="width:auto;padding:0 10px;gap:6px;font:500 12px var(--sans)" data-tip="Extella в Claude Code&#10;Одна команда в терминале — и Claude Code берёт твои программы, знания и агентов сам. Клик — покажу команду."><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M9 7V3M15 7V3"/><path d="M6 7h12v5a6 6 0 0 1-6 6 6 6 0 0 1-6-6V7Z"/><path d="M12 18v3"/></svg>Claude Code</button>
   <button class="iconbtn" id="autoBtn" onclick="setc('automations')" data-tip="Автоматизации&#10;Задачи по расписанию: отчёты, проверки, рассылки. Клик — открыть список и настроить."><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M8 2v4M16 2v4"/><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/></svg></button>
-  <button class="iconbtn" id="themeBtn" onclick="toggleTheme()" title="Светлая / тёмная тема">☾</button>
+  <!-- Кнопка темы снята 28.07 (правка команды): тема приходит из приложения
+       сообщением etb_theme (и ключом color-theme) — локальный тумблер только
+       расходился с ЛК и сбрасывался при следующем сообщении. -->
   <button class="bclose" onclick="notify('close')" title="Close">&#10005;</button>
 </div>
 <div class="cmdbar">
@@ -6823,7 +6825,8 @@ function setMode(m){
   if(p) p.classList.toggle('on', m==='pro');
   renderGrid();
 }
-function toggleTheme(){ document.documentElement.toggleAttribute('data-lm'); }
+// toggleTheme() удалён вместе с кнопкой: источник правды по теме — приложение
+// (см. ith() и обработчик etb_theme выше).
 
 // ── Boot ──────────────────────────────────────────────────────────────────
 // Вернуть раздел, где человек был до того, как хост переинжектил тулбар.
