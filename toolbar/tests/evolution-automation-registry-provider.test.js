@@ -217,11 +217,16 @@ test('provider reads every source with exact scopes and performs no writes', asy
     (call) => call.method === 'kvGet' &&
       call.key === '_mkt_installed',
   );
+  // Регресс 28.07.2026: общий реестр обязан читаться под КАНОНИЧЕСКИМ агентом.
+  // `global: true` общего чтения НЕ даёт — своя копия ключа у агента побеждает общую молча,
+  // и Console показывала пустой реестр при 12 целых записях.
   assert.deepEqual(catalogRead.scope, {
     global: true,
+    agentId: 'agent_extella_default',
   });
   assert.deepEqual(composerRead.scope, {
     global: true,
+    agentId: 'agent_extella_default',
   });
   assert.deepEqual(
     calls.find((call) => call.method === 'expertsListScoped').scope,

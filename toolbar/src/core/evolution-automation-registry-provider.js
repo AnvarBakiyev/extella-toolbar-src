@@ -133,9 +133,18 @@ ETB.evolutionAutomationRegistryProvider = (function () {
     throw new Error('source document must contain an items array');
   }
 
+  // Скоуп чтения ОБЩИХ реестров. Живая проверка 28.07.2026: `global: true` НЕ даёт общего
+  // чтения — собственная копия ключа у агента побеждает общую молча. `_mkt_automations` под
+  // личным Qwen пользователя отдавал 0 записей, под agent_extella_default — все 12. Данные были
+  // целы всё это время, Console просто спрашивала не там.
+  // Правило: писатель и читатель общего ключа обязаны работать под ОДНИМ агентом. Пишет их
+  // эксперт wz_registry_rebuild под agent_extella_default — значит и читать надо оттуда.
+  var SHARED_REGISTRY_SCOPE_AGENT = 'agent_extella_default';
+
   function readKvItems(api, key, options) {
     var scope = {
-      global: true
+      global: true,
+      agentId: SHARED_REGISTRY_SCOPE_AGENT
     };
     assertContext(options);
     return Promise.resolve().then(function () {
