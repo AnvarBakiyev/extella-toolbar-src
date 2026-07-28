@@ -2528,7 +2528,7 @@ function _renderModelsCore() {
       '<div class="sk_lead" style="grid-column:1/-1;margin:-8px 0 12px;font-size:12px;color:var(--tx3)">поиск по Hugging Face — не проверено Extella</div>');
     return;
   }
-  g.innerHTML = '<div class="sk_lead" style="grid-column:1/-1">Модели с Hugging Face: найди в каталоге или вставь ссылку. Локальные модели работают у тебя на компьютере, даже без интернета.</div>' + modelsSpotlight() +
+  g.innerHTML = '<section class="catalog_intro" aria-labelledby="models_intro_title"><h2 class="catalog_intro_title" id="models_intro_title">Модели для агента</h2><p class="catalog_intro_text">Мозг, который выполняет задачу: понимает текст, рисует картинки, распознаёт речь. Каталог собран с Hugging Face — можно и вставить свою ссылку.</p><p class="catalog_intro_text">Локальные модели работают прямо на твоём компьютере, даже без интернета. Облачные — быстрее и не занимают место.</p></section>' + modelsSpotlight() +
     '<div style="grid-column:1/-1;text-align:center;margin:10px 0 0"><button class="cat_chip" onclick="_modHFset(true)">Искать ещё на Hugging Face</button></div>';
   [].forEach.call(g.querySelectorAll('[data-lminst]'),function(b){b.onclick=function(){installLocalModel(b.getAttribute('data-lminst'),b);};});
   _mountTabFilter('Поиск модели…');
@@ -5207,7 +5207,7 @@ function renderAgents(){
       '<span class="st_chip">✦ Создать</span><div class="st_title">+ Создать агента</div>'+
       '<div class="st_fact">Откроется Конструктор: опиши задачу — он соберёт и запустит агента.</div>'+
       '<div class="st_foot"><span style="font-size:11px;color:var(--tx3)">Конструктор · есть на Рабочем столе</span></div></div></div>';
-  var html='<div class="sk_lead" style="grid-column:1/-1">Твои агенты — сотрудники: создай своего в Конструкторе или найми готовую роль с полки.</div>'+
+  var html='<section class="catalog_intro" aria-labelledby="agents_intro_title"><h2 class="catalog_intro_title" id="agents_intro_title">Агенты — твои сотрудники</h2><p class="catalog_intro_text">Агент работает вместо тебя: ведёт переписку, считает, готовит отчёты. Своего собери в Конструкторе — он расспросит о задаче и всё настроит.</p><p class="catalog_intro_text">Или возьми готовую профессию с полки ниже: продажи, поддержка, бухгалтерия, аналитика. Роль назначается на твою копию агента за минуту.</p></section>'+
     buildTiles+
     mineHtml+
     _bentoHTML(TYPE_ED.agents.heroes)+
@@ -5306,7 +5306,7 @@ function svConnect(id){ var a=svGi(); if(a.indexOf(id)<0){a.push(id);svSi(a);} i
 function svDisc(id){ var a=svGi(); var i=a.indexOf(id); if(i>=0){a.splice(i,1);svSi(a);} if(cur==='services')renderServices(); }
 function renderServices(){
   var g=document.getElementById('grid'); if(!g)return;
-  var html='<div class="sk_lead" style="grid-column:1/-1">Живые данные для агента: курсы, погода, справки. Проверь здесь и отметь, что дать агенту.</div>'+
+  var html='<section class="catalog_intro" aria-labelledby="services_intro_title"><h2 class="catalog_intro_title" id="services_intro_title">Живые данные для агента</h2><p class="catalog_intro_text">Курсы валют, погода, справки, перевод — чтобы агент отвечал по фактам из интернета, а не по памяти.</p><p class="catalog_intro_text">Любой сервис можно проверить прямо здесь, а кнопкой «+ Для агента» отметить те, что получит твой агент при сборке.</p></section>'+
     _bentoHTML(TYPE_ED.services.heroes);
   html+='<div class="sect"><h2>Сервисы</h2></div>';
   var cats=[]; CATALOG_SERVICES.forEach(function(s){if(cats.indexOf(s.cat)<0)cats.push(s.cat);});
@@ -5612,7 +5612,7 @@ var _KPBTN='border:1px solid var(--bd2);background:transparent;color:var(--tx);b
 function renderKnowledge(){
   var g=document.getElementById('grid'); if(!g)return;
   var packs=kpGi();
-  var html='<div class="sk_lead" style="grid-column:1/-1">Твои документы и готовые справочники: агент отвечает по ним, а не по памяти. Возьми готовую базу — или собери свою из папки.</div>'+
+  var html='<section class="catalog_intro" aria-labelledby="knowledge_intro_title"><h2 class="catalog_intro_title" id="knowledge_intro_title">Знания для агента</h2><p class="catalog_intro_text">База знаний — это твои документы, по которым агент отвечает: регламенты, договоры, прайсы, кодексы.</p><p class="catalog_intro_text">Возьми готовую базу с полки ниже или собери свою из папки с файлами — сборка идёт локально, документы никуда не уходят.</p></section>'+
     _bentoHTML(TYPE_ED.knowledge.heroes);
   html+='<div class="sect"><h2>Знания</h2></div>'+
     '<div class="sect_hdr"><span class="sect_title">Своя база из документов</span><span class="sect_line"></span></div>'+
