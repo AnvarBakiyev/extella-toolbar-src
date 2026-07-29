@@ -3017,10 +3017,13 @@ ETB.router = (function () {
     var sourcePassports = session.standardsBundle &&
       session.standardsBundle.sources &&
       session.standardsBundle.sources.passports;
+    var boundSourcePassportIds = {};
     var passportRows = [];
     var contracts = [];
     var normalized;
     var reference;
+    var boundSourcePassportCount;
+    var sourceIdsValid = true;
     var i;
 
     function reasonCode(value, fallback) {
@@ -3077,7 +3080,53 @@ ETB.router = (function () {
       ));
     }
 
-    Object.keys(session.standardsById || {}).sort().forEach(function (id) {
+    // AVAILABLE means that every declared *bound* source passport is present,
+    // ready and bound to the current live fleet.  An unbound source belongs
+    // to its separate remediation queue, not to this live Cabinet cohort.
+    // Do not project a contract from a ready subset and present the source-list
+    // total as though all bound passports had been verified.
+    sourcePassports.forEach(function (source) {
+      var id = source && source.platform_agent_id;
+      if (id === null) return;
+      if (typeof id !== 'string' || !id || id !== id.trim() ||
+          boundSourcePassportIds[id]) {
+        sourceIdsValid = false;
+        return;
+      }
+      boundSourcePassportIds[id] = true;
+    });
+    boundSourcePassportCount = Object.keys(boundSourcePassportIds).length;
+    if (!sourceIdsValid) {
+      return Promise.resolve(surface(
+        'CONTRACT_UNAVAILABLE',
+        'AGENT_CONTROL_PASSPORT_SOURCE_INVALID',
+        sourcePassports.length,
+        null
+      ));
+    }
+    if (boundSourcePassportCount === 0) {
+      return Promise.resolve(surface(
+        'CONTRACT_UNAVAILABLE',
+        'AGENT_CONTROL_PASSPORT_SET_INCOMPLETE',
+        sourcePassports.length,
+        null
+      ));
+    }
+    if (
+        Object.keys(session.standardsById || {}).length !==
+          boundSourcePassportCount ||
+        Object.keys(session.standardsById || {}).some(function (id) {
+          return !boundSourcePassportIds[id];
+        })) {
+      return Promise.resolve(surface(
+        'CONTRACT_UNAVAILABLE',
+        'AGENT_CONTROL_PASSPORT_SOURCE_INVALID',
+        boundSourcePassportCount,
+        null
+      ));
+    }
+
+    Object.keys(boundSourcePassportIds).sort().forEach(function (id) {
       var standard = session.standardsById[id];
       var platformRow = session.platformById && session.platformById[id];
       var fleetRow = (session.fleet && session.fleet.rows || []).filter(
@@ -3091,11 +3140,11 @@ ETB.router = (function () {
       }
     });
 
-    if (!passportRows.length) {
+    if (passportRows.length !== boundSourcePassportCount) {
       return Promise.resolve(surface(
         'CONTRACT_UNAVAILABLE',
-        'NO_READY_AGENT_PASSPORTS',
-        sourcePassports.length,
+        'AGENT_CONTROL_PASSPORT_SET_INCOMPLETE',
+        boundSourcePassportCount,
         null
       ));
     }
@@ -3104,7 +3153,7 @@ ETB.router = (function () {
       return Promise.resolve(surface(
         'CONTRACT_UNAVAILABLE',
         'AGENT_CONTROL_CONTRACT_RUNTIME_UNAVAILABLE',
-        sourcePassports.length,
+        boundSourcePassportCount,
         null
       ));
     }
@@ -3117,7 +3166,7 @@ ETB.router = (function () {
           return Promise.resolve(surface(
             'CONTRACT_UNAVAILABLE',
             'AGENT_CONTROL_CONTRACT_UNAVAILABLE',
-            sourcePassports.length,
+            boundSourcePassportCount,
             null
           ));
         }
@@ -3132,7 +3181,7 @@ ETB.router = (function () {
         return Promise.resolve(surface(
           'CONTRACT_MISMATCH',
           'AGENT_CONTROL_CONTRACT_MISMATCH',
-          sourcePassports.length,
+          boundSourcePassportCount,
           null
         ));
       }
@@ -3144,12 +3193,12 @@ ETB.router = (function () {
           error && error.code,
           'AGENT_CONTROL_CONTRACT_INVALID'
         ),
-        sourcePassports.length,
+        boundSourcePassportCount,
         null
       ));
     }
 
-    return Promise.resolve(surface('AVAILABLE', null, sourcePassports.length,
+    return Promise.resolve(surface('AVAILABLE', null, boundSourcePassportCount,
       normalized));
   }
 

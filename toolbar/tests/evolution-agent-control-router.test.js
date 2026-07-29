@@ -205,6 +205,100 @@ test('Agent change-management projection is read-only and returns no inventory',
   assert.equal(Object.prototype.hasOwnProperty.call(result, 'sources'), false);
 });
 
+test('five ready Agent Passports with one canonical Cabinet contract stay AVAILABLE', async () => {
+  const ids = [
+    'agent_alpha',
+    'agent_beta',
+    'agent_gamma',
+    'agent_delta',
+    'agent_epsilon',
+  ];
+  const runtime = harness(session({
+    standards: ids.map((id) => readyStandard(id, agentControlContract())),
+  }));
+  const result = plain(await load(runtime));
+
+  assert.equal(result.status, 'AVAILABLE');
+  assert.equal(result.agent_passport_count, 5);
+  assert.equal(result.mutations_allowed, false);
+  assert.equal(result.error_code, null);
+  assert.deepEqual(result.contract, agentControlContract());
+});
+
+test('an unready or dead declared passport never projects a ready subset', async () => {
+  const alpha = readyStandard('agent_alpha', agentControlContract());
+  const betaUnready = readyStandard('agent_beta', agentControlContract());
+  betaUnready.passport_ready = false;
+  const unready = plain(await load(harness(session({
+    standards: [alpha, betaUnready],
+    sources: [sourcePassport('agent_alpha'), sourcePassport('agent_beta')],
+  }))));
+  assert.equal(unready.status, 'CONTRACT_UNAVAILABLE');
+  assert.equal(
+    unready.error_code,
+    'AGENT_CONTROL_PASSPORT_SET_INCOMPLETE',
+  );
+  assert.equal(unready.agent_passport_count, 2);
+  assert.equal(unready.contract, null);
+
+  const beta = readyStandard('agent_beta', agentControlContract());
+  const dead = plain(await load(harness(session({
+    standards: [alpha, beta],
+    sources: [sourcePassport('agent_alpha'), sourcePassport('agent_beta')],
+    fleetRows: [
+      fleetRow('agent_alpha'),
+      {
+        ...fleetRow('agent_beta'),
+        platformPresent: false,
+        standardStatus: 'DEAD_REFERENCE',
+      },
+    ],
+  }))));
+  assert.equal(dead.status, 'CONTRACT_UNAVAILABLE');
+  assert.equal(
+    dead.error_code,
+    'AGENT_CONTROL_PASSPORT_SET_INCOMPLETE',
+  );
+  assert.equal(dead.contract, null);
+});
+
+test('an unbound source is outside the live Cabinet cohort', async () => {
+  const alpha = readyStandard('agent_alpha', agentControlContract());
+  const unbound = sourcePassport('agent_unbound');
+  unbound.platform_agent_id = null;
+  const unboundResult = plain(await load(harness(session({
+    standards: [alpha],
+    sources: [sourcePassport('agent_alpha'), unbound],
+  }))));
+  assert.equal(unboundResult.status, 'AVAILABLE');
+  assert.equal(unboundResult.agent_passport_count, 1);
+  assert.equal(unboundResult.error_code, null);
+  assert.deepEqual(unboundResult.contract, agentControlContract());
+
+  const onlyUnbound = plain(await load(harness(session({
+    standards: [],
+    sources: [unbound],
+  }))));
+  assert.equal(onlyUnbound.status, 'CONTRACT_UNAVAILABLE');
+  assert.equal(
+    onlyUnbound.error_code,
+    'AGENT_CONTROL_PASSPORT_SET_INCOMPLETE',
+  );
+  assert.equal(onlyUnbound.agent_passport_count, 1);
+  assert.equal(onlyUnbound.contract, null);
+
+  const extraStandard = plain(await load(harness(session({
+    standards: [alpha, readyStandard('agent_extra', agentControlContract())],
+    sources: [sourcePassport('agent_alpha')],
+  }))));
+  assert.equal(extraStandard.status, 'CONTRACT_UNAVAILABLE');
+  assert.equal(
+    extraStandard.error_code,
+    'AGENT_CONTROL_PASSPORT_SOURCE_INVALID',
+  );
+  assert.equal(extraStandard.contract, null);
+});
+
 test('unavailable standards remain unknown rather than zero passports', async () => {
   const runtime = harness(session({
     standardsAvailable: false,
@@ -238,7 +332,10 @@ test('only an attested empty source list produces NO_AGENT_PASSPORTS', async () 
     fleetRows: [fleetRow('agent_unready')],
   }))));
   assert.equal(nonEmpty.status, 'CONTRACT_UNAVAILABLE');
-  assert.equal(nonEmpty.error_code, 'NO_READY_AGENT_PASSPORTS');
+  assert.equal(
+    nonEmpty.error_code,
+    'AGENT_CONTROL_PASSPORT_SET_INCOMPLETE',
+  );
   assert.equal(nonEmpty.agent_passport_count, 1);
   assert.notEqual(nonEmpty.status, 'NO_AGENT_PASSPORTS');
 });
