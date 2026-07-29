@@ -461,6 +461,35 @@ function buildLibrary() {
     console.warn(`  ⚠ ${msg} Library tab will be empty (dev build only).`);
     return '';
   }
+  // Отсутствие dist ловится выше, а СТАРЫЙ dist не ловился ничем: он лежит в
+  // .gitignore, собирается у каждого локально, и артефакт молча уносил чужую
+  // позавчерашнюю сборку Библиотеки. Живой случай 29.07.2026: в собранном
+  // toolbar.js всплыл платный agent_extella_default, которого в исходниках
+  // Библиотеки уже нет — он приехал из просроченного dist. Гейт account-scope
+  // это поймал, но после пуша. Теперь несвежесть видна в момент сборки.
+  const LIB_SRC = path.join(ROOT, '..', 'modules', 'library', 'src');
+  function newestMtime(dir) {
+    let newest = 0;
+    for (const name of fs.readdirSync(dir)) {
+      const full = path.join(dir, name);
+      const st = fs.statSync(full);
+      const t = st.isDirectory() ? newestMtime(full) : st.mtimeMs;
+      if (t > newest) newest = t;
+    }
+    return newest;
+  }
+  try {
+    if (fs.existsSync(LIB_SRC) &&
+        newestMtime(LIB_SRC) > fs.statSync(LIBRARY_DIST).mtimeMs) {
+      const stale = 'Библиотека собрана раньше, чем менялись её исходники — ' +
+        'артефакт унесёт старую сборку. Выполни `npm run build -w @extella/library`.';
+      if (RELEASE_ARTIFACTS) throw new Error('LIBRARY_STALE_IN_RELEASE: ' + stale);
+      console.warn(`  ⚠ ${stale}`);
+    }
+  } catch (e) {
+    if (String(e.message || '').startsWith('LIBRARY_STALE_IN_RELEASE')) throw e;
+    // Проверка свежести — удобство, а не гейт: сбой обхода не должен ронять сборку.
+  }
   const html = readFile(LIBRARY_DIST);
   const shim = [
     '<script>(function(){try{',
