@@ -16,7 +16,7 @@ ETB.hfAdd = (function () {
       'position:fixed;inset:0;z-index:2147483645;',
       'background:rgba(0,0,0,.72);backdrop-filter:blur(6px);',
       'display:flex;align-items:center;justify-content:center;',
-      'font-family:-apple-system,system-ui,sans-serif;',
+      'font-family:var(--etb-sans,"Source Sans 3",system-ui,sans-serif);',
       'animation:_etbv2_hf_fade .16s ease;',
     '}',
     'html[data-etb-light] #_etbv2_hf_ov{background:rgba(0,0,0,.35);}',
@@ -49,7 +49,7 @@ ETB.hfAdd = (function () {
       'width:100%;background:var(--etb-s2,#fff);border:1px solid var(--etb-bd2,rgba(0,0,0,.14));border-radius:9px;',
       'color:var(--etb-tx,#111);font-size:13px;padding:10px 14px;',
       'box-sizing:border-box;outline:none;transition:border-color .15s;',
-      'font-family:-apple-system,system-ui,sans-serif;',
+      'font-family:var(--etb-sans,"Source Sans 3",system-ui,sans-serif);',
     '}',
     '._etbv2_hf_input:focus{border-color:rgba(198,126,52,.5);}',
     '._etbv2_hf_input::placeholder{color:var(--etb-tx3,#ccc);}',
@@ -126,7 +126,7 @@ ETB.hfAdd = (function () {
     '._etbv2_hf_activity{',
       'background:var(--etb-s3,#f7f7f9);border:1px solid var(--etb-bd,rgba(0,0,0,.07));',
       'border-radius:8px;padding:10px 12px;max-height:120px;overflow-y:auto;',
-      'font-family:monospace;font-size:10.5px;color:var(--etb-tx2,#6b6b6b);line-height:1.6;',
+      'font-family:var(--etb-mono,"JetBrains Mono",ui-monospace,Menlo,monospace);font-size:10.5px;color:var(--etb-tx2,#6b6b6b);line-height:1.6;',
       'margin-bottom:16px;word-break:break-word;',
     '}',
     '._etbv2_hf_activity:empty{display:none;}',
@@ -312,7 +312,7 @@ ETB.hfAdd = (function () {
 
   function _buildModalHTML() {
     var kind = _state.kind;
-    var kindLabel = kind === 'model' ? '🧠 Model' : '🤗 Space';
+    var kindLabel = kind === 'model' ? '🧠 Model' : 'Space';
     var title = 'HuggingFace · ' + kindLabel;
 
     var body = '';
@@ -499,7 +499,7 @@ ETB.hfAdd = (function () {
     '</div>';
 
     return [
-      '<div class="_etbv2_hf_title" style="margin-bottom:16px">Installing…</div>',
+      '<div class="_etbv2_hf_title" style="margin-bottom:16px">Ставлю…</div>',
       '<div class="_etbv2_hf_prog">',
         '<div class="_etbv2_hf_prog_row">',
           '<div class="_etbv2_hf_prog_phase" id="_etbv2_hf_prog_phase">' + _esc(phase) + '</div>',
@@ -508,13 +508,13 @@ ETB.hfAdd = (function () {
         '<div class="_etbv2_hf_bar"><div class="_etbv2_hf_bar_fill"></div></div>',
       '</div>',
       actHtml,
-      '<div class="_etbv2_hf_note">The agent is setting up the plugin on your device. This may take a few minutes.</div>'
+      '<div class="_etbv2_hf_note">Модель ставится на твой компьютер. Обычно это пара минут.</div>'
     ].join('');
   }
 
   function _htmlError() {
     return [
-      '<div class="_etbv2_hf_title" style="color:#f87171;margin-bottom:8px">Installation failed</div>',
+      '<div class="_etbv2_hf_title" style="color:#B23A2E;margin-bottom:8px">Не установилось</div>',
       '<div class="_etbv2_hf_sub" style="margin-bottom:16px">' + _esc(_state.errorMsg) + '</div>',
       '<div class="_etbv2_hf_actions">',
         '<button class="_etbv2_hf_btn_cancel" onclick="ETB.hfAdd.close()">Close</button>',
@@ -684,13 +684,18 @@ ETB.hfAdd = (function () {
           return;
         }
         _state.step = 'error';
+        // Было: «No plugin manifest was written (~/extella-plugins/_registry/…)» —
+        // путь к файлу вместо объяснения. Человеку нужно знать, что произошло и что
+        // делать; путь остаётся, но ниже и как техническая деталь.
         _state.errorMsg = agentErr ||
-          ('No plugin manifest was written (' + ctx.registryPath + ').' +
-            (agentNotes ? ' Agent notes: ' + agentNotes : ''));
+          ('Установка не дошла до конца: карточка модели не появилась в списке установленных. ' +
+           'Нажми «Ещё раз» — обычно помогает. Если повторяется, у этой модели нет готовой сборки.' +
+            (agentNotes ? ' Что ответил агент: ' + agentNotes : '') +
+            ' · ' + ctx.registryPath);
         _render();
       }).catch(function (e) {
         _state.step = 'error';
-        _state.errorMsg = (e && e.message) || 'Sync failed.';
+        _state.errorMsg = (e && e.message) || 'Не удалось синхронизировать список установленного. Попробуй ещё раз.';
         _render();
       });
     }
