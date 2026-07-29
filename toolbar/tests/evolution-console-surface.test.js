@@ -174,7 +174,7 @@ test('Evolution Console has one always-available localized system card', () => {
   assert.equal(consoleRoutes.length, 1, 'the system card must have one route');
   assert.match(
     cards,
-    /lbl:LANG==='en'\?'Evolution Console':'Центр Управления Агентами'/,
+    /lbl:LANG==='en'\?'Evolution Console':'Управление агентами'/,
   );
   assert.match(
     cards,
