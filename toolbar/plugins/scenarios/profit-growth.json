@@ -7,7 +7,7 @@
   "description": "Evolution Console показывает, что работает, что остановлено и где нужна помощь. Каталог отделён от установленных автоматизаций, а неизвестное состояние не подменяется успехом.",
   "category": "business",
   "type": "application",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "eye": "Extella Evolution",
   "pills": [
     "Автоматизации",
@@ -50,6 +50,13 @@
       "name": "Защита данных",
       "description": "Read-only статус PRE, POST и REVEAL по каждому агенту с текущего устройства; недоступные данные остаются неизвестными.",
       "version": "EVOLUTION_MASKING_POSTURE_V1",
+      "external_writes": false
+    },
+    {
+      "id": "agent_change_management",
+      "name": "Управление изменениями агентов",
+      "description": "Read-only проекция канонического контракта из Agent Passport; до отдельного trusted action любые изменения остаются закрытыми.",
+      "version": "EVOLUTION_AGENT_CONTROL_SURFACE_V1",
       "external_writes": false
     },
     {
