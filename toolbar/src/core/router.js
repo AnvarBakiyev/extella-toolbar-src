@@ -4539,7 +4539,7 @@ ETB.router = (function () {
   function _serviceUrl(plugin) {
     var ui = plugin.ui || {};
     // Хостинговые плагины: сервер живёт не на устройстве, а на нашем VPS —
-    // карточка несёт готовый https-URL (первый пример: Бага на baga.*.sslip.io).
+    // карточка несёт готовый https-URL (первый пример: Баға на baga.*.sslip.io).
     if (ui.url) return ui.url;
     var port = ui.port || (plugin.service && plugin.service.port);
     if (!port) return '';
@@ -5032,7 +5032,7 @@ ETB.router = (function () {
       } else if (ui.url) {
         // Хостинговый плагин: сервер на нашем VPS, открываем прямо в панели.
         // Без localhost-health и автостарта — состояние сервера не зависит от
-        // устройства пользователя (первый пример: Бага, общая история команды).
+        // устройства пользователя (первый пример: Баға, общая история команды).
         var hostedIframe = document.createElement('iframe');
         hostedIframe.style.cssText = 'width:100%;height:100%;border:none;display:block;';
         hostedIframe.setAttribute('allow', 'clipboard-read;clipboard-write');
