@@ -5772,10 +5772,17 @@ function claudeConnectModal(){
       '<div style="color:var(--tx2);font-size:13.5px;line-height:1.6">'+
         _clT('Открой терминал в любой папке и нажми Enter. Claude Code ответит «Connected».',
              'Open a terminal in any folder and hit Enter. Claude Code answers “Connected”.')+'</div>'+
-      '<div style="'+lbl+'">'+_clT('шаг 3 · проверь','step 3 · check it')+'</div>'+
-      '<div style="color:var(--tx2);font-size:13.5px;line-height:1.6">'+
-        _clT('Набери в Claude Code <code style="font-family:var(--mono,monospace)">/mcp</code> — в списке появится extella. Дальше проси словами: он сам возьмёт нужный инструмент.',
-             'Type <code style="font-family:var(--mono,monospace)">/mcp</code> in Claude Code — extella shows up in the list. After that just ask in plain words: it picks the right tool itself.')+'</div>'+
+      '<div style="'+lbl+'">'+_clT('шаг 3 · скажи это Claude','step 3 · say this to Claude')+'</div>'+
+      '<div style="color:var(--tx2);font-size:13.5px;line-height:1.6;margin-bottom:8px">'+
+        _clT('Запусти <code style="font-family:var(--mono,monospace)">claude</code> в терминале и напиши первую фразу — по ней сразу видно, что связь есть:',
+             'Run <code style="font-family:var(--mono,monospace)">claude</code> in a terminal and send the first line — it shows right away that the link works:')+'</div>'+
+      '<div style="background:var(--bg);border:1px solid var(--bd2);border-radius:5px;padding:11px 12px;'+
+        'font:400 13px/1.55 var(--sans);color:var(--tx);user-select:all">'+esc(_claudeAskPhrase())+'</div>'+
+      '<div style="margin-top:10px;display:flex;gap:8px;align-items:center">'+
+        '<button style="'+_KPBTN+'" id="cl_copy2" onclick="claudeCopyPhrase(this)">'+_clT('Скопировать фразу','Copy the line')+'</button>'+
+        '<span style="font-size:12px;color:var(--tx3)">'+
+          _clT('дальше проси обычными словами — инструмент он выберет сам',
+               'after that just ask in plain words — it picks the tool itself')+'</span></div>'+
       '<div style="margin-top:16px;padding-top:13px;border-top:1px solid var(--bd);color:var(--tx3);font-size:12px;line-height:1.55">'+
         _clT('В команде твой личный ключ — не выкладывай её в чаты и репозитории. Подключение живёт во всех проектах (флаг -s user); убрать — <code style="font-family:var(--mono,monospace)">claude mcp remove extella</code>.',
              'The command carries your personal key — keep it out of chats and repos. It applies to every project (-s user); to undo — <code style="font-family:var(--mono,monospace)">claude mcp remove extella</code>.')+'</div>'+
@@ -5791,27 +5798,35 @@ function claudeConnectModal(){
   ov.addEventListener('click',function(e){ if(e.target===ov) ov.remove(); });
   document.body.appendChild(ov);
 }
-function claudeCopyCmd(btn){
-  var cmd=_claudeCmd(); if(!cmd) return;
+function _claudeAskPhrase(){
+  return _clT('Проверь подключение к Extella и перечисли, какие инструменты оттуда тебе доступны.',
+              'Check the Extella connection and list the tools it gives you.');
+}
+function claudeCopyPhrase(btn){ _claudeCopyText(_claudeAskPhrase(), btn, _clT('Скопировать фразу','Copy the line')); }
+// Общий копировщик: буфер по клику, честный откат через скрытое поле и честная
+// подпись, если не вышло ни то ни другое.
+function _claudeCopyText(text, btn, label){
+  if(!text) return;
   var done=function(ok){
     if(!btn)return;
     btn.textContent = ok ? _clT('Скопировано ✓','Copied ✓') : _clT('Не вышло — выдели вручную','Copy failed — select it by hand');
-    setTimeout(function(){ btn.textContent=_clT('Скопировать команду','Copy command'); },2600);
+    setTimeout(function(){ btn.textContent=label; },2600);
   };
   var fallback=function(){
     try{
-      var ta=document.createElement('textarea'); ta.value=cmd;
+      var ta=document.createElement('textarea'); ta.value=text;
       ta.style.cssText='position:fixed;left:-9999px;top:0'; document.body.appendChild(ta);
       ta.select(); var ok=document.execCommand('copy'); ta.remove(); done(ok);
     }catch(_){ done(false); }
   };
   try{
     if(navigator.clipboard&&navigator.clipboard.writeText){
-      navigator.clipboard.writeText(cmd).then(function(){done(true);},fallback); return;
+      navigator.clipboard.writeText(text).then(function(){done(true);},fallback); return;
     }
   }catch(_){}
   fallback();
 }
+function claudeCopyCmd(btn){ _claudeCopyText(_claudeCmd(), btn, _clT('Скопировать команду','Copy command')); }
 function renderKnowledge(){
   var g=document.getElementById('grid'); if(!g)return;
   var packs=kpGi();
