@@ -3391,7 +3391,7 @@ function _mkbLoad(){
     if(!action.length && !by.working.length && !by.missing.length){ slot.innerHTML=''; return; }
     var head='<div class="sect_hdr"><span class="sect_title">'+(en?'Installed & automations':'Установлено и автоматизации')+'</span><span class="sect_line"></span></div>'+
       '<div class="sk_lead" style="grid-column:1/-1">'+(en?'What you\'ve installed and whether it\'s wired into automations — connect the rest to automations right here.':'Что установлено и участвует ли в автоматизациях — остальное можно подключить к автоматизациям прямо здесь.')+
-      (d.blocks!=null?' <span style="color:var(--tx3)">· '+(en?'blocks now: ':'блоков сейчас: ')+esc(String(d.blocks))+'</span>':'')+'</div>';
+      (d.blocks!=null?' <span style="color:var(--tx3)">· '+(en?'connected: ':'подключено: ')+esc(String(d.blocks))+'</span>':'')+'</div>';
     var cards=action.map(function(it,i){ return _mkbCard(it,i,en); }).join('');
     var workLine=by.working.length?'<div class="sk_lead" style="grid-column:1/-1;color:#2E7D5B;font-size:12px">✓ '+
       esc(String(by.working.length))+' '+(en?'already working in automations':'уже работают в автоматизациях')+'</div>':'';
@@ -3425,13 +3425,13 @@ function _mkbCard(it,i,en){
   var kindL=en?({app:'App',mcp:'MCP',cli:'Tool'}[it.kind]||it.kind):({app:'Приложение',mcp:'MCP',cli:'Инструмент'}[it.kind]||it.kind);
   var foot;
   if(it.state==='not_running')
-    foot='<span style="font-size:11px;color:var(--tx3)">'+(en?'start it first':'сначала запустите')+'</span>';
+    foot='<span style="font-size:11px;color:var(--tx3)">'+(en?'start it first':'сначала запусти')+'</span>';
   else if(broken)
     // осиротевший кубик: способность под ним исчезла — предложить убрать блок
-    foot='<span style="font-size:11px;color:#B23A2E;margin-right:8px">'+(en?'capability gone — reinstall':'способность пропала — переустановите')+'</span>'+
+    foot='<span style="font-size:11px;color:#B23A2E;margin-right:8px">'+(en?'the program is gone — reinstall':'программа пропала — переустанови')+'</span>'+
       (it.block?'<button class="st_btn" style="background:transparent;color:#B23A2E;border:1px solid rgba(178,58,46,.5)" onclick="_mkbRemoveBlock(this,\''+_dtEsc(it.block)+'\')">'+(en?'Remove block':'Убрать блок')+'</button>':'');
   else  // installable
-    foot='<button class="st_btn" style="--acc:'+acc+'" onclick="_mkbMake(this,\''+_dtEsc(it.kind)+'\',\''+_dtEsc(it.ref)+'\',\''+_dtEsc(it.title||it.ref)+'\')">'+(en?'Make a block':'Сделать блоком')+'</button>';
+    foot='<button class="st_btn" style="--acc:'+acc+'" onclick="_mkbMake(this,\''+_dtEsc(it.kind)+'\',\''+_dtEsc(it.ref)+'\',\''+_dtEsc(it.title||it.ref)+'\')">'+(en?'Add to automations':'Подключить к автоматизациям')+'</button>';
   return '<div class="stile" style="--acc:'+acc+';animation-delay:'+Math.min(i*30,240)+'ms">'+
     '<span class="st_chip">'+esc(kindL)+'</span>'+
     '<div class="st_title">'+esc(it.title||it.ref)+'</div>'+
@@ -4106,7 +4106,7 @@ function _loadingHTML(text){ return '<div class="empty"><video style="width:84px
 function _desktopLoadingHTML(){ return '<div class="empty"><video style="width:64px;height:88px;display:block;margin:0 auto 8px;object-fit:contain;background:transparent" autoplay loop muted playsinline src="'+_DESKTOP_LOADER_VIDEO+'"></video><p>Собираю рабочий стол…</p></div>'; }
 function _emptyHTML(icon, html){
   // канон: линейные иконки, не эмодзи — старые вызовы с эмодзи мапятся на символы
-  var MAP={'🔍':'box','🤗':'box','🗂️':'box','📦':'box','⚙️':'tech','📚':'docs'};
+  var MAP={'🔍':'search','🤗':'box','🗂️':'box','📦':'box','⚙️':'tech','📚':'docs'};
   var sym=MAP[icon]|| (/^[a-z-]+$/.test(icon||'')?icon:'box');
   return '<div class="empty"><div class="eico"><svg class="lico"><use href="#ic-'+sym+'"/></svg></div><p>'+html+'</p></div>'; }
 
@@ -4115,6 +4115,7 @@ function _dtEsc(s){ return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); 
 // Правый клик по ярлыку → контекстное меню (Открыть/Кабинет/Запустить · Удалить),
 // как в ОС. Управление живёт на столе — отдельные вкладки «Мои»/«Автоматизации» не нужны.
 var _dtReg=[];
+var _wzBridge=null;   // null — не проверяли, true/false — ответ моста Конструктора
 var _dtSys=[];   // ярлыки, спрятанные со стола как двойники системных плиток (их и открывают плитки)
 // Открыть Конструктор. Делаем ровно то же, что рабочая иконка Конструктора на столе: находим его
 // среди ярлыков и вызываем его же действие открытия — id установленного плагина
@@ -4482,10 +4483,10 @@ function renderDesktop(){
     // «Автоматизации» убраны — вход остался кнопкой-календарём в шапке (три входа
     // в одно место было лишним). «Команда» убрана до готовности — «скоро»-плиток
     // на столе больше нет по канону «оставлено только готовое».
-    {lbl:'Конструктор',      ico:'wand',     acc:'#C57E33', go:"_openWizard()",                tip:'Опиши задачу — соберём процесс, который работает по расписанию'},
+    {lbl:'Конструктор',      ico:'wand',     acc:'#C57E33', bridge:true, go:"_openWizard()",                tip:'Опиши задачу — соберём процесс, который работает по расписанию'},
     // «Быстрая сборка» подтверждена Эллой 29.07 отдельным словом: в списке правок
     // команды её не было, но она остаётся — это тоже «то, чем создают». Не снимать.
-    {lbl:'Быстрая сборка',   ico:'box',      acc:'#3D8078', go:"_openQuickBuild()",            tip:'Разовая задача из готовых блоков — результат за минуту'},
+    {lbl:'Быстрая сборка',   ico:'box',      acc:'#3D8078', bridge:true, go:"_openQuickBuild()",            tip:'Разовая задача из готовых блоков — результат за минуту'},
     {lbl:'Подключения',      ico:'globe',    acc:'#2F6B66', req:'extella_connectors', go:"notify('open','extella_connectors')", tip:'Свои сервисы, CRM и кабинеты — один контур доступа'},
     // РЕШЕНИЕ АНВАРА 29.07: Evolution Console встаёт в ряд системных карточек и доступна ВСЕМ.
     // Оговорка для Эллы: это сознательное расширение её принципа «стол = только то, чем
@@ -4521,6 +4522,9 @@ function renderDesktop(){
     catch(_){ return false; }
   }
   // Ошибка обязана говорить, что делать (замечание Алии: «непонятно, что это значит»).
+  window._wzBridgeDown=function(lbl){ wsToast(LANG==='en'
+    ? ('“'+lbl+'” needs the Wizard service, and it is not answering. Restart Extella — it starts together with the app.')
+    : ('«'+lbl+'» работает через службу Конструктора, а она не отвечает. Перезапусти Extella — она поднимается вместе с приложением.')); };
   window._sysMissing=function(lbl){ wsToast(LANG==='en'
     ? ('“'+lbl+'” is not installed on this computer yet. Restart Extella — missing parts are fetched on start. If it is still absent, it is not part of your build yet.')
     : ('«'+lbl+'» ещё не установлена на этом компьютере. Перезапусти Extella — недостающие части докачиваются при старте. Если и после перезапуска пусто, эта часть пока не входит в твою сборку.')); };
@@ -4589,13 +4593,28 @@ function renderDesktop(){
   _dtReg=icons;      // реестр для правого клика (открыть/кабинет/удалить); системные сюда не входят
   _dtSys=_sysHidden; // …а системные плитки открываются отсюда — иначе «Визард» считал сам себя неустановленным
 
+  // Честная деградация плиток (находка Анвара 29.07): плагин может быть в реестре,
+  // а его сервер лежать — тогда плитка выглядит рабочей, а клик молчит. Мост
+  // Конструктора проверяем один раз при отрисовке стола и, если он не отвечает,
+  // приглушаем зависящие от него плитки заранее.
+  if(_wzBridge===null){
+    _wzBridge='checking';
+    _mkbFetch('/x/health',{},2500)
+      .then(function(){ _wzBridge=true; if(cur==='desktop')renderDesktop(); })
+      .catch(function(){ _wzBridge=false; if(cur==='desktop')renderDesktop(); });
+  }
   var sysHtml=SYS_APPS.map(function(s,i){
     // «Скоро» приоритетнее «не установлено»: возможность ещё не для пользователей —
     // ярлык виден (чтобы обещал), но приглушён, с бейджем, клик объясняет, не открывает.
     var soon = !!s.soon;
-    var missing = !soon && s.req && !_sysAvail(s.req);
-    var go  = soon ? "_sysSoon('"+esc(s.lbl)+"')" : (missing ? "_sysMissing('"+esc(s.lbl)+"')" : s.go);
-    var tip = soon ? (s.lbl+' — скоро') : (missing ? (s.lbl+' — ещё не установлена на этом компьютере') : s.tip);
+    var bridgeDown = !soon && s.bridge && _wzBridge===false;
+    var missing = (!soon && s.req && !_sysAvail(s.req)) || bridgeDown;
+    var go  = soon ? "_sysSoon('"+esc(s.lbl)+"')"
+      : (bridgeDown ? "_wzBridgeDown('"+esc(s.lbl)+"')"
+      : (missing ? "_sysMissing('"+esc(s.lbl)+"')" : s.go));
+    var tip = soon ? (s.lbl+' — скоро')
+      : (bridgeDown ? (s.lbl+' — Конструктор не отвечает. Перезапусти Extella: он поднимается вместе с приложением')
+      : (missing ? (s.lbl+' — ещё не установлена на этом компьютере') : s.tip));
     var badge = soon ? '<span class="dt_soon">'+(LANG==='en'?'Soon':'Скоро')+'</span>' : '';
     return '<button type="button" aria-label="'+esc(s.lbl)+'" class="dt_ico'+((soon||missing)?' dt_off':'')+'" style="animation-delay:'+Math.min(i*14,180)+'ms" title="'+esc(tip)+'" onclick="'+go+'" oncontextmenu="return false">'+
       '<span class="dt_ic_badge" style="background:'+s.acc+'14;border-color:'+s.acc+'40;color:'+s.acc+'">'+_icoSym(s.ico)+badge+'</span>'+
@@ -4878,7 +4897,7 @@ function renderAutomations() {
   _mkbFetch('/x/automations',{},4000).then(function(d){
     var n=(d&&d.automations&&d.automations.length)||0; if(!n) return;
     var g2=document.getElementById('grid'); if(!g2||cur!=='automations'||document.getElementById('wzAutoLink')) return;
-    g2.insertAdjacentHTML('beforeend','<div id="wzAutoLink" class="sk_lead" style="grid-column:1/-1;font-size:12px;color:var(--tx3)">В Конструкторе собрано процессов: '+n+' — управление, расписание и прогоны там. <a href="#" onclick="_openWizard();return false" style="color:var(--a)">Открыть Конструктор</a></div>');
+    g2.insertAdjacentHTML('beforeend','<div id="wzAutoLink" class="sk_lead" style="grid-column:1/-1;font-size:12px;color:var(--tx3)">«Мои автоматизации» — всё, что собрано на этом компьютере: '+n+'. Управление, расписание и прогоны в Конструкторе. <a href="#" onclick="_openWizard();return false" style="color:var(--a)">Открыть Конструктор</a></div>');
   }).catch(function(){});
   if (_autoReg === null) {
     _ensureAuto();
@@ -4901,7 +4920,7 @@ function renderAutomations() {
     g.innerHTML = _autoErr ? _autoErrHTML() : _emptyHTML('⚙️', _t('autoEmpty'));
     rtabs(); return;
   }
-  var html = '<div class="sect_hdr" style="grid-column:1/-1"><span class="sect_title">Мои агенты · собраны Конструктором</span><span class="sect_line"></span></div>'+
+  var html = '<div class="sect_hdr" style="grid-column:1/-1"><span class="sect_title">Опубликованные автоматизации</span><span class="sect_line"></span></div>'+
     '<div class="sk_lead" style="grid-column:1/-1;margin:-2px 0 6px">Каждый агент — управляемый объект: запуск, расписание, история, настройки. Открой «⚙ Кабинет».</div>'+
     '<div class="mshelf">' + visible.map(function(p, i){ return autoCardHTML(p, i); }).join('') + '</div>';
   g.innerHTML = html;
