@@ -638,6 +638,11 @@ body[data-theme="dark"] .inf .tr,html[data-theme="dark"] .inf .tr{stroke:var(--b
   </div>
   <button class="iconbtn" onclick="notify('mkt_min')" title="Свернуть">&#8211;</button>
   <button class="iconbtn" onclick="notify('mkt_win')" title="В окне / на весь экран"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><rect x="3" y="8" width="13" height="13" rx="1.5"/><path d="M8 5h12a1 1 0 0 1 1 1v12"/></svg></button>
+  <!-- Разделитель: слева — управление самим окном витрины (свернуть в чип, оконный
+       режим), справа — то, что относится к содержимому. Обе кнопки слева проверены
+       по коду хоста и НЕ дублируют системные, поэтому оставлены; правый угол разгружен
+       группировкой, а не потерей функций. -->
+  <span aria-hidden="true" style="width:1px;height:18px;background:var(--bd);margin:0 3px;flex-shrink:0"></span>
   <button class="iconbtn" id="langBtn" onclick="setLang(LANG==='en'?'ru':'en')" title="Язык / Language" style="font:600 11px var(--mono,monospace);width:auto;padding:0 8px">EN</button>
   <button class="iconbtn" id="mcpBtn" onclick="claudeConnectModal()" style="width:auto;padding:0 10px;gap:6px;font:500 12px var(--sans)" data-tip="Extella в Claude Code&#10;Одна команда в терминале — и Claude Code берёт твои программы, знания и агентов сам. Клик — покажу команду."><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M9 7V3M15 7V3"/><path d="M6 7h12v5a6 6 0 0 1-6 6 6 6 0 0 1-6-6V7Z"/><path d="M12 18v3"/></svg>Claude Code</button>
   <button class="iconbtn" id="autoBtn" onclick="setc('automations')" data-tip="Автоматизации&#10;Задачи по расписанию: отчёты, проверки, рассылки. Клик — открыть список и настроить."><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M8 2v4M16 2v4"/><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/></svg></button>
@@ -5287,11 +5292,17 @@ function renderAgents(){
   if(_autoReg===null){ _ensureAuto(); }
   // «Мои агенты» — собранные автоматизации-агенты; фокус вкладки на агентах,
   // роли/промпты — вторым планом (решение Эллы 20.07)
-  var mine=(_autoReg||[]).slice(0,8);
-  var mineHtml = mine.length
-    ? '<div class="sect_hdr"><span class="sect_title">Мои агенты</span><span class="sect_line"></span></div>'+
-      '<div class="mshelf">'+mine.map(function(p,i){return autoCardHTML(p,i);}).join('')+'</div>'+
-      ((_autoReg||[]).length>8 ? '<div style="grid-column:1/-1;text-align:right;margin:-2px 0 8px"><button onclick="setc(\'automations\')" style="border:1px solid var(--bd2);background:transparent;color:var(--tx2);border-radius:5px;padding:4px 10px;font-size:12px;cursor:pointer">Все мои агенты →</button></div>' : '')
+  // Дубль «Мои агенты» убран (замечание Алии №3: агенты на столе и во вкладке путают).
+  // Канон витрины: в каталоге берёшь — на Столе живёт. Поэтому здесь не вторая копия
+  // списка, а строка-указатель: сколько их и где они лежат.
+  var _agN=(_autoReg||[]).length;
+  var mineHtml = _agN
+    ? '<div class="sk_lead" style="grid-column:1/-1;display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
+        '<span>'+_clT('Твои агенты живут на Рабочем столе — их там '+_agN+'. Оттуда и открывай.',
+                      'Your agents live on the Desktop — '+_agN+' of them. Open them from there.')+'</span>'+
+        '<button onclick="setc(\'desktop\')" style="border:1px solid var(--bd2);background:transparent;color:var(--tx2);border-radius:5px;padding:4px 10px;font-size:12px;cursor:pointer">'+_clT('На Рабочий стол','To the Desktop')+'</button>'+
+        '<button onclick="setc(\'automations\')" style="border:1px solid var(--bd2);background:transparent;color:var(--tx2);border-radius:5px;padding:4px 10px;font-size:12px;cursor:pointer">'+_clT('Все мои агенты','All my agents')+'</button>'+
+      '</div>'
     : (_autoErr ? '<div class="sk_lead" style="grid-column:1/-1;font-size:12px;color:#A5632A">⚠ Не смог проверить «Мои агенты» — облако не ответило. <a href="#" onclick="autoRefresh();return false" style="color:var(--a)">Проверить ещё раз</a></div>' : '');
   // Разделение (решение Эллы 21.07): СОЗДАНИЕ агента = Конструктор (плитка ведёт
   // в него), НАЗНАЧЕНИЕ роли = каталог ролей ниже; «роль + умения» (agentForgeModal)
