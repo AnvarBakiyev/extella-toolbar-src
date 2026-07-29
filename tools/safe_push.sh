@@ -55,16 +55,22 @@ fi
 say "3. Пересобираю и проверяю сборку"
 ( cd toolbar && node build.js >/dev/null )
 node --check toolbar/build/toolbar.js
+# Зеркал артефакта ДВА, и оба под гитом: HANDOFF/toolbar.js и toolbar/toolbar.js.
+# Скрипт обновлял только первое — 29.07 они разъехались, и в отстающем осталась
+# старая сборка. Обновляем оба из одной свежей.
 cp toolbar/build/toolbar.js HANDOFF/toolbar.js
-if [ -n "$(git status --porcelain HANDOFF/toolbar.js)" ]; then
-  git add HANDOFF/toolbar.js
+cp toolbar/build/toolbar.js toolbar/toolbar.js
+if [ -n "$(git status --porcelain HANDOFF/toolbar.js toolbar/toolbar.js)" ]; then
+  git add HANDOFF/toolbar.js toolbar/toolbar.js
   git commit -q -m "Пересборка артефакта после слияния с чужими правками"
   echo "артефакт пересобран и закоммичен"
 fi
 
 say "4. Проверяю, что мои правки пережили слияние"
 FAIL=0
-for MARK in "BENTO_HEROES" "cmd_add_btn" "claudeConnectModal"; do
+# Маркеры — по одному от каждого, кто ведёт файл: иначе скрипт скажет «зелено»,
+# потеряв чужую правку. Добавляешь свою — впиши сюда её якорь.
+for MARK in "BENTO_HEROES" "cmd_add_btn" "claudeConnectModal" "Управление агентами" "skRunAgent"; do
   if grep -q "$MARK" toolbar/public/plugins_manager.html; then
     echo "   ✓ $MARK на месте"
   else
@@ -72,6 +78,25 @@ for MARK in "BENTO_HEROES" "cmd_add_btn" "claudeConnectModal"; do
   fi
 done
 [ "$FAIL" = 0 ] || { say "Останавливаюсь: правки потерялись при слиянии"; exit 1; }
+
+say "4б. Гоняю гейты и тесты"
+# `node --check` ловит только синтаксис. Утром 29.07 через него спокойно прошла
+# сборка с платным Claude-агентом в зеркале — гейт account-scope её и поймал.
+GATES_FAILED=""
+for G in check-account-scope check-runtime-portability check-reproducible-build; do
+  if node "scripts/$G.js" >/dev/null 2>&1; then echo "   ✓ $G"
+  else echo "   ✗ $G ПРОВАЛ"; GATES_FAILED="$GATES_FAILED $G"; fi
+done
+CANON="$HOME/Documents/Extella/extella-agent-standards/tools/check_code_canon.py"
+if [ -f "$CANON" ]; then
+  if python3 "$CANON" toolbar HANDOFF >/dev/null 2>&1; then echo "   ✓ канон кода"
+  else echo "   ✗ канон кода ПРОВАЛ"; GATES_FAILED="$GATES_FAILED check_code_canon"; fi
+else
+  echo "   · канон кода пропущен (нет репозитория стандартов рядом)"
+fi
+if node --test toolbar/tests/*.test.js >/dev/null 2>&1; then echo "   ✓ тесты"
+else echo "   ✗ тесты ПРОВАЛ"; GATES_FAILED="$GATES_FAILED tests"; fi
+[ -z "$GATES_FAILED" ] || { say "Останавливаюсь, красное:$GATES_FAILED"; exit 1; }
 
 if [ "$CHECK_ONLY" = true ]; then
   say "Проверка пройдена (--check: не отправляю)"; exit 0
