@@ -162,6 +162,40 @@ test('Evolution Console manifest keeps exact product naming and a read-only surf
   );
 });
 
+test('Evolution Console has one always-available localized system card', () => {
+  const cardsStart = pluginsManager.indexOf('var SYS_APPS=[');
+  const cardsEnd = pluginsManager.indexOf('];', cardsStart);
+  const cards = pluginsManager.slice(cardsStart, cardsEnd);
+  const consoleRoutes = cards.match(
+    /go:"notify\('open','profit-growth-scenario'\)"/g,
+  ) || [];
+
+  assert.ok(cardsStart >= 0 && cardsEnd > cardsStart);
+  assert.equal(consoleRoutes.length, 1, 'the system card must have one route');
+  assert.match(
+    cards,
+    /lbl:LANG==='en'\?'Evolution Console':'Центр Управления Агентами'/,
+  );
+  assert.match(
+    cards,
+    /go:"notify\('open','profit-growth-scenario'\)"/,
+  );
+  assert.doesNotMatch(
+    cards,
+    /profit-growth-scenario[^\n]*\breq\s*:/,
+    'a built-in system surface must not be blocked by the install registry',
+  );
+  assert.match(
+    pluginsManager,
+    /var DESK_HIDDEN = \['capability-studio-scenario', 'profit-growth-scenario'/,
+  );
+  assert.match(
+    pluginsManager,
+    /'profit-growth-scenario':1/,
+  );
+  assert.doesNotMatch(pluginsManager, /etb_agent_control/);
+});
+
 test('Evolution Console HTML has valid inline scripts and unique document IDs', () => {
   assert.match(
     evolutionHtml,
