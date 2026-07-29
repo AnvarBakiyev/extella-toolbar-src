@@ -2159,6 +2159,7 @@ var I18N_EN = {
   'локально, офлайн':'local, offline',
   // Хвосты EN-прогона 18.07 (фрагменты шагов, плюс-плитки, категории программ)
   'Проверено Extella':'Verified by Extella',
+  'с GitHub':'from GitHub','от Extella':'by Extella','Отобрано Extella':'Picked by Extella',
   'Отобрано Extella':'Curated by Extella',
   'Приложения с GitHub':'Apps from GitHub',
   'Создай в Extella':'In Extella, create',
@@ -2710,9 +2711,13 @@ function programCard(p) {
   var ico = _ico(cat);
   // Микс 02+03+07: иконка слева + имя (Raycast), строка пользы, внизу слой
   // сигналов доверия за линией (Figma): курировано / источник + категория.
+  // Нижняя строка карточки отвечает на вопрос «что я соглашаюсь поставить»
+  // (замечание Алии). Категорию отсюда убрали — она уже в чипах над сеткой,
+  // и повторять её значило занимать единственное место, где может стоять источник.
+  var origin = p.eye ? 'с GitHub' : ((p.trust_tier === 'verified' || p._biz) ? 'от Extella' : (owner || ''));
   var sig = (p.trust_tier === 'verified')
-    ? ('Проверено Extella · ' + (BIZ_LABEL[cat]||''))
-    : (p._biz ? ('Отобрано Extella · ' + (BIZ_LABEL[cat]||'')) : (owner || BIZ_LABEL[cat] || ''));
+    ? ('Проверено Extella · ' + origin)
+    : (p._biz ? ('Отобрано Extella · ' + origin) : (origin || BIZ_LABEL[cat] || ''));
   return '<div class="stile" style="--acc:' + acc + '">' +
     '<div class="st_head">' +
       '<span class="st_ico" aria-hidden="true">' + ico + '</span>' +
