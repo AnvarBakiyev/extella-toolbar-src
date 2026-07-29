@@ -652,7 +652,7 @@ body[data-theme="dark"] .inf .tr,html[data-theme="dark"] .inf .tr{stroke:var(--b
 <div class="cmdbar">
   <div id="cmd_search" style="display:flex;gap:10px;flex:1;min-width:0;height:55px">
     <input id="cmd_url" placeholder="Поиск по ярлыкам и каталогам" spellcheck="false" autocomplete="off" oninput="cmdInput(this.value)" onkeydown="if(event.key==='Enter')cmdInstall()"/>
-    <button class="cmdgo" onclick="cmdInstall()">Установить</button>
+    <button class="cmdgo" onclick="cmdInstall()">Найти</button>
   </div>
   <div id="cmd_add" style="display:none;gap:12px;flex:1;min-width:0;align-items:center;height:55px">
     <button class="cmdgo" id="cmd_add_btn" onclick="cmdSlotAdd()" style="flex-shrink:0;height:42px">+ Добавить</button>
@@ -1570,6 +1570,7 @@ function _lm(m, field){ if(LANG==='en' && m && m.en && m.en[field]!=null) return
 // ══════════════════════════════════════════════════════════════════════════
 try { if (localStorage.getItem('etb_lang') === 'en') LANG = 'en'; } catch (_) {}
 var I18N_EN = {
+  'Найти':'Search',
   'Управление парком агентов: состояние, версии, запуски':'Manage your fleet of agents: state, versions, runs',
   // Карточка «Скрыть личные данные» (переехала со стола) — своя EN-пара.
   'Скрыть личные данные':'Hide personal data',
@@ -4159,6 +4160,34 @@ function _wizardMissing(){
 }
 // Поиск внутри одной полки стола. Верхняя строка ищет по всему сразу, эта —
 // только по своей группе: когда программ 39, глазами уже не найти.
+// «Начни с задачи» — вариант А (решение Эллы 29.07 по макетам). Вход в существующую
+// навигацию, а не новая: клик открывает нужную полку и, если такая категория там есть,
+// сразу выбирает её чипом. Не нашлось — просто откроется полка, без обещаний впустую.
+var DESK_TASKS = [
+  {ru:'Обработать документы',   en:'Work with documents',  tab:'cli',       cat:'Документы и PDF'},
+  {ru:'Картинки, видео, звук',  en:'Images, video, sound', tab:'models',    cat:'Генерация картинок'},
+  {ru:'Расшифровать запись',    en:'Transcribe a recording', tab:'models',  cat:'Звук и музыка'},
+  {ru:'Посчитать и собрать отчёт', en:'Count and build a report', tab:'programs', cat:'Данные и форматы'},
+  {ru:'Ответить по своим документам', en:'Answer from my documents', tab:'knowledge'},
+  {ru:'Поручить работу агенту', en:'Hand the work to an agent', tab:'agents'}
+];
+function _deskTasksHTML(){
+  return '<div class="dt_sect">'+_clT('начни с задачи','start with a task')+'</div>'+
+    '<div class="dt_tasks">'+DESK_TASKS.map(function(t,i){
+      return '<button type="button" class="dt_task" onclick="deskTask('+i+')">'+esc(_clT(t.ru,t.en))+'</button>';
+    }).join('')+'</div>';
+}
+function deskTask(i){
+  var t = DESK_TASKS[i]; if(!t) return;
+  setc(t.tab);
+  if(!t.cat) return;
+  // чипы категорий строятся после рендера полки — ждём кадр и выбираем свою
+  setTimeout(function(){
+    var g=document.getElementById('grid'); if(!g) return;
+    var chip=g.querySelector('.cat_chip[data-cat="'+t.cat.replace(/"/g,'\\"')+'"]');
+    if(chip) chip.click();
+  }, 60);
+}
 function dtGrpFilter(inp){
   var k = inp.getAttribute('data-grp');
   var q = String(inp.value || '').toLowerCase().trim();
@@ -4241,6 +4270,10 @@ function _dtCss(){
     '.dt_wrap{grid-column:1/-1;padding:6px 2px 24px}'+
     '.dt_sect{font:600 12px var(--mono);letter-spacing:.05em;color:var(--petrol);margin:2px 0 14px}'+
     '.dt_sect_row{display:flex;align-items:center;justify-content:space-between;gap:12px}'+
+    '.dt_tasks{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 26px}'+
+    '.dt_task{border:1px solid var(--bd2);border-radius:5px;background:var(--s1);padding:6px 11px;'+
+      'font:400 13px var(--sans);color:var(--tx2);cursor:pointer;white-space:nowrap;transition:border-color .14s,color .14s}'+
+    '.dt_task:hover{border-color:var(--petrol);color:var(--tx)}'+
     '.dt_gsrch{width:190px;max-width:42vw;border:1px solid var(--bd);border-radius:5px;background:var(--s1);'+
       'padding:5px 9px;font:400 12px var(--sans);color:var(--tx);letter-spacing:0;outline:none}'+
     '.dt_gsrch::placeholder{color:var(--tx3);font-family:var(--mono);font-size:11px}'+
@@ -4601,6 +4634,7 @@ function _dtIconBtn(ic,i){
 
   g.innerHTML = _dtCss() +
     '<div class="dt_wrap">'+
+      _deskTasksHTML()+
       '<div class="dt_sect" style="display:flex;align-items:center;min-height:15px"><img src="__EXTELLA_LOGO_DATA__" alt="Extella" style="height:15px;width:auto;display:block" onerror="this.outerHTML=\'Extella\'"></div>'+
       '<div class="dt_grid" style="margin-bottom:24px">'+sysHtml+'</div>'+
       (icons.length
