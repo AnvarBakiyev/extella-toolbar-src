@@ -496,7 +496,7 @@
         removeDead:'Remove dead references',changeShared:'Change a Shared Gene',showImpact:'Show impact',impactApproval:'Impact and approval',
         boundTargets:'Changing the target list invalidates approval.',receiptsLead:'Receipts for Evidence → Candidate → Test → Approval → Activation → Observation → Rollback.',
         close:'Close',gotIt:'Got it',passed:'passes',failed:'fails',missing:'Agent Passport missing',standardUnknown:'standards registry unavailable',dead:'in registry, absent on platform',
-        consumers:'consumers',moreAgents:'more agents',noData:'No data',noAgents:'There are no agents in this fleet yet',noMatches:'No agents match this search and filter',incomplete:'Снимок парка неполный, поэтому изменения заблокированы. Обнови страницу; если не помогло — значит часть агентов не ответила, попробуй через минуту.',
+        consumers:'consumers',moreAgents:'more agents',noData:'No data',noAgents:'There are no agents in this fleet yet',noMatches:'No agents match this search and filter',incomplete:'The snapshot is incomplete, so changes are blocked for now. Press «Refresh snapshot»; if that does not help, some agents did not answer.',
         complete:'Snapshot complete',downloaded:'Draft downloaded; the canonical checker has not run yet.',confirmExact:'Approve exact list',
         planStages:'Create exact stage plan',stage:'Activate next stage',publish:'Publish',observe:'Record observation',rollback:'One-action rollback',runTest:'Test the whole class',approve:'Approve',
         selectedSharedGene:'Shared Gene from the current map',candidateVersion:'Candidate version',candidateVersionPlaceholder:'for example 2.0.0',
@@ -540,11 +540,11 @@
       // aria-label кнопки языка удалён вместе с кнопкой
       if(window.HELP){
         HELP.evolution_console={
-          ru:{icon:'◇',title:'Как работает Evolution Console',sub:'Единый реестр автоматизаций',
+          ru:{icon:'◇',title:'How Evolution Console works',sub:'One registry of automations',
             steps:['Сначала показывает установленные автоматизации: что работает, что не запущено и где нужна помощь.','Карточка раскрывает состояние, последние запуски, расписания и состав только по запросу.','Agent Cabinet открывается из состава конкретной автоматизации; Evolution Lab используется для безопасной проверки подготовленного изменения.'],
             sure:['Каталог отделён от установленных автоматизаций.','Если состояние проверить нельзя, Evolution Console пишет об этом прямо и блокирует зависимые действия.','Защита данных считается включённой только после подтверждения PRE и POST на текущем устройстве.','«Управление изменениями» читает только канонический контракт из Agent Passport.'],
             nope:['Этот экран пока не включает, не выключает, не обновляет и не откатывает автоматизации.','Раздел «Управление изменениями» не создаёт агентов, не дублирует защиту данных и не ведёт отдельный журнал.','Неизвестное состояние не подменяется успешным.','Между аккаунтами видимости нет.'],
-            who:{title:'Где находятся подробности',items:['Технические коды, версии и источники скрыты в «Технических сведениях».','Внутренний агент и настройки защиты данных открываются в готовом Agent Cabinet, а не дублируются в Evolution Console.']}},
+            who:{title:'Where the details live',items:['Технические коды, версии и источники скрыты в «Технических сведениях».','Внутренний агент и настройки защиты данных открываются в готовом Agent Cabinet, а не дублируются в Evolution Console.']}},
           en:{icon:'◇',title:'How Evolution Console works',sub:'Unified automation registry',
             steps:['It first shows installed automations: what is working, what is not running, and where attention is needed.','A card reveals status, recent runs, schedules, and composition only when requested.','Agent Cabinet opens from a specific automation’s composition; Evolution Lab safely tests a prepared change.'],
             sure:['The catalog is separate from installed automations.','If status cannot be checked, Evolution Console says so and blocks dependent actions.','Data protection is enabled only after PRE and POST are verified on this device.','Change management reads only the canonical contract from Agent Passport.'],
