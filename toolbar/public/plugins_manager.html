@@ -2787,7 +2787,7 @@ function _progSearchHTML(){
   return '<div style="grid-column:1/-1;padding:2px 0 10px"><div class="fb_srch" style="max-width:440px">' +
     '<input class="fb_sinp" id="feat_q" placeholder="Поиск по программам…" autocomplete="off" value="' +
       esc(_featSearch) + '" oninput="_setFeatSearch(this.value)">' +
-    '<span class="fb_sico">&#24544F;</span></div></div>';
+    '<span class="fb_sico">&#128269;</span></div></div>';
 }
 
 // Catalogue, grouped by business aisle into coloured sections (same schema as
@@ -3087,7 +3087,7 @@ function _mountTabFilter(placeholder){
   // на малых полках всё ищет глобальная строка сверху, дубли убраны (решение Эллы).
   var search = total>=30 ? '<div style="grid-column:1/-1;padding:2px 0 10px"><div class="fb_srch" style="max-width:440px">'+
     '<input class="fb_sinp tf_inp" placeholder="'+esc(placeholder||'Поиск…')+'" autocomplete="off" oninput="_tabFilterApply()">'+
-    '<span class="fb_sico">&#24544F;</span></div></div>' : '';
+    '<span class="fb_sico">&#128269;</span></div></div>' : '';
   var chips='<div class="catbar"><button class="cat_chip on" data-cat="__all" onclick="_tabFilterCat(this)">Все <span class="cat_n">'+total+'</span></button>'+
     cats.map(function(c){ return '<button class="cat_chip" data-cat="'+esc(c)+'" onclick="_tabFilterCat(this)">'+esc(c)+' <span class="cat_n">'+(cnt[c]||0)+'</span></button>'; }).join('')+'</div>';
   bar.innerHTML=search+chips;
@@ -4157,6 +4157,30 @@ function _wizardMissing(){
   alert((en?'Wizard is not installed on this device.\n\nRun the installer (toolbar + Wizard):':'Конструктор не установлен на этом устройстве.\n\nЗапусти единый установщик (тулбар + Конструктор):')+
     '\n\nmacOS (Terminal):\n'+mac+'\n\nWindows (PowerShell):\n'+win);
 }
+// Поиск внутри одной полки стола. Верхняя строка ищет по всему сразу, эта —
+// только по своей группе: когда программ 39, глазами уже не найти.
+function dtGrpFilter(inp){
+  var k = inp.getAttribute('data-grp');
+  var q = String(inp.value || '').toLowerCase().trim();
+  var grid = document.querySelector('.dt_grid[data-grp="' + k + '"]');
+  if (!grid) return;
+  var shown = 0;
+  [].forEach.call(grid.querySelectorAll('.dt_ico'), function(el){
+    var ok = !q || (el.textContent || '').toLowerCase().indexOf(q) >= 0;
+    el.style.display = ok ? '' : 'none';
+    if (ok) shown++;
+  });
+  var empty = grid.querySelector('.dt_gempty');
+  if (!shown) {
+    if (!empty) {
+      empty = document.createElement('div'); empty.className = 'dt_gempty';
+      empty.style.cssText = 'grid-column:1/-1;font-size:13px;color:var(--tx2);padding:2px 0 6px';
+      grid.appendChild(empty);
+    }
+    empty.textContent = _clT('Здесь такого нет. Поищи в строке сверху — она смотрит и в каталогах.',
+                             'Nothing like that here. Try the bar above — it looks in the catalogues too.');
+  } else if (empty) empty.remove();
+}
 function _dtCloseMenu(){ var m=document.getElementById('dt_menu'); if(m)m.remove(); }
 function _dtCtx(e, i){
   e.preventDefault(); e.stopPropagation();
@@ -4215,7 +4239,12 @@ function _dtDo(i, act){
 function _dtCss(){
   return '<style>'+
     '.dt_wrap{grid-column:1/-1;padding:6px 2px 24px}'+
-    '.dt_sect{font:600 12.5px var(--mono);letter-spacing:.05em;color:var(--tx3);margin:2px 0 14px}'+
+    '.dt_sect{font:600 12.5px var(--mono);letter-spacing:.05em;color:var(--petrol);margin:2px 0 14px}'+
+    '.dt_sect_row{display:flex;align-items:center;justify-content:space-between;gap:12px}'+
+    '.dt_gsrch{width:190px;max-width:42vw;border:1px solid var(--bd);border-radius:5px;background:var(--s1);'+
+      'padding:5px 9px;font:400 12px var(--sans);color:var(--tx);letter-spacing:0;outline:none}'+
+    '.dt_gsrch::placeholder{color:var(--tx3);font-family:var(--mono);font-size:11px}'+
+    '.dt_gsrch:focus{border-color:var(--bd2)}'+
     '.dt_grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px}'+
     '.dt_ico{display:flex;flex-direction:column;align-items:center;gap:8px;background:transparent;border:1px solid transparent;'+
       'border-radius:6px;padding:12px 6px 10px;cursor:pointer;transition:background .12s,border-color .12s,transform .1s;animation:fiu .22s ease both}'+
@@ -4541,17 +4570,33 @@ function renderDesktop(){
   // Индексы для правого клика — глобальные по массиву icons (_dtReg), поэтому
   // кнопки строим с исходным i, а по группам только раскладываем.
   function _dtGrp(k){ return k==='agent' ? 0 : (k==='cli'||k==='cap') ? 2 : 1; }
-  function _dtIconBtn(ic,i){
+  // Служебные хвосты в имени («(мой)», «(my)», «(копия)») приезжают из реестра
+// устройства: так называют личную копию при создании. На Рабочем столе всё и так
+// твоё, поэтому в подписи ярлыка они только шумят — прячем при показе, само имя
+// в реестре не трогаем (правка Эллы 29.07).
+function _dtCleanLbl(t){
+  return String(t || '').replace(/\s*\((?:мой|моя|моё|my|копия|copy)\)\s*$/i, '').trim();
+}
+function _dtIconBtn(ic,i){
     var sym=_dtIco(ic.raw, ic.cat, ic.kind);
     return '<button type="button" aria-label="Открыть '+esc(ic.lbl)+'" class="dt_ico" style="animation-delay:'+Math.min((SYS_APPS.length+i)*14,180)+'ms" title="'+esc(ic.raw)+' — клик открыть, правый клик меню" onclick="'+ic.go+'" oncontextmenu="return _dtCtx(event,'+i+')">'+
       '<span class="dt_ic_badge" style="background:'+esc(ic.acc)+'14;border-color:'+esc(ic.acc)+'40;color:'+esc(ic.acc)+'">'+_icoSym(sym)+'</span>'+
-      '<span class="dt_ic_lbl">'+esc(ic.lbl)+'</span></button>';
+      '<span class="dt_ic_lbl">'+esc(_dtCleanLbl(ic.lbl))+'</span></button>';
   }
   var _grpBtns=[[],[],[]];
   icons.forEach(function(ic,i){ _grpBtns[_dtGrp(ic.kind)].push(_dtIconBtn(ic,i)); });
-  var grpHtml=[{t:'Автоматизации'},{t:'Программы'},{t:'Инструменты'}].map(function(G,gi){
+  // Заголовок группы — строка: слева метка со счётом, справа своё поле поиска.
+  // Верхняя строка ищет по всему (ярлыки + каталоги), это — по одной полке,
+  // и появляется только там, где искать действительно есть среди чего (от 8 штук).
+  var grpHtml=[{t:'Автоматизации',k:'auto'},{t:'Программы',k:'prog'},{t:'Инструменты',k:'tool'}].map(function(G,gi){
     var b=_grpBtns[gi];
-    return b.length ? '<div class="dt_sect">'+G.t+' · '+b.length+'</div><div class="dt_grid" style="margin-bottom:24px">'+b.join('')+'</div>' : '';
+    if(!b.length) return '';
+    var srch = b.length>=8
+      ? '<input class="dt_gsrch" data-grp="'+G.k+'" oninput="dtGrpFilter(this)" spellcheck="false" autocomplete="off"'+
+        ' placeholder="'+esc(_clT('поиск среди '+b.length,'search '+b.length))+'">'
+      : '';
+    return '<div class="dt_sect dt_sect_row"><span>'+G.t+' · '+b.length+'</span>'+srch+'</div>'+
+      '<div class="dt_grid" data-grp="'+G.k+'" style="margin-bottom:24px">'+b.join('')+'</div>';
   }).join('');
 
   g.innerHTML = _dtCss() +
