@@ -4271,9 +4271,13 @@ function _dtCss(){
     '.dt_sect{font:600 12px var(--mono);letter-spacing:.05em;color:var(--petrol);margin:2px 0 14px}'+
     '.dt_sect_row{display:flex;align-items:center;justify-content:space-between;gap:12px}'+
     '.dt_tasks{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 26px}'+
-    '.dt_task{border:1px solid var(--bd2);border-radius:5px;background:var(--s1);padding:6px 11px;'+
-      'font:400 13px var(--sans);color:var(--tx2);cursor:pointer;white-space:nowrap;transition:border-color .14s,color .14s}'+
-    '.dt_task:hover{border-color:var(--petrol);color:var(--tx)}'+
+    // Один стиль чипа на весь продукт: те же метрики и поведение, что у чипов
+    // категорий на полках (.cat_chip). Две похожие, но разные плашки читались бы
+    // как два разных элемента управления.
+    '.dt_task{display:inline-flex;align-items:center;white-space:nowrap;flex:0 0 auto;'+
+      'border:1px solid var(--bd2);background:transparent;color:var(--tx2);border-radius:5px;'+
+      'padding:4px 10px;font-size:11px;font-weight:600;line-height:1;cursor:pointer;transition:all .14s}'+
+    '.dt_task:hover{border-color:var(--a);color:var(--a)}'+
     '.dt_gsrch{width:190px;max-width:42vw;border:1px solid var(--bd);border-radius:5px;background:var(--s1);'+
       'padding:5px 9px;font:400 12px var(--sans);color:var(--tx);letter-spacing:0;outline:none}'+
     '.dt_gsrch::placeholder{color:var(--tx3);font-family:var(--mono);font-size:11px}'+
