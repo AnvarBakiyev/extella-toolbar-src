@@ -52,8 +52,8 @@
     .advanced-menu .tab{text-align:left;width:100%}.advanced-menu .tab.on{color:var(--petrol)}
     main{max-width:1260px;margin:0 auto;padding:28px 24px 42px}.view{display:none}.view.on{display:block}
     .hero{display:flex;justify-content:space-between;gap:20px;align-items:flex-end;margin-bottom:20px}
-    .eyebrow{color:var(--petrol);font:700 11px/1.2 var(--mono);letter-spacing:.12em;text-transform:uppercase}
-    h1{font-size:30px;line-height:1.12;margin:7px 0 8px;letter-spacing:-.03em}h2{font-size:17px;margin:0}h1,h2{color:var(--ink)}
+    .eyebrow{color:var(--petrol);font:500 11px/1.2 var(--mono);letter-spacing:.06em}
+    h1{font-size:30px;line-height:1.16;margin:7px 0 8px;letter-spacing:-.005em}h2{font-size:17px;margin:0}h1,h2{color:var(--ink)}
     .lead{max-width:820px;margin:0;color:var(--muted)}.status{display:flex;gap:7px;flex-wrap:wrap}
     .badge{border:1px solid var(--line);background:var(--panel2);padding:5px 8px;border-radius:999px;
       color:var(--muted);font:700 10px var(--mono)}.badge.good{color:var(--good)}
@@ -179,7 +179,7 @@
       .table-wrap{overflow:visible;border:0}.table-wrap table{display:block;min-width:0}.table-wrap thead{display:none}.table-wrap tbody{display:grid;gap:10px}
       .table-wrap tr[data-registry-row]{display:grid;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel2)}
       .table-wrap tr[data-registry-row]>th,.table-wrap tr[data-registry-row]>td{display:block;position:static;padding:8px 0;border:0;background:transparent}
-      .table-wrap tr[data-registry-row]>td+td{border-top:1px solid var(--line)}.mobile-label{display:block;margin-bottom:5px;color:var(--muted);font-size:10px;font-weight:700;text-transform:uppercase}}
+      .table-wrap tr[data-registry-row]>td+td{border-top:1px solid var(--line)}.mobile-label{display:block;margin-bottom:5px;color:var(--muted);font-size:10.5px;font-weight:500;font-family:var(--mono);letter-spacing:.06em}}
   </style>
 </head>
 <body>
@@ -362,13 +362,13 @@
     var I18N = {
       ru:{
         consoleSub:'Evolution Console',fleet:'Парк',overview:'Обзор',automationsNav:'Автоматизации',advanced:'Дополнительно',risks:'Риски',riskDetails:'Причины рисков',escalations:'Эскалации',bulk:'Массовые операции',
-        how:'? Как это работает',demo:'DEMO: данные и Evolution Receipts существуют только в памяти страницы; платформа не читается и не изменяется.',
-        overviewTitle:'Твои автоматизации',overviewLead:'Здесь видно, что работает, что остановлено и где нужна ваша помощь.',
+        how:'Как это работает',demo:'DEMO: данные и Evolution Receipts существуют только в памяти страницы; платформа не читается и не изменяется.',
+        overviewTitle:'Твои автоматизации',overviewLead:'Здесь видно, что работает, что остановлено и где нужна твоя помощь.',
         myAutomations:'Мои автоматизации',catalog:'Каталог',automationScope:'Установленные автоматизации или каталог',workingCount:'работают',notRunningCount:'не запущены',protectedAgents:'с подтверждёнными PRE + POST',attentionCount:'требуют внимания',
         dataProtection:'Защита данных',maskingActive:'PRE + POST включены и подтверждены',maskingOff:'Выключено',maskingPartial:'Подтверждено частично',maskingUnknown:'Состояние защиты неизвестно',maskingSettingsCabinet:'Настройки находятся в Agent Cabinet.',maskingLocalSource:'Статус получен только с текущего устройства.',
         agentControl:'Управление изменениями',agentControlTitle:'Управление изменениями агентов',agentControlLead:'Evolution Console показывает канонический путь изменения из Agent Passport. Пока паспортов или контракта нет, действия закрыты.',agentControlContract:'Канонический контракт',agentControlSteps:'Путь изменения',agentControlPublishGates:'Перед публикацией',agentControlLimits:'Границы',agentControlRequires:'Зависит от',agentControlLoading:'Проверяем Agent Passports и канонический контракт…',agentControlStandardsUnavailable:'Production bundle Agent Passports пока недоступен.',agentControlNoPassports:'Agent Passports ещё не заполнены. Когда появится подтверждённый паспорт, здесь будет показан канонический путь изменения.',agentControlContractUnavailable:'Канонический контракт управления пока недоступен. Действия закрыты.',agentControlContractMismatch:'Контракты Agent Passports расходятся. Действия закрыты до устранения расхождения.',agentControlUnknown:'Состояние управления изменениями неизвестно. Действия закрыты.',agentControlReadOnly:'Сейчас доступно только чтение канонического контракта. Публикация появится только через trusted action с теми же гейтами.',agentControlBoundary:'Этот раздел только читает канонический контракт: он не создаёт агентов, не меняет настройки Agent Cabinet или защиты данных, не ведёт отдельный журнал и не публикует изменения.',
         advancedConsole:'Расширенные возможности Evolution Console',evolutionLabTitle:'Безопасная проверка изменений',evolutionLabLead:'Evolution Lab сравнивает поведение до и после изменения, не затрагивая работающие автоматизации.',labEmptyTitle:'Нет изменения для проверки',labEmptyText:'Evolution Lab откроет сравнение, когда в Evolution Console или Agent Cabinet будет подготовлено конкретное изменение.',backAutomations:'Вернуться к автоматизациям',
-        openAutomation:'Открыть',reviewAutomation:'Разобраться',catalogDetails:'Подробнее',descriptionMissing:'Описание пока не добавлено.',whatItDoes:'Что делает',stateAndRuns:'Состояние и последние запуски',technicalEvidence:'Технические сведения',chooseAutomation:'Выберите автоматизацию, чтобы открыть подробности.',
+        openAutomation:'Открыть',reviewAutomation:'Разобраться',catalogDetails:'Подробнее',descriptionMissing:'Описание пока не добавлено.',whatItDoes:'Что делает',stateAndRuns:'Состояние и последние запуски',technicalEvidence:'Технические сведения',chooseAutomation:'Выбери автоматизацию, чтобы открыть подробности.',
         stateUnavailableSummary:'Данные о работе пока недоступны.',stateCheckUnavailableText:'Действия временно недоступны: сначала нужно проверить состояние автоматизации.',notRunningText:'Автоматизация сейчас не выполняет задачи.',updateAvailable:'Доступно обновление.',scheduleMissingHuman:'Расписание не найдено.',linkedComponentMissing:'Не найден связанный компонент.',
         allAutomations:'всего автоматизаций',installed:'установлены',catalogAvailable:'доступны в каталоге',automation:'Автоматизация',availability:'Доступность',versions:'Версии',composition:'Состав',
         automationTools:'Инструменты автоматизации',mcpLoading:'Читаю состав инструментов…',mcpUnavailable:'Состав инструментов пока не подтверждён',mcpIncomplete:'Показаны только подтверждённые данные; остальное неизвестно.',mcpConnectionOne:'подключение',mcpConnectionFew:'подключения',mcpConnections:'подключений',mcpToolOne:'инструмент',mcpToolFew:'инструмента',mcpTools:'инструментов',mcpExtensionOne:'MCP Extension',mcpExtensionFew:'MCP Extensions',mcpExtensions:'MCP Extensions',readOnlyTool:'только чтение',reversibleTool:'обратимое действие',externalTool:'внешнее действие',connectionUp:'подключение работает',connectionDown:'подключение не отвечает',connectionUnknown:'состояние подключения неизвестно',toolBindings:'Привязки Agent Cabinet',toolBinding:'привязка',toolBindingsFew:'привязки',toolBindingsMany:'привязок',noTools:'Подтверждённых инструментов нет',lastToolRun:'Последний вызов',retry:'Повторить',mcpCoverage:'Что подтверждено',mcpObserved:'подтверждено',mcpObservedEmpty:'проверено: записей нет',mcpPartial:'подтверждено частично',mcpNotExposed:'платформа не раскрывает данные',mcpNotApplicable:'такой сущности нет',mcpUnavailableState:'источник недоступен',mcpUnknownState:'неизвестно',platformAccess:'Фактический доступ агента',unscopedAccess:'Доступ не ограничен этой автоматизацией',scopedAccess:'Доступ ограничен этой автоматизацией',unknownAccessScope:'Граница доступа не подтверждена',observedToolCount:'платформенных инструментов',businessToolCount:'бизнес-инструментов',excessiveAccess:'избыточные права',leastPrivilegeAccess:'минимально необходимые права',unknownAccess:'уровень прав неизвестен',zeroBindingsWarning:'Ноль Tool Bindings не означает отсутствие доступа.',mcpSourceWarnings:'Ограничения источника',
@@ -382,7 +382,7 @@
         failedStandard:'не проходят стандарт',ownerless:'без владельца',withShared:'с Shared Genes',inventory:'Автоматизации',
         attentionTitle:'Что требует внимания',attentionLead:'Начните с вычисленных расхождений. Каждая карточка сразу фильтрует нужные автоматизации.',
         attentionStandard:'Agent Passport требуют исправления',attentionStandardText:'Проверка нашла ошибки или отсутствующий Agent Passport.',attentionStable:'Не удалось сопоставить Agent Passport',
-        attentionStableText:'Выберите точный ID агента, чтобы связать его с Agent Passport.',attentionDead:'Есть расхождения с платформой',
+        attentionStableText:'Выбери точный ID агента, чтобы связать его с Agent Passport.',attentionDead:'Есть расхождения с платформой',
         attentionDeadText:'Агент записан в реестре, но не найден на платформе.',attentionEscalation:'Изменение Shared Gene ждёт решения',
         attentionEscalationText:'Изменение поступило из Agent Cabinet и может затронуть несколько агентов.',nothingNeedsAttention:'Внимание не требуется',
         attentionUnknown:'Проверка части агентов недоступна',attentionUnknownText:'Не считайте неизвестное состояние успешной проверкой.',attentionIncomplete:'Данные парка неполные',
@@ -406,8 +406,8 @@
         riskTitle:'Риски — результат единого стандарта',riskLead:'Ошибки и предупреждения приходят из закреплённого check_agent_passport.py. Evolution Console не повторяет и не исправляет его правила.',
         riskByAgent:'Проверка по агентам',riskCanonical:'Код, тяжесть, путь и текст принадлежат canonical checker.',missingPassports:'Agent Passport отсутствует',
         draftTruth:'Черновик заполняется живыми данными, но остаётся NOT_VALIDATED, пока его не проверит canonical checker.',
-        stableIdRequired:'Нужен стабильный ID',stableIdLead:'Эти Agent Passport не связываются с платформой по имени. Выберите точный live agentId; source Passport и checker issues останутся видимыми.',
-        exactLiveAgent:'Точный live agentId',selectStableAgent:'Выберите точный live agentId',sourcePassport:'Source Passport',sourcePath:'Путь источника',
+        stableIdRequired:'Нужен стабильный ID',stableIdLead:'Эти Agent Passport не связываются с платформой по имени. Выбери точный live agentId; source Passport и checker issues останутся видимыми.',
+        exactLiveAgent:'Точный live agentId',selectStableAgent:'Выбери точный live agentId',sourcePassport:'Source Passport',sourcePath:'Путь источника',
         genesTitle:'Карта Shared Genes',
         genesLead:'N считается один раз — по устойчивым признакам общего гена и точному списку агентов-потребителейids. Видимость native-объекта не выдаётся за использование.',
         objectView:'Shared Gene → агенты',agentView:'Агент → Shared Genes',escTitle:'Приём эскалаций из Agent Cabinet',
@@ -429,14 +429,14 @@
         productionRequired:'Мутации закрыты: требуется явный data_mode=PRODUCTION, account-scoped production-eligible стандарт и полный текущий снимок.',
         scheduleAdapterRequired:'Операция закрыта: host не объявил native schedule adapter.',scheduleStateRequired:'Операция закрыта: для всех установленных автоматизаций нужно достоверное состояние WORKING или NOT_RUNNING. STATE_UNAVAILABLE и неизвестное состояние блокируют действие.',exactTargetsOnly:'Цели создаются только из текущих видимых строк canonical projection.',
         wholeClassRequired:'Для Shared Gene выбран весь точный consumer class; каждый потребитель должен быть видим в текущем фильтре.',
-        selectExactTarget:'Выберите хотя бы одну доступную точную цель.',selectGeneVersion:'Выберите Shared Gene и задайте candidate version.',
+        selectExactTarget:'Выбери хотя бы одну доступную точную цель.',selectGeneVersion:'Выбери Shared Gene и задай candidate version.',
         actorUnavailable:'Текущий actor_id отсутствует в проверенном едином журнале; эскалация закрыта.',mapUnavailable:'Полная текущая карта Shared Genes недоступна.',
         accountCleared:'Контекст аккаунта очищен; ожидается новый etb_init.',versionUnknown:'версия неизвестна',
         managedVerified:'managed / verified',declaredFact:'declared',platformFact:'PLATFORM fact',pinnedFact:'pinned standards fact',sourceUnknown:'source UNKNOWN'
       },
       en:{
         consoleSub:'Evolution Console',fleet:'Fleet',overview:'Overview',automationsNav:'Automations',advanced:'More',risks:'Risks',riskDetails:'Risk details',escalations:'Escalations',bulk:'Bulk operations',
-        how:'? How it works',demo:'DEMO: data and Evolution Receipts exist only in this page memory; the platform is neither read nor changed.',
+        how:'How it works',demo:'DEMO: data and Evolution Receipts exist only in this page memory; the platform is neither read nor changed.',
         overviewTitle:'Your automations',overviewLead:'See what is working, what is stopped, and where your attention is needed.',
         myAutomations:'My automations',catalog:'Catalog',automationScope:'Installed automations or catalog',workingCount:'working',notRunningCount:'not running',protectedAgents:'with verified PRE + POST',attentionCount:'need attention',
         dataProtection:'Data protection',maskingActive:'PRE + POST enabled and verified',maskingOff:'Off',maskingPartial:'Partially verified',maskingUnknown:'Protection status unknown',maskingSettingsCabinet:'Settings are in Agent Cabinet.',maskingLocalSource:'Status comes from this device only.',

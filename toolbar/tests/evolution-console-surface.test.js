@@ -48,7 +48,7 @@ test('Evolution Console manifest keeps exact product naming and a read-only surf
   assert.equal(evolutionManifest.name, 'Evolution Console');
   assert.equal(
     evolutionManifest.tagline,
-    'Ваши автоматизации — просто и честно',
+    'Что работает, что остановлено и где нужна твоя помощь',
   );
   assert.equal(
     evolutionManifest.description,
