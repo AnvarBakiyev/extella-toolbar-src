@@ -414,6 +414,58 @@ ETB.marketplace = (function () {
           return;
         }
 
+        // Dedicated, fail-closed Codex installer bridge. Unlike the generic
+        // Expert bridge below, the iframe cannot choose the Expert, code,
+        // repository, ref, credential, command, or target device. The trusted
+        // host module pins all of those and binds execution to this Extella
+        // Desktop instance.
+        if (e.data.type === 'etb_codex_install') {
+          var _cf = document.getElementById('_etbv2_mkt_frame');
+          var _crid = String(e.data.reqId || '');
+          var _cback = function (msg) {
+            if (_cf && _cf.contentWindow) {
+              try { _cf.contentWindow.postMessage(msg, '*'); } catch (_) {}
+            }
+          };
+          if (!_cf || e.source !== _cf.contentWindow || !_crid) return;
+          if (!ETB.codexInstaller || typeof ETB.codexInstaller.install !== 'function') {
+            _cback({
+              type: 'etb_codex_install_result',
+              reqId: _crid,
+              ok: false,
+              code: 'installer_unavailable',
+              error: 'Установщик Codex недоступен в этой версии Extella.'
+            });
+            return;
+          }
+          ETB.codexInstaller.install({
+            onProgress: function (state) {
+              _cback({
+                type: 'etb_codex_install_progress',
+                reqId: _crid,
+                stage: state.stage,
+                metadata: state.metadata || ETB.codexInstaller.metadata()
+              });
+            }
+          }).then(function (result) {
+            _cback({
+              type: 'etb_codex_install_result',
+              reqId: _crid,
+              ok: true,
+              result: result
+            });
+          }).catch(function (error) {
+            _cback({
+              type: 'etb_codex_install_result',
+              reqId: _crid,
+              ok: false,
+              code: (error && error.code) || 'installer_failed',
+              error: (error && error.message) || 'Не удалось подключить Codex.'
+            });
+          });
+          return;
+        }
+
         // separate plugin window. Mirrors the router bridges; KV is scoped to
         // '_mkt_' keys so a page can never touch secrets.
         if (e.data.type === 'etb_kv_get' || e.data.type === 'etb_kv_set' ||
