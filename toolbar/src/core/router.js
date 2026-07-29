@@ -4547,6 +4547,32 @@ ETB.router = (function () {
     return 'http://localhost:' + port + (mainFile ? '/' + mainFile : '');
   }
 
+  // ДЕФЕКТ «шапка своя, тело — Мастер автоматизаций» (Алия, пункт 8; разбор 29.07).
+  //
+  // Четыре плитки — «Скрыть личные данные», Композитор, Студия языков и «Команда» — это
+  // НЕ четыре страницы, а ОДНА: wizard.html на :8765, различающаяся только `?app=`.
+  // Проверено по живому реестру устройства (у Эллы этих плагинов нет, поэтому у неё и не
+  // воспроизводилось). А wizard.html БЕЗ параметра — это и есть мастер автоматизаций.
+  //
+  // Панели кэшируются вместе с живым iframe, и комментарий выше честно обещает «состояние
+  // сохраняется». Но если внутри окна человек ушёл на Мастер, кэш сохраняет и это: при
+  // следующем открытии шапка рисуется из карточки плагина (своя), а тело остаётся тем, куда
+  // ушёл iframe. Отсюда и «после нескольких переходов» — нужен хотя бы один уход в сторону.
+  //
+  // Сбрасываем ТОЛЬКО панели, чей адрес несёт `?`: наличие параметра и означает, что это вид
+  // общей с соседями страницы, а не собственное окно. Плагины со своей страницей состояние
+  // по-прежнему сохраняют — прокрутка и введённое в них не теряются.
+  function _resetSharedPagePanel(entry, plugin) {
+    var url = _serviceUrl(plugin);
+    if (!url || url.indexOf('?') < 0) return;
+    var frame = entry.panel && entry.panel.querySelector && entry.panel.querySelector('iframe');
+    if (!frame) return;
+    // Читать текущий адрес iframe нельзя: другой порт — другой источник, обращение бросает
+    // исключение. Поэтому не сравниваем, а возвращаем на объявленный адрес. Перезагрузка
+    // локальная и мгновенная, а показать чужое тело под своей шапкой — дефект.
+    frame.src = url;
+  }
+
   // Open a URL in the user's default browser. In Extella Desktop, window.open is
   // intercepted by setWindowOpenHandler → shell.openExternal (opens externally).
   function _openUrlExternal(url) {
@@ -6716,6 +6742,7 @@ ETB.router = (function () {
         }
         entry.panel.style.display = 'flex';
         entry.panel.style.animation = '_etbv2_slide_in .18s ease';
+        _resetSharedPagePanel(entry, plugin);
         entry.lastUsed = Date.now();
         _activeId = id;
       } else {
