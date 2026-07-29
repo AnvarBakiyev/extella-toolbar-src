@@ -1569,7 +1569,9 @@ try { if (localStorage.getItem('etb_lang') === 'en') LANG = 'en'; } catch (_) {}
 var I18N_EN = {
   // Вкладки
   'Рабочий стол':'Desktop','Программы':'Programs','Модели':'Models',
-  'Навыки':'Skills','Инструменты':'Tools','Знания':'Knowledge','Агенты':'Agents','Инструменты':'Tools','Для файлов':'For files','Подключения':'Connections','Проверенные':'Verified','Профи':'Pro','История':'History','Автозапуск':'Auto-run',
+  'Навыки':'Skills','Инструменты':'Tools','Знания':'Knowledge','Агенты':'Agents','Инструменты':'Tools','Для файлов':'For files','Подключения':'Connections','Управление агентами':'Agent Control',
+  'Нет агента сессии — некому выполнить запрос':'No session agent — nobody can run this request',
+  'Парк агентов: состояние, версии, запуски и откат':'Your agent fleet: state, versions, runs and rollback','Проверенные':'Verified','Профи':'Pro','История':'History','Автозапуск':'Auto-run',
   'На Рабочий стол':'Back to Desktop',
   'Мини-программы Extella и приложения с GitHub: берёшь с полки — живут у тебя на компьютере.':'Extella mini-programs and apps from GitHub: pick one from the shelf — it lives on your computer.',
   'Готовые приложения с GitHub: клик — и Extella установит на твой компьютер. Работают локально.':'Ready-made apps from GitHub: one click and Extella installs them on your computer. They run locally.',
@@ -4290,6 +4292,13 @@ function renderDesktop(){
     // команды её не было, но она остаётся — это тоже «то, чем создают». Не снимать.
     {lbl:'Быстрая сборка',   ico:'box',      acc:'#7C5CBF', go:"_openQuickBuild()",            tip:'Разовая задача из готовых блоков — результат за минуту'},
     {lbl:'Подключения',      ico:'globe',    acc:'#2F6B66', req:'extella_connectors', go:"notify('open','extella_connectors')", tip:'Свои сервисы, CRM и кабинеты — один контур доступа'},
+    // РЕШЕНИЕ АНВАРА 29.07: Evolution Console встаёт в ряд системных карточек и доступна ВСЕМ.
+    // Оговорка для Эллы: это сознательное расширение её принципа «стол = только то, чем
+    // создают» (28.07). Console не создаёт — она показывает парк агентов и управляет
+    // изменениями; Анвар решил, что вход должен быть постоянным, а не через каталог.
+    // Динамический двойник (id profit-growth-scenario) остаётся в DESK_HIDDEN, иначе рядом
+    // появится вторая, удаляемая копия — тот же приём, что у остальных системных карточек.
+    {lbl:'Управление агентами', ico:'monitor',  acc:'#3D6FA8', req:'profit-growth-scenario', go:"notify('open','profit-growth-scenario')", tip:'Парк агентов: состояние, версии, запуски и откат'},
     // «Обезличивание» ушло со стола в Сервисы (правка команды 28.07): стол — то,
     // чем создают, а не витрина утилит. Карточка живёт в renderServices и зовётся
     // по-человечески — «Скрыть личные данные».
@@ -6500,17 +6509,16 @@ function wsUndo(ws_id){
   }).catch(function(e){ wsToast('⚠ '+esc((e&&e.message)||'ошибка'),'err'); });
 }
 
-var BUILDER_ID='agent_FLYxB0v1qIY2phB5beVP5';  // спец-сборщик (есть не у всех) — теперь только запасной
+// ЗАПАСНОЙ АГЕНТ УБРАН 29.07.2026 (нашёл гейт check_code_canon.py).
+// Здесь стоял BUILDER_ID='agent_FLY…' — личный Строитель Анвара, зашитый как фолбэк.
+// Комментарий рядом сам признавал: «есть не у всех». У коллеги и у клиента такого агента
+// не существует: запасной путь либо падал непонятной ошибкой платформы, либо — что хуже —
+// увёл бы работу на чужого агента и, возможно, на запрещённую каноном модель.
+// Канон: нет обязательного — честный отказ, а не подмена.
 function skRunAgent(msg){
-  // Портируемость: сначала агент СЕССИИ пользователя (есть у каждого),
-  // BUILDER_ID — только как запасной, если сессионный недоступен
   var sid=(window._etbSess&&window._etbSess.agentId)||'';
-  var first=sid||BUILDER_ID, second=(sid&&sid!==BUILDER_ID)?BUILDER_ID:'';
-  return skBridge('etb_run_agent','etb_agent_result',{message:msg,agent_id:first})
-    .catch(function(e){
-      if(!second) throw e;
-      return skBridge('etb_run_agent','etb_agent_result',{message:msg,agent_id:second});
-    });
+  if(!sid) return Promise.reject(new Error('Нет агента сессии — некому выполнить запрос'));
+  return skBridge('etb_run_agent','etb_agent_result',{message:msg,agent_id:sid});
 }
 function openCliAdd(){
   var ov=document.getElementById('cliadd_ov');

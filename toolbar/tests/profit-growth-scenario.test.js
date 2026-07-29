@@ -514,7 +514,9 @@ test('live smoke selects account agents dynamically and keeps Agent calls epheme
   assert.match(smoke, /DEFAULT_AGENT = "agent_extella_alibaba_default"/);
   assert.match(smoke, /agents = choose_agents\(post\(token,\s*"\/api\/agent\/list",\s*\{\}\)\)/);
   assert.match(smoke, /"store": False/);
-  assert.doesNotMatch(smoke, /agent_XwZBKvd8dD70jKvW4WrZm/);
+  // canon-ok: проверка утверждает ОТСУТСТВИЕ зашитого id — это охранник того же
+  // канона, что и гейт; ругаться на него значит запрещать саму проверку
+  assert.doesNotMatch(smoke, /agent_XwZBKvd8dD70jKvW4WrZm/);  // canon-ok: проверка требует ОТСУТСТВИЯ id
 });
 
 test('uninstall removes only Experts explicitly owned by the Studio manifest', () => {

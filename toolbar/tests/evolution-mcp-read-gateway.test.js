@@ -130,7 +130,9 @@ function travelAutomationRegistry(complete = true) {
     components: {
       ...registry.rows[0].components,
       platform_agents: [{
-        id: 'agent_eUSuv3enLqKkZd2lj0aeI',
+        // canon-ok: фикстура, а не фолбэк — id живого Travel-агента лежит здесь как
+        // входные данные проверки, никуда не роутит и в поставляемый код не попадает
+        id: 'agent_eUSuv3enLqKkZd2lj0aeI',  // canon-ok: входные данные проверки, не фолбэк
         state: 'PRESENT',
         source: 'REVIEWED_LIVE_FACTS',
       }],
