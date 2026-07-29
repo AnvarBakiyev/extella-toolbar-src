@@ -971,10 +971,14 @@ test('Sandbox language state is memory-only and honors etb_init.lang', () => {
     evolutionHtml,
     /String\(d\.lang\|\|''\)\.toLowerCase\(\)\.indexOf\('en'\)===0/,
   );
-  assert.match(
-    evolutionHtml,
-    /WLANG=WLANG==='ru'\?'en':'ru';applyLanguage\(\);renderAll\(\)/,
-  );
+  // ПЕРЕВЁРНУТО 29.07 по замечанию Эллы. Тест закреплял СВОЙ переключатель языка —
+  // то есть фиксировал нарушение канона: «окно не заводит свой переключатель темы и
+  // языка, тему и язык бери из etb_theme и etb_init». Локальный тумблер и давал то, что
+  // она увидела: английский интерфейс при русской витрине. Теперь требуем обратного.
+  assert.doesNotMatch(evolutionHtml, /id="langBtn"/,
+    'у окна не должно быть своей кнопки языка — язык приходит от витрины');
+  assert.doesNotMatch(evolutionHtml, /WLANG=WLANG==='ru'\?'en':'ru'/,
+    'локальное переключение языка запрещено каноном');
 });
 
 test('Capability Studio remains a separate demo product and keeps the old reviewed assets', () => {

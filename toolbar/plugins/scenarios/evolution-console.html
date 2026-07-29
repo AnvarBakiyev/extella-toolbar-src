@@ -191,7 +191,10 @@
         <button class="tab" type="button" data-view="lab" data-primary-surface="lab">Evolution Lab</button>
       </nav>
       <div class="top-actions">
-        <button class="ghost" id="langBtn">EN</button>
+        <!-- Кнопка языка убрана 29.07: правило Эллы запрещает окну заводить свой
+             переключатель языка. Язык приходит от витрины сообщением etb_init;
+             локальный тумблер только расходился с ЛК — ровно это и увидела Элла,
+             английский интерфейс при русской витрине. -->
         <button class="ghost" id="helpBtn" data-t="how"></button>
       </div>
     </header>
@@ -530,8 +533,7 @@
       document.querySelectorAll('[data-t]').forEach(function(n){n.textContent=t(n.getAttribute('data-t'));});
       document.querySelectorAll('[data-ph]').forEach(function(n){n.placeholder=t(n.getAttribute('data-ph'));});
       document.querySelectorAll('[data-aria]').forEach(function(n){n.setAttribute('aria-label',t(n.getAttribute('data-aria')));});
-      el('langBtn').textContent=WLANG==='ru'?'EN':'RU';
-      el('langBtn').setAttribute('aria-label',WLANG==='ru'?'Switch language to English':'Переключить язык на русский');
+      // aria-label кнопки языка удалён вместе с кнопкой
       if(window.HELP){
         HELP.evolution_console={
           ru:{icon:'◇',title:'Как работает Evolution Console',sub:'Единый реестр автоматизаций',
@@ -1375,7 +1377,7 @@
     document.querySelectorAll('[data-summary-view]').forEach(function(b){b.onclick=function(){setView(b.dataset.summaryView);};});
     document.querySelectorAll('[data-summary-attention]').forEach(function(b){b.onclick=function(){applyFleetFilter('attention',true);};});
     document.querySelectorAll('[data-fleet-filter]').forEach(function(b){b.onclick=function(){applyFleetFilter(b.dataset.fleetFilter,false);};});
-    el('langBtn').onclick=function(){WLANG=WLANG==='ru'?'en':'ru';applyLanguage();renderAll();if(el('cabinetOverlay').classList.contains('on'))updateCabinetImpact();};
+    // обработчик кнопки языка удалён вместе с кнопкой (см. выше)
     el('helpBtn').onclick=function(){if(typeof openHelp==='function')openHelp('evolution_console');};el('refreshBtn').onclick=loadFleet;
     el('agentControlRefreshBtn').onclick=function(){clearAgentControl();loadAgentControl();};
     el('searchInput').oninput=function(){renderFleet();renderBulk();};el('filterSelect').onchange=function(){syncFilterControls();renderFleet();renderBulk();};el('jsonBtn').onclick=function(){exportRows('json');};el('csvBtn').onclick=function(){exportRows('csv');};
