@@ -241,7 +241,7 @@
           <details class="console-tools">
             <summary data-t="technicalDetails"></summary>
             <div class="console-tools-body">
-              <div class="status"><span class="badge" id="registryScopeBadge">CURRENT DEVICE</span><span class="badge" id="registryCheckedBadge">—</span><span class="badge" id="snapshotBadge">SNAPSHOT —</span><span class="badge" id="standardsBadge">STANDARD —</span></div>
+              <div class="status"><span class="badge" id="registryScopeBadge">Текущее устройство</span><span class="badge" id="registryCheckedBadge">—</span><span class="badge" id="snapshotBadge">SNAPSHOT —</span><span class="badge" id="standardsBadge">STANDARD —</span></div>
               <label><span class="sr-only" data-t="moreFilters"></span><select id="filterSelect">
                 <option value="" data-t="filterAll"></option>
                 <option value="installed" data-t="installed" selected></option>
@@ -360,7 +360,7 @@
       ru:{
         consoleSub:'Evolution Console',fleet:'Парк',overview:'Обзор',automationsNav:'Автоматизации',advanced:'Дополнительно',risks:'Риски',riskDetails:'Причины рисков',escalations:'Эскалации',bulk:'Массовые операции',
         how:'? Как это работает',demo:'DEMO: данные и Evolution Receipts существуют только в памяти страницы; платформа не читается и не изменяется.',
-        overviewTitle:'Ваши автоматизации',overviewLead:'Здесь видно, что работает, что остановлено и где нужна ваша помощь.',
+        overviewTitle:'Твои автоматизации',overviewLead:'Здесь видно, что работает, что остановлено и где нужна ваша помощь.',
         myAutomations:'Мои автоматизации',catalog:'Каталог',automationScope:'Установленные автоматизации или каталог',workingCount:'работают',notRunningCount:'не запущены',protectedAgents:'с подтверждёнными PRE + POST',attentionCount:'требуют внимания',
         dataProtection:'Защита данных',maskingActive:'PRE + POST включены и подтверждены',maskingOff:'Выключено',maskingPartial:'Подтверждено частично',maskingUnknown:'Состояние защиты неизвестно',maskingSettingsCabinet:'Настройки находятся в Agent Cabinet.',maskingLocalSource:'Статус получен только с текущего устройства.',
         agentControl:'Управление изменениями',agentControlTitle:'Управление изменениями агентов',agentControlLead:'Evolution Console показывает канонический путь изменения из Agent Passport. Пока паспортов или контракта нет, действия закрыты.',agentControlContract:'Канонический контракт',agentControlSteps:'Путь изменения',agentControlPublishGates:'Перед публикацией',agentControlLimits:'Границы',agentControlRequires:'Зависит от',agentControlLoading:'Проверяем Agent Passports и канонический контракт…',agentControlStandardsUnavailable:'Production bundle Agent Passports пока недоступен.',agentControlNoPassports:'Agent Passports ещё не заполнены. Когда появится подтверждённый паспорт, здесь будет показан канонический путь изменения.',agentControlContractUnavailable:'Канонический контракт управления пока недоступен. Действия закрыты.',agentControlContractMismatch:'Контракты Agent Passports расходятся. Действия закрыты до устранения расхождения.',agentControlUnknown:'Состояние управления изменениями неизвестно. Действия закрыты.',agentControlReadOnly:'Сейчас доступно только чтение канонического контракта. Публикация появится только через trusted action с теми же гейтами.',agentControlBoundary:'Этот раздел только читает канонический контракт: он не создаёт агентов, не меняет настройки Agent Cabinet или защиты данных, не ведёт отдельный журнал и не публикует изменения.',
@@ -406,7 +406,7 @@
         stableIdRequired:'Нужен стабильный ID',stableIdLead:'Эти Agent Passport не связываются с платформой по имени. Выберите точный live agentId; source Passport и checker issues останутся видимыми.',
         exactLiveAgent:'Точный live agentId',selectStableAgent:'Выберите точный live agentId',sourcePassport:'Source Passport',sourcePath:'Путь источника',
         genesTitle:'Карта Shared Genes',
-        genesLead:'N считается один раз по стабильным gene_id и точным consumer_agent_ids. Видимость native-объекта не выдаётся за использование.',
+        genesLead:'N считается один раз — по устойчивым признакам общего гена и точному списку агентов-потребителейids. Видимость native-объекта не выдаётся за использование.',
         objectView:'Shared Gene → агенты',agentView:'Агент → Shared Genes',escTitle:'Приём эскалаций из Agent Cabinet',
         escLead:'Изменение Shared Gene начинается в Agent Cabinet и завершается здесь: весь класс, одинаковые кейсы, поэтапное включение, наблюдение и точный откат.',
         pendingClass:'Ожидает решения по классу',contract:'candidate_id + SHA-256 + scope + affected agents + actor_id',exactBinding:'Каждый шаг привязан к точному candidate и target set.',
@@ -480,7 +480,7 @@
         stableIdRequired:'Stable ID required',stableIdLead:'These Agent Passports are never joined to the platform by name. Select an exact live agentId; the source Passport and checker issues remain visible.',
         exactLiveAgent:'Exact live agentId',selectStableAgent:'Select an exact live agentId',sourcePassport:'Source Passport',sourcePath:'Source path',
         genesTitle:'Shared Genes map',
-        genesLead:'N is calculated once from stable gene_id and exact consumer_agent_ids. Native visibility is never presented as usage.',
+        genesLead:'N is calculated once, from stable gene identity and the exact list of consumer agents. Native visibility is never presented as usage.',
         objectView:'Shared Gene → agents',agentView:'Agent → Shared Genes',escTitle:'Escalations from Agent Cabinet',
         escLead:'A Shared Gene change starts in Agent Cabinet and ends here: the whole class, identical cases, staged activation, observation and exact rollback.',
         pendingClass:'Pending class decision',contract:'candidate_id + SHA-256 + scope + affected agents + actor_id',exactBinding:'Every step is bound to the exact candidate and target set.',
@@ -489,7 +489,7 @@
         removeDead:'Remove dead references',changeShared:'Change a Shared Gene',showImpact:'Show impact',impactApproval:'Impact and approval',
         boundTargets:'Changing the target list invalidates approval.',receiptsLead:'Receipts for Evidence → Candidate → Test → Approval → Activation → Observation → Rollback.',
         close:'Close',gotIt:'Got it',passed:'passes',failed:'fails',missing:'Agent Passport missing',standardUnknown:'standards registry unavailable',dead:'in registry, absent on platform',
-        consumers:'consumers',moreAgents:'more agents',noData:'No data',noAgents:'There are no agents in this fleet yet',noMatches:'No agents match this search and filter',incomplete:'Snapshot is incomplete — mutations are blocked.',
+        consumers:'consumers',moreAgents:'more agents',noData:'No data',noAgents:'There are no agents in this fleet yet',noMatches:'No agents match this search and filter',incomplete:'Снимок парка неполный, поэтому изменения заблокированы. Обнови страницу; если не помогло — значит часть агентов не ответила, попробуй через минуту.',
         complete:'Snapshot complete',downloaded:'Draft downloaded; the canonical checker has not run yet.',confirmExact:'Approve exact list',
         planStages:'Create exact stage plan',stage:'Activate next stage',publish:'Publish',observe:'Record observation',rollback:'One-action rollback',runTest:'Test the whole class',approve:'Approve',
         selectedSharedGene:'Shared Gene from the current map',candidateVersion:'Candidate version',candidateVersionPlaceholder:'for example 2.0.0',
@@ -1293,7 +1293,7 @@
     function updateCabinetImpact(){
       var gene=geneById(el('cabinetGeneSelect').value),affected=gene&&gene.consumerAgentIds||[],actor=cabinetActorId(),version=el('cabinetVersionInput').value.trim();
       if(!state.shared||!state.shared.complete||!gene){el('cabinetImpact').textContent=t('mapUnavailable');el('cabinetEscalateBtn').disabled=true;return;}
-      el('cabinetImpact').textContent='shared_gene_id='+gene.geneId+' · affected_agent_ids='+affected.length+' · affected_count='+Math.max(0,affected.length-1)+' · shared_gene_map_sha256='+state.shared.snapshotId;
+      el('cabinetImpact').textContent=(WLANG==='en'?'Shared gene ':'Общий ген ')+gene.geneId+(WLANG==='en'?' · agents affected: ':' · затронуто агентов: ')+affected.length+' · affected_count='+Math.max(0,affected.length-1)+' · shared_gene_map_sha256='+state.shared.snapshotId;
       el('cabinetEscalateBtn').disabled=!productionReady()||!actor||!version||affected.indexOf(state.cabinetAgentId)===-1;
       if(!actor)el('cabinetImpact').textContent+=' · '+t('actorUnavailable');
     }
