@@ -39,6 +39,7 @@ const CORE_ORDER = [
   'brand.js',
   'auth.js',
   'api.js',
+  'codex-installer.js',
   'agent-control.js',
   'evolution-console.js',
   'evolution-agent-control-contract.js',
