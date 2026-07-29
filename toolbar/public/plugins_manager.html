@@ -1572,6 +1572,42 @@ function _lm(m, field){ if(LANG==='en' && m && m.en && m.en[field]!=null) return
 // ══════════════════════════════════════════════════════════════════════════
 try { if (localStorage.getItem('etb_lang') === 'en') LANG = 'en'; } catch (_) {}
 var I18N_EN = {
+  'Управление парком агентов: состояние, версии, запуски':'Manage your fleet of agents: state, versions, runs',
+  // Карточка «Скрыть личные данные» (переехала со стола) — своя EN-пара.
+  'Скрыть личные данные':'Hide personal data',
+  'Уберёт из файла имена, телефоны и адреса — перед тем как ты кому-то его отправишь. Файл не уходит с компьютера.':'Strips names, phone numbers and addresses from a file before you send it to anyone. The file never leaves the computer.',
+  'Файлы · локально':'Files · local',
+  'На твоём компьютере':'On your computer',
+  'Пока недоступно':'Not available yet',
+  // Вводные блоки разделов (catalog_intro) не переводились НИ НА ОДНОЙ вкладке:
+  // на английском интерфейсе заголовок и лид оставались русскими. Поймано по
+  // скриншотам живого приложения 29.07. Ключи с неразрывными пробелами —
+  // подставлять ровно так, как они стоят в разметке.
+  'Модели для агента':'Models for your agent',
+  'Мозг, который выполняет задачу: понимает текст, рисует картинки, распознаёт речь. Каталог собран с Hugging Face — можно и вставить свою ссылку.':'The brain that does the job: understands text, draws images, recognises speech. The catalogue is built from Hugging Face — or paste a link of your own.',
+  'Локальные модели работают прямо на твоём компьютере, даже без интернета. Облачные — быстрее и не занимают место.':'Local models run right on your computer, even offline. Cloud ones are faster and take up no space.',
+  'Программы для агента':'Programs for your agent',
+  'Добавляют агенту новые возможности: работу с документами, данными, изображениями и внешними сервисами.':'They give the agent new abilities: documents, data, images and outside services.',
+  'Выбери программу и нажми «Установить» — после установки она появится на рабочем столе.':'Pick a program and press «Install» — it lands on the desktop once it is in.',
+  'Технически это мини-приложения с интерфейсом (UI) и MCP-серверы с GitHub.':'Technically these are mini-apps with a UI and MCP servers from GitHub.',
+  'Навыки для агента':'Skills for your agent',
+  'Задают дополнительные правила работы: например, отвечать короче, проверять факты или разбирать документы.':'They set extra rules of work: answer shorter, check the facts, take documents apart.',
+  'Выбери навык и укажи агента — он начнёт применять его в новых диалогах.':'Pick a skill and name the agent — it starts applying it in new conversations.',
+  'Инструменты для файлов':'Tools for files',
+  'Обрабатывают документы, изображения, видео и аудио прямо на твоём компьютере — без загрузки в интернет.':'They handle documents, images, video and audio right on your computer — nothing is uploaded.',
+  'Скажи агенту, что сделать с файлами, — он выберет и запустит нужный инструмент.':'Tell the agent what to do with the files — it picks the right tool and runs it.',
+  'Технически это утилиты командной строки (CLI): ffmpeg, pandoc, OCR и другие.':'Technically these are command-line utilities (CLI): ffmpeg, pandoc, OCR and others.',
+  'Агенты — твои сотрудники':'Agents — your coworkers',
+  'Агент работает вместо тебя: ведёт переписку, считает, готовит отчёты. Своего собери в Конструкторе — он расспросит о задаче и всё настроит.':'An agent works instead of you: keeps the correspondence, counts, prepares reports. Build your own in the Wizard — it asks about the task and sets everything up.',
+  'Или возьми готовую профессию с полки ниже: продажи, поддержка, бухгалтерия, аналитика. Роль назначается на твою копию агента за минуту.':'Or take a ready profession from the shelf below: sales, support, accounting, analytics. A role is assigned to your copy of the agent in a minute.',
+  'Живые данные для агента':'Live data for your agent',
+  'Курсы валют, погода, справки, перевод — чтобы агент отвечал по фактам из интернета, а не по памяти.':'Exchange rates, weather, reference, translation — so the agent answers from facts off the internet, not from memory.',
+  'Любой сервис можно проверить прямо здесь, а кнопкой «+ Для агента» отметить те, что получит твой агент при сборке.':'Any service can be tried right here, and the «+ For the agent» button marks the ones your agent gets when it is built.',
+  'Технически это внешние API и MCP-серверы — подключаются без ключей.':'Technically these are external APIs and MCP servers — they connect without keys.',
+  'Знания для агента':'Knowledge for your agent',
+  'База знаний — это твои документы, по которым агент отвечает: регламенты, договоры, прайсы, кодексы.':'A knowledge base is your own documents for the agent to answer from: rules, contracts, price lists, codes.',
+  'Возьми готовую базу с полки ниже или собери свою из папки с файлами — сборка идёт локально, документы никуда не уходят.':'Take a ready base from the shelf below or build your own from a folder of files — it is assembled locally, the documents never leave.',
+  'Быстрая сборка':'Quick build',
   // Вкладки
   'Рабочий стол':'Desktop','Программы':'Programs','Модели':'Models',
   'Навыки':'Skills','Инструменты':'Tools','Знания':'Knowledge','Агенты':'Agents','Инструменты':'Tools','Для файлов':'For files','Подключения':'Connections','Управление агентами':'Agent Control',
