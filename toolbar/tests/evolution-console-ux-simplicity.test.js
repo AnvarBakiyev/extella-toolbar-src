@@ -447,7 +447,9 @@ test('the simplified overview has matching human copy in Russian and English', (
   const ru = languageBlock('ru', 'en');
   const en = languageBlock('en');
   const copyContract = {
-    overviewTitle: ['Ваши автоматизации', 'Your automations'],
+    // Правка 29.07: тест закреплял «Ваши» — то есть фиксировал нарушение канона Эллы
+    // (§4, обращение на «ты»). Ожидание приведено к канону вместе с самим экраном.
+    overviewTitle: ['Твои автоматизации', 'Your automations'],
     inventory: ['Автоматизации', 'Automations'],
     myAutomations: ['Мои автоматизации', 'My automations'],
     catalog: ['Каталог', 'Catalog'],
