@@ -651,7 +651,7 @@ body[data-theme="dark"] .inf .tr,html[data-theme="dark"] .inf .tr{stroke:var(--b
 </div>
 <div class="cmdbar">
   <div id="cmd_search" style="display:flex;gap:10px;flex:1;min-width:0;height:55px">
-    <input id="cmd_url" placeholder="🔍  Поиск по ярлыкам и каталогам — или вставь ссылку из любого репозитория: установим в один клик" spellcheck="false" autocomplete="off" oninput="deskFilter(this.value)" onkeydown="if(event.key==='Enter')cmdInstall()"/>
+    <input id="cmd_url" placeholder="🔍  Поиск по ярлыкам и каталогам" spellcheck="false" autocomplete="off" oninput="cmdInput(this.value)" onkeydown="if(event.key==='Enter')cmdInstall()"/>
     <button class="cmdgo" onclick="cmdInstall()">Установить</button>
   </div>
   <div id="cmd_add" style="display:none;gap:12px;flex:1;min-width:0;align-items:center;height:55px">
@@ -3633,13 +3633,64 @@ function deskFilter(q){
     : _clT('На столе такого нет. Enter — поищу в каталогах и покажу, что можно поставить.',
            'Nothing like that on the desktop. Press Enter and I will look through the catalogues.');
 }
+// Строка обещает ровно одно — поиск. Раньше тот же Enter мог увести в установку
+// с GitHub: витрина закрывалась, человек оказывался в другом окне, и предсказать
+// это заранее было нельзя (правка Эллы 29.07). Теперь вставленная ссылка ничего
+// не запускает — под строкой появляется ряд с тем, что распознано, и отдельной
+// кнопкой. Установка осталась в один клик, но клик стал осознанным.
+function _cmdLink(v){
+  v = String(v || '').trim();
+  if (!v) return null;
+  var looksLink = /^https?:\/\//i.test(v) || /^[\w.-]+\.[a-z]{2,}\//i.test(v) ||
+                  v.indexOf('github.com') >= 0 || v.indexOf('huggingface.co') >= 0;
+  if (!looksLink) return null;
+  var hf = v.indexOf('huggingface.co') >= 0;
+  var m = v.replace(/^https?:\/\//i, '').split('?')[0].split('#')[0]
+           .replace(/\/+$/, '').split('/');
+  var name = m.length >= 3 ? m[1] + '/' + m[2] : (m[1] || v);
+  return { url: v, hf: hf, name: name };
+}
+function cmdLinkRow(v){
+  var row = document.getElementById('cmd_link');
+  var lk = _cmdLink(v);
+  if (!lk) { if (row) row.remove(); return false; }
+  if (!row) {
+    row = document.createElement('div'); row.id = 'cmd_link';
+    row.style.cssText = 'display:flex;align-items:center;gap:10px;flex-wrap:wrap;' +
+      'padding:10px 18px 0;background:var(--s1);font:400 13px var(--sans);color:var(--tx2)';
+    var bar = document.querySelector('.cmdbar');
+    if (bar && bar.parentNode) bar.parentNode.insertBefore(row, bar.nextSibling);
+    else return false;
+  }
+  row.innerHTML =
+    '<span>' + esc(_clT(lk.hf ? 'Похоже на модель Hugging Face: ' : 'Похоже на репозиторий GitHub: ',
+                        lk.hf ? 'Looks like a Hugging Face model: ' : 'Looks like a GitHub repository: ')) +
+      '<b style="font-family:var(--mono);font-weight:500;color:var(--tx)">' + esc(lk.name) + '</b></span>' +
+    '<button class="st_btn" onclick="cmdLinkInstall()">' + esc(_clT('Установить', 'Install')) + '</button>' +
+    '<button onclick="cmdLinkCancel()" style="' + _KPBTN + '">' + esc(_clT('Отмена', 'Cancel')) + '</button>';
+  return true;
+}
+function cmdLinkCancel(){
+  var inp = document.getElementById('cmd_url'); if (inp) inp.value = '';
+  var row = document.getElementById('cmd_link'); if (row) row.remove();
+}
+function cmdLinkInstall(){
+  var inp = document.getElementById('cmd_url');
+  var lk = _cmdLink(inp ? inp.value : ''); if (!lk) return;
+  notify(lk.hf ? 'hf_add_url' : 'github_add_url', '', lk.url);
+  cmdLinkCancel();
+}
+// Один обработчик ввода: ссылка — показать ряд, текст — фильтровать ярлыки стола.
+function cmdInput(v){
+  if (cmdLinkRow(v)) { deskFilter(''); return; }
+  deskFilter(v);
+}
 function cmdInstall() {
   var inp = document.getElementById('cmd_url');
   var v = inp ? inp.value.trim() : '';
   if (!v) { notify('github_add'); return; }
-  var isLink = /^https?:\/\//i.test(v) || /^[\w.-]+\.[a-z]{2,}\//i.test(v) || v.indexOf('github.com') >= 0 || v.indexOf('huggingface.co') >= 0;
-  if (isLink) { notify('github_add_url', '', v); if (inp) inp.value = ''; return; }
-  _gsearch(v);   // текст (не ссылка) → сквозной поиск по всем каталогам
+  if (cmdLinkRow(v)) return;   // ссылка ждёт осознанного клика, Enter её не ставит
+  _gsearch(v);                 // текст → сквозной поиск по всем каталогам
 }
 // Сквозной поиск по всем каталогам (bundled: сервисы/CLI/навыки/модели; KV: программы/приложения/MCP).
 function _gsearch(query){

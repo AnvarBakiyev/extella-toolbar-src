@@ -4771,7 +4771,7 @@ ETB.router = (function () {
       _L('Открой его в браузере','Open it in your browser'), url ? ' (' + _esc(url) + ')' : '', '.</div>',
       '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">',
       '<button onclick="ETB.router._openExternal(\'' + _esc(pid) + '\')" style="' +
-      'background:#C67E34;border:none;color:#000;font-weight:700;border-radius:6px;' +
+      'background:#C57E33;border:none;color:#fff;font-weight:700;border-radius:6px;' +
       'padding:10px 22px;cursor:pointer;font-size:12px;">' + _L('Открыть ','Open ') + _esc(plugin.name) + '</button>',
       '<button onclick="ETB.router._repairWithAgent(\'' + _esc(pid) + '\')" style="' +
       'background:var(--etb-s3,#1a1a1a);border:1px solid var(--etb-bd2,#333);color:var(--etb-tx,#f0f0f0);border-radius:6px;' +
@@ -4792,19 +4792,19 @@ ETB.router = (function () {
       '<div style="display:flex;align-items:center;justify-content:center;height:100%;',
       'padding:32px;font-family:-apple-system,system-ui,sans-serif;">',
       '<div style="max-width:380px;text-align:center;">',
-      '<div style="margin-bottom:14px;color:#C67E34"><svg class="lico" style="width:34px;height:34px"><use href="#ic-tech"/></svg></div>',
+      '<div style="margin-bottom:14px;color:#C57E33"><svg class="lico" style="width:34px;height:34px"><use href="#ic-tech"/></svg></div>',
       '<div style="font-size:16px;font-weight:700;color:var(--etb-tx,#f0f0f0);margin-bottom:8px;">',
-      _esc(plugin.name), _L(': нужна минутка на настройку</div>',' needs a moment to set up</div>'),
+      _esc(plugin.name), _L(': нужно доустановить</div>',': one step left</div>'),
       '<div style="font-size:13px;color:var(--etb-tx2,#888);line-height:1.6;margin-bottom:22px;">',
-      _L('Программа не запустилась сама. Позволь агенту доустановить её и открыть — ','It didn\'t start on its own. Let the agent finish setting it up and open it &#8212; '),
-      _L('обычно это разовый шаг.</div>','usually a one-time step.</div>'),
+      _L('Программа установлена не до конца — часть файлов ещё не на месте. Нажми «Доустановить и открыть»: ','The program is only half installed — some files are still missing. Press «Finish setup and open»: '),
+      _L('обычно это разовый шаг, дальше она открывается сразу.</div>','usually a one-time step, after that it opens right away.</div>'),
       '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">',
       '<button onclick="ETB.router._repairWithAgent(\'' + _esc(pid) + '\')" style="' +
       'background:#C67E34;border:none;color:#000;font-weight:700;border-radius:6px;' +
-      'padding:11px 24px;cursor:pointer;font-size:12.5px;">' + _L('Настроить и открыть','Set up &amp; open') + '</button>',
+      'padding:11px 24px;cursor:pointer;font-size:12.5px;">' + _L('Доустановить и открыть','Finish setup and open') + '</button>',
       '<button onclick="ETB.router._retryServer(\'' + _esc(pid) + '\')" style="' +
       'background:var(--etb-s3,#1a1a1a);border:1px solid var(--etb-bd2,#333);color:var(--etb-tx,#f0f0f0);border-radius:6px;' +
-      'padding:11px 20px;cursor:pointer;font-size:12.5px;">&#8635; ' + _L('Ещё раз','Try again') + '</button>',
+      'padding:11px 20px;cursor:pointer;font-size:12.5px;">&#8635; ' + _L('Попробовать ещё раз','Try again') + '</button>',
       '</div>',
       // Technical detail, collapsed — for power users, not in the user's face.
       '<details style="margin-top:18px;text-align:left;">',
@@ -4812,7 +4812,7 @@ ETB.router = (function () {
       '<div style="font-size:11px;color:var(--etb-tx3,#666);line-height:1.5;margin-top:8px;">',
       _L('Локальный сервер не отвечает на порту ','Local server offline on port '), String(ui.port || '&#8212;'), '.',
       ui.startExpert
-        ? ' <a href="#" onclick="ETB.router._startServer(\'' + _esc(pid) + '\');return false;" style="color:#C67E34;">' + _L('Запустить только сервер','Start server only') + '</a>.'
+        ? ' <a href="#" onclick="ETB.router._startServer(\'' + _esc(pid) + '\');return false;" style="color:#C57E33;">' + _L('Запустить только сервер','Start server only') + '</a>.'
         : '',
       '</div></details>',
       '</div></div>'
