@@ -2301,6 +2301,7 @@ ETB.router = (function () {
         snapshotId: projection.snapshotId,
         complete: complete,
         standardsAvailable: standardsAvailable,
+        standardsError: standardsResult.error,
         unboundPassports: standardsResult.unboundPassports,
         unboundPassportsById: standardsResult.unboundPassports.reduce(
           function (acc, row) {
@@ -2955,6 +2956,148 @@ ETB.router = (function () {
       }
       return unavailable(code);
     });
+  }
+
+  function _evolutionAgentControlLoad(data, context) {
+    var session = _evolutionRequireSession(data, context, false);
+    var contractRuntime = ETB.evolutionAgentControlContract;
+    var sourcePassports = session.standardsBundle &&
+      session.standardsBundle.sources &&
+      session.standardsBundle.sources.passports;
+    var passportRows = [];
+    var contracts = [];
+    var normalized;
+    var reference;
+    var i;
+
+    function reasonCode(value, fallback) {
+      var code = String(value || fallback).toUpperCase();
+      return /^[A-Z][A-Z0-9_]{0,63}$/.test(code) ? code : fallback;
+    }
+
+    function surface(status, errorCode, count, contract) {
+      return {
+        schema: 'extella.evolution.agent_control_surface.v1',
+        owner_account_id: context.actorId,
+        fleet_snapshot_id: session.snapshotId,
+        captured_at: new Date().toISOString(),
+        status: status,
+        agent_passport_count: count,
+        contract: contract || null,
+        // No publication action exists in this surface.  The generated
+        // Cabinet contract is projected read-only until a separately reviewed
+        // trusted action can enforce the same gates.
+        mutations_allowed: false,
+        error_code: errorCode || null
+      };
+    }
+
+    if (!session.standardsAvailable) {
+      return Promise.resolve(surface(
+        'STANDARDS_UNAVAILABLE',
+        reasonCode(
+          session.standardsError && session.standardsError.code,
+          'PRODUCTION_STANDARDS_UNAVAILABLE'
+        ),
+        null,
+        null
+      ));
+    }
+
+    // Only an attested, explicitly empty source list proves that there are no
+    // Agent Passports.  An unready, unbound or dead-reference passport is a
+    // different condition and must never be presented as a zero.
+    if (!Array.isArray(sourcePassports)) {
+      return Promise.resolve(surface(
+        'UNKNOWN',
+        'AGENT_PASSPORT_SOURCES_UNKNOWN',
+        null,
+        null
+      ));
+    }
+    if (sourcePassports.length === 0) {
+      return Promise.resolve(surface(
+        'NO_AGENT_PASSPORTS',
+        'NO_AGENT_PASSPORTS',
+        0,
+        null
+      ));
+    }
+
+    Object.keys(session.standardsById || {}).sort().forEach(function (id) {
+      var standard = session.standardsById[id];
+      var platformRow = session.platformById && session.platformById[id];
+      var fleetRow = (session.fleet && session.fleet.rows || []).filter(
+        function (row) { return row.platformAgentId === id; }
+      )[0];
+      if (platformRow && fleetRow && fleetRow.platformPresent === true &&
+          fleetRow.passportPresent === true &&
+          fleetRow.standardStatus === 'PASS' &&
+          standard && standard.passport_ready === true) {
+        passportRows.push(standard);
+      }
+    });
+
+    if (!passportRows.length) {
+      return Promise.resolve(surface(
+        'CONTRACT_UNAVAILABLE',
+        'NO_READY_AGENT_PASSPORTS',
+        sourcePassports.length,
+        null
+      ));
+    }
+
+    if (!contractRuntime || typeof contractRuntime.normalize !== 'function') {
+      return Promise.resolve(surface(
+        'CONTRACT_UNAVAILABLE',
+        'AGENT_CONTROL_CONTRACT_RUNTIME_UNAVAILABLE',
+        sourcePassports.length,
+        null
+      ));
+    }
+
+    try {
+      for (i = 0; i < passportRows.length; i += 1) {
+        if (!passportRows[i].cabinet ||
+            passportRows[i].cabinet.schema !== 'extella.agent_cabinet.v1.1' ||
+            !passportRows[i].cabinet.agent_control) {
+          return Promise.resolve(surface(
+            'CONTRACT_UNAVAILABLE',
+            'AGENT_CONTROL_CONTRACT_UNAVAILABLE',
+            sourcePassports.length,
+            null
+          ));
+        }
+        contracts.push(contractRuntime.normalize(
+          passportRows[i].cabinet.agent_control
+        ));
+      }
+      reference = ETB.evolutionConsole.canonical(contracts[0]);
+      if (contracts.some(function (contract) {
+            return ETB.evolutionConsole.canonical(contract) !== reference;
+          })) {
+        return Promise.resolve(surface(
+          'CONTRACT_MISMATCH',
+          'AGENT_CONTROL_CONTRACT_MISMATCH',
+          sourcePassports.length,
+          null
+        ));
+      }
+      normalized = contracts[0];
+    } catch (error) {
+      return Promise.resolve(surface(
+        'CONTRACT_UNAVAILABLE',
+        reasonCode(
+          error && error.code,
+          'AGENT_CONTROL_CONTRACT_INVALID'
+        ),
+        sourcePassports.length,
+        null
+      ));
+    }
+
+    return Promise.resolve(surface('AVAILABLE', null, sourcePassports.length,
+      normalized));
   }
 
   function _evolutionLastReceipt(ledger) {
@@ -4213,6 +4356,13 @@ ETB.router = (function () {
     if (action === 'masking_posture_load') {
       try {
         return _evolutionMaskingPostureLoad(data, context);
+      } catch (error) {
+        return Promise.reject(error);
+      }
+    }
+    if (action === 'agent_control_load') {
+      try {
+        return _evolutionAgentControlLoad(data, context);
       } catch (error) {
         return Promise.reject(error);
       }

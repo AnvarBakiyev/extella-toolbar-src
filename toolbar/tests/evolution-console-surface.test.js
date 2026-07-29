@@ -54,7 +54,7 @@ test('Evolution Console manifest keeps exact product naming and a read-only surf
     evolutionManifest.description,
     'Evolution Console показывает, что работает, что остановлено и где нужна помощь. Каталог отделён от установленных автоматизаций, а неизвестное состояние не подменяется успехом.',
   );
-  assert.equal(evolutionManifest.version, '0.9.0');
+  assert.equal(evolutionManifest.version, '0.10.0');
   assert.deepEqual(evolutionManifest.pills, [
     'Автоматизации',
     'Состояние',
@@ -91,6 +91,7 @@ test('Evolution Console manifest keeps exact product naming and a read-only surf
   assert.deepEqual(
     evolutionManifest.capabilities.map((capability) => capability.id).sort(),
     [
+      'agent_change_management',
       'agent_passport_risks',
       'automation_registry',
       'data_protection_posture',
@@ -122,6 +123,12 @@ test('Evolution Console manifest keeps exact product naming and a read-only surf
       (capability) => capability.id === 'mcp_read_inventory',
     ).version,
     'EVOLUTION_MCP_READ_CONTRACT_V1_1',
+  );
+  assert.equal(
+    evolutionManifest.capabilities.find(
+      (capability) => capability.id === 'agent_change_management',
+    ).version,
+    'EVOLUTION_AGENT_CONTROL_SURFACE_V1',
   );
 
   const completeSurface = `${JSON.stringify(evolutionManifest)}\n${evolutionHtml}`;
@@ -431,6 +438,51 @@ test('data protection is a read-only per-agent posture in Console and settings s
   assert.doesNotMatch(
     pluginsManager,
     /'profit-growth-scenario': \{[^}\n]*name:'Консоль агентов'/,
+  );
+});
+
+test('Agent change management is an internal read-only Evolution Console view', () => {
+  const advancedStart = evolutionHtml.indexOf('id="advancedNav"');
+  const advancedEnd = evolutionHtml.indexOf('</details>', advancedStart);
+  const advancedNav = evolutionHtml.slice(advancedStart, advancedEnd);
+  const viewStart = evolutionHtml.indexOf('id="agentControlView"');
+  const viewEnd = evolutionHtml.indexOf('</main>', viewStart);
+  const view = evolutionHtml.slice(viewStart, viewEnd);
+  const loaderStart = evolutionHtml.indexOf('    function validAgentControlSurface(');
+  const loaderEnd = evolutionHtml.indexOf('    function clearLegacyFleet(', loaderStart);
+  const loader = evolutionHtml.slice(loaderStart, loaderEnd);
+  const routerStart = router.indexOf('  function _evolutionAgentControlLoad(');
+  const routerEnd = router.indexOf('  function _evolutionLastReceipt(', routerStart);
+  const routerSlice = router.slice(routerStart, routerEnd);
+
+  assert.match(advancedNav, /data-view="agentControl"/);
+  assert.doesNotMatch(advancedNav, /data-primary-surface/);
+  assert.match(view, /data-evolution-view="agent-control"/);
+  assert.match(view, /id="agentControlRefreshBtn"/);
+  assert.match(view, /id="agentControlOperations"/);
+  assert.match(view, /id="agentControlGates"/);
+  assert.match(view, /id="agentControlLimits"/);
+  assert.doesNotMatch(view, /agent_control_publish|data-agent-control-action/);
+  assert.doesNotMatch(evolutionHtml, /etb_agent_control/);
+  assert.match(evolutionHtml, /agentControlBoundary:'Этот раздел только читает канонический контракт/);
+  assert.match(evolutionHtml, /agentControlBoundary:'This section only reads the canonical contract/);
+  assert.match(evolutionHtml, /agentControlRequires:'Зависит от'/);
+  assert.match(evolutionHtml, /agentControlRequires:'Requires'/);
+  assert.match(loader, /request\('agent_control_load'/);
+  assert.match(
+    loader,
+    /status==='STANDARDS_UNAVAILABLE'\|\|status==='UNKNOWN'\)return count===null/,
+  );
+  assert.match(loader, /status==='NO_AGENT_PASSPORTS'\)return count===0/);
+  assert.match(loader, /surface\.mutations_allowed!==false/);
+  assert.match(loader, /var operationNames=\{\};contract\.operations\.forEach/);
+  assert.match(loader, /operationNames\[code\]\|\|code/);
+  assert.doesNotMatch(loader, /status=\+esc\(surface\.status\)|ledger=/);
+  assert.match(routerSlice, /session\.standardsBundle\.sources/);
+  assert.match(routerSlice, /mutations_allowed: false/);
+  assert.doesNotMatch(
+    routerSlice,
+    /kvGet|kvSet|_agentControlWrite|_agentControlAction|etb_agent_control|agent_control_publish/,
   );
 });
 

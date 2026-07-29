@@ -151,6 +151,8 @@
     .risk-list,.gene-list,.receipt-list{display:grid;gap:9px}.risk,.gene,.receipt{padding:12px;border:1px solid var(--line);
       border-radius:11px;background:var(--panel2)}.risk b,.gene b,.receipt b{display:block;margin-bottom:4px}
     .risk p,.gene p,.receipt p{margin:4px 0;color:var(--muted)}.risk code,.gene code,.receipt code{word-break:break-all}
+    .agent-control-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.agent-control-operation{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;padding:11px;border:1px solid var(--line);border-radius:10px;background:var(--panel2)}
+    .agent-control-order{display:grid;place-items:center;width:25px;height:25px;border-radius:999px;background:var(--panel);color:var(--petrol);font:700 11px var(--mono)}.agent-control-operation b{display:block;color:var(--ink)}.agent-control-operation small{display:block;margin-top:3px;color:var(--muted)}.agent-control-list{display:grid;gap:8px;margin:0;padding:0;list-style:none}.agent-control-list li{padding:9px;border-left:2px solid var(--line);background:var(--panel2);color:var(--body)}
     .consumer{display:inline-flex;margin:3px 4px 0 0;padding:3px 7px;border-radius:999px;background:var(--panel);font-size:11px}
     .flow{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:7px;margin:12px 0}.step{border:1px solid var(--line);
       border-radius:10px;padding:9px;background:var(--panel2);color:var(--muted);font-size:11px}.step.on{border-color:var(--petrol);color:var(--petrol)}
@@ -169,7 +171,7 @@
     .sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;
       overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
     @media(max-width:1000px){.top{flex-wrap:wrap}.brand{min-width:0}.tabs{order:3;width:100%;flex:1 0 100%;overflow:auto}.advanced-menu{position:fixed;left:16px;right:16px;top:auto}
-      .metrics{grid-template-columns:1fr 1fr 1fr}.split{grid-template-columns:1fr}.flow{grid-template-columns:1fr 1fr 1fr}.attention-list{grid-template-columns:1fr}}
+      .metrics{grid-template-columns:1fr 1fr 1fr}.split,.agent-control-grid{grid-template-columns:1fr}.flow{grid-template-columns:1fr 1fr 1fr}.attention-list{grid-template-columns:1fr}}
     @media(max-width:700px){main{padding:18px 15px 34px}.top{padding:12px}.metrics{grid-template-columns:1fr}.hero{display:block}.top-actions{margin-left:auto}
       .tabs{flex-wrap:wrap;overflow:visible}.inventory-tools{display:block}.quick-filters{margin:10px 0}.search-wrap{min-width:0}.tools>*{max-width:100%}.flow{grid-template-columns:1fr 1fr}
       .automation-card>summary{grid-template-columns:1fr auto}.automation-card-title{grid-column:1}.automation-card>summary>.state{grid-column:1}.automation-card-next{grid-column:2;grid-row:1/3}.technical-grid{grid-template-columns:1fr}
@@ -231,6 +233,7 @@
               <button class="tab" type="button" data-view="genes">Shared Genes</button>
               <button class="tab" type="button" data-view="escalations" data-t="escalations"></button>
               <button class="tab" type="button" data-view="bulk" data-t="bulk"></button>
+              <button class="tab" type="button" data-view="agentControl" data-t="agentControl"></button>
               <button class="tab" type="button" data-view="receipts">Evolution Receipts</button>
               <button class="tab" type="button" data-view="risks" data-t="technicalDetails"></button>
             </div>
@@ -311,6 +314,19 @@
         <div class="hero"><div><div class="eyebrow">Evolution Loop</div><h1>Evolution Receipts</h1><p class="lead" data-t="receiptsLead"></p></div></div>
         <section class="card"><div class="receipt-list" id="receiptList"></div></section>
       </section>
+
+      <section class="view" id="agentControlView" data-evolution-view="agent-control">
+        <div class="hero"><div><div class="eyebrow">Extella Evolution · Evolution Console</div><h1 data-t="agentControlTitle"></h1><p class="lead" data-t="agentControlLead"></p></div>
+          <button class="ghost" type="button" id="agentControlRefreshBtn" data-t="refresh"></button></div>
+        <section class="card"><div class="card-head"><div><h2 data-t="agentControlContract"></h2><p id="agentControlStatus" aria-live="polite"></p></div></div>
+          <div class="boundary" id="agentControlBoundary"></div>
+          <div class="agent-control-grid">
+            <section><h2 data-t="agentControlSteps"></h2><div class="agent-control-list" id="agentControlOperations"></div></section>
+            <section><h2 data-t="agentControlPublishGates"></h2><ul class="agent-control-list" id="agentControlGates"></ul></section>
+          </div>
+          <section class="card" style="margin-top:14px"><h2 data-t="agentControlLimits"></h2><ul class="agent-control-list" id="agentControlLimits"></ul></section>
+        </section>
+      </section>
     </main>
   </div>
 
@@ -347,6 +363,7 @@
         overviewTitle:'Ваши автоматизации',overviewLead:'Здесь видно, что работает, что остановлено и где нужна ваша помощь.',
         myAutomations:'Мои автоматизации',catalog:'Каталог',automationScope:'Установленные автоматизации или каталог',workingCount:'работают',notRunningCount:'не запущены',protectedAgents:'с подтверждёнными PRE + POST',attentionCount:'требуют внимания',
         dataProtection:'Защита данных',maskingActive:'PRE + POST включены и подтверждены',maskingOff:'Выключено',maskingPartial:'Подтверждено частично',maskingUnknown:'Состояние защиты неизвестно',maskingSettingsCabinet:'Настройки находятся в Agent Cabinet.',maskingLocalSource:'Статус получен только с текущего устройства.',
+        agentControl:'Управление изменениями',agentControlTitle:'Управление изменениями агентов',agentControlLead:'Evolution Console показывает канонический путь изменения из Agent Passport. Пока паспортов или контракта нет, действия закрыты.',agentControlContract:'Канонический контракт',agentControlSteps:'Путь изменения',agentControlPublishGates:'Перед публикацией',agentControlLimits:'Границы',agentControlRequires:'Зависит от',agentControlLoading:'Проверяем Agent Passports и канонический контракт…',agentControlStandardsUnavailable:'Production bundle Agent Passports пока недоступен.',agentControlNoPassports:'Agent Passports ещё не заполнены. Когда появится подтверждённый паспорт, здесь будет показан канонический путь изменения.',agentControlContractUnavailable:'Канонический контракт управления пока недоступен. Действия закрыты.',agentControlContractMismatch:'Контракты Agent Passports расходятся. Действия закрыты до устранения расхождения.',agentControlUnknown:'Состояние управления изменениями неизвестно. Действия закрыты.',agentControlReadOnly:'Сейчас доступно только чтение канонического контракта. Публикация появится только через trusted action с теми же гейтами.',agentControlBoundary:'Этот раздел только читает канонический контракт: он не создаёт агентов, не меняет настройки Agent Cabinet или защиты данных, не ведёт отдельный журнал и не публикует изменения.',
         advancedConsole:'Расширенные возможности Evolution Console',evolutionLabTitle:'Безопасная проверка изменений',evolutionLabLead:'Evolution Lab сравнивает поведение до и после изменения, не затрагивая работающие автоматизации.',labEmptyTitle:'Нет изменения для проверки',labEmptyText:'Evolution Lab откроет сравнение, когда в Evolution Console или Agent Cabinet будет подготовлено конкретное изменение.',backAutomations:'Вернуться к автоматизациям',
         openAutomation:'Открыть',reviewAutomation:'Разобраться',catalogDetails:'Подробнее',descriptionMissing:'Описание пока не добавлено.',whatItDoes:'Что делает',stateAndRuns:'Состояние и последние запуски',technicalEvidence:'Технические сведения',chooseAutomation:'Выберите автоматизацию, чтобы открыть подробности.',
         stateUnavailableSummary:'Данные о работе пока недоступны.',stateCheckUnavailableText:'Действия временно недоступны: сначала нужно проверить состояние автоматизации.',notRunningText:'Автоматизация сейчас не выполняет задачи.',updateAvailable:'Доступно обновление.',scheduleMissingHuman:'Расписание не найдено.',linkedComponentMissing:'Не найден связанный компонент.',
@@ -420,6 +437,7 @@
         overviewTitle:'Your automations',overviewLead:'See what is working, what is stopped, and where your attention is needed.',
         myAutomations:'My automations',catalog:'Catalog',automationScope:'Installed automations or catalog',workingCount:'working',notRunningCount:'not running',protectedAgents:'with verified PRE + POST',attentionCount:'need attention',
         dataProtection:'Data protection',maskingActive:'PRE + POST enabled and verified',maskingOff:'Off',maskingPartial:'Partially verified',maskingUnknown:'Protection status unknown',maskingSettingsCabinet:'Settings are in Agent Cabinet.',maskingLocalSource:'Status comes from this device only.',
+        agentControl:'Change management',agentControlTitle:'Agent change management',agentControlLead:'Evolution Console shows the canonical change path from Agent Passport. Until passports or the contract are available, actions are closed.',agentControlContract:'Canonical contract',agentControlSteps:'Change path',agentControlPublishGates:'Before publication',agentControlLimits:'Limits',agentControlRequires:'Requires',agentControlLoading:'Checking Agent Passports and the canonical contract…',agentControlStandardsUnavailable:'The production Agent Passport bundle is not available yet.',agentControlNoPassports:'Agent Passports have not been filled in yet. The canonical change path will appear here once a verified passport exists.',agentControlContractUnavailable:'The canonical change-management contract is not available yet. Actions are closed.',agentControlContractMismatch:'Agent Passport contracts disagree. Actions are closed until the mismatch is resolved.',agentControlUnknown:'Change-management status is unknown. Actions are closed.',agentControlReadOnly:'Only canonical-contract reading is available now. Publication will appear only through a trusted action with the same gates.',agentControlBoundary:'This section only reads the canonical contract: it does not create agents, change Agent Cabinet settings or data protection, keep a separate ledger, or publish changes.',
         advancedConsole:'Advanced Evolution Console capabilities',evolutionLabTitle:'Test changes safely',evolutionLabLead:'Evolution Lab compares behavior before and after a change without affecting working automations.',labEmptyTitle:'No change to test',labEmptyText:'Evolution Lab will open a comparison after a specific change is prepared in Evolution Console or Agent Cabinet.',backAutomations:'Back to automations',
         openAutomation:'Open',reviewAutomation:'Review',catalogDetails:'Details',descriptionMissing:'No description has been added yet.',whatItDoes:'What it does',stateAndRuns:'Status and recent runs',technicalEvidence:'Technical details',chooseAutomation:'Choose an automation to open its details.',
         stateUnavailableSummary:'Status data is not available yet.',stateCheckUnavailableText:'Actions are temporarily unavailable until the automation’s status can be checked.',notRunningText:'The automation is not running tasks right now.',updateAvailable:'Update available.',scheduleMissingHuman:'Schedule could not be found.',linkedComponentMissing:'A linked component could not be found.',
@@ -503,7 +521,8 @@
       bulkOperations:[],currentBulkOperationId:null,selectedBulkOperationId:null,selectedBulkGeneId:null,selectedBulkIds:[],
       lastEscalationEvidence:null,lastBulkEvidence:null,lastLoadedAt:null,focusRiskAgentId:null,cabinetTrigger:null,
       mcpByAutomation:Object.create(null),mcpEpoch:0,
-      maskingPostures:null,maskingLoading:false,maskingError:null,maskingEpoch:0
+      maskingPostures:null,maskingLoading:false,maskingError:null,maskingEpoch:0,
+      agentControl:null,agentControlLoading:false,agentControlError:null,agentControlEpoch:0
     };
 
     function applyLanguage(){
@@ -517,24 +536,24 @@
         HELP.evolution_console={
           ru:{icon:'◇',title:'Как работает Evolution Console',sub:'Единый реестр автоматизаций',
             steps:['Сначала показывает установленные автоматизации: что работает, что не запущено и где нужна помощь.','Карточка раскрывает состояние, последние запуски, расписания и состав только по запросу.','Agent Cabinet открывается из состава конкретной автоматизации; Evolution Lab используется для безопасной проверки подготовленного изменения.'],
-            sure:['Каталог отделён от установленных автоматизаций.','Если состояние проверить нельзя, Evolution Console пишет об этом прямо и блокирует зависимые действия.','Защита данных считается включённой только после подтверждения PRE и POST на текущем устройстве.'],
-            nope:['Этот экран пока не включает, не выключает, не обновляет и не откатывает автоматизации.','Неизвестное состояние не подменяется успешным.','Между аккаунтами видимости нет.'],
+            sure:['Каталог отделён от установленных автоматизаций.','Если состояние проверить нельзя, Evolution Console пишет об этом прямо и блокирует зависимые действия.','Защита данных считается включённой только после подтверждения PRE и POST на текущем устройстве.','«Управление изменениями» читает только канонический контракт из Agent Passport.'],
+            nope:['Этот экран пока не включает, не выключает, не обновляет и не откатывает автоматизации.','Раздел «Управление изменениями» не создаёт агентов, не дублирует защиту данных и не ведёт отдельный журнал.','Неизвестное состояние не подменяется успешным.','Между аккаунтами видимости нет.'],
             who:{title:'Где находятся подробности',items:['Технические коды, версии и источники скрыты в «Технических сведениях».','Внутренний агент и настройки защиты данных открываются в готовом Agent Cabinet, а не дублируются в Evolution Console.']}},
           en:{icon:'◇',title:'How Evolution Console works',sub:'Unified automation registry',
             steps:['It first shows installed automations: what is working, what is not running, and where attention is needed.','A card reveals status, recent runs, schedules, and composition only when requested.','Agent Cabinet opens from a specific automation’s composition; Evolution Lab safely tests a prepared change.'],
-            sure:['The catalog is separate from installed automations.','If status cannot be checked, Evolution Console says so and blocks dependent actions.','Data protection is enabled only after PRE and POST are verified on this device.'],
-            nope:['This screen does not yet enable, disable, update, or roll back automations.','Unknown status is never replaced with success.','There is no cross-account visibility.'],
+            sure:['The catalog is separate from installed automations.','If status cannot be checked, Evolution Console says so and blocks dependent actions.','Data protection is enabled only after PRE and POST are verified on this device.','Change management reads only the canonical contract from Agent Passport.'],
+            nope:['This screen does not yet enable, disable, update, or roll back automations.','Change management does not create agents, duplicate data protection, or keep a separate ledger.','Unknown status is never replaced with success.','There is no cross-account visibility.'],
             who:{title:'Where details live',items:['Technical codes, versions, and sources are hidden under “Technical details”.','An internal agent and its data protection settings open in the existing Agent Cabinet instead of being duplicated in Evolution Console.']}}
         };
       }
     }
     function showError(msg){var n=el('errorBox');n.textContent=String(msg||'');n.classList.toggle('on',!!msg);}
     function setView(view){
-      var advanced=el('advancedNav'),advancedActive=['genes','escalations','risks','bulk','receipts'].indexOf(view)!==-1;
+      var advanced=el('advancedNav'),advancedActive=['genes','escalations','risks','bulk','receipts','agentControl'].indexOf(view)!==-1;
       document.querySelectorAll('.view').forEach(function(n){var active=n.id===view+'View';n.classList.toggle('on',active);n.setAttribute('aria-hidden',active?'false':'true');});
       document.querySelectorAll('.tab').forEach(function(n){var active=n.dataset.view===view||(n.dataset.primarySurface==='console'&&advancedActive);n.classList.toggle('on',active);if(active)n.setAttribute('aria-current','page');else n.removeAttribute('aria-current');});
       advanced.classList.toggle('has-active',advancedActive);advanced.open=false;
-      if(advancedActive)ensureLegacyFleet();
+      if(advancedActive){ensureLegacyFleet();if(view==='agentControl')loadAgentControl();}
     }
     function standardDataMode(){var s=state.standards||{};return String(s.dataMode||s.data_mode||'UNAVAILABLE');}
     function productionReady(){
@@ -656,6 +675,7 @@
       if(action==='automation_registry_load')return {actorId:'demo_actor',registry:demoAutomationRegistry(),legacy:mockRequest('fleet_load',payload)};
       if(action==='fleet_load')return {actorId:'demo_actor',projection:demoProjection(),stableIdRequired:[{sourcePassport:'demo_unbound_passport',sourcePath:'agents/demo-unbound.yaml',name:'Demo unbound Agent Passport',passportSha256:'0000000000000000000000000000000000000000000000000000000000000000',checkerIssues:[{code:'AGENT_PLATFORM_ID_REQUIRED',severity:'error',path:'agent.platform_agent_id',message_ru:'Нужен стабильный platform_agent_id',message_en:'A stable platform_agent_id is required'}]}],shared:{complete:true,snapshotId:'demo_genes_1',genes:[{geneId:'shared.demo.approval_guard',kind:'rule',name:'Approval guard',version:'1.0.0',consumerAgentIds:['agent_demo_fixture_valid_alpha','agent_demo_fixture_valid_beta','agent_demo_fixture_warning_only'],consumers:[{platformAgentId:'agent_demo_fixture_valid_alpha',activeVersion:'1.0.0'},{platformAgentId:'agent_demo_fixture_valid_beta',activeVersion:'1.0.0'},{platformAgentId:'agent_demo_fixture_warning_only',activeVersion:'1.0.0'}],lastChanged:'2026-07-20T10:00:00Z'}],byAgent:{agent_demo_fixture_valid_alpha:['shared.demo.approval_guard'],agent_demo_fixture_valid_beta:['shared.demo.approval_guard'],agent_demo_fixture_warning_only:['shared.demo.approval_guard']}},standards:{dataMode:'DEMO_FIXTURE',deliveryMode:'STATIC_BUILD_ARTIFACT',accountScoped:false,productionEligible:false,liveProjectionAllowed:false,commit:'demo-standards',checkerSha256:'demo'},platform:{evolutionLabAdapter:'PLATFORM_UNAVAILABLE',classActivationAdapter:'PLATFORM_UNAVAILABLE',classObservationAdapter:'PLATFORM_UNAVAILABLE',classRollbackAdapter:'PLATFORM_UNAVAILABLE',scheduleStateAdapter:'PLATFORM_UNAVAILABLE',nativeScheduleAdapter:'PLATFORM_UNAVAILABLE',bulkActivationAdapter:'PLATFORM_UNAVAILABLE',bulkObservationAdapter:'PLATFORM_UNAVAILABLE',bulkRollbackAdapter:'PLATFORM_UNAVAILABLE'},ledger:{ownerAccountId:'demo_actor',evolution:{currentEscalationId:'demo_candidate_1',escalations:{demo_candidate_1:{candidateId:'demo_candidate_1',status:'PENDING_CLASS_DECISION',candidateBundleSha256:'0000000000000000000000000000000000000000000000000000000000000000',affectedAgentIds:['agent_demo_fixture_valid_alpha','agent_demo_fixture_valid_beta','agent_demo_fixture_warning_only'],actorId:'demo_actor'}},bulkOperations:{},receipts:{}}},receipts:[]};
       if(action==='masking_posture_load')return demoMaskingPostures();
+      if(action==='agent_control_load')return {schema:'extella.evolution.agent_control_surface.v1',owner_account_id:'demo_actor',fleet_snapshot_id:'demo_snapshot_15',captured_at:new Date().toISOString(),status:'STANDARDS_UNAVAILABLE',agent_passport_count:null,contract:null,mutations_allowed:false,error_code:'PRODUCTION_STANDARDS_UNAVAILABLE'};
       if(action==='mcp_read'){var args=payload&&payload.arguments||{};if(payload.tool!=='automations.get_composition'||!args.automation_id)throw new Error('Unsupported preview MCP read');return demoMcpComposition(args.automation_id);}
       if(action==='passport_draft')return {filename:'agent_passport_'+payload.agentId+'.json',draft:{agent:{platform_agent_id:payload.agentId,name:'Demo Agent',owner:'',business_goal:'',model_profile:'qwen3.7-max',version:'0.1.0',languages:['ru','en']},capabilities:[],shared_genes:[],budgets:{max_duration_ms:null,max_llm_tokens:null,max_delegation_depth:null,max_external_actions:null},operations:{success_metric:'',owner_on_call:''},draft_status:'NOT_VALIDATED'}};
       if(action.indexOf('escalation_')===0||action.indexOf('bulk_')===0)throw new Error(t('productionRequired'));
@@ -664,10 +684,66 @@
     function clearMaskingPostures(){
       state.maskingEpoch++;state.maskingPostures=null;state.maskingLoading=false;state.maskingError=null;
     }
+    function clearAgentControl(){
+      state.agentControlEpoch++;state.agentControl=null;state.agentControlLoading=false;state.agentControlError=null;
+    }
+    function agentControlText(value){return typeof value==='string'&&value.length>0&&value.length<=1200&&!/[\u0000-\u001f\u007f]/.test(value);}
+    function sameKeys(value,keys){return !!value&&typeof value==='object'&&!Array.isArray(value)&&canonical(Object.keys(value).sort())===canonical(keys.slice().sort());}
+    function validAgentControlContract(contract){
+      var operationOrders={};
+      if(!sameKeys(contract,['surface','engine','shared_ledger_with','operations','publish_gates','limits'])||contract.surface!=='agent_control_center'||contract.engine!=='ETB.agentControl'||contract.shared_ledger_with!=='agent_cabinet'||!Array.isArray(contract.operations)||contract.operations.length!==6||!Array.isArray(contract.publish_gates)||contract.publish_gates.length!==4||!Array.isArray(contract.limits)||contract.limits.length!==4)return false;
+      if(contract.operations.some(function(row){var order=Number(row&&row.order);if(!sameKeys(row,['code','order','ru','en','requires'])||!agentControlText(row.code)||!Number.isInteger(order)||order<1||order>6||operationOrders[order]||!agentControlText(row.ru)||!agentControlText(row.en)||!Array.isArray(row.requires)||row.requires.some(function(code){return !agentControlText(code);}))return true;operationOrders[order]=true;return false;}))return false;
+      if(Object.keys(operationOrders).length!==6)return false;
+      return !contract.publish_gates.some(function(row){return !sameKeys(row,['code','ru','en'])||!agentControlText(row.code)||!agentControlText(row.ru)||!agentControlText(row.en);})&&!contract.limits.some(function(row){return !sameKeys(row,['ru','en'])||!agentControlText(row.ru)||!agentControlText(row.en);});
+    }
+    function validAgentControlSurface(surface){
+      var statuses=['AVAILABLE','STANDARDS_UNAVAILABLE','NO_AGENT_PASSPORTS','CONTRACT_UNAVAILABLE','CONTRACT_MISMATCH','UNKNOWN'],capturedAt=Date.parse(surface&&surface.captured_at||''),now=Date.now(),count=surface&&surface.agent_passport_count,status=String(surface&&surface.status||'');
+      if(!sameKeys(surface,['schema','owner_account_id','fleet_snapshot_id','captured_at','status','agent_passport_count','contract','mutations_allowed','error_code'])||surface.schema!=='extella.evolution.agent_control_surface.v1'||surface.owner_account_id!==state.actorId||!state.projection||surface.fleet_snapshot_id!==state.projection.snapshotId||statuses.indexOf(status)===-1||surface.mutations_allowed!==false||!isFinite(capturedAt)||capturedAt<now-5*60*1000||capturedAt>now+60*1000)return false;
+      if(status==='STANDARDS_UNAVAILABLE'||status==='UNKNOWN')return count===null&&surface.contract===null&&typeof surface.error_code==='string'&&/^[A-Z][A-Z0-9_]{0,63}$/.test(surface.error_code);
+      if(!Number.isInteger(count)||count<0||count>10000)return false;
+      if(status==='AVAILABLE')return count>0&&validAgentControlContract(surface.contract)&&surface.error_code===null;
+      if(status==='NO_AGENT_PASSPORTS')return count===0&&surface.contract===null&&typeof surface.error_code==='string'&&/^[A-Z][A-Z0-9_]{0,63}$/.test(surface.error_code);
+      return count>0&&surface.contract===null&&typeof surface.error_code==='string'&&/^[A-Z][A-Z0-9_]{0,63}$/.test(surface.error_code);
+    }
+    function agentControlStatusText(surface){
+      var status=String(surface&&surface.status||'UNKNOWN');
+      if(status==='STANDARDS_UNAVAILABLE')return t('agentControlStandardsUnavailable');
+      if(status==='NO_AGENT_PASSPORTS')return t('agentControlNoPassports');
+      if(status==='CONTRACT_UNAVAILABLE')return t('agentControlContractUnavailable');
+      if(status==='CONTRACT_MISMATCH')return t('agentControlContractMismatch');
+      if(status==='AVAILABLE')return t('agentControlReadOnly');
+      return t('agentControlUnknown');
+    }
+    function renderAgentControl(){
+      var surface=state.agentControl,contract=surface&&surface.contract,status=el('agentControlStatus'),boundary=el('agentControlBoundary'),operations=el('agentControlOperations'),gates=el('agentControlGates'),limits=el('agentControlLimits');
+      if(state.agentControlLoading){status.textContent=t('agentControlLoading');boundary.textContent=t('agentControlBoundary');operations.innerHTML='';gates.innerHTML='';limits.innerHTML='';return;}
+      status.textContent=state.agentControlError?t('agentControlUnknown'):agentControlStatusText(surface);
+      boundary.textContent=t('agentControlBoundary');
+      if(!contract){operations.innerHTML='<div class="empty">'+esc(status.textContent)+'</div>';gates.innerHTML='';limits.innerHTML='';return;}
+      var operationNames={};contract.operations.forEach(function(row){operationNames[row.code]=row[WLANG];});
+      operations.innerHTML=contract.operations.slice().sort(function(left,right){return left.order-right.order;}).map(function(row){var requires=row.requires&&row.requires.length?'<small>'+esc(t('agentControlRequires'))+': '+esc(row.requires.map(function(code){return operationNames[code]||code;}).join(' · '))+'</small>':'';return '<article class="agent-control-operation" data-agent-control-operation="'+esc(row.code)+'" data-agent-control-requires="'+esc(row.requires.join(' '))+'"><span class="agent-control-order">'+esc(row.order)+'</span><span><b>'+esc(row[WLANG])+'</b>'+requires+'</span></article>';}).join('');
+      gates.innerHTML=contract.publish_gates.map(function(row){return '<li data-agent-control-gate="'+esc(row.code)+'">'+esc(row[WLANG])+'</li>';}).join('');
+      limits.innerHTML=contract.limits.map(function(row){return '<li>'+esc(row[WLANG])+'</li>';}).join('');
+    }
+    async function loadAgentControl(){
+      if(!state.projection||!state.actorId||state.agentControlLoading)return;
+      var epoch=state.accountEpoch,requestEpoch=++state.agentControlEpoch;
+      state.agentControlLoading=true;state.agentControlError=null;renderAgentControl();
+      try{
+        var result=await request('agent_control_load',{});
+        if(epoch!==state.accountEpoch||requestEpoch!==state.agentControlEpoch)return;
+        if(!validAgentControlSurface(result))throw new Error('AGENT_CONTROL_SURFACE_INVALID');
+        state.agentControl=result;
+      }catch(error){
+        if(epoch!==state.accountEpoch||requestEpoch!==state.agentControlEpoch)return;
+        state.agentControl=null;state.agentControlError=error&&error.message||'AGENT_CONTROL_SURFACE_UNAVAILABLE';
+      }
+      state.agentControlLoading=false;renderAgentControl();
+    }
     function clearLegacyFleet(){
       state.legacyLoading=false;state.actorId=null;state.projection=null;state.stableIdRequired=[];state.stableTargetBySource=Object.create(null);state.shared=null;state.standards=null;state.platform=null;state.ledger=null;
       state.escalations=[];state.bulkOperations=[];state.bulk=null;state.receipts=[];state.currentEscalationId=null;state.selectedEscalationId=null;state.currentBulkOperationId=null;state.selectedBulkOperationId=null;
-      clearMaskingPostures();
+      clearMaskingPostures();clearAgentControl();
       el('snapshotBadge').textContent='SNAPSHOT —';el('snapshotBadge').className='badge';el('standardsBadge').textContent='STANDARD —';el('standardsBadge').className='badge';
     }
     function validAutomationRegistry(registry){
@@ -692,7 +768,7 @@
       if(!deferRender)renderAll();var s=state.standards||{},ready=productionReady();
       el('standardsBadge').textContent=(ready?'✓ PRODUCTION READY · ':'⚠ PRODUCTION BLOCKED · ')+'STANDARD '+short(s.commit||s.checkerSha256)+' · '+standardDataMode();
       el('standardsBadge').className='badge '+(ready?'good':'warn');
-      loadMaskingPostures();
+      loadMaskingPostures();loadAgentControl();
     }
     function isInactiveRow(r){
       if(!r.platformPresent||r.activityState!=='KNOWN'||!r.lastActivity||!r.lastActivitySource)return false;
@@ -1176,7 +1252,7 @@
       el('bulkActions').innerHTML=stateBlocked?'<span class="state-gate-explanation" data-bulk-state-gate="STATE_REQUIRED">'+esc(t('scheduleStateRequired'))+'</span>':actions.map(function(a){return '<span><button class="'+(a[0]==='bulk_rollback'?'danger':'primary')+'" data-bulk-action="'+a[0]+'" '+(a[2]?'':'disabled')+'>'+esc(a[1])+'</button><small class="mono">'+esc(a[3])+'='+(a[2]?'AVAILABLE':'PLATFORM_UNAVAILABLE')+'</small></span>';}).join('');el('bulkActions').querySelectorAll('[data-bulk-action]').forEach(function(b){b.onclick=function(){runBulkAction(b.dataset.bulkAction);};});
     }
     function renderReceipts(){el('receiptList').innerHTML=state.receipts.length?state.receipts.slice().reverse().map(function(r){return '<article class="receipt"><b>'+esc(r.type||'Evolution Receipt')+'</b><p>'+esc(fmtTime(r.at))+' · '+esc(r.status||'RECORDED')+'</p><code>'+esc(r.sha256||'—')+'</code></article>';}).join(''):'<div class="empty">'+esc(t('noData'))+'</div>';}
-    function renderAll(){renderFleet();renderRisks();renderStableIdRequired();renderGenes();renderEscalations();renderBulk();renderReceipts();renderBoundary();el('escalationEvidence').textContent=state.lastEscalationEvidence?JSON.stringify(state.lastEscalationEvidence,null,2):'—';}
+    function renderAll(){renderFleet();renderRisks();renderStableIdRequired();renderGenes();renderEscalations();renderBulk();renderReceipts();renderAgentControl();renderBoundary();el('escalationEvidence').textContent=state.lastEscalationEvidence?JSON.stringify(state.lastEscalationEvidence,null,2):'—';}
     async function loadMaskingPostures(){
       var projection=state.projection;
       if(!projection||!projection.snapshotId)return;
@@ -1195,7 +1271,7 @@
       state.maskingLoading=false;renderFleet();
     }
     async function loadFleet(){
-      showError('');state.automationRegistryError=null;state.mcpEpoch++;state.mcpByAutomation=Object.create(null);clearMaskingPostures();el('fleetRegistry').setAttribute('aria-busy','true');el('fleetRows').innerHTML='<tr><td colspan="5" class="empty">'+esc(t('loading'))+'</td></tr>';
+      showError('');state.automationRegistryError=null;state.mcpEpoch++;state.mcpByAutomation=Object.create(null);clearMaskingPostures();clearAgentControl();el('fleetRegistry').setAttribute('aria-busy','true');el('fleetRows').innerHTML='<tr><td colspan="5" class="empty">'+esc(t('loading'))+'</td></tr>';
       try{var result=await request('automation_registry_load',{});if(!applyAutomationRegistryResult(result))throw new Error(t('registryIncomplete'));ensureLegacyFleet();return true;}
       catch(e){state.automationRegistry=null;state.automationRegistryError=e&&e.message||t('registryIncomplete');clearLegacyFleet();renderAll();el('fleetRegistry').setAttribute('aria-busy','false');showError(state.automationRegistryError);return false;}
     }
@@ -1206,7 +1282,7 @@
     }
     async function refreshAfterMutation(kind,result){
       if(kind==='escalation')state.lastEscalationEvidence=result;else state.lastBulkEvidence=result;
-      state.automationRegistry=null;state.automationRegistryError=null;state.legacyLoading=false;state.actorId=null;state.projection=null;state.stableIdRequired=[];state.stableTargetBySource=Object.create(null);state.shared=null;state.standards=null;state.platform=null;state.ledger=null;state.escalations=[];state.currentEscalationId=null;state.selectedEscalationId=null;state.bulkOperations=[];state.currentBulkOperationId=null;state.selectedBulkOperationId=null;state.bulk=null;state.receipts=[];state.mcpEpoch++;state.mcpByAutomation=Object.create(null);clearMaskingPostures();renderAll();
+      state.automationRegistry=null;state.automationRegistryError=null;state.legacyLoading=false;state.actorId=null;state.projection=null;state.stableIdRequired=[];state.stableTargetBySource=Object.create(null);state.shared=null;state.standards=null;state.platform=null;state.ledger=null;state.escalations=[];state.currentEscalationId=null;state.selectedEscalationId=null;state.bulkOperations=[];state.currentBulkOperationId=null;state.selectedBulkOperationId=null;state.bulk=null;state.receipts=[];state.mcpEpoch++;state.mcpByAutomation=Object.create(null);clearMaskingPostures();clearAgentControl();renderAll();
       if(!await loadFleet())throw new Error('Mutation completed, but the required fresh fleet snapshot could not be loaded.');
       if(kind==='escalation')setView('escalations');else setView('bulk');
     }
@@ -1289,7 +1365,7 @@
       state.accountEpoch++;state.pending.forEach(function(p){clearTimeout(p.timer);p.reject(new Error('Account context changed; stale result discarded.'));});state.pending.clear();
       state.automationRegistry=null;state.automationRegistryError=null;state.legacyLoading=false;state.actorId=null;state.projection=null;state.stableIdRequired=[];state.stableTargetBySource=Object.create(null);state.shared=null;state.standards=null;state.platform=null;state.ledger=null;state.escalations=[];state.bulkOperations=[];state.bulk=null;state.receipts=[];state.draft=null;
       state.cabinetAgentId=null;state.cabinetGeneId=null;state.cabinetArtifactBase=null;state.currentEscalationId=null;state.selectedEscalationId=null;state.currentBulkOperationId=null;state.selectedBulkOperationId=null;state.selectedBulkGeneId=null;state.selectedBulkIds=[];state.lastEscalationEvidence=null;state.lastBulkEvidence=null;
-      state.lastLoadedAt=null;state.focusRiskAgentId=null;state.cabinetTrigger=null;state.mcpEpoch++;state.mcpByAutomation=Object.create(null);clearMaskingPostures();
+      state.lastLoadedAt=null;state.focusRiskAgentId=null;state.cabinetTrigger=null;state.mcpEpoch++;state.mcpByAutomation=Object.create(null);clearMaskingPostures();clearAgentControl();
       el('searchInput').value='';el('filterSelect').value='installed';el('bulkType').value='shared_gene_change';el('bulkVersionInput').value='';el('cabinetVersionInput').value='';
       el('standardsBadge').textContent='STANDARD —';el('standardsBadge').className='badge';el('cabinetTitle').textContent='Agent Cabinet';el('cabinetHost').innerHTML='';el('cabinetGeneSelect').innerHTML='';el('cabinetImpact').textContent='';el('cabinetEscalateBtn').disabled=true;
       el('advancedNav').open=false;el('cabinetOverlay').classList.remove('on');window._cab=null;setView('fleet');renderAll();showError(message||'');
@@ -1301,6 +1377,7 @@
     document.querySelectorAll('[data-fleet-filter]').forEach(function(b){b.onclick=function(){applyFleetFilter(b.dataset.fleetFilter,false);};});
     el('langBtn').onclick=function(){WLANG=WLANG==='ru'?'en':'ru';applyLanguage();renderAll();if(el('cabinetOverlay').classList.contains('on'))updateCabinetImpact();};
     el('helpBtn').onclick=function(){if(typeof openHelp==='function')openHelp('evolution_console');};el('refreshBtn').onclick=loadFleet;
+    el('agentControlRefreshBtn').onclick=function(){clearAgentControl();loadAgentControl();};
     el('searchInput').oninput=function(){renderFleet();renderBulk();};el('filterSelect').onchange=function(){syncFilterControls();renderFleet();renderBulk();};el('jsonBtn').onclick=function(){exportRows('json');};el('csvBtn').onclick=function(){exportRows('csv');};
     el('geneObjectBtn').onclick=function(){state.geneView='object';renderGenes();};el('geneAgentBtn').onclick=function(){state.geneView='agent';renderGenes();};
     el('bulkType').onchange=function(){state.selectedBulkIds=[];state.lastBulkEvidence=null;renderFleet();renderBulk();};el('bulkGeneSelect').onchange=function(){state.selectedBulkGeneId=el('bulkGeneSelect').value||null;state.selectedBulkIds=[];state.lastBulkEvidence=null;renderFleet();renderBulk();};
