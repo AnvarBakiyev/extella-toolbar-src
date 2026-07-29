@@ -80,6 +80,12 @@
   «Концепты» — «Что агент знает о твоём деле: сущности, которыми он оперирует в ответах»;
   «Правила» — «Границы, внутри которых агент действует: что можно, чего нельзя, когда спросить»;
   «Ключи доступа» — «Ключ подключает к Extella программу или другого агента. Отозвал — доступ закрылся».
+
+  **EN-пары к этим строкам** (ключи те же, файл `locales/en/*.json`):
+  - Experts — «Functions an agent calls while it works: the Wizard and the agents themselves create them»
+  - Concepts — «What the agent knows about your business: the entities it works with in its answers»
+  - Rules — «The limits an agent acts inside: what is allowed, what is not, when to ask»
+  - Access keys — «A key connects a program or another agent to Extella. Revoke it and the access is closed»
 - **Числа и подстановки:** `{{name}}` и `{{count}}` остаются на месте; русский требует
   согласования — там, где в EN `1 agent / 2 agents`, в RU нужны три формы
   (`{{count}} агент / агента / агентов`), i18next это умеет через `_one/_few/_many`.

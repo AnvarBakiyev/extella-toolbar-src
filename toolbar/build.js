@@ -252,8 +252,25 @@ function buildToolbar(plugins, evolutionBundle) {
     ``
   ].join('\n'));
 
+  // ── Отпечаток сборки ───────────────────────────────────────────
+  // Практика, о которой договорились 29.07: любой отчёт от коллег начинается
+  // с вопроса «какая у вас версия». Чтобы на него отвечали за секунду, а не
+  // по памяти, кладём в артефакт короткий отпечаток ВХОДОВ сборки.
+  // Именно входов, а не времени: гейт воспроизводимости собирает дважды и
+  // сравнивает хэши — метка времени его бы уронила.
+  const buildFingerprint = require('crypto')
+    .createHash('sha256')
+    .update(marketplaceHtml)
+    .update(chatHtml)
+    .update(formHtml)
+    .update(libraryHtml)
+    .update(JSON.stringify(plugins))
+    .digest('hex')
+    .slice(0, 7);
+
   // ── IIFE start ─────────────────────────────────────────────────
   parts.push(`(function () {\n  'use strict';\n\n  var ETB = {};\n`);
+  parts.push(`  var ETB_BUILD = ${JSON.stringify(buildFingerprint)};\n  ETB.build = ETB_BUILD;\n`);
   parts.push(
     `  ETB.evolutionStandardsBundle = ${
       jsonForInlineScript(evolutionRuntimeBundle(evolutionBundle))
@@ -390,12 +407,18 @@ function jsonForInlineScript(value) {
 // ── Step 3: Build plugins_manager.html ────────────────────────────────────
 function buildMarketplace(plugins) {
   const template = readFile(path.join(PUBLIC, 'plugins_manager.html'));
+  // Отпечаток витрины: короткий хэш её исходника. Нужен, чтобы на вопрос
+  // «какая у вас версия» отвечали за секунду — метка видна внизу Рабочего стола.
+  // Хэш ИСХОДНИКА, а не времени сборки: гейт воспроизводимости собирает дважды.
+  const shopFingerprint = require('crypto')
+    .createHash('sha256').update(template).digest('hex').slice(0, 7);
   const _formHtml = buildForm(plugins);
   const _chatHtml = buildChat(plugins);
   const dataVar = `var BUILTIN_PLUGINS_DATA = ${jsonForInlineScript(plugins)};`;
   // Function replacer required: string replacements treat `$'` / `$&` in plugin
   // expert code (regex patterns) as special patterns and corrupt the output.
   return template
+    .replaceAll('__ETB_SHOP_BUILD__', shopFingerprint)
     .replaceAll('__EXTELLA_LOGO_DATA__', getBrandLogoData())
     .replaceAll('__EXTELLA_DESKTOP_LOADER_DATA__', getDesktopLoaderData())
     .replace('/* __BUILTIN_PLUGINS_DATA__ */', function () { return dataVar; })
