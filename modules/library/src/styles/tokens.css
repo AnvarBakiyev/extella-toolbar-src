@@ -4,8 +4,13 @@
 
 .ap-theme {
   /* type */
-  --ap-font: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", system-ui, sans-serif;
-  --ap-font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  /* ШРИФТЫ ПРИВЕДЕНЫ К КАНОНУ EXTELLA 29.07 (правило Эллы, UX_CANON §3).
+     Здесь стоял системный стек Apple, и Библиотека выглядела чужой на каждом переходе —
+     это и был пункт 2 у Алии «разные шрифты на разных экранах». Системные семейства
+     оставлены хвостом: если шрифт хоста почему-то не подгрузился, текст не поедет. */
+  --ap-font-display: "Source Serif 4", ui-serif, Georgia, serif;
+  --ap-font: "Source Sans 3", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --ap-font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
   /* radii */
   --ap-r-xs: 4px;
@@ -321,6 +326,8 @@
   border-bottom: 1px solid var(--ap-divider);
 }
 .ap-page-h h1 {
+  /* Канон Эллы: заголовки — Source Serif 4, текст и UI — Source Sans 3. */
+  font-family: var(--ap-font-display);
   font-size: var(--ap-fs-2xl); font-weight: 600;
   line-height: 1.15; margin: 0; letter-spacing: -0.01em;
 }
