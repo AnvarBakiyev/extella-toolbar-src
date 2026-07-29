@@ -5298,10 +5298,10 @@ function renderAgents(){
   var _agN=(_autoReg||[]).length;
   var mineHtml = _agN
     ? '<div class="sk_lead" style="grid-column:1/-1;display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
-        '<span>'+_clT('Твои агенты живут на Рабочем столе — их там '+_agN+'. Оттуда и открывай.',
-                      'Your agents live on the Desktop — '+_agN+' of them. Open them from there.')+'</span>'+
+        '<span>'+_clT('Собранные агенты живут на Рабочем столе — оттуда и открываются.',
+                      'Assembled agents live on the Desktop — they open from there.')+'</span>'+
         '<button onclick="setc(\'desktop\')" style="border:1px solid var(--bd2);background:transparent;color:var(--tx2);border-radius:5px;padding:4px 10px;font-size:12px;cursor:pointer">'+_clT('На Рабочий стол','To the Desktop')+'</button>'+
-        '<button onclick="setc(\'automations\')" style="border:1px solid var(--bd2);background:transparent;color:var(--tx2);border-radius:5px;padding:4px 10px;font-size:12px;cursor:pointer">'+_clT('Все мои агенты','All my agents')+'</button>'+
+        '<button onclick="setc(\'automations\')" style="border:1px solid var(--bd2);background:transparent;color:var(--tx2);border-radius:5px;padding:4px 10px;font-size:12px;cursor:pointer">'+_clT('Все агенты','All agents')+'</button>'+
       '</div>'
     : (_autoErr ? '<div class="sk_lead" style="grid-column:1/-1;font-size:12px;color:#A5632A">⚠ Не смог проверить «Мои агенты» — облако не ответило. <a href="#" onclick="autoRefresh();return false" style="color:var(--a)">Проверить ещё раз</a></div>' : '');
   // Разделение (решение Эллы 21.07): СОЗДАНИЕ агента = Конструктор (плитка ведёт
