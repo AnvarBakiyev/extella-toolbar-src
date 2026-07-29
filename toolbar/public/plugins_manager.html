@@ -375,7 +375,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);
 .sect_hdr{grid-column:1/-1;display:flex;align-items:center;gap:8px;
   padding:4px 0 2px;margin-top:4px}
 .sect_hdr:first-child{margin-top:0}
-.sect_title{font:600 9.5px var(--mono);color:var(--petrol);text-transform:none;letter-spacing:.02em}
+.sect_title{font:500 11px/1.2 var(--mono);letter-spacing:.06em;word-spacing:-.14em;color:var(--petrol);text-transform:none}
 .sect_jump{display:inline-flex;align-items:center;gap:6px;border:none;background:transparent;cursor:pointer;padding:0;
   font:600 12px var(--sans);color:var(--tx);letter-spacing:0}
 .sect_jump:hover{color:var(--a)}
@@ -408,7 +408,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);
 
 /* ── Section headers: eyebrow + serif title (concept .sect) ─────────── */
 .sect{grid-column:1/-1;display:flex;align-items:baseline;gap:12px;margin:26px 0 14px;flex-wrap:wrap}
-.sect .eyebrow{font:600 9px var(--mono);letter-spacing:.01em;color:var(--amber);text-transform:none;white-space:nowrap}
+.sect .eyebrow{font:500 11px/1.2 var(--mono);letter-spacing:.06em;word-spacing:-.14em;color:var(--petrol);text-transform:none;white-space:nowrap}
 .sect h2{font:600 20px/1.25 var(--serif);color:var(--tx);letter-spacing:0;margin:0;text-wrap:balance}  /* гротеск — в тон заголовкам Библиотеки */
 .sect h2 i{font-style:normal;color:inherit}
 .sect .sp{flex:1}
@@ -4268,7 +4268,7 @@ function _dtDo(i, act){
 function _dtCss(){
   return '<style>'+
     '.dt_wrap{grid-column:1/-1;padding:6px 2px 24px}'+
-    '.dt_sect{font:600 12px var(--mono);letter-spacing:.05em;color:var(--petrol);margin:2px 0 14px}'+
+    '.dt_sect{font:500 11px/1.2 var(--mono);letter-spacing:.06em;word-spacing:-.14em;color:var(--petrol);margin:2px 0 14px}'+
     '.dt_sect_row{display:flex;align-items:center;justify-content:space-between;gap:12px}'+
     '.dt_tasks{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 26px}'+
     // Один стиль чипа на весь продукт: те же метрики и поведение, что у чипов
