@@ -55,9 +55,16 @@
     {
       "id": "agent_change_management",
       "name": "Управление изменениями агентов",
-      "description": "Read-only проекция канонического контракта из Agent Passport; до отдельного trusted action любые изменения остаются закрытыми.",
+      "description": "Read-only проекция канонического контракта из Agent Passport; она не публикует изменения и не ведёт второй журнал.",
       "version": "EVOLUTION_AGENT_CONTROL_SURFACE_V1",
       "external_writes": false
+    },
+    {
+      "id": "trusted_publish_action",
+      "name": "Доверенная публикация подготовленного черновика",
+      "description": "Единственное host-mediated действие: публикует только подготовленный черновик с тремя ссылками-доказательствами, идемпотентностью, перечитыванием и квитанцией с откатом.",
+      "version": "EVOLUTION_TRUSTED_PUBLISH_ACTION_V1",
+      "external_writes": true
     },
     {
       "id": "agent_passport_risks",

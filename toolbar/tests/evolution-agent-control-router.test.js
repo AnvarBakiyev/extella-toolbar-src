@@ -127,7 +127,7 @@ function session(options = {}) {
 
 function agentControlSlice() {
   const start = router.indexOf('  function _evolutionAgentControlLoad(');
-  const end = router.indexOf('  function _evolutionLastReceipt(', start);
+  const end = router.indexOf('  function _evolutionTrustedPublishRequest(', start);
   assert.ok(start >= 0 && end > start, 'agent-control loader must be extractable');
   return router.slice(start, end);
 }
@@ -294,7 +294,7 @@ test('a missing source declaration remains UNKNOWN and account/snapshot fences a
   );
 });
 
-test('new action stays inside Evolution Console and has no write or legacy escape hatch', () => {
+test('Agent Cabinet projection stays read-only while publish is a separate fenced route', () => {
   const source = agentControlSlice();
   assert.match(source, /_evolutionRequireSession\(data, context, false\)/);
   assert.match(source, /session\.standardsBundle/);
@@ -304,4 +304,6 @@ test('new action stays inside Evolution Console and has no write or legacy escap
     router,
     /action === 'agent_control_publish'|action === 'agent_control_create'/,
   );
+  assert.match(router, /if \(action === 'etb_evolution_publish'\)/);
+  assert.doesNotMatch(router, /e\.data\.type === 'etb_evolution_publish'/);
 });

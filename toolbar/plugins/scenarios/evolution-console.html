@@ -618,7 +618,7 @@
       }
       return new Promise(function(resolve,reject){
         var id='evo_'+Date.now().toString(36)+'_'+(++state.seq),epoch=state.accountEpoch;
-        var timer=setTimeout(function(){state.pending.delete(id);reject(new Error('OUTCOME UNKNOWN · reload the snapshot before retrying'));},240000);
+        var timer=setTimeout(function(){var timeoutError=new Error('OUTCOME UNKNOWN · reload the snapshot before retrying');state.pending.delete(id);if(action==='etb_evolution_publish'){timeoutError.code='PUBLISH_OUTCOME_UNKNOWN';timeoutError.publicError={code:'PUBLISH_OUTCOME_UNKNOWN',message_ru:'Исход публикации пока неизвестен.',message_en:'The publication outcome is currently unknown.',next_step_ru:'Перечитай квитанцию и черновик тем же ключом; не публикуй с новым ключом.',next_step_en:'Re-read the receipt and draft with the same key; do not publish with a new key.',platform_reason:null,gate:null,receipt_id:null,rollback:null};}reject(timeoutError);},240000);
         state.pending.set(id,{resolve:resolve,reject:reject,timer:timer,epoch:epoch});
         window.parent.postMessage(Object.assign({type:'etb_evolution_console',reqId:id,action:action},payload),'*');
       });
@@ -1535,7 +1535,7 @@
       if(d.type==='etb_init'){clearInitDeadline();resetAccountState('');state.hostInitialized=true;if(String(d.lang||'').toLowerCase().indexOf('en')===0)WLANG='en';else if(String(d.lang||'').toLowerCase().indexOf('ru')===0)WLANG='ru';applyLanguage();document.documentElement.dataset.theme=d.theme==='light'?'light':'dark';renderAll();loadFleet();return;}
       if(d.type==='etb_theme'){document.documentElement.dataset.theme=d.theme==='light'?'light':'dark';return;}
       if(d.type==='etb_account_reset'||d.type==='etb_logout'||d.type==='etb_session_reset'){resetAccountState(t('accountCleared'));state.hostInitialized=false;armInitDeadline();return;}
-      if(d.type==='etb_evolution_console_result'){var p=state.pending.get(d.reqId);if(!p)return;clearTimeout(p.timer);state.pending.delete(d.reqId);if(p.epoch!==state.accountEpoch){p.reject(new Error('Account context changed; stale result discarded.'));return;}if(d.ok===false)p.reject(new Error(d.error||'Evolution Console operation failed'));else p.resolve(d.result||d);}
+      if(d.type==='etb_evolution_console_result'){var p=state.pending.get(d.reqId);if(!p)return;clearTimeout(p.timer);state.pending.delete(d.reqId);if(p.epoch!==state.accountEpoch){p.reject(new Error('Account context changed; stale result discarded.'));return;}if(d.ok===false){var bridgeError=new Error(d.error||'Evolution Console operation failed');if(typeof d.errorCode==='string'&&/^[A-Z][A-Z0-9_]{0,63}$/.test(d.errorCode))bridgeError.code=d.errorCode;if(d.public_error&&typeof d.public_error==='object'&&!Array.isArray(d.public_error))bridgeError.publicError=d.public_error;p.reject(bridgeError);}else p.resolve(d.result||d);}
     });
     if(new URLSearchParams(location.search).get('lang')==='en')WLANG='en';applyLanguage();document.documentElement.dataset.theme=new URLSearchParams(location.search).get('theme')==='light'?'light':'dark';renderAll();setView('fleet');
     window.parent.postMessage({type:'etb_ui_health',ok:true,pluginId:'profit-growth-scenario'},'*');

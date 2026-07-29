@@ -43,7 +43,7 @@ function inlineScripts(html) {
   )].map((match) => match[1]);
 }
 
-test('Evolution Console manifest keeps exact product naming and a read-only surface contract', () => {
+test('Evolution Console manifest keeps exact product naming and one narrow host-mediated write', () => {
   assert.equal(evolutionManifest.id, 'profit-growth-scenario');
   assert.equal(evolutionManifest.name, 'Evolution Console');
   assert.equal(
@@ -85,10 +85,11 @@ test('Evolution Console manifest keeps exact product naming and a read-only surf
     evolutionManifest.expert_defs[0].sourceSha256,
     crypto.createHash('sha256').update(evolutionScanner).digest('hex'),
   );
-  assert.ok(
-    evolutionManifest.capabilities.every(
-      (capability) => capability.external_writes === false,
-    ),
+  assert.deepEqual(
+    evolutionManifest.capabilities.filter(
+      (capability) => capability.external_writes === true,
+    ).map((capability) => capability.id),
+    ['trusted_publish_action'],
   );
   assert.deepEqual(
     evolutionManifest.capabilities.map((capability) => capability.id).sort(),
@@ -101,6 +102,7 @@ test('Evolution Console manifest keeps exact product naming and a read-only surf
       'evolution_loop',
       'mcp_read_inventory',
       'shared_genes_map',
+      'trusted_publish_action',
     ],
   );
   assert.equal(
@@ -131,6 +133,12 @@ test('Evolution Console manifest keeps exact product naming and a read-only surf
       (capability) => capability.id === 'agent_change_management',
     ).version,
     'EVOLUTION_AGENT_CONTROL_SURFACE_V1',
+  );
+  assert.equal(
+    evolutionManifest.capabilities.find(
+      (capability) => capability.id === 'trusted_publish_action',
+    ).version,
+    'EVOLUTION_TRUSTED_PUBLISH_ACTION_V1',
   );
 
   const completeSurface = `${JSON.stringify(evolutionManifest)}\n${evolutionHtml}`;
@@ -438,7 +446,7 @@ test('data protection stays read-only and outside the automation summary', () =>
     '  function _evolutionMaskingPostureLoad(',
   );
   const postureEnd = router.indexOf(
-    '  function _evolutionLastReceipt(',
+    '  function _evolutionAgentControlLoad(',
     postureStart,
   );
   assert.ok(postureStart >= 0 && postureEnd > postureStart);

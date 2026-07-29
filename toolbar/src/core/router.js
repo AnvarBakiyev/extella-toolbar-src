@@ -1160,6 +1160,9 @@ ETB.router = (function () {
       mcpRegistryLocatorAdapter:
         typeof evolutionAdapter.getMcpRegistryLocator === 'function' ?
           'AVAILABLE' : 'PLATFORM_UNAVAILABLE',
+      trustedPublishAdapter:
+        typeof evolutionAdapter.publishTrustedDraft === 'function' ?
+          'AVAILABLE' : 'PLATFORM_UNAVAILABLE',
       evolutionLabAdapter:
         typeof evolutionAdapter.runClassTest === 'function' ?
           'AVAILABLE' : 'PLATFORM_UNAVAILABLE',
@@ -3147,6 +3150,155 @@ ETB.router = (function () {
       normalized));
   }
 
+  // The one native-write seam of Evolution Console.  This does not reuse the
+  // managed Evolution Loop ledger: its virtual publish operation is not a
+  // platform agent update and cannot prove account ownership, durable
+  // idempotency or an agent/get read-back.
+  function _evolutionTrustedPublishRequest(data) {
+    var contract = ETB.evolutionTrustedPublishContract;
+    var allowed = [
+      'type',
+      'reqId',
+      'action',
+      'snapshotId'
+    ];
+    if (!contract || typeof contract.normalizeRequest !== 'function') {
+      throw _evolutionError(
+        'TRUSTED_PUBLISH_CONTRACT_UNAVAILABLE',
+        'the trusted publication request contract is unavailable'
+      );
+    }
+    allowed = allowed.concat(contract.REQUEST_KEYS || []);
+    _evolutionRequireClosedKeys(
+      data,
+      allowed,
+      'TRUSTED_PUBLISH_REQUEST_INVALID',
+      'trusted publish bridge request'
+    );
+    if (data.type !== 'etb_evolution_console' ||
+        data.action !== 'etb_evolution_publish') {
+      throw _evolutionError(
+        'TRUSTED_PUBLISH_REQUEST_INVALID',
+        'trusted publish must use the fenced Evolution Console bridge'
+      );
+    }
+    return contract.normalizeRequest({
+      draft_id: data.draft_id,
+      agent_id: data.agent_id,
+      expected_version: data.expected_version,
+      ledger_sha256: data.ledger_sha256,
+      gates: data.gates,
+      idempotency_key: data.idempotency_key
+    });
+  }
+
+  function _evolutionTrustedPublishPublicFailure(publicError) {
+    var error = _evolutionError(
+      publicError.code,
+      publicError.message_en
+    );
+    error.publicError = _evolutionClone(publicError);
+    return error;
+  }
+
+  function _evolutionTrustedPublishAdapterFailure(error, contract) {
+    var code = String(error && error.code || '');
+    var publicError = error && (error.publicError || error.public_error);
+    if (contract && typeof contract.isPublicErrorCode === 'function' &&
+        contract.isPublicErrorCode(code)) {
+      try {
+        return _evolutionTrustedPublishPublicFailure(
+          contract.normalizePublicError(publicError, code)
+        );
+      } catch (_) {
+        // A write may have happened before an adapter returned malformed
+        // error data. Preserve uncertainty rather than turning it into a
+        // fabricated rejection or success.
+      }
+    }
+    return _evolutionTrustedPublishPublicFailure(contract.unknownOutcome());
+  }
+
+  function _evolutionCallTrustedPublishAdapter(request, session, context) {
+    var adapter = ETB.evolutionAdapter || {};
+    var contract = ETB.evolutionTrustedPublishContract;
+    if (!contract || typeof contract.normalizeSuccess !== 'function' ||
+        typeof contract.unknownOutcome !== 'function') {
+      return Promise.reject(_evolutionError(
+        'TRUSTED_PUBLISH_CONTRACT_UNAVAILABLE',
+        'the trusted publication response contract is unavailable'
+      ));
+    }
+    if (typeof adapter.publishTrustedDraft !== 'function') {
+      return Promise.reject(_evolutionError(
+        'TRUSTED_PUBLISH_ADAPTER_UNAVAILABLE',
+        'trusted publication requires the host-owned publish adapter'
+      ));
+    }
+    return Promise.resolve().then(function () {
+      _agentControlAssertContext(context);
+      // `host_context` intentionally carries only a snapshot fence and a
+      // correlation id. The adapter must get the account and token from the
+      // host session itself; neither comes from iframe data.
+      return adapter.publishTrustedDraft({
+        request: contract.clone(request),
+        host_context: {
+          fleet_snapshot_id: session.snapshotId,
+          request_id: context.operationId
+        }
+      });
+    }).then(function (result) {
+      // A timed-out iframe must not turn a completed host action into a
+      // browser-side retry. We still fence an account switch, but allow the
+      // UI deadline to expire because the durable host receipt is authoritative.
+      _agentControlAssertContext(context, true);
+      return contract.normalizeSuccess(result, request);
+    }, function (error) {
+      _agentControlAssertContext(context, true);
+      throw _evolutionTrustedPublishAdapterFailure(error, contract);
+    });
+  }
+
+  function _evolutionTrustedPublish(data, context) {
+    var request;
+    try {
+      request = _evolutionTrustedPublishRequest(data);
+      _evolutionRequireSession(data, context, true);
+    } catch (error) {
+      return Promise.reject(error);
+    }
+    // This queue only prevents duplicate clicks from racing in one toolbar.
+    // The host-owned 24-hour idempotency record remains the durable boundary.
+    return _agentControlSerialize(request.agent_id, context, function () {
+      var before = _evolutionRequireSession(data, context, true);
+      _agentControlAssertContext(context);
+      // Re-read the live account fleet immediately before the host action.
+      // A changed snapshot is a hard stop: the caller must reload evidence
+      // against that exact live state, not publish a stale draft.
+      return _evolutionFleetLoad(context).then(function (fresh) {
+        var projection = fresh && fresh.projection;
+        var session;
+        _agentControlAssertContext(context);
+        if (!projection || projection.complete !== true) {
+          throw _evolutionError(
+            'FLEET_SNAPSHOT_INCOMPLETE',
+            'incomplete reloaded fleet snapshot blocks trusted publication'
+          );
+        }
+        if (projection.snapshotId !== before.snapshotId) {
+          throw _evolutionError(
+            'FLEET_SNAPSHOT_MISMATCH',
+            'live fleet changed; reload the prepared publication before retrying'
+          );
+        }
+        session = _evolutionRequireSession({
+          snapshotId: projection.snapshotId
+        }, context, true);
+        return _evolutionCallTrustedPublishAdapter(request, session, context);
+      });
+    });
+  }
+
   function _evolutionLastReceipt(ledger) {
     var rows = _evolutionReceiptRows(ledger);
     return rows.length ? rows[rows.length - 1] : null;
@@ -4413,6 +4565,9 @@ ETB.router = (function () {
       } catch (error) {
         return Promise.reject(error);
       }
+    }
+    if (action === 'etb_evolution_publish') {
+      return _evolutionTrustedPublish(data, context);
     }
     if (action === 'passport_draft') {
       try {
@@ -5720,14 +5875,21 @@ ETB.router = (function () {
             result: result
           });
         }).catch(function (error) {
-          reply8({
+          var result8 = {
             type: 'etb_evolution_console_result',
             reqId: reqId8,
             ok: false,
             error: (error && error.message) ||
               'Evolution Console operation failed',
             errorCode: error && error.code || null
-          });
+          };
+          // Only the trusted-publish contract can attach this bounded public
+          // projection. It is deliberately distinct from a raw Error so a
+          // receipt and rollback survive a post-write read-back failure.
+          if (error && error.publicError) {
+            result8.public_error = _evolutionClone(error.publicError);
+          }
+          reply8(result8);
         });
       } else if (e.data.type === 'etb_governance_probe') {
         // Capability Studio's bounded governance lab. It may manage only

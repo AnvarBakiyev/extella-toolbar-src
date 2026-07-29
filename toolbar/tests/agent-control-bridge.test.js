@@ -59,6 +59,14 @@ test('legacy Agent Control bridge is retired and cannot bypass Evolution Console
   assert.doesNotMatch(router, /sandbox['"],\s*['"][^'"]*allow-same-origin/);
   assert.match(router, /if \(!ui\.tokenless\) initPayload\.token = token/);
   assert.match(router, /type:\s*'etb_agent_control_result'/);
+  assert.match(
+    evolutionBridge,
+    /result8\.public_error = _evolutionClone\(error\.publicError\)/,
+  );
+  assert.doesNotMatch(
+    evolutionBridge,
+    /e\.data\.type === 'etb_evolution_publish'/,
+  );
 });
 
 test('Agent Control API surface is read-only outside its fixed verified KV ledger', () => {
@@ -874,7 +882,7 @@ test('scoped API helpers keep credentials in the host and bind reads/writes to a
   );
 });
 
-test('Evolution Console manifest keeps the stable install identity and no-write contract', () => {
+test('Evolution Console manifest keeps the stable install identity and narrow trusted publish declaration', () => {
   assert.equal(manifest.id, 'profit-growth-scenario');
   assert.equal(manifest.name, 'Evolution Console');
   assert.equal(manifest.version, '0.13.0');
@@ -891,6 +899,7 @@ test('Evolution Console manifest keeps the stable install identity and no-write 
       'evolution_loop',
       'mcp_read_inventory',
       'shared_genes_map',
+      'trusted_publish_action',
     ],
   );
   assert.equal(
@@ -899,7 +908,16 @@ test('Evolution Console manifest keeps the stable install identity and no-write 
     ).version,
     'EVOLUTION_AGENT_CONTROL_SURFACE_V1',
   );
-  assert.ok(manifest.capabilities.every((capability) => capability.external_writes === false));
+  assert.deepEqual(
+    manifest.capabilities.filter((capability) => capability.external_writes),
+    [manifest.capabilities.find((capability) => capability.id === 'trusted_publish_action')],
+  );
+  assert.equal(
+    manifest.capabilities.find(
+      (capability) => capability.id === 'trusted_publish_action',
+    ).version,
+    'EVOLUTION_TRUSTED_PUBLISH_ACTION_V1',
+  );
   assert.deepEqual(manifest.experts, ['_etb_evolution_registry_scan_v1']);
   assert.equal(manifest.expert_defs.length, 1);
   assert.equal(
