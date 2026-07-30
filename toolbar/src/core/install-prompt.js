@@ -200,8 +200,13 @@ ETB.installPrompt = (function () {
           '  1. read the Extella account token from ~/.extella/api_token.txt (fall back to\n' +
           '     ~/extella_wizard/app/config.json -> auth_token);\n' +
           '  2. POST https://api.extella.ai/api/kv/get with headers X-Auth-Token: <that token>,\n' +
-          '     X-Profile-Id: default, X-Agent-Id: agent_extella_default and body\n' +
-          '     {"key": "github_token", "global": true} — the answer field `value` is the key;\n' +
+          '     X-Profile-Id: default, X-Agent-Id: <an agent id of THIS account> and body\n' +
+          '     {"key": "github_token", "global": true}; the answer field `value` is the key.\n' +
+          '     The scope matters: a key written under one agent answers HTTP 500 under another\n' +
+          '     (measured live). So try ids in order — `agent_id` from\n' +
+          '     ~/extella_wizard/app/config.json, then every id from POST /api/agent/list —\n' +
+          '     and stop at the first one that returns a non-empty value. Never hardcode an\n' +
+          '     agent id of your own: on the client machine it is a different account;\n' +
           '  3. download the tarball, passing the key in a HEADER, never in the URL (a token\n' +
           '     inside a URL leaks into shell history, process lists and server logs):\n' +
           '     curl -sL -H "Authorization: token <key>" \\\n' +
