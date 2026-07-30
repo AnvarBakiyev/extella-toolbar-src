@@ -10,7 +10,7 @@
   "actions.signIn": "Войти",
   "actions.signOut": "Выйти",
   "actions.confirm": "Подтвердить",
-  "actions.retry": "Попробовать ещё раз",
+  "actions.retry": "Обновить",
   "actions.reject": "Отклонить",
   "actions.publish": "Опубликовать",
   "actions.submit": "Отправить",

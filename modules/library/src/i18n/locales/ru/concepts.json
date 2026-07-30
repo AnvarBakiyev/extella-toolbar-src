@@ -31,5 +31,6 @@
   "list.create": "Создать концепт",
   "count_one": "{{count}} концепт",
   "count_few": "{{count}} концепта",
-  "count_other": "{{count}} концептов"
+  "count_many": "{{count}} концептов",
+  "count_other": "{{count}} концепта"
 }

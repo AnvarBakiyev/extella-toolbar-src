@@ -29,5 +29,6 @@
   "list.create": "Создать правило",
   "count_one": "{{count}} правило",
   "count_few": "{{count}} правила",
-  "count_other": "{{count}} правил"
+  "count_many": "{{count}} правил",
+  "count_other": "{{count}} правила"
 }

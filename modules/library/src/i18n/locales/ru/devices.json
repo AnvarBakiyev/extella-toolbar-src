@@ -28,7 +28,8 @@
   "toolbar.view.list": "Список",
   "toolbar.resultsCount_one": "{{count}} совпадение",
   "toolbar.resultsCount_few": "{{count}} совпадения",
-  "toolbar.resultsCount_other": "{{count}} совпадений",
+  "toolbar.resultsCount_many": "{{count}} совпадений",
+  "toolbar.resultsCount_other": "{{count}} совпадения",
 
   "sort.recent": "Недавние",
   "sort.name": "По имени",
@@ -44,7 +45,7 @@
   "defaultCard.heading": "Основное устройство",
   "defaultCard.changeButton": "Сменить основное",
   "defaultCard.empty": "Основное устройство не назначено",
-  "defaultCard.error": "Не смог узнать основное устройство — попробуй ещё раз.",
+  "defaultCard.error": "Не смог узнать основное устройство — нажми «Обновить».",
   "defaultCard.retry": "Обновить",
   "defaultCard.notRegistered": "Нет в списке добавленных устройств",
 
@@ -69,7 +70,7 @@
   "empty.search.title": "Ничего не нашлось",
   "empty.search.subtitle": "Попробуй сформулировать иначе",
 
-  "error.loadFailed": "Не смог получить список устройств — проверь подключение и попробуй ещё раз",
+  "error.loadFailed": "Не смог получить список устройств — проверь подключение и нажми «Обновить»",
 
   "form.createTitle": "Новое устройство",
   "form.editTitle": "Изменить устройство",
