@@ -9,6 +9,7 @@
  * back in via `value`.
  */
 
+import { useTranslation } from 'react-i18next';
 import { useTopology } from '@/features/shared/useTopology';
 import { ChevronDown } from 'lucide-react';
 import { Icon } from '@/lib/icon';
@@ -29,6 +30,7 @@ export function ProfileAgentFilter({
   onChange,
   className = '',
 }: ProfileAgentFilterProps) {
+  const { t } = useTranslation('common');
   const { data: topology } = useTopology();
   const profiles = topology?.profiles ?? [];
 
@@ -60,7 +62,7 @@ export function ProfileAgentFilter({
           style={{ minWidth: 120 }}
           aria-label="Filter by profile"
         >
-          <option value="">All profiles</option>
+          <option value="">{t('list.allProfiles')}</option>
           {profiles.map((p) => (
             <option key={p.profile_id} value={p.profile_id}>
               {p.profile_name || p.profile_id}

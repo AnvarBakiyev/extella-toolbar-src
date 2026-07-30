@@ -30,5 +30,8 @@
   "count_one": "{{count}} правило",
   "count_few": "{{count}} правила",
   "count_many": "{{count}} правил",
-  "count_other": "{{count}} правила"
+  "count_other": "{{count}} правила",
+  "empty.title": "Правил пока нет",
+  "empty.hint": "Границы, внутри которых действует агент. Создай первое кнопкой сверху.",
+  "empty.searchTitle": "По твоему запросу правил нет"
 }

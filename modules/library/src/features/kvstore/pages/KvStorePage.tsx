@@ -498,7 +498,7 @@ export function KvStorePage() {
       {/* page header */}
       <PageHeader
         title={t('title', 'KV Store')}
-        subtitle={`Workspace key-value store · ${total} ${total === 1 ? 'entry' : 'entries'}`}
+        subtitle={t('subtitle', { count: total })}
         actions={
           <Button
             variant="primary"

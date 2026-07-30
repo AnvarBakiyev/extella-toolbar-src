@@ -136,7 +136,7 @@ export function ConceptsPage() {
       {/* page header */}
       <PageHeader
         title={t('title')}
-        subtitle={`Workspace knowledge base · ${total} concepts`}
+        subtitle={t('subtitle.userActive', { active: total })}
         actions={
           <Button
             variant="primary"

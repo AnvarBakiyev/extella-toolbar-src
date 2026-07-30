@@ -1,20 +1,25 @@
 import { useState, type ComponentType } from 'react';
+import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router-dom';
 import { ChevronDown, FileText, Sparkles, Bot, Cpu, Users, Database, MonitorSmartphone, KeyRound } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
 type IconCmp = ComponentType<{ className?: string }>;
 
+// Подписи меню — КЛЮЧИ, а не готовые строки. Раньше здесь лежал английский текст, и
+// русский словарь до экрана не доезжал: язык переключён, а меню осталось «Rules ·
+// Concepts · Experts». Проверка «слова есть в сборке» такое пропускает — слова-то есть,
+// просто их никто не спрашивает (поймала Элла 30.07).
 interface NavItem {
   id: string;
-  label: string;
+  labelKey: string;
   icon: IconCmp;
   to: string;
 }
 
 interface NavGroup {
   id: string;
-  label: string;
+  labelKey: string;
   items: NavItem[];
 }
 
@@ -27,33 +32,34 @@ interface NavGroup {
 const GROUPS: NavGroup[] = [
   {
     id: 'my-library',
-    label: 'My Library',
+    labelKey: 'nav.myLibrary',
     items: [
-      { id: 'rules', label: 'Rules', icon: FileText, to: '/rules' },
-      { id: 'concepts', label: 'Concepts', icon: Sparkles, to: '/concepts' },
-      { id: 'experts', label: 'Experts', icon: Bot, to: '/experts' },
-      { id: 'agents', label: 'Agents', icon: Cpu, to: '/agents' },
-      { id: 'teams', label: 'Agent Teams', icon: Users, to: '/teams' },
+      { id: 'rules', labelKey: 'nav.rules', icon: FileText, to: '/rules' },
+      { id: 'concepts', labelKey: 'nav.concepts', icon: Sparkles, to: '/concepts' },
+      { id: 'experts', labelKey: 'nav.experts', icon: Bot, to: '/experts' },
+      { id: 'agents', labelKey: 'nav.agents', icon: Cpu, to: '/agents' },
+      { id: 'teams', labelKey: 'nav.teams', icon: Users, to: '/teams' },
     ],
   },
   {
     id: 'system',
-    label: 'System',
+    labelKey: 'nav.system',
     items: [
-      { id: 'devices', label: 'Devices', icon: MonitorSmartphone, to: '/devices' },
-      { id: 'kvstore', label: 'KV Store', icon: Database, to: '/kvstore' },
-      { id: 'tokens', label: 'Tokens', icon: KeyRound, to: '/tokens' },
+      { id: 'devices', labelKey: 'nav.devices', icon: MonitorSmartphone, to: '/devices' },
+      { id: 'kvstore', labelKey: 'nav.kvstore', icon: Database, to: '/kvstore' },
+      { id: 'tokens', labelKey: 'nav.tokens', icon: KeyRound, to: '/tokens' },
     ],
   },
 ];
 
 export function Sidebar() {
+  const { t } = useTranslation('common');
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
   return (
     <aside
       className="flex w-[260px] shrink-0 flex-col border-r border-divider bg-bg2"
-      aria-label="My Library"
+      aria-label={t('nav.myLibrary')}
     >
       {/* Nav groups */}
       <nav className="flex-1 overflow-y-auto p-2">
@@ -72,7 +78,7 @@ export function Sidebar() {
                     isCollapsed && '-rotate-90',
                   )}
                 />
-                <span>{g.label}</span>
+                <span>{t(g.labelKey)}</span>
               </button>
               {!isCollapsed && (
                 <ul className="flex flex-col gap-px pl-0.5">
@@ -92,6 +98,7 @@ export function Sidebar() {
 }
 
 function NavItemRow({ item }: { item: NavItem }) {
+  const { t } = useTranslation('common');
   const Icon = item.icon;
   return (
     <NavLink
@@ -112,7 +119,7 @@ function NavItemRow({ item }: { item: NavItem }) {
               isActive ? 'text-accent' : 'text-icon',
             )}
           />
-          <span className="flex-1 truncate">{item.label}</span>
+          <span className="flex-1 truncate">{t(item.labelKey)}</span>
         </>
       )}
     </NavLink>

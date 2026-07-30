@@ -28,5 +28,8 @@
   "list.empty": "No rules yet.",
   "list.create": "Create rule",
   "count_one": "{{count}} rule",
-  "count_other": "{{count}} rules"
+  "count_other": "{{count}} rules",
+  "empty.title": "No rules yet",
+  "empty.hint": "Create the first rule using the button above.",
+  "empty.searchTitle": "No rules match your search"
 }

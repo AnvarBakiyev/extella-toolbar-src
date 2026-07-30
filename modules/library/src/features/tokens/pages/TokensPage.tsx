@@ -386,7 +386,7 @@ export function TokensPage() {
       {/* page header */}
       <PageHeader
         title={t('title', 'Tokens')}
-        subtitle={`API tokens · ${total} ${total === 1 ? 'token' : 'tokens'}`}
+        subtitle={t('subtitle', { count: total })}
         actions={
           <Button
             variant="primary"

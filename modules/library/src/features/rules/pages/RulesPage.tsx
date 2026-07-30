@@ -86,6 +86,7 @@ function formatDiagnostic(err: unknown): string {
 
 export function RulesPage() {
   const { t } = useTranslation('rules');
+  const { t: tCommon } = useTranslation('common');
 
   const { role } = usePermissions();
   const { user } = useAuth();
@@ -167,7 +168,7 @@ export function RulesPage() {
       {/* page header */}
       <PageHeader
         title={t('title')}
-        subtitle={`${total} published rules`}
+        subtitle={t('subtitle.userActive', { active: total })}
         actions={
           <div className="flex items-center gap-2">
             <Button
@@ -240,10 +241,10 @@ export function RulesPage() {
           <div className="flex flex-col items-center justify-center py-20 gap-3" style={{ color: 'var(--ap-text-faint)' }}>
             <div style={{ fontSize: 40 }}>📋</div>
             <div style={{ fontSize: 16, fontWeight: 500, color: 'var(--ap-text)' }}>
-              {q ? 'No rules match your search' : 'No rules yet'}
+              {q ? t('empty.searchTitle') : t('empty.title')}
             </div>
             <div style={{ fontSize: 13 }}>
-              {q ? 'Try a different query.' : 'Create the first rule using the button above.'}
+              {q ? tCommon('empty.search.hint') : t('empty.hint')}
             </div>
           </div>
         ) : (
