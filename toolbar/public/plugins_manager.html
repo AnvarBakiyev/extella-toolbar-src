@@ -7425,13 +7425,25 @@ function _addShowRefresh(cfg, ov){
   rb.onclick=function(){cfg.refresh();ov.style.display='none';};
   var f=document.getElementById('add_foot'); f.insertBefore(rb,f.firstChild);
 }
+// Инструменты ставятся резолверами через brew — на Windows его нет, и НИ ОДИН из
+// семи там не установится (проверено по обработчику /x/cap_install Конструктора:
+// brew и только brew, ни winget, ни choco). Карточка, обещающая установку там, где
+// она невозможна, — это немой отказ у коллеги на Windows, наш самый дорогой класс.
+// Поэтому на Windows кнопка не обещает, а объясняет.
+function _cliOnThisOS(){ return _curOS() !== 'win32'; }
 function cliCard(c){
   var ops=(c.ops||[]).map(function(o){return '<span style="display:inline-block;font-size:11px;padding:2px 8px;border:1px solid var(--border);border-radius:5px;color:var(--text-secondary);margin:2px 4px 0 0">'+esc(o)+'</span>';}).join('');
   var foot=c.soon
     ? '<span class="cli_note" style="font-size:11px;color:var(--text-muted)">в работе</span><button class="st_btn" disabled style="opacity:.45;cursor:default">Скоро</button>'
     : cliInstalled(c.id)
       ? '<span class="sk_active">● установлено</span><span style="display:flex;gap:6px"><button class="st_btn" onclick="cliRun(\''+esc(c.id)+'\')">▶ Запустить</button><button class="sk_del" data-clirm="'+esc(c.id)+'">Удалить</button></span>'
-      : '<span class="cli_note" style="font-size:11px;color:var(--text-muted)">локально · офлайн</span><button class="st_btn" data-cliinst="'+esc(c.id)+'">Установить</button>';
+      : (!_cliOnThisOS()
+        ? '<span class="cli_note" style="font-size:11px;color:var(--tx3)">'+_clT('только macOS и Linux','macOS and Linux only')+'</span>'+
+          '<button class="st_btn" disabled style="opacity:.45;cursor:default" title="'+esc(_clT(
+            'Инструменты ставятся менеджером пакетов, которого в Windows нет. Открой эту полку на Mac или Linux — там установка в один клик.',
+            'These tools install through a package manager that Windows does not have. Open this shelf on a Mac or Linux — one click there.'))+'">'+
+          esc(_clT('Недоступно в Windows','Not available on Windows'))+'</button>'
+        : '<span class="cli_note" style="font-size:11px;color:var(--text-muted)">локально · офлайн</span><button class="st_btn" data-cliinst="'+esc(c.id)+'">Установить</button>');
   return '<div class="stile" style="--acc:'+esc(CLI_ACC[c.cat]||'#C57E33')+'">'+
     '<span class="st_chip">'+_catIco(c.cat)+esc(c.cat)+'</span>'+
     '<div class="st_title">'+esc(c.name)+'</div>'+
