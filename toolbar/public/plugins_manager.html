@@ -2795,9 +2795,18 @@ function programCard(p) {
   // (замечание Алии). Категорию отсюда убрали — она уже в чипах над сеткой,
   // и повторять её значило занимать единственное место, где может стоять источник.
   var origin = p.eye ? 'с GitHub' : ((p.trust_tier === 'verified' || p._biz) ? 'от Extella' : (owner || ''));
+  // МЕТКА ДОВЕРИЯ (решение Анвара 30.07 — принят пункт 2 контракта каталога).
+  // Из 111 карточек комплекта 89 непроверенных, и до сих пор они выглядели так же,
+  // как проверенные: подпись показывала владельца или категорию, и человек не мог
+  // отличить наше от чужого. Когда агентов и карточек кладут МНОГИЕ, вопрос «кто за
+  // это отвечает» становится главным, поэтому непроверенное теперь называет себя само.
   var sig = (p.trust_tier === 'verified')
     ? ('Проверено Extella · ' + origin)
-    : (p._biz ? ('Отобрано Extella · ' + origin) : (origin || BIZ_LABEL[cat] || ''));
+    : (p.trust_tier === 'candidate')
+      ? ('Кандидат Extella · проверяется' + (origin ? ' · ' + origin : ''))
+      : (p.trust_tier === 'unverified')
+        ? ('Стороннее · не проверено' + (origin ? ' · ' + origin : ''))
+        : (p._biz ? ('Отобрано Extella · ' + origin) : (origin || BIZ_LABEL[cat] || ''));
   return '<div class="stile" style="--acc:' + acc + '">' +
     '<div class="st_head">' +
       '<span class="st_ico" aria-hidden="true">' + ico + '</span>' +
@@ -5726,6 +5735,8 @@ function renderAgents(){
         return '<div class="stile" style="--acc:#2F6B66"><span class="st_chip">🤝 '+_clT('Агент','Agent')+'</span>'+
           '<div class="st_title">'+esc(a.name||a.id)+'</div>'+
           '<div class="st_fact">'+esc(a.goal||_clT('Паспорт прошёл гейт стандартов','Passport passed the standards gate'))+'</div>'+
+          '<div class="st_sig" style="font-size:11px;color:var(--tx3);margin-top:6px">'+
+            esc(_clT('Стороннее · не проверено · паспорт прошёл гейт','Third-party · not reviewed · passport passed the gate'))+'</div>'+
           '<div class="st_foot" style="justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap">'+
             '<button class="st_btn" onclick="notify(\'open\',\''+esc(a.id)+'\')">'+_clT('Открыть','Open')+'</button>'+
             (a.url?'<a href="'+esc(a.url)+'" target="_blank" rel="noopener" style="font-size:11px;color:var(--tx2)">GitHub</a>':'')+

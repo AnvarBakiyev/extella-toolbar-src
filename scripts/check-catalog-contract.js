@@ -72,23 +72,16 @@ const byId = new Map();
 const expertNames = new Set();
 const managedIds = new Set();
 const managedPorts = new Set();
-// ПРОДУКТОВЫЙ КОНТРАКТ CODEX, КОТОРЫЙ МЫ СОЗНАТЕЛЬНО НЕ ПРИНЯЛИ.
-// Выборочный мерж 9a1a663 взял инфраструктуру ветки feat/client-stability «без
-// продуктовых выключателей»: карточки managed_runtime, отдельный установщик каталога,
-// маршрут удаления и мост подтверждения удаления в main НЕ приехали — это было решение,
-// а не потеря (сам код жив в origin/feat/client-stability). Гейт же приехал целиком и с
-// тех пор требовал того, чего никто не решал: пройти его честно было невозможно, а
-// непроходимый гейт — сам по себе дефект (правило 29.07).
-// Пока решения нет, эти проверки объявлены ОЖИДАЮЩИМИ: гейт печатает их отдельным
-// списком и НЕ валит сборку. Примем контракт — снимем флаг и они станут обязательными.
-const PENDING_PRODUCT_CONTRACT = true;
-const pending = [];
-function pend(message) { (PENDING_PRODUCT_CONTRACT ? pending : failures).push(message); }
-const expectedManaged = [
-  'extella_adoption_wizard',
-  'extella_contract_agent',
-  'extella_travel_agency'
-];
+// РЕШЕНИЕ АНВАРА 30.07 по продуктовому контракту ветки feat/client-stability:
+//   • ПРИНЯТ пункт «метки доверия» — карточка обязана называть, кто за неё отвечает;
+//     проверки ниже обязательны, потому что 89 из 111 карточек комплекта непроверенные,
+//     а когда карточки кладут многие, «кто это проверял» — главный вопрос человека.
+//   • ОТКЛОНЕНЫ пункты «установка/удаление через отдельный установщик каталога» и
+//     «карточки managed_runtime»: обе задачи мы решили своим путём (гейт паспорта на
+//     входе и честная деградация), а держать две механики одного и того же дороже,
+//     чем не иметь второй. Проверки удалены, а не спрятаны: гейт не должен помнить
+//     отклонённое — иначе он снова станет непроходимым.
+// Сам код отклонённой части жив в origin/feat/client-stability — ветку не удалять.
 for (const { file, name, value } of manifests) {
   const basename = path.basename(name, '.json');
   const expectedId = value.mode === 'scenario' ? `${basename}-scenario` : basename;
@@ -113,7 +106,6 @@ for (const { file, name, value } of manifests) {
   }
   if (value.mode === 'scenario') {
     if (value.trust_tier !== 'verified') fail(`${name}: scenario must be verified`);
-    if (!value.featured) pend(`${name}: scenario is not featured on the storefront`);
     if (!value.ui || value.ui.type !== 'html' || value.ui.tokenless !== true) fail(`${name}: scenario must use tokenless reviewed HTML`);
     if (value.owned_experts !== true) fail(`${name}: scenario must declare ownership of its namespaced Experts`);
     const html = value.ui && value.ui.htmlFile
@@ -156,7 +148,6 @@ for (const id of curatedIds) {
   if (!manifest) fail(`curated program has no bundled manifest: ${id}`);
   else if (manifest.trust_tier !== 'verified' && manifest.mode !== 'managed_runtime') fail(`curated program is not verified: ${id}`);
 }
-if (JSON.stringify(Array.from(managedIds).sort()) !== JSON.stringify(expectedManaged.slice().sort())) pend(`managed runtime allowlist changed: ${Array.from(managedIds).sort().join(',')}`);
 
 const cli = block('var CLI_CATALOG=[', '\n];\nvar CLI_ACC');
 const cliIds = idsFrom(cli);
@@ -178,22 +169,13 @@ const modelIds = idsFrom(models);
 if (modelIds.length !== 6 || new Set(modelIds).size !== modelIds.length) fail(`local-model contract expected 6 unique cards, got ${modelIds.length}`);
 
 const installCli = block('function installCLI(tool,btn){', '\n}\n\n// ── Storefront modes');
-if (!installCli.includes("name:'catalog_tool_manage'")) pend('CLI cards do not use the standalone catalog installer');
-if (installCli.includes("/x/cap_install") || installCli.includes('_mkbFetch(')) pend('CLI cards still depend on the Adoption Wizard localhost');
 if (!html.includes("name:'cap_localmodel_install'")) fail('local models have no bundled installer route');
-if (!html.includes("name: expert, params: params") || !html.includes("catalog_capability_uninstall")) pend('catalog removal route is missing');
-if (!html.includes('Стороннее · не проверено')) pend('unverified catalogue cards are not labelled');
-if (!html.includes('Кандидат Extella · проверяется')) pend('managed candidate cards are not honestly labelled');
+if (!html.includes('Стороннее · не проверено')) fail('unverified catalogue cards are not labelled');
+if (!html.includes('Кандидат Extella · проверяется')) fail('managed candidate cards are not honestly labelled');
 if (!bridge.includes("action === 'install_featured'") || !bridge.includes("ETB.plugins.provision(plugin, 'install')")) fail('curated plugin provisioning bridge is missing');
 const pluginsSource = fs.readFileSync(path.join(root, 'toolbar', 'src', 'core', 'plugins.js'), 'utf8');
 if (!pluginsSource.includes("'/api/plugins/'") || !pluginsSource.includes("'X-Extella-Control'") || !pluginsSource.includes("manifest.mode === 'managed_runtime'")) fail('managed runtime install bridge is missing');
-if (!bridge.includes('ETB.plugins.unprovision(managedPlugin)') || !html.includes("e.data.type === 'etb_uninstall_result'")) pend('managed runtime uninstall confirmation bridge is missing');
 
-if (pending.length) {
-  process.stdout.write(
-    `ОЖИДАЕТ РЕШЕНИЯ (продуктовый контракт Codex не принят, сборку не валит):\n  ${pending.join('\n  ')}\n`
-  );
-}
 if (failures.length) {
   process.stderr.write(`toolbar catalog contract failed:\n${failures.join('\n')}\n`);
   process.exit(1);
