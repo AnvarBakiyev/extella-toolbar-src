@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
 import {
@@ -34,6 +35,7 @@ export const DialogContent = forwardRef<
   ElementRef<typeof DialogPrimitive.Content>,
   ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
 >(function DialogContent({ className, children, ...props }, ref) {
+  const { t: tCommon } = useTranslation('common');
   return (
     <DialogPortal>
       <DialogOverlay />
@@ -56,7 +58,7 @@ export const DialogContent = forwardRef<
           )}
         >
           <X className="h-4 w-4" />
-          <span className="sr-only">Close</span>
+          <span className="sr-only">{tCommon('actions.close')}</span>
         </DialogPrimitive.Close>
       </DialogPrimitive.Content>
     </DialogPortal>

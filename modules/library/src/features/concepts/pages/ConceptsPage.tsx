@@ -199,9 +199,7 @@ export function ConceptsPage() {
             <button
               className="underline"
               onClick={() => void conceptsQuery.refetch()}
-            >
-              Retry
-            </button>
+            >{tCommon('actions.retry')}</button>
           </div>
         ) : allRows.length === 0 ? (
           <div
@@ -255,17 +253,13 @@ export function ConceptsPage() {
               size="sm"
               disabled={page === 1}
               onClick={() => setPage((p) => p - 1)}
-            >
-              Previous
-            </Button>
+            >{tCommon('pagination.prev')}</Button>
             <Button
               variant="secondary"
               size="sm"
               disabled={!conceptsQuery.data?.has_more}
               onClick={() => setPage((p) => p + 1)}
-            >
-              Next
-            </Button>
+            >{tCommon('pagination.next')}</Button>
           </div>
         </div>
       )}

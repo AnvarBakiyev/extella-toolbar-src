@@ -63,6 +63,7 @@ export interface ConceptsTableProps {
 }
 
 export function ConceptsTable({ rows, role: _role, currentUserId, loading, onOpen, onDelete, hideProfileAgentColumn = false }: ConceptsTableProps) {
+  const { t: tCommon } = useTranslation('common');
   const { t, i18n } = useTranslation('concepts');
   const locale = (i18n.language ?? 'en') as AppLocale;
 
@@ -82,41 +83,31 @@ export function ConceptsTable({ rows, role: _role, currentUserId, loading, onOpe
             scope="col"
             className="text-left px-4 py-2 font-medium"
             style={{ color: 'var(--ap-text-muted)', fontSize: 11 }}
-          >
-            Title and content
-          </th>
+          >{tCommon('columns.titleContent')}</th>
           <th
             scope="col"
             className="text-left px-4 py-2 font-medium"
             style={{ width: 140, color: 'var(--ap-text-muted)', fontSize: 11 }}
-          >
-            Source
-          </th>
+          >{tCommon('columns.source')}</th>
           {!hideProfileAgentColumn && (
             <th
               scope="col"
               className="text-left px-4 py-2 font-medium"
               style={{ width: 160, color: 'var(--ap-text-muted)', fontSize: 11 }}
-            >
-              Profile / Agent
-            </th>
+            >{tCommon('columns.profileAgent')}</th>
           )}
           <th
             scope="col"
             className="text-left px-4 py-2 font-medium"
             style={{ width: 130, color: 'var(--ap-text-muted)', fontSize: 11 }}
-          >
-            Date
-          </th>
+          >{tCommon('columns.date')}</th>
           <th scope="col" style={{ width: 40 }} aria-hidden="true" />
         </tr>
       </thead>
       <tbody>
         {rows.length === 0 && (
           <tr>
-            <td colSpan={hideProfileAgentColumn ? 4 : 5} className="py-12 text-center" style={{ color: 'var(--ap-text-faint)', fontSize: 13 }}>
-              No concepts found
-            </td>
+            <td colSpan={hideProfileAgentColumn ? 4 : 5} className="py-12 text-center" style={{ color: 'var(--ap-text-faint)', fontSize: 13 }}>{tCommon('empty.notFound')}</td>
           </tr>
         )}
         {rows.map((c) => {

@@ -172,6 +172,7 @@ function DetailPageSkeleton() {
 /* ─── main page ──────────────────────────────────────────────────── */
 
 export function TeamDetailPage() {
+  const { t: tCommon } = useTranslation('common');
   const { t } = useTranslation('teams');
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
@@ -198,6 +199,7 @@ export function TeamDetailPage() {
   const activeTab: DetailTab = TABS.includes(tabParam) ? tabParam : 'members';
 
   const setTab = (tab: DetailTab) => {
+  const { t: tCommon } = useTranslation('common');
     setSearchParams({ tab }, { replace: true });
   };
 
@@ -293,7 +295,7 @@ export function TeamDetailPage() {
         </Button>
         <nav
           className="ml-2 flex items-center gap-1.5 text-sm text-textMuted"
-          aria-label="Breadcrumb"
+          aria-label={tCommon('nav.breadcrumb')}
         >
           <button className="hover:text-text" onClick={() => navigate('/teams')}>
             {t('detail.back', 'Agent Teams')}

@@ -38,6 +38,7 @@ export interface KvTableProps {
 /* ─── component ─────────────────────────────────────────────────── */
 
 export function KvTable({ rows, loading, onOpen, onEdit, onDelete }: KvTableProps) {
+  const { t: tCommon } = useTranslation('common');
   const { t, i18n } = useTranslation('kvstore');
   const locale = (i18n.language ?? 'en') as AppLocale;
 
@@ -78,9 +79,7 @@ export function KvTable({ rows, loading, onOpen, onEdit, onDelete }: KvTableProp
             scope="col"
             className="text-left px-4 py-2 font-medium"
             style={{ width: 160, color: 'var(--ap-text-muted)', fontSize: 11 }}
-          >
-            Profile / Agent
-          </th>
+          >{tCommon('columns.profileAgent')}</th>
           <th
             scope="col"
             className="text-left px-4 py-2 font-medium"

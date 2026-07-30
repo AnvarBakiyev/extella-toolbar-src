@@ -138,7 +138,7 @@ function OverviewTab({ agent }: { agent: AgentDetail }) {
       >
         {/* 2/3 — Instructions */}
         <div>
-          <h2 className="mb-3 text-xl font-semibold">System instructions</h2>
+          <h2 className="mb-3 text-xl font-semibold">{tCommon('drawer.systemInstructions')}</h2>
           {agent.instructions ? (
             <pre
               className="rounded-lg border border-border bg-bgInset p-4 text-sm"
@@ -154,7 +154,7 @@ function OverviewTab({ agent }: { agent: AgentDetail }) {
               {agent.instructions}
             </pre>
           ) : (
-            <EmptySlot label="No instructions" subtitle="This agent has no system instructions configured." />
+            <EmptySlot label={tCommon('drawer.noInstructions')} subtitle={tCommon('drawer.noInstructionsHint')} />
           )}
         </div>
 
@@ -162,7 +162,7 @@ function OverviewTab({ agent }: { agent: AgentDetail }) {
         <div className="flex flex-col gap-4">
           {/* Conversation starters */}
           {agent.conversation_starters && agent.conversation_starters.length > 0 ? (
-            <SidebarBlock title="Conversation starters">
+            <SidebarBlock title={tCommon('drawer.conversationStarters')}>
               <ul className="flex flex-col gap-1.5">
                 {agent.conversation_starters.map((s, i) => (
                   <li
@@ -178,7 +178,7 @@ function OverviewTab({ agent }: { agent: AgentDetail }) {
           ) : null}
 
           {/* Behavior */}
-          <SidebarBlock title="Behavior">
+          <SidebarBlock title={tCommon('drawer.behavior')}>
             <div
               className="grid text-sm"
               style={{ gridTemplateColumns: 'auto 1fr', gap: '8px 12px' }}
@@ -211,13 +211,13 @@ function OverviewTab({ agent }: { agent: AgentDetail }) {
               ) : null}
               {agent.recursion_limit == null && agent.hide_sequential_outputs == null &&
                agent.end_after_tools == null && temperature == null ? (
-                <span className="col-span-2 text-textFaint text-xs">No behavior flags set</span>
+                <span className="col-span-2 text-textFaint text-xs">{tCommon('drawer.noBehaviorFlags')}</span>
               ) : null}
             </div>
           </SidebarBlock>
 
           {/* Provenance */}
-          <SidebarBlock title="Provenance">
+          <SidebarBlock title={tCommon('drawer.provenance')}>
             <div
               className="grid text-sm"
               style={{ gridTemplateColumns: 'auto 1fr', gap: '8px 12px' }}
@@ -290,13 +290,12 @@ function ToolTile({ id, on }: ToolTileProps) {
 }
 
 function ToolsTab({ agent }: { agent: AgentDetail }) {
+  const { t: tCommon } = useTranslation('common');
   const active = new Set(agent.tools ?? []);
 
   return (
     <div className="p-7 pb-8">
-      <h2 className="mb-4 text-xl font-semibold">
-        Built-in tools
-        <span className="ml-2 text-base font-normal text-textFaint">
+      <h2 className="mb-4 text-xl font-semibold">{tCommon('drawer.builtinTools')}<span className="ml-2 text-base font-normal text-textFaint">
           · {agent.tools?.length ?? 0} enabled
         </span>
       </h2>
@@ -312,7 +311,7 @@ function ToolsTab({ agent }: { agent: AgentDetail }) {
       {/* tool_options raw block if present */}
       {agent.tool_options && Object.keys(agent.tool_options).length > 0 ? (
         <div className="mt-6">
-          <h2 className="mb-3 text-xl font-semibold">Tool options</h2>
+          <h2 className="mb-3 text-xl font-semibold">{tCommon('drawer.toolOptions')}</h2>
           <pre
             className="rounded-lg border border-border bg-bgInset p-4 text-sm"
             style={{
@@ -422,6 +421,7 @@ function DetailPageSkeleton() {
 /* ─── main page ──────────────────────────────────────────────────── */
 
 export function AgentDetailPage() {
+  const { t: tCommon } = useTranslation('common');
   const { t } = useTranslation('agents');
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
@@ -463,6 +463,7 @@ export function AgentDetailPage() {
     setSearchParams(next, { replace: true });
   };
   const setEntitiesTab = (tab: EntitiesTab) => {
+  const { t: tCommon } = useTranslation('common');
     const next = new URLSearchParams(searchParams);
     next.set('etab', tab);
     setSearchParams(next, { replace: true });
@@ -534,7 +535,7 @@ export function AgentDetailPage() {
           <Icon as={ArrowLeft} size={13} />
           {t('detail.backToList', 'To list')}
         </Button>
-        <nav className="ml-2 flex items-center gap-1.5 text-sm text-textMuted" aria-label="Breadcrumb">
+        <nav className="ml-2 flex items-center gap-1.5 text-sm text-textMuted" aria-label={tCommon('nav.breadcrumb')}>
           <button className="hover:text-text" onClick={() => navigate('/agents')}>
             {t('list.title', 'Agents')}
           </button>
@@ -591,28 +592,28 @@ export function AgentDetailPage() {
         className="mx-7 mb-2 grid gap-4 rounded-lg border border-border bg-bgCard px-4 py-3"
         style={{ gridTemplateColumns: 'repeat(6, minmax(0, 1fr))' }}
       >
-        <MetaCol label="Provider">
+        <MetaCol label={tCommon('columns.provider')}>
           <ProviderBadge provider={agent.provider} />
         </MetaCol>
-        <MetaCol label="Model">
+        <MetaCol label={tCommon('columns.model')}>
           <span style={{ fontFamily: 'var(--ap-font-mono)' }}>
             {agent.model ?? '—'}
           </span>
         </MetaCol>
-        <MetaCol label="Temp">
+        <MetaCol label={tCommon('drawer.temperature')}>
           <span className="tabular-nums">
             {temperature != null
               ? (typeof temperature === 'number' ? temperature.toFixed(2) : String(temperature))
               : '—'}
           </span>
         </MetaCol>
-        <MetaCol label="Recursion">
+        <MetaCol label={tCommon('drawer.recursion')}>
           <span className="tabular-nums">{agent.recursion_limit ?? '—'}</span>
         </MetaCol>
-        <MetaCol label="Version">
+        <MetaCol label={tCommon('columns.version')}>
           {agent.version != null ? `v${agent.version}` : '—'}
         </MetaCol>
-        <MetaCol label="Updated">
+        <MetaCol label={tCommon('meta.updated')}>
           {formatDate(agent.updated_at)}
         </MetaCol>
       </div>

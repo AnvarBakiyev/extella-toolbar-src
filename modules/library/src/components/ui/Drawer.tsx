@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
 import {
@@ -47,6 +48,7 @@ export const DrawerContent = forwardRef<
   ElementRef<typeof DialogPrimitive.Content>,
   DrawerContentProps
 >(function DrawerContent({ className, children, width = 460, style, ...props }, ref) {
+  const { t: tCommon } = useTranslation('common');
   return (
     <DrawerPortal>
       <DrawerOverlay />
@@ -68,7 +70,7 @@ export const DrawerContent = forwardRef<
             'hover:bg-bg3 hover:text-text',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accentSoftStrong',
           )}
-          aria-label="Close drawer"
+          aria-label={tCommon('actions.closeDrawer')}
         >
           <X className="h-4 w-4" />
         </DialogPrimitive.Close>

@@ -239,7 +239,7 @@ export function ExpertPreviewDrawer({
             <DrawerSkeleton />
           ) : isError ? (
             <div className="p-5">
-              <p className="text-sm text-danger">Failed to load expert. Try again.</p>
+              <p className="text-sm text-danger">{t('drawer.loadFailed')}</p>
             </div>
           ) : expert ? (
             <>

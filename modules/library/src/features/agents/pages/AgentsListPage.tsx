@@ -247,7 +247,7 @@ export function AgentsListPage() {
             value={q}
             onChange={(e) => { setQ(e.target.value); setPage(1); }}
             className="h-8 w-full rounded-md border border-border bg-bgCard pl-8 pr-8 text-sm text-text placeholder:text-textFaint focus:outline-none focus:ring-2 focus:ring-accentSoftStrong"
-            aria-label="Search agents"
+            aria-label={tCommon('toolbar.searchAgents')}
           />
           <SearchSpinner busy={isSearching} className="absolute right-2.5" />
         </div>

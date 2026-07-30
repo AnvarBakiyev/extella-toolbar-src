@@ -108,13 +108,14 @@ function UniqueToggle({
   onChange: (on: boolean) => void;
   disabled?: boolean;
 }) {
+  const { t: tCommon } = useTranslation('common');
   return (
     <button
       type="button"
       disabled={disabled}
       onClick={() => onChange(!on)}
       aria-pressed={on}
-      title="Show only entities unique to this team (not in the Default profile)"
+      title={tCommon('filter.onlyUniqueHint')}
       className="inline-flex items-center gap-1.5 rounded-pill border px-2.5 py-1 text-xs font-medium transition-colors disabled:opacity-50"
       style={{
         background: on ? 'var(--ap-accent-soft)' : 'var(--ap-bg-card)',
@@ -122,16 +123,14 @@ function UniqueToggle({
         color: on ? 'var(--ap-accent)' : 'var(--ap-text-muted)',
       }}
     >
-      <Icon as={Sparkles} size={12} />
-      Only unique
-    </button>
+      <Icon as={Sparkles} size={12} />{tCommon('filter.onlyUnique')}</button>
   );
 }
 
 function CreateScopeNote({ label }: { label: string }) {
+  const { t: tCommon } = useTranslation('common');
   return (
-    <div className="rounded-md border border-border bg-bgInset px-3 py-2 text-sm text-textMuted">
-      Will be added to <span className="font-medium text-text">{label}</span>.
+    <div className="rounded-md border border-border bg-bgInset px-3 py-2 text-sm text-textMuted">{tCommon('drawer.willBeAddedTo')}<span className="font-medium text-text">{label}</span>.
     </div>
   );
 }
@@ -294,6 +293,7 @@ export function ConceptsPanel({
   createScope,
   createScopeLabel,
 }: CreatableScopedPanelProps) {
+  const { t: tCommon } = useTranslation('common');
   const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
@@ -375,9 +375,7 @@ export function ConceptsPanel({
         right={
           createScope ? (
             <Button variant="primary" size="sm" onClick={() => setCreateOpen(true)}>
-              <Icon as={Plus} size={13} />
-              New concept
-            </Button>
+              <Icon as={Plus} size={13} />{tCommon('actions.newConcept')}</Button>
           ) : undefined
         }
       />
@@ -449,7 +447,7 @@ export function ConceptsPanel({
         open={Boolean(deleteTarget)}
         onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
         variant="danger"
-        title="Delete concept?"
+        title={t('delete.confirmTitle')}
         description={`Concept "${deleteTarget?.preview ?? ''}" will be deleted permanently. This action cannot be undone.`}
         confirmLabel={deleteMutation.isPending ? 'Deleting…' : 'Delete'}
         cancelLabel="Cancel"
@@ -481,6 +479,7 @@ export function RulesPanel({
   createScope,
   createScopeLabel,
 }: CreatableScopedPanelProps) {
+  const { t: tCommon } = useTranslation('common');
   const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
@@ -562,9 +561,7 @@ export function RulesPanel({
         right={
           createScope ? (
             <Button variant="primary" size="sm" onClick={() => setCreateOpen(true)}>
-              <Icon as={Plus} size={13} />
-              New rule
-            </Button>
+              <Icon as={Plus} size={13} />{tCommon('actions.newRule')}</Button>
           ) : undefined
         }
       />
@@ -636,7 +633,7 @@ export function RulesPanel({
         open={Boolean(deleteTarget)}
         onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
         variant="danger"
-        title="Delete rule?"
+        title={t('delete.confirmTitle')}
         description={`Rule "${deleteTarget?.preview ?? ''}" will be deleted permanently. This action cannot be undone.`}
         confirmLabel={deleteMutation.isPending ? 'Deleting…' : 'Delete'}
         cancelLabel="Cancel"

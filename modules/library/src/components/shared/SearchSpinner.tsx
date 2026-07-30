@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Loader2 } from 'lucide-react';
 
 import { Icon } from '@/lib/icon';
@@ -24,6 +25,7 @@ export function SearchSpinner({
   busy: boolean;
   className?: string;
 }) {
+  const { t: tCommon } = useTranslation('common');
   if (!busy) return null;
   return (
     <Icon
@@ -32,7 +34,7 @@ export function SearchSpinner({
       className={cn('animate-spin', className)}
       style={{ color: 'var(--ap-text-faint)' }}
       role="status"
-      aria-label="Searching"
+      aria-label={tCommon('states.searching')}
     />
   );
 }

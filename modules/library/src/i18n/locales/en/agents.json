@@ -94,5 +94,16 @@
   "empty.search.subtitle": "Try resetting filters or searching for a different name",
   "pagination.rows": "Rows:",
   "pagination.prev": "Previous",
-  "pagination.next": "Next"
+  "pagination.next": "Next",
+  "drawer.behavior": "Behavior",
+  "drawer.builtinTools": "Built-in tools",
+  "drawer.noBehaviorFlags": "No behavior flags set",
+  "drawer.noInstructions": "No instructions",
+  "drawer.noInstructionsHint": "This agent has no system instructions configured.",
+  "drawer.systemInstructions": "System instructions",
+  "drawer.provenance": "Provenance",
+  "drawer.temperature": "Temperature",
+  "drawer.recursion": "Recursion",
+  "drawer.willBeAddedTo": "Will be added to",
+  "drawer.pinned": "Pinned"
 }

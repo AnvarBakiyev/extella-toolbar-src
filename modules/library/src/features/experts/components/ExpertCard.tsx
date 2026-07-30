@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Pin } from 'lucide-react';
 import { Icon } from '@/lib/icon';
 import { EXPERT_TYPE_COLORS, type ExpertType, type RunPhase } from '../schemas';
@@ -58,6 +59,7 @@ export function ExpertCard({
   onRun,
   onStop,
 }: ExpertCardProps) {
+  const { t: tCommon } = useTranslation('common');
   const typeColor = EXPERT_TYPE_COLORS[expert.type] ?? EXPERT_TYPE_COLORS.general;
   const phase: RunPhase = runPhase ?? 'idle';
   // Run/launch button temporarily hidden. Restore: const showRun = Boolean(onRun);
@@ -87,7 +89,7 @@ export function ExpertCard({
           {expert.pinned ? (
             <span
               className="flex h-[22px] w-[22px] items-center justify-center rounded-[6px] bg-accentSoft text-accent"
-              title="Pinned"
+              title={tCommon('drawer.pinned')}
             >
               <Icon as={Pin} size={11} />
             </span>

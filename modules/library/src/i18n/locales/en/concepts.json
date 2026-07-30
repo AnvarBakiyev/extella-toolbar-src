@@ -34,5 +34,8 @@
   "list.errorTitle": "Could not load concepts",
   "empty.title": "No concepts yet",
   "empty.searchTitle": "No concepts match your search",
-  "empty.hint": "Create the first concept using the button above."
+  "empty.hint": "Create the first concept using the button above.",
+  "list.notFound": "No concepts found",
+  "actions.newConceptShort": "New concept",
+  "delete.confirmTitle": "Delete concept?"
 }

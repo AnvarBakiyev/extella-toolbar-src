@@ -98,5 +98,16 @@
   "empty.search.subtitle": "Сбрось фильтры или поищи по другому имени",
   "pagination.rows": "Строк:",
   "pagination.prev": "Назад",
-  "pagination.next": "Дальше"
+  "pagination.next": "Дальше",
+  "drawer.behavior": "Поведение",
+  "drawer.builtinTools": "Встроенные инструменты",
+  "drawer.noBehaviorFlags": "Особое поведение не задано",
+  "drawer.noInstructions": "Инструкций нет",
+  "drawer.noInstructionsHint": "Системные инструкции этому агенту не заданы.",
+  "drawer.systemInstructions": "Системные инструкции",
+  "drawer.provenance": "Происхождение",
+  "drawer.temperature": "Температура",
+  "drawer.recursion": "Предел рекурсии",
+  "drawer.willBeAddedTo": "Будет добавлен в",
+  "drawer.pinned": "Закреплено"
 }

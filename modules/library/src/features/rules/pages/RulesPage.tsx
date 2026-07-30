@@ -276,12 +276,8 @@ export function RulesPage() {
             Page {page} · {total} total
           </span>
           <div className="flex items-center gap-2">
-            <Button variant="secondary" size="sm" disabled={page === 1} onClick={() => setPage((p) => p - 1)}>
-              Previous
-            </Button>
-            <Button variant="secondary" size="sm" disabled={!rulesQuery.data?.has_more} onClick={() => setPage((p) => p + 1)}>
-              Next
-            </Button>
+            <Button variant="secondary" size="sm" disabled={page === 1} onClick={() => setPage((p) => p - 1)}>{tCommon('pagination.prev')}</Button>
+            <Button variant="secondary" size="sm" disabled={!rulesQuery.data?.has_more} onClick={() => setPage((p) => p + 1)}>{tCommon('pagination.next')}</Button>
           </div>
         </div>
       )}

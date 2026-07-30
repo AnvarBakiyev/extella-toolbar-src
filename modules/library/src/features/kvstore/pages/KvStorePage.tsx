@@ -633,17 +633,13 @@ export function KvStorePage() {
               size="sm"
               disabled={page === 1}
               onClick={() => setPage((p) => p - 1)}
-            >
-              Previous
-            </Button>
+            >{tCommon('pagination.prev')}</Button>
             <Button
               variant="secondary"
               size="sm"
               disabled={!kvQuery.data?.has_more}
               onClick={() => setPage((p) => p + 1)}
-            >
-              Next
-            </Button>
+            >{tCommon('pagination.next')}</Button>
           </div>
         </div>
       )}

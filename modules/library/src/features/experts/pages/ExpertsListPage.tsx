@@ -391,7 +391,7 @@ function ExpertsListPageInner() {
                 setPage(1);
               }}
               className="h-8 w-full rounded-md border border-border bg-bgCard pl-8 pr-8 text-sm text-text placeholder:text-textFaint focus:outline-none focus:ring-2 focus:ring-accentSoftStrong"
-              aria-label="Search experts"
+              aria-label={tCommon('toolbar.searchExperts')}
             />
             <SearchSpinner busy={isSearching} className="absolute right-2.5" />
           </div>
@@ -632,7 +632,7 @@ function ExpertsListPageInner() {
           {isError ? (
             <div className="px-7 py-6">
               <ErrorBanner
-                title="Failed to load experts"
+                title={tCommon('errors.loadFailed')}
                 onRetry={() => void refetch()}
               />
             </div>
@@ -716,9 +716,7 @@ function ExpertsListPageInner() {
                 }
                 action={
                   filterCount > 0 ? (
-                    <Button variant="secondary" size="sm" onClick={resetFilters}>
-                      Reset filters
-                    </Button>
+                    <Button variant="secondary" size="sm" onClick={resetFilters}>{tCommon('filters.reset')}</Button>
                   ) : undefined
                 }
               />
@@ -829,17 +827,13 @@ function ExpertsListPageInner() {
                   size="sm"
                   disabled={page <= 1}
                   onClick={() => setPage((p) => p - 1)}
-                >
-                  Previous
-                </Button>
+                >{tCommon('pagination.prev')}</Button>
                 <Button
                   variant="secondary"
                   size="sm"
                   disabled={!hasMore && page * pageSize >= total}
                   onClick={() => setPage((p) => p + 1)}
-                >
-                  Next
-                </Button>
+                >{tCommon('pagination.next')}</Button>
               </div>
             </div>
           ) : null}

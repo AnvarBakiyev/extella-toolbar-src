@@ -32,5 +32,8 @@
   "empty.title": "No rules yet",
   "empty.hint": "Create the first rule using the button above.",
   "empty.searchTitle": "No rules match your search",
-  "list.errorTitle": "Could not load rules"
+  "list.errorTitle": "Could not load rules",
+  "list.notFound": "No rules found",
+  "actions.newRuleShort": "New rule",
+  "delete.confirmTitle": "Delete rule?"
 }

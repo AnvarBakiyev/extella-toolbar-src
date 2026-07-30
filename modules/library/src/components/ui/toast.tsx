@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Toaster as SonnerToaster, toast } from 'sonner';
 
 /**
@@ -6,8 +7,13 @@ import { Toaster as SonnerToaster, toast } from 'sonner';
  * duration. The standalone build is light-theme-only.
  */
 export function Toaster() {
+  // Подпись области уведомлений читает экранный диктор — по-английски она звучала
+  // «Notifications alt+T» посреди русского окна. Её не видно глазами, поэтому она и
+  // пережила все прошлые проходы: проверять надо и то, что человек слышит.
+  const { t } = useTranslation('common');
   return (
     <SonnerToaster
+      containerAriaLabel={t('states.notifications')}
       theme="light"
       position="top-right"
       richColors

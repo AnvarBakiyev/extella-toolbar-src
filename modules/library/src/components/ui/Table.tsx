@@ -6,7 +6,7 @@ import { cn } from '@/lib/cn';
  * row hover via `--ap-overlay`, selected row tint via `--ap-accent-soft`.
  *
  *   <Table>
- *     <TableHeader><TableRow><TableHead>Name</TableHead></TableRow></TableHeader>
+ *     <TableHeader><TableRow><TableHead>{tCommon('columns.name')}</TableHead></TableRow></TableHeader>
  *     <TableBody><TableRow><TableCell>...</TableCell></TableRow></TableBody>
  *   </Table>
  */

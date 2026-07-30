@@ -60,7 +60,7 @@ export function ProfileAgentFilter({
           onChange={handleProfileChange}
           className="h-8 rounded-md border border-border bg-bgCard pl-2.5 pr-7 text-sm text-text appearance-none focus:outline-none focus:ring-2 focus:ring-accentSoftStrong"
           style={{ minWidth: 120 }}
-          aria-label="Filter by profile"
+          aria-label={t('filter.byProfile')}
         >
           <option value="">{t('list.allProfiles')}</option>
           {profiles.map((p) => (
@@ -90,7 +90,7 @@ export function ProfileAgentFilter({
             onChange={handleAgentChange}
             className="h-8 rounded-md border border-border bg-bgCard pl-2.5 pr-7 text-sm text-text appearance-none focus:outline-none focus:ring-2 focus:ring-accentSoftStrong"
             style={{ minWidth: 140 }}
-            aria-label="Filter by agent"
+            aria-label={t('filter.byAgent')}
           >
             <option value="">{t('list.allAgents')}</option>
             {availableAgents.map((a) => (
