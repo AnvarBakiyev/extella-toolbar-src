@@ -5325,12 +5325,18 @@ ETB.router = (function () {
         }
         try {
           // УСТРОЙСТВО ПРОБРАСЫВАЕТСЯ ЧЕРЕЗ МОСТ — починка 30.07.
-          // Без таргета эксперт исполняется на платформе и пишет файлы в ЕЁ песочницу,
-          // честно рапортуя успех. Так ломалась установка с Hugging Face: манифест
-          // «записан», а на машине человека его нет, и панель говорила «не установилось».
-          // Ложный успех — наш самый дорогой класс, поэтому устройство передаём явно.
+          // Без таргета эксперт исполняется на дефолтном таргете аккаунта и пишет файлы
+          // на чужую машину, честно рапортуя успех. Так ломалась установка с Hugging
+          // Face: манифест «записан», а на машине человека его нет, и панель говорила
+          // «не установилось». Ложный успех — наш самый дорогой класс, поэтому
+          // устройство передаём явно. По документации платформы (api.html) поле
+          // называется targets и это МАССИВ кандидатов; одиночный target принимаем
+          // для обратной совместимости и заворачиваем в массив.
+          var _tgts = Array.isArray(e.data.targets) && e.data.targets.length
+            ? e.data.targets.map(String)
+            : (e.data.target ? [String(e.data.target)] : null);
           ETB.api.runExpert(expertName, expertParams,
-            e.data.target ? { global: true, target: String(e.data.target) } : { global: true })
+            _tgts ? { global: true, targets: _tgts } : { global: true })
             .then(function (res) { reply({ type: 'etb_expert_result', reqId: reqId, ok: true, res: res }); })
             .catch(function (err) { reply({ type: 'etb_expert_result', reqId: reqId, ok: false, error: (err && err.message) || 'expert failed' }); });
         } catch (err) {

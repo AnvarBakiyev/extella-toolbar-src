@@ -4061,13 +4061,35 @@ function renderHFCard(item, i) {
   '</div>';
 }
 
+// target ЭТОГО устройства — от моста Конструктора (/x/health отдаёт его с 5.32).
+// Зачем: /api/expert/run БЕЗ поля targets исполняется на дефолтном таргете аккаунта
+// (доказано вживую 30.07: wz_ping без targets отвечал с VPS extella-team) — установщик
+// писал манифест на чужую машину и рапортовал успех. Поле называется targets и это
+// МАССИВ — по документации платформы (api.html).
+var _selfTgtCache = { at: 0, val: null };
+function _selfTarget() {
+  var now = Date.now();
+  if (_selfTgtCache.val !== null && now - _selfTgtCache.at < 60000) return Promise.resolve(_selfTgtCache.val);
+  return _mkbFetch('/x/health', {}, 2500)
+    .then(function (h) { var t = (h && h.target) || ''; _selfTgtCache = { at: now, val: t }; return t; })
+    .catch(function () { return _selfTgtCache.val || ''; });
+}
 function installHF(id, kind, btn) {
   // Детерминированная установка gradio-Space (без ИИ-агента): прокси-эксперт создаётся ВСЕГДА, за секунды.
   // Не-space (модели без Space) и не-gradio — фолбэк на прежний агентный путь.
   function agentFallback() { if (btn) { btn.disabled = true; btn.textContent = 'Opening…'; } notify('hf_add_url', '', 'hf:' + kind + ':' + id); }
   if (kind !== 'space') { agentFallback(); return; }
   if (btn) { btn.disabled = true; btn.textContent = 'Ставлю…'; }
-  skBridge('etb_run_expert', 'etb_expert_result', { name: 'hf_space_install', params: { space: id } }, 180000).then(function (r) {
+  _selfTarget().then(function (tgt) {
+  if (!tgt) {
+    // Без target установка исполнится на чужой машине и притворится успешной —
+    // честный отказ вместо ложного «Готово ✓» (корень HF-инцидента 30.07).
+    if (btn) { btn.disabled = false; btn.textContent = '+ Install'; }
+    alert(_clT('Не удалось определить это устройство — плагин встал бы не на ваш компьютер. Перезапустите Extella (служба Конструктора поднимается вместе с приложением) и попробуйте снова.',
+               'Could not identify this device — the plugin would land on another machine. Restart Extella (the bridge starts with the app) and try again.'));
+    return;
+  }
+  skBridge('etb_run_expert', 'etb_expert_result', { name: 'hf_space_install', params: { space: id }, targets: [tgt] }, 180000).then(function (r) {
     var out = r.res; if (out && typeof out === 'object' && (out.result || out.output)) out = out.result || out.output;
     if (typeof out === 'string') { try { out = JSON.parse(out); } catch (e) {} }
     if (out && out.status === 'success' && out.plugin_id) {
@@ -4080,6 +4102,7 @@ function installHF(id, kind, btn) {
       alert('Не удалось установить: ' + ((out && out.message) || 'неизвестная ошибка'));
     }
   }).catch(function () { agentFallback(); });  // таймаут/сбой моста — на агента
+  });
 }
 
 // ── Installed plugins (builtin featured + custom GitHub) ─────────────────

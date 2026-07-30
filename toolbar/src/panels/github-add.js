@@ -769,6 +769,24 @@ ETB.githubAdd = (function () {
   }
 
   // ── Device ID helpers ─────────────────────────────────────────
+  // target ЭТОГО устройства — от моста Конструктора (/x/health отдаёт его с 5.32,
+  // источник — текущая регистрация листенера в ~/.extella/device.txt).
+  // Зачем: /api/expert/run без поля targets исполняется в песочнице платформы.
+  // Для mkt_hf_install это значило: манифест и файлы плагина ложились в песочницу,
+  // а витрина получала честный success — с чужой машины (корень HF-инцидента 30.07).
+  // Поле называется targets и это МАССИВ — по документации платформы (api.html);
+  // исполняется первый доступный из списка.
+  function _selfTarget() {
+    return new Promise(function (resolve) {
+      var done = false;
+      var t = setTimeout(function () { if (!done) { done = true; resolve(''); } }, 3000);
+      fetch('http://127.0.0.1:8765/x/health')
+        .then(function (r) { return r.json(); })
+        .then(function (j) { if (!done) { done = true; clearTimeout(t); resolve((j && j.target) || ''); } })
+        .catch(function () { if (!done) { done = true; clearTimeout(t); resolve(''); } });
+    });
+  }
+
   function _getDeviceId() {
     return ETB.api.kvGet('_device_id')
       .then(function (res) { return (res && res.value) || null; })
@@ -919,16 +937,29 @@ ETB.githubAdd = (function () {
     _state.statusMsg = 'Подключаем модель через HuggingFace…';
     _state.installAgentText = 'Подключаем модель через HuggingFace…';
     _render();
-    return _resolveHostedSpace(rd).then(function (space) {
+    return Promise.all([_resolveHostedSpace(rd), _selfTarget()]).then(function (pair) {
+      var space = pair[0], selfTgt = pair[1];
       if (!space) {
         _state.step = 'analysis_error';
         _state.errorMsg = 'Не нашли готовый HuggingFace-Space для этой модели. Попробуйте локальную установку (нужна видеокарта NVIDIA) или другую модель.';
         _render();
         return;
       }
+      // Без target установка исполнится в облачной песочнице и притворится успешной —
+      // честный отказ вместо ложного «Готово».
+      if (!selfTgt) {
+        _state.step = 'analysis_error';
+        _state.errorMsg = 'Не удалось определить это устройство на платформе — плагин установился бы не на ваш компьютер. Перезапустите Extella (служба Конструктора и листенер поднимаются вместе с приложением) и попробуйте снова.';
+        _render();
+        return;
+      }
       _state.statusMsg = 'Собираем плагин из ' + space + '…';
       _render();
-      return ETB.api.runExpert('mkt_hf_install', { space: space, plugin_name: _state.customName || rd.name || space, plugin_id: pluginId }, { timeout: 150 })
+      // hf_space_install — согласованный детерминированный установщик (30.07):
+      // сам проверяет, что манифест лёг на устройство (_verify_on_device), и
+      // отвечает not_on_device вместо ложного успеха. mkt_hf_install оставлен
+      // старым плагинам ради их рантайма (mkt_hf_call).
+      return ETB.api.runExpert('hf_space_install', { space: space, display_name: _state.customName || rd.name || space, plugin_id: pluginId }, { timeout: 150, targets: [selfTgt] })
         .then(function (res) {
           var out = (res && res.result !== undefined) ? res.result : res;
           if (typeof out === 'string') { try { out = JSON.parse(out); } catch (e) {} }
@@ -952,20 +983,31 @@ ETB.githubAdd = (function () {
   }
 
   // Load device compute capability (cached in KV) to gate the "Local" option.
+  // Замер обязан исполняться НА ЭТОМ устройстве (targets), иначе mkt_device_caps
+  // меряет GPU песочницы платформы. Кэшу верим только если он снят с того же
+  // target — старые записи без метки могли приехать из песочницы.
   function _fetchDeviceCaps() {
     if (_state.deviceCaps) return;
-    ETB.api.kvGet('mkt_device_caps')
-      .then(function (r) { if (r && r.value) { try { return JSON.parse(r.value); } catch (e) {} } return null; })
-      .catch(function () { return null; })
-      .then(function (cached) {
-        if (cached) return cached;
-        return ETB.api.runExpert('mkt_device_caps', {}).then(function (res) {
-          var out = (res && res.result !== undefined) ? res.result : res;
-          if (typeof out === 'string') { try { out = JSON.parse(out); } catch (e) { out = null; } }
-          if (out) { try { ETB.api.kvSet('mkt_device_caps', JSON.stringify(out), 'device compute caps'); } catch (e) {} }
-          return out;
-        }).catch(function () { return null; });
-      })
+    _selfTarget().then(function (selfTgt) {
+      if (!selfTgt) {
+        return { can_run_local_heavy: false, reason: 'Не удалось определить это устройство — доступен только HuggingFace.' };
+      }
+      return ETB.api.kvGet('mkt_device_caps')
+        .then(function (r) { if (r && r.value) { try { return JSON.parse(r.value); } catch (e) {} } return null; })
+        .catch(function () { return null; })
+        .then(function (cached) {
+          if (cached && cached._target === selfTgt) return cached;
+          return ETB.api.runExpert('mkt_device_caps', {}, { targets: [selfTgt] }).then(function (res) {
+            var out = (res && res.result !== undefined) ? res.result : res;
+            if (typeof out === 'string') { try { out = JSON.parse(out); } catch (e) { out = null; } }
+            if (out) {
+              out._target = selfTgt;
+              try { ETB.api.kvSet('mkt_device_caps', JSON.stringify(out), 'device compute caps'); } catch (e) {}
+            }
+            return out;
+          }).catch(function () { return null; });
+        });
+    })
       .then(function (caps) {
         _state.deviceCaps = caps || { can_run_local_heavy: false, reason: 'Не удалось проверить устройство — доступен только HuggingFace.' };
         if (!_state.runMode && !_state.deviceCaps.can_run_local_heavy) _state.runMode = 'remote';

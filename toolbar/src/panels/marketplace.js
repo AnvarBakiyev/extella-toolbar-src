@@ -544,7 +544,12 @@ ETB.marketplace = (function () {
                 });
                 return;
               }
-              ETB.api.runExpertAsync(_expertName, _expertParams, { global: true, maxWait: 900000, interval: 2500 })
+              // targets (массив UUID устройств) пробрасывается в /api/expert/run: без
+              // него эксперт исполняется на дефолтном таргете аккаунта, и установщики
+              // писали файлы на чужую машину, рапортуя успех (HF-инцидент 30.07).
+              var _expertOpts = { global: true, maxWait: 900000, interval: 2500 };
+              if (Array.isArray(e.data.targets) && e.data.targets.length) _expertOpts.targets = e.data.targets;
+              ETB.api.runExpertAsync(_expertName, _expertParams, _expertOpts)
                 .then(function (res) { _back({ type: 'etb_expert_result', reqId: _rid, ok: true, res: res }); })
                 .catch(function (er) { _back({ type: 'etb_expert_result', reqId: _rid, ok: false, error: (er && er.message) || 'expert failed' }); });
             } else if (_t === 'etb_run_agent') {
