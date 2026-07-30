@@ -32,7 +32,7 @@ textarea,input,select{font-family:var(--sans);font-size:14px}
 .sess-select{padding:7px 10px;border:1px solid var(--cream-dark);border-radius:5px;background:#fff;max-width:280px}
 .btn{border:1px solid var(--ink);background:var(--ink);color:#fff;border-radius:5px;padding:8px 16px;font-size:13.5px;font-weight:600;transition:.15s}
 .btn:hover{background:var(--ink-medium)}
-.btn.gold{background:var(--gold);border-color:var(--gold)}
+.btn.gold{background:var(--gold);border-color:var(--gold);color:#fff}
 .btn.gold:hover{background:var(--gold-light);border-color:var(--gold-light)}
 .btn.ghost{background:transparent;color:var(--ink);border-color:var(--silver-light)}
 .btn.ghost:hover{border-color:var(--ink)}
@@ -158,7 +158,7 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
 .auto-tile .wz-hero{margin:-14px -16px 12px;padding:14px 16px 12px}
 .auto-tile .wz-hero-nm{font-size:15px}
 .tile-badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
-.tile-badge{font-size:11px;border-radius:999px;padding:3px 9px;background:rgba(128,128,128,.10);color:var(--nav)}
+.tile-badge{font-size:11px;border-radius:8px;padding:3px 9px;background:rgba(128,128,128,.10);color:var(--nav)}
 .tile-badge.ok{background:rgba(47,158,86,.12);color:#2f9e56}
 .tile-badge.warn{background:rgba(197,126,51,.13);color:#C57E33}
 .tile-run{font-size:12px;color:var(--silver);margin-bottom:10px;min-height:16px}
@@ -177,7 +177,7 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
 .auto-kpis{display:flex;gap:22px;flex-wrap:wrap;margin:8px 0}
 .auto-kpis b{font-size:20px}
 .run-row{font-size:12.5px;color:var(--nav);padding:4px 0;border-bottom:1px dashed var(--cream-dark)}
-.nav-toggle{display:flex;gap:2px;background:var(--cream);border-radius:9px;padding:3px}
+.nav-toggle{display:flex;gap:2px;background:var(--cream);border-radius:8px;padding:3px}
 .nav-toggle button{border:none;background:none;padding:6px 13px;border-radius:7px;font-size:13px;font-weight:600;color:var(--nav)}
 .nav-toggle button.on{background:var(--ink);color:#fff}
 
@@ -195,18 +195,18 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
 .msg.bot{align-self:flex-start;background:var(--cream);border:1px solid var(--cream-dark);border-bottom-left-radius:4px}
 .msg .apply{margin-top:8px}
 .chat-form{display:flex;gap:8px;padding:12px 14px;border-top:1px solid var(--cream-dark);align-items:flex-end}
-.chat-form input,.chat-form textarea{flex:1;border:1px solid var(--cream-dark);border-radius:9px;padding:9px 12px;background:#fff}
+.chat-form input,.chat-form textarea{flex:1;border:1px solid var(--cream-dark);border-radius:8px;padding:9px 12px;background:#fff}
 .chat-form textarea{resize:none;min-height:20px;max-height:120px;line-height:1.45;font:14px/1.45 var(--sans,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif);overflow-y:auto;white-space:pre-wrap}
 .chat-form input:focus,.chat-form textarea:focus{outline:none;border-color:var(--gold)}
-.chat-form .attach{border:1px solid var(--cream-dark);background:#fff;color:var(--nav);border-radius:9px;padding:0 11px;font-size:16px}
+.chat-form .attach{border:1px solid var(--cream-dark);background:#fff;color:var(--nav);border-radius:8px;padding:0 11px;font-size:16px}
 .empty{color:var(--silver);font-size:13.5px;text-align:center;padding:40px 20px}
 .hide{display:none!important}
-.notice{background:var(--gold-bg);border:1px solid #eddfc4;border-radius:10px;padding:12px 16px;font-size:13.5px;margin-bottom:16px}
+.notice{background:var(--gold-bg);border:1px solid #eddfc4;border-radius:8px;padding:12px 16px;font-size:13.5px;margin-bottom:16px}
 
 /* ---------- modal + toasts (замена prompt/alert: работают и внутри Extella) ---------- */
 .mod-back{position:fixed;inset:0;background:rgba(10,10,10,.35);display:none;align-items:center;justify-content:center;z-index:100000}/* #3 выше оверлея кабинета (wz_cab z-index:99998) — иначе диалоги «Привязать источник»/«Входящие» открывались ПОД кабинетом */
 .mod-back.open{display:flex}
-.mod{background:var(--paper);border-radius:14px;padding:24px 26px;width:min(430px,92vw);max-height:calc(100vh - 40px);box-sizing:border-box;box-shadow:0 18px 60px rgba(0,0,0,.25);display:flex;flex-direction:column;overflow:hidden;position:relative}
+.mod{background:var(--paper);border-radius:8px;padding:24px 26px;width:min(430px,92vw);max-height:calc(100vh - 40px);box-sizing:border-box;box-shadow:0 18px 60px rgba(0,0,0,.25);display:flex;flex-direction:column;overflow:hidden;position:relative}
 .mod h3{font-size:16px;margin-bottom:6px;padding-right:30px;flex:none}
 .mod .mhint{color:var(--silver);font-size:12.5px;margin-bottom:12px;max-height:32vh;min-height:0;overflow-y:auto;overflow-wrap:anywhere}
 .mod-content{min-height:0;overflow-y:auto;overscroll-behavior:contain;padding-right:4px}
@@ -314,7 +314,7 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
 <div id="anon_studio" style="display:none;position:fixed;inset:0;z-index:9990;background:var(--cream,#f4f1ea);overflow:auto">
   <div style="max-width:860px;margin:0 auto;padding:26px 28px 70px">
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
-      <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#3f4b52,#14171e);display:flex;align-items:center;justify-content:center;font-size:26px"></div>
+      <div style="width:52px;height:52px;border-radius:8px;background:linear-gradient(135deg,#3f4b52,#14171e);display:flex;align-items:center;justify-content:center;font-size:26px"></div>
       <div>
         <div style="font:700 20px var(--sans);color:var(--ink,#0a0a0a)">Обезличивание</div>
         <div style="font-size:12.5px;color:var(--silver,#889)">Личные данные заменяются стабильными кодами прямо на этом компьютере — без ИИ-моделей, файлы никуда не отправляются</div>
@@ -345,7 +345,7 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
      XTL_HELP ниже; добавить пояснение новому экрану = дописать запись, а не верстать окно заново.
      Раздел «чего НЕ обещаем» обязателен: границы возможности человек должен узнать от нас, а не от клиента. -->
 <div id="xtl_help" style="display:none;position:fixed;inset:0;z-index:9996;background:rgba(12,14,18,.55);overflow:auto;padding:34px 18px">
-  <div style="max-width:720px;margin:0 auto;background:var(--cream,#f4f1ea);border-radius:16px;padding:26px 28px 22px;box-shadow:0 24px 60px -20px rgba(0,0,0,.5)">
+  <div style="max-width:720px;margin:0 auto;background:var(--cream,#f4f1ea);border-radius:8px;padding:26px 28px 22px;border:1px solid var(--line,#D7E0DC);box-shadow:none">
     <div id="xtl_help_body"></div>
     <div style="display:flex;align-items:center;gap:10px;margin-top:4px">
       <button class="btn gold" onclick="closeHelp()">Понятно</button>
@@ -358,7 +358,7 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
 <div id="cspl_studio" style="display:none;position:fixed;inset:0;z-index:9990;background:var(--cream,#f4f1ea);overflow:auto">
   <div style="max-width:980px;margin:0 auto;padding:26px 28px 70px">
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
-      <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#2a6f77,#14171e);display:flex;align-items:center;justify-content:center;font-size:26px"></div>
+      <div style="width:52px;height:52px;border-radius:8px;background:linear-gradient(135deg,#2a6f77,#14171e);display:flex;align-items:center;justify-content:center;font-size:26px"></div>
       <div>
         <div style="font:700 20px var(--sans);color:var(--ink,#0a0a0a)">Студия языков</div>
         <div style="font-size:12.5px;color:var(--silver,#889)">предметные языки твоего аккаунта: программа словами дела → проверенный исполняемый результат</div>
@@ -382,7 +382,7 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
 <div id="comp_studio" style="display:none;position:fixed;inset:0;z-index:9990;background:var(--cream,#f4f1ea);overflow:auto">
   <div style="max-width:980px;margin:0 auto;padding:26px 28px 70px">
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
-      <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#c9a35c,#a97e35);display:flex;align-items:center;justify-content:center;font-size:26px"></div>
+      <div style="width:52px;height:52px;border-radius:8px;background:linear-gradient(135deg,#c9a35c,#a97e35);display:flex;align-items:center;justify-content:center;font-size:26px"></div>
       <div>
         <div style="font:700 20px var(--sans);color:var(--ink,#0a0a0a)">Быстрая сборка</div>
         <div style="font-size:12.5px;color:var(--silver,#889)">задача словами → сборка из блоков → результат</div>
@@ -390,7 +390,7 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
       <button class="btn ghost" style="margin-left:auto;padding:8px 16px" onclick="openHelp('composer')" title="Что делает, что гарантирует, а что нет">Как это работает</button>
       <button class="btn ghost" style="padding:8px 16px" onclick="closeCompStudio()">✕ Закрыть</button>
     </div>
-    <div style="border:1px solid var(--cream-dark,#d8d2c8);border-radius:14px;padding:18px 20px;background:var(--paper,#fff)">
+    <div style="border:1px solid var(--cream-dark,#d8d2c8);border-radius:8px;padding:18px 20px;background:var(--paper,#fff)">
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">
         <span class="chip-ex" onclick="composerFill(this)">найти забытые подписки в банковских выписках</span>
         <span class="chip-ex" onclick="composerFill(this)">следить за конкурентами и слать дайджест</span>
@@ -429,7 +429,7 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
 </div>
 
 <style>
-.chip-ex{cursor:pointer;font-size:12px;color:var(--silver,#889);background:#fff;border:1px solid var(--cream-dark,#e0dccf);border-radius:999px;padding:5px 11px}
+.chip-ex{cursor:pointer;font-size:12px;color:var(--silver,#889);background:#fff;border:1px solid var(--cream-dark,#e0dccf);border-radius:8px;padding:5px 11px}
 .chip-ex:hover{color:var(--gold,#c60);border-color:var(--gold,#c60)}
 .cmp-step{display:flex;align-items:center;gap:9px;padding:8px 12px;border:1px solid var(--cream-dark,#e0dccf);border-radius:6px;margin:6px 0;font-size:13.5px;background:#fff}
 .cmp-dot{width:8px;height:8px;border-radius:50%;background:var(--gold,#c60);flex:0 0 auto;display:inline-block;vertical-align:middle}
@@ -690,7 +690,7 @@ function _agentGateUnavailable(why, authRequired){
   el("modTitle").textContent = authRequired ? "Сначала запустите Extella" : "Платформа временно недоступна";
   el("modHint").textContent = why;
   el("modInput").outerHTML = '<input id="modInput" type="hidden">'
-    + '<div style="padding:12px;border-radius:10px;background:#fff5ef;color:#8d352a;font-size:13px;line-height:1.5">'
+    + '<div style="padding:12px;border-radius:8px;background:#fff5ef;color:#8d352a;font-size:13px;line-height:1.5">'
     + (authRequired
        ? 'Существующий агент не удалён. Не создавайте и не привязывайте его повторно.'
        : 'Список агентов сохранён на платформе; повторите проверку после восстановления связи.')
@@ -720,7 +720,7 @@ function _agentGateRender(list, broken, why){
   // возвращает пустоту молча, и кнопка «Создать агента» выглядела мёртвой (Гульжан, 20.07).
   el("modInput").outerHTML = '<input id="modInput" type="text" autocomplete="off" '
     + 'placeholder="Имя нового агента (например: «Мой агент»)" '
-    + 'style="width:100%;box-sizing:border-box;padding:10px 12px;margin-top:10px;border:1px solid var(--cream-dark,#e5e0d5);border-radius:9px;font-size:13.5px" '
+    + 'style="width:100%;box-sizing:border-box;padding:10px 12px;margin-top:10px;border:1px solid var(--cream-dark,#e5e0d5);border-radius:8px;font-size:13.5px" '
     + 'onkeydown="if(event.key===\'Enter\')agentGateCreate()">'
     + (rows ? '<div style="margin:12px 0 4px;font-size:12px;color:var(--silver)">Или выбери существующего:</div>'+rows : '')
     + '<div style="display:flex;gap:8px;margin-top:12px">'
@@ -811,7 +811,7 @@ async function openAgentManager(){
   }
   const list=(_agents.agents||[]).map(function(a){
     const on=a.id===_agents.current;
-    return '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid '+(on?'var(--gold,#c9a35c)':'var(--cream-dark,#e5e0d5)')+';border-radius:9px;margin-bottom:6px;background:'+(on?'#c9a35c14':'transparent')+'">'+
+    return '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid '+(on?'var(--gold,#c9a35c)':'var(--cream-dark,#e5e0d5)')+';border-radius:8px;margin-bottom:6px;background:'+(on?'#c9a35c14':'transparent')+'">'+
       '<div style="flex:1"><div style="font-weight:600;font-size:13px">'+(on?'✓ ':'')+esc(a.name)+'</div>'+
       '<div style="font-size:11px;color:var(--silver,#889)">'+esc(a.id)+' · '+(a.source==='created'?'создан визардом':'привязан')+'</div></div>'+
       (on?'<button class="btn ghost" style="padding:4px 10px;font-size:12px" onclick="openBrain()">Мозг</button><span style="font-size:11px;color:var(--gold,#a97e35);font-weight:600">строим сюда</span>':
@@ -888,7 +888,7 @@ function _brainRender(res, seq){
   el("modTitle").textContent="Мозг агента · "+esc((res.agent&&res.agent.name)||"");
   el("modHint").innerHTML="Знания и правила этого агента (его личный мозг). Концепты — что он знает о клиенте; правила — как он должен действовать/говорить. Эксперты (умения) — общий граф платформы.";
   var voiceN=rs.filter(function(r){return /\[голос\]/.test(r.text);}).length;
-  var voiceBox='<div style="background:linear-gradient(135deg,#c9a35c14,transparent);border:1px solid var(--gold,#c9a35c);border-radius:9px;padding:9px 11px;margin-bottom:12px">'+
+  var voiceBox='<div style="background:linear-gradient(135deg,#c9a35c14,transparent);border:1px solid var(--gold,#c9a35c);border-radius:8px;padding:9px 11px;margin-bottom:12px">'+
     '<div style="font-weight:700;font-size:13px">Голос агента '+(voiceN?'<span style="color:var(--silver,#889);font-weight:400">выучен, '+voiceN+' правил</span>':'<span style="color:var(--silver,#889);font-weight:400">не задан</span>')+'</div>'+
     '<div style="font-size:11.5px;color:var(--silver,#889);margin:2px 0 7px">Дайте 2–4 примера, как пишет клиент — агент выучит стиль (тон, длина, обороты) и будет отвечать так же.</div>'+
     '<button class="btn gold" style="padding:5px 12px;font-size:12px" onclick="voiceLearn()">Обучить по примерам</button>'+
@@ -3012,7 +3012,7 @@ function _composeWorkbench(r){
   var st = window._composeState || { task:'', refinements:[], chat:[] };
   var card = r.card||{};
   var comps = (card.components && card.components.length) ? card.components : (r.steps||[]).map(function(s){return s.expert;});
-  var chips = comps.map(function(c){ return '<span style="display:inline-block;font-size:12.5px;background:#faf7f2;border:1px solid #e4ded5;border-radius:999px;padding:4px 11px;margin:0 6px 6px 0;color:#48423a">'+esc(compChip(c))+'</span>'; }).join('');
+  var chips = comps.map(function(c){ return '<span style="display:inline-block;font-size:12.5px;background:#faf7f2;border:1px solid #e4ded5;border-radius:8px;padding:4px 11px;margin:0 6px 6px 0;color:#48423a">'+esc(compChip(c))+'</span>'; }).join('');
   var instN = (r.installed||[]).filter(function(x){return x.status!=='already';}).length;
   var inst = instN ? '<div style="font-size:12.5px;color:var(--gold,#c60);margin:2px 0 8px">⬇ доустановлено под задачу: '+instN+' '+(instN===1?'модель':'модели')+'</div>' : '';
   var mh = (r.missing_human||[]).filter(Boolean);
@@ -3038,7 +3038,7 @@ function _composeWorkbench(r){
     : '<div style="margin:6px 0"><span style="display:inline-block;background:var(--cream);border:1px solid var(--cream-dark);border-radius:6px 12px 12px 2px;padding:6px 11px;font-size:13px;max-width:82%">'+esc(m.text)+'</span></div>'; };
   var thread = (st.chat||[]).map(bubble).join('');
   (el('composeBody')||el('composerOut')).innerHTML =
-    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="font-size:11.5px;background:rgba(128,128,128,.12);color:var(--silver);border-radius:999px;padding:3px 10px">черновик · не сохранён</span><a href="#" onclick="resetCompose();return false" style="font-size:12px;color:var(--silver);margin-left:auto">✕ начать заново</a></div>'+
+    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="font-size:11.5px;background:rgba(128,128,128,.12);color:var(--silver);border-radius:8px;padding:3px 10px">черновик · не сохранён</span><a href="#" onclick="resetCompose();return false" style="font-size:12px;color:var(--silver);margin-left:auto">✕ начать заново</a></div>'+
     '<div style="border:1px solid var(--cream-dark,#d8d2c8);border-radius:6px;padding:16px 18px;background:var(--paper,#fff);margin-bottom:12px">'+
       '<div style="display:flex;align-items:center;gap:10px"><span style="font-size:26px">'+em+'</span><div style="font:700 17px var(--sans)">'+nm+'</div></div>'+
       '<div style="font-size:13.5px;color:var(--ink-soft);line-height:1.5;margin:8px 0 12px">'+desc+'</div>'+
@@ -4165,7 +4165,7 @@ function universalProcessHTML(p){
       </div>
     </details>`;
   }).join('');
-  return `<div style="margin:10px 0 12px;padding:11px 13px;border:1px solid var(--cream-dark);border-radius:10px;background:rgba(255,255,255,.55)">
+  return `<div style="margin:10px 0 12px;padding:11px 13px;border:1px solid var(--cream-dark);border-radius:8px;background:rgba(255,255,255,.55)">
     <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:4px">
       <b style="font-size:13.5px">Шаги процесса · Universal Contract v1</b>
       <span style="font-size:11.5px;color:var(--silver)">${accepted}/${steps.length} принято${active?' · '+active+' выполняется':''}${blocked?' · '+blocked+' ждёт человека':''}</span>
@@ -4548,7 +4548,7 @@ async function renderConnections(){
   // #10/#15: честный статус проверки — не выдаём «подключено» за проверенное, показываем свежесть
   const svmap = {}; secrets.forEach(x=>{ if(!x.external) svmap[x.connector]=x; });
   const _ago = (iso)=>{ if(!iso) return ''; const d=Math.floor((Date.now()-new Date(iso).getTime())/86400000); return d<=0?'сегодня':(d===1?'вчера':d+' дн назад'); };
-  const _pill = (c,bg,t)=>`<span style="font-size:11.5px;color:${c};background:${bg};border-radius:999px;padding:3px 9px">${t}</span>`;
+  const _pill = (c,bg,t)=>`<span style="font-size:11.5px;color:${c};background:${bg};border-radius:8px;padding:3px 9px">${t}</span>`;
   const connStatus = (e)=>{
     if(!e) return '';
     if(e.last_ok===false) return _pill('#c33','rgba(197,51,51,.12)','⚠ не подтверждено');
@@ -4561,7 +4561,7 @@ async function renderConnections(){
     const on = vaulted.includes(key), ext = found.includes(key);
     const status = on
       ? connStatus(svmap[key])
-      : (ext ? '<span style="font-size:11.5px;color:#C57E33;background:rgba(197,126,51,.13);border-radius:999px;padding:3px 9px">найдено в Travel-паке</span>' : '');
+      : (ext ? '<span style="font-size:11.5px;color:#C57E33;background:rgba(197,126,51,.13);border-radius:8px;padding:3px 9px">найдено в Travel-паке</span>' : '');
     const act = on
       ? `<a href="#" onclick="testConn('${key}',${key.startsWith('src_')?1:0});return false" style="color:#2f9e56;font-size:12.5px">проверить</a> <a href="#" onclick="disconnectConn('${key}');return false" style="color:#c33;font-size:12.5px;margin-left:8px" title="отключить">отключить</a>`
       : (ext
@@ -4582,9 +4582,9 @@ async function renderConnections(){
     if(tv){
       let days=null, dstr='';
       if(tv.expires){ days=Math.floor((new Date(tv.expires)-Date.now())/86400000); dstr=String(tv.expires).slice(0,10); }
-      if(days!=null && days<0){ st='<span style="font-size:11.5px;color:#c0392b;background:rgba(192,57,43,.12);border-radius:999px;padding:3px 9px">токен истёк '+esc(dstr)+'</span>'; }
-      else if(days!=null && days<=7){ st='<span style="font-size:11.5px;color:#C57E33;background:rgba(197,126,51,.13);border-radius:999px;padding:3px 9px">⚠ токен до '+esc(dstr)+' ('+days+' дн.)</span>'; }
-      else { st='<span style="font-size:11.5px;color:#2f9e56;background:rgba(47,158,86,.12);border-radius:999px;padding:3px 9px">✓ подключено'+(dstr?' · до '+esc(dstr):'')+'</span>'; }
+      if(days!=null && days<0){ st='<span style="font-size:11.5px;color:#c0392b;background:rgba(192,57,43,.12);border-radius:8px;padding:3px 9px">токен истёк '+esc(dstr)+'</span>'; }
+      else if(days!=null && days<=7){ st='<span style="font-size:11.5px;color:#C57E33;background:rgba(197,126,51,.13);border-radius:8px;padding:3px 9px">⚠ токен до '+esc(dstr)+' ('+days+' дн.)</span>'; }
+      else { st='<span style="font-size:11.5px;color:#2f9e56;background:rgba(47,158,86,.12);border-radius:8px;padding:3px 9px">✓ подключено'+(dstr?' · до '+esc(dstr):'')+'</span>'; }
       act='<a href="#" onclick="tvTest();return false" style="color:#2f9e56;font-size:12.5px">проверить</a> <button class="btn ghost sm" style="font-size:12px;padding:5px 12px;margin-left:8px" onclick="connectTourvisor()">Обновить токен</button>';
     } else {
       act='<button class="btn ghost sm" style="font-size:12px;padding:5px 12px" onclick="connectTourvisor()">Подключить</button>';
@@ -4825,7 +4825,7 @@ function _wzCabRender(){
           _wzLifeRow(a)+
           '<div style="margin-top:6px;font:500 10px var(--mono,monospace);color:rgba(255,255,255,.55)">'+esc(a.orchestrator||a.session_id||'')+'</div>'+
         '</div>'+
-        '<button onclick="closeWzCabinet()" style="border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.14);color:#fff;border-radius:9px;padding:8px 14px;cursor:pointer;font:600 13px var(--sans);flex-shrink:0;position:relative">✕ Закрыть</button>'+
+        '<button onclick="closeWzCabinet()" style="border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.14);color:#fff;border-radius:8px;padding:8px 14px;cursor:pointer;font:600 13px var(--sans);flex-shrink:0;position:relative">✕ Закрыть</button>'+
       '</div>'+
     '</div>'+
     // Чат доводки — БОКОВОЙ панелью (как «Мастер» в Мастере), а не полоской внизу: заметен, виден
@@ -4861,8 +4861,8 @@ function _cabPush(html){
   if(window._cabChat.items.length>30) window._cabChat.items=window._cabChat.items.slice(-30);
   var th=el('cabchat_thread'); if(th){ th.innerHTML=window._cabChat.items.join(''); th.scrollTop=th.scrollHeight; }
 }
-function _cabU(t){ return '<div style="text-align:right;margin:5px 0"><span style="display:inline-block;background:var(--gold-bg,#f3e6d5);color:#7a4a12;border-radius:11px 11px 2px 11px;padding:5px 10px;font-size:12.5px;max-width:78%">'+esc(t)+'</span></div>'; }
-function _cabA(t){ return '<div style="margin:5px 0"><span style="display:inline-block;background:var(--cream);border:1px solid var(--cream-dark);border-radius:11px 11px 11px 2px;padding:5px 10px;font-size:12.5px;max-width:82%">'+t+'</span></div>'; }
+function _cabU(t){ return '<div style="text-align:right;margin:5px 0"><span style="display:inline-block;background:var(--gold-bg,#f3e6d5);color:#7a4a12;border-radius:8px 11px 2px 11px;padding:5px 10px;font-size:12.5px;max-width:78%">'+esc(t)+'</span></div>'; }
+function _cabA(t){ return '<div style="margin:5px 0"><span style="display:inline-block;background:var(--cream);border:1px solid var(--cream-dark);border-radius:8px 11px 11px 2px;padding:5px 10px;font-size:12.5px;max-width:82%">'+t+'</span></div>'; }
 function _cabBtns(applyLabel){
   return ' <button class="btn gold sm" style="padding:3px 12px;font-size:11.5px" onclick="cabApply()">'+esc(applyLabel)+'</button>'+
          ' <button class="btn ghost sm" style="padding:3px 10px;font-size:11.5px" onclick="cabCancel()">Отмена</button>';
@@ -5065,7 +5065,7 @@ async function cabApply(){
     toast('Задание набрано — отправь сообщение Мастеру','ok');
   }
 }
-function _wzCard(inner){ return '<div style="max-width:720px;background:var(--paper);border:1px solid var(--cream-dark);border-radius:12px;padding:18px 20px;margin-bottom:14px">'+inner+'</div>'; }
+function _wzCard(inner){ return '<div style="max-width:720px;background:var(--paper);border:1px solid var(--cream-dark);border-radius:8px;padding:18px 20px;margin-bottom:14px">'+inner+'</div>'; }
 function _wzH(t){ return '<div style="font:700 12px var(--sans);color:var(--nav);letter-spacing:.06em;margin-bottom:10px">'+t+'</div>'; }
 function _wzRuntime(a){
   var c=(a&&a.runtime_contract)||{};
@@ -5084,7 +5084,7 @@ function _wzCabReviewCard(a){
   var nr=(a&&a.needs_review)||[];
   if(!nr.length) return '';
   window._cabReview=nr;                          // для кнопок «Поправить словами» (по индексу)
-  return '<div style="border:1px solid #e0b48a;border-radius:14px;padding:16px 18px;background:rgba(224,168,94,.09);margin-bottom:14px">'
+  return '<div style="border:1px solid #e0b48a;border-radius:8px;padding:16px 18px;background:rgba(224,168,94,.09);margin-bottom:14px">'
     +'<div style="font:700 14px var(--sans);margin-bottom:4px">⚠ Шаги, которые стоит довести ('+nr.length+')</div>'
     +'<div style="font-size:12.5px;color:var(--ink-soft);margin-bottom:10px">Они собрались и запускаются, но результат по смыслу сомнителен. Поправьте словами в чате внизу — например: «в поиске поставщиков ищи по названиям товаров, не по суммам».</div>'
     +nr.map(function(r,i){
@@ -5125,7 +5125,7 @@ function _wzChip(c){ return '<span style="display:inline-block;font-size:12px;co
 // ── вкладка «Запуск и результат» (value-first): готовность → запуск → последний результат, плумбинг под спойлер ──
 function _wzReadyChip(state, label){
   var c = state==='ok' ? ['#2f9e56','rgba(47,158,86,.10)','✓'] : (state==='warn'?['#C57E33','rgba(197,126,51,.12)','!']:['#7a7a7a','rgba(128,128,128,.10)','·']);
-  return '<span style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:'+c[0]+';background:'+c[1]+';border-radius:999px;padding:5px 11px;margin:0 6px 6px 0"><i style="font-style:normal">'+c[2]+'</i> '+esc(label)+'</span>';
+  return '<span style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:'+c[0]+';background:'+c[1]+';border-radius:8px;padding:5px 11px;margin:0 6px 6px 0"><i style="font-style:normal">'+c[2]+'</i> '+esc(label)+'</span>';
 }
 // ── C2: вкладка «Состав·Доводка» для композиций (orchestrator=wz_flow_run) ──
 // Суперсила быстрой сборки (чат-доводка) больше НЕ теряется после «Сохранить»: пересборка идёт
@@ -5150,7 +5150,7 @@ function _wzComposeMakeupHTML(f){
     return '<div style="font-size:13px;padding:5px 0;border-bottom:1px dashed var(--cream-dark)">'+(i+1)+'. <code>'+esc(s.expert||'')+'</code> <span style="font-size:11.5px;color:var(--silver)">'+esc(JSON.stringify(s.params||{}).slice(0,90))+'</span></div>';
   }).join('') || '<div style="color:var(--silver);font-size:13px">шаги не записаны (композиция старой версии — отправь любую доводку, состав запишется)</div>';
   var inst=(f.installed||[]).map(function(x){
-    return '<span style="display:inline-block;font-size:11.5px;background:var(--cream);border:1px solid var(--cream-dark);border-radius:999px;padding:3px 10px;margin:6px 6px 0 0">⬇ '+esc(String(x.model||x.name||''))+' · '+esc(String(x.status||''))+'</span>';
+    return '<span style="display:inline-block;font-size:11.5px;background:var(--cream);border:1px solid var(--cream-dark);border-radius:8px;padding:3px 10px;margin:6px 6px 0 0">⬇ '+esc(String(x.model||x.name||''))+' · '+esc(String(x.status||''))+'</span>';
   }).join('');
   var miss=(f.missing_human||[]);
   var missBlock = miss.length
@@ -5288,7 +5288,7 @@ function _wzSourceBanner(a, i){
   // #7 (Гульжан 20.07): раньше банер вёл только в «Подключить источник» (OAuth/refresh-токены —
   // «круги мучений»), а для ТЕСТА подключать ничего не нужно. Разводим два пути явно: тест на
   // приложенном файле (сейчас, без подключения) и живой источник (для автономной работы 24/7).
-  return '<div style="background:#fdf6e7;border:1px solid #f0d9a0;border-radius:10px;padding:12px 14px;margin-bottom:14px">'+
+  return '<div style="background:#fdf6e7;border:1px solid #f0d9a0;border-radius:8px;padding:12px 14px;margin-bottom:14px">'+
     '<div style="font-size:13px;color:#7a5b1a;margin-bottom:8px">Данные пока берутся из <b>приложенного файла</b>.</div>'+
     '<div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-soft)">'+
       '<div style="flex:1;min-width:200px"><b>Чтобы попробовать сейчас</b> — подключать ничего не нужно: нажмите «Сделать первый прогон» ниже, процесс отработает на файле.</div>'+
@@ -6055,7 +6055,7 @@ function showBrief(md, opts){
   var subtitle= (custom && opts.subtitle) || 'Собрано твоим процессом · работает на твоём Qwen, в твоём контуре.';
   var chipList= (custom && opts.chips && opts.chips.length) ? opts.chips : [];
   var chips=chipList.map(function(c){
-    return '<span style="background:#faf7f2;border:1px solid #e4ded5;border-radius:999px;padding:4px 11px;font-size:12px;color:#48423a">'+esc(c)+'</span>';}).join("");
+    return '<span style="background:#faf7f2;border:1px solid #e4ded5;border-radius:8px;padding:4px 11px;font-size:12px;color:#48423a">'+esc(c)+'</span>';}).join("");
   var warns=(custom && opts.warnings && opts.warnings.length) ? opts.warnings : [];
   var warnBox = warns.length
     ? '<div style="background:#fdf6e7;border:1px solid #f0d9a0;border-radius:6px;padding:10px 14px;margin:0 0 16px;font-size:12.5px;color:#7a5b1a">'+
