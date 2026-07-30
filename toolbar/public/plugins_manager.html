@@ -1165,6 +1165,28 @@ function cliSi(a){ try{ localStorage.setItem(CLI_INST_KEY, JSON.stringify(a)); }
 function cliInstalled(id){ return cliGi().indexOf(id) !== -1; }
 function cliMarkInstalled(id){ var a=cliGi(); if(a.indexOf(id)<0){ a.push(id); cliSi(a); } }
 function cliUnmark(id){ cliSi(cliGi().filter(function(x){return x!==id;})); }
+// ── Агенты, установленные по ссылке (паспорт прошёл гейт стандартов) ──────
+// Запись делается в момент прохождения гейта (cmdLinkInstall), ДО установки:
+// если установка сорвётся, плагина с этим id не появится и запись ни на что не
+// влияет. Ключ — id будущего плагина, тем же правилом, что github-add.js
+// ('gh_' + slug(owner_repo)); правила обязаны совпадать, иначе агент навсегда
+// останется «программой».
+var AGENT_REPO_KEY = 'etb_agent_repos_v1';
+function agrGi(){ try{ return JSON.parse(localStorage.getItem(AGENT_REPO_KEY)||'{}'); }catch(_){ return {}; } }
+function agrSi(o){ try{ localStorage.setItem(AGENT_REPO_KEY, JSON.stringify(o)); }catch(_){} }
+function agrPid(ownerRepo){
+  var s=String(ownerRepo||'').toLowerCase().replace('/','_')
+    .replace(/[^a-z0-9_]/g,'_').replace(/__+/g,'_').replace(/^_+|_+$/g,'').slice(0,30);
+  return s ? 'gh_'+s : '';
+}
+// Установленные из них — сверка с реестром: карточка агента рисуется только
+// когда плагин реально доехал (манифест синкнулся), а не по факту клика.
+function agrInstalled(){
+  var m=agrGi(), inst=gi(), out=[];
+  var custom={}; try{ getCustom().forEach(function(p){ if(p&&p.id) custom[p.id]=1; }); }catch(_){}
+  Object.keys(m).forEach(function(id){ if(inst.indexOf(id)>=0 || custom[id]) out.push({id:id, name:m[id].name, goal:m[id].goal, url:m[id].url}); });
+  return out;
+}
 
 // ── Notify parent ─────────────────────────────────────────────────────────
 var _pwz=40,_pwn=0,_pwins={};
@@ -3699,7 +3721,17 @@ function cmdLinkInstall(){
   var row = document.getElementById('cmd_link');
   if (row) row.innerHTML = '<span>' + esc(_clT('Проверяю паспорт агента…', 'Checking the agent passport…')) + '</span>';
   cmdLinkCheck(lk.url).then(function (v) {
-    if (v.ok) { notify('github_add_url', '', lk.url); cmdLinkCancel(); return; }
+    if (v.ok) {
+      // Решение Анвара 30.07: карточка агента, установленного по ссылке, встаёт
+      // и на Рабочий стол, и во вкладку «Агенты». Паспорт запоминаем здесь,
+      // пока он в руках; когда гейт был недоступен (unknown) — не запоминаем:
+      // мы не знаем, агент ли это, и честнее оставить его программой.
+      if (!v.unknown) {
+        var ag = v.agent || {}, pid = agrPid(lk.name);
+        if (pid) { var mm = agrGi(); mm[pid] = { name: ag.name || lk.name, goal: ag.goal || '', url: lk.url }; agrSi(mm); }
+      }
+      notify('github_add_url', '', lk.url); cmdLinkCancel(); return;
+    }
     var why = (v.problems || []).map(function (p) { return '<li>' + esc(String(p)) + '</li>'; }).join('');
     if (row) row.innerHTML =
       '<div><b>' + esc(_clT('Ставить нельзя', 'Cannot install')) + '</b>' +
@@ -4261,7 +4293,7 @@ function _dtDo(i, act){
   var it=_dtReg[i]; if(!it) return;
   if(act==='open'){
     if(it.kind==='agent') openAgentCabinet(it.id);
-    else if(it.kind==='program') notify('open', it.id);
+    else if(it.kind==='program'||it.kind==='ghagent') notify('open', it.id);
     else if(it.kind==='cli') cliRun(it.id);
     else if(it.kind==='cap'){ if(it.url) window.open(it.url,'_blank'); else setc('mine'); }
     return;
@@ -4286,6 +4318,12 @@ function _dtDo(i, act){
         _agSaveState(d.id,{status:'removed', hidden:true});
       }
       else if(d.kind==='program'){ uninst(d.id); }
+      else if(d.kind==='ghagent'){
+        // Удаление = удаление плагина; запись паспорта чистим следом, чтобы
+        // случайный будущий плагин с тем же id не рисовался агентом.
+        uninst(d.id);
+        var _am=agrGi(); delete _am[d.id]; agrSi(_am);
+      }
       else if(d.kind==='cli'){ cliUninstall(d.id); }
       else if(d.kind==='cap'){ capInstRemove(d.rmKind, d.id, d.method||''); }
       else if(d.kind==='app'){ appUninstall(d.id, d.raw||d.lbl); }
@@ -4482,7 +4520,7 @@ function renderDesktop(){
     if(kind==='app')   return 'monitor';  // приложение = окно, а не «</>» разработчика
     var catSym=(typeof ICO_SYM!=='undefined')&&ICO_SYM[cat];
     if(catSym) return catSym;       // агент/программа с осмысленной категорией
-    if(kind==='agent') return 'bot';
+    if(kind==='agent'||kind==='ghagent') return 'bot';
     return 'box';
   }
   // Короткая подпись: рвём по границе слова, «…» только между словами (без обрезки посреди слова).
@@ -4570,7 +4608,19 @@ function renderDesktop(){
   });
   // 2) Установленные программы (встроенные + добавленные) → открыть окно
   var instIds=gi();
+  // Агент, установленный по ссылке (паспорт прошёл гейт), — на Столе агент,
+  // а не «программа»: имя из паспорта, значок агента, полка «Автоматизации».
+  var _agrM=agrGi();
   BUILTIN_PLUGINS_DATA.filter(function(p){return instIds.indexOf(p.id)!==-1 && !_deskHidden(p.id);}).concat(getCustom().filter(function(p){return !_deskHidden(p&&p.id);})).forEach(function(p){
+    var ar=_agrM[p.id];
+    if(ar){
+      // kind СВОЙ (ghagent), не 'agent': у агентов Конструктора правый клик
+      // открывает кабинет и чистит каталог автоматизаций — для gh_-плагина
+      // оба действия чужие (открытие = окно плагина, удаление = uninst).
+      icons.push({kind:'ghagent',cat:'work',lbl:ar.name||p.name||p.id,acc:_dtAcc('work'),id:p.id,
+        ident:true, go:"notify('open','"+_dtEsc(p.id)+"')"});
+      return;
+    }
     var cu=(typeof CURATED_PROGRAMS!=='undefined'&&CURATED_PROGRAMS[p.id])||{};
     var cat=cu.biz||(typeof catOf==='function'?catOf(p):'')||'box';
     icons.push({kind:'program',cat:cat,lbl:cu.name||p.name||p.id,acc:_dtAcc(cat),id:p.id,
@@ -4655,7 +4705,7 @@ function renderDesktop(){
   // и приложения) · инструменты (CLI и способности из интернета).
   // Индексы для правого клика — глобальные по массиву icons (_dtReg), поэтому
   // кнопки строим с исходным i, а по группам только раскладываем.
-  function _dtGrp(k){ return k==='agent' ? 0 : (k==='cli'||k==='cap') ? 2 : 1; }
+  function _dtGrp(k){ return (k==='agent'||k==='ghagent') ? 0 : (k==='cli'||k==='cap') ? 2 : 1; }
   // Служебные хвосты в имени («(мой)», «(my)», «(копия)») приезжают из реестра
 // устройства: так называют личную копию при создании. На Рабочем столе всё и так
 // твоё, поэтому в подписи ярлыка они только шумят — прячем при показе, само имя
@@ -5573,8 +5623,27 @@ function renderAgents(){
   // Разделение (решение Эллы 21.07): СОЗДАНИЕ агента = Конструктор (плитка ведёт
   // в него), НАЗНАЧЕНИЕ роли = каталог ролей ниже; «роль + умения» (agentForgeModal)
   // живёт карточкой «Универсальный помощник» в каталоге ролей.
+  // РЕШЕНИЕ АНВАРА 30.07: агент, установленный по ссылке (паспорт прошёл гейт
+  // стандартов), виден И здесь, И на Рабочем столе. Это сознательный возврат
+  // дубля для ЭТОГО класса карточек — замечание Алии №3 и строка-указатель выше
+  // касаются агентов Конструктора, их канон «в каталоге берёшь — на Столе
+  // живёт» не тронут.
+  var _agrList=agrInstalled();
+  var linkedHtml=_agrList.length
+    ? '<div class="sect_hdr"><span class="sect_title">'+_clT('Установленные по ссылке','Installed from a link')+'</span><span class="sect_line"></span></div><div class="mshelf">'+
+      _agrList.map(function(a){
+        return '<div class="stile" style="--acc:#2F6B66"><span class="st_chip">🤝 '+_clT('Агент','Agent')+'</span>'+
+          '<div class="st_title">'+esc(a.name||a.id)+'</div>'+
+          '<div class="st_fact">'+esc(a.goal||_clT('Паспорт прошёл гейт стандартов','Passport passed the standards gate'))+'</div>'+
+          '<div class="st_foot" style="justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap">'+
+            '<button class="st_btn" onclick="notify(\'open\',\''+esc(a.id)+'\')">'+_clT('Открыть','Open')+'</button>'+
+            (a.url?'<a href="'+esc(a.url)+'" target="_blank" rel="noopener" style="font-size:11px;color:var(--tx2)">GitHub</a>':'')+
+          '</div></div>';
+      }).join('')+'</div>'
+    : '';
   var html='<section class="catalog_intro" aria-labelledby="agents_intro_title"><h2 class="catalog_intro_title" id="agents_intro_title">Агенты — твои сотрудники</h2><p class="catalog_intro_text">Агент работает вместо тебя: ведёт переписку, считает, готовит отчёты. Своего собери в Конструкторе — он расспросит о задаче и всё настроит.</p><p class="catalog_intro_text">Или возьми готовую профессию с полки ниже: продажи, поддержка, бухгалтерия, аналитика. Роль назначается на твою копию агента за минуту.</p></section>'+
     mineHtml+
+    linkedHtml+
     _bentoHTML(TYPE_ED.agents.heroes)+
     '<div class="sect"><h2>Роли агентов</h2></div>'+
     '<div class="sk_lead" style="grid-column:1/-1">Готовые профессии для твоего агента. Назначаются в три шага:</div>'+
