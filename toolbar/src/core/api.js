@@ -480,12 +480,32 @@ ETB.api = (function () {
       return _post('/api/expert/save', def);
     },
 
+    saveExpertScoped: function (def, agentId) {
+      return _post(
+        '/api/expert/save',
+        def,
+        agentId ? { 'X-Agent-Id': String(agentId) } : null
+      );
+    },
+
     getExpert: function (name, opts) {
       opts = opts || {};
       return _post('/api/expert/get', {
         name: name,
         global: opts.global === true
       });
+    },
+
+    getExpertScoped: function (name, agentId, opts) {
+      opts = opts || {};
+      return _post(
+        '/api/expert/get',
+        {
+          name: name,
+          global: opts.global === true
+        },
+        agentId ? { 'X-Agent-Id': String(agentId) } : null
+      );
     },
 
     deleteExpert: function (name) {
@@ -558,6 +578,16 @@ ETB.api = (function () {
       return _post('/api/agent/get', {
         agent_id: String(agentId || '')
       }, agentId ? { 'X-Agent-Id': String(agentId) } : null);
+    },
+    agentToolsUpdateScoped: function (agentId, tools) {
+      return _post(
+        '/api/agent/update',
+        {
+          agent_id: String(agentId || ''),
+          tools: Array.isArray(tools) ? tools.slice() : []
+        },
+        agentId ? { 'X-Agent-Id': String(agentId) } : null
+      );
     },
     expertsListScoped: function (opts) {
       opts = opts || {};
