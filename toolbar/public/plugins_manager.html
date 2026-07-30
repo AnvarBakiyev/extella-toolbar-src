@@ -643,7 +643,7 @@ body[data-theme="dark"] .inf .tr,html[data-theme="dark"] .inf .tr{stroke:var(--b
   <span aria-hidden="true" style="width:1px;height:18px;background:var(--bd);margin:0 3px;flex-shrink:0"></span>
   <button class="iconbtn" id="langBtn" onclick="setLang(LANG==='en'?'ru':'en')" title="Язык / Language" style="font:600 11px var(--mono,monospace);width:auto;padding:0 8px">EN</button>
   <button class="iconbtn" id="mcpBtn" onclick="claudeConnectModal()" style="width:auto;padding:0 10px;gap:6px;font:500 12px var(--sans)" data-tip="Extella в Claude Code&#10;Твои программы, знания и агенты становятся инструментами Claude Code: он вызывает их прямо в разговоре. Клик — покажу команду для терминала."><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M9 7V3M15 7V3"/><path d="M6 7h12v5a6 6 0 0 1-6 6 6 6 0 0 1-6-6V7Z"/><path d="M12 18v3"/></svg>Claude Code</button>
-  <button class="iconbtn" id="codexBtn" onclick="codexConnectModal()" style="width:auto;padding:0 10px;gap:6px;font:500 12px var(--sans)" data-tip="Extella в Codex&#10;Установит Agent Builder, подключит текущий аккаунт Extella и проверит конфигурацию. Без терминала и без запуска моделей."><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M12 2 4.5 6.3v8.6L12 19.2l7.5-4.3V6.3L12 2Z"/><path d="m4.8 6.5 7.2 4.1 7.2-4.1M12 10.6v8.2"/></svg>Codex</button>
+  <button class="iconbtn" id="codexBtn" onclick="codexConnectModal()" style="width:auto;padding:0 10px;gap:6px;font:500 12px var(--sans)" data-tip="Codex для всех агентов&#10;Одна кнопка установит Agent Builder, запустит локальный мост и подключит всех текущих и будущих агентов. Установка не запускает модели."><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M12 2 4.5 6.3v8.6L12 19.2l7.5-4.3V6.3L12 2Z"/><path d="m4.8 6.5 7.2 4.1 7.2-4.1M12 10.6v8.2"/></svg>Codex</button>
   <button class="iconbtn" id="autoBtn" onclick="setc('automations')" data-tip="Автоматизации&#10;Задачи по расписанию: отчёты, проверки, рассылки. Клик — открыть список и настроить."><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M8 2v4M16 2v4"/><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/></svg></button>
   <!-- Кнопка темы снята 28.07 (правка команды): тема приходит из приложения
        сообщением etb_theme (и ключом color-theme) — локальный тумблер только
@@ -6066,15 +6066,20 @@ function claudeCopyCmd(btn){ _claudeCopyText(_claudeCmd(), btn, _clT('Скопи
 //  the Expert code, GitHub refs, commands, credential source and current Mac.
 //  No token or shell text crosses this postMessage boundary.
 // ══════════════════════════════════════════════════════════════════════════
-var CODEX_INSTALLER_EXPERT='_etb_codex_setup_v1';
-var CODEX_INSTALLER_HASH='43b1acdf06fff012d1c6e716c04cb87c9a96b163b4ba7b4b9b9b98defea9c3ce';
-var CODEX_PLUGIN_VERSION='0.3.2';
+var CODEX_INSTALLER_EXPERT='_etb_codex_setup_v2';
+var CODEX_INSTALLER_HASH='b80a59fbcd73fdc67650d42e7c2b784b07668890fa22e0cee9c5be31e3ba044e';
+var CODEX_BRIDGE_EXPERT_HASH='c526b7bd8f55dcff782e674a9841c681f6a472127abb10e26e65330bdbb19c49';
+var CODEX_PLUGIN_VERSION='0.4.0';
 var _cxState={status:'idle',stage:'',error:'',code:'',result:null,metadata:null};
+var _cxAgentCount=null;
+var _cxAgentCountLoading=false;
 var _cxSteps=[
   {id:'provisioning',ru:'Готовим проверенный Expert',en:'Preparing the verified Expert'},
   {id:'preflight',ru:'Проверяем Codex, Extella и GitHub',en:'Checking Codex, Extella and GitHub'},
   {id:'install',ru:'Устанавливаем Agent Builder',en:'Installing Agent Builder'},
   {id:'credentials',ru:'Подключаем текущий аккаунт Extella',en:'Connecting the current Extella account'},
+  {id:'bridge',ru:'Запускаем локальный мост Codex',en:'Starting the local Codex bridge'},
+  {id:'agents',ru:'Подключаем всех агентов',en:'Connecting every agent'},
   {id:'verify',ru:'Проверяем итоговую конфигурацию',en:'Verifying the final configuration'}
 ];
 function _cxT(ru,en){return (LANG==='en'&&en)?en:ru;}
@@ -6105,28 +6110,41 @@ function _cxIdleHTML(){
                          'Agent Builder '+CODEX_PLUGIN_VERSION+' will be installed')+'</div>'+
     '<div>✓ '+_cxT('текущий аккаунт Extella подключится к Codex',
                          'the current Extella account will be connected to Codex')+'</div>'+
-    '<div>✓ '+_cxT('создастся локальный ключ обратного моста',
-                         'a local reverse-bridge key will be created')+'</div>'+
-    '<div>✓ '+_cxT('конфигурация проверится без запуска модели',
-                         'the configuration will be checked without running a model')+'</div>'+
+    '<div>✓ '+_cxT('запустится защищённый локальный мост Codex',
+                         'the protected local Codex bridge will start')+'</div>'+
+    '<div>✓ '+_cxT('Codex станет доступен всем текущим и будущим агентам',
+                         'Codex will become available to every current and future agent')+'</div>'+
+    '<div id="cx_agent_count" style="margin-top:5px;color:var(--tx)">'+
+      (_cxAgentCount===null?
+        _cxT('Считаем текущих агентов…','Counting current agents…'):
+        _cxT('Сейчас будет подключено агентов: '+_cxAgentCount,
+             'Agents to connect now: '+_cxAgentCount))+
+    '</div>'+
+    '<div>✓ '+_cxT('установка проверится без запуска модели',
+                         'installation will be verified without running a model')+'</div>'+
     '</div>'+
     '<div style="margin-top:12px;font-size:12.5px;line-height:1.6;color:var(--tx2)">'+
-      _cxT('Нужны установленный и авторизованный Codex и доступ GitHub к приватному репозиторию стандартов. Токен берётся локально из Extella Desktop и не показывается на экране.',
-           'Codex must be installed and signed in, and GitHub must have access to the private standards repository. The token is read locally from Extella Desktop and is never shown.')+
+      _cxT('Нужен установленный и авторизованный Codex. Токен текущего аккаунта берётся локально из Extella Desktop и не показывается на экране.',
+           'Codex must be installed and signed in. The current account token is read locally from Extella Desktop and is never shown.')+
     '</div>'+
     '<div style="margin-top:13px;padding-top:12px;border-top:1px solid var(--bd);font-size:12px;line-height:1.55;color:var(--tx3)">'+
-      _cxT('Стоимость: 0 кредитов Extella; агенты и модели не запускаются. Live-вызовы Codex не включаются.',
-           'Cost: 0 Extella credits; no agent or model is run. Live Codex calls remain disabled.')+
+      _cxT('Сама установка бесплатна: агенты и модели не запускаются. После установки обращения агентов к Codex могут расходовать лимит подписки Codex/ChatGPT или API; обычный запуск агента Extella учитывается по вашему тарифу Extella.',
+           'Installation itself is free: no agent or model is run. Later agent calls to Codex may consume Codex/ChatGPT plan or API usage; normal Extella agent runs follow your Extella plan.')+
     '</div>'+
     '<details style="margin-top:9px;color:var(--tx3);font-size:11.5px;line-height:1.55">'+
       '<summary style="cursor:pointer">'+_cxT('Технические детали и откат','Technical details and rollback')+'</summary>'+
       '<div style="margin-top:7px;word-break:break-all">'+
-        'Expert: <code>'+CODEX_INSTALLER_EXPERT+'</code><br>SHA-256: <code>'+CODEX_INSTALLER_HASH+'</code><br>'+
-        _cxT('Изменения: Codex marketplace/plugin, EXTELLA_API_TOKEN и EXTELLA_BRIDGE_SECRET в launchctl. Откат удаляет marketplace/plugin и эти переменные; агенты Extella не меняются.',
-             'Changes: Codex marketplace/plugin plus EXTELLA_API_TOKEN and EXTELLA_BRIDGE_SECRET in launchctl. Rollback removes the marketplace/plugin and these variables; Extella agents are unchanged.')+
+        'Installer Expert: <code>'+CODEX_INSTALLER_EXPERT+'</code><br>SHA-256: <code>'+CODEX_INSTALLER_HASH+'</code><br>'+
+        'Bridge Expert SHA-256: <code>'+CODEX_BRIDGE_EXPERT_HASH+'</code><br>'+
+        _cxT('Предел одного вызова: 4 000 знаков запроса, до 800 выходных токенов, до 120 секунд; одновременно выполняется один запрос, автоматических повторов нет. ',
+             'Per-call limit: 4,000 prompt characters, up to 800 output tokens, up to 120 seconds; one request runs at a time and there are no automatic retries. ')+
+        _cxT('Изменения: Codex marketplace/plugin, локальный LaunchAgent, производная привязка аккаунта и additive-инструмент extella_codex_bridge во всех агентах. Будущие агенты подключаются автоматически. Откат: остановить LaunchAgent и убрать только этот инструмент.',
+             'Changes: Codex marketplace/plugin, a local LaunchAgent, a derived account binding, and additive extella_codex_bridge tool binding in every agent. Future agents are reconciled automatically. Rollback: stop the LaunchAgent and remove only this tool.')+
       '</div></details>'+
     '<div style="margin-top:16px;display:flex;gap:8px">'+
-      '<button class="st_btn" onclick="codexStartInstall()">'+_cxT('Подключить Codex','Connect Codex')+'</button>'+
+      '<button id="cx_install_button" class="st_btn" onclick="codexStartInstall()"'+
+        (_cxAgentCount>0?'':' disabled aria-disabled="true" style="opacity:.55;cursor:not-allowed"')+'>'+
+        _cxT('Подключить ко всем агентам','Connect every agent')+'</button>'+
       '<button onclick="_cxClose()" style="'+_KPBTN+'">'+_cxT('Отмена','Cancel')+'</button>'+
     '</div>';
 }
@@ -6141,18 +6159,18 @@ function _cxRunningHTML(){
     '<div style="margin-top:16px"><button onclick="_cxClose()" style="'+_KPBTN+'">'+_cxT('Свернуть','Hide')+'</button></div>';
 }
 function _cxSuccessHTML(){
-  var phrase=_cxT('Проверь подключение extella_primary только чтением и перечисли доступные инструменты. Ничего не меняй и модели не запускай.',
-                  'Check extella_primary read-only and list the available tools. Do not change anything or run models.');
+  var phrase=_cxT('Позови Codex и попроси его кратко объяснить, что он получил это сообщение.',
+                  'Call Codex and ask it to briefly confirm it received this message.');
   return _cxStepsHTML()+
     '<div style="margin-top:16px;padding:13px 14px;border:1px solid #2E7D5B;border-radius:6px;'+
       'background:rgba(46,125,91,.07);color:var(--tx);font-size:13px;line-height:1.6">'+
-      '<strong>'+_cxT('Готово. Codex подключён к Extella.','Done. Codex is connected to Extella.')+'</strong><br>'+
-      _cxT('Полностью закрой и снова открой Codex, чтобы он увидел локальный токен и плагин.',
-           'Fully quit and reopen Codex so it can see the local token and plugin.')+
+      '<strong>'+_cxT('Готово. Codex доступен всем агентам Extella.','Done. Codex is available to every Extella agent.')+'</strong><br>'+
+      _cxT('Перезапуск не нужен. Новые агенты будут подключаться автоматически.',
+           'No restart is required. New agents will be connected automatically.')+
     '</div>'+
     '<div style="margin-top:14px;color:var(--tx2);font-size:12.5px;line-height:1.55">'+
-      _cxT('После перезапуска можно отправить безопасную проверку:',
-           'After restarting, you can send this safe check:')+'</div>'+
+      _cxT('Для первого реального платного теста открой любого агента и напиши:',
+           'For the first real paid test, open any agent and send:')+'</div>'+
     '<div style="margin-top:7px;background:var(--bg);border:1px solid var(--bd2);border-radius:5px;padding:10px 11px;'+
       'font-size:12.5px;line-height:1.55;user-select:all">'+esc(phrase)+'</div>'+
     '<div style="margin-top:10px;display:flex;gap:8px">'+
@@ -6162,20 +6180,16 @@ function _cxSuccessHTML(){
     '</div>';
 }
 function _cxErrorHTML(){
-  var standards=_cxState.code==='standards_access_denied';
   return '<div style="margin-top:15px;padding:13px 14px;border:1px solid #B23A2E;border-radius:6px;'+
       'background:rgba(178,58,46,.06);font-size:13px;line-height:1.6;color:var(--tx)">'+
       '<strong>'+_cxT('Не удалось завершить установку.','Installation did not finish.')+'</strong><br>'+
       esc(_cxState.error||_cxT('Неизвестная ошибка.','Unknown error.'))+
-      (standards?'<br><span style="color:var(--tx2)">'+
-        _cxT('Agent Builder уже публичный, но репозиторий стандартов пока приватный. Нужен доступ к нему через GitHub.',
-             'Agent Builder is public, but the standards repository is still private. GitHub access is required.')+'</span>':'')+
     '</div>'+
     '<div style="margin-top:12px;color:var(--tx3);font-size:12px">'+
-      _cxT('Повтор безопасен: модели и агенты не запускаются.',
-           'Retrying is safe: no models or agents are run.')+'</div>'+
+      _cxT('Повтор продолжит идемпотентную установку: модели и агенты не запускаются.',
+           'Retrying continues the idempotent installation: no models or agents are run.')+'</div>'+
     '<div style="margin-top:16px;display:flex;gap:8px">'+
-      '<button class="st_btn" onclick="codexStartInstall()">'+_cxT('Повторить','Retry')+'</button>'+
+      '<button class="st_btn" onclick="codexStartInstall()">'+_cxT('Продолжить установку','Continue installation')+'</button>'+
       '<button onclick="_cxClose()" style="'+_KPBTN+'">'+_cxT('Закрыть','Close')+'</button>'+
     '</div>';
 }
@@ -6188,13 +6202,35 @@ function codexConnectModal(){
   ov.innerHTML='<style>@keyframes cxmove{0%{transform:translateX(-110%)}100%{transform:translateX(280%)}}</style>'+
     '<div style="'+_KPMODAL+'">'+
       '<div style="font-family:var(--serif);font-size:20px;margin-bottom:5px">'+
-        _cxT('Extella в Codex','Extella inside Codex')+'</div>'+
+        _cxT('Codex для всех агентов Extella','Codex for every Extella agent')+'</div>'+
       '<div style="color:var(--tx2);font-size:13.5px;line-height:1.6">'+
-        _cxT('Одна кнопка установит Agent Builder и подключит текущий аккаунт Extella на этом Mac.',
-             'One button installs Agent Builder and connects the current Extella account on this Mac.')+
+        _cxT('Одна кнопка завершит установку в обе стороны и даст каждому агенту возможность вызывать локальный Codex.',
+             'One button completes the two-way setup and lets every agent call local Codex.')+
       '</div>'+body+'</div>';
   ov.addEventListener('click',function(e){if(e.target===ov&&_cxState.status!=='running')ov.remove();});
   document.body.appendChild(ov);
+  if(_cxState.status==='idle'&&(_cxAgentCount===null||_cxAgentCount<=0)&&!_cxAgentCountLoading){
+    _cxAgentCountLoading=true;
+    skAgentsFetch().then(function(agents){
+      _cxAgentCount=Array.isArray(agents)?agents.length:0;
+    }).catch(function(){
+      _cxAgentCount=-1;
+    }).then(function(){
+      _cxAgentCountLoading=false;
+      var el=document.getElementById('cx_agent_count');
+      var btn=document.getElementById('cx_install_button');
+      if(el)el.textContent=_cxAgentCount<0?
+        _cxT('Не удалось прочитать число агентов — установка пока недоступна.',
+             'Could not read the agent count — installation is not available yet.'):
+        _cxT('Сейчас будет подключено агентов: '+_cxAgentCount,
+             'Agents to connect now: '+_cxAgentCount);
+      if(btn&&_cxAgentCount>0){
+        btn.disabled=false;
+        btn.removeAttribute('aria-disabled');
+        btn.removeAttribute('style');
+      }
+    });
+  }
 }
 function codexStartInstall(){
   if(_cxState.status==='running')return;
