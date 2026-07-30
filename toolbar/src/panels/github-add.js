@@ -384,9 +384,18 @@ ETB.githubAdd = (function () {
         '<div class="_etbv2_gh_experts" style="margin-top:12px;">',
         '<div class="_etbv2_gh_sub_sm">',
         already
-          ? '&#10003; Этот плагин уже установлен. Откройте его — или переустановите заново.'
-          : 'Extella\'s agent will analyze this repository and autonomously install it as a plugin — reusing or generating a working interface on your device.',
+          ? '&#10003; Этот плагин уже установлен. Открой его — или переустанови заново.'
+          // РИСК НАЗЫВАЕТСЯ ДО УСТАНОВКИ (решение Анвара 30.07). Возможность
+          // «вставил ссылку — получил приложение» остаётся, но человек больше не
+          // соглашается вслепую: Extella выполнит на его компьютере сборочные команды
+          // из ЧУЖОГО репозитория. Мы этот код не проверяли и обещать за него не можем.
+          // Умолчание тут было бы тем же немым отказом, только наоборот — немым согласием.
+          : 'Extella скачает этот репозиторий на твой компьютер и выполнит из него сборочные команды — как если бы ты собирал проект сам. Код чужой: мы его не проверяли.',
         '</div>',
+        (already ? '' :
+          '<div class="_etbv2_gh_sub_sm" style="margin-top:8px;color:var(--etb-tx2,#6b6b6b);">' +
+          'Всё ляжет в отдельную папку <code>~/extella-plugins/' + _esc(_baseId || 'plugin') + '</code> и удаляется целиком одной кнопкой.' +
+          '</div>'),
         '</div>',
         '</div>', // end preview
         /* Status */
@@ -402,7 +411,7 @@ ETB.githubAdd = (function () {
           : (rd.name && s.step === 'preview'
             ? (already
               ? '<button class="_etbv2_gh_btn_cancel" id="_etbv2_gh_reinstall">Переустановить</button><button class="_etbv2_gh_btn_primary" id="_etbv2_gh_open_existing">Открыть</button>'
-              : '<button class="_etbv2_gh_btn_primary" id="_etbv2_gh_create">Install Plugin</button>')
+              : '<button class="_etbv2_gh_btn_primary" id="_etbv2_gh_create">Понимаю, установить</button>')
             : '<button class="_etbv2_gh_btn_primary" disabled>Working...</button>'),
         '</div>',
         '</div>'
@@ -423,21 +432,55 @@ ETB.githubAdd = (function () {
   }
 
   // ── Install failed: real error + retry ─────────────────────────
+  // Промпт для чата Extella: НЕ шаблон, а конкретные факты этой установки. Человеку
+  // незачем пересказывать модели то, что мы и так знаем — репозиторий, куда ставили,
+  // на чём встало. Пересказ по памяти и есть то место, где разбор теряет минуты.
+  function _chatPrompt() {
+    var rd = _state.repoData || {};
+    var id = _state.pluginId || '';
+    var safe = id.replace(/[^a-z0-9]/gi, '_');
+    return [
+      'Установка плагина из GitHub не завершилась. Доведи её, пожалуйста, до конца.',
+      '',
+      'Репозиторий: ' + (rd.html_url || _state.urlValue || ''),
+      'Что должно получиться: плагин «' + (_state.customName || rd.name || id) + '»',
+      '  папка ~/extella-plugins/' + safe,
+      '  манифест ~/extella-plugins/_registry/' + safe + '.json',
+      (_state.deviceId ? 'Устройство: ' + _state.deviceId : 'Устройство: то, где открыта Extella'),
+      '',
+      'Где остановилось: ' + (_state.errorMsg || 'без внятной ошибки'),
+      '',
+      'Разберись в репозитории, доустанови недостающее, подними интерфейс и запиши манифест.',
+      'Если это не приложение (библиотека, набор навыков, CLI) — скажи прямо и не собирай',
+      'плагин вокруг пустой папки: пустая карточка хуже честного отказа.'
+    ].join('\n');
+  }
+
   function _renderAnalysisError() {
     return [
       '<div id="_etbv2_gh_body">',
-      '<div class="_etbv2_gh_title" style="margin-bottom:10px;">Installation failed</div>',
+      '<div class="_etbv2_gh_title" style="margin-bottom:10px;">Установка не завершилась</div>',
       '<div style="font-size:12px;color:#e74c3c;line-height:1.6;margin-bottom:16px;">',
-      _esc(_state.errorMsg || 'Unknown error'),
+      _esc(_state.errorMsg || 'Причина не названа'),
       '</div>',
-      '<div class="_etbv2_gh_sub_sm" style="margin-bottom:16px;">',
-      'The agent could not complete the install. You can retry — long repositories ',
-      '(build + toolchain) can take a few minutes.',
+      '<div class="_etbv2_gh_sub_sm" style="margin-bottom:14px;">',
+      'Можно повторить — большие репозитории (сборка и инструментарий) занимают минуты. ',
+      'Если повтор не помогает, доведи установку в чате Extella: там ты можешь спросить, ',
+      'уточнить и поправить на ходу — окно установки этого не умеет.',
+      '</div>',
+      '<div style="background:var(--etb-s3,#f7f7f9);border:1px solid var(--etb-bd,rgba(0,0,0,.07));',
+        'border-radius:9px;padding:10px 12px;margin-bottom:14px;">',
+        '<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;',
+          'color:var(--etb-tx2,#6b6b6b);margin-bottom:6px;">Готовое сообщение для чата</div>',
+        '<pre id="_etbv2_gh_prompt" style="margin:0;white-space:pre-wrap;word-break:break-word;',
+          'font:11px/1.5 ui-monospace,monospace;color:var(--etb-tx2,#6b6b6b);max-height:132px;',
+          'overflow:auto;">', _esc(_chatPrompt()), '</pre>',
       '</div>',
       '<div id="_etbv2_gh_status"></div>',
       '<div class="_etbv2_gh_actions">',
-      '<button class="_etbv2_gh_btn_cancel" id="_etbv2_gh_cancel">Cancel</button>',
-      '<button class="_etbv2_gh_btn_primary" id="_etbv2_gh_retry">Retry</button>',
+      '<button class="_etbv2_gh_btn_cancel" id="_etbv2_gh_cancel">Закрыть</button>',
+      '<button class="_etbv2_gh_btn_cancel" id="_etbv2_gh_tochat">Скопировать и открыть чат</button>',
+      '<button class="_etbv2_gh_btn_primary" id="_etbv2_gh_retry">Повторить</button>',
       '</div>',
       '</div>'
     ].join('');
@@ -562,6 +605,31 @@ ETB.githubAdd = (function () {
 
     var retryBtn = ov.querySelector('#_etbv2_gh_retry');
     if (retryBtn) retryBtn.onclick = function () { _startAnalysis(); };
+
+    // «Открыть чат» = закрыть витрину: чат Extella и есть окно, поверх которого мы
+    // лежим. Никаких адресов не угадываем — человек оказывается ровно там, где нужно,
+    // с уже скопированным сообщением.
+    var toChat = ov.querySelector('#_etbv2_gh_tochat');
+    if (toChat) toChat.onclick = function () {
+      var text = _chatPrompt();
+      function done() {
+        ETB.githubAdd.close();
+        try { ETB.marketplace.close(); } catch (_) {}
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, done);
+      } else {
+        // Буфер недоступен (нет разрешения) — не молчим: оставляем текст выделенным,
+        // человек скопирует руками. Молча закрыть окно значило бы потерять сообщение.
+        try {
+          var pre = ov.querySelector('#_etbv2_gh_prompt');
+          var r = document.createRange(); r.selectNodeContents(pre);
+          var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+        } catch (_) {}
+        var st = ov.querySelector('#_etbv2_gh_status');
+        if (st) st.innerHTML = '<span>Скопируй выделенное сообщение и открой чат Extella.</span>';
+      }
+    };
 
     var didSubmitBtn = ov.querySelector('#_etbv2_gh_did_submit');
     if (didSubmitBtn) didSubmitBtn.onclick = _onDeviceIdSubmit;
