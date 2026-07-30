@@ -4070,7 +4070,14 @@ var _selfTgtCache = { at: 0, val: null };
 function _selfTarget() {
   var now = Date.now();
   if (_selfTgtCache.val !== null && now - _selfTgtCache.at < 60000) return Promise.resolve(_selfTgtCache.val);
-  return _mkbFetch('/x/health', {}, 2500)
+  // ВАЖНО: /x/health у моста — GET; POST через _mkbFetch отвечает {"status":"error",
+  // "message":"not found"} — для проверки живости это сходило с рук, но target из
+  // такого ответа не прочитать (поймано живой проверкой 30.07).
+  var ctl = ('AbortController' in window) ? new AbortController() : null;
+  var tm = ctl ? setTimeout(function () { ctl.abort(); }, 2500) : null;
+  var o = ctl ? { signal: ctl.signal } : {};
+  return fetch(_MKB + '/x/health', o)
+    .then(function (r) { if (tm) clearTimeout(tm); return r.json(); })
     .then(function (h) { var t = (h && h.target) || ''; _selfTgtCache = { at: now, val: t }; return t; })
     .catch(function () { return _selfTgtCache.val || ''; });
 }
