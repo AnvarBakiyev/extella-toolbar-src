@@ -664,7 +664,7 @@ body[data-theme="dark"] .inf .tr,html[data-theme="dark"] .inf .tr{stroke:var(--b
 </div>
 <div class="cmdbar">
   <div id="cmd_search" style="display:flex;gap:10px;flex:1;min-width:0;height:55px">
-    <input id="cmd_url" placeholder="Поиск по ярлыкам и каталогам" spellcheck="false" autocomplete="off" oninput="cmdInput(this.value)" onkeydown="if(event.key==='Enter')cmdInstall()"/>
+    <input id="cmd_url" placeholder="Поиск по ярлыкам и разделам" spellcheck="false" autocomplete="off" oninput="cmdInput(this.value)" onkeydown="if(event.key==='Enter')cmdInstall()"/>
     <button class="cmdgo" onclick="cmdInstall()">Найти</button>
   </div>
   <div id="cmd_add" style="display:none;gap:12px;flex:1;min-width:0;align-items:center;height:55px">
@@ -1618,7 +1618,7 @@ var I18N_EN = {
   // скриншотам живого приложения 29.07. Ключи с неразрывными пробелами —
   // подставлять ровно так, как они стоят в разметке.
   'Модели для агента':'Models for your agent',
-  'Мозг, который выполняет задачу: понимает текст, рисует картинки, распознаёт речь. Каталог собран с Hugging Face — можно и вставить свою ссылку.':'The brain that does the job: understands text, draws images, recognises speech. The catalogue is built from Hugging Face — or paste a link of your own.',
+  'Мозг, который выполняет задачу: понимает текст, рисует картинки, распознаёт речь. Список собран с Hugging Face — можно и вставить свою ссылку.':'The brain that does the job: understands text, draws images, recognises speech. The catalogue is built from Hugging Face — or paste a link of your own.',
   'Локальные модели работают прямо на твоём компьютере, даже без интернета. Облачные — быстрее и не занимают место.':'Local models run right on your computer, even offline. Cloud ones are faster and take up no space.',
   'Программы для агента':'Programs for your agent',
   'Добавляют агенту новые возможности: работу с документами, данными, изображениями и внешними сервисами.':'They give the agent new abilities: documents, data, images and outside services.',
@@ -1650,13 +1650,13 @@ var I18N_EN = {
   'На Рабочий стол':'Back to Desktop',
   'Мини-программы Extella и приложения с GitHub: берёшь с полки — живут у тебя на компьютере.':'Extella mini-programs and apps from GitHub: pick one from the shelf — it lives on your computer.',
   'Готовые приложения с GitHub: клик — и Extella установит на твой компьютер. Работают локально.':'Ready-made apps from GitHub: one click and Extella installs them on your computer. They run locally.',
-  'Модели с Hugging Face: найди в каталоге или вставь ссылку. Локальные модели работают у тебя на компьютере, даже без интернета.':'Models from Hugging Face: search the catalog or paste a link. Local models run on your computer, even offline.',
+  'Модели с Hugging Face: найди на полке или вставь ссылку. Локальные модели работают у тебя на компьютере, даже без интернета.':'Models from Hugging Face: search the catalog or paste a link. Local models run on your computer, even offline.',
   'Все программы':'All programs',
   'Обработка файлов прямо на твоём компьютере (инструменты командной строки, CLI).':'Works with files right on your computer (command-line tools, CLI).',
   'Скажи агенту, что сделать с файлами, — он вызовет нужный.':'Tell the agent what to do with the files — it calls the right tool.',
   // Шапка / командная строка
   'Установить':'Install','Для профи':'Pro','Для всех':'For everyone',
-  '🔍  Поиск по установленному и каталогам — или вставь ссылку из любого репозитория: установим в один клик':'🔍  Search across all sections — or paste a GitHub / Hugging Face link: the program, model or skill gets installed',
+  '🔍  Поиск по установленному и разделам — или вставь ссылку из любого репозитория: установим в один клик':'🔍  Search across all sections — or paste a GitHub / Hugging Face link: the program, model or skill gets installed',
   'Свернуть':'Minimize','В окне / на весь экран':'Window / fullscreen','Светлая / тёмная тема':'Light / dark theme','Язык / Language':'Язык / Language',
   // Рабочий стол
   'Мой компьютер · Конструктор':'My computer · Wizard',
@@ -2242,7 +2242,7 @@ var I18N_EN = {
   '+ Добавить модель':'+ Add model',
   '+ Добавить навык':'+ Add skill',
   'Опиши задачу — Extella подберёт открытый инструмент, установит и добавит.':'Describe the task — Extella picks an open tool, installs and adds it.',
-  '↻ Обновить каталог':'↻ Refresh catalog',
+  '↻ Обновить список':'↻ Refresh catalog',
   'Искать ещё на Hugging Face':'Search more on Hugging Face',
   'Убрать из витрины':'Remove from storefront','Удалить навсегда':'Delete forever','Опасная зона':'Danger zone','Автоматизации':'Automations',
   '«Убрать из витрины» прячет карточку и ярлык у тебя. «Удалить навсегда» вычищает запись из каталога автоматизаций целиком. Эксперты и данные в Extella не трогаются.':'"Remove from storefront" hides the card and icon for you. "Delete forever" wipes the entry from the automations catalog entirely. Experts and data in Extella are untouched.',
@@ -2660,7 +2660,7 @@ function _renderModelsCore() {
       '<div class="sk_lead" style="grid-column:1/-1;margin:-8px 0 12px;font-size:12px;color:var(--tx3)">поиск по Hugging Face — не проверено Extella</div>');
     return;
   }
-  g.innerHTML = '<section class="catalog_intro" aria-labelledby="models_intro_title"><h2 class="catalog_intro_title" id="models_intro_title">Модели для агента</h2><p class="catalog_intro_text">Мозг, который выполняет задачу: понимает текст, рисует картинки, распознаёт речь. Каталог собран с Hugging Face — можно и вставить свою ссылку.</p><p class="catalog_intro_text">Локальные модели работают прямо на твоём компьютере, даже без интернета. Облачные — быстрее и не занимают место.</p></section>' + modelsSpotlight() +
+  g.innerHTML = '<section class="catalog_intro" aria-labelledby="models_intro_title"><h2 class="catalog_intro_title" id="models_intro_title">Модели для агента</h2><p class="catalog_intro_text">Мозг, который выполняет задачу: понимает текст, рисует картинки, распознаёт речь. Список собран с Hugging Face — можно и вставить свою ссылку.</p><p class="catalog_intro_text">Локальные модели работают прямо на твоём компьютере, даже без интернета. Облачные — быстрее и не занимают место.</p></section>' + modelsSpotlight() +
     '<div style="grid-column:1/-1;text-align:center;margin:10px 0 0"><button class="cat_chip" onclick="_modHFset(true)">Искать ещё на Hugging Face</button></div>';
   [].forEach.call(g.querySelectorAll('[data-lminst]'),function(b){b.onclick=function(){installLocalModel(b.getAttribute('data-lminst'),b);};});
   _mountTabFilter('Поиск модели…');
@@ -2863,7 +2863,7 @@ function renderFeaturedSection() {
   if (!featured.length) {
     var _q = (_featSearch || '').trim();
     html += '<div class="empty" style="grid-column:1/-1;padding:26px 20px;text-align:center">' +
-      '<p style="margin:0 0 4px;font-weight:600">' + (_q ? 'Такого в каталоге пока нет' : 'На этой полке пока пусто') + '</p>' +
+      '<p style="margin:0 0 4px;font-weight:600">' + (_q ? 'Такого здесь пока нет' : 'На этой полке пока пусто') + '</p>' +
       '<p style="margin:0 0 14px;color:var(--tx2);font-size:13px">Опиши задачу — Extella найдёт подходящее и добавит.</p>' +
       '<button class="st_btn" data-q="' + esc(_q) + '" onclick="etbFindInstall(this)">Найти и установить</button>' +
     '</div>';
@@ -3683,9 +3683,9 @@ function deskFilter(q){
   if (!q) { note.style.display = 'none'; return; }
   note.style.display = '';
   note.textContent = shown
-    ? _clT('Ярлыков подходит: ' + shown + ' из ' + total + '. Enter — поискать это же в каталогах.',
+    ? _clT('Ярлыков подходит: ' + shown + ' из ' + total + '. Enter — поискать это же в разделах.',
            'Matching shortcuts: ' + shown + ' of ' + total + '. Press Enter to search the catalogues.')
-    : _clT('На столе такого нет. Enter — поищу в каталогах и покажу, что можно поставить.',
+    : _clT('На столе такого нет. Enter — поищу в разделах и покажу, что можно поставить.',
            'Nothing like that on the desktop. Press Enter and I will look through the catalogues.');
 }
 // Строка обещает ровно одно — поиск. Раньше тот же Enter мог увести в установку
@@ -3860,7 +3860,7 @@ function _gsearch(query){
   // «Назад» возвращает в тот раздел, из которого искали (renderGrid рисует текущий cur),
   // а не выкидывает на Рабочий стол, как делала прежняя ссылка «закрыть».
   var html=_subNavHTML([{l:_tabLabel(cur), go:'renderGrid()'},{l:'Поиск: «'+query+'»'}], 'renderGrid()')+
-    (mine.length?('<div class="sect_hdr"><span class="sect_title">У тебя установлено · '+mine.length+'</span><span class="sect_line"></span></div><div class="mshelf">'+mine.slice(0,24).map(function(r){ return '<div class="stile" style="--acc:#2E7D5B"><span class="st_chip">'+esc(r.type)+' · установлено</span>'+'<div class="st_title">'+esc(r.name)+'</div><div class="st_fact">'+esc(r.desc)+'</div>'+'<div class="st_foot"><button class="st_btn" onclick="'+r.go+'">Открыть</button></div></div>'; }).join('')+'</div>'):'')+'<div class="sk_lead" style="grid-column:1/-1">'+(mine.length?'В каталоге: ':'Найдено: ')+res.length+'</div>';
+    (mine.length?('<div class="sect_hdr"><span class="sect_title">У тебя установлено · '+mine.length+'</span><span class="sect_line"></span></div><div class="mshelf">'+mine.slice(0,24).map(function(r){ return '<div class="stile" style="--acc:#2E7D5B"><span class="st_chip">'+esc(r.type)+' · установлено</span>'+'<div class="st_title">'+esc(r.name)+'</div><div class="st_fact">'+esc(r.desc)+'</div>'+'<div class="st_foot"><button class="st_btn" onclick="'+r.go+'">Открыть</button></div></div>'; }).join('')+'</div>'):'')+'<div class="sk_lead" style="grid-column:1/-1">'+(mine.length?'Можно поставить: ':'Найдено: ')+res.length+'</div>';
   if(res.length){
     html+='<div class="mshelf">'+res.slice(0,80).map(function(r){
       return '<div class="stile" style="--acc:var(--a)"><span class="st_chip">'+esc(r.type)+(r.cat?' · '+esc(r.cat):'')+'</span>'+
@@ -4369,7 +4369,7 @@ function dtGrpFilter(inp){
       empty.style.cssText = 'grid-column:1/-1;font-size:13px;color:var(--tx2);padding:2px 0 6px';
       grid.appendChild(empty);
     }
-    empty.textContent = _clT('Здесь такого нет. Поищи в строке сверху — она смотрит и в каталогах.',
+    empty.textContent = _clT('Здесь такого нет. Поищи в строке сверху — она смотрит и в разделах.',
                              'Nothing like that here. Try the bar above — it looks in the catalogues too.');
   } else if (empty) empty.remove();
 }
@@ -4673,7 +4673,7 @@ function renderDesktop(){
     // по-человечески — «Скрыть личные данные».
   ];
   // Решение Анвара 27.07 (срочный релиз коллегам): на столе оставляем только готовое.
-  // Скрытые здесь карточки НЕ удалены — они доступны в Каталоге и через «Автоматизации»;
+  // Скрытые здесь карточки НЕ удалены — они доступны в разделе «Инструменты» и через «Автоматизации»;
   // прятать надо и динамические двойники, иначе они вернутся после синка с устройством.
   var DESK_HIDDEN = ['capability-studio-scenario', 'profit-growth-scenario',
                      'extella_composer_studio', 'extella_cspl_studio', 'copilot_ctl'];
@@ -5539,7 +5539,7 @@ window.addEventListener('message', function(e){
   var _ov=document.getElementById('cliadd_ov'), _mm=document.getElementById('cliadd_msg');
   if(_ov && _ov.style.display!=='none' && _mm){
     _mm.innerHTML = e.data.ok
-      ? '✓ '+esc(String(e.data.answer||'Готово — нажми «Обновить каталог».').slice(0,220))
+      ? '✓ '+esc(String(e.data.answer||'Готово — нажми «Обновить список».').slice(0,220))
       : '✗ Не получилось: '+esc(String(e.data.error||'нет ответа').slice(0,180));
   }
 });
@@ -5565,7 +5565,7 @@ function renderCLI(){
     (_cliPending && _cliPending.t && (Date.now()-_cliPending.t < 10*60*1000)
       ? '<div style="grid-column:1/-1;border:1px solid '+(_cliPending.status==='fail'?'rgba(220,80,60,.4)':'var(--bd2)')+';border-radius:5px;padding:10px 14px;font-size:12px;color:var(--tx2);background:var(--s1)">'+
           (_cliPending.status==='ok'
-            ? '✓ '+esc((_cliPending.note||'Готово — проверь каталог ниже.').slice(0,240))
+            ? '✓ '+esc((_cliPending.note||'Готово — проверь список ниже.').slice(0,240))
             : _cliPending.status==='fail'
             ? '✗ Не получилось добавить: '+esc((_cliPending.note||'нет ответа').slice(0,180).replace(/[.\s]+$/,''))+'. Попробуй описать задачу другими словами.'
             : '⏳ Ищу и собираю новый инструмент — обычно минута-другая. Итог появится здесь же.')+
@@ -5577,7 +5577,7 @@ function renderCLI(){
     html+='<div class="mshelf">'+all.filter(function(c){return c.cat===cn;}).map(cliCard).join('')+'</div>';
   });
   html+='<div style="grid-column:1/-1;text-align:right;margin:-2px 0 8px"><span style="font-size:11px;color:var(--tx3);margin-right:8px">'+(all.length)+' инструментов</span>'+
-    '<button onclick="_cliLoaded=false;_cliReg=null;renderCLI()" style="border:1px solid var(--bd2);background:transparent;color:var(--tx2);border-radius:5px;padding:4px 10px;font-size:12px;cursor:pointer">↻ Обновить каталог</button></div>';
+    '<button onclick="_cliLoaded=false;_cliReg=null;renderCLI()" style="border:1px solid var(--bd2);background:transparent;color:var(--tx2);border-radius:5px;padding:4px 10px;font-size:12px;cursor:pointer">↻ Обновить список</button></div>';
   g.innerHTML=html;
   [].forEach.call(g.querySelectorAll('[data-cliinst]'),function(b){b.onclick=function(){installCLI(b.getAttribute('data-cliinst'),b);};});
   [].forEach.call(g.querySelectorAll('[data-clirm]'),function(b){b.onclick=function(){cliUninstall(b.getAttribute('data-clirm'));};});
@@ -5709,7 +5709,7 @@ function renderAgents(){
   // «Мои агенты» — собранные автоматизации-агенты; фокус вкладки на агентах,
   // роли/промпты — вторым планом (решение Эллы 20.07)
   // Дубль «Мои агенты» убран (замечание Алии №3: агенты на столе и во вкладке путают).
-  // Канон витрины: в каталоге берёшь — на Столе живёт. Поэтому здесь не вторая копия
+  // Канон витрины: в Инструментах берёшь — на Столе живёт. Поэтому здесь не вторая копия
   // списка, а строка-указатель: сколько их и где они лежат.
   var _agN=(_autoReg||[]).length;
   var mineHtml = _agN
@@ -5902,7 +5902,7 @@ function renderMcpCatalog(){
   var draw=function(items){
     if(!items||!items.length){ host.innerHTML=''; return; }
     var order=['web','search','dev','data','files','comm','finance','ai','other'];
-    var html='<div class="sect"><span class="eyebrow">MCP</span><h2>Каталог MCP-серверов <i>— тысячи готовых умений</i></h2></div>'+
+    var html='<div class="sect"><span class="eyebrow">MCP</span><h2>MCP-серверы <i>— тысячи готовых умений</i></h2></div>'+
       '<div class="sk_lead" style="grid-column:1/-1">Готовые подключения для агента — из официального каталога MCP ('+items.length+' проверенных, все — без ключей). Помеченные «✓ подключён» уже работают; остальные подключим по запросу.</div>'+
       (_mcpConnErr?'<div class="sk_lead" style="grid-column:1/-1;font-size:12px;color:#A5632A">⚠ Не смог проверить, какие серверы уже подключены — отметки могут быть неточными. <a href="#" onclick="_mcpConnRetry();return false" style="color:var(--a)">Проверить ещё раз</a></div>':'');
     order.forEach(function(ck){
@@ -7232,10 +7232,10 @@ function submitCliAdd(){
     'Если инструмент проприетарный (Excel/Photoshop) или без открытого CLI, честно откажись и предложи альтернативу. После выпуска инструмент появится в разделе «Инструменты» без перезагрузки.';
   skRunAgent(prompt).then(function(){
     _cliPending={t:Date.now(),status:'working'};
-    if(m)m.innerHTML='✓ Ищу и собираю инструмент — минута-другая. Затем нажми «Обновить каталог».';
+    if(m)m.innerHTML='✓ Ищу и собираю инструмент — минута-другая. Затем нажми «Обновить список».';
     b.textContent='Передано';
     if(!document.getElementById('cliadd_refresh')){
-      var rb=document.createElement('button'); rb.id='cliadd_refresh'; rb.textContent='Обновить каталог';
+      var rb=document.createElement('button'); rb.id='cliadd_refresh'; rb.textContent='Обновить список';
       rb.style.cssText='border:1px solid var(--bd2);background:transparent;color:var(--tx);border-radius:5px;padding:8px 14px;cursor:pointer;margin-right:auto;font-family:var(--sans)';
       rb.onclick=function(){_cliLoaded=false;_cliReg=null;closeCliAdd();if(cur==='cli')renderCLI();};
       var f=document.getElementById('cliadd_foot'); f.insertBefore(rb,f.firstChild);
@@ -7245,9 +7245,9 @@ function submitCliAdd(){
 // Обобщённая кнопка «+ Добавить» для Программ/Моделей/Навыков, передаёт сборщик
 // (Qwen) типовую задачу; после он добавляет карточку в живой каталог соответствующего раздела.
 var ADD_KINDS={
-  programs:{where:'Программы, полка «Инструменты с GitHub»',title:'Найти программу',action:'Найти программу',sub:'Опиши задачу — Extella найдёт подходящую открытую программу и покажет её карточку. Установка начнётся только после нажатия «Установить».',ph:'напр.: планировщик задач · трекер времени · генератор счетов',refresh:function(){_progReg=null;_progFetched=false;if(cur==='programs')renderPrograms();},prompt:function(v){return 'Пользователь просит добавить ПРОГРАММУ (плагин/приложение/MCP-сервер) в магазин Extella: «'+v+'». Найди подходящий ОТКРЫТЫЙ репозиторий и добавь карточку в живой каталог программ: kv_get "_mkt_programs" (global), добавь в .shelf объект {repoUrl,title,facts:[кратко по-русски],source:"github.com/<owner> · ★ N",acc:"#2F6B66",label:"MCP-инструмент"}, kv_set global. Если открытого нет, честно откажись.';}},
+  programs:{where:'Инструменты, полка «Программы»',title:'Найти программу',action:'Найти программу',sub:'Опиши задачу — Extella найдёт подходящую открытую программу и покажет её карточку. Установка начнётся только после нажатия «Установить».',ph:'напр.: планировщик задач · трекер времени · генератор счетов',refresh:function(){_progReg=null;_progFetched=false;if(cur==='programs')renderPrograms();},prompt:function(v){return 'Пользователь просит добавить ПРОГРАММУ (плагин/приложение/MCP-сервер) в магазин Extella: «'+v+'». Найди подходящий ОТКРЫТЫЙ репозиторий и добавь карточку в живой каталог программ: kv_get "_mkt_programs" (global), добавь в .shelf объект {repoUrl,title,facts:[кратко по-русски],source:"github.com/<owner> · ★ N",acc:"#2F6B66",label:"MCP-инструмент"}, kv_set global. Если открытого нет, честно откажись.';}},
   models:{where:'Модели, полка новинок',title:'Добавить модель',sub:'Опиши, какая ИИ-модель нужна, — Extella подберёт работающую и добавит в магазин.',ph:'напр.: генерация музыки · распознавание речи · перевод',refresh:function(){_modReg=null;_modFetched=false;if(cur==='models')renderModels();},prompt:function(v){return 'Пользователь просит добавить ИИ-МОДЕЛЬ в магазин Extella: «'+v+'». Подбери РАБОТАЮЩЕЕ пространство HuggingFace (RUNNING) под задачу и добавь карточку: kv_get "_mkt_models" (global), добавь в .shelf {hfId,title,facts:[кратко по-русски],source:"huggingface.co/<owner> · ♥ N",acc:"#2E7D5B",label:"Работает"}, kv_set global.';}},
-  skills:{where:'Навыки',title:'Добавить навык',sub:'Опиши поведение для агента — Extella составит навык и добавит в каталог.',ph:'напр.: всегда предлагать сроки · проверять цифры дважды',refresh:function(){_skLoaded=false;_skCatReg=null;if(cur==='skills')renderSkillsShelf();},prompt:function(v){return 'Пользователь просит добавить НАВЫК (правило поведения) в магазин Extella: «'+v+'». Составь один навык: {id:"skill_<латиница>",cat:"Бизнес" или "Работа и продуктивность" или "Стиль и общение" или "Разработка",emoji,name:"<рус 2-3 слова>",desc:"<рус фраза>",rule:"[skill:Имя] <конкретное правило на русском>",howto:"<рус>"}. Добавь: kv_get "_mkt_skills_catalog" (global) {items:[...]}, dedup по id и name, append, kv_set global. Подтверди.';}}
+  skills:{where:'Навыки',title:'Добавить навык',sub:'Опиши поведение для агента — Extella составит навык и добавит на полку.',ph:'напр.: всегда предлагать сроки · проверять цифры дважды',refresh:function(){_skLoaded=false;_skCatReg=null;if(cur==='skills')renderSkillsShelf();},prompt:function(v){return 'Пользователь просит добавить НАВЫК (правило поведения) в магазин Extella: «'+v+'». Составь один навык: {id:"skill_<латиница>",cat:"Бизнес" или "Работа и продуктивность" или "Стиль и общение" или "Разработка",emoji,name:"<рус 2-3 слова>",desc:"<рус фраза>",rule:"[skill:Имя] <конкретное правило на русском>",howto:"<рус>"}. Добавь: kv_get "_mkt_skills_catalog" (global) {items:[...]}, dedup по id и name, append, kv_set global. Подтверди.';}}
 };
 // Плитка «Добавить…» — стоит в начале полки, БЕЗ заголовка-раздела и с tf_skip:
 // иначе фильтр категорий считал её отдельным разделом («Своего навыка нет? 1»)
