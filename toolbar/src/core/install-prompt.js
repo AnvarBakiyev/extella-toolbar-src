@@ -60,6 +60,10 @@ ETB.installPrompt = (function () {
       pidFile: '/tmp/etb_srv_' + safeId + '.pid',
       digest: digest || null,
       runMode: runMode,
+      // Приватный репозиторий: обычный git clone по URL у агента упадёт «not found»
+      // (GitHub на приватный отвечает так же, как на несуществующий). Флаг включает
+      // отдельную инструкцию скачивания по ключу — см. блок SPEED.
+      isPrivate: !!(rd && rd.private),
       hf: opts.hf || null   // { kind:'space'|'model', id:'owner/name' } when known
     };
   }
@@ -190,7 +194,24 @@ ETB.installPrompt = (function () {
       'Think and plan IN PARALLEL with execution — start executing NOW.',
       '',
       '=== SPEED (do not skip) ===',
-      'ALWAYS clone shallow: git clone --depth 1 --single-branch ' + ctx.url + ' ' + ctx.rootPath,
+      (ctx.isPrivate
+        ? 'PRIVATE REPOSITORY — a plain `git clone` fails here with "not found" (GitHub answers\n' +
+          'the same for private and non-existent). Fetch it with the stored key instead:\n' +
+          '  1. read the Extella account token from ~/.extella/api_token.txt (fall back to\n' +
+          '     ~/extella_wizard/app/config.json -> auth_token);\n' +
+          '  2. POST https://api.extella.ai/api/kv/get with headers X-Auth-Token: <that token>,\n' +
+          '     X-Profile-Id: default, X-Agent-Id: agent_extella_default and body\n' +
+          '     {"key": "github_token", "global": true} — the answer field `value` is the key;\n' +
+          '  3. download the tarball, passing the key in a HEADER, never in the URL (a token\n' +
+          '     inside a URL leaks into shell history, process lists and server logs):\n' +
+          '     curl -sL -H "Authorization: token <key>" \\\n' +
+          '       https://api.github.com/repos/' + ctx.fullName + '/tarball/' + ctx.branch + ' \\\n' +
+          '       | tar xz --strip-components=1 -C ' + ctx.rootPath + '\n' +
+          '     (create ' + ctx.rootPath + ' first).\n' +
+          'If the key is missing or GitHub answers 401/404, STOP and report honestly that the\n' +
+          'repository is private and the GitHub key is missing or has no access to it. Do NOT\n' +
+          'build a plugin around an empty directory — an empty card is worse than an error.'
+        : 'ALWAYS clone shallow: git clone --depth 1 --single-branch ' + ctx.url + ' ' + ctx.rootPath),
       '(you never need git history — a full clone of a big repo wastes minutes).',
       'Be decisive, not exploratory. For a static / docs / content repo this is a',
       'handful of steps — clone, confirm the entry file, serve it, write the manifest —',
