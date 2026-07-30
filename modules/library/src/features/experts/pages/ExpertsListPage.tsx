@@ -859,9 +859,11 @@ function ExpertsListPageInner() {
           title={t('delete.title', 'Move to trash?')}
           description={t('delete.description', {
             name: deleteName ?? '',
-            days: retentionDays,
-            defaultValue:
-              'Expert "{{name}}" will be moved to the trash bin. You can restore it within {{days}} days from the Trash tab.',
+            // Склонение включает ТОЛЬКО поле count — i18next смотрит именно его.
+            // Здесь передавалось days, и «30 дней» в русском не склонялось никогда
+            // (находка Эллы). Считаем срок отдельным ключом и подставляем готовую
+            // фразу: «в течение 30 дней», а не «30 дн.».
+            retention: t('delete.retention', { count: retentionDays }),
           })}
           confirmLabel={
             deleteMutation.isPending

@@ -16,7 +16,7 @@
   "tabs.all": "All",
   "tabs.trash": "Trash",
   "delete.title": "Move to trash?",
-  "delete.description": "Expert \"{{name}}\" will be moved to the trash bin. You can restore it within {{days}} days from the Trash tab.",
+  "delete.description": "Expert \"{{name}}\" will be moved to the trash bin. You can restore it within {{retention}} from the Trash tab.",
   "delete.confirm": "Move to trash",
   "delete.cancel": "Cancel",
   "delete.deleting": "Deleting…",
@@ -125,5 +125,9 @@
   "share.toasts.success": "\"{{name}}\" shared successfully",
   "share.toasts.failed": "Failed to share expert",
   "list.errorTitle": "Could not load experts",
-  "drawer.loadFailed": "Could not load the expert. Try again."
+  "drawer.loadFailed": "Could not load the expert. Try again.",
+  "delete.retention_one": "{{count}} day",
+  "delete.retention_few": "{{count}} days",
+  "delete.retention_many": "{{count}} days",
+  "delete.retention_other": "{{count}} days"
 }

@@ -207,6 +207,10 @@ ETB.marketplace = (function () {
       }
       _ensureStyles();
 
+      // Флаг «витрина открыта» — по нему прячется плавающая панель клиента.
+      // Ставим на корне документа, а не на body: панель рисуется вне нашего дерева.
+      document.documentElement.setAttribute('data-etb-mkt-open', '1');
+
       var ov = document.createElement('div');
       ov.id = '_etbv2_mkt_ov';
 
@@ -729,6 +733,7 @@ ETB.marketplace = (function () {
         _msgHandler = null;
       }
       if (_blobUrl) { URL.revokeObjectURL(_blobUrl); _blobUrl = null; }
+      document.documentElement.removeAttribute('data-etb-mkt-open');
       var ov = document.getElementById('_etbv2_mkt_ov');
       if (ov) {
         // Mark as closing synchronously so nav.syncUI() stops counting it as the
