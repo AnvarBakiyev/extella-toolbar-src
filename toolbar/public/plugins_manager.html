@@ -3676,11 +3676,40 @@ function cmdLinkCancel(){
   var inp = document.getElementById('cmd_url'); if (inp) inp.value = '';
   var row = document.getElementById('cmd_link'); if (row) row.remove();
 }
+// ПАСПОРТ ПРОВЕРЯЕТСЯ ДО УСТАНОВКИ — задача Анвара 30.07: коллеги ставят своих агентов
+// по ссылке сами, без нас в середине. Чтобы «Агенты» через месяц не стали свалкой,
+// репозиторий без паспорта не ставится, а отказ НАЗЫВАЕТ причину: иначе коллега пойдёт
+// гадать к нам, и мы снова окажемся в середине — ровно то, чего задача избегает.
+// Проверяет тот же гейт, что и наши собственные паспорта: планка одна для своих и чужих.
+function cmdLinkCheck(url){
+  return skBridge('etb_run_expert', 'etb_expert_result',
+      { name: 'wz_agent_repo_check', params: { url: url } }, 45000)
+    .then(function (r) {
+      var res = r && (r.result || r);
+      if (typeof res === 'string') { try { res = JSON.parse(res); } catch (_) { res = null; } }
+      return res || { ok: true, unknown: true };   // гейт недоступен — не блокируем установку
+    })
+    .catch(function () { return { ok: true, unknown: true }; });
+}
 function cmdLinkInstall(){
   var inp = document.getElementById('cmd_url');
   var lk = _cmdLink(inp ? inp.value : ''); if (!lk) return;
-  notify(lk.hf ? 'hf_add_url' : 'github_add_url', '', lk.url);
-  cmdLinkCancel();
+  // Hugging Face — не агент, паспорта у него нет и быть не должно: ставим как раньше.
+  if (lk.hf) { notify('hf_add_url', '', lk.url); cmdLinkCancel(); return; }
+  var row = document.getElementById('cmd_link');
+  if (row) row.innerHTML = '<span>' + esc(_clT('Проверяю паспорт агента…', 'Checking the agent passport…')) + '</span>';
+  cmdLinkCheck(lk.url).then(function (v) {
+    if (v.ok) { notify('github_add_url', '', lk.url); cmdLinkCancel(); return; }
+    var why = (v.problems || []).map(function (p) { return '<li>' + esc(String(p)) + '</li>'; }).join('');
+    if (row) row.innerHTML =
+      '<div><b>' + esc(_clT('Ставить нельзя', 'Cannot install')) + '</b>' +
+      '<ul style="margin:6px 0 0 18px;padding:0">' + why + '</ul>' +
+      '<div style="margin-top:6px">' + esc(_clT(
+        'Это проверка стандарта: без паспорта витрина не знает, что ставит и на какую полку класть.',
+        'This is the standard check: without a passport the storefront does not know what it installs.')) +
+      '</div></div>' +
+      '<button onclick="cmdLinkCancel()" style="' + _KPBTN + '">' + esc(_clT('Закрыть', 'Close')) + '</button>';
+  });
 }
 // Один обработчик ввода: ссылка — показать ряд, текст — фильтровать ярлыки стола.
 function cmdInput(v){
