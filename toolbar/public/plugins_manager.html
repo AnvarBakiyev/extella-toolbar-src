@@ -3855,7 +3855,7 @@ function _gsearch(query){
     var _inst=gi();
     BUILTIN_PLUGINS_DATA.filter(function(p){return _inst.indexOf(p.id)!==-1;}).concat(getCustom()).forEach(function(p){
       var cu=(typeof CURATED_PROGRAMS!=='undefined'&&CURATED_PROGRAMS[p.id])||{};
-      var nm=cu.name||p.name||p.id, ds=cu.tagline||p.description||'';
+      var nm=cu.name||p.name||p.title||p.id, ds=cu.tagline||p.description||p.subtitle||'';
       if((nm+' '+ds).toLowerCase().indexOf(q)>=0) mine.push({type:'Программа',name:nm,desc:ds,go:"notify('open','"+String(p.id).replace(/'/g,'')+"')"});
     });
     var _cm={}; (typeof cliCatalog==='function'?cliCatalog():[]).forEach(function(c){_cm[c.id]=c;});
@@ -4730,7 +4730,13 @@ function renderDesktop(){
     }
     var cu=(typeof CURATED_PROGRAMS!=='undefined'&&CURATED_PROGRAMS[p.id])||{};
     var cat=cu.biz||(typeof catOf==='function'?catOf(p):'')||'box';
-    icons.push({kind:'program',cat:cat,lbl:cu.name||p.name||p.id,acc:_dtAcc(cat),id:p.id,
+    // ИМЯ КАРТОЧКИ: name, потом title, и только потом id. Хостинговые карточки пишут
+    // человеческое имя в title (там нет name), и на Столе вместо «Баға» стояло
+    // «extella_baga_hosted» — рядом с правильной плиткой того же приложения. Два ярлыка
+    // на одно приложение, один из них с техническим именем: человек видит мусор и
+    // справедливо считает, что у него что-то сломалось (замечание Анвара 30.07).
+    // С общим именем дедуп ниже сам склеит пару в одну плитку.
+    icons.push({kind:'program',cat:cat,lbl:cu.name||p.name||p.title||p.id,acc:_dtAcc(cat),id:p.id,
       go:"notify('open','"+_dtEsc(p.id)+"')"});
   });
   // 3) CLI-инструменты → запустить
