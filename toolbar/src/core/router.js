@@ -5324,7 +5324,13 @@ ETB.router = (function () {
           return;
         }
         try {
-          ETB.api.runExpert(expertName, expertParams, { global: true })
+          // УСТРОЙСТВО ПРОБРАСЫВАЕТСЯ ЧЕРЕЗ МОСТ — починка 30.07.
+          // Без таргета эксперт исполняется на платформе и пишет файлы в ЕЁ песочницу,
+          // честно рапортуя успех. Так ломалась установка с Hugging Face: манифест
+          // «записан», а на машине человека его нет, и панель говорила «не установилось».
+          // Ложный успех — наш самый дорогой класс, поэтому устройство передаём явно.
+          ETB.api.runExpert(expertName, expertParams,
+            e.data.target ? { global: true, target: String(e.data.target) } : { global: true })
             .then(function (res) { reply({ type: 'etb_expert_result', reqId: reqId, ok: true, res: res }); })
             .catch(function (err) { reply({ type: 'etb_expert_result', reqId: reqId, ok: false, error: (err && err.message) || 'expert failed' }); });
         } catch (err) {
