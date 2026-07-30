@@ -1,0 +1,48 @@
+{
+  "title": "Хранилище",
+  "subtitle": "Общие записи рабочего пространства · записей: {{count}}",
+
+  "actions.newEntry": "Новая запись",
+  "actions.edit": "Изменить",
+  "actions.delete": "Удалить",
+
+  "toolbar.searchPlaceholder": "Поиск по ключу, значению, описанию",
+
+  "columns.key": "Ключ записи",
+  "columns.value": "Значение",
+  "columns.description": "Описание",
+  "columns.date": "Дата",
+
+  "table.empty": "Ничего не нашлось",
+  "table.noDescription": "Без описания",
+
+  "fields.key": "Ключ записи",
+  "fields.keyPlaceholder": "например, app.timeout",
+  "fields.value": "Значение",
+  "fields.valuePlaceholder": "Введи значение…",
+  "fields.description": "Описание",
+  "fields.descriptionPlaceholder": "Необязательно — короткая заметка об этой записи",
+
+  "create.title": "Новая запись",
+  "create.save": "Сохранить",
+  "create.saving": "Сохраняю…",
+  "create.directNote": "Запись сохраняется в хранилище сразу.",
+
+  "edit.title": "Изменить запись",
+  "edit.saving": "Сохраняю…",
+  "edit.keyReadOnly": "Ключ записи изменить нельзя — по нему запись и находится.",
+
+  "delete.title": "Удалить запись?",
+  "delete.description": "Запись «{{key}}» будет удалена навсегда. Отменить это не получится.",
+  "delete.confirm": "Удалить",
+  "delete.cancel": "Отмена",
+  "delete.deleting": "Удаляю…",
+
+  "error.load": "Не смог получить записи хранилища — проверь подключение и попробуй ещё раз.",
+  "error.retry": "Обновить",
+
+  "empty.blank": "Записей пока нет",
+  "empty.blankHint": "Создай первую кнопкой сверху.",
+  "empty.search": "По твоему запросу ничего не нашлось",
+  "empty.searchHint": "Попробуй сформулировать иначе."
+}
