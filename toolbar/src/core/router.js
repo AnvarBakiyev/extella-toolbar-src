@@ -4594,7 +4594,18 @@ ETB.router = (function () {
     if (document.getElementById('_etbv2_router_styles')) return;
     var s = document.createElement('style');
     s.id = '_etbv2_router_styles';
-    s.textContent = '@keyframes _etbv2_spin{to{transform:rotate(360deg)}}';
+    // ТОКЕНЫ ШРИФТА ШЕЛЛА — по замечанию Эллы 30.07.
+    // Панели хоста (установка с HF, добавление с GitHub, карточка доустановки) уже
+    // обращаются к var(--etb-sans) и var(--etb-mono), а переменных не существовало —
+    // работал фолбэк, и каждая панель молча уезжала в системный шрифт. Объявляем их
+    // один раз здесь, чтобы новая панель получала канон по умолчанию, а не по памяти
+    // автора. Семейства — канон Эллы; системные оставлены хвостом, чтобы текст не поехал,
+    // если шрифт не подгрузился.
+    s.textContent = ':root{'
+      + '--etb-serif:"Source Serif 4",ui-serif,Georgia,serif;'
+      + '--etb-sans:"Source Sans 3",-apple-system,system-ui,sans-serif;'
+      + '--etb-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace}'
+      + '@keyframes _etbv2_spin{to{transform:rotate(360deg)}}';
     document.head.appendChild(s);
   }
 
