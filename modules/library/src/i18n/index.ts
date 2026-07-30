@@ -11,6 +11,16 @@ import enKvstore from './locales/en/kvstore.json';
 import enDevices from './locales/en/devices.json';
 import enTokens from './locales/en/tokens.json';
 
+import ruCommon from './locales/ru/common.json';
+import ruExperts from './locales/ru/experts.json';
+import ruRules from './locales/ru/rules.json';
+import ruConcepts from './locales/ru/concepts.json';
+import ruAgents from './locales/ru/agents.json';
+import ruTeams from './locales/ru/teams.json';
+import ruKvstore from './locales/ru/kvstore.json';
+import ruDevices from './locales/ru/devices.json';
+import ruTokens from './locales/ru/tokens.json';
+
 /**
  * Язык берётся от хоста, а не прибивается к 'en'.
  *
@@ -18,9 +28,9 @@ import enTokens from './locales/en/tokens.json';
  * `etb_init` от витрины. Здесь стояло жёсткое `lng: 'en'` — из-за него Библиотека оставалась
  * английской даже когда весь остальной интерфейс по-русски.
  *
- * ЧЕСТНАЯ ОГОВОРКА: русских словарей ещё НЕТ — переведено 0 из 565 строк. Пока их нет,
- * `fallbackLng: 'en'` даёт ровно прежнюю картинку, ничего не ломая. Как только появится
- * `locales/ru`, достаточно добавить его в `resources` — механика уже готова и слушает хост.
+ * Русские словари заведены 30.07: прогон 565/565 по глоссарию + вычитка Эллы (49bf6ab).
+ * `fallbackLng: 'en'` остаётся страховкой: если ключ вдруг не найдётся, человек увидит
+ * английскую строку, а не пустое место или сырой ключ.
  */
 const resources = {
   en: {
@@ -33,6 +43,17 @@ const resources = {
     kvstore: enKvstore,
     devices: enDevices,
     tokens: enTokens,
+  },
+  ru: {
+    common: ruCommon,
+    experts: ruExperts,
+    rules: ruRules,
+    concepts: ruConcepts,
+    agents: ruAgents,
+    teams: ruTeams,
+    kvstore: ruKvstore,
+    devices: ruDevices,
+    tokens: ruTokens,
   },
 } as const;
 

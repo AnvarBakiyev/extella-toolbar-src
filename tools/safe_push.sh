@@ -93,7 +93,7 @@ say "4б. Гоняю гейты и тесты"
 # `node --check` ловит только синтаксис. Утром 29.07 через него спокойно прошла
 # сборка с платным Claude-агентом в зеркале — гейт account-scope её и поймал.
 GATES_FAILED=""
-for G in check-account-scope check-runtime-portability check-reproducible-build; do
+for G in check-account-scope check-runtime-portability check-reproducible-build check-catalog-contract check-ru-plurals; do
   if node "scripts/$G.js" >/dev/null 2>&1; then echo "   ✓ $G"
   else echo "   ✗ $G ПРОВАЛ"; GATES_FAILED="$GATES_FAILED $G"; fi
 done
