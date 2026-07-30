@@ -478,11 +478,37 @@ test('agent change-management contract stays internal instead of becoming a task
   const routerStart = router.indexOf('  function _evolutionAgentControlLoad(');
   const routerEnd = router.indexOf('  function _evolutionLastReceipt(', routerStart);
   const routerSlice = router.slice(routerStart, routerEnd);
+  const loaderStart = evolutionHtml.indexOf('    function validAgentControlSurface(');
+  const loaderEnd = evolutionHtml.indexOf('    function clearLegacyFleet()', loaderStart);
+  const loader = evolutionHtml.slice(loaderStart, loaderEnd);
 
   assert.doesNotMatch(advancedNav, /data-view="agentControl"/);
   assert.doesNotMatch(advancedNav, /data-primary-surface/);
   assert.doesNotMatch(evolutionHtml, /data-agent-control-action/);
   assert.doesNotMatch(evolutionHtml, /etb_agent_control/);
+  assert.match(evolutionHtml, /agentControlBoundary:'Этот раздел только читает канонический контракт/);
+  assert.match(evolutionHtml, /agentControlBoundary:'This section only reads the canonical contract/);
+  assert.match(evolutionHtml, /agentControlPublishGates:'Подтверждения публикации'/);
+  assert.match(evolutionHtml, /agentControlPublishGates:'Publication confirmations'/);
+  assert.match(evolutionHtml, /agentControlGatePreWrite:'До публикации'/);
+  assert.match(evolutionHtml, /agentControlGatePostWrite:'После записи: Extella перечитывает результат'/);
+  assert.match(evolutionHtml, /agentControlGatePreWrite:'Before publication'/);
+  assert.match(evolutionHtml, /agentControlGatePostWrite:'After write: Extella re-reads the result'/);
+  assert.match(evolutionHtml, /agentControlRequires:'Зависит от'/);
+  assert.match(evolutionHtml, /agentControlRequires:'Requires'/);
+  assert.match(loader, /request\('agent_control_load'/);
+  assert.match(
+    loader,
+    /status==='STANDARDS_UNAVAILABLE'\|\|status==='UNKNOWN'\)return count===null/,
+  );
+  assert.match(loader, /status==='NO_AGENT_PASSPORTS'\)return count===0/);
+  assert.match(loader, /surface\.mutations_allowed!==false/);
+  assert.match(loader, /var operationNames=\{\};contract\.operations\.forEach/);
+  assert.match(loader, /operationNames\[code\]\|\|code/);
+  assert.match(loader, /row\.code==='READ_BACK_CONFIRMED'\?'post-write':'pre-write'/);
+  assert.match(loader, /data-agent-control-gate-phase=/);
+  assert.match(loader, /agentControlGatePostWrite/);
+  assert.doesNotMatch(loader, /status=\+esc\(surface\.status\)|ledger=/);
   assert.match(routerSlice, /session\.standardsBundle\.sources/);
   assert.match(routerSlice, /mutations_allowed: false/);
   assert.doesNotMatch(
