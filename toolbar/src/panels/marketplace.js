@@ -498,8 +498,17 @@ ETB.marketplace = (function () {
                 _kerr('key reserved for the trusted Evolution MCP provider');
                 return;
               }
-              if (!_isMkt && !_isAgSt && !_isAgRuns && !_isCapMan) { _kerr('key not allowed'); return; }
-              var _scope = (_isMkt || _isCapMan) ? { global: true } : {};
+              // github_token — ключ доступа к приватным репозиториям агентов. Разрешён
+              // ТОЛЬКО на ЗАПИСЬ: человек вставляет его один раз в окне витрины, а читают
+              // его гейт паспорта и установщик — на стороне платформы. Чтение с витрины
+              // закрыто сознательно: поверхность, которая умеет показать секрет, рано или
+              // поздно его покажет (тот же принцип, по которому здесь закрыт
+              // huggingface_token). Пишем в общий скоуп аккаунта: читатели — эксперты, у
+              // них свой агент, и личный скоуп витрины они бы не увидели.
+              var _isGhToken = _key === 'github_token';
+              if (_isGhToken && _t === 'etb_kv_get') { _kerr('key not allowed'); return; }
+              if (!_isMkt && !_isAgSt && !_isAgRuns && !_isCapMan && !_isGhToken) { _kerr('key not allowed'); return; }
+              var _scope = (_isMkt || _isCapMan || _isGhToken) ? { global: true } : {};
               if (_t === 'etb_kv_get') {
                 ETB.api.kvGet(_key, _scope)
                   .then(function (r) { _back({ type: 'etb_kv_result', reqId: _rid, ok: true, value: (r && r.value != null) ? r.value : null }); })

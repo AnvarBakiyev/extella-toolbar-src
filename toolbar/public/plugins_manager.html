@@ -3739,15 +3739,54 @@ function cmdLinkInstall(){
       notify('github_add_url', '', lk.url); cmdLinkCancel(); return;
     }
     var why = (v.problems || []).map(function (p) { return '<li>' + esc(String(p)) + '</li>'; }).join('');
+    // Приватный репозиторий (второй этап, 30.07): гейт отвечает need_github_token, когда
+    // причина отказа — доступ, а не содержимое. Тогда объяснение другое и рядом стоит
+    // кнопка, ведущая туда, где ключ вводят: отказ без пути к починке бесполезен.
+    var needTok = !!v.need_github_token;
     if (row) row.innerHTML =
-      '<div><b>' + esc(_clT('Ставить нельзя', 'Cannot install')) + '</b>' +
+      '<div><b>' + esc(needTok ? _clT('Не могу открыть репозиторий', 'Cannot open the repository')
+                               : _clT('Ставить нельзя', 'Cannot install')) + '</b>' +
       '<ul style="margin:6px 0 0 18px;padding:0">' + why + '</ul>' +
-      '<div style="margin-top:6px">' + esc(_clT(
+      '<div style="margin-top:6px">' + esc(needTok ? _clT(
+        'Приватные репозитории читаются по ключу доступа GitHub — добавь его один раз, дальше витрина будет ставить твоих агентов и из приватных.',
+        'Private repositories are read with a GitHub access key — add it once and the storefront will install your agents from private repos too.') : _clT(
         'Это проверка стандарта: без паспорта витрина не знает, что ставит и на какую полку класть.',
         'This is the standard check: without a passport the storefront does not know what it installs.')) +
       '</div></div>' +
+      (needTok ? '<button class="st_btn" onclick="ghTokenModal()">' + esc(_clT('Добавить ключ GitHub', 'Add GitHub key')) + '</button>' : '') +
       '<button onclick="cmdLinkCancel()" style="' + _KPBTN + '">' + esc(_clT('Закрыть', 'Close')) + '</button>';
   });
+}
+// Ключ доступа GitHub — один на все приватные репозитории. Хранится в KV аккаунта под
+// именем github_token: его читают и гейт паспорта, и установщик. Значение наружу не
+// показываем и в подписи не печатаем — только факт «ключ сохранён».
+function ghTokenModal(){
+  var old=document.getElementById('ght_ov'); if(old)old.remove();
+  var ov=document.createElement('div'); ov.id='ght_ov'; ov.style.cssText=_KPOV;
+  ov.innerHTML='<div style="'+_KPMODAL+'">'+
+    '<div style="font-family:var(--serif);font-size:20px;margin-bottom:4px">'+_clT('Ключ доступа GitHub','GitHub access key')+'</div>'+
+    '<div style="color:var(--tx2);font-size:13px;line-height:1.55;margin-bottom:12px">'+_clT(
+      'Нужен, чтобы ставить агентов из приватных репозиториев. Создаётся в GitHub: Settings → Developer settings → Personal access tokens. Права — только чтение репозиториев.',
+      'Needed to install agents from private repositories. Create it in GitHub: Settings → Developer settings → Personal access tokens. Read-only access to repositories is enough.')+'</div>'+
+    '<a href="https://github.com/settings/tokens" target="_blank" rel="noopener" style="font-size:12px;color:var(--a);text-decoration:none;display:inline-block;margin-bottom:12px">'+_clT('Открыть страницу ключей GitHub','Open the GitHub tokens page')+' ↗</a>'+
+    '<input id="ght_val" type="password" autocomplete="off" spellcheck="false" placeholder="ghp_… / github_pat_…" style="'+_KPINP+'"/>'+
+    '<div style="margin-top:14px;display:flex;gap:8px;align-items:center">'+
+      '<button class="st_btn" onclick="ghTokenSave()">'+_clT('Сохранить','Save')+'</button>'+
+      '<button onclick="var o=document.getElementById(\'ght_ov\');if(o)o.remove()" style="'+_KPBTN+'">'+_clT('Отмена','Cancel')+'</button></div>'+
+    '<div id="ght_msg" style="font-size:13px;color:var(--tx2);line-height:1.55;margin-top:12px;min-height:18px"></div></div>';
+  document.body.appendChild(ov);
+  var i=document.getElementById('ght_val'); if(i)i.focus();
+}
+function ghTokenSave(){
+  var el=document.getElementById('ght_val'), msg=document.getElementById('ght_msg');
+  var v=(el&&el.value||'').trim();
+  if(!v){ if(msg)msg.textContent=_clT('Вставь ключ — поле пустое.','Paste the key — the field is empty.'); return; }
+  if(msg)msg.textContent=_clT('Сохраняю…','Saving…');
+  // Мост кладёт ключ в KV аккаунта тем же именем, которым его читают гейт и установщик.
+  skBridge('etb_kv_set','etb_kv_result',{key:'github_token', value:v, plain:true}, 20000)
+    .then(function(){ if(msg)msg.textContent=_clT('Ключ сохранён. Вставь ссылку на приватный репозиторий ещё раз.','Key saved. Paste the private repository link again.');
+      setTimeout(function(){var o=document.getElementById('ght_ov');if(o)o.remove();},1800); })
+    .catch(function(e){ if(msg)msg.textContent=_clT('Не смог сохранить ключ: ','Could not save the key: ')+((e&&e.message)||''); });
 }
 // Один обработчик ввода: ссылка — показать ряд, текст — фильтровать ярлыки стола.
 function cmdInput(v){

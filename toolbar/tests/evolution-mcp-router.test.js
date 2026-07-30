@@ -206,10 +206,12 @@ test('generic iframe KV and KV-expert bridges reserve the MCP registry key', () 
   assert.match(routerGuard, /return;/);
 
   const marketStart = marketplace.indexOf('var _isReservedMcpRegistry');
-  const marketEnd = marketplace.indexOf(
-    'if (!_isMkt && !_isAgSt && !_isAgRuns && !_isCapMan)',
-    marketStart,
-  );
+  // Якорь по НАЧАЛУ строки-белого списка, а не по её полному тексту: список
+  // допустимых ключей пополняется (30.07 добавлен github_token на запись), и
+  // буквальный ассерт краснел бы на каждом таком пополнении, ничего не проверяя
+  // по существу. Свойство, которое здесь важно, — зарезервированный ключ MCP
+  // отбивается ДО белого списка — проверяется ниже и не ослаблено.
+  const marketEnd = marketplace.indexOf('if (!_isMkt', marketStart);
   assert.ok(marketStart >= 0 && marketEnd > marketStart);
   const marketGuard = marketplace.slice(marketStart, marketEnd);
   assert.match(marketGuard, new RegExp(key));
