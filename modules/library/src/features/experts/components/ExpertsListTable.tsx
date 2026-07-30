@@ -64,6 +64,7 @@ export function ExpertsListTable({
   onPreview,
   onDelete,
 }: ExpertsListTableProps) {
+  const { t: tCommon } = useTranslation('common');
   const { t } = useTranslation('experts');
   const runs = useExpertRuns();
 
@@ -93,7 +94,7 @@ export function ExpertsListTable({
             <th scope="col" className="w-9 px-3 py-2">
               <input
                 type="checkbox"
-                aria-label="Select all"
+                aria-label={tCommon('table.selectAll')}
                 checked={allSelected}
                 ref={(el) => {
                   if (el) el.indeterminate = someSelected && !allSelected;
@@ -120,7 +121,7 @@ export function ExpertsListTable({
             <th scope="col" className="w-[130px] px-3 py-2 text-left text-xs font-medium uppercase tracking-[0.04em] text-textFaint">
               {t('columns.added', 'Added')}
             </th>
-            <th scope="col" className="w-10" aria-label="Actions" />
+            <th scope="col" className="w-10" aria-label={tCommon('table.actions')} />
           </tr>
         </thead>
         <tbody>

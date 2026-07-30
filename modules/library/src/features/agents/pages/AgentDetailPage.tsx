@@ -122,6 +122,7 @@ function EmptySlot({ label, subtitle }: EmptySlotProps) {
 /* ─── OverviewTab ────────────────────────────────────────────────── */
 
 function OverviewTab({ agent }: { agent: AgentDetail }) {
+  const { t: tCommon } = useTranslation('common');
   const temperature =
     agent.model_parameters &&
     typeof agent.model_parameters === 'object' &&
@@ -221,19 +222,19 @@ function OverviewTab({ agent }: { agent: AgentDetail }) {
               className="grid text-sm"
               style={{ gridTemplateColumns: 'auto 1fr', gap: '8px 12px' }}
             >
-              <span className="text-textMuted">Created</span>
+              <span className="text-textMuted">{tCommon('meta.created')}</span>
               <span>{formatDate(agent.created_at)}</span>
-              <span className="text-textMuted">Updated</span>
+              <span className="text-textMuted">{tCommon('meta.updated')}</span>
               <span>{formatDate(agent.updated_at)}</span>
               {agent.version != null ? (
                 <>
-                  <span className="text-textMuted">Version</span>
+                  <span className="text-textMuted">{tCommon('columns.version')}</span>
                   <span className="tabular-nums">v{agent.version}</span>
                 </>
               ) : null}
               {agent.profile_name ? (
                 <>
-                  <span className="text-textMuted">Profile</span>
+                  <span className="text-textMuted">{tCommon('meta.profile')}</span>
                   <span>{agent.profile_name}</span>
                 </>
               ) : null}

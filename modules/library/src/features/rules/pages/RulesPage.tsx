@@ -208,7 +208,7 @@ export function RulesPage() {
         />
         {!rulesQuery.isLoading && (
           <span className="ml-auto" style={{ fontSize: 12, color: 'var(--ap-text-muted)' }}>
-            {allRows.length} of {total}
+            {allRows.length} {tCommon('pagination.of')} {total}
           </span>
         )}
       </div>
@@ -216,12 +216,12 @@ export function RulesPage() {
       {/* content area */}
       <div className="overflow-auto flex-1 min-h-0">
         {rulesQuery.isLoading ? (
-          <Loader label={t('list.loading', 'Loading…')} />
+          <Loader label={tCommon('states.loadingList')} />
         ) : rulesQuery.isError ? (
           <div className="p-6 text-left mx-auto" style={{ color: 'var(--ap-danger)', fontSize: 13, maxWidth: 720 }}>
             <div className="text-center mb-3">
               Failed to load rules.{' '}
-              <button className="underline" onClick={() => void rulesQuery.refetch()}>Retry</button>
+              <button className="underline" onClick={() => void rulesQuery.refetch()}>{tCommon('actions.retry')}</button>
             </div>
             <pre
               className="whitespace-pre-wrap break-all text-left"

@@ -270,7 +270,7 @@ export function RCDetailDialog({
             )}
 
             <div style={{ width: 1, height: 20, background: 'var(--ap-divider)', margin: '0 4px' }} />
-            <Button variant="ghost" size="icon-sm" onClick={handleClose} aria-label="Close">
+            <Button variant="ghost" size="icon-sm" onClick={handleClose} aria-label={tCommon('actions.close')}>
               <Icon as={X} size={14} />
             </Button>
           </div>

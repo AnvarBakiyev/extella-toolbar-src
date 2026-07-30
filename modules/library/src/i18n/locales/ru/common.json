@@ -84,5 +84,21 @@
   "list.allProfiles": "Все профили",
   "list.ofTotal": "{{shown}} из {{total}}",
   "empty.search.title": "Ничего не нашлось",
-  "empty.search.hint": "Попробуй сформулировать иначе."
+  "empty.search.hint": "Попробуй сформулировать иначе.",
+  "errors.loadFailed": "Не смог загрузить — проверь подключение и нажми «Обновить».",
+  "table.selectAll": "Выбрать все",
+  "table.actions": "Действия",
+  "meta.profile": "Профиль",
+  "meta.created": "Создан",
+  "meta.updated": "Обновлён",
+  "filter.defaultProfile": "Основной",
+  "pagination.rows": "Строк:",
+  "columns.profileAgent": "Профиль / агент",
+  "columns.version": "Версия",
+  "columns.date": "Дата",
+  "columns.source": "Источник",
+  "columns.title": "Название",
+  "states.searching": "Ищу",
+  "list.allAgents": "Все агенты",
+  "states.loadingList": "Загружаю…"
 }

@@ -56,6 +56,7 @@ export function DevicesListTable({
   onDelete,
   onSetDefault,
 }: DevicesListTableProps) {
+  const { t: tCommon } = useTranslation('common');
   const { t } = useTranslation('devices');
 
   return (
@@ -81,7 +82,7 @@ export function DevicesListTable({
               currentSort={sort}
               onSort={onSort}
             />
-            <th scope="col" className="w-10" aria-label="Actions" />
+            <th scope="col" className="w-10" aria-label={tCommon('table.actions')} />
           </tr>
         </thead>
         <tbody>

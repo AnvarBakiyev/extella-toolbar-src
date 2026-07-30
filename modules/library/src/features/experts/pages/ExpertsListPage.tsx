@@ -117,6 +117,7 @@ export function ExpertsListPage() {
 
 function ExpertsListPageInner() {
   const { t, i18n } = useTranslation('experts');
+  const { t: tCommon } = useTranslation('common');
   const intlLocale = i18n.language === 'ru' ? 'ru-RU' : i18n.language === 'kz' ? 'kk-KZ' : 'en-US';
   const navigate = useNavigate();
   const params = useParams<{ id?: string }>();
@@ -694,7 +695,7 @@ function ExpertsListPageInner() {
               </div>
             )
           ) : isLoading ? (
-            <Loader label={t('list.loading', 'Loading…')} />
+            <Loader label={tCommon('states.loadingList')} />
           ) : cards.length === 0 ? (
             /* Empty state */
             <div className="px-7 py-8">
@@ -797,7 +798,7 @@ function ExpertsListPageInner() {
             <div className="flex items-center justify-between border-t border-divider px-7 py-4">
               {/* Page size picker */}
               <div className="flex items-center gap-2 text-sm text-textMuted">
-                <span>Rows:</span>
+                <span>{tCommon('pagination.rows')}</span>
                 {PAGE_SIZE_OPTIONS.map((size) => (
                   <button
                     key={size}
@@ -821,7 +822,7 @@ function ExpertsListPageInner() {
               <div className="flex items-center gap-2">
                 <span className="text-sm text-textMuted tabular-nums">
                   {Math.min((page - 1) * pageSize + 1, total)}–
-                  {Math.min(page * pageSize, total)} of {total}
+                  {Math.min(page * pageSize, total)} {tCommon('pagination.of')} {total}
                 </span>
                 <Button
                   variant="secondary"

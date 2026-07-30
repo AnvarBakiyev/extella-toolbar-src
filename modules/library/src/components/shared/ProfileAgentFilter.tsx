@@ -65,7 +65,13 @@ export function ProfileAgentFilter({
           <option value="">{t('list.allProfiles')}</option>
           {profiles.map((p) => (
             <option key={p.profile_id} value={p.profile_id}>
-              {p.profile_name || p.profile_id}
+              {/* «Default» приходит ИМЕНЕМ ПРОФИЛЯ с платформы, это данные, а не наша
+                  подпись. Но человеку в русском окне английское слово читается как наш
+                  недосмотр (замечание Эллы). Переводим ТОЛЬКО системный профиль —
+                  остальные названия придумал сам человек, их трогать нельзя. */}
+              {p.profile_id === 'default' || p.profile_name === 'Default'
+                ? t('filter.defaultProfile')
+                : p.profile_name || p.profile_id}
             </option>
           ))}
         </select>
@@ -86,7 +92,7 @@ export function ProfileAgentFilter({
             style={{ minWidth: 140 }}
             aria-label="Filter by agent"
           >
-            <option value="">All agents</option>
+            <option value="">{t('list.allAgents')}</option>
             {availableAgents.map((a) => (
               <option key={a.agent_id} value={a.agent_id}>
                 {a.agent_name || a.agent_id}

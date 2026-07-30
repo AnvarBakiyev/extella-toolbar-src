@@ -123,5 +123,6 @@
   "share.confirm": "Share",
   "share.cancel": "Cancel",
   "share.toasts.success": "\"{{name}}\" shared successfully",
-  "share.toasts.failed": "Failed to share expert"
+  "share.toasts.failed": "Failed to share expert",
+  "list.errorTitle": "Could not load experts"
 }

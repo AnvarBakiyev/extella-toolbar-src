@@ -230,6 +230,7 @@ interface FullDrawerContentProps {
 }
 
 function FullDrawerContent({ agent }: FullDrawerContentProps) {
+  const { t: tCommon } = useTranslation('common');
   const { t } = useTranslation('agents');
 
   // Resolve (profileId, agentId) for scoped entity queries.
@@ -271,7 +272,7 @@ function FullDrawerContent({ agent }: FullDrawerContentProps) {
                 {agent.profile_name ? (
                   <span
                     className="inline-flex h-5 items-center rounded-pill border border-border px-1.5 text-xs font-medium text-textMuted"
-                    title="Profile"
+                    title={tCommon('meta.profile')}
                   >
                     {agent.profile_name}
                   </span>
@@ -410,16 +411,16 @@ function FullDrawerContent({ agent }: FullDrawerContentProps) {
           className="grid text-sm"
           style={{ gridTemplateColumns: 'auto 1fr', gap: '8px 12px' }}
         >
-          <span className="text-textMuted">Created</span>
+          <span className="text-textMuted">{tCommon('meta.created')}</span>
           <span>{formatDate(agent.created_at)}</span>
-          <span className="text-textMuted">Updated</span>
+          <span className="text-textMuted">{tCommon('meta.updated')}</span>
           <span>
             {formatDate(agent.updated_at)}
             {agent.version != null ? ` · v${agent.version}` : ''}
           </span>
           {agent.profile_name ? (
             <>
-              <span className="text-textMuted">Profile</span>
+              <span className="text-textMuted">{tCommon('meta.profile')}</span>
               <span>{agent.profile_name}</span>
             </>
           ) : null}

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 /**
  * ScopedEntityPanels — reusable "mini sections" for the Experts / Concepts /
  * Rules of a given (profile, agent) scope.
@@ -170,6 +171,7 @@ export function ExpertsPanel({
   emptyDescription = 'Experts in this scope will appear here.',
   comparisonProfileId,
 }: ScopedPanelProps) {
+  const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
   const [drawerName, setDrawerName] = useState<string | null>(null);
@@ -203,7 +205,7 @@ export function ExpertsPanel({
   } else if (isError) {
     body = (
       <div className="p-7">
-        <ErrorBanner title="Failed to load experts" onRetry={() => void refetch()} />
+        <ErrorBanner title={t('list.errorTitle', { ns: 'experts' })} onRetry={() => void refetch()} />
       </div>
     );
   } else if (display.length === 0) {
@@ -292,6 +294,7 @@ export function ConceptsPanel({
   createScope,
   createScopeLabel,
 }: CreatableScopedPanelProps) {
+  const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
   const [detailId, setDetailId] = useState<string | null>(null);
@@ -328,7 +331,7 @@ export function ConceptsPanel({
   } else if (isError) {
     body = (
       <div className="p-7">
-        <ErrorBanner title="Failed to load concepts" onRetry={() => void refetch()} />
+        <ErrorBanner title={t('list.errorTitle', { ns: 'concepts' })} onRetry={() => void refetch()} />
       </div>
     );
   } else if (display.length === 0) {
@@ -478,6 +481,7 @@ export function RulesPanel({
   createScope,
   createScopeLabel,
 }: CreatableScopedPanelProps) {
+  const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
   const [detailId, setDetailId] = useState<string | null>(null);
@@ -514,7 +518,7 @@ export function RulesPanel({
   } else if (isError) {
     body = (
       <div className="p-7">
-        <ErrorBanner title="Failed to load rules" onRetry={() => void refetch()} />
+        <ErrorBanner title={t('list.errorTitle', { ns: 'rules' })} onRetry={() => void refetch()} />
       </div>
     );
   } else if (display.length === 0) {

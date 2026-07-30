@@ -19,6 +19,7 @@ import { TeamCard } from '../components/TeamCard';
 
 export function TeamsListPage() {
   const { t } = useTranslation('teams');
+  const { t: tCommon } = useTranslation('common');
   const { teams, agentMap, isLoading, isError, refetch } = useTeams();
 
   return (
@@ -37,7 +38,7 @@ export function TeamsListPage() {
         </div>
 
         {isLoading ? (
-          <Loader label={t('list.loading', 'Loading…')} />
+          <Loader label={tCommon('states.loadingList')} />
         ) : isError ? (
           <div className="px-7 py-6">
             <ErrorBanner

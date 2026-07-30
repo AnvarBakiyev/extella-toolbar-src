@@ -85,6 +85,7 @@ function toCardData(item: AgentRow, locale: string): AgentCardData {
 
 export function AgentsListPage() {
   const { t, i18n } = useTranslation('agents');
+  const { t: tCommon } = useTranslation('common');
   const intlLocale = i18n.language === 'ru' ? 'ru-RU' : i18n.language === 'kz' ? 'kk-KZ' : 'en-US';
   const navigate = useNavigate();
   const params = useParams<{ id?: string }>();
@@ -312,10 +313,10 @@ export function AgentsListPage() {
         <div className="ml-auto flex items-center gap-2">
           {!isLoading ? (
             <span className="text-sm text-textMuted">
-              {filteredItems.length}{' '}
-              {filteredItems.length === 1
-                ? t('toolbar.result', 'result')
-                : t('toolbar.results', 'results')}
+              {/* Ручной выбор единственного/множественного здесь работал только для
+                  английского: в русском форм четыре. Отдаём счёт словарю — он и
+                  склоняет, и переводит. */}
+              {t('toolbar.resultsCount', { count: filteredItems.length })}
             </span>
           ) : null}
           <div className="flex gap-0.5 rounded-md bg-bgInset p-0.5">
@@ -494,7 +495,7 @@ export function AgentsListPage() {
             />
           </div>
         ) : isLoading ? (
-          <Loader label={t('list.loading', 'Loading…')} />
+          <Loader label={tCommon('states.loadingList')} />
         ) : cards.length === 0 ? (
           <div className="px-7 py-8">
             <EmptyState
@@ -592,7 +593,7 @@ export function AgentsListPage() {
             <div className="flex items-center gap-2">
               <span className="text-sm text-textMuted tabular-nums">
                 {Math.min((page - 1) * pageSize + 1, total)}–
-                {Math.min(page * pageSize, total)} of {total}
+                {Math.min(page * pageSize, total)} {tCommon('pagination.of')} {total}
               </span>
               <Button
                 variant="secondary"

@@ -57,6 +57,7 @@ export function AgentsListTable({
   onPreview,
   onDelete,
 }: AgentsListTableProps) {
+  const { t: tCommon } = useTranslation('common');
   const { t } = useTranslation('agents');
 
   const toggleItem = (id: string) => {
@@ -85,7 +86,7 @@ export function AgentsListTable({
             <th scope="col" className="w-9 px-3 py-2">
               <input
                 type="checkbox"
-                aria-label="Select all"
+                aria-label={tCommon('table.selectAll')}
                 checked={allSelected}
                 ref={(el) => {
                   if (el) el.indeterminate = someSelected && !allSelected;
@@ -132,7 +133,7 @@ export function AgentsListTable({
             >
               {t('columns.added', 'Added')}
             </th>
-            <th scope="col" className="w-10" aria-label="Actions" />
+            <th scope="col" className="w-10" aria-label={tCommon('table.actions')} />
           </tr>
         </thead>
         <tbody>

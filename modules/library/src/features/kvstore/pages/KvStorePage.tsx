@@ -157,7 +157,7 @@ function KvCreateDialog({ open, onOpenChange, onSave, extraContent }: KvCreateDi
             variant="ghost"
             size="icon-sm"
             onClick={() => handleOpenChange(false)}
-            aria-label="Close"
+            aria-label={tCommon('actions.close')}
             disabled={isSubmitting}
           >
             <Icon as={X} size={14} />
@@ -337,7 +337,7 @@ function KvEditDialog({ open, onOpenChange, entry, onSave }: KvEditDialogProps) 
             variant="ghost"
             size="icon-sm"
             onClick={() => handleOpenChange(false)}
-            aria-label="Close"
+            aria-label={tCommon('actions.close')}
             disabled={isSubmitting}
           >
             <Icon as={X} size={14} />
@@ -437,6 +437,7 @@ function KvEditDialog({ open, onOpenChange, entry, onSave }: KvEditDialogProps) 
 /* ─── page ──────────────────────────────────────────────────────── */
 
 export function KvStorePage() {
+  const { t: tCommon } = useTranslation('common');
   const { t } = useTranslation('kvstore');
 
   /* UI state */
@@ -546,7 +547,7 @@ export function KvStorePage() {
             className="ml-auto"
             style={{ fontSize: 12, color: 'var(--ap-text-muted)' }}
           >
-            {rows.length} of {total}
+            {rows.length} {tCommon('pagination.of')} {total}
           </span>
         )}
       </div>
@@ -554,7 +555,7 @@ export function KvStorePage() {
       {/* content area */}
       <div className="overflow-auto flex-1 min-h-0">
         {kvQuery.isLoading ? (
-          <Loader label={t('list.loading', 'Loading…')} />
+          <Loader label={tCommon('states.loadingList')} />
         ) : kvQuery.isError ? (
           <div
             className="p-6 text-center"

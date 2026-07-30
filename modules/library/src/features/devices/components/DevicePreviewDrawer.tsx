@@ -68,6 +68,7 @@ export function DevicePreviewDrawer({
   onSetDefault,
   isSettingDefault,
 }: DevicePreviewDrawerProps) {
+  const { t: tCommon } = useTranslation('common');
   const { t } = useTranslation('devices');
 
   const { data: device, isLoading, isError } = useDevice(deviceId);
@@ -133,7 +134,7 @@ export function DevicePreviewDrawer({
 
           {/* Close */}
           <DrawerClose asChild>
-            <Button variant="ghost" size="icon-sm" aria-label="Close">
+            <Button variant="ghost" size="icon-sm" aria-label={tCommon('actions.close')}>
               <Icon as={X} size={14} />
             </Button>
           </DrawerClose>

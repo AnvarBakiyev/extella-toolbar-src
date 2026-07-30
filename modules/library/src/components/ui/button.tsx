@@ -8,7 +8,7 @@ import { cn } from '@/lib/cn';
  * (default / primary / ghost / accent) into Tailwind utilities reading the
  * same CSS variables. Sizes: sm (26px), md (32px), icon variants square.
  *
- *  <Button variant="primary">Save</Button>
+ *  <Button variant="primary">{tCommon('actions.save')}</Button>
  *  <Button variant="ghost" size="icon"><Icon as={X} /></Button>
  *  <Button asChild><Link to="/x">Go</Link></Button>
  */

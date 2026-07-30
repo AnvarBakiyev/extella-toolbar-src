@@ -62,6 +62,7 @@ export function ExpertPreviewDrawer({
   expertName,
   onDelete,
 }: ExpertPreviewDrawerProps) {
+  const { t: tCommon } = useTranslation('common');
   const { t } = useTranslation('experts');
 
   const { data: expert, isLoading, isError } = useExpert(expertName);
@@ -182,7 +183,7 @@ export function ExpertPreviewDrawer({
             <Button
               variant="ghost"
               size="icon-sm"
-              aria-label="Close"
+              aria-label={tCommon('actions.close')}
             >
               <Icon as={X} size={14} />
             </Button>

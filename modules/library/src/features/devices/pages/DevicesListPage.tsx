@@ -62,6 +62,7 @@ const PAGE_SIZE_OPTIONS = [25, 50, 100] as const;
 
 export function DevicesListPage() {
   const { t } = useTranslation('devices');
+  const { t: tCommon } = useTranslation('common');
   const navigate = useNavigate();
   const params = useParams<{ id?: string }>();
 
@@ -480,7 +481,7 @@ export function DevicesListPage() {
             />
           </div>
         ) : isLoading ? (
-          <Loader label={t('list.loading', 'Loading…')} />
+          <Loader label={tCommon('states.loadingList')} />
         ) : items.length === 0 ? (
           /* Empty state */
           <div className="px-7 py-8">
@@ -592,7 +593,7 @@ export function DevicesListPage() {
             <div className="flex items-center gap-2">
               <span className="text-sm text-textMuted tabular-nums">
                 {Math.min((page - 1) * pageSize + 1, displayTotal)}–
-                {Math.min(page * pageSize, displayTotal)} of {displayTotal}
+                {Math.min(page * pageSize, displayTotal)} {tCommon('pagination.of')} {displayTotal}
               </span>
               <Button
                 variant="secondary"

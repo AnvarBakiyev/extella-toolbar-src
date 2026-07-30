@@ -84,5 +84,21 @@
   "list.allProfiles": "All profiles",
   "list.ofTotal": "{{shown}} of {{total}}",
   "empty.search.title": "Nothing found",
-  "empty.search.hint": "Try a different query."
+  "empty.search.hint": "Try a different query.",
+  "errors.loadFailed": "Could not load. Check the connection and press “Refresh”.",
+  "table.selectAll": "Select all",
+  "table.actions": "Actions",
+  "meta.profile": "Profile",
+  "meta.created": "Created",
+  "meta.updated": "Updated",
+  "filter.defaultProfile": "Default",
+  "pagination.rows": "Rows:",
+  "columns.profileAgent": "Profile / Agent",
+  "columns.version": "Version",
+  "columns.date": "Date",
+  "columns.source": "Source",
+  "columns.title": "Title",
+  "states.searching": "Searching",
+  "list.allAgents": "All agents",
+  "states.loadingList": "Loading…"
 }

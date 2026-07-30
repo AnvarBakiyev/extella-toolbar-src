@@ -53,6 +53,7 @@ import {
 
 export function ConceptsPage() {
   const { t, i18n } = useTranslation('concepts');
+  const { t: tCommon } = useTranslation('common');
   // AppLocale narrowing — i18n.language is only ever 'en' in the standalone
   // build today; cast keeps formatDate happy without spreading `any`.
   const locale = (i18n.language ?? 'en') as AppLocale;
@@ -180,7 +181,7 @@ export function ConceptsPage() {
             className="ml-auto"
             style={{ fontSize: 12, color: 'var(--ap-text-muted)' }}
           >
-            {allRows.length} of {total}
+            {allRows.length} {tCommon('pagination.of')} {total}
           </span>
         )}
       </div>
@@ -188,7 +189,7 @@ export function ConceptsPage() {
       {/* content area */}
       <div className="overflow-auto flex-1 min-h-0">
         {conceptsQuery.isLoading ? (
-          <Loader label={t('list.loading', 'Loading…')} />
+          <Loader label={tCommon('states.loadingList')} />
         ) : conceptsQuery.isError ? (
           <div
             className="p-6 text-center"
@@ -211,12 +212,10 @@ export function ConceptsPage() {
             <div
               style={{ fontSize: 16, fontWeight: 500, color: 'var(--ap-text)' }}
             >
-              {q ? 'No concepts match your search' : 'No concepts yet'}
+              {q ? t('empty.searchTitle') : t('empty.title')}
             </div>
             <div style={{ fontSize: 13 }}>
-              {q
-                ? 'Try a different query.'
-                : 'Create the first concept using the button above.'}
+              {q ? tCommon('empty.search.hint') : t('empty.hint')}
             </div>
           </div>
         ) : (

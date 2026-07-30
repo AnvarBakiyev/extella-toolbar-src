@@ -236,7 +236,7 @@ function GenerateDialog({ open, onOpenChange, onGenerate }: GenerateDialogProps)
             variant="ghost"
             size="icon-sm"
             onClick={() => handleOpenChange(false)}
-            aria-label="Close"
+            aria-label={tCommon('actions.close')}
             disabled={isSubmitting}
           >
             <Icon as={X} size={14} />
@@ -334,6 +334,7 @@ function GenerateDialog({ open, onOpenChange, onGenerate }: GenerateDialogProps)
 /* ─── page ──────────────────────────────────────────────────────── */
 
 export function TokensPage() {
+  const { t: tCommon } = useTranslation('common');
   const { t } = useTranslation('tokens');
 
   /* UI state */
@@ -434,7 +435,7 @@ export function TokensPage() {
             className="ml-auto"
             style={{ fontSize: 12, color: 'var(--ap-text-muted)' }}
           >
-            {rows.length} of {total}
+            {rows.length} {tCommon('pagination.of')} {total}
           </span>
         )}
       </div>
@@ -442,7 +443,7 @@ export function TokensPage() {
       {/* content area */}
       <div className="overflow-auto flex-1 min-h-0">
         {tokensQuery.isLoading ? (
-          <Loader label={t('list.loading', 'Loading…')} />
+          <Loader label={tCommon('states.loadingList')} />
         ) : tokensQuery.isError ? (
           <div
             className="p-6 text-center"

@@ -122,7 +122,7 @@ export function AdminCreateModal({
             variant="ghost"
             size="icon-sm"
             onClick={() => handleOpenChange(false)}
-            aria-label="Close"
+            aria-label={tCommon('actions.close')}
             disabled={saving}
           >
             <Icon as={X} size={14} />
