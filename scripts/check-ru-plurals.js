@@ -54,6 +54,19 @@ for (const file of fs.readdirSync(dir).filter((f) => f.endsWith('.json'))) {
       }
     }
   }
+
+  // Вторая половина того же класса: ключ БЕЗ форм, где число стоит вплотную к слову.
+  // Проверка выше смотрит только на ключи, у которых формы уже есть, — то есть верит,
+  // что автор понял про склонение. Ключ с одной формой ей невидим: «в корзине {{count}}
+  // дней» молча даёт «1 дней» и «22 дней». Отличаем от безопасного «устройств: {{count}}»,
+  // где число стоит последним и ни с чем не согласуется.
+  for (const [key, value] of Object.entries(dict)) {
+    if (typeof value !== 'string' || /_(one|few|many|other)$/.test(key)) continue;
+    if (NEEDED.some((form) => `${key}_${form}` in dict)) continue;
+    if (/\{\{count\}\}\s+[А-Яа-яЁё]/.test(value)) {
+      failures.push(`${file}: ${key} — число стоит перед словом, а форм числа нет: «${value.slice(0, 60)}»`);
+    }
+  }
 }
 
 if (failures.length) {

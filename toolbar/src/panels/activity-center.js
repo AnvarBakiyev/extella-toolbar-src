@@ -9,7 +9,7 @@
   var API = API_BASE + '/api/activity';
   var SERVICES_API = API_BASE + '/api/services';
   var state = {
-    open: false, data: null, bridgeOnline: false, expanded: {},
+    open: false, data: null, bridge: null, bridgeOnline: false, expanded: {},
     activityToken: '', taskBusy: {},
     services: null, servicesToken: '', servicesLoading: false,
     servicesUpdatedAt: 0, serviceBusy: {}, serviceMessage: ''
@@ -17,10 +17,10 @@
 
   var css = [
     '#_xtlac_root{position:fixed;right:12px;bottom:12px;z-index:2147483638;font-family:-apple-system,system-ui,sans-serif;color:var(--etb-tx,#f0f0f0);pointer-events:auto}',
-    '#_xtlac_pill{height:34px;display:flex;align-items:center;gap:8px;padding:0 12px;border:1px solid var(--etb-bd2,rgba(255,255,255,.13));border-radius:8px;background:var(--etb-s1,#111);color:var(--etb-tx,#f0f0f0);box-shadow:0 2px 20px rgba(0,0,0,.35);cursor:pointer;font:600 11px/1 -apple-system,system-ui,sans-serif;max-width:330px}',
+    '#_xtlac_pill{height:34px;display:flex;align-items:center;gap:8px;padding:0 12px;border:1px solid var(--etb-bd2,rgba(255,255,255,.13));border-radius:12px;background:var(--etb-s1,#111);color:var(--etb-tx,#f0f0f0);box-shadow:0 2px 20px rgba(0,0,0,.35);cursor:pointer;font:600 11px/1 -apple-system,system-ui,sans-serif;max-width:330px}',
     '#_xtlac_pill:hover{border-color:rgba(198,126,52,.55)}',
     // Ручка перетаскивания: видимая аффорданса + курсор говорят «меня можно двигать»
-    '#_xtlac_grip{color:var(--etb-tx2,#888);font-size:10px;letter-spacing:1px;cursor:grab;user-select:none;margin-right:2px;flex:0 0 auto}',
+    '#_xtlac_grip{color:var(--etb-tx2,#888);font-size:11px;letter-spacing:1px;cursor:grab;user-select:none;margin-right:2px;flex:0 0 auto}',
     '#_xtlac_pill:hover #_xtlac_grip{color:var(--etb-tx,#f0f0f0)}',
     '#_xtlac_root.dragging #_xtlac_pill{cursor:grabbing}',
     '#_xtlac_root.dragging #_xtlac_grip{cursor:grabbing}',
@@ -29,22 +29,22 @@
     '#_xtlac_root[data-health="warning"] #_xtlac_dot{background:#f59e0b;box-shadow:0 0 8px rgba(245,158,11,.5)}',
     '#_xtlac_text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
     '#_xtlac_count{color:var(--etb-tx2,#888);font-weight:500;white-space:nowrap}',
-    '#_xtlac_panel{position:absolute;right:0;bottom:42px;width:410px;max-height:min(660px,calc(100vh - 64px));display:none;flex-direction:column;overflow:hidden;background:var(--etb-s1,#111);border:1px solid var(--etb-bd2,rgba(255,255,255,.13));border-radius:8px;box-shadow:0 18px 60px rgba(0,0,0,.5)}',
+    '#_xtlac_panel{position:absolute;right:0;bottom:42px;width:410px;max-height:min(660px,calc(100vh - 64px));display:none;flex-direction:column;overflow:hidden;background:var(--etb-s1,#111);border:1px solid var(--etb-bd2,rgba(255,255,255,.13));border-radius:12px;box-shadow:0 18px 60px rgba(0,0,0,.5)}',
     '#_xtlac_panel.open{display:flex;animation:_xtlac_in .16s ease}',
-    '#_xtlac_head{display:flex;align-items:flex-start;gap:10px;padding:15px 16px 12px;border-bottom:1px solid var(--etb-bd,rgba(255,255,255,.07))}',
-    '#_xtlac_head h3{margin:0;font-size:14px;line-height:1.25}',
-    '#_xtlac_clear{display:none;margin-left:auto;border:1px solid var(--etb-bd2,rgba(255,255,255,.13));border-radius:7px;background:transparent;color:var(--etb-tx2,#888);padding:5px 8px;font:600 9.5px/1 -apple-system,system-ui,sans-serif;cursor:pointer}',
+    '#_xtlac_head{display:flex;align-items:flex-start;gap:8px;padding:16px 16px 12px;border-bottom:1px solid var(--etb-bd,rgba(255,255,255,.07))}',
+    '#_xtlac_head h3{margin:0;font-size:15px;line-height:1.25}',
+    '#_xtlac_clear{display:none;margin-left:auto;border:1px solid var(--etb-bd2,rgba(255,255,255,.13));border-radius:12px;background:transparent;color:var(--etb-tx2,#888);padding:4px 8px;font:600 11px/1 -apple-system,system-ui,sans-serif;cursor:pointer}',
     '#_xtlac_clear.show{display:block}',
     '#_xtlac_clear:hover{color:var(--etb-tx,#f0f0f0)}',
-    '#_xtlac_head{display:flex;align-items:center;gap:10px}',
+    '#_xtlac_head{display:flex;align-items:center;gap:8px}',
     '#_xtlac_head>div:first-child{margin-right:auto}',
-    '#_xtlac_close{border:0;background:transparent;color:var(--etb-tx2,#888);font-size:17px;line-height:1;cursor:pointer;padding:6px 9px;border-radius:5px}',
+    '#_xtlac_close{border:0;background:transparent;color:var(--etb-tx2,#888);font-size:17px;line-height:1;cursor:pointer;padding:8px 8px;border-radius:8px}',
     '#_xtlac_close:hover{background:rgba(0,0,0,.06);color:var(--etb-tx,#222)}',
-    '#_xtlac_warning{display:none;margin:10px 12px 0;padding:9px 10px;border-radius:6px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);color:#f59e0b;font-size:11px;line-height:1.45}',
+    '#_xtlac_warning{display:none;margin:8px 12px 0;padding:8px 8px;border-radius:8px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);color:#f59e0b;font-size:11px;line-height:1.45}',
     '#_xtlac_warning.show{display:block}',
-    '#_xtlac_body{overflow:auto;padding:10px 12px 14px;scrollbar-width:thin}',
-    '._xtlac_section{margin:2px 2px 7px;color:var(--etb-tx2,#888);font-size:10px;font-weight:600;letter-spacing:.05em}',
-    '._xtlac_task{display:grid;grid-template-columns:22px 1fr auto;gap:9px;align-items:start;padding:10px;border-radius:6px;border:1px solid transparent;margin-bottom:5px;cursor:pointer;outline:none}',
+    '#_xtlac_body{overflow:auto;padding:8px 12px 16px;scrollbar-width:thin}',
+    '._xtlac_section{margin:2px 2px 8px;color:var(--etb-tx2,#888);font-size:11px;font-weight:600;letter-spacing:.05em}',
+    '._xtlac_task{display:grid;grid-template-columns:22px 1fr auto;gap:8px;align-items:start;padding:8px;border-radius:8px;border:1px solid transparent;margin-bottom:4px;cursor:pointer;outline:none}',
     '._xtlac_task:hover{background:var(--etb-s3,#1c1c1c);border-color:var(--etb-bd,rgba(255,255,255,.07))}',
     '._xtlac_task:focus-visible{border-color:rgba(198,126,52,.65)}',
     '._xtlac_task.expanded{background:var(--etb-s3,#1c1c1c);border-color:var(--etb-bd2,rgba(255,255,255,.13))}',
@@ -52,22 +52,22 @@
     '._xtlac_task.running ._xtlac_icon{background:rgba(198,126,52,.12);color:#c67e34}',
     '._xtlac_task.interrupted ._xtlac_icon{background:rgba(245,158,11,.12);color:#f59e0b}',
     '._xtlac_task.failed ._xtlac_icon{background:rgba(239,68,68,.12);color:#ef4444}',
-    '._xtlac_title{font-size:12px;font-weight:650;line-height:1.35}',
-    '._xtlac_detail{margin-top:3px;color:var(--etb-tx2,#888);font-size:10.5px;line-height:1.4}',
-    '._xtlac_side{display:flex;align-items:center;gap:5px}',
-    '._xtlac_badge{padding:3px 6px;border-radius:6px;background:var(--etb-s3,#1c1c1c);color:var(--etb-tx2,#888);font-size:9px;white-space:nowrap}',
-    '._xtlac_chev{color:var(--etb-tx2,#888);font-size:10px;transition:transform .15s ease}',
+    '._xtlac_title{font-size:13px;font-weight:650;line-height:1.35}',
+    '._xtlac_detail{margin-top:3px;color:var(--etb-tx2,#888);font-size:11px;line-height:1.4}',
+    '._xtlac_side{display:flex;align-items:center;gap:4px}',
+    '._xtlac_badge{padding:3px 8px;border-radius:8px;background:var(--etb-s3,#1c1c1c);color:var(--etb-tx2,#888);font-size:11px;white-space:nowrap}',
+    '._xtlac_chev{color:var(--etb-tx2,#888);font-size:11px;transition:transform .15s ease}',
     '._xtlac_task.expanded ._xtlac_chev{transform:rotate(180deg)}',
-    '._xtlac_details{display:none;grid-column:2/4;padding:9px 0 2px;border-top:1px solid var(--etb-bd,rgba(255,255,255,.07));margin-top:2px}',
+    '._xtlac_details{display:none;grid-column:2/4;padding:8px 0 2px;border-top:1px solid var(--etb-bd,rgba(255,255,255,.07));margin-top:2px}',
     '._xtlac_task.expanded ._xtlac_details{display:block}',
-    '._xtlac_meta{display:grid;grid-template-columns:74px 1fr;gap:5px 8px;font-size:10.5px;line-height:1.45}',
+    '._xtlac_meta{display:grid;grid-template-columns:74px 1fr;gap:4px 8px;font-size:11px;line-height:1.45}',
     '._xtlac_meta dt{color:var(--etb-tx2,#888)}',
     '._xtlac_meta dd{margin:0;color:var(--etb-tx,#f0f0f0)}',
-    '._xtlac_manage{margin-top:10px;border:1px solid rgba(198,126,52,.45);border-radius:8px;background:rgba(198,126,52,.1);color:#d99a58;padding:7px 10px;font:650 10.5px/1.2 -apple-system,system-ui,sans-serif;cursor:pointer}',
+    '._xtlac_manage{margin-top:8px;border:1px solid rgba(198,126,52,.45);border-radius:12px;background:rgba(198,126,52,.1);color:#d99a58;padding:8px 8px;font:650 11px/1.2 -apple-system,system-ui,sans-serif;cursor:pointer}',
     '._xtlac_manage:hover{background:rgba(198,126,52,.18)}',
-    '._xtlac_remove{margin:10px 0 0 7px;border:0;background:transparent;color:var(--etb-tx2,#888);padding:7px 5px;font:600 10px/1.2 -apple-system,system-ui,sans-serif;cursor:pointer}',
+    '._xtlac_remove{margin:8px 0 0 8px;border:0;background:transparent;color:var(--etb-tx2,#888);padding:8px 4px;font:600 11px/1.2 -apple-system,system-ui,sans-serif;cursor:pointer}',
     '._xtlac_remove:hover{color:#ef4444}',
-    '._xtlac_hint{margin-top:7px;color:var(--etb-tx2,#888);font-size:9.5px;line-height:1.4}',
+    '._xtlac_hint{margin-top:8px;color:var(--etb-tx2,#888);font-size:11px;line-height:1.4}',
     '#_xtlac_empty{padding:24px 12px;text-align:center;color:var(--etb-tx2,#888);font-size:11px;line-height:1.5}',
     '@keyframes _xtlac_pulse{50%{opacity:.45;transform:scale(.86)}}',
     '@keyframes _xtlac_in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}',
@@ -85,10 +85,280 @@
   }
 
   function badge(category) {
+    if (category === 'install') return T('Установка','Install');
+    if (category === 'automation') return T('Автоматизация','Automation');
     if (category === 'background') return T('Фоновая','Background');
     if (category === 'system') return T('Системная','System');
     return T('Задача','Task');
   }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  //  КЛИЕНТСКИЕ ДАННЫЕ
+  //  Служба фоновых задач (8799) стоит не на каждом устройстве, и без неё плашка
+  //  молчала даже тогда, когда человек прямо сейчас ставит программу. Поэтому
+  //  главный источник — то, что тулбар знает сам: установки (события витрины и
+  //  её же installingIds) и последние запуски автоматизаций (agent_runs, они же
+  //  снапшот стола в общем с витриной localStorage). Служба, если она есть,
+  //  добавляет свои задачи сверху этого.
+  // ══════════════════════════════════════════════════════════════════════════
+  var SNAP_KEY = 'etb_desk_snap_v1';
+  var INSTALL_GIVEUP = 10 * 60 * 1000;   // столько ждём ответа об установке
+  var INSTALL_KEEP = 6 * 60 * 60 * 1000; // столько держим итог установки в ленте
+  var RUN_STALE = 30 * 60 * 1000;        // «идёт» дольше получаса — уже не идёт
+  var RECENT = 24 * 60 * 60 * 1000;      // лента показывает сутки, не архив
+  var local = { installs: {}, dismissed: {}, snapRaw: '', snap: null, snapAt: 0 };
+
+  function storefrontWindow() {
+    try {
+      var frame = document.getElementById('_etbv2_mkt_frame');
+      var store = frame && frame.contentWindow;
+      return (store && store.document) ? store : null;
+    } catch (e) { return null; }
+  }
+
+  function pluginName(id) {
+    var store = storefrontWindow();
+    try {
+      var curated = store && store.CURATED_PROGRAMS && store.CURATED_PROGRAMS[id];
+      if (curated && curated.name) return curated.name;
+      var builtin = store && store.BUILTIN_PLUGINS_DATA;
+      if (Array.isArray(builtin)) {
+        for (var i = 0; i < builtin.length; i++) {
+          if (builtin[i] && builtin[i].id === id && builtin[i].name) return builtin[i].name;
+        }
+      }
+      if (window.ETB && ETB.registry && typeof ETB.registry.getById === 'function') {
+        var plugin = ETB.registry.getById(id);
+        if (plugin && (plugin.name || plugin.title)) return plugin.name || plugin.title;
+      }
+    } catch (e) {}
+    return id;
+  }
+
+  function noteInstall(id, phase, message, name) {
+    if (!id) return;
+    var item = local.installs[id];
+    if (phase === 'start') {
+      if (item && item.status === 'running') return;
+      delete local.dismissed['install:' + id];   // новая установка ≠ убранная запись
+      local.installs[id] = { id: id, name: name || pluginName(id), status: 'running', startedAt: Date.now(), message: '' };
+      return;
+    }
+    if (!item) item = local.installs[id] = { id: id, name: name || pluginName(id), startedAt: Date.now() };
+    item.status = phase === 'done' ? 'completed' : 'failed';
+    item.finishedAt = Date.now();
+    item.message = message || '';
+  }
+
+  // Витрина знает про установку, пока открыта; закрыли её — установка идёт дальше.
+  // Событие из marketplace.js переживает закрытие, скан installingIds ловит то,
+  // что началось помимо него.
+  function scanInstalls() {
+    var store = storefrontWindow();
+    var live = (store && store.installingIds) || null;
+    if (live) {
+      Object.keys(live).forEach(function (id) { if (live[id]) noteInstall(id, 'start'); });
+    }
+    var now = Date.now();
+    Object.keys(local.installs).forEach(function (id) {
+      var item = local.installs[id];
+      if (item.status === 'running' && now - item.startedAt > INSTALL_GIVEUP) {
+        // Канон: вечного «Ставлю…» не бывает. Не дождались — говорим прямо.
+        item.status = 'failed';
+        item.finishedAt = now;
+        item.message = T('Extella не ответила','Extella did not answer');
+      }
+      if (item.status !== 'running' && now - (item.finishedAt || 0) > INSTALL_KEEP) delete local.installs[id];
+    });
+  }
+
+  function installTasks() {
+    var out = [];
+    Object.keys(local.installs).forEach(function (id) {
+      var item = local.installs[id];
+      var key = 'install:' + id;
+      if (local.dismissed[key]) return;
+      var name = item.name || id;
+      var task = { id: key, local: true, category: 'install', status: item.status, origin: T('Витрина Extella','Extella storefront') };
+      if (item.status === 'running') {
+        task.title = T('Ставлю «' + name + '»', 'Installing “' + name + '”');
+        task.detail = T('Обычно это минута-другая. Ярлык появится на Рабочем столе.','Usually a minute or two. The shortcut will appear on the Desktop.');
+        task.hint = T('Установка идёт в фоне — эту панель можно закрыть.','The install runs in the background — you can close this panel.');
+      } else if (item.status === 'failed') {
+        var why = String(item.message || '').slice(0, 120);
+        task.title = T('«' + name + '» не установилась', '“' + name + '” did not install');
+        task.detail = why
+          ? T(why + '. Попробуй поставить ещё раз.', why + '. Try installing again.')
+          : T('Попробуй поставить ещё раз.','Try installing again.');
+      } else {
+        task.title = T('«' + name + '» установлена', '“' + name + '” installed');
+        task.detail = T('Ярлык на Рабочем столе.','The shortcut is on the Desktop.');
+      }
+      task.ts = item.finishedAt || item.startedAt;
+      out.push(task);
+    });
+    return out;
+  }
+
+  // Снапшот стола витрина пишет сама; парсим редко — он бывает большим.
+  function readSnapshot() {
+    var now = Date.now();
+    if (now - local.snapAt < 8000) return local.snap;
+    local.snapAt = now;
+    try {
+      var raw = localStorage.getItem(SNAP_KEY) || '';
+      if (raw !== local.snapRaw) {
+        local.snapRaw = raw;
+        local.snap = raw ? JSON.parse(raw) : null;
+      }
+    } catch (e) { local.snap = null; }
+    return local.snap;
+  }
+
+  function automationSource() {
+    var store = storefrontWindow();
+    var snap = readSnapshot();
+    var packs = (store && Array.isArray(store._autoReg) && store._autoReg.length)
+      ? store._autoReg
+      : ((snap && Array.isArray(snap.autoReg)) ? snap.autoReg : []);
+    var states = {};
+    if (snap && snap.agState) {
+      Object.keys(snap.agState).forEach(function (key) { states[key] = snap.agState[key]; });
+    }
+    if (store && store._agState) {
+      Object.keys(store._agState).forEach(function (key) { states[key] = store._agState[key]; });  // живое главнее снапшота
+    }
+    return { packs: packs, states: states };
+  }
+
+  // Имя без ведущего эмодзи — как на столе и в кабинете.
+  function cleanName(name, id) {
+    var text = String(name || id || '').trim();
+    if (text && text.charCodeAt(0) >= 0x2600) text = text.replace(/^\S+\s*/, '');
+    return text || String(id || '');
+  }
+
+  function runErrText(note) {
+    var text = String(note || '').toLowerCase();
+    if (/worker hung|hang|stuck/.test(text)) return T('Процесс завис и был остановлен. Открой Конструктор и запусти ещё раз.','The process hung and was stopped. Open the Wizard and run it again.');
+    if (/timeout|timed out/.test(text)) return T('Ответ не пришёл вовремя — работа могла продолжиться в фоне.','No answer in time — the work may still be running.');
+    if (/not found|404/.test(text)) return T('Не нашлось, что запускать: эксперт автоматизации не установлен.','Nothing to run: the automation expert is not installed.');
+    if (/403|denied|forbidden/.test(text)) return T('Нет доступа к этой автоматизации под текущим аккаунтом.','No access to this automation under the current account.');
+    return note ? T('Не получилось: ','Failed: ') + String(note).slice(0, 120) : T('Не получилось выполнить.','It did not run.');
+  }
+
+  // «сегодня в 22:21» вместо «31.07 22:21»: человек читает время, а не отметку.
+  function whenText(ts) {
+    try {
+      var date = new Date(ts);
+      var pad = function (n) { return (n < 10 ? '0' : '') + n; };
+      var clock = pad(date.getHours()) + ':' + pad(date.getMinutes());
+      var day = new Date(); day.setHours(0, 0, 0, 0);
+      var days = Math.floor((day.getTime() - new Date(ts).setHours(0, 0, 0, 0)) / 86400000);
+      if (days <= 0) return T('сегодня в ','today at ') + clock;
+      if (days === 1) return T('вчера в ','yesterday at ') + clock;
+      return pad(date.getDate()) + '.' + pad(date.getMonth() + 1) + T(' в ',' at ') + clock;
+    } catch (e) { return ''; }
+  }
+
+  function capFirst(text) {
+    return text ? text.charAt(0).toUpperCase() + text.slice(1) : text;
+  }
+
+  function scheduleText(pack, agentState) {
+    var schedule = (agentState && agentState.schedule) || pack.schedule || null;
+    if (!schedule) return T('вручную','manual');
+    return schedule.human || schedule.period || T('по расписанию','on a schedule');
+  }
+
+  // Последний запуск каждой автоматизации: идёт, не получилось или получилось.
+  // Вся история — в кабинете; здесь только то, что человеку важно прямо сейчас.
+  function automationTasks() {
+    var source = automationSource();
+    var now = Date.now();
+    var out = [];
+    source.packs.forEach(function (pack) {
+      if (!pack) return;
+      var id = String(pack.id || pack.orchestrator || pack.name || '');
+      if (!id) return;
+      var agentState = source.states[id] || {};
+      if (agentState.hidden) return;
+      var run = (agentState.runs || [])[0];
+      if (!run || !run.ts) return;
+      var key = 'run:' + id + ':' + run.ts;
+      if (local.dismissed[key]) return;
+      var age = now - run.ts;
+      var name = cleanName(agentState.name || pack.name, id);
+      var task = {
+        id: key, local: true, category: 'automation', ts: run.ts,
+        sourceIds: [id], manageTarget: 'automations',
+        manageLabel: T('Открыть автоматизацию','Open the automation'),
+        origin: name, mode: scheduleText(pack, agentState)
+      };
+      if (run.ok === null && age < RUN_STALE) {
+        task.status = 'running';
+        task.title = T('Идёт «' + name + '»', '“' + name + '” is running');
+        task.detail = T('Запущена ','Started ') + whenText(run.ts) + '.';
+        task.hint = T('Результат появится в кабинете автоматизации.','The result will show up in the automation cabinet.');
+      } else if (run.ok === null) {
+        task.status = 'interrupted';
+        task.title = T('«' + name + '» так и не отчиталась', '“' + name + '” never reported back');
+        task.detail = T('Запущена ','Started ') + whenText(run.ts) + T('. Открой автоматизацию и запусти заново.','. Open the automation and run it again.');
+      } else if (run.ok === false) {
+        if (age > RECENT) return;
+        task.status = 'failed';
+        task.title = T('«' + name + '» не выполнилась', '“' + name + '” did not run');
+        task.detail = capFirst(whenText(run.ts)) + ' · ' + runErrText(run.note);
+      } else {
+        if (age > RECENT) return;
+        task.status = 'completed';
+        task.title = T('«' + name + '» выполнилась', '“' + name + '” finished');
+        task.detail = capFirst(whenText(run.ts)) + (run.note ? ' · ' + String(run.note).slice(0, 80) : '');
+      }
+      out.push(task);
+    });
+    return out;
+  }
+
+  function composeData() {
+    scanInstalls();
+    var clientTasks = installTasks().concat(automationTasks());
+    clientTasks.sort(function (a, b) { return (b.ts || 0) - (a.ts || 0); });
+    var active = [], history = [];
+    clientTasks.forEach(function (task) { (task.status === 'running' ? active : history).push(task); });
+
+    var bridge = state.bridge;
+    if (bridge) {
+      // Запасной статус слушателя знает только «занята/свободна» — если своя
+      // картина уже есть, его общая строка была бы вторым именем той же задачи.
+      var skipActive = bridge.__fallback && active.length;
+      if (!skipActive) (bridge.active || []).forEach(function (task) { active.push(task); });
+      (bridge.history || []).forEach(function (task) { history.push(task); });
+    }
+
+    var failed = history.some(function (task) { return task.status === 'failed' || task.status === 'interrupted'; });
+    var health = active.length ? 'busy' : ((failed || (bridge && bridge.health === 'warning')) ? 'warning' : 'ok');
+    var headline;
+    if (active.length === 1) headline = active[0].title;
+    else if (active.length > 1) headline = T('Работаю над ' + active.length + ' задачами', 'Working on ' + active.length + ' tasks');
+    else if (failed) headline = T('Последняя задача не удалась','The last task failed');
+    else headline = T('Сейчас ничего не идёт','Nothing running right now');
+
+    var completed = history.filter(function (task) { return task.status === 'completed'; }).length;
+    return {
+      health: health, headline: headline, active: active, history: history,
+      counts: { active: active.length, completed: completed, failed: history.length - completed },
+      listeners: (bridge && bridge.listeners) || { count: 0, orphaned: 0 }
+    };
+  }
+
+  window.addEventListener('etb:install', function (event) {
+    var detail = event && event.detail;
+    if (!detail || !detail.pluginId) return;
+    noteInstall(detail.pluginId, detail.phase, detail.message, detail.name);
+    state.data = composeData();
+    render();
+  });
 
   function closePanel() {
     state.open = false;
@@ -103,40 +373,40 @@
     var style = doc.createElement('style');
     style.id = '_xtlac_storefront_styles';
     style.textContent = [
-      '#_xtlac_schedule_shortcut{position:relative;width:100%;display:flex;align-items:center;gap:14px;margin:12px 0 4px;padding:15px 17px;border:1px solid var(--bd2);border-radius:var(--r);background:linear-gradient(135deg,color-mix(in srgb,var(--a) 10%,var(--s2)),var(--s2));color:var(--tx);text-align:left;cursor:pointer;overflow:hidden;font-family:var(--sans)}',
+      '#_xtlac_schedule_shortcut{position:relative;width:100%;display:flex;align-items:center;gap:16px;margin:12px 0 4px;padding:16px 16px;border:1px solid var(--bd2);border-radius:var(--r);background:linear-gradient(135deg,color-mix(in srgb,var(--a) 10%,var(--s2)),var(--s2));color:var(--tx);text-align:left;cursor:pointer;overflow:hidden;font-family:var(--sans)}',
       '#_xtlac_schedule_shortcut::before{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:var(--a)}',
       '#_xtlac_schedule_shortcut:hover{border-color:var(--a);transform:translateY(-1px)}',
-      '._xtlac_desk_icon{width:42px;height:42px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;border-radius:6px;background:rgba(var(--ar),.14);font-size:21px}',
+      '._xtlac_desk_icon{width:42px;height:42px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;border-radius:8px;background:rgba(var(--ar),.14);font-size:21px}',
       '._xtlac_desk_copy{min-width:0;flex:1}',
       '._xtlac_desk_title{display:block;font-size:15px;font-weight:750;line-height:1.3}',
-      '._xtlac_desk_sub{display:block;margin-top:3px;color:var(--tx2);font-size:12px;line-height:1.4}',
-      '._xtlac_desk_count{color:var(--tx3);font:600 10.5px var(--mono);white-space:nowrap}',
-      '._xtlac_desk_go{color:var(--a);font-size:12px;font-weight:750;white-space:nowrap}',
-      '#_xtlac_local_services{grid-column:1/-1;margin:0 0 14px;padding:16px;border:1px solid var(--bd2);border-radius:var(--r);background:var(--s2)}',
+      '._xtlac_desk_sub{display:block;margin-top:3px;color:var(--tx2);font-size:13px;line-height:1.4}',
+      '._xtlac_desk_count{color:var(--tx3);font:600 11px var(--mono);white-space:nowrap}',
+      '._xtlac_desk_go{color:var(--a);font-size:13px;font-weight:750;white-space:nowrap}',
+      '#_xtlac_local_services{grid-column:1/-1;margin:0 0 16px;padding:16px;border:1px solid var(--bd2);border-radius:var(--r);background:var(--s2)}',
       '._xtlac_srv_head{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px}',
       '._xtlac_srv_head_copy{min-width:0;flex:1}',
       '._xtlac_srv_title{font-size:15px;font-weight:760;color:var(--tx)}',
-      '._xtlac_srv_sub{margin-top:3px;color:var(--tx2);font-size:11.5px;line-height:1.45}',
-      '._xtlac_srv_summary{color:var(--tx3);font:650 10.5px var(--mono);white-space:nowrap}',
-      '._xtlac_srv_message{display:none;margin:0 0 10px;padding:8px 10px;border-radius:8px;background:rgba(var(--ar),.1);color:var(--a);font-size:11px}',
+      '._xtlac_srv_sub{margin-top:3px;color:var(--tx2);font-size:11px;line-height:1.45}',
+      '._xtlac_srv_summary{color:var(--tx3);font:650 11px var(--mono);white-space:nowrap}',
+      '._xtlac_srv_message{display:none;margin:0 0 8px;padding:8px 8px;border-radius:12px;background:rgba(var(--ar),.1);color:var(--a);font-size:11px}',
       '._xtlac_srv_message.show{display:block}',
       '._xtlac_srv_grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}',
-      '._xtlac_srv_card{display:grid;grid-template-columns:9px minmax(0,1fr) auto;gap:9px;align-items:start;padding:11px;border:1px solid var(--bd);border-radius:6px;background:var(--bg)}',
-      '._xtlac_srv_dot{width:8px;height:8px;margin-top:5px;border-radius:50%;background:var(--tx3)}',
+      '._xtlac_srv_card{display:grid;grid-template-columns:9px minmax(0,1fr) auto;gap:8px;align-items:start;padding:12px;border:1px solid var(--bd);border-radius:8px;background:var(--bg)}',
+      '._xtlac_srv_dot{width:8px;height:8px;margin-top:4px;border-radius:50%;background:var(--tx3)}',
       '._xtlac_srv_card.running ._xtlac_srv_dot{background:#2f9e56;box-shadow:0 0 7px rgba(47,158,86,.4)}',
-      '._xtlac_srv_name{font-size:12px;font-weight:700;line-height:1.35;color:var(--tx)}',
-      '._xtlac_srv_desc{margin-top:3px;color:var(--tx2);font-size:10.5px;line-height:1.35}',
-      '._xtlac_srv_meta{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}',
-      '._xtlac_srv_chip{padding:2px 5px;border-radius:5px;background:var(--s3);color:var(--tx3);font:600 9px var(--mono)}',
-      '._xtlac_srv_link{display:inline-block;margin-top:7px;color:var(--a);font:600 10px var(--mono);text-decoration:none}',
-      '._xtlac_srv_source{margin-top:6px;color:var(--tx3);font-size:9.5px;line-height:1.3}',
-      '._xtlac_srv_btn{min-width:78px;border:1px solid var(--bd2);border-radius:7px;background:transparent;color:var(--tx2);padding:6px 8px;font:650 10px var(--sans);cursor:pointer}',
+      '._xtlac_srv_name{font-size:13px;font-weight:700;line-height:1.35;color:var(--tx)}',
+      '._xtlac_srv_desc{margin-top:3px;color:var(--tx2);font-size:11px;line-height:1.35}',
+      '._xtlac_srv_meta{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}',
+      '._xtlac_srv_chip{padding:2px 4px;border-radius:8px;background:var(--s3);color:var(--tx3);font:600 11px var(--mono)}',
+      '._xtlac_srv_link{display:inline-block;margin-top:8px;color:var(--a);font:600 11px var(--mono);text-decoration:none}',
+      '._xtlac_srv_source{margin-top:8px;color:var(--tx3);font-size:11px;line-height:1.3}',
+      '._xtlac_srv_btn{min-width:78px;border:1px solid var(--bd2);border-radius:12px;background:transparent;color:var(--tx2);padding:8px 8px;font:650 11px var(--sans);cursor:pointer}',
       '._xtlac_srv_btn.stop{border-color:rgba(181,66,62,.38);color:#c96b67}',
       '._xtlac_srv_btn.start{border-color:rgba(47,158,86,.4);color:#57a773}',
       '._xtlac_srv_btn.restart{border-color:rgba(var(--ar),.4);color:var(--a)}',
       '._xtlac_srv_btn:disabled{opacity:.45;cursor:default}',
-      '._xtlac_srv_actions{display:flex;flex-direction:column;gap:6px}',
-      '._xtlac_srv_blocked{grid-column:2/4;margin-top:1px;color:#c67e34;font-size:9.5px;line-height:1.35}',
+      '._xtlac_srv_actions{display:flex;flex-direction:column;gap:8px}',
+      '._xtlac_srv_blocked{grid-column:2/4;margin-top:1px;color:#c67e34;font-size:11px;line-height:1.35}',
       '@media(max-width:680px){._xtlac_srv_grid{grid-template-columns:1fr}}'
     ].join('');
     doc.head.appendChild(style);
@@ -236,22 +506,20 @@
       var info = storefrontNode(doc, 'div', '_xtlac_srv_info');
       info.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_name', service.name));
       if (service.description) info.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_desc', service.description));
-      // ДИЗАЙН-КОД §7: PORT, PID, localhost — запрещённые слова. Человеку они не говорят
-      // ничего, а место занимают: он хочет знать «работает или нет», а не номер процесса.
-      // Замена по канону: «PORT 8765 · PID 1063» → «работает» / «остановлена»,
-      // сырая ссылка localhost:8799/… → кнопка «Открыть».
       var meta = storefrontNode(doc, 'div', '_xtlac_srv_meta');
       meta.appendChild(storefrontNode(doc, 'span', '_xtlac_srv_chip',
-        running ? 'работает' : 'остановлена'));
+        running ? T('работает','running') : T('остановлена','stopped')));
       info.appendChild(meta);
       if (running) {
-        var link = storefrontNode(doc, 'a', '_xtlac_srv_link', 'Открыть');
+        var link = storefrontNode(doc, 'a', '_xtlac_srv_link', T('Открыть','Open'));
         link.href = service.url;
         link.target = '_blank';
         link.rel = 'noopener noreferrer';
         info.appendChild(link);
       }
-      info.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_source', service.source + (service.project ? ' · ' + service.project : '')));
+      // Источник и имя файла — машинные подробности: человеку они ничего не говорят,
+      // а место занимают. Оставляем только проект, если он есть.
+      if (service.project) info.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_source', service.project));
       card.appendChild(info);
 
       var actions = storefrontNode(doc, 'div', '_xtlac_srv_actions');
@@ -298,7 +566,7 @@
     fetch('http://127.0.0.1:8765/x/listener_procs').then(function (r) { return r.json(); }).then(function (lp) {
       if (!lp || !lp.orphans) return;
       var warn = doc.createElement('div');
-      warn.style.cssText = 'margin:8px 0;padding:8px 12px;border:1px solid #C0392B;border-radius:8px;font-size:12.5px;display:flex;align-items:center;gap:10px';
+      warn.style.cssText = 'margin:8px 0;padding:8px 12px;border:1px solid #C0392B;border-radius:12px;font-size:13px;display:flex;align-items:center;gap:8px';
       warn.appendChild(doc.createTextNode(T('Лишние процессы listener: ','Extra listener processes: ') + lp.orphans + T(' — забирают фоновые задачи параллельно.',' — they may grab background tasks in parallel.')));
       var cbtn = doc.createElement('button');
       cbtn.type = 'button';
@@ -319,12 +587,12 @@
         var list = agents.filter(function (a) { return a.family === fam; });
         if (!list.length) return;
         var h = doc.createElement('div');
-        h.style.cssText = 'font-weight:700;font-size:12.5px;margin:10px 0 4px;opacity:.85';
+        h.style.cssText = 'font-weight:700;font-size:13px;margin:8px 0 4px;opacity:.85';
         h.textContent = famTitle[fam] + ' · ' + list.length;
         body.appendChild(h);
         list.forEach(function (a) {
           var row = doc.createElement('div');
-          row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px dashed rgba(128,128,128,.25);font-size:12.5px';
+          row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px dashed rgba(128,128,128,.25);font-size:13px';
           var dot = a.running ? '\u{1F7E2}' : (a.enabled ? '⚪' : '⛔');
           row.appendChild(doc.createTextNode(dot + ' ' + a.label + (a.pid ? ' · pid ' + a.pid : '') + (a.enabled ? '' : T(' · автозапуск выключен',' · autostart off'))));
           var b = doc.createElement('button');
@@ -549,6 +817,16 @@
   }
 
   function dismissTask(task) {
+    if (task.local) {
+      // Клиентская запись живёт в этой же вкладке — убираем её здесь же,
+      // службе она неизвестна и спрашивать нечего.
+      local.dismissed[task.id] = true;
+      if (task.id.indexOf('install:') === 0) delete local.installs[task.id.slice(8)];
+      delete state.expanded[task.id];
+      state.data = composeData();
+      render();
+      return;
+    }
     if (state.taskBusy[task.id]) return;
     state.taskBusy[task.id] = true;
     taskAction('/api/tasks/' + encodeURIComponent(task.id) + '/dismiss')
@@ -560,6 +838,15 @@
   function clearCompletedTasks() {
     if (!state.data || !state.data.history || !state.data.history.length) return;
     if (!window.confirm(T('Убрать все завершённые записи из этой ленты?','Remove all completed entries from this feed?'))) return;
+    var hasBridgeTasks = false;
+    state.data.history.forEach(function (task) {
+      if (!task.local) { hasBridgeTasks = true; return; }
+      local.dismissed[task.id] = true;
+      if (task.id.indexOf('install:') === 0) delete local.installs[task.id.slice(8)];
+    });
+    state.data = composeData();
+    render();
+    if (!hasBridgeTasks) return;
     taskAction('/api/tasks/clear-completed')
       .then(function () { return refresh(); })
       .catch(function () {});
@@ -598,7 +885,8 @@
       details.appendChild(el('div', { className: '_xtlac_hint' }, sourceIdHint(task)));
     }
     if (task.status === 'running') {
-      details.appendChild(el('div', { className: '_xtlac_hint' }, T('Прервать задачу можно красной кнопкой Cancel внизу панели Extella.','To interrupt a task, use the red Cancel button at the bottom of the Extella panel.')));
+      details.appendChild(el('div', { className: '_xtlac_hint' }, task.hint
+        || T('Прервать задачу можно красной кнопкой Cancel внизу панели Extella.','To interrupt a task, use the red Cancel button at the bottom of the Extella panel.')));
     } else {
       var remove = el('button', { className: '_xtlac_remove', type: 'button' }, state.taskBusy[task.id] ? T('Убираю…','Removing…') : T('Убрать запись из ленты','Remove from the feed'));
       remove.disabled = !!state.taskBusy[task.id];
@@ -655,12 +943,7 @@
 
     var warning = document.getElementById('_xtlac_warning');
     var orphaned = data && data.listeners && data.listeners.orphaned || 0;
-    if (!state.bridgeOnline && !state.data) {
-      // Ни детального списка, ни базового статуса. Честно: перезапуск может и
-      // не помочь (движка задач на устройстве может не быть) — не обещаем.
-      warning.textContent = T('Не вижу фоновых задач. Если ты их не запускала — так и должно быть. Если запускала, а список пропал — перезапусти Extella (⌘Q и открой заново).','No background tasks visible. If you have not started any — that is normal. If you did and the list vanished — restart Extella (⌘Q and open again).');
-      warning.classList.add('show');
-    } else if (orphaned) {
+    if (orphaned) {
       // Задание Анвара: не только предупреждать, но и чинить в один клик —
       // POST /x/listener_cleanup закрывает только сирот, ответ показываем тут же.
       warning.replaceChildren(
@@ -683,22 +966,22 @@
       return;
     }
     section(body, T('Сейчас','Now'), data.active);
-    section(body, T('Выполнено','Done'), data.history.slice(0, 15));
+    section(body, T('Что было','Earlier'), data.history.slice(0, 15));
     if (!data.active.length && !data.history.length) {
       var _h3=document.querySelector('#_xtlac_head h3'); if(_h3)_h3.textContent=T('Что делает Extella','What Extella is doing');
-      var _clr=document.getElementById('_xtlac_clear'); if(_clr)_clr.textContent=T('Очистить выполненные','Clear completed');
+      var _clr=document.getElementById('_xtlac_clear'); if(_clr)_clr.textContent=T('Убрать записи','Clear the feed');
       body.appendChild(el('div', { id: '_xtlac_empty' }, T('Пока пусто. Когда Extella что-то делает — ставит программу, запускает процесс, проверяет данные, — здесь видна каждая задача и её статус.','Quiet for now. When Extella is doing something — installing a program, running a process, checking data — every task and its status shows up here.')));
     }
   }
 
   function mount() {
     if (!document.body || document.getElementById('_xtlac_root')) return;
-    css += '._xtlac_fixbtn{margin-left:8px;border:1px solid var(--etb-bd2,rgba(0,0,0,.15));background:transparent;color:inherit;border-radius:5px;padding:2px 10px;font-size:11.5px;cursor:pointer}._xtlac_fixbtn:disabled{opacity:.6;cursor:default}';
+    css += '._xtlac_fixbtn{margin-left:8px;border:1px solid var(--etb-bd2,rgba(0,0,0,.15));background:transparent;color:inherit;border-radius:8px;padding:2px 8px;font-size:11px;cursor:pointer}._xtlac_fixbtn:disabled{opacity:.6;cursor:default}';
     var style = el('style', { id: '_xtlac_styles' });
     style.textContent = css;
     document.head.appendChild(style);
 
-    var root = el('div', { id: '_xtlac_root', 'data-health': 'warning' });
+    var root = el('div', { id: '_xtlac_root', 'data-health': 'ok' });
     var pill = el('button', { id: '_xtlac_pill', type: 'button', 'aria-label': T('Что делает Extella — открыть список','What Extella is doing — open the list') });
     pill.appendChild(el('span', { id: '_xtlac_grip', title: T('Перетащи, чтобы сдвинуть плашку','Drag to move this chip') }, '⠿'));
     pill.appendChild(el('span', { id: '_xtlac_dot' }));
@@ -711,7 +994,7 @@
     var heading = el('div');
     heading.appendChild(el('h3', {}, T('Что делает Extella','What Extella is doing')));
     head.appendChild(heading);
-    head.appendChild(el('button', { id: '_xtlac_clear', type: 'button' }, T('Очистить выполненные','Clear completed')));
+    head.appendChild(el('button', { id: '_xtlac_clear', type: 'button' }, T('Убрать записи','Clear the feed')));
     head.appendChild(el('button', { id: '_xtlac_close', type: 'button', 'aria-label': T('Закрыть','Close') }, '×'));
     panel.appendChild(head);
     panel.appendChild(el('div', { id: '_xtlac_warning' }));
@@ -771,6 +1054,7 @@
     var marketplaceObserver = new MutationObserver(function () { enhanceMarketplace(); });
     marketplaceObserver.observe(document.body, { childList: true, subtree: true });
     enhanceMarketplace();
+    state.data = composeData();   // клиентская картина есть сразу, до ответа службы
     render();
   }
 
@@ -786,7 +1070,8 @@
         }] : [];
         return {
           // Спокойный чип: без деталей журнала он всё равно знает счётчик задач.
-          // Про перезапуск объясняет предупреждение ВНУТРИ панели, чипу ныть не нужно.
+          // Своя, клиентская картина точнее — поэтому помечаем источник запасным.
+          __fallback: true,
           health: active.length ? 'busy' : 'ok',
           headline: active.length ? active[0].title : T('Сейчас ничего не выполняется','Nothing running right now'),
           active: active, history: [],
@@ -817,11 +1102,13 @@
   function refresh() {
     return fetch(API, { cache: 'no-store' })
       .then(function (response) { if (!response.ok) throw new Error('HTTP ' + response.status); return response.json(); })
-      .then(function (data) { state.bridgeOnline = true; state.data = data; state.activityToken = data.controlToken || ''; render(); })
+      .then(function (data) { state.bridgeOnline = true; state.bridge = data; state.activityToken = data.controlToken || ''; })
       .catch(function () {
         state.bridgeOnline = false;
-        fallbackStatus().then(function (data) { if (data) state.data = data; render(); });
-      });
+        state.activityToken = '';
+        return fallbackStatus().then(function (data) { state.bridge = data; });
+      })
+      .then(function () { state.data = composeData(); render(); });
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount, { once: true });

@@ -169,11 +169,11 @@ ETB.marketplace = (function () {
     '}',
     '#_etbv2_mkt_frame{flex:1;border:none;display:block;width:100%;}',
     '#_etbv2_mkt_ov.win{position:fixed;inset:auto;left:6vw;top:5vh;width:72vw;height:86vh;',
-      'border:1px solid rgba(140,140,140,.45);border-radius:6px;overflow:hidden;',
+      'border:1px solid rgba(140,140,140,.45);border-radius:8px;overflow:hidden;',
       'box-shadow:0 18px 60px rgba(0,0,0,.45);}',
     '#_etbv2_mkt_grip{display:none;height:20px;flex-shrink:0;cursor:move;',
       'background:var(--etb-s1,#141414);border-bottom:1px solid rgba(140,140,140,.25);}',
-    '#_etbv2_mkt_grip::after{content:"";display:block;width:44px;height:4px;border-radius:2px;',
+    '#_etbv2_mkt_grip::after{content:"";display:block;width:44px;height:4px;border-radius:8px;',
       'background:rgba(140,140,140,.5);margin:8px auto 0;}',
     '#_etbv2_mkt_ov.win #_etbv2_mkt_grip{display:block;}',
     '#_etbv2_mkt_ov.dragging #_etbv2_mkt_frame{pointer-events:none;}',
@@ -184,7 +184,7 @@ ETB.marketplace = (function () {
     '#_etbv2_mkt_ov.win #_etbv2_mkt_rs{display:block;}',
     '#_etbv2_mkt_chip{position:fixed;right:16px;bottom:64px;z-index:2147483639;',
       'background:var(--etb-s1,#141414);color:var(--etb-tx,#eee);border:1px solid rgba(140,140,140,.45);',
-      'border-radius:999px;padding:9px 16px;font:600 12.5px system-ui;cursor:pointer;',
+      'border-radius:999px;padding:8px 16px;font:600 13px system-ui;cursor:pointer;',
       'box-shadow:0 10px 30px rgba(0,0,0,.35);}'
   ].join('');
 
@@ -601,7 +601,19 @@ ETB.marketplace = (function () {
           // experts/concepts on the user's account, then report back so the
           // iframe can flip the button state without a reload.
           var plugin = ETB.registry.getById(pluginId);
+          // Плашка активности живёт в родительском окне и не видит витрину, когда
+          // та закрыта, — а установка продолжается. Поэтому о ходе установки
+          // сообщаем событием сюда же, в родительское окно.
+          var _sayInstall = function (phase, message) {
+            try {
+              window.dispatchEvent(new CustomEvent('etb:install', { detail: {
+                pluginId: pluginId, phase: phase, message: message || '',
+                name: (plugin && (plugin.name || plugin.title)) || pluginId
+              } }));
+            } catch (e) {}
+          };
           var _reply = function (ok, message) {
+            _sayInstall(ok ? 'done' : 'failed', message);
             var frame = document.getElementById('_etbv2_mkt_frame');
             if (frame && frame.contentWindow) {
               frame.contentWindow.postMessage({
@@ -613,6 +625,7 @@ ETB.marketplace = (function () {
             }
           };
           if (!plugin) { _reply(false, 'Unknown plugin: ' + pluginId); return; }
+          _sayInstall('start');
           ETB.plugins.provision(plugin, 'install').then(function () {
             ETB.tabs.refresh();
             _reply(true);
