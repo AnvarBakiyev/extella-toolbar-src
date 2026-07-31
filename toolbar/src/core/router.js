@@ -4591,6 +4591,20 @@ ETB.router = (function () {
   // Inject the spinner keyframe once (router may render before any panel that
   // defines it). Idempotent via the style element id.
   function _ensureRepairStyles() {
+  // Начертания канона — из единственного места, где они лежат: строки витрины.
+  function _etbFontFaceCss() {
+    try {
+      var src = typeof _ETB_MARKETPLACE_HTML === 'string' ? _ETB_MARKETPLACE_HTML : '';
+      var faces = src.match(/@font-face\{[^}]*\}/g) || [];
+      var seen = {}, uniq = [];   // блок встречается в строке несколько раз — берём по разу
+      for (var i = 0; i < faces.length; i++) {
+        if (seen[faces[i]]) continue;
+        seen[faces[i]] = 1; uniq.push(faces[i]);
+      }
+      return uniq.join('');
+    } catch (e) { return ''; }
+  }
+
     if (document.getElementById('_etbv2_router_styles')) return;
     var s = document.createElement('style');
     s.id = '_etbv2_router_styles';
@@ -4601,7 +4615,12 @@ ETB.router = (function () {
     // один раз здесь, чтобы новая панель получала канон по умолчанию, а не по памяти
     // автора. Семейства — канон Эллы; системные оставлены хвостом, чтобы текст не поехал,
     // если шрифт не подгрузился.
-    s.textContent = ':root{'
+    // Одних токенов мало: САМИХ начертаний в документе хоста не было. @font-face вшит
+    // только в витрину, а она живёт отдельным документом-blob — панели хоста падали на
+    // Georgia и системный (Элла увидела это в Evolution Console). Берём тот же блок из
+    // уже собранной строки витрины: один источник, в бандле шрифты не задваиваются.
+    s.textContent = _etbFontFaceCss()
+      + ':root{'
       + '--etb-serif:"Source Serif 4",ui-serif,Georgia,serif;'
       + '--etb-sans:"Source Sans 3",-apple-system,system-ui,sans-serif;'
       + '--etb-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace}'
