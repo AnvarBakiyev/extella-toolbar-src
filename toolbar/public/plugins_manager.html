@@ -2377,7 +2377,7 @@ var LOCAL_MODELS = [
    name:'Юрист (англоязычный)', desc:'Разбор англоязычных договоров и юр-текстов приватно. На английском сильна, на русском слабее.', frame:'черновик, не заключение'},
   {id:'medical', domain:'Медицина · англ.', emoji:'🩺', model:'hf.co/mradermacher/II-Medical-8B-GGUF:Q4_K_M', size:'~5 ГБ',
    name:'Медицина (англоязычная)', desc:'Разбор англоязычных мед-текстов и вопросов приватно. На английском сильно, на русском слабее.', frame:'не диагноз, для специалиста'},
-  {id:'finance', domain:'Финансы · англ.', emoji:'📊', model:'martain7r/finance-llama-8b:q4_k_m', size:'~5 ГБ',
+  {id:'finance', domain:'Финансы · англ.', emoji:'', model:'martain7r/finance-llama-8b:q4_k_m', size:'~5 ГБ',
    name:'Финансы (англоязычный)', desc:'Разбирает англоязычные финансы и отчёты приватно. На английском сильно, на русском слабее.', frame:'не инвест-совет, проверяет человек'}
 ];
 function localModelCard(m){
@@ -4984,7 +4984,7 @@ function renderInstalled() {
     html += cliItems.map(function(c, i){
       var hint = c.howto || ('Скажи агенту, что сделать с файлами, он вызовет «' + (c.name||c.id) + '».');
       return '<div class="icard" style="align-items:flex-start;animation-delay:' + Math.min(i*12,120) + 'ms"><div class="idot" style="margin-top:4px"></div>' +
-        '<div class="iinfo"><div class="iname">' + esc((c.emoji?c.emoji+' ':'') + (c.name||c.id)) + '</div>' +
+        '<div class="iinfo"><div class="iname">' + esc(c.name||c.id) + '</div>' +
         '<div class="isub" style="white-space:normal;overflow:visible;text-overflow:clip;line-height:1.45"><b>Как запустить:</b> ' + esc(hint) + '</div></div>' +
         '<div class="iacts"><button class="ibtn_open" onclick="cliRun(\'' + esc(c.id) + '\')">▶ Запустить</button><button class="ibtn_rm" onclick="cliUninstall(\'' + esc(c.id) + '\');renderInstalled()">Удалить</button></div></div>';
     }).join('');
@@ -5429,9 +5429,9 @@ var SKILLS_CATALOG=[
   {id:'skill_translate',cat:'Стиль и общение',emoji:'🌍',name:'Живой перевод',desc:'Переводит естественно и с сохранением тона, а не дословно.',rule:'[skill:Живой перевод] При переводе передавай смысл и тон естественно на языке-цели, а не дословно; сохраняй регистр (деловой/разговорный) оригинала.',howto:'Скажи «переведи на английский: …», получишь живой перевод, а не подстрочник.'},
   {id:'skill_plan',cat:'Работа и продуктивность',emoji:'🗺️',name:'Сначала план',desc:'На любую задачу сперва даёт короткий план, потом выполняет.',rule:'[skill:Сначала план] На любую содержательную задачу сначала дай короткий план из 2–4 шагов, затем выполняй по нему.',howto:'Дай агенту любую задачу, он начнёт с плана из нескольких шагов.'},
   {id:'skill_options',cat:'Работа и продуктивность',emoji:'⚖️',name:'Всегда варианты',desc:'Предлагает 2–3 варианта решения с плюсами и минусами.',rule:'[skill:Всегда варианты] Когда задача допускает разные решения, предложи 2–3 варианта, у каждого кратко плюсы и минусы, и в конце дай рекомендацию с обоснованием.',howto:'Спроси «как лучше сделать X», получишь несколько вариантов с плюсами/минусами.'},
-  {id:'skill_honest',cat:'Работа и продуктивность',emoji:'🔍',name:'Проверяй факты',desc:'Не выдумывает: помечает предположения, честно говорит о неуверенности.',rule:'[skill:Проверяй факты] Никогда не выдумывай факты, цифры и цитаты. Если не уверен, скажи прямо «не уверен». Явно помечай предположения словом «предположительно». Лучше честное «не знаю», чем правдоподобная выдумка.',howto:'Задавай фактические вопросы, агент отметит, где не уверен, и не выдумает.'},
+  {id:'skill_honest',cat:'Работа и продуктивность',emoji:'',name:'Проверяй факты',desc:'Не выдумывает: помечает предположения, честно говорит о неуверенности.',rule:'[skill:Проверяй факты] Никогда не выдумывай факты, цифры и цитаты. Если не уверен, скажи прямо «не уверен». Явно помечай предположения словом «предположительно». Лучше честное «не знаю», чем правдоподобная выдумка.',howto:'Задавай фактические вопросы, агент отметит, где не уверен, и не выдумает.'},
   {id:'skill_legal',cat:'Бизнес',emoji:'📜',name:'Юрист-упроститель',desc:'Присылаешь договор, получаешь простое объяснение и список рисков.',rule:'[skill:Юрист-упроститель] Когда пользователь присылает договор, оферту, условия или юридический текст, объясни простым языком: что подписывают, ключевые риски и подводные камни, на что обратить внимание. Без юридического жаргона.',howto:'Вставь текст договора и скажи «разбери», получишь простое объяснение и риски.'},
-  {id:'skill_numbers',cat:'Бизнес',emoji:'📊',name:'Разбор цифр',desc:'Присылаешь таблицу/отчёт, выделяет ключевые цифры, тренды и аномалии.',rule:'[skill:Разбор цифр] Когда пользователь присылает таблицу, отчёт или набор чисел, выдели ключевые показатели, тренды и аномалии простыми словами. Начни с 3–5 главных выводов, потом детали. Без воды.',howto:'Вставь таблицу или цифры и скажи «разбери», получишь ключевые выводы и аномалии.'},
+  {id:'skill_numbers',cat:'Бизнес',emoji:'',name:'Разбор цифр',desc:'Присылаешь таблицу/отчёт, выделяет ключевые цифры, тренды и аномалии.',rule:'[skill:Разбор цифр] Когда пользователь присылает таблицу, отчёт или набор чисел, выдели ключевые показатели, тренды и аномалии простыми словами. Начни с 3–5 главных выводов, потом детали. Без воды.',howto:'Вставь таблицу или цифры и скажи «разбери», получишь ключевые выводы и аномалии.'},
   {id:'skill_email',cat:'Бизнес',emoji:'✉️',name:'Редактор писем',desc:'Пишет короткие, вежливые письма с чёткой темой и запросом.',rule:'[skill:Редактор писем] Когда просят написать письмо, сделай короткое и вежливое: тема, приветствие, суть в 2–4 предложениях, чёткий запрос/призыв к действию, подпись. Без воды и канцелярита.',howto:'Скажи «напиши письмо …», получишь готовое короткое деловое письмо.'},
   {id:'skill_debug',cat:'Разработка',emoji:'🐞',name:'Метод отладки',desc:'Отлаживает системно: воспроизвести → изолировать → гипотеза → проверка.',rule:'[skill:Метод отладки] При отладке ошибок не гадай. Действуй по шагам: 1) воспроизведи и опиши симптом; 2) изолируй, где ломается; 3) сформулируй гипотезу о причине; 4) предложи минимальную проверку. Только потом — исправление.',howto:'Скинь ошибку или баг, агент разберёт её системно, а не наугад.'},
   {id:'skill_review',cat:'Разработка',emoji:'👀',name:'Ревью кода',desc:'Ищет баги, дыры безопасности и читаемость, с конкретными правками.',rule:'[skill:Ревью кода] При ревью кода ищи по приоритету: 1) баги и логические ошибки; 2) уязвимости безопасности; 3) читаемость. Давай КОНКРЕТНЫЕ правки с примером, а не общие советы. Фокус — на проблемах.',howto:'Вставь код и скажи «сделай ревью», получишь конкретные замечания и правки.'}
@@ -5565,11 +5565,11 @@ function skUninstall(id){
 // Установка = запуск резолвера (кладёт бинарь на устройство). Живые способности
 // печатает фабрика wz_cli_capability_factory; «скоро», заглушки для полноты полки.
 var CLI_CATALOG=[
-  {id:'ghostscript',cat:'Документы и PDF',emoji:'🗜️',name:'Сжать PDF',live:true,batch:['cap_ghostscript_compress_pdf_batch'],
+  {id:'ghostscript',cat:'Документы и PDF',emoji:'',name:'Сжать PDF',live:true,batch:['cap_ghostscript_compress_pdf_batch'],
    desc:'Пакетно ужимает PDF на 50–70%.',
    ops:['Сжать PDF','Сжать папку'],
    howto:'Скажи агенту: «сожми PDF в этой папке», он вызовет способность и вернёт отчёт.'},
-  {id:'pandoc',cat:'Документы и PDF',emoji:'📄',name:'Документы из Markdown',live:true,batch:['cap_pandoc_md_to_docx_batch','cap_pandoc_md_to_html_batch'],
+  {id:'pandoc',cat:'Документы и PDF',emoji:'',name:'Документы из Markdown',live:true,batch:['cap_pandoc_md_to_docx_batch','cap_pandoc_md_to_html_batch'],
    desc:'Собирает Word и HTML из шаблона и данных пачкой.',
    ops:['Markdown → Word','Markdown → HTML','папкой'],
    howto:'Скажи: «собери договоры из этих шаблонов», получишь готовые .docx.'},
@@ -5585,11 +5585,11 @@ var CLI_CATALOG=[
    desc:'Поворачивает и оптимизирует PDF для веба, без потери качества, пачкой.',
    ops:['Оптимизировать','Повернуть'],
    howto:'Скажи: «поверни сканы в этой папке на 90°», вызовет способность.'},
-  {id:'imagemagick',cat:'Изображения и медиа',emoji:'🖼️',name:'Пакет изображений',live:true,batch:['cap_imagemagick_to_jpg_batch','cap_imagemagick_resize_batch'],
+  {id:'imagemagick',cat:'Изображения и медиа',emoji:'',name:'Пакет изображений',live:true,batch:['cap_imagemagick_to_jpg_batch','cap_imagemagick_resize_batch'],
    desc:'Меняет формат и размер тысяч изображений в один проход.',
    ops:['В JPG','Уменьшить'],
    howto:'Скажи: «сожми все изображения в этой папке до 50%», обработает пачкой.'},
-  {id:'ffmpeg',cat:'Изображения и медиа',emoji:'🎬',name:'Видео и аудио',live:true,batch:['cap_ffmpeg_extract_audio_batch','cap_ffmpeg_to_mp4_batch'],
+  {id:'ffmpeg',cat:'Изображения и медиа',emoji:'',name:'Видео и аудио',live:true,batch:['cap_ffmpeg_extract_audio_batch','cap_ffmpeg_to_mp4_batch'],
    desc:'Перекодирует видео и извлекает аудио из целой медиатеки, локально.',
    ops:['Извлечь аудио (MP3)','В MP4 (H.264)'],
    howto:'Скажи: «вытащи аудио из этих видео», вернёт MP3 пачкой.'}
@@ -5682,7 +5682,7 @@ function openCliRunModal(c, batchExperts){
   var ov=document.createElement('div'); ov.id='clirun_ov';
   ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px';
   ov.innerHTML='<div style="background:var(--s1);color:var(--tx);max-width:540px;width:100%;border:1px solid var(--bd);border-radius:var(--r);padding:24px;box-shadow:none;font-family:var(--sans)">'+
-    '<div style="font-family:var(--serif);font-size:20px;margin-bottom:4px">▶ '+esc((c.emoji?c.emoji+' ':'')+(c.name||c.id))+'</div>'+
+    '<div style="font-family:var(--serif);font-size:20px;margin-bottom:4px">▶ '+esc(c.name||c.id)+'</div>'+
     '<div style="color:var(--tx2);font-size:13px;line-height:1.5;margin-bottom:12px">'+esc(c.desc||'')+' Укажи папку с файлами, обработаю все подходящие, результат появится рядом с оригиналами.</div>'+
     '<input id="clirun_dir" placeholder="напр.: /Users/имя/Downloads/фото" autocomplete="off" style="width:100%;box-sizing:border-box;border:1px solid var(--bd2);border-radius:var(--r-sm);padding:8px;font-family:var(--sans);font-size:15px;background:var(--bg);color:var(--tx)"/>'+
     '<div style="margin-top:8px"><button onclick="cliPickFolder()" style="border:1px solid var(--bd2);background:transparent;color:var(--tx);border-radius:var(--r-sm);padding:8px 16px;font-size:13px;cursor:pointer;font-family:var(--sans)">📁 Выбрать папку…</button> <span style="font-size:11px;color:var(--tx3)">или впиши путь выше</span></div>'+
@@ -5752,7 +5752,7 @@ var CATALOG_PACKS=[
   {id:'admin_rk', cat:'Право и налоги', name:'Кодекс об админправонарушениях РК', emoji:'🚦', acc:'#A5632A', desc:'Штрафы и нарушения: за что, сколько и как обжаловать.'},
   {id:'pred_rk', cat:'Право и налоги', name:'Предпринимательский кодекс РК', emoji:'🏢', acc:'#2F6B66', desc:'Регистрация, проверки, разрешения: правила игры для бизнеса в РК.'},
   {id:'ugol_rk', cat:'Право и налоги', name:'Уголовный кодекс РК', emoji:'🔒', acc:'#8C8C8C', desc:'Составы, наказания, ответственность, строго по кодексу.'},
-  {id:'pm', cat:'Бизнес и управление', name:'Управление проектами', emoji:'📊', acc:'#C57E33', desc:'Scrum, канбан и Гант: как спланировать проект и не сорвать сроки.'},
+  {id:'pm', cat:'Бизнес и управление', name:'Управление проектами', emoji:'', acc:'#C57E33', desc:'Scrum, канбан и Гант: как спланировать проект и не сорвать сроки.'},
   {id:'management', cat:'Бизнес и управление', name:'Менеджмент и лидерство', emoji:'👔', acc:'#A5632A', desc:'Как ставить задачи, мотивировать и делегировать без микроменеджмента.'},
   {id:'sales', cat:'Бизнес и управление', name:'Продажи и маркетинг', emoji:'📈', acc:'#2E7D5B', desc:'Воронка, CRM и реклама: как находить клиентов и доводить до сделки.'},
   {id:'strategy', cat:'Бизнес и управление', name:'Стратегия и бизнес-модели', emoji:'🎯', acc:'#C57E33', desc:'Бизнес-модели и конкурентное преимущество: как решить, куда расти.'},
@@ -5849,7 +5849,7 @@ function agCard(a){
   var foot=on
     ? '<span class="sk_active">● установлена</span><button class="st_btn" data-aginst="'+esc(a.id)+'">Назначить снова</button><button class="sk_del" data-agdel="'+esc(a.id)+'" style="margin-left:8px">Убрать</button>'
     : '<button class="st_btn" data-aginst="'+esc(a.id)+'">Установить роль</button>';
-  return '<div class="stile" style="--acc:'+esc(a.acc)+'"><span class="st_chip">'+a.emoji+' Роль агента</span>'+
+  return '<div class="stile" style="--acc:'+esc(a.acc)+'"><span class="st_chip">'+_ico('work')+' Роль агента'+
     '<div class="st_title">'+esc(a.name)+'</div><div class="st_fact">'+esc(a.tagline)+'</div>'+
     '<div style="margin:8px 0 2px">'+caps+'</div>'+
     '<div class="st_foot" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">'+foot+'</div></div>';
@@ -5861,7 +5861,7 @@ function agentInstallModal(roleId){
   var prev=agGi()[roleId]||'';
   var ov=document.createElement('div'); ov.id='ag_ov'; ov.style.cssText=_KPOV;
   ov.innerHTML='<div style="'+_KPMODAL+'">'+
-    '<div style="font-family:var(--serif);font-size:20px;margin-bottom:4px">'+a.emoji+' '+esc(a.name)+'</div>'+
+    '<div style="font-family:var(--serif);font-size:20px;margin-bottom:4px">'+esc(a.name)+'</div>'+
     '<div style="color:var(--tx2);font-size:13px;line-height:1.55;margin-bottom:12px">'+esc(a.desc)+'</div>'+
     '<div class="steps" style="flex-direction:column;gap:8px;margin-bottom:12px">'+
       '<div class="step" style="max-width:none"><span class="step_n">1</span><div>Сделай в Extella <b>копию базового агента</b>, это два клика</div></div>'+
