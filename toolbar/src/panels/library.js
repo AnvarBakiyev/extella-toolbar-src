@@ -36,7 +36,7 @@ ETB.library = (function () {
     '#_etbv2_lib_frame{flex:1;border:none;display:block;width:100%;}',
     '#_etbv2_lib_close{',
       'position:absolute;top:8px;right:14px;z-index:2147483633;',
-      'width:28px;height:28px;border-radius:7px;cursor:pointer;',
+      'width:28px;height:28px;border-radius:12px;cursor:pointer;',
       'display:flex;align-items:center;justify-content:center;',
       'background:var(--etb-s2,#161616);color:var(--etb-tx2,#888);',
       'border:1px solid var(--etb-bd2,rgba(255,255,255,.13));',

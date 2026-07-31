@@ -13,11 +13,11 @@
   --ap-font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
   /* radii */
-  --ap-r-xs: 4px;
-  --ap-r-sm: 6px;
+  --ap-r-xs: 6px;
+  --ap-r-sm: 8px;
   --ap-r-md: 8px;
-  --ap-r-lg: 10px;
-  --ap-r-xl: 12px;
+  --ap-r-lg: 12px;
+  --ap-r-xl: 16px;
   --ap-r-pill: 999px;
 
   /* spacing scale */
@@ -34,8 +34,8 @@
   --ap-fs-xs: 11px;
   --ap-fs-sm: 12px;
   --ap-fs-md: 13px;
-  --ap-fs-base: 14px;
-  --ap-fs-lg: 16px;
+  --ap-fs-base: 15px;
+  --ap-fs-lg: 17px;
   --ap-fs-xl: 20px;
   --ap-fs-2xl: 28px;
 

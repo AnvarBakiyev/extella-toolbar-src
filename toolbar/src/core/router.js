@@ -4690,7 +4690,7 @@ ETB.router = (function () {
     bar.style.borderBottomColor = 'rgba(220,90,90,.5)';
     var retryBtn = onRetry
       ? '<button class="_etb_rep_retry" style="background:rgba(198,126,52,.2);border:1px solid rgba(198,126,52,.5);' +
-        'color:#C67E34;cursor:pointer;font-size:11px;padding:3px 10px;border-radius:5px;flex-shrink:0;">Retry</button>'
+        'color:#C67E34;cursor:pointer;font-size:11px;padding:3px 10px;border-radius:8px;flex-shrink:0;">Retry</button>'
       : '';
     bar.innerHTML = [
       '<div style="font-size:14px;flex-shrink:0;">&#9888;</div>',
@@ -4801,10 +4801,10 @@ ETB.router = (function () {
       _L('Открой его в браузере','Open it in your browser'), url ? ' (' + _esc(url) + ')' : '', '.</div>',
       '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">',
       '<button onclick="ETB.router._openExternal(\'' + _esc(pid) + '\')" style="' +
-      'background:#C57E33;border:none;color:#fff;font-weight:700;border-radius:6px;' +
+      'background:#C57E33;border:none;color:#fff;font-weight:700;border-radius:8px;' +
       'padding:10px 22px;cursor:pointer;font-size:12px;">' + _L('Открыть ','Open ') + _esc(plugin.name) + '</button>',
       '<button onclick="ETB.router._repairWithAgent(\'' + _esc(pid) + '\')" style="' +
-      'background:var(--etb-s3,#1a1a1a);border:1px solid var(--etb-bd2,#333);color:var(--etb-tx,#f0f0f0);border-radius:6px;' +
+      'background:var(--etb-s3,#1a1a1a);border:1px solid var(--etb-bd2,#333);color:var(--etb-tx,#f0f0f0);border-radius:8px;' +
       'padding:10px 22px;cursor:pointer;font-size:12px;">' + _L('Починить агентом','Repair with agent') + '</button>',
       '</div></div></div>'
     ].join('');
@@ -4830,10 +4830,10 @@ ETB.router = (function () {
       _L('обычно это разовый шаг, дальше она открывается сразу.</div>','usually a one-time step, after that it opens right away.</div>'),
       '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">',
       '<button onclick="ETB.router._repairWithAgent(\'' + _esc(pid) + '\')" style="' +
-      'background:#C67E34;border:none;color:#000;font-weight:700;border-radius:6px;' +
+      'background:#C67E34;border:none;color:#000;font-weight:700;border-radius:8px;' +
       'padding:11px 24px;cursor:pointer;font-size:12.5px;">' + _L('Доустановить и открыть','Finish setup and open') + '</button>',
       '<button onclick="ETB.router._retryServer(\'' + _esc(pid) + '\')" style="' +
-      'background:var(--etb-s3,#1a1a1a);border:1px solid var(--etb-bd2,#333);color:var(--etb-tx,#f0f0f0);border-radius:6px;' +
+      'background:var(--etb-s3,#1a1a1a);border:1px solid var(--etb-bd2,#333);color:var(--etb-tx,#f0f0f0);border-radius:8px;' +
       'padding:11px 20px;cursor:pointer;font-size:12.5px;">&#8635; ' + _L('Попробовать ещё раз','Try again') + '</button>',
       '</div>',
       // Technical detail, collapsed — for power users, not in the user's face.
@@ -4869,7 +4869,7 @@ ETB.router = (function () {
       error ? '<br><span style="color:#a55;font-size:11px;">' + _esc(String(error).slice(0, 200)) + '</span>' : '',
       '</div>',
       '<button onclick="ETB.router._repairWithAgent(\'' + _esc(pid) + '\')" style="' +
-      'background:#C67E34;border:none;color:#000;font-weight:700;border-radius:6px;' +
+      'background:#C67E34;border:none;color:#000;font-weight:700;border-radius:8px;' +
       'padding:10px 22px;cursor:pointer;font-size:12px;">' + _L('Починить агентом','Fix with agent') + '</button>',
       '</div>'
     ].join('');
@@ -5060,7 +5060,7 @@ ETB.router = (function () {
       var escapedPath = _esc(String(ui.filePath || ''));
       openFileBtn = '<button id="_etb_open_file_btn" title="Скопировать путь к файлу: ' + escapedPath + '" style="' +
         'background:none;border:none;color:var(--etb-tx2,#888);cursor:pointer;' +
-        'font-size:14px;padding:4px 8px;border-radius:6px;transition:background .1s;">' +
+        'font-size:14px;padding:4px 8px;border-radius:8px;transition:background .1s;">' +
         '<svg class="lico" style="width:14px;height:14px"><use href="#ic-docs"/></svg></button>';
     }
 
@@ -5073,7 +5073,7 @@ ETB.router = (function () {
       browserBtn = '<button onclick="ETB.router._openExternal(\'' + _esc(bpid) + '\')" ' +
         'title="' + (_bLang === 'en' ? 'Open in your browser' : 'Открыть в браузере') + '" style="' +
         'background:none;border:none;color:var(--etb-tx2,#888);cursor:pointer;' +
-        'font-size:14px;padding:4px 8px;border-radius:6px;transition:background .1s;">' +
+        'font-size:14px;padding:4px 8px;border-radius:8px;transition:background .1s;">' +
         '<svg class="lico" style="width:14px;height:14px"><use href="#ic-globe"/></svg></button>';
     }
 
@@ -5084,18 +5084,18 @@ ETB.router = (function () {
       var safePid = plugin.id ? plugin.id.replace(/'/g, '') : '';
       hfModeToggle = [
         '<div style="display:flex;gap:2px;background:var(--etb-s3,#1c1c1c);',
-        'border:1px solid var(--etb-bd2,rgba(255,255,255,.13));border-radius:8px;padding:2px;">',
+        'border:1px solid var(--etb-bd2,rgba(255,255,255,.13));border-radius:12px;padding:2px;">',
         '<button onclick="ETB.router._hfSwitchMode(\'' + _esc(safePid) + '\',\'local\')" style="',
         'background:' + (currentMode === 'local' ? 'var(--etb-s4,#242424)' : 'none') + ';',
         'border:none;color:' + (currentMode === 'local' ? 'var(--etb-tx,#f0f0f0)' : 'var(--etb-tx2,#888)') + ';',
         'font-size:11px;font-weight:' + (currentMode === 'local' ? '700' : '500') + ';',
-        'padding:3px 10px;border-radius:6px;cursor:pointer;font-family:inherit;transition:all .14s;">',
+        'padding:3px 10px;border-radius:8px;cursor:pointer;font-family:inherit;transition:all .14s;">',
         _L('Локально</button>','Local</button>'),
         '<button onclick="ETB.router._hfSwitchMode(\'' + _esc(safePid) + '\',\'remote\')" style="',
         'background:' + (currentMode === 'remote' ? 'var(--etb-s4,#242424)' : 'none') + ';',
         'border:none;color:' + (currentMode === 'remote' ? 'var(--etb-tx,#f0f0f0)' : 'var(--etb-tx2,#888)') + ';',
         'font-size:11px;font-weight:' + (currentMode === 'remote' ? '700' : '500') + ';',
-        'padding:3px 10px;border-radius:6px;cursor:pointer;font-family:inherit;transition:all .14s;">',
+        'padding:3px 10px;border-radius:8px;cursor:pointer;font-family:inherit;transition:all .14s;">',
         '☁️ HF</button>',
         '</div>'
       ].join('');
@@ -5111,14 +5111,14 @@ ETB.router = (function () {
       (_helpKey(plugin.id) ? '<button onclick="ETB.router.openHelp(\'' + _esc(plugin.id) + '\')" ' +
         'title="' + _esc(_L('Как это работает, что гарантировано, а что нет', 'How it works, what is guaranteed and what is not')) + '" ' +
         'style="background:none;border:1px solid rgba(140,140,140,.4);color:var(--etb-tx2,#aaa);cursor:pointer;' +
-        'font-size:11.5px;padding:4px 10px;border-radius:7px;margin-right:6px;">? ' +
+        'font-size:11.5px;padding:4px 10px;border-radius:12px;margin-right:6px;">? ' +
         _L('Как это работает', 'How it works') + '</button>' : ''),
       hfModeToggle,
       browserBtn,
       openFileBtn,
       '<button class="_etbv2_panel_close" style="background:none;border:none;',
       'color:var(--etb-tx2,#888);cursor:pointer;font-size:18px;padding:4px 8px;',
-      'border-radius:6px;transition:background .1s;" title="Закрыть">&#10005;</button>'
+      'border-radius:8px;transition:background .1s;" title="Закрыть">&#10005;</button>'
     ].join('');
     panel.appendChild(hdr);
 
@@ -5842,7 +5842,7 @@ ETB.router = (function () {
       function fmt(s) {
         return _esc(s)
           .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')
-          .replace(/`([^`]+)`/g, '<code style="background:rgba(140,140,140,.18);padding:1px 5px;border-radius:4px;font-size:12px;">$1</code>')
+          .replace(/`([^`]+)`/g, '<code style="background:rgba(140,140,140,.18);padding:1px 5px;border-radius:8px;font-size:12px;">$1</code>')
           .replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" style="color:#C67E34;word-break:break-all;">$1</a>');
       }
       if (!li && inList) { out.push('</ul>'); inList = false; }
@@ -5876,7 +5876,7 @@ ETB.router = (function () {
         isLink ? [
           '<div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(140,140,140,.25);">',
           '<button data-info-open="', _esc(src), '" style="min-height:36px;padding:8px 14px;',
-          'background:transparent;color:var(--etb-tx,#f0f0f0);border:1px solid rgba(140,140,140,.45);border-radius:9px;font-size:12px;cursor:pointer;">',
+          'background:transparent;color:var(--etb-tx,#f0f0f0);border:1px solid rgba(140,140,140,.45);border-radius:12px;font-size:12px;cursor:pointer;">',
           _L('Открыть в GitHub (нужен доступ)', 'Open on GitHub (access required)'), '</button></div>'
         ].join('') : '',
         '</div></div>'
@@ -5893,7 +5893,7 @@ ETB.router = (function () {
       _esc(plugin.description || ''), '</div>',
       isLink ? [
         '<button data-info-open="', _esc(src), '" style="min-height:40px;padding:10px 18px;',
-        'background:#C67E34;color:#000;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;">',
+        'background:#C67E34;color:#000;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;">',
         _L('Открыть инструкцию', 'Open the guide'), '</button>',
         isPrivateRepo ? [
           '<div style="font-size:11px;color:var(--etb-tx2,#888);margin-top:12px;line-height:1.5;">',
@@ -6137,7 +6137,7 @@ ETB.router = (function () {
   }
   function _helpCard(accent) {
     return '<div style="border:1px solid rgba(140,140,140,.28);border-left:3px solid ' +
-      (accent || 'rgba(140,140,140,.5)') + ';border-radius:8px;padding:14px 16px;margin-bottom:12px;background:var(--etb-s1,#141414);">';
+      (accent || 'rgba(140,140,140,.5)') + ';border-radius:12px;padding:14px 16px;margin-bottom:12px;background:var(--etb-s1,#141414);">';
   }
   function openHelp(id) {
     var key = _helpKey(id); if (!key) return;
@@ -6163,7 +6163,7 @@ ETB.router = (function () {
     var steps = _helpCard('') + '<div style="font-weight:700;font-size:13.5px;color:var(--etb-tx,#f0f0f0);margin-bottom:8px;">' +
       _L('Как это работает', 'How it works') + '</div><div style="font-size:12.5px;line-height:1.65;color:var(--etb-tx,#e8e8e8);">' +
       _pick(d.steps).map(function (s, i) { return '<b>' + (i + 1) + '.</b> ' + s; }).join('<br>') + '</div></div>';
-    var html = '<div style="max-width:560px;margin:0 auto;background:var(--etb-bg,#0d0d0f);border:1px solid rgba(140,140,140,.4);border-radius:14px;padding:22px 22px 18px;box-shadow:0 20px 60px rgba(0,0,0,.5);">' +
+    var html = '<div style="max-width:560px;margin:0 auto;background:var(--etb-bg,#0d0d0f);border:1px solid rgba(140,140,140,.4);border-radius:12px;padding:22px 22px 18px;box-shadow:0 20px 60px rgba(0,0,0,.5);">' +
       '<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:16px;">' +
       '<div style="flex:1;"><div style="font:700 18px system-ui;color:var(--etb-tx,#f0f0f0);">' + _esc(_pick(d.title)) + '</div>' +
       '<div style="font-size:12px;color:var(--etb-tx2,#999);margin-top:3px;">' + _esc(_pick(d.sub)) + '</div></div>' +
@@ -6207,7 +6207,7 @@ ETB.router = (function () {
     var card = document.createElement('div');
     card.style.cssText = [
       'background:var(--etb-s1,#fff);border:1px solid var(--etb-bd2,rgba(0,0,0,.14));',
-      'border-radius:8px;width:440px;max-width:calc(100vw - 32px);',
+      'border-radius:12px;width:440px;max-width:calc(100vw - 32px);',
       'box-shadow:none;overflow:hidden;'
     ].join('');
     bd.appendChild(card);
@@ -6234,7 +6234,7 @@ ETB.router = (function () {
           ETB.brand.icon(18),
           '<span style="flex:1;font-size:15px;font-weight:700;color:var(--etb-tx,#111);">Repair Plugin</span>',
           '<button id="_etb_rm_close" style="background:none;border:none;color:var(--etb-tx2,#888);',
-            'cursor:pointer;font-size:18px;padding:4px 6px;border-radius:5px;">&#10005;</button>',
+            'cursor:pointer;font-size:18px;padding:4px 6px;border-radius:8px;">&#10005;</button>',
         '</div>',
         '<div style="padding:20px 22px;">',
           '<div style="font-size:12px;color:var(--etb-tx2,#6b6b6b);margin-bottom:10px;">',
@@ -6245,7 +6245,7 @@ ETB.router = (function () {
             _L('Опиши проблему (необязательно)','Describe the issue (optional)'),
           '</label>',
           '<textarea id="_etb_rm_desc" rows="4" style="width:100%;background:#fff;',
-            'border:1px solid var(--etb-bd2,rgba(0,0,0,.14));border-radius:6px;',
+            'border:1px solid var(--etb-bd2,rgba(0,0,0,.14));border-radius:8px;',
             'color:var(--etb-tx,#111);font-size:13px;padding:10px 14px;box-sizing:border-box;',
             'outline:none;resize:vertical;font-family:-apple-system,system-ui,sans-serif;">',
             _esc(prefillText || ''),
@@ -6256,9 +6256,9 @@ ETB.router = (function () {
           '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;">',
             '<button id="_etb_rm_cancel" style="background:var(--etb-s3,#f7f7f9);',
               'border:1px solid var(--etb-bd2,rgba(0,0,0,.14));color:var(--etb-tx2,#6b6b6b);',
-              'border-radius:6px;padding:9px 18px;cursor:pointer;font-size:12px;">' + _L('Отмена','Cancel') + '</button>',
+              'border-radius:8px;padding:9px 18px;cursor:pointer;font-size:12px;">' + _L('Отмена','Cancel') + '</button>',
             '<button id="_etb_rm_go" style="background:#C67E34;border:none;color:#000;font-weight:700;',
-              'border-radius:6px;padding:9px 24px;cursor:pointer;font-size:12px;">' + _L('Починить','Repair') + '</button>',
+              'border-radius:8px;padding:9px 24px;cursor:pointer;font-size:12px;">' + _L('Починить','Repair') + '</button>',
           '</div>',
         '</div>'
       ].join('');
@@ -6277,7 +6277,7 @@ ETB.router = (function () {
         ? '<div style="margin-bottom:16px;"><div style="font-size:11px;font-weight:600;color:var(--etb-tx2,#6b6b6b);' +
           'letter-spacing:.06em;margin-bottom:5px;">' + _L('Твоя записка агенту','Your note to the agent') + '</div>' +
           '<div style="background:var(--etb-s3,#f7f7f9);border:1px solid var(--etb-bd2,rgba(0,0,0,.1));' +
-          'border-radius:8px;padding:10px 12px;font-size:12px;color:var(--etb-tx,#111);line-height:1.5;">' +
+          'border-radius:12px;padding:10px 12px;font-size:12px;color:var(--etb-tx,#111);line-height:1.5;">' +
           _esc(desc) + '</div></div>'
         : '';
       sh.card.innerHTML = [
@@ -6298,9 +6298,9 @@ ETB.router = (function () {
           '<div style="display:flex;gap:8px;justify-content:flex-end;">',
             '<button id="_etb_rc_back" style="background:var(--etb-s3,#f7f7f9);',
               'border:1px solid var(--etb-bd2,rgba(0,0,0,.14));color:var(--etb-tx2,#6b6b6b);',
-              'border-radius:6px;padding:9px 18px;cursor:pointer;font-size:12px;">&#8592; Back</button>',
+              'border-radius:8px;padding:9px 18px;cursor:pointer;font-size:12px;">&#8592; Back</button>',
             '<button id="_etb_rc_go" style="background:#C67E34;border:none;color:#000;font-weight:700;',
-              'border-radius:6px;padding:9px 20px;cursor:pointer;font-size:12px;">',
+              'border-radius:8px;padding:9px 20px;cursor:pointer;font-size:12px;">',
               _L('Удалить и переустановить','Delete &amp; Reinstall'),
             '</button>',
           '</div>',
@@ -6349,7 +6349,7 @@ ETB.router = (function () {
           '</label>',
           '<input type="' + typ + '" data-field-id="' + fid + '"',
             ' style="width:100%;background:#fff;border:1px solid var(--etb-bd2,rgba(0,0,0,.14));',
-            'border-radius:6px;color:var(--etb-tx,#111);font-size:13px;padding:10px 14px;',
+            'border-radius:8px;color:var(--etb-tx,#111);font-size:13px;padding:10px 14px;',
             'box-sizing:border-box;outline:none;font-family:-apple-system,system-ui,sans-serif;"',
             ' autocomplete="off" />',
         '</div>'
@@ -6364,16 +6364,16 @@ ETB.router = (function () {
           _esc(title || 'Configure Plugin'),
         '</span>',
         '<button id="_etb_cm_close" style="background:none;border:none;color:var(--etb-tx2,#888);',
-          'cursor:pointer;font-size:18px;padding:4px 6px;border-radius:5px;">&#10005;</button>',
+          'cursor:pointer;font-size:18px;padding:4px 6px;border-radius:8px;">&#10005;</button>',
       '</div>',
       '<div style="padding:20px 22px;">',
         fieldsHtml || '<div style="font-size:13px;color:var(--etb-tx2,#6b6b6b);">No fields provided.</div>',
         '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px;">',
           '<button id="_etb_cm_cancel" style="background:var(--etb-s3,#f7f7f9);',
             'border:1px solid var(--etb-bd2,rgba(0,0,0,.14));color:var(--etb-tx2,#6b6b6b);',
-            'border-radius:6px;padding:9px 18px;cursor:pointer;font-size:12px;">' + _L('Отмена','Cancel') + '</button>',
+            'border-radius:8px;padding:9px 18px;cursor:pointer;font-size:12px;">' + _L('Отмена','Cancel') + '</button>',
           '<button id="_etb_cm_save" style="background:#C67E34;border:none;color:#000;font-weight:700;',
-            'border-radius:6px;padding:9px 20px;cursor:pointer;font-size:12px;">Save</button>',
+            'border-radius:8px;padding:9px 20px;cursor:pointer;font-size:12px;">Save</button>',
         '</div>',
       '</div>'
     ].join('');
@@ -6428,7 +6428,7 @@ ETB.router = (function () {
     var card = document.createElement('div');
     card.style.cssText = [
       'background:var(--etb-s1,#fff);border:1px solid var(--etb-bd2,rgba(0,0,0,.14));',
-      'border-radius:8px;width:420px;max-width:calc(100vw - 32px);',
+      'border-radius:12px;width:420px;max-width:calc(100vw - 32px);',
       'box-shadow:none;overflow:hidden;'
     ].join('');
     bd.appendChild(card);
@@ -6454,8 +6454,8 @@ ETB.router = (function () {
       if (!_logLines.length) return '';
       return [
         '<div style="margin-top:14px;border:1px solid var(--etb-bd,rgba(0,0,0,.07));',
-          'border-radius:8px;overflow:hidden;">',
-          '<div style="font-size:10px;font-weight:600;color:var(--etb-tx2,#6b6b6b);',
+          'border-radius:12px;overflow:hidden;">',
+          '<div style="font-size:11px;font-weight:600;color:var(--etb-tx2,#6b6b6b);',
             'letter-spacing:.05em;padding:6px 10px 5px;',
             'background:var(--etb-s3,#f7f7f9);border-bottom:1px solid var(--etb-bd,rgba(0,0,0,.07));">',
             'Activity',
@@ -6497,7 +6497,7 @@ ETB.router = (function () {
         var short = summary.trim().slice(0, 400);
         summaryHtml = [
           '<div style="background:var(--etb-s3,#f7f7f9);border:1px solid var(--etb-bd,rgba(0,0,0,.07));',
-            'border-radius:8px;padding:10px 12px;font-size:11px;font-family:ui-monospace,monospace;',
+            'border-radius:12px;padding:10px 12px;font-size:11px;font-family:ui-monospace,monospace;',
             'line-height:1.6;color:var(--etb-tx2,#6b6b6b);max-height:80px;overflow:auto;',
             'margin-bottom:16px;white-space:pre-wrap;word-break:break-word;">',
             _esc(short),
@@ -6518,9 +6518,9 @@ ETB.router = (function () {
           '<div style="display:flex;gap:8px;justify-content:flex-end;">',
             '<button id="_etb_rsm_close" style="background:var(--etb-s3,#f7f7f9);',
               'border:1px solid var(--etb-bd2,rgba(0,0,0,.14));color:var(--etb-tx2,#6b6b6b);',
-              'border-radius:6px;padding:9px 18px;cursor:pointer;font-size:12px;">Закрыть</button>',
+              'border-radius:8px;padding:9px 18px;cursor:pointer;font-size:12px;">Закрыть</button>',
             '<button id="_etb_rsm_open" style="background:#C67E34;border:none;color:#000;',
-              'font-weight:700;border-radius:6px;padding:9px 22px;cursor:pointer;font-size:12px;">',
+              'font-weight:700;border-radius:8px;padding:9px 22px;cursor:pointer;font-size:12px;">',
               'Открыть плагин</button>',
           '</div>',
         '</div>'
@@ -6543,16 +6543,16 @@ ETB.router = (function () {
             'Плагин: <b>' + _esc(pluginName) + '</b>',
           '</div>',
           '<div style="background:rgba(220,50,50,.06);border:1px solid rgba(220,50,50,.18);',
-            'border-radius:6px;padding:10px 14px;font-size:12px;color:rgba(160,40,40,.9);',
+            'border-radius:8px;padding:10px 14px;font-size:12px;color:rgba(160,40,40,.9);',
             'line-height:1.5;margin-bottom:20px;">',
             _esc(String(msg || 'Unknown error').slice(0, 200)),
           '</div>',
           '<div style="display:flex;gap:8px;justify-content:flex-end;">',
             '<button id="_etb_rsm_close2" style="background:var(--etb-s3,#f7f7f9);',
               'border:1px solid var(--etb-bd2,rgba(0,0,0,.14));color:var(--etb-tx2,#6b6b6b);',
-              'border-radius:6px;padding:9px 18px;cursor:pointer;font-size:12px;">Закрыть</button>',
+              'border-radius:8px;padding:9px 18px;cursor:pointer;font-size:12px;">Закрыть</button>',
             onRetry
-              ? '<button id="_etb_rsm_retry" style="background:#C67E34;border:none;color:#000;font-weight:700;border-radius:6px;padding:9px 20px;cursor:pointer;font-size:12px;">Ещё раз</button>'
+              ? '<button id="_etb_rsm_retry" style="background:#C67E34;border:none;color:#000;font-weight:700;border-radius:8px;padding:9px 20px;cursor:pointer;font-size:12px;">Ещё раз</button>'
               : '',
           '</div>',
         '</div>'
@@ -6604,7 +6604,7 @@ ETB.router = (function () {
       '<button onclick="ETB.router._showRepairModal(\'' + pid + '\',\'\')"',
         ' title="Починить или перенастроить этот плагин"',
         ' style="background:var(--etb-s1,#fff);border:1px solid var(--etb-bd2,rgba(0,0,0,.14));',
-        'color:var(--etb-tx2,#6b6b6b);border-radius:8px;padding:5px 13px;cursor:pointer;',
+        'color:var(--etb-tx2,#6b6b6b);border-radius:12px;padding:5px 13px;cursor:pointer;',
         'font-size:11px;font-family:-apple-system,system-ui,sans-serif;',
         'box-shadow:none;transition:background .12s,color .12s;',
         'display:flex;align-items:center;gap:5px;">',
