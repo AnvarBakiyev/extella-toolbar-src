@@ -178,7 +178,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);
 [data-lm] .stile:hover{box-shadow:none}
 .st_chip{align-self:flex-start;font:500 11px var(--mono);letter-spacing:.015em;color:var(--tx3);text-transform:none}
 .st_top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
-.catbar{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:flex-start;gap:8px;padding:0 0 16px}
+.catbar{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:flex-start;gap:8px;margin:16px 0 0;padding:0}
 .adm_seg{display:flex;background:var(--s2);border:1px solid var(--bd);border-radius:var(--r-sm);padding:2px;gap:2px}
 .adm_seg button{border:none;background:transparent;color:var(--tx2);font:600 13px var(--sans);padding:8px 12px;border-radius:var(--r);cursor:pointer}
 .adm_seg button.on{background:var(--s1);color:var(--tx);border:1px solid var(--bd2)}
@@ -400,6 +400,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);
   padding:4px 0 2px;margin-top:32px}
 .sect_hdr:first-child{margin-top:0}
 .sect + .sect_hdr{margin-top:8px}
+.tabfilter + .sect_hdr, .catbar + .sect_hdr{margin-top:24px}
 .sect_title{font:500 11px/1.2 var(--mono);letter-spacing:.06em;color:var(--petrol);text-transform:none}
 .sect_jump{display:inline-flex;align-items:center;gap:8px;border:none;background:transparent;cursor:pointer;padding:0;
   font:600 13px var(--sans);color:var(--tx);letter-spacing:0}
