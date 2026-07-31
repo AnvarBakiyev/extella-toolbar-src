@@ -28,18 +28,18 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--tx);
 #hdr_sub{font-size:11px;color:var(--tx2);margin-top:1px}
 #hdr_sp{flex:1}
 .hdr_btn{background:none;border:1px solid var(--bd2);color:var(--tx2);
-  border-radius:7px;padding:5px 11px;font-size:11px;cursor:pointer;transition:all .12s}
+  border-radius:8px;padding:5px 11px;font-size:11px;cursor:pointer;transition:all .12s}
 .hdr_btn:hover{border-color:rgba(var(--ar),.3);color:var(--a)}
 #ctx_bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;
   padding:7px 16px;background:var(--s2);border-bottom:1px solid var(--bd);flex-shrink:0}
 .ctx_pill{background:rgba(var(--ar),.08);color:var(--a);border:1px solid rgba(var(--ar),.18);
-  border-radius:5px;font-size:10px;font-weight:600;padding:2px 8px;white-space:nowrap}
+  border-radius:8px;font-size:10px;font-weight:600;padding:2px 8px;white-space:nowrap}
 #body_row{display:flex;flex:1;min-height:0;flex-direction:column}
 #chat_col{display:flex;flex-direction:column;flex:1;min-height:0;min-width:0}
 #msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;
   scrollbar-width:thin;scrollbar-color:var(--s4) transparent}
 #msgs::-webkit-scrollbar{width:3px}
-#msgs::-webkit-scrollbar-thumb{background:var(--s4);border-radius:2px}
+#msgs::-webkit-scrollbar-thumb{background:var(--s4);border-radius:8px}
 #doc_col{display:none;flex-direction:column;min-height:0;border-left:1px solid var(--bd);
   background:var(--s1);min-width:0}
 #doc_toolbar{display:flex;align-items:center;gap:8px;padding:10px 14px;
@@ -94,18 +94,18 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--tx);
 .qa_chip:disabled{opacity:.5;cursor:not-allowed}
 #inp_area{padding:12px 16px 16px;flex-shrink:0;background:var(--s1);border-top:1px solid var(--bd)}
 #inp_row{display:flex;gap:8px;align-items:flex-end}
-#inp{flex:1;background:var(--s2);border:1px solid var(--bd2);border-radius:10px;
+#inp{flex:1;background:var(--s2);border:1px solid var(--bd2);border-radius:12px;
   color:var(--tx);font-size:13px;padding:10px 14px;resize:none;outline:none;
   min-height:42px;max-height:140px;line-height:1.5;transition:border-color .15s;
   font-family:-apple-system,system-ui,sans-serif}
 #inp:focus{border-color:rgba(var(--ar),.4)}
 #inp::placeholder{color:var(--tx3)}
-#send_btn{background:var(--a);border:none;color:#000;font-weight:700;
-  border-radius:9px;padding:10px 18px;cursor:pointer;font-size:12px;
+#send_btn{background:var(--act,var(--a));border:none;color:#fff;font-weight:600;
+  border-radius:999px;padding:10px 20px;cursor:pointer;font-size:13px;
   flex-shrink:0;transition:opacity .12s;align-self:flex-end}
 #send_btn:hover{opacity:.85}
 #attach_btn{background:var(--s3,#f2f2f0);border:1px solid var(--bd2,#d9d6cf);color:var(--tx2,#666);
-  border-radius:9px;padding:8px 11px;cursor:pointer;font-size:15px;line-height:1;
+  border-radius:12px;padding:8px 11px;cursor:pointer;font-size:15px;line-height:1;
   flex-shrink:0;transition:background .12s;align-self:flex-end}
 #attach_btn:hover{background:var(--s4,#e9e6df)}
 #send_btn:disabled{opacity:.4;cursor:not-allowed}
@@ -135,13 +135,13 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--tx);
 .md-content a{color:var(--a);text-decoration:none}
 .md-content a:hover{text-decoration:underline}
 .md-content code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;
-  background:var(--s3);padding:1px 5px;border-radius:4px}
+  background:var(--s3);padding:1px 5px;border-radius:8px}
 .md-table-wrap{overflow-x:auto;margin:10px 0;border:1px solid var(--bd);border-radius:8px}
 .md-table{width:100%;border-collapse:collapse;font-size:12px}
 .md-table th,.md-table td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--bd)}
 .md-table th{background:var(--s3);font-weight:600;color:var(--tx)}
 .md-table tr:last-child td{border-bottom:none}
-.md-artifact{border:1px solid rgba(var(--ar),.25);border-radius:10px;margin:12px 0;overflow:hidden}
+.md-artifact{border:1px solid rgba(var(--ar),.25);border-radius:12px;margin:12px 0;overflow:hidden}
 .md-artifact-hdr{display:flex;align-items:center;gap:8px;padding:8px 12px;
   background:rgba(var(--ar),.08);border-bottom:1px solid rgba(var(--ar),.15);
   font-size:11px;font-weight:700;color:var(--a)}
@@ -151,7 +151,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--tx);
 .md-code-hdr{display:flex;align-items:center;gap:8px;padding:6px 10px;
   background:var(--s4);border-bottom:1px solid var(--bd);font-size:10px;color:var(--tx2)}
 .md-code-lang{flex:1;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
-.md-code-copy{background:none;border:1px solid var(--bd2);color:var(--tx2);border-radius:5px;
+.md-code-copy{background:none;border:1px solid var(--bd2);color:var(--tx2);border-radius:8px;
   padding:2px 8px;font-size:10px;cursor:pointer}
 .md-code-copy:hover{color:var(--a);border-color:rgba(var(--ar),.3)}
 .md-code pre{margin:0;padding:12px;overflow-x:auto;font-size:12px;line-height:1.5;
@@ -166,7 +166,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--tx);
 .md-img-wrap{margin:10px 0}
 .md-img-wrap img{max-width:100%;border-radius:8px;border:1px solid var(--bd);display:block}
 .md-img-actions{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
-.md-img-btn{background:none;border:1px solid var(--bd2);color:var(--tx2);border-radius:6px;
+.md-img-btn{background:none;border:1px solid var(--bd2);color:var(--tx2);border-radius:8px;
   padding:4px 12px;font-size:11px;font-weight:600;cursor:pointer;transition:all .12s}
 .md-img-btn:hover{color:var(--a);border-color:rgba(var(--ar),.3)}
 .msg_img_hint{margin-top:8px;font-size:11px;color:var(--tx2);font-style:italic}
@@ -181,8 +181,8 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--tx);
 #doc_preview li{margin:5px 0}
 #doc_preview blockquote{margin:14px 0;padding:8px 14px}
 #doc_preview hr{margin:20px 0}
-#doc_preview code{padding:2px 7px;border-radius:5px;font-size:12px}
-#doc_preview .md-table-wrap{margin:14px 0;border-radius:10px;max-height:none}
+#doc_preview code{padding:2px 7px;border-radius:8px;font-size:12px}
+#doc_preview .md-table-wrap{margin:14px 0;border-radius:12px;max-height:none}
 #doc_preview .md-table{font-size:13px}
 #doc_preview .md-table thead th{position:sticky;top:0;z-index:1;background:var(--s3);box-shadow:0 1px 0 var(--bd)}
 #doc_preview .md-table th,#doc_preview .md-table td{padding:10px 14px}
@@ -218,7 +218,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--tx);
       <div id="inp_area">
         <div id="inp_row">
           <textarea id="inp" placeholder="Напиши агенту…" rows="1"></textarea>
-          <button id="attach_btn" title="Приложить документ для анализа — PDF, Word, txt">📎</button>
+          <button id="attach_btn" title="Приложить документ для анализа — PDF, Word, txt"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></button>
           <input type="file" id="attach_inp" accept=".pdf,.docx,.doc,.rtf,.odt,.txt,.md,.markdown,.csv,.json,.html,.htm,.log,.yaml,.yml" style="display:none">
           <button id="send_btn">Отправить</button>
         </div>
@@ -247,7 +247,8 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
   var messages = [];
   // Язык окна = язык витрины: приходит в etb_init, фолбэк — общий localStorage (same-origin)
   var LANG = (function () { try { return localStorage.getItem('etb_lang') === 'en' ? 'en' : 'ru'; } catch (e) { return 'ru'; } })();
-  function T(ru, en) { return LANG === 'en' ? en : ru; }
+  var ATTACH_ICON = "<svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48\"/></svg>";
+    function T(ru, en) { return LANG === 'en' ? en : ru; }
   function chatRu(id) { return (LANG === 'ru' && CHAT_RU[id]) || null; }
   function applyLangChrome() {
     var el;
@@ -1542,7 +1543,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
       }
       isTyping = false;
       var out = extractAgentText(data);
-      messages.push({ role: 'assistant', content: out || T('Не получилось получить ответ. Попробуй ещё раз.', 'Could not get a response. Please try again.') });
+      messages.push({ role: 'assistant', content: out || T('Агент не ответил. Проверь подключение и нажми «Отправить» ещё раз.', 'The agent did not answer. Check the connection and press “Send” again.') });
       renderMessages();
       saveHistory();
       if (isSplitLayout()) {
@@ -1688,7 +1689,7 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
         reader.readAsDataURL(f);
       });
     }
-    function _attachReset() { var b = document.getElementById('attach_btn'); if (b) { b._busy = false; b.textContent = b._old || '📎'; } }
+    function _attachReset() { var b = document.getElementById('attach_btn'); if (b) { b._busy = false; b.innerHTML = b._old || ATTACH_ICON; } }
     window.addEventListener('message', function (e) {
       var d = e.data; if (!d || d.type !== 'etb_doc_text') return;
       _attachReset();

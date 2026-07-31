@@ -3496,13 +3496,28 @@ function _mkbLoad(){
     var head='<div class="sect_hdr"><span class="sect_title">'+(en?'Installed':'Установленное')+'</span><span class="sect_line"></span></div>'+
       '<div class="sk_lead" style="grid-column:1/-1">'+(en?'Programs on this computer. Connect one so an agent can use it on a schedule.':'Программы на этом компьютере. Подключи любую, чтобы агент мог ей пользоваться по расписанию.')+
       (d.blocks!=null?' <span style="color:var(--tx3)">· '+(en?'connected: ':'подключено: ')+esc(String(d.blocks))+'</span>':'')+'</div>';
-    var cards=action.map(function(it,i){ return _mkbCard(it,i,en); }).join('');
+    var mine=action.filter(function(x){ return x.kind==='app'; });
+    var built=action.filter(function(x){ return x.kind!=='app'; });
+    function grp(title, list, from){
+      if(!list.length) return '';
+      return '<div class="sect_hdr" style="margin-top:24px"><span class="sect_title">'+title+'</span><span class="sect_line"></span></div>'+
+        '<div class="sk_lead" style="grid-column:1/-1">'+from+'</div>'+
+        '<div class="mshelf">'+list.map(function(it,i){ return _mkbCard(it,i,en); }).join('')+'</div>';
+    }
+    var cards = grp(en?'Your programs':'Твои программы', mine,
+                    en?'Installed by you from GitHub.':'Ты установила их с GitHub.')+
+                grp(en?'Built in':'Встроенное', built,
+                    en?'Came with Extella, nothing to install.':'Пришли вместе с Extella, ставить ничего не нужно.');
     var workLine=by.working.length?'<div class="sk_lead" style="grid-column:1/-1;color:#2E7D5B;font-size:13px">✓ '+
       esc(String(by.working.length))+' '+(en?'already working in automations':'уже работают в автоматизациях')+'</div>':'';
     var miss=by.missing.map(function(r){return r.title||r.ref;});
     var missLine=miss.length?'<div class="sk_lead" style="grid-column:1/-1;color:var(--tx3);font-size:13px">'+
       esc(String(miss.length))+' '+(en?'listed as installed, but not found':'числятся установленными, но их нет')+' — '+esc(miss.slice(0,6).join(', '))+(miss.length>6?'…':'')+'</div>':'';
-    slot.innerHTML=head+workLine+(cards?'<div class="mshelf">'+cards+'</div>':'')+missLine;
+    var html=head+workLine+cards+missLine;
+    // Мигание: блок перерисовывался на каждый ответ моста, даже если данные те же.
+    // Сравниваем отпечаток и трогаем DOM только когда картина изменилась.
+    if(slot._sig===html) return;
+    slot._sig=html; slot.innerHTML=html;
   }).catch(function(){ slot.innerHTML=''; });   // мост спит / визарда нет — молчим
 }
 // Автозамыкание «поставил приложение → оно само стало блоком автоматизаций».
