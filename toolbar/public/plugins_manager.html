@@ -675,6 +675,7 @@ body[data-theme="dark"] .inf .tr,html[data-theme="dark"] .inf .tr{stroke:var(--b
        расходился с ЛК и сбрасывался при следующем сообщении. -->
   <button class="bclose" onclick="notify('close')" title="Close">&#10005;</button>
 </div>
+<div class="tabs" id="tabs"></div>
 <div class="cmdbar">
   <div id="cmd_search" style="display:flex;gap:8px;flex:1;min-width:0;height:55px">
     <input id="cmd_url" placeholder="Поиск по ярлыкам и разделам" spellcheck="false" autocomplete="off" oninput="cmdInput(this.value)" onkeydown="if(event.key==='Enter')cmdInstall()"/>
@@ -685,7 +686,6 @@ body[data-theme="dark"] .inf .tr,html[data-theme="dark"] .inf .tr{stroke:var(--b
     <span id="cmd_add_hint" style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font:400 13px var(--sans);color:var(--tx3)"></span>
   </div>
 </div>
-<div class="tabs" id="tabs"></div>
 <div class="scr"><div class="grid" id="grid"></div></div>
 <div class="apick" id="apick">
   <div class="apick_box">
@@ -5077,6 +5077,35 @@ function _fmtTs(ts){
 }
 
 // ── Запуск агента + запись в историю ──────────────────────────────────────
+// Человеческий текст вместо сырого ответа воркера: правило «ошибка говорит, что делать».
+function _runErrText(m){
+  var s=String(m||'').toLowerCase();
+  if(/worker hung|hang|stuck/.test(s)) return _clT('Процесс завис и был остановлен. Открой Конструктор и запусти ещё раз.','The process hung and was stopped. Open the Wizard and run it again.');
+  if(/timeout|timed out/.test(s))      return _clT('Ответ не пришёл вовремя — работа могла продолжиться в фоне. Загляни в историю через минуту.','No answer in time — the work may still be running. Check the history in a minute.');
+  if(/not found|404/.test(s))          return _clT('Не нашёл, что запускать: эксперт агента не установлен.','Nothing to run: the agent expert is not installed.');
+  if(/403|denied|forbidden/.test(s))   return _clT('Нет доступа к этому агенту под текущим аккаунтом.','No access to this agent under the current account.');
+  return _clT('Не удалось запустить: ','Could not run: ')+esc(m||'');
+}
+// Запуск из кабинета: та же механика, но со своей строкой состояния и обновлением истории.
+function cabRunNow(orch, btn){
+  var p=_cabAgent(); if(!p) return;
+  var id=_agId(p), box=document.getElementById('cab_run_msg');
+  if(btn) btn.disabled=true;
+  if(box) box.innerHTML=INF(24)+' '+_clT('Запускаю…','Starting…');
+  var ts=Date.now();
+  skBridge('etb_run_expert','etb_expert_result',{name:orch,params:{}},180000).then(function(){
+    _recRun(id,true,_clT('запуск вручную','manual run'),ts);
+    if(box) box.innerHTML='✓ '+_clT('Готово','Done');
+    if(btn) btn.disabled=false;
+    _agLoadRuns(id).then(function(){ _cabRender(); });
+  }).catch(function(e){
+    var m=(e&&e.message)||'error', deferred=/500|timeout|defer/i.test(m);
+    _recRun(id, deferred?null:false, deferred?_clT('в фоне','in background'):m, ts);
+    if(box) box.innerHTML=(deferred?INF(24)+' ':'⚠ ')+_runErrText(m);
+    if(btn) btn.disabled=false;
+    _agLoadRuns(id).then(function(){ _cabRender(); });
+  });
+}
 function autoRun(orch, btn){
   var p = (_autoReg||[]).filter(function(x){return (x.orchestrator||x.id)===orch;})[0] || {orchestrator:orch, id:orch};
   var id = _agId(p);
@@ -5130,7 +5159,7 @@ function autoCardHTML(p, i){
       '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;position:relative">'+
         '<span style="font-size:26px;line-height:1">'+em+'</span>'+_statusBadge(status)+'</div>'+
       '<div style="font:700 15px/1.28 var(--sans);color:#fff;letter-spacing:-.01em;margin-top:8px;text-shadow:0 1px 4px rgba(0,0,0,.25);position:relative;max-width:88%">'+name+'</div>'+
-      (tag?'<div style="font-size:13px;color:rgba(255,255,255,.9);margin-top:4px;line-height:1.4;text-shadow:0 1px 3px rgba(0,0,0,.25);position:relative;max-width:92%">'+tag+'</div>':'')+
+      (tag?'<div style="font-size:13px;color:var(--tx2);margin-top:4px;line-height:1.4;text-shadow:0 1px 3px rgba(0,0,0,.25);position:relative;max-width:92%">'+tag+'</div>':'')+
     '</div>'+
     // тело — умения + управление
     '<div style="padding:12px 16px 12px">'+
@@ -5208,11 +5237,11 @@ function _cabRender(){
       '<div style="display:flex;align-items:flex-start;gap:16px;position:relative">'+
         '<div style="font-size:32px;line-height:1;flex-shrink:0;display:flex;align-items:center">'+_agAvatar(p)+'</div>'+
         '<div style="min-width:0;flex:1">'+
-          '<div style="font:750 20px/1.25 var(--sans);letter-spacing:-.01em;color:#fff;text-shadow:0 1px 5px rgba(0,0,0,.3)">'+name+'</div>'+
-          (tag?'<div style="font-size:13px;color:rgba(255,255,255,.92);margin-top:4px;line-height:1.45;text-shadow:0 1px 4px rgba(0,0,0,.3)">'+tag+'</div>':'')+
-          '<div style="margin-top:8px;display:flex;align-items:center;gap:8px">'+_statusBadge(status)+'<span style="font-size:11px;color:rgba(255,255,255,.7)">· '+esc(p.orchestrator||_agId(p))+'</span></div>'+
+          '<div style="font:700 20px/1.25 var(--sans);letter-spacing:-.01em;color:var(--tx)">'+name+'</div>'+
+          (tag?'<div style="font-size:13px;color:var(--tx2);margin-top:4px;line-height:1.45">'+tag+'</div>':'')+
+          '<div style="margin-top:8px;display:flex;align-items:center;gap:8px">'+_statusBadge(status)+'<span style="font-size:11px;color:var(--tx3)">· '+esc(p.orchestrator||_agId(p))+'</span></div>'+
         '</div>'+
-        '<button onclick="closeAgentCabinet()" style="border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:#fff;border-radius:var(--r);padding:8px 16px;cursor:pointer;font:600 13px var(--sans);flex-shrink:0;position:relative">✕ Закрыть</button>'+
+        '<button onclick="closeAgentCabinet()" style="border:1px solid var(--bd2);background:var(--s1);color:var(--tx);font:600 13px var(--sans);padding:8px 16px;border-radius:var(--r-pill);cursor:pointer;flex-shrink:0">✕ Закрыть</button>'+
       '</div>'+
     '</div>'+
     '<div style="display:flex;gap:4px;padding:8px 16px;border-bottom:1px solid var(--bd);background:var(--s1)">'+tabBar+'</div>'+
@@ -5238,15 +5267,15 @@ function _cabOverview(p){
 }
 function _cabRuns(p){
   var runs=_agRuns(p), orch=p.orchestrator||'';
-  var runBtn = orch ? '<button class="st_btn" onclick="autoRun(\''+esc(orch)+'\',this)">▶ Запустить сейчас</button>' : '<span style="color:var(--tx3);font-size:13px">нет оркестратора — запуск недоступен</span>';
+  var runBtn = orch ? '<button class="st_btn" onclick="cabRunNow(\''+esc(orch)+'\',this)">▶ '+_clT('Запустить сейчас','Run now')+'</button>' : '<span style="color:var(--tx3);font-size:13px">нет оркестратора — запуск недоступен</span>';
   var list = runs.length ? runs.map(function(r){
     var ic = r.ok===true?'<span style="color:#2E7D5B">✓</span>':(r.ok===false?'<span style="color:#B23A2E">✕</span>':INF(26));
     var lbl = r.ok===true?'успешно':(r.ok===false?'ошибка':'в фоне');
     return '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--bd)"><span style="font-size:15px">'+ic+'</span>'+
       '<span style="font-variant-numeric:tabular-nums;font-size:13px;color:var(--tx);min-width:82px">'+_fmtTs(r.ts)+'</span>'+
-      '<span style="font-size:13px;color:var(--tx2)">'+esc(lbl)+(r.note?' · '+esc(r.note):'')+'</span></div>';
+      '<span style="font-size:13px;color:var(--tx2)">'+esc(lbl)+(r.note?' · '+(r.ok===false?_runErrText(r.note):esc(r.note)):'')+'</span></div>';
   }).join('') : '<div style="color:var(--tx3);font-size:13px;padding:12px 0">Запусков пока нет. Нажми «Запустить сейчас».</div>';
-  return _cabCard('<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px"><div style="font:700 13px var(--sans);color:var(--tx2);letter-spacing:.02em">История запусков</div>'+runBtn+'</div>'+list);
+  return _cabCard('<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px"><div style="font:700 13px var(--sans);color:var(--tx2);letter-spacing:.02em">История запусков</div>'+runBtn+'</div>'+'<div id="cab_run_msg" style="font-size:13px;color:var(--tx2);margin-bottom:8px;min-height:18px"></div>'+list);
 }
 var _SCHED_PRESETS=[['','вручную (без расписания)'],['60','каждый час'],['360','каждые 6 часов'],['1440','каждый день'],['10080','каждую неделю']];
 function _cabSchedule(p){
@@ -6863,9 +6892,9 @@ function _wsxStyle(){
 '.wsx .wx-cog{width:40px;height:40px;flex:0 0 auto;opacity:.95}.wsx .wx-cog svg{width:100%;height:100%;fill:#fff;animation:wxspin 22s linear infinite}',
 '@keyframes wxspin{to{transform:rotate(360deg)}}@media (prefers-reduced-motion:reduce){.wsx .wx-cog svg{animation:none}}',
 '.wsx .wx-htxt h1{margin:0;font-family:var(--serif);font-size:21px;font-weight:600;letter-spacing:0;line-height:1.2;color:#fff}',
-'.wsx .wx-st{display:flex;align-items:center;gap:8px;margin-top:4px;font-size:13px;color:rgba(255,255,255,.9)}',
+'.wsx .wx-st{display:flex;align-items:center;gap:8px;margin-top:4px;font-size:13px;color:var(--tx2)}',
 '.wsx .wx-st .wx-dot{width:8px;height:8px;border-radius:50%;background:#2F6B66;box-shadow:none}.wsx .wx-st code{font-family:var(--mono);font-size:11px;opacity:.9}',
-'.wsx .wx-close{margin-left:auto;color:rgba(255,255,255,.9);font-size:13px;font-weight:600;background:rgba(255,255,255,.14);border:0;border-radius:var(--r);padding:8px 16px;cursor:pointer}.wsx .wx-close:hover{background:rgba(255,255,255,.22)}',
+'.wsx .wx-close{margin-left:auto;color:var(--tx2);font-size:13px;font-weight:600;background:rgba(255,255,255,.14);border:0;border-radius:var(--r);padding:8px 16px;cursor:pointer}.wsx .wx-close:hover{background:rgba(255,255,255,.22)}',
 '.wsx .wx-tabr{position:absolute;opacity:0;pointer-events:none}',
 '.wsx .wx-tabbar{display:flex;gap:4px;padding:12px 24px 0;background:var(--paper);border-bottom:1px solid var(--wl);flex-wrap:wrap}',
 '.wsx .wx-tabbar label{display:inline-flex;align-items:center;gap:8px;font-size:15px;font-weight:600;color:var(--muted);padding:8px 16px;border-radius:var(--r) 10px 0 0;cursor:pointer;position:relative;top:1px;border:1px solid transparent;border-bottom:0}',
