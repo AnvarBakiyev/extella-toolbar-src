@@ -530,8 +530,22 @@ function buildLibrary() {
     'history.replaceState(null,"",location.href.split("#")[0]);',
     '}catch(e){}})();</script>'
   ].join('');
+  // Библиотека живёт отдельным документом, значит своих начертаний у неё нет:
+  // токены просили Source Sans / Inter, а рисовал системный шрифт. Берём тот же
+  // блок @font-face из витрины — один источник на весь продукт, без дублей в
+  // исходниках (в артефакте он и так лежит внутри строки витрины).
+  var fontFaces = '';
+  try {
+    var mktCss = readFile(path.join(PUBLIC, 'plugins_manager.html'));
+    var faces = mktCss.match(/@font-face\{[^}]*\}/g) || [];
+    var seen = Object.create(null), uniq = [];
+    faces.forEach(function (face) { if (!seen[face]) { seen[face] = 1; uniq.push(face); } });
+    if (uniq.length) fontFaces = '<style>' + uniq.join('') + '</style>';
+  } catch (e) {
+    console.warn('  ⚠ Не смог вложить начертания в Библиотеку: ' + e.message);
+  }
   if (html.indexOf('<head>') !== -1) {
-    return html.replace('<head>', '<head>' + shim);
+    return html.replace('<head>', '<head>' + fontFaces + shim);
   }
   // No literal <head> — prepend; still runs before the body module script.
   console.warn('  ⚠ Library build has no <head> tag — prepending credential shim.');

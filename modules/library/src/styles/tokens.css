@@ -9,7 +9,7 @@
      это и был пункт 2 у Алии «разные шрифты на разных экранах». Системные семейства
      оставлены хвостом: если шрифт хоста почему-то не подгрузился, текст не поедет. */
   --ap-font-display: "Source Serif 4", ui-serif, Georgia, serif;
-  --ap-font: "Source Sans 3", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --ap-font: "Inter", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   --ap-font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
   /* radii */
@@ -326,7 +326,7 @@
   border-bottom: 1px solid var(--ap-divider);
 }
 .ap-page-h h1 {
-  /* Канон Эллы: заголовки — Source Serif 4, текст и UI — Source Sans 3. */
+  /* Канон Эллы: заголовки — Source Serif 4, текст и UI — Inter. */
   font-family: var(--ap-font-display);
   font-size: var(--ap-fs-2xl); font-weight: 600;
   line-height: 1.15; margin: 0; letter-spacing: -0.01em;
