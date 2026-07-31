@@ -1543,7 +1543,7 @@ var CMD_ADD = {
   programs:  {l:'+ Добавить программу', l_en:'+ Add a program', h:'Опиши задачу: Extella найдёт открытую программу и покажет карточку', h_en:'Describe the task — Extella finds an open-source program and shows its card', go:function(){ openAddModal('programs'); }},
   apps:      {l:'+ Добавить программу', l_en:'+ Add a program', h:'Опиши задачу: Extella найдёт открытую программу и покажет карточку', h_en:'Describe the task — Extella finds an open-source program and shows its card', go:function(){ openAddModal('programs'); }},
   cli:       {l:'+ Добавить инструмент', l_en:'+ Add a tool',    h:'', h_en:'', go:function(){ openCliAdd(); }},
-  models:    {l:'+ Добавить модель',     l_en:'+ Add a model',   h:'Опиши, какая модель нужна, и Extella подберёт работающую', h_en:'Describe the model you need — Extella finds a working one', go:function(){ openAddModal('models'); }},
+  models:    {l:'+ Добавить модель',     l_en:'+ Add a model',   h:'Опиши, что модель должна уметь, и Extella найдёт подходящую', h_en:'Describe the model you need — Extella finds a working one', go:function(){ openAddModal('models'); }},
   skills:    {l:'+ Добавить навык',      l_en:'+ Add a skill',   h:'', h_en:'A rule for your agent: what to count, what to ask, what to double-check', go:function(){ openAddModal('skills'); }},
   knowledge: {l:'+ Добавить базу',       l_en:'+ Add a base',    h:'', h_en:'Your own documents for the agent to answer from', go:function(){ kpCreate(); }},
   agents:    {l:'+ Создать агента',      l_en:'+ Create an agent', h:'Откроется Конструктор: опиши задачу, он соберёт и запустит агента', h_en:'The Wizard opens: describe the task and it builds and starts the agent', go:function(){ _openWizard(); }},
@@ -1630,7 +1630,7 @@ function _lm(m, field){ if(LANG==='en' && m && m.en && m.en[field]!=null) return
 try { if (localStorage.getItem('etb_lang') === 'en') LANG = 'en'; } catch (_) {}
 var I18N_EN = {
   'Найти':'Search',
-  'Управление парком агентов: состояние, версии, запуски':'Manage your fleet of agents: state, versions, runs',
+  'Показывает всех твоих агентов в одном списке: кто работает, когда запускался':'All your agents in one list: what is running and when it last ran',
   // Карточка «Скрыть личные данные» (переехала со стола) — своя EN-пара.
   'Скрыть личные данные':'Hide personal data',
   'Уберёт из файла имена, телефоны и адреса — перед тем как ты кому-то его отправишь. Файл не уходит с компьютера.':'Strips names, phone numbers and addresses from a file before you send it to anyone. The file never leaves the computer.',
@@ -1642,12 +1642,12 @@ var I18N_EN = {
   // скриншотам живого приложения 29.07. Ключи с неразрывными пробелами —
   // подставлять ровно так, как они стоят в разметке.
   'Модели для агента':'Models for your agent',
-  'Мозг, который выполняет задачу: понимает текст, рисует изображения, распознаёт речь. Список собран с Hugging Face — можно и вставить свою ссылку.':'The brain that does the job: understands text, draws images, recognises speech. The catalogue is built from Hugging Face — or paste a link of your own.',
+  'Модель отвечает за то, что агент понимает и создаёт: разбирает текст, рисует изображения, распознаёт речь. Список собран с Hugging Face. Можно вставить и свою ссылку.':'The model is what your agent understands and creates with: it reads text, draws images, recognises speech. The list comes from Hugging Face. You can paste your own link too.',
   'Локальные модели работают прямо на твоём компьютере, даже без интернета. Облачные быстрее и не занимают место.':'Local models run right on your computer, even offline. Cloud ones are faster and take up no space.',
   'Программы для агента':'Programs for your agent',
   'Добавляют агенту новые возможности: работу с документами, данными, изображениями и внешними сервисами.':'They give the agent new abilities: documents, data, images and outside services.',
   'Выбери программу и нажми «Установить». После установки она появится на рабочем столе.':'Pick a program and press «Install» — it lands on the desktop once it is in.',
-  'Технически это мини-приложения с интерфейсом (UI) и MCP-серверы с GitHub.':'Technically these are mini-apps with a UI and MCP servers from GitHub.',
+  'Технически это мини-приложения со своим окном и MCP-серверы с GitHub.':'Technically these are mini-apps with their own window and MCP servers from GitHub.',
   'Навыки для агента':'Skills for your agent',
   'Задают дополнительные правила работы: например, отвечать короче, проверять факты или разбирать документы.':'They set extra rules of work: answer shorter, check the facts, take documents apart.',
   'Выбери навык и укажи агента: он начнёт применять его в новых диалогах.':'Pick a skill and name the agent — it starts applying it in new conversations.',
@@ -1657,14 +1657,14 @@ var I18N_EN = {
   'Технически это утилиты командной строки (CLI): ffmpeg, pandoc, OCR и другие.':'Technically these are command-line utilities (CLI): ffmpeg, pandoc, OCR and others.',
   'Агенты — твои сотрудники':'Agents — your coworkers',
   'Агент работает вместо тебя: ведёт переписку, считает, готовит отчёты. Своего собери в Конструкторе — он расспросит о задаче и всё настроит.':'An agent works instead of you: keeps the correspondence, counts, prepares reports. Build your own in the Wizard — it asks about the task and sets everything up.',
-  'Или возьми готовую профессию с полки ниже: продажи, поддержка, бухгалтерия, аналитика. Роль назначается на твою копию агента за минуту.':'Or take a ready profession from the shelf below: sales, support, accounting, analytics. A role is assigned to your copy of the agent in a minute.',
+  'Или возьми готовую профессию с полки ниже: продажи, поддержка, бухгалтерия, аналитика. Роль можно назначить своему агенту за минуту.':'Or take a ready profession from the shelf below: sales, support, accounting, analytics. A role is assigned to your copy of the agent in a minute.',
   'Живые данные для агента':'Live data for your agent',
   'Курсы валют, погода, справки, перевод: агент отвечает по фактам из интернета, а не по памяти.':'Exchange rates, weather, reference, translation — so the agent answers from facts off the internet, not from memory.',
   'Любой сервис можно проверить прямо здесь, а кнопкой «+ Для агента» отметить те, что получит твой агент при сборке.':'Any service can be tried right here, and the «+ For the agent» button marks the ones your agent gets when it is built.',
-  'Технически это внешние API и MCP-серверы, подключаются без ключей.':'Technically these are external APIs and MCP servers — they connect without keys.',
+  'Технически это внешние источники данных (API) и MCP-серверы. Ключи доступа не нужны.':'Technically these are external data sources (APIs) and MCP servers. No access keys needed.',
   'Знания для агента':'Knowledge for your agent',
   'В базе знаний лежат твои документы, по которым агент отвечает: регламенты, договоры, прайсы, кодексы.':'A knowledge base is your own documents for the agent to answer from: rules, contracts, price lists, codes.',
-  'Возьми готовую базу с полки ниже или собери свою из папки с файлами. Сборка идёт локально, документы никуда не уходят.':'Take a ready base from the shelf below or build your own from a folder of files — it is assembled locally, the documents never leave.',
+  'Возьми готовую базу с полки ниже или собери свою из папки с файлами. Всё собирается на твоём компьютере, документы никуда не уходят.':'Take a ready base from the shelf below or build your own from a folder of files — it is assembled locally, the documents never leave.',
   'Быстрая сборка':'Quick build',
   // Вкладки
   'Рабочий стол':'Desktop','Программы':'Programs','Модели':'Models',
@@ -1868,40 +1868,40 @@ var I18N_EN = {
   'договор простым языком':'contracts in plain language',
   // Карточки-данные всех каталогов (курированные, навыки, агенты, сервисы, базы, модели, CLI, мерч): авто-влито 18.07
   'Договор простым языком':'Legal Text Simplifier',
-  'Объяснит по-человечески и покажет, на что смотреть перед подписью':'Translate legal and contract language into plain English',
-  'Был созвон, будут задачи: кто, что и к какому сроку':'Turn raw meeting notes into structured action items',
+  'Перескажет договор простыми словами и подскажет, на что посмотреть до подписи':'Retells the contract in plain words and points out what to check before signing',
+  'Соберёт из записи встречи задачи: кто, что и к какому сроку':'Turns a meeting into tasks: who does what and by when',
   'Деловые письма':'Email builder',
-  'Вежливо, по делу и без «доброго времени суток»':'Write professional emails for any occasion',
+  'Напишет деловое письмо: вежливо, коротко и по делу':'Writes a business email: polite, short and to the point',
   'Резюме под вакансию':'Resume Builder & Optimizer',
-  'Усилит резюме так, что его дочитают до конца':'Write and optimize your resume for any job',
+  'Соберёт резюме под конкретную вакансию: опыт, навыки, цифры':'Builds a CV for a specific job: experience, skills, numbers',
   'Сопроводительное письмо':'Cover Letter Writer',
-  'Убедительно, но без «я командный игрок»':'Write a compelling cover letter for any job application',
+  'Напишет сопроводительное письмо под вакансию, коротко и по делу':'Writes a cover letter for the job, short and to the point',
   'Вопросы к собеседованию':'Interview Question Generator',
-  'Подготовит вопросы и погоняет по ответам, без паники в переговорке':'Generate interview questions for any role or practice answers',
+  'Подготовит вопросы к собеседованию и поможет потренировать ответы':'Prepares interview questions and helps you rehearse the answers',
   'Тексты для рекламы':'Marketing Copy Writer',
-  'Заголовки и лендинги, которые не стыдно показать клиенту':'Write ads, headlines, CTAs and landing page copy',
+  'Напишет заголовки и тексты для рекламы и страниц сайта':'Writes headlines and copy for ads and website pages',
   'Описание товара':'Product Description Writer',
-  'Из «ну, это такая штука» — в текст, который продаёт':'Write SEO-optimized product descriptions that sell',
+  'Опишет товар для сайта или маркетплейса: что это и кому подойдёт':'Describes a product for your site or a marketplace: what it is and who it suits',
   'Мозговой штурм':'Brainstorm Assistant',
-  'Накидает идей, пока кофе не остыл':'Ideas faster than your coffee gets cold',
+  'Предложит идеи по твоей задаче и поможет выбрать подходящую':'Suggests ideas for your task and helps you pick one',
   'План подготовки':'Study Schedule Planner',
-  'Разложит учёбу к экзамену по дням, без ночных подвигов':'Create personalized study plans for any subject or exam',
+  'Разложит подготовку к экзамену по дням: что учить и когда':'Splits exam prep into days: what to study and when',
   'Зарплата на руки':'Net Pay Calculator',
-  'Сколько реально придёт после налогов':'Estimate take-home pay after taxes',
+  'Посчитает, сколько придёт на руки после налогов':'Works out what lands in your pocket after taxes',
   'Калькулятор кредита':'Loan / EMI Calculator',
-  'Платёж, переплата и график, до похода в банк':'Calculate monthly payments, interest and loan schedule',
-  'Покажет, куда уходят деньги, спокойно и без укоров':'Create a budget plan and track your spending',
+  'Посчитает ежемесячный платёж, переплату и график выплат':'Works out the monthly payment, the overpayment and the schedule',
+  'Покажет, на что уходят деньги за месяц':'Shows where your money goes over a month',
   'Налог из цены':'Sales Tax Calculator',
-  'Добавит или выделит налог из любой суммы':'Add or extract sales tax from prices',
+  'Добавит налог к сумме или выделит его из неё':'Adds tax to an amount or extracts it from one',
   'Курс на любую дату':'Historical Exchange Rates',
-  'Официальный курс Нацбанка РК на нужный день, для первички':'Official NB Kazakhstan rate for any date (KZT), ECB fallback',
+  'Покажет официальный курс Нацбанка РК на любую прошедшую дату':'Shows the official National Bank of Kazakhstan rate for any past date',
   'Что приготовить':'Recipe Suggester',
-  'Рецепты из того, что уже в холодильнике':'Find recipes based on ingredients you have',
-  'Маршрут, план и список вещей, ничего не забыть':'Plan trips, itineraries and packing lists with AI',
+  'Подберёт рецепты из продуктов, которые уже есть дома':'Finds recipes from the food you already have at home',
+  'Составит маршрут поездки, план по дням и список вещей':'Builds a trip route, a day plan and a packing list',
   'Погода и прогноз':'Weather Lookup',
-  'Брать ли зонт, сейчас и на три дня':'Current weather and 3-day forecast for any city',
+  'Покажет погоду сейчас и прогноз на три дня':'Shows the weather now and the forecast for three days',
   'Фитнес-план':'Fitness Coach',
-  'Тренировки под твой уровень, без фанатизма':'Get personalized workout plans and fitness guidance',
+  'Составит план тренировок под твой уровень и цель':'Builds a training plan for your level and goal',
   'Лаконичный режим':'Concise mode',
   'Отвечает коротко и по делу, без воды, вступлений и повторения вопроса.':'Answers short and to the point — no fluff, no preambles, no repeating your question.',
   'Задай агенту любой вопрос, ответ будет в 2–3 предложения, без таблиц и воды.':'Ask the agent anything — you\'ll get 2–3 sentences, no tables, no fluff.',
@@ -2713,7 +2713,7 @@ function _renderModelsCore() {
       '<div class="sk_lead" style="grid-column:1/-1;margin:-8px 0 12px;font-size:13px;color:var(--tx3)">поиск по Hugging Face — не проверено Extella</div>');
     return;
   }
-  g.innerHTML = '<section class="catalog_intro" aria-labelledby="models_intro_title"><h2 class="catalog_intro_title" id="models_intro_title">Модели для агента</h2><p class="catalog_intro_text">Мозг, который выполняет задачу: понимает текст, рисует изображения, распознаёт речь. Список собран с Hugging Face — можно и вставить свою ссылку.</p><p class="catalog_intro_text">Локальные модели работают прямо на твоём компьютере, даже без интернета. Облачные быстрее и не занимают место.</p></section>' + modelsSpotlight() +
+  g.innerHTML = '<section class="catalog_intro" aria-labelledby="models_intro_title"><h2 class="catalog_intro_title" id="models_intro_title">Модели для агента</h2><p class="catalog_intro_text">Модель отвечает за то, что агент понимает и создаёт: разбирает текст, рисует изображения, распознаёт речь. Список собран с Hugging Face. Можно вставить и свою ссылку.</p><p class="catalog_intro_text">Локальные модели работают прямо на твоём компьютере, даже без интернета. Облачные быстрее и не занимают место.</p></section>' + modelsSpotlight() +
     '<div style="grid-column:1/-1;text-align:center;margin:8px 0 0"><button class="cat_chip" onclick="_modHFset(true)">Искать ещё на Hugging Face</button></div>';
   [].forEach.call(g.querySelectorAll('[data-lminst]'),function(b){b.onclick=function(){installLocalModel(b.getAttribute('data-lminst'),b);};});
   _mountTabFilter('Поиск модели…');
@@ -3626,7 +3626,7 @@ function _renderProgramsCore() {
     ? '<section class="catalog_intro" aria-labelledby="programs_intro_title">'+
         '<h2 class="catalog_intro_title" id="programs_intro_title">Программы для агента</h2>'+
         '<p class="catalog_intro_text">Добавляют агенту новые возможности: работу с документами, данными, изображениями и внешними сервисами.</p>'+
-        '<p class="catalog_intro_text">Выбери программу и нажми «Установить». После установки она появится на рабочем столе.</p>'+'<p class="catalog_intro_text" style="font-size:13px;color:var(--tx3);letter-spacing:.01em;margin-top:12px">Технически это мини-приложения с интерфейсом (UI) и MCP-серверы с GitHub.</p>'+
+        '<p class="catalog_intro_text">Выбери программу и нажми «Установить». После установки она появится на рабочем столе.</p>'+'<p class="catalog_intro_text" style="font-size:13px;color:var(--tx3);letter-spacing:.01em;margin-top:12px">Технически это мини-приложения со своим окном и MCP-серверы с GitHub.</p>'+
       '</section>'
     : '';
   var featuredHtml = _bk + _programIntro + ((_featCat === 'all' && !_isPro) ? programsSpotlight() + _mkbSlot + ''/* плитка «Добавить» переехала в слот под шапкой */ : '') + renderFeaturedSection() + (_featCat !== 'all' ? ''/* плитка «Добавить» переехала в слот под шапкой */ : (_isPro ? '' : progToolsHTML(_appsShelvesHTML())));
@@ -5948,7 +5948,7 @@ function renderAgents(){
           '</div></div>';
       }).join('')+'</div>'
     : '';
-  var html='<section class="catalog_intro" aria-labelledby="agents_intro_title"><h2 class="catalog_intro_title" id="agents_intro_title">Агенты — твои сотрудники</h2><p class="catalog_intro_text">Агент работает вместо тебя: ведёт переписку, считает, готовит отчёты. Своего собери в Конструкторе — он расспросит о задаче и всё настроит.</p><p class="catalog_intro_text">Или возьми готовую профессию с полки ниже: продажи, поддержка, бухгалтерия, аналитика. Роль назначается на твою копию агента за минуту.</p></section>'+
+  var html='<section class="catalog_intro" aria-labelledby="agents_intro_title"><h2 class="catalog_intro_title" id="agents_intro_title">Агенты — твои сотрудники</h2><p class="catalog_intro_text">Агент работает вместо тебя: ведёт переписку, считает, готовит отчёты. Своего собери в Конструкторе — он расспросит о задаче и всё настроит.</p><p class="catalog_intro_text">Или возьми готовую профессию с полки ниже: продажи, поддержка, бухгалтерия, аналитика. Роль можно назначить своему агенту за минуту.</p></section>'+
     mineHtml+
     linkedHtml+
     _bentoHTML(TYPE_ED.agents.heroes)+
@@ -6047,7 +6047,7 @@ function svConnect(id){ var a=svGi(); if(a.indexOf(id)<0){a.push(id);svSi(a);} i
 function svDisc(id){ var a=svGi(); var i=a.indexOf(id); if(i>=0){a.splice(i,1);svSi(a);} if(cur==='services')renderServices(); }
 function renderServices(){
   var g=document.getElementById('grid'); if(!g)return;
-  var html='<section class="catalog_intro" aria-labelledby="services_intro_title"><h2 class="catalog_intro_title" id="services_intro_title">Живые данные для агента</h2><p class="catalog_intro_text">Курсы валют, погода, справки, перевод: агент отвечает по фактам из интернета, а не по памяти.</p><p class="catalog_intro_text">Любой сервис можно проверить прямо здесь, а кнопкой «+ Для агента» отметить те, что получит твой агент при сборке.</p><p class="catalog_intro_text" style="font-size:13px;color:var(--tx3);letter-spacing:.01em;margin-top:12px">Технически это внешние API и MCP-серверы, подключаются без ключей.</p></section>'+
+  var html='<section class="catalog_intro" aria-labelledby="services_intro_title"><h2 class="catalog_intro_title" id="services_intro_title">Живые данные для агента</h2><p class="catalog_intro_text">Курсы валют, погода, справки, перевод: агент отвечает по фактам из интернета, а не по памяти.</p><p class="catalog_intro_text">Любой сервис можно проверить прямо здесь, а кнопкой «+ Для агента» отметить те, что получит твой агент при сборке.</p><p class="catalog_intro_text" style="font-size:13px;color:var(--tx3);letter-spacing:.01em;margin-top:12px">Технически это внешние источники данных (API) и MCP-серверы. Ключи доступа не нужны.</p></section>'+
     _bentoHTML(TYPE_ED.services.heroes);
   html+='<div class="sect"><h2>Сервисы</h2></div>';
   var cats=[]; CATALOG_SERVICES.forEach(function(s){if(cats.indexOf(s.cat)<0)cats.push(s.cat);});
@@ -6677,7 +6677,7 @@ function codexStartInstall(){
 function renderKnowledge(){
   var g=document.getElementById('grid'); if(!g)return;
   var packs=kpGi();
-  var html='<section class="catalog_intro" aria-labelledby="knowledge_intro_title"><h2 class="catalog_intro_title" id="knowledge_intro_title">Знания для агента</h2><p class="catalog_intro_text">В базе знаний лежат твои документы, по которым агент отвечает: регламенты, договоры, прайсы, кодексы.</p><p class="catalog_intro_text">Возьми готовую базу с полки ниже или собери свою из папки с файлами. Сборка идёт локально, документы никуда не уходят.</p></section>'+
+  var html='<section class="catalog_intro" aria-labelledby="knowledge_intro_title"><h2 class="catalog_intro_title" id="knowledge_intro_title">Знания для агента</h2><p class="catalog_intro_text">В базе знаний лежат твои документы, по которым агент отвечает: регламенты, договоры, прайсы, кодексы.</p><p class="catalog_intro_text">Возьми готовую базу с полки ниже или собери свою из папки с файлами. Всё собирается на твоём компьютере, документы никуда не уходят.</p></section>'+
     _bentoHTML(TYPE_ED.knowledge.heroes);
   html+='<div class="sect"><h2>Знания</h2></div>'+
     kpCatalogHTML();
@@ -7451,7 +7451,7 @@ function submitCliAdd(){
 // (Qwen) типовую задачу; после он добавляет карточку в живой каталог соответствующего раздела.
 var ADD_KINDS={
   programs:{where:'Инструменты, полка «Программы»',title:'Найти программу',action:'Найти программу',sub:'Опиши задачу — Extella найдёт подходящую открытую программу и покажет её карточку. Установка начнётся только после нажатия «Установить».',ph:'напр.: планировщик задач · трекер времени · генератор счетов',refresh:function(){_progReg=null;_progFetched=false;if(cur==='programs')renderPrograms();},prompt:function(v){return 'Пользователь просит добавить ПРОГРАММУ (плагин/приложение/MCP-сервер) в магазин Extella: «'+v+'». Найди подходящий ОТКРЫТЫЙ репозиторий и добавь карточку в живой каталог программ: kv_get "_mkt_programs" (global), добавь в .shelf объект {repoUrl,title,facts:[кратко по-русски],source:"github.com/<owner> · ★ N",acc:"#2F6B66",label:"MCP-инструмент"}, kv_set global. Если открытого нет, честно откажись.';}},
-  models:{where:'Модели, полка новинок',title:'Добавить модель',sub:'Опиши, какая ИИ-модель нужна, — Extella подберёт работающую и добавит в магазин.',ph:'напр.: генерация музыки · распознавание речи · перевод',refresh:function(){_modReg=null;_modFetched=false;if(cur==='models')renderModels();},prompt:function(v){return 'Пользователь просит добавить ИИ-МОДЕЛЬ в магазин Extella: «'+v+'». Подбери РАБОТАЮЩЕЕ пространство HuggingFace (RUNNING) под задачу и добавь карточку: kv_get "_mkt_models" (global), добавь в .shelf {hfId,title,facts:[кратко по-русски],source:"huggingface.co/<owner> · ♥ N",acc:"#2E7D5B",label:"Работает"}, kv_set global.';}},
+  models:{where:'Модели, полка новинок',title:'Добавить модель',sub:'Опиши, что модель должна уметь, и Extella найдёт подходящую и добавит в магазин.',ph:'напр.: генерация музыки · распознавание речи · перевод',refresh:function(){_modReg=null;_modFetched=false;if(cur==='models')renderModels();},prompt:function(v){return 'Пользователь просит добавить ИИ-МОДЕЛЬ в магазин Extella: «'+v+'». Подбери РАБОТАЮЩЕЕ пространство HuggingFace (RUNNING) под задачу и добавь карточку: kv_get "_mkt_models" (global), добавь в .shelf {hfId,title,facts:[кратко по-русски],source:"huggingface.co/<owner> · ♥ N",acc:"#2E7D5B",label:"Работает"}, kv_set global.';}},
   skills:{where:'Навыки',title:'Добавить навык',sub:'Опиши поведение для агента — Extella составит навык и добавит на полку.',ph:'напр.: всегда предлагать сроки · проверять цифры дважды',refresh:function(){_skLoaded=false;_skCatReg=null;if(cur==='skills')renderSkillsShelf();},prompt:function(v){return 'Пользователь просит добавить НАВЫК (правило поведения) в магазин Extella: «'+v+'». Составь один навык: {id:"skill_<латиница>",cat:"Бизнес" или "Работа и продуктивность" или "Стиль и общение" или "Разработка",emoji,name:"<рус 2-3 слова>",desc:"<рус фраза>",rule:"[skill:Имя] <конкретное правило на русском>",howto:"<рус>"}. Добавь: kv_get "_mkt_skills_catalog" (global) {items:[...]}, dedup по id и name, append, kv_set global. Подтверди.';}}
 };
 // Плитка «Добавить…» — стоит в начале полки, БЕЗ заголовка-раздела и с tf_skip:
