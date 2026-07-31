@@ -47,7 +47,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);
 .lmark:active{transform:scale(.8)}
 @keyframes lmark_pop{0%{transform:scale(.8)}55%{transform:scale(1.18)}100%{transform:scale(1)}}
 .lmark.pop{animation:lmark_pop .32s cubic-bezier(.34,1.56,.64,1)}
-.lnm{font:700 15px var(--sans);letter-spacing:-.02em}
+.lnm{font:600 15px var(--sans);letter-spacing:-.01em}
 .sp{flex:1}
 .bclose{background:none;border:none;color:var(--tx2);cursor:pointer;
   font-size:15px;padding:4px 8px;border-radius:var(--r-sm);transition:all .15s;flex-shrink:0}
@@ -166,7 +166,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);
   background:var(--acc,var(--a))}
 .stile:hover{border-color:var(--bd2);box-shadow:none;transform:translateY(-2px)}
 [data-lm] .stile:hover{box-shadow:none}
-.st_chip{align-self:flex-start;font:600 11px var(--sans);letter-spacing:.015em;color:var(--tx3);text-transform:none}
+.st_chip{align-self:flex-start;font:500 11px var(--mono);letter-spacing:.015em;color:var(--tx3);text-transform:none}
 .st_top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
 .catbar{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:flex-start;gap:8px;padding:0 0 16px}
 .adm_seg{display:flex;background:var(--s2);border:1px solid var(--bd);border-radius:var(--r-sm);padding:2px;gap:2px}
@@ -187,7 +187,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);
 .lico{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:block}
 .st_ico{width:34px;height:34px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--acc,var(--a))}
 .st_ico .lico{width:22px;height:22px}
-.st_title{font:600 15px/1.4 var(--sans);color:var(--tx);letter-spacing:0;margin-top:1px}
+.st_title{font:700 15px/1.4 var(--sans);color:var(--tx);letter-spacing:0;margin-top:1px}
 .st_name{font-size:11px;font-weight:600;color:var(--acc,var(--a));margin-top:-2px;margin-bottom:2px}
 .st_title i{font-style:normal;color:inherit}
 .acc_sub{display:block;font-style:normal;font-weight:500;color:var(--tx2);margin-top:2px}
@@ -1577,7 +1577,7 @@ function renderGrid() {
 
 // Модели, curated AI-model demos in «Для всех»; full HuggingFace search in «Для профи».
 var MODELS_CURATED = [
-  { id:'black-forest-labs/FLUX.1-dev', name:'FLUX.1, картинки по тексту', desc:'Студийные изображения по одному описанию, без своей видеокарты.', acc:'#2E7D5B' },
+  { id:'black-forest-labs/FLUX.1-dev', name:'FLUX.1, изображения по тексту', desc:'Студийные изображения по одному описанию, без своей видеокарты.', acc:'#2E7D5B' },
   { id:'Kwai-Kolors/Kolors-Virtual-Try-On', name:'Kolors, примерочная', desc:'Примеряет одежду на твоё фото, не выходя из браузера.', acc:'#A5632A' },
   { id:'enzostvs/deepsite', name:'DeepSite, сайт по описанию', desc:'Собирает рабочий сайт из текста, без кода.', acc:'#2F6B66' },
   { id:'openai/whisper', name:'Whisper, расшифровка речи', desc:'Аудио в текст за секунды, понимает десятки языков.', acc:'#C57E33' },
@@ -1631,7 +1631,7 @@ var I18N_EN = {
   // скриншотам живого приложения 29.07. Ключи с неразрывными пробелами —
   // подставлять ровно так, как они стоят в разметке.
   'Модели для агента':'Models for your agent',
-  'Мозг, который выполняет задачу: понимает текст, рисует картинки, распознаёт речь. Список собран с Hugging Face — можно и вставить свою ссылку.':'The brain that does the job: understands text, draws images, recognises speech. The catalogue is built from Hugging Face — or paste a link of your own.',
+  'Мозг, который выполняет задачу: понимает текст, рисует изображения, распознаёт речь. Список собран с Hugging Face — можно и вставить свою ссылку.':'The brain that does the job: understands text, draws images, recognises speech. The catalogue is built from Hugging Face — or paste a link of your own.',
   'Локальные модели работают прямо на твоём компьютере, даже без интернета. Облачные — быстрее и не занимают место.':'Local models run right on your computer, even offline. Cloud ones are faster and take up no space.',
   'Программы для агента':'Programs for your agent',
   'Добавляют агенту новые возможности: работу с документами, данными, изображениями и внешними сервисами.':'They give the agent new abilities: documents, data, images and outside services.',
@@ -1708,7 +1708,7 @@ var I18N_EN = {
   'Разработка':'Development','Стиль и общение':'Style & tone','Работа и продуктивность':'Work & productivity','Бизнес':'Business','Продажи':'Sales','HR и найм':'HR & hiring','Финансы':'Finance','Маркетинг':'Marketing','Поддержка клиентов':'Customer support','Управление проектами':'Project management','Аналитика данных':'Data analytics','Юридическое':'Legal','Операции':'Operations','Деловая переписка':'Business writing','Встречи и решения':'Meetings','Закупки':'Procurement','Стратегия':'Strategy','Обучение и наставничество':'Training & mentoring','Личная продуктивность':'Personal productivity','Управление рисками':'Risk management','Работа с документами':'Documents','Исследования':'Research','Клиентский успех':'Customer success','Кризис-менеджмент':'Crisis management','Бренд и PR':'Brand & PR','Продуктовый менеджмент':'Product management','Нужного нет?':'Not here?',
   // Модели / HF
   'ИИ-модели по разделам':'AI models by category','Локальные модели, на твоём устройстве':'Local models, on your device',
-  'Генерация картинок':'Image generation','Редактирование фото':'Photo editing','Аватары и примерка':'Avatars & try-on','Видео и анимация':'Video & animation','Звук и музыка':'Audio & music','Текст и чат':'Text & chat','Код и приложения':'Code & apps','Другое':'Other',
+  'Генерация изображений':'Image generation','Редактирование фото':'Photo editing','Аватары и примерка':'Avatars & try-on','Видео и анимация':'Video & animation','Звук и музыка':'Audio & music','Текст и чат':'Text & chat','Код и приложения':'Code & apps','Другое':'Other',
   // Состояния
   'Загружаю…':'Loading…','Пока пусто.':'Nothing yet.','Пока ничего не установлено.':'Nothing installed yet.',
   // Плейсхолдеры
@@ -1728,7 +1728,7 @@ var I18N_EN = {
   'Bark, синтез речи':'Bark, speech synthesis',
   'Chart.js, графики':'Chart.js, charts',
   'DeepSite, сайт по описанию':'DeepSite, a website from a description',
-  'FLUX Schnell, картинки мгновенно':'FLUX Schnell, instant images',
+  'FLUX Schnell, изображения мгновенно':'FLUX Schnell, instant images',
   'OCR, распознаёт документы':'OCR, reads documents',
   'PDF, Word, тексты — по всем заработает поиск':'PDF, Word, texts — all become searchable',
   'SDR-роль: работа с входящими за тебя':'SDR role: handles inbound leads for you',
@@ -2151,7 +2151,7 @@ var I18N_EN = {
   'проверенные модели':'verified models',
   'ИИ-модели: облачные и локальные':'AI models: cloud and local',
   'Работает':'Running',
-  'FLUX.1, картинки по тексту':'FLUX.1, images from text',
+  'FLUX.1, изображения по тексту':'FLUX.1, images from text',
   'Студийные изображения по одному описанию, без своей видеокарты.':'Studio-grade images from a single description, no GPU of your own.',
   'Kolors, примерочная':'Kolors, the fitting room',
   'Примеряет одежду на твоё фото, не выходя из браузера.':'Tries clothes on your photo without leaving the browser.',
@@ -2162,7 +2162,7 @@ var I18N_EN = {
   'OCR, распознавание документов':'OCR, document recognition',
   'Достаёт текст из PDF, фото и сканов.':'Extracts text from PDFs, photos and scans.',
   'Документы и PDF':'Documents & PDF',
-  'Картинки и медиа':'Images & media',
+  'Изображения и медиа':'Images & media',
   'Сжать PDF':'Compress PDF',
   'Пакетно ужимает PDF на 50–70%.':'Batch-shrinks PDFs by 50–70%.',
   'Сжать папку':'Compress a folder',
@@ -2183,11 +2183,11 @@ var I18N_EN = {
   'Оптимизировать':'Optimize',
   'Повернуть':'Rotate',
   'Скажи: «поверни сканы в этой папке на 90°», вызовет способность.':'Say: «rotate the scans in this folder by 90°» — it calls the capability.',
-  'Пакет картинок':'Image batch',
+  'Пакет изображений':'Image batch',
   'Меняет формат и размер тысяч изображений в один проход.':'Changes the format and size of thousands of images in one pass.',
   'В JPG':'To JPG',
   'Уменьшить':'Resize down',
-  'Скажи: «сожми все картинки в этой папке до 50%», обработает пачкой.':'Say: «shrink every image in this folder to 50%» — it handles the whole batch.',
+  'Скажи: «сожми все изображения в этой папке до 50%», обработает пачкой.':'Say: «shrink every image in this folder to 50%» — it handles the whole batch.',
   'Видео и аудио':'Video & audio',
   'Перекодирует видео и извлекает аудио из целой медиатеки, локально.':'Re-encodes video and extracts audio from a whole media library, locally.',
   'Извлечь аудио (MP3)':'Extract audio (MP3)',
@@ -2453,7 +2453,7 @@ function _curOS(){
 }
 function _appOk(a){ var c=a.compat; return !c||!c.platforms||c.platforms.indexOf(_curOS())>=0; }
 var _appOnlyCompat=true;
-var APP_CATL={image:'Картинки',audio:'Аудио и музыка',video:'Видео',avatar:'Аватары','3d':'3D',llm:'Модели и чат',code:'Код и разработка',text:'Текст и документы',data:'Данные и аналитика',other:'Другое'};
+var APP_CATL={image:'Изображения',audio:'Аудио и музыка',video:'Видео',avatar:'Аватары','3d':'3D',llm:'Модели и чат',code:'Код и разработка',text:'Текст и документы',data:'Данные и аналитика',other:'Другое'};
 var APP_CATL_EN={image:'Images',audio:'Audio & music',video:'Video',avatar:'Avatars','3d':'3D',llm:'Models & chat',code:'Code & development',text:'Text & documents',data:'Data & analytics',other:'Other'};
 // Порядок полок: «Другое» всегда последним, остальное — как здесь.
 var APP_CAT_ORDER=['image','audio','video','avatar','3d','llm','code','text','data','other'];
@@ -2517,7 +2517,7 @@ function appCard(a){
   if(func){ head=esc(func); nameLine='<div class="st_name">'+esc(a.title||a.id)+'</div>'; }
   else { head=esc(a.title||a.id); }   // фолбэк до локализации
   return '<div class="stile" style="--acc:'+(APP_ACC[a.cat]||TYPE_ACC.app)+(ok?'':';opacity:.62')+'">'+
-    '<span class="st_chip">📦 '+esc(_appCatL(a.cat||'other'))+(stars?' · '+stars:'')+badge+(inst?' · ✓ установлено':'')+'</span>'+
+    '<span class="st_chip">'+_ico('box')+' '+esc(_appCatL(a.cat||'other'))+(stars?' · '+stars:'')+badge+(inst?' · ✓ установлено':'')+'</span>'+
     '<div class="st_title">'+head+'</div>'+nameLine+
     '<div class="st_fact">'+esc(dsc)+'</div>'+
     '<div class="st_foot" style="justify-content:space-between;align-items:center">'+
@@ -2690,7 +2690,7 @@ function _renderModelsCore() {
       '<div class="sk_lead" style="grid-column:1/-1;margin:-8px 0 12px;font-size:13px;color:var(--tx3)">поиск по Hugging Face — не проверено Extella</div>');
     return;
   }
-  g.innerHTML = '<section class="catalog_intro" aria-labelledby="models_intro_title"><h2 class="catalog_intro_title" id="models_intro_title">Модели для агента</h2><p class="catalog_intro_text">Мозг, который выполняет задачу: понимает текст, рисует картинки, распознаёт речь. Список собран с Hugging Face — можно и вставить свою ссылку.</p><p class="catalog_intro_text">Локальные модели работают прямо на твоём компьютере, даже без интернета. Облачные — быстрее и не занимают место.</p></section>' + modelsSpotlight() +
+  g.innerHTML = '<section class="catalog_intro" aria-labelledby="models_intro_title"><h2 class="catalog_intro_title" id="models_intro_title">Модели для агента</h2><p class="catalog_intro_text">Мозг, который выполняет задачу: понимает текст, рисует изображения, распознаёт речь. Список собран с Hugging Face — можно и вставить свою ссылку.</p><p class="catalog_intro_text">Локальные модели работают прямо на твоём компьютере, даже без интернета. Облачные — быстрее и не занимают место.</p></section>' + modelsSpotlight() +
     '<div style="grid-column:1/-1;text-align:center;margin:8px 0 0"><button class="cat_chip" onclick="_modHFset(true)">Искать ещё на Hugging Face</button></div>';
   [].forEach.call(g.querySelectorAll('[data-lminst]'),function(b){b.onclick=function(){installLocalModel(b.getAttribute('data-lminst'),b);};});
   _mountTabFilter('Поиск модели…');
@@ -2757,7 +2757,7 @@ var ICO_SYM = { work:'work', marketing:'marketing', money:'money', study:'study'
 function _ico(cat){ return '<svg class="lico"><use href="#ic-'+(ICO_SYM[cat]||'box')+'"/></svg>'; }
 // Категория каталога (рус.) → линейная иконка вместо эмодзи (канон: Iconoir, не эмодзи)
 var CAT_SYM_RU={'Стиль и общение':'chat','Работа и продуктивность':'work','Бизнес':'money','Разработка':'tech',
- 'Документы и PDF':'docs','Картинки и медиа':'data',
+ 'Документы и PDF':'docs','Изображения и медиа':'data',
  'Приватный ИИ':'tech','Код':'tech','Право · англ.':'docs','Медицина · англ.':'health','Финансы · англ.':'money',
  'Право и налоги':'docs','Бизнес и управление':'money','Финансы':'money','Технологии':'tech','Наука и здоровье':'health'};
 function _catIco(cat){ return '<svg class="lico chip_ic"><use href="#ic-'+(CAT_SYM_RU[cat]||'box')+'"/></svg>'; }
@@ -3029,7 +3029,7 @@ var TYPE_ED = {
       { label:'Документы', acc:'#C57E33', source:'huggingface.co/baidu · ★ 13k', hfId:'baidu/Unlimited-OCR',
         title:'OCR, распознаёт документы', facts:['Достаёт текст из PDF, фото и сканов'] },
       { label:'Быстро', acc:'#2E7D5B', source:'huggingface.co/black-forest-labs', hfId:'black-forest-labs/FLUX.1-schnell',
-        title:'FLUX Schnell, картинки мгновенно', facts:['Генерация изображения за пару секунд'] },
+        title:'FLUX Schnell, изображения мгновенно', facts:['Генерация изображения за пару секунд'] },
       { label:'Голос', acc:'#A5632A', source:'huggingface.co/suno', hfId:'suno/bark', title:'Bark, синтез речи', facts:['Текст в естественную речь, разные голоса'] },
       { label:'Фото', acc:'#2F6B66', source:'huggingface.co/not-lain · ♥ 2.9k', hfId:'not-lain/background-removal', title:'Удаление фона', facts:['Вырежет фон с фото за секунды, аккуратно по краям'] }
     ]
@@ -3371,7 +3371,7 @@ function repoCat(c){
   return 'other';
 }
 var MODEL_ORDER=['imggen','imgedit','avatar','video','audio','text','code','threed','other'];
-var MODEL_LABEL={imggen:'Генерация картинок',imgedit:'Редактирование фото',avatar:'Аватары и примерка',video:'Видео и анимация',audio:'Звук и музыка',text:'Текст и чат',code:'Код и приложения',threed:'3D',other:'Другое'};
+var MODEL_LABEL={imggen:'Генерация изображений',imgedit:'Редактирование фото',avatar:'Аватары и примерка',video:'Видео и анимация',audio:'Звук и музыка',text:'Текст и чат',code:'Код и приложения',threed:'3D',other:'Другое'};
 var MODEL_ACC={imggen:'#24544F',imgedit:'#C57E33',avatar:'#A5632A',video:'#B23A2E',audio:'#2E7D5B',text:'#2F6B66',code:'#3D8078',threed:'#24544F',other:'#8C8C8C'};
 function modelCat(c){
   if(c.cat&&MODEL_LABEL[c.cat])return c.cat;
@@ -4358,14 +4358,16 @@ function _wizardMissing(){
 // сразу выбирает её чипом. Не нашлось — просто откроется полка, без обещаний впустую.
 var DESK_TASKS = [
   {ru:'Обработать документы',   en:'Work with documents',  tab:'cli',       cat:'Документы и PDF'},
-  {ru:'Картинки, видео, звук',  en:'Images, video, sound', tab:'models',    cat:'Генерация картинок'},
+  {ru:'Изображения, видео, звук',  en:'Images, video, sound', tab:'models',    cat:'Генерация изображений'},
   {ru:'Расшифровать запись',    en:'Transcribe a recording', tab:'models',  cat:'Звук и музыка'},
   {ru:'Посчитать и собрать отчёт', en:'Count and build a report', tab:'programs', cat:'Данные и форматы'},
   {ru:'Ответить по своим документам', en:'Answer from my documents', tab:'knowledge'},
   {ru:'Поручить работу агенту', en:'Hand the work to an agent', tab:'agents'}
 ];
 function _deskTasksHTML(){
-  return '<div class="dt_sect">'+_clT('начни с задачи','start with a task')+'</div>'+
+  // Метка «начни с задачи» снята (Элла, 31.07): сами чипы сформулированы задачами,
+  // а ниже на столе уже стоит поясняющая строка. Двойное объяснение одного и того же.
+  return ''+
     '<div class="dt_tasks">'+DESK_TASKS.map(function(t,i){
       return '<button type="button" class="dt_task" onclick="deskTask('+i+')">'+esc(_clT(t.ru,t.en))+'</button>';
     }).join('')+'</div>';
@@ -5551,16 +5553,16 @@ var CLI_CATALOG=[
    desc:'Поворачивает и оптимизирует PDF для веба, без потери качества, пачкой.',
    ops:['Оптимизировать','Повернуть'],
    howto:'Скажи: «поверни сканы в этой папке на 90°», вызовет способность.'},
-  {id:'imagemagick',cat:'Картинки и медиа',emoji:'🖼️',name:'Пакет картинок',live:true,batch:['cap_imagemagick_to_jpg_batch','cap_imagemagick_resize_batch'],
+  {id:'imagemagick',cat:'Изображения и медиа',emoji:'🖼️',name:'Пакет изображений',live:true,batch:['cap_imagemagick_to_jpg_batch','cap_imagemagick_resize_batch'],
    desc:'Меняет формат и размер тысяч изображений в один проход.',
    ops:['В JPG','Уменьшить'],
-   howto:'Скажи: «сожми все картинки в этой папке до 50%», обработает пачкой.'},
-  {id:'ffmpeg',cat:'Картинки и медиа',emoji:'🎬',name:'Видео и аудио',live:true,batch:['cap_ffmpeg_extract_audio_batch','cap_ffmpeg_to_mp4_batch'],
+   howto:'Скажи: «сожми все изображения в этой папке до 50%», обработает пачкой.'},
+  {id:'ffmpeg',cat:'Изображения и медиа',emoji:'🎬',name:'Видео и аудио',live:true,batch:['cap_ffmpeg_extract_audio_batch','cap_ffmpeg_to_mp4_batch'],
    desc:'Перекодирует видео и извлекает аудио из целой медиатеки, локально.',
    ops:['Извлечь аудио (MP3)','В MP4 (H.264)'],
    howto:'Скажи: «вытащи аудио из этих видео», вернёт MP3 пачкой.'}
 ];
-var CLI_ACC={'Документы и PDF':'#C57E33','Картинки и медиа':'#24544F'};
+var CLI_ACC={'Документы и PDF':'#C57E33','Изображения и медиа':'#24544F'};
 
 // Живой каталог: захардкоженная база + инструменты, добавленные фабрикой в KV
 // (_mkt_cli_catalog). Новый инструмент от wz_cli_capability_pack появляется сам,
@@ -5771,7 +5773,7 @@ function renderAgents(){
   var linkedHtml=_agrList.length
     ? '<div class="sect_hdr"><span class="sect_title">'+_clT('Установленные по ссылке','Installed from a link')+'</span><span class="sect_line"></span></div><div class="mshelf">'+
       _agrList.map(function(a){
-        return '<div class="stile" style="--acc:#2F6B66"><span class="st_chip">🤝 '+_clT('Агент','Agent')+'</span>'+
+        return '<div class="stile" style="--acc:#2F6B66"><span class="st_chip">'+_ico('work')+' '+_clT('Агент','Agent')+'</span>'+
           '<div class="st_title">'+esc(a.name||a.id)+'</div>'+
           '<div class="st_fact">'+esc(a.goal||_clT('Паспорт прошёл гейт стандартов','Passport passed the standards gate'))+'</div>'+
           '<div class="st_sig" style="font-size:11px;color:var(--tx3);margin-top:8px">'+
@@ -5795,7 +5797,7 @@ function renderAgents(){
     '</div>';
   // Универсальная роль с выбором умений — тем же рядом, что и остальные роли.
   html+='<div class="sect_hdr"><span class="sect_title">Универсальная</span><span class="sect_line"></span></div><div class="mshelf">'+
-    '<div class="stile" style="--acc:#2F6B66"><span class="st_chip">🧰 Роль агента</span>'+
+    '<div class="stile" style="--acc:#2F6B66"><span class="st_chip">'+_ico('work')+' Роль агента</span>'+
     '<div class="st_title">Универсальный помощник</div><div class="st_fact">Роль без специализации — сам выбираешь, какие живые умения ей дать.</div>'+
     '<div style="margin:8px 0 2px"><span style="display:inline-block;font-size:11px;color:var(--tx2);background:var(--bg);border:1px solid var(--bd2);border-radius:var(--r-sm);padding:2px 8px;margin:0 4px 4px 0">Умения на выбор</span><span style="display:inline-block;font-size:11px;color:var(--tx2);background:var(--bg);border:1px solid var(--bd2);border-radius:var(--r-sm);padding:2px 8px;margin:0 4px 4px 0">Курсы, погода, перевод и другие</span></div>'+
     '<div class="st_foot" style="justify-content:space-between;align-items:center;gap:8px"><button class="st_btn" onclick="agentForgeModal()">Настроить роль</button></div></div></div>';
@@ -5963,7 +5965,7 @@ function renderMcpCatalog(){
           var mL=_locOf(c)||{};
           var mfunc=(LANG==='en'?(c.func_en||mL.func_en||c.func):(c.func_ru||mL.func_ru||c.func))||'';
           var mdsc=(LANG==='en'?(c.desc_en||mL.desc_en||c.desc):(c.desc_ru||mL.desc_ru||c.desc))||'';
-          return '<div class="stile" style="--acc:'+(CAT_ACC[c.cat]||TYPE_ACC.mcp)+'"><span class="st_chip">🔌 MCP · '+esc(MCP_CATL[c.cat]||c.cat||'')+'</span>'+
+          return '<div class="stile" style="--acc:'+(CAT_ACC[c.cat]||TYPE_ACC.mcp)+'"><span class="st_chip">'+_ico('tech')+' MCP · '+esc(MCP_CATL[c.cat]||c.cat||'')+'</span>'+
             '<div class="st_title">'+(mfunc?esc(mfunc):esc(c.title||short))+'</div>'+(mfunc?'<div class="st_name">'+esc(c.title||short)+'</div>':'')+'<div class="st_fact">'+esc(mdsc)+'</div>'+
             '<div class="st_foot" style="justify-content:space-between;align-items:center;gap:8px">'+foot+'</div></div>';
         }).join('')+'</div>';
@@ -6518,7 +6520,7 @@ function renderKnowledge(){
   if(packs.length){
     html+='<div class="sect_hdr"><span class="sect_title">Мои базы знаний</span><span class="sect_line"></span></div><div class="mshelf">'+
       packs.map(function(p,i){ return '<div class="stile" style="--acc:#2F6B66">'+
-        '<span class="st_chip">📚 База знаний</span><div class="st_title">'+esc(p)+'</div>'+
+        '<span class="st_chip">'+_ico('docs')+' База знаний</span><div class="st_title">'+esc(p)+'</div>'+
         '<div class="st_fact">Спрашивай агента по документам этой базы.</div>'+
         '<div class="st_foot" style="justify-content:space-between;align-items:center;gap:8px"><button class="st_btn" onclick="kpAskModal('+i+')">▶ Спросить</button><button class="sk_del" onclick="kpDel('+i+')">Удалить</button></div></div>'; }).join('')+'</div>';
   }
@@ -7290,7 +7292,7 @@ var ADD_KINDS={
 };
 // Плитка «Добавить…» — стоит в начале полки, БЕЗ заголовка-раздела и с tf_skip:
 // иначе фильтр категорий считал её отдельным разделом («Своего навыка нет? 1»)
-function addTileHTML(kind,label){var fact=kind==='programs'?'Опиши задачу — Extella найдёт подходящую программу и покажет её здесь.':'Опиши задачу — Extella найдёт и добавит.';return '<div class="mshelf tf_skip"><div class="stile" style="--acc:var(--a);border-style:dashed;cursor:pointer" onclick="openAddModal(\''+kind+'\')"><span class="st_chip">✦ Добавить</span><div class="st_title">+ '+esc(label)+'</div><div class="st_fact">'+fact+'</div><div class="st_foot"><span style="font-size:11px;color:var(--tx3)">из открытых источников</span></div></div></div>';}
+function addTileHTML(kind,label){var fact=kind==='programs'?'Опиши задачу — Extella найдёт подходящую программу и покажет её здесь.':'Опиши задачу — Extella найдёт и добавит.';return '<div class="mshelf tf_skip"><div class="stile" style="--acc:var(--a);border-style:dashed;cursor:pointer" onclick="openAddModal(\''+kind+'\')"><span class="st_chip">Добавить</span><div class="st_title">+ '+esc(label)+'</div><div class="st_fact">'+fact+'</div><div class="st_foot"><span style="font-size:11px;color:var(--tx3)">из открытых источников</span></div></div></div>';}
 function etbFindInstall(btn){
   var q = (btn && btn.getAttribute('data-q')) || '';
   openAddModal('programs');
