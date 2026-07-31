@@ -236,18 +236,16 @@
       var info = storefrontNode(doc, 'div', '_xtlac_srv_info');
       info.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_name', service.name));
       if (service.description) info.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_desc', service.description));
+      // ДИЗАЙН-КОД §7: PORT, PID, localhost — запрещённые слова. Человеку они не говорят
+      // ничего, а место занимают: он хочет знать «работает или нет», а не номер процесса.
+      // Замена по канону: «PORT 8765 · PID 1063» → «работает» / «остановлена»,
+      // сырая ссылка localhost:8799/… → кнопка «Открыть».
       var meta = storefrontNode(doc, 'div', '_xtlac_srv_meta');
-      meta.appendChild(storefrontNode(doc, 'span', '_xtlac_srv_chip', 'PORT ' + service.port));
-      if (service.processes && service.processes.length) {
-        service.processes.forEach(function (process) {
-          meta.appendChild(storefrontNode(doc, 'span', '_xtlac_srv_chip', 'PID ' + process.pid + ' · ' + process.process));
-        });
-      } else {
-        meta.appendChild(storefrontNode(doc, 'span', '_xtlac_srv_chip', 'PID —'));
-      }
+      meta.appendChild(storefrontNode(doc, 'span', '_xtlac_srv_chip',
+        running ? 'работает' : 'остановлена'));
       info.appendChild(meta);
       if (running) {
-        var link = storefrontNode(doc, 'a', '_xtlac_srv_link', service.url.replace(/^https?:\/\//, ''));
+        var link = storefrontNode(doc, 'a', '_xtlac_srv_link', 'Открыть');
         link.href = service.url;
         link.target = '_blank';
         link.rel = 'noopener noreferrer';
