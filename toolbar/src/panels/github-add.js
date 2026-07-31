@@ -30,27 +30,27 @@ ETB.githubAdd = (function () {
     '}',
     'html[data-etb-light] #_etbv2_gh_modal{box-shadow:0 16px 48px rgba(0,0,0,.12);}',
     '#_etbv2_gh_hdr{',
-      'display:flex;align-items:center;gap:10px;',
-      'padding:18px 22px 16px;border-bottom:1px solid var(--etb-bd,rgba(0,0,0,.07));',
+      'display:flex;align-items:center;gap:8px;',
+      'padding:16px 24px 16px;border-bottom:1px solid var(--etb-bd,rgba(0,0,0,.07));',
     '}',
     '#_etbv2_gh_hdr h3{flex:1;font-size:15px;font-weight:700;color:var(--etb-tx,#111);margin:0;}',
     '#_etbv2_gh_hdr button{',
       'background:none;border:none;color:var(--etb-tx2,#888);cursor:pointer;',
-      'font-size:18px;padding:4px 6px;border-radius:8px;',
+      'font-size:18px;padding:4px 8px;border-radius:8px;',
     '}',
     '#_etbv2_gh_hdr button:hover{background:var(--etb-s3,#f7f7f9);color:var(--etb-tx,#111);}',
-    '#_etbv2_gh_body{padding:22px;}',
-    '._etbv2_gh_title{font-size:14px;font-weight:700;color:var(--etb-tx,#111);margin-bottom:4px;}',
+    '#_etbv2_gh_body{padding:24px;}',
+    '._etbv2_gh_title{font-size:15px;font-weight:700;color:var(--etb-tx,#111);margin-bottom:4px;}',
     '._etbv2_gh_title_lg{font-size:16px;font-weight:700;color:var(--etb-tx,#111);margin-bottom:8px;}',
-    '._etbv2_gh_sub{font-size:12px;color:var(--etb-tx2,#6b6b6b);line-height:1.6;}',
+    '._etbv2_gh_sub{font-size:13px;color:var(--etb-tx2,#6b6b6b);line-height:1.6;}',
     '._etbv2_gh_sub_sm{font-size:11px;color:var(--etb-tx2,#6b6b6b);line-height:1.6;}',
     /* Inputs */
     '._etbv2_gh_field{margin-bottom:16px;}',
     '._etbv2_gh_label{font-size:11px;font-weight:600;color:var(--etb-tx2,#6b6b6b);text-transform:uppercase;',
-      'letter-spacing:.06em;margin-bottom:6px;display:block;}',
+      'letter-spacing:.06em;margin-bottom:8px;display:block;}',
     '._etbv2_gh_input{',
       'width:100%;background:var(--etb-s2,#fff);border:1px solid var(--etb-bd2,rgba(0,0,0,.14));border-radius:12px;',
-      'color:var(--etb-tx,#111);font-size:13px;padding:10px 14px;',
+      'color:var(--etb-tx,#111);font-size:13px;padding:8px 16px;',
       'box-sizing:border-box;outline:none;transition:border-color .15s;',
       'font-family:-apple-system,system-ui,sans-serif;',
     '}',
@@ -59,12 +59,12 @@ ETB.githubAdd = (function () {
     /* Preview card */
     '#_etbv2_gh_preview{',
       'background:var(--etb-s3,#f7f7f9);border:1px solid var(--etb-bd,rgba(0,0,0,.07));border-radius:12px;',
-      'padding:14px 16px;margin-bottom:16px;display:none;',
+      'padding:16px 16px;margin-bottom:16px;display:none;',
     '}',
     '#_etbv2_gh_preview.show{display:block;}',
-    '._etbv2_gh_prev_name{font-size:14px;font-weight:700;color:var(--etb-tx,#111);margin-bottom:4px;}',
-    '._etbv2_gh_prev_desc{font-size:12px;color:var(--etb-tx2,#6b6b6b);line-height:1.5;margin-bottom:10px;}',
-    '._etbv2_gh_prev_meta{display:flex;gap:10px;flex-wrap:wrap;}',
+    '._etbv2_gh_prev_name{font-size:15px;font-weight:700;color:var(--etb-tx,#111);margin-bottom:4px;}',
+    '._etbv2_gh_prev_desc{font-size:13px;color:var(--etb-tx2,#6b6b6b);line-height:1.5;margin-bottom:8px;}',
+    '._etbv2_gh_prev_meta{display:flex;gap:8px;flex-wrap:wrap;}',
     '._etbv2_gh_pill{',
       'background:rgba(198,126,52,.1);color:var(--etb-a,#C67E34);border:1px solid rgba(198,126,52,.2);',
       'border-radius:8px;font-size:11px;font-weight:600;padding:2px 8px;',
@@ -72,11 +72,11 @@ ETB.githubAdd = (function () {
     /* Info note */
     '._etbv2_gh_experts{',
       'background:var(--etb-s3,#f7f7f9);border:1px solid var(--etb-bd,rgba(0,0,0,.07));border-radius:12px;',
-      'padding:10px 12px;margin-bottom:16px;font-size:11px;color:var(--etb-tx2,#6b6b6b);',
+      'padding:8px 12px;margin-bottom:16px;font-size:11px;color:var(--etb-tx2,#6b6b6b);',
     '}',
     /* Status */
     '#_etbv2_gh_status{',
-      'font-size:12px;color:var(--etb-tx2,#6b6b6b);min-height:18px;margin-bottom:12px;',
+      'font-size:13px;color:var(--etb-tx2,#6b6b6b);min-height:18px;margin-bottom:12px;',
       'display:flex;align-items:center;gap:8px;',
     '}',
     '._etbv2_gh_spinner{',
@@ -89,28 +89,28 @@ ETB.githubAdd = (function () {
     '._etbv2_gh_actions{display:flex;gap:8px;justify-content:flex-end;}',
     '._etbv2_gh_btn_cancel{',
       'background:var(--etb-s3,#f7f7f9);border:1px solid var(--etb-bd2,rgba(0,0,0,.14));color:var(--etb-tx2,#6b6b6b);',
-      'border-radius:12px;padding:9px 20px;cursor:pointer;font-size:12px;',
+      'border-radius:12px;padding:8px 20px;cursor:pointer;font-size:13px;',
     '}',
     '._etbv2_gh_btn_cancel:hover{color:var(--etb-tx,#111);}',
     '._etbv2_gh_btn_primary{',
       'background:var(--etb-a,#C67E34);border:none;color:#000;font-weight:700;',
-      'border-radius:12px;padding:9px 20px;cursor:pointer;font-size:12px;',
+      'border-radius:12px;padding:8px 20px;cursor:pointer;font-size:13px;',
       'transition:opacity .12s;',
     '}',
     '._etbv2_gh_btn_primary:hover{opacity:.85;}',
     '._etbv2_gh_btn_primary:disabled{opacity:.4;cursor:not-allowed;}',
     /* Install progress */
-    '._etbv2_gh_prog{margin:6px 0 18px;}',
-    '._etbv2_gh_prog_row{display:flex;align-items:center;gap:10px;margin-bottom:12px;}',
+    '._etbv2_gh_prog{margin:8px 0 16px;}',
+    '._etbv2_gh_prog_row{display:flex;align-items:center;gap:8px;margin-bottom:12px;}',
     '._etbv2_gh_prog_phase{flex:1;font-size:13px;font-weight:600;color:var(--etb-tx,#111);}',
-    '._etbv2_gh_prog_time{font-size:12px;color:var(--etb-tx2,#6b6b6b);font-variant-numeric:tabular-nums;}',
+    '._etbv2_gh_prog_time{font-size:13px;color:var(--etb-tx2,#6b6b6b);font-variant-numeric:tabular-nums;}',
     '._etbv2_gh_bar{position:relative;height:5px;border-radius:8px;background:var(--etb-bd2,rgba(0,0,0,.1));overflow:hidden;}',
     '._etbv2_gh_bar_fill{position:absolute;top:0;left:0;height:100%;width:38%;border-radius:8px;',
       'background:linear-gradient(90deg,rgba(198,126,52,.25),#C67E34,rgba(198,126,52,.25));',
       'animation:_etbv2_gh_indet 1.25s ease-in-out infinite;}',
     '@keyframes _etbv2_gh_indet{0%{left:-40%}100%{left:100%}}',
-    '._etbv2_gh_steps{margin-top:16px;display:flex;flex-direction:column;gap:7px;}',
-    '._etbv2_gh_step{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--etb-tx3,#ccc);transition:color .2s;}',
+    '._etbv2_gh_steps{margin-top:16px;display:flex;flex-direction:column;gap:8px;}',
+    '._etbv2_gh_step{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--etb-tx3,#ccc);transition:color .2s;}',
     '._etbv2_gh_step._done{color:var(--etb-tx2,#6b6b6b);}',
     '._etbv2_gh_step._active{color:var(--etb-a,#C67E34);font-weight:600;}',
     '._etbv2_gh_dot{width:6px;height:6px;border-radius:50%;background:var(--etb-bd2,rgba(0,0,0,.2));flex-shrink:0;transition:background .2s;}',
@@ -193,13 +193,13 @@ ETB.githubAdd = (function () {
   function _installLogHtml() {
     if (!_installLogLines.length) return '';
     return [
-      '<div style="margin-top:10px;border:1px solid var(--etb-bd,rgba(0,0,0,.07));border-radius:12px;overflow:hidden;">',
+      '<div style="margin-top:8px;border:1px solid var(--etb-bd,rgba(0,0,0,.07));border-radius:12px;overflow:hidden;">',
         '<div style="font-size:11px;font-weight:600;color:var(--etb-tx2,#6b6b6b);',
-          'text-transform:uppercase;letter-spacing:.05em;padding:5px 10px 4px;',
+          'text-transform:uppercase;letter-spacing:.05em;padding:4px 8px 4px;',
           'background:var(--etb-s3,#f7f7f9);border-bottom:1px solid var(--etb-bd,rgba(0,0,0,.07));">',
           'Activity',
         '</div>',
-        '<div id="_etbv2_gh_log" style="padding:6px 10px;font-size:11px;',
+        '<div id="_etbv2_gh_log" style="padding:8px 8px;font-size:11px;',
           'font-family:ui-monospace,monospace;line-height:1.6;',
           'color:var(--etb-tx2,#6b6b6b);max-height:72px;overflow:hidden;">',
           _installLogLines.map(function (l) {
@@ -311,15 +311,15 @@ ETB.githubAdd = (function () {
 
     if (s.step === 'done') {
       modalHtml = [
-        '<div id="_etbv2_gh_body" style="text-align:center;padding:40px 22px;">',
-        '<div style="font-size:48px;margin-bottom:14px;">&#10003;</div>',
+        '<div id="_etbv2_gh_body" style="text-align:center;padding:40px 24px;">',
+        '<div style="font-size:48px;margin-bottom:16px;">&#10003;</div>',
         '<div class="_etbv2_gh_title_lg">Plugin added!</div>',
-        '<div class="_etbv2_gh_sub" style="margin-bottom:18px;">',
+        '<div class="_etbv2_gh_sub" style="margin-bottom:16px;">',
         _esc(s.customName || (s.repoData && s.repoData.name) || ''),
         ' is now available in Plugins.</div>',
         (s.doneWarning
-          ? '<div style="margin:0 auto 18px;max-width:420px;text-align:left;background:rgba(198,126,52,.1);' +
-            'border:1px solid rgba(198,126,52,.4);border-radius:12px;padding:10px 14px;font-size:12px;' +
+          ? '<div style="margin:0 auto 16px;max-width:420px;text-align:left;background:rgba(198,126,52,.1);' +
+            'border:1px solid rgba(198,126,52,.4);border-radius:12px;padding:8px 16px;font-size:13px;' +
             'line-height:1.55;color:var(--etb-tx,#f0f0f0);">&#9888; ' + _esc(s.doneWarning) + '</div>'
           : ''),
         '<div class="_etbv2_gh_actions" style="justify-content:center;">',
@@ -459,19 +459,19 @@ ETB.githubAdd = (function () {
   function _renderAnalysisError() {
     return [
       '<div id="_etbv2_gh_body">',
-      '<div class="_etbv2_gh_title" style="margin-bottom:10px;">Установка не завершилась</div>',
-      '<div style="font-size:12px;color:#e74c3c;line-height:1.6;margin-bottom:16px;">',
+      '<div class="_etbv2_gh_title" style="margin-bottom:8px;">Установка не завершилась</div>',
+      '<div style="font-size:13px;color:#e74c3c;line-height:1.6;margin-bottom:16px;">',
       _esc(_state.errorMsg || 'Причина не названа'),
       '</div>',
-      '<div class="_etbv2_gh_sub_sm" style="margin-bottom:14px;">',
+      '<div class="_etbv2_gh_sub_sm" style="margin-bottom:16px;">',
       'Можно повторить — большие репозитории (сборка и инструментарий) занимают минуты. ',
       'Если повтор не помогает, доведи установку в чате Extella: там ты можешь спросить, ',
       'уточнить и поправить на ходу — окно установки этого не умеет.',
       '</div>',
       '<div style="background:var(--etb-s3,#f7f7f9);border:1px solid var(--etb-bd,rgba(0,0,0,.07));',
-        'border-radius:12px;padding:10px 12px;margin-bottom:14px;">',
+        'border-radius:12px;padding:8px 12px;margin-bottom:16px;">',
         '<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;',
-          'color:var(--etb-tx2,#6b6b6b);margin-bottom:6px;">Готовое сообщение для чата</div>',
+          'color:var(--etb-tx2,#6b6b6b);margin-bottom:8px;">Готовое сообщение для чата</div>',
         '<pre id="_etbv2_gh_prompt" style="margin:0;white-space:pre-wrap;word-break:break-word;',
           'font:11px/1.5 ui-monospace,monospace;color:var(--etb-tx2,#6b6b6b);max-height:132px;',
           'overflow:auto;">', _esc(_chatPrompt()), '</pre>',
@@ -521,22 +521,22 @@ ETB.githubAdd = (function () {
       var sel = rm === mode;
       return '<div class="_etbv2_gh_mode" data-mode="' + mode + '" style="' +
         'flex:1;min-width:0;border:1.5px solid ' + (sel ? '#C67E34' : 'var(--etb-bd2,rgba(0,0,0,.14))') + ';' +
-        'border-radius:12px;padding:15px;cursor:' + (disabled ? 'not-allowed' : 'pointer') + ';' +
+        'border-radius:12px;padding:16px;cursor:' + (disabled ? 'not-allowed' : 'pointer') + ';' +
         'background:' + (sel ? 'rgba(198,126,52,.08)' : 'transparent') + ';opacity:' + (disabled ? '.5' : '1') + ';">' +
-        '<div style="font-size:22px;margin-bottom:6px;">' + icon + '</div>' +
-        '<div style="font-weight:700;font-size:13.5px;margin-bottom:3px;color:var(--etb-tx,#111);">' + title + '</div>' +
-        '<div style="font-size:11.5px;color:var(--etb-tx2,#6b6b6b);line-height:1.4;">' + desc + '</div>' +
+        '<div style="font-size:22px;margin-bottom:8px;">' + icon + '</div>' +
+        '<div style="font-weight:700;font-size:15px;margin-bottom:3px;color:var(--etb-tx,#111);">' + title + '</div>' +
+        '<div style="font-size:11px;color:var(--etb-tx2,#6b6b6b);line-height:1.4;">' + desc + '</div>' +
       '</div>';
     }
     return [
       '<div id="_etbv2_gh_body">',
       '<div class="_etbv2_gh_title">Как запустить эту модель?</div>',
-      '<div class="_etbv2_gh_sub" style="margin-bottom:14px;">Это тяжёлая ИИ-модель. Запустите её локально (нужна видеокарта NVIDIA) или через HuggingFace — на любом компьютере.</div>',
-      '<div style="display:flex;gap:10px;">',
+      '<div class="_etbv2_gh_sub" style="margin-bottom:16px;">Это тяжёлая ИИ-модель. Запустите её локально (нужна видеокарта NVIDIA) или через HuggingFace — на любом компьютере.</div>',
+      '<div style="display:flex;gap:8px;">',
       card('local', '&#128187;', 'Локально', localNote, !canLocal),
       card('remote', '&#9729;', 'Через HuggingFace', 'Работает везде. Понадобится ваш ключ HuggingFace (своя квота).', false),
       '</div>',
-      '<div class="_etbv2_gh_actions" style="margin-top:18px;">',
+      '<div class="_etbv2_gh_actions" style="margin-top:16px;">',
       '<button class="_etbv2_gh_btn_cancel" id="_etbv2_gh_rm_back">&#8592; Назад</button>',
       '<button class="_etbv2_gh_btn_primary" id="_etbv2_gh_rm_next"' + (rm ? '' : ' disabled') + '>Установить &#8594;</button>',
       '</div></div>'
@@ -551,8 +551,8 @@ ETB.githubAdd = (function () {
       '<div class="_etbv2_gh_field">',
       '<input class="_etbv2_gh_input" id="_etbv2_gh_hf_inp" type="password" placeholder="hf_..." autocomplete="off" spellcheck="false" />',
       '</div>',
-      '<a href="https://huggingface.co/settings/tokens" target="_blank" style="font-size:11.5px;color:#C67E34;text-decoration:none;display:inline-block;margin-top:6px;">Открыть страницу токенов HuggingFace &#8594;</a>',
-      '<div class="_etbv2_gh_actions" style="margin-top:18px;">',
+      '<a href="https://huggingface.co/settings/tokens" target="_blank" style="font-size:11px;color:#C67E34;text-decoration:none;display:inline-block;margin-top:8px;">Открыть страницу токенов HuggingFace &#8594;</a>',
+      '<div class="_etbv2_gh_actions" style="margin-top:16px;">',
       '<button class="_etbv2_gh_btn_cancel" id="_etbv2_gh_hf_back">&#8592; Назад</button>',
       '<button class="_etbv2_gh_btn_primary" id="_etbv2_gh_hf_save">Сохранить и установить &#8594;</button>',
       '</div></div>'
@@ -883,13 +883,13 @@ ETB.githubAdd = (function () {
     var rd = _state.repoData || {};
     var nm = _esc(_state.customName || rd.name || 'Этот репозиторий');
     return [
-      '<div id="_etbv2_gh_body" style="padding:6px 4px;">',
+      '<div id="_etbv2_gh_body" style="padding:8px 4px;">',
       '<div class="_etbv2_gh_title">&#129504; Это Навык, а не приложение</div>',
-      '<div class="_etbv2_gh_sub" style="margin-bottom:14px;">',
+      '<div class="_etbv2_gh_sub" style="margin-bottom:16px;">',
       '<b>' + nm + '</b> — это набор навыков (Skill) для ИИ-агента, а не программа с окном. ',
       'Такое не открывают — оно <b>учит ассистента</b> новому умению.</div>',
       '<div style="background:rgba(198,126,52,.09);border:1px solid rgba(198,126,52,.28);',
-      'border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.5;margin-bottom:16px;">',
+      'border-radius:12px;padding:12px 16px;font-size:13px;line-height:1.5;margin-bottom:16px;">',
       'Навыки ставятся прямо на твоего агента: пишешь ему по-человечески — а он уже умеет то, ',
       'чему научил навык. Открой полку «Навыки» — там готовые навыки можно установить, посмотреть, ',
       'как их запускать, и удалить. (Импорт навыков прямо с GitHub — на подходе.)',
@@ -907,7 +907,7 @@ ETB.githubAdd = (function () {
     var nm = _esc(_state.customName || rd.name || 'Этот репозиторий');
     var kind = (_state.classify && _state.classify.kind) === 'cli' ? 'инструмент командной строки (CLI)' : 'библиотека / фреймворк';
     return [
-      '<div id="_etbv2_gh_body" style="padding:6px 4px;">',
+      '<div id="_etbv2_gh_body" style="padding:8px 4px;">',
       '<div class="_etbv2_gh_title">&#9888;&#65039; Похоже, это не приложение</div>',
       '<div class="_etbv2_gh_sub" style="margin-bottom:16px;">',
       '<b>' + nm + '</b> выглядит как <b>' + kind + '</b> — собственного окна у неё нет, ',

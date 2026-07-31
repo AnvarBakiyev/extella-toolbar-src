@@ -51,7 +51,7 @@ ETB.library = (function () {
     '#_etbv2_lib_loader{',
       'position:absolute;inset:0;',
       'display:flex;flex-direction:column;align-items:center;justify-content:center;',
-      'gap:14px;color:var(--etb-tx2,#888);font-size:13px;',
+      'gap:16px;color:var(--etb-tx2,#888);font-size:13px;',
       'font-family:-apple-system,system-ui,sans-serif;',
     '}',
     '@keyframes _etbv2_spin{to{transform:rotate(360deg)}}',
