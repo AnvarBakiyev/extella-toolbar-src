@@ -3390,8 +3390,17 @@ function modelCat(c){
 // Живой GitHub-каталог иногда приносит учебные, тестовые и просто случайные
 // репозитории. В пользовательской витрине показываем только карточки с понятным
 // описанием на текущем языке; известный мусор отсекаем независимо от языка.
+// Устаревшее не место на полке: рядом с рабочей карточкой оно читается как выбор,
+// а это приглашение поставить не то. С полок убираем, из поиска — нет: кто ищет
+// именно старую версию, найдёт по имени и увидит метку в карточке.
+var _DEPR_RE=/\((?:устарел[оа]?|deprecated|legacy|old)\)|\b(?:устарел[оа]?|deprecated|legacy)\b/i;
+function _isDepr(c){
+  if(!c) return false;
+  return _DEPR_RE.test(String(c.title||c.name||c.nm||'')+' '+String((c.facts&&c.facts[0])||c.desc||''));
+}
 function programCardIsUseful(c){
   if(!c||!c.title||!c.repoUrl)return false;
+  if(_isDepr(c))return false;      // с полки — вон; в поиске остаётся
   var raw=((c.title||'')+' '+((c.facts&&c.facts[0])||'')+' '+(c.source||'')).toLowerCase();
   if(/laws of aviation|bee should be able to fly|comp[_\s-]*sci[_\s-]*sem|(?:^|[\s_-])(homework|assignment|coursework|semester)(?:$|[\s_-])/.test(raw))return false;
   var L=_locOf(c)||{};
@@ -3863,7 +3872,7 @@ function _gsearch(query){
   if(!_progReg&&!_progFetched){_progFetched=true;_loadSharded('_mkt_programs').then(function(r){if(r&&r.shelf){_progReg=r;}}).catch(function(){});}
   if(!_mcpReg){try{_loadSharded('_mkt_mcp','items').then(function(r){_mcpReg=r;}).catch(function(){});}catch(e){}}
   var res=[];
-  function add(items,type,tab,gn,gd,gc){ (items||[]).forEach(function(it){ var nm=(gn(it)||''); var ds=(gd(it)||''); if((nm+' '+ds).toLowerCase().indexOf(q)>=0) res.push({nm:nm,ds:ds,type:type,tab:tab,cat:gc?(gc(it)||''):''}); }); }
+  function add(items,type,tab,gn,gd,gc){ (items||[]).forEach(function(it){ var nm=(gn(it)||''); var ds=(gd(it)||''); if((nm+' '+ds).toLowerCase().indexOf(q)>=0) res.push({nm:nm,ds:ds,type:type,tab:tab,cat:gc?(gc(it)||''):'',depr:_isDepr({title:nm,desc:ds})}); }); }
   add(typeof CATALOG_SERVICES!=='undefined'?CATALOG_SERVICES:[],'Сервис','services',function(x){return x.name;},function(x){return x.desc;},function(x){return x.cat;});
   add(typeof cliCatalog==='function'?cliCatalog():[],'Инструмент','cli',function(x){return x.name;},function(x){return x.howto||x.desc;},function(x){return x.cat;});
   add(typeof skCatalog==='function'?skCatalog():[],'Навык','skills',function(x){return x.name;},function(x){return x.desc||x.rule;},function(x){return x.cat;});
@@ -3893,7 +3902,8 @@ function _gsearch(query){
     (mine.length?('<div class="sect_hdr"><span class="sect_title">У тебя установлено · '+mine.length+'</span><span class="sect_line"></span></div><div class="mshelf">'+mine.slice(0,24).map(function(r){ return '<div class="stile" style="--acc:#2E7D5B"><span class="st_chip">'+esc(r.type)+' · установлено</span>'+'<div class="st_title">'+esc(r.name)+'</div><div class="st_fact">'+esc(r.desc)+'</div>'+'<div class="st_foot"><button class="st_btn" onclick="'+r.go+'">Открыть</button></div></div>'; }).join('')+'</div>'):'')+'<div class="sk_lead" style="grid-column:1/-1">'+(mine.length?'Можно поставить: ':'Найдено: ')+res.length+'</div>';
   if(res.length){
     html+='<div class="mshelf">'+res.slice(0,80).map(function(r){
-      return '<div class="stile" style="--acc:var(--a)"><span class="st_chip">'+esc(r.type)+(r.cat?' · '+esc(r.cat):'')+'</span>'+
+      return '<div class="stile" style="--acc:var(--a)"><span class="st_chip">'+esc(r.type)+(r.cat?' · '+esc(r.cat):'')+
+        (r.depr?' · '+_clT('устарело','deprecated'):'')+'</span>'+
         '<div class="st_title">'+esc(r.nm)+'</div><div class="st_fact">'+esc((r.ds||'').slice(0,90))+'</div>'+
         '<div class="st_foot"><button class="st_btn" onclick="setc(\''+r.tab+'\')">Открыть в разделе →</button></div></div>';
     }).join('')+'</div>';
@@ -4905,7 +4915,7 @@ function _dtIconBtn(ic,i){
         ? '<div class="dt_hint">Клик — открыть или запустить. Правый клик — кабинет, настройки, удалить.'+
             (_dtHidden().length ? ' <a href="#" onclick="_dtUnhideAll();renderGrid();return false" style="color:var(--a)">'+
               _clT('Вернуть скрытые ярлыки','Restore hidden shortcuts')+' ('+_dtHidden().length+')</a>' : '')+'</div>'+grpHtml
-        : '<div class="dt_hint">Пока пусто. Поставь что-нибудь во вкладке «Инструменты» или собери агента в Конструкторе — они появятся здесь ярлыками.</div>')+
+        : '<div class="dt_hint">Пока пусто. Поставь что-нибудь во вкладке «Инструменты» или собери агента в Конструкторе — они появятся здесь ярлыками.</div>')+(_dtHidden().length ? '<div class="dt_hint">'+_clT('Часть ярлыков скрыта вручную.','Some shortcuts are hidden.')+' <a href="#" onclick="_dtUnhideAll();renderGrid();return false" style="color:var(--a)">'+_clT('Вернуть их','Restore them')+' ('+_dtHidden().length+')</a></div>' : '')+
       // Отпечаток сборки витрины. Договорённость 29.07: разбор чужого отчёта
       // начинается с «какая у вас версия» — чтобы на это отвечали за секунду,
       // а не по памяти. Подставляется в build.js хэшем исходника витрины.
