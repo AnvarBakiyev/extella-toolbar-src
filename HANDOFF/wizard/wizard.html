@@ -235,7 +235,7 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
     <button id="navComposer" class="on" onclick="setMode('composer')">Собрать</button>
     <button id="navMy" onclick="setMode('my')">Найти</button>
     <button id="navWizard" onclick="setMode('wizard')" style="display:none">Мастер</button>
-    <button id="navAuto" onclick="setMode('automations')">Автоматизации</button>
+    <button id="navAuto" onclick="setMode('automations')">Сборки устройства</button>
     <button id="navCore" onclick="setMode('core')" style="display:none">Процессное ядро</button>
   </div>
   <div class="spacer"></div>
@@ -310,13 +310,13 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
   </div>
 </div>
 
-<!-- Псевдоанонимизация v1: детерминированные regex-замены (без LLM), файлы не покидают устройство -->
+<!-- Скрыть личные данные v1: детерминированные regex-замены (без LLM), файлы не покидают устройство -->
 <div id="anon_studio" style="display:none;position:fixed;inset:0;z-index:9990;background:var(--cream,#f4f1ea);overflow:auto">
   <div style="max-width:860px;margin:0 auto;padding:26px 28px 70px">
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
       <div style="width:52px;height:52px;border-radius:12px;background:linear-gradient(135deg,#3f4b52,#14171e);display:flex;align-items:center;justify-content:center;font-size:26px"></div>
       <div>
-        <div style="font:700 20px var(--sans);color:var(--ink,#0a0a0a)">Псевдоанонимизация</div>
+        <div style="font:700 20px var(--sans);color:var(--ink,#0a0a0a)">Скрыть личные данные</div>
         <div style="font-size:13px;color:var(--silver,#889)">ПДн заменяются стабильными токенами локально на этом устройстве — без ИИ-моделей, файлы никуда не отправляются</div>
       </div>
       <button class="btn ghost" style="margin-left:auto;padding:8px 16px" onclick="openAnonHelp()" title="Что делает обезличивание, что гарантирует, а что нет">Как это работает</button>
@@ -1046,7 +1046,7 @@ function resetModInput(){ _modClearExtras(); var ob=el("modOkBtn"); if(ob) ob.te
 /* ================= EN/RU (демо на английский) ================= */
 var WLANG = (function(){ try { return localStorage.getItem('wz_lang') || 'ru'; } catch(e){ return 'ru'; } })();
 var WT = {
-  navWizard:{ru:'Мастер',en:'Wizard'}, navAuto:{ru:'Автоматизации',en:'Automations'}, navCore:{ru:'Процессное ядро',en:'Process core'},
+  navWizard:{ru:'Мастер',en:'Wizard'}, navAuto:{ru:'Сборки устройства',en:'Automations'}, navCore:{ru:'Процессное ядро',en:'Process core'},
   newSess:{ru:'+ Новый проект',en:'+ New project'}, assistant:{ru:'Мастер',en:'Wizard'},
   kicker:{ru:'Мои автоматизации',en:'My automations'}, h1:{ru:'Твои собранные процессы',en:'Business process automations'},
   lede:{ru:'Каждый процесс: схема работы, запуск сейчас или по расписанию, история прогонов и результаты, публикация в витрину.',en:'Composed processes: logic as a flow, run now or on a schedule, logs and run results, a production agent, publishing.'},
@@ -2284,7 +2284,7 @@ async function teamRevoke(fullName){
   if(r&&r.status==='success'){ toast((WLANG==='en'?'✓ Access revoked':'✓ Доступ отозван'),'ok'); renderTeam(); }
   else toast('Ошибка: '+((r&&r.message)||''),'err');
 }
-// ── Псевдоанонимизация v1: локальные детерминированные замены (без LLM); файлы не покидают устройство ──
+// ── Скрыть личные данные v1: локальные детерминированные замены (без LLM); файлы не покидают устройство ──
 var _anonJob = {id:'', files:[]};
 function openAnonStudio(){ var st=el('anon_studio'); if(!st) return; st.style.display='block'; document.body.style.overflow='hidden'; _anonJob={id:'',files:[]}; renderAnonFiles(); var res=el('anonResult'); if(res) res.innerHTML=''; renderAnonJobs(); anonHelpFirstTime(); }
 function closeAnonStudio(){ var st=el('anon_studio'); if(!st||st.style.display==='none') return; st.style.display='none'; document.body.style.overflow=''; closeAnonHelp(); }

@@ -237,23 +237,19 @@
       info.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_name', service.name));
       if (service.description) info.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_desc', service.description));
       var meta = storefrontNode(doc, 'div', '_xtlac_srv_meta');
-      meta.appendChild(storefrontNode(doc, 'span', '_xtlac_srv_chip', 'PORT ' + service.port));
-      if (service.processes && service.processes.length) {
-        service.processes.forEach(function (process) {
-          meta.appendChild(storefrontNode(doc, 'span', '_xtlac_srv_chip', 'PID ' + process.pid + ' · ' + process.process));
-        });
-      } else {
-        meta.appendChild(storefrontNode(doc, 'span', '_xtlac_srv_chip', 'PID —'));
-      }
+      meta.appendChild(storefrontNode(doc, 'span', '_xtlac_srv_chip',
+        running ? T('работает','running') : T('остановлена','stopped')));
       info.appendChild(meta);
       if (running) {
-        var link = storefrontNode(doc, 'a', '_xtlac_srv_link', service.url.replace(/^https?:\/\//, ''));
+        var link = storefrontNode(doc, 'a', '_xtlac_srv_link', T('Открыть','Open'));
         link.href = service.url;
         link.target = '_blank';
         link.rel = 'noopener noreferrer';
         info.appendChild(link);
       }
-      info.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_source', service.source + (service.project ? ' · ' + service.project : '')));
+      // Источник и имя файла — машинные подробности: человеку они ничего не говорят,
+      // а место занимают. Оставляем только проект, если он есть.
+      if (service.project) info.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_source', service.project));
       card.appendChild(info);
 
       var actions = storefrontNode(doc, 'div', '_xtlac_srv_actions');

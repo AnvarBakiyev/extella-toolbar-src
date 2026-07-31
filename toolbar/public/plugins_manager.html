@@ -5196,7 +5196,7 @@ function renderAutomations() {
   _mkbFetch('/x/automations',{},4000).then(function(d){
     var n=(d&&d.automations&&d.automations.length)||0; if(!n) return;
     var g2=document.getElementById('grid'); if(!g2||cur!=='automations'||document.getElementById('wzAutoLink')) return;
-    g2.insertAdjacentHTML('beforeend','<div id="wzAutoLink" class="sk_lead" style="grid-column:1/-1;font-size:13px;color:var(--tx3)">«Мои автоматизации» — всё, что собрано на этом компьютере: '+n+'. Управление, расписание и прогоны в Конструкторе. <a href="#" onclick="_openWizard();return false" style="color:var(--a)">Открыть Конструктор</a></div>');
+    g2.insertAdjacentHTML('beforeend','<div id="wzAutoLink" class="sk_lead" style="grid-column:1/-1;font-size:13px;color:var(--tx3)">Сборки этого компьютера: '+n+'. Управление, расписание и прогоны в Конструкторе. <a href="#" onclick="_openWizard();return false" style="color:var(--a)">Открыть Конструктор</a></div>');
   }).catch(function(){});
   if (_autoReg === null) {
     _ensureAuto();
