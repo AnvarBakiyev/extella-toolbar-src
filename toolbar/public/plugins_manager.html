@@ -1531,10 +1531,10 @@ function syncHFFilterBar() {
 var CMD_ADD = {
   programs:  {l:'+ Добавить программу', l_en:'+ Add a program', h:'Опиши задачу — Extella найдёт открытую программу и покажет карточку', h_en:'Describe the task — Extella finds an open-source program and shows its card', go:function(){ openAddModal('programs'); }},
   apps:      {l:'+ Добавить программу', l_en:'+ Add a program', h:'Опиши задачу — Extella найдёт открытую программу и покажет карточку', h_en:'Describe the task — Extella finds an open-source program and shows its card', go:function(){ openAddModal('programs'); }},
-  cli:       {l:'+ Добавить инструмент', l_en:'+ Add a tool',    h:'Обработка файлов: видео, PDF, распознавание текста', h_en:'File work: video, PDF, text recognition', go:function(){ openCliAdd(); }},
+  cli:       {l:'+ Добавить инструмент', l_en:'+ Add a tool',    h:'', h_en:'', go:function(){ openCliAdd(); }},
   models:    {l:'+ Добавить модель',     l_en:'+ Add a model',   h:'Опиши, какая модель нужна, — Extella подберёт работающую', h_en:'Describe the model you need — Extella finds a working one', go:function(){ openAddModal('models'); }},
-  skills:    {l:'+ Добавить навык',      l_en:'+ Add a skill',   h:'Правило поведения для агента: как считать, о чём спрашивать, что проверять', h_en:'A rule for your agent: what to count, what to ask, what to double-check', go:function(){ openAddModal('skills'); }},
-  knowledge: {l:'+ Добавить базу',       l_en:'+ Add a base',    h:'Свои документы, по которым агент будет отвечать', h_en:'Your own documents for the agent to answer from', go:function(){ kpCreate(); }},
+  skills:    {l:'+ Добавить навык',      l_en:'+ Add a skill',   h:'', h_en:'A rule for your agent: what to count, what to ask, what to double-check', go:function(){ openAddModal('skills'); }},
+  knowledge: {l:'+ Добавить базу',       l_en:'+ Add a base',    h:'', h_en:'Your own documents for the agent to answer from', go:function(){ kpCreate(); }},
   agents:    {l:'+ Создать агента',      l_en:'+ Create an agent', h:'Откроется Конструктор: опиши задачу — он соберёт и запустит агента', h_en:'The Wizard opens: describe the task and it builds and starts the agent', go:function(){ _openWizard(); }},
   services:  {h:'Сервис включается галочкой прямо в карточке — добавлять отдельно нечего', h_en:'A service turns on with a checkbox right on its card — nothing to add separately'}
 };
