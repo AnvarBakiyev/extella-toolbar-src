@@ -4306,6 +4306,12 @@ function _dtEsc(s){ return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); 
 
 // Правый клик по ярлыку → контекстное меню (Открыть/Кабинет/Запустить · Удалить),
 // как в ОС. Управление живёт на столе — отдельные вкладки «Мои»/«Автоматизации» не нужны.
+// Ярлык можно убрать со стола, НЕ трогая установку: список скрытых живёт локально.
+// Раньше «Удалить» в меню всегда означало удаление программы — обратного пути не было.
+var DESK_HIDDEN_KEY='etb_desk_hidden_v1';
+function _dtHidden(){ try{ var v=JSON.parse(localStorage.getItem(DESK_HIDDEN_KEY)||'[]'); return Array.isArray(v)?v:[]; }catch(_){ return []; } }
+function _dtHide(ids){ try{ var h=_dtHidden(); ids.forEach(function(x){ if(x&&h.indexOf(x)<0)h.push(x); }); localStorage.setItem(DESK_HIDDEN_KEY,JSON.stringify(h)); }catch(_){} }
+function _dtUnhideAll(){ try{ localStorage.removeItem(DESK_HIDDEN_KEY); }catch(_){} }
 var _dtReg=[];
 var _wzBridge=null;   // null — не проверяли, true/false — ответ моста Конструктора
 var _dtSys=[];   // ярлыки, спрятанные со стола как двойники системных плиток (их и открывают плитки)
@@ -4411,7 +4417,9 @@ function _dtCtx(e, i){
   var it=_dtReg[i]; if(!it) return false;
   _dtCloseMenu();
   var openLbl = 'Открыть';  // одно слово для всех типов (решение Эллы); действие остаётся типовым — агент откроется кабинетом, инструмент запуском
-  var items=[{l:openLbl,a:'open'},{l:'Удалить',a:'remove',d:true}];
+  var items=[{l:_clT(openLbl,'Open'),a:'open'},
+             {l:_clT('Удалить ярлык','Remove shortcut'),a:'hide'},
+             {l:_clT('Удалить установку','Uninstall'),a:'remove',d:true}];
   var m=document.createElement('div'); m.id='dt_menu'; m.className='dt_menu';
   m.innerHTML=items.map(function(x){ return '<button class="dt_mi'+(x.d?' dt_mi_danger':'')+'" onclick="_dtDo('+i+',\''+x.a+'\')">'+x.l+'</button>'; }).join('');
   document.body.appendChild(m);
@@ -4430,6 +4438,15 @@ function _dtDo(i, act){
     else if(it.kind==='cap'){ if(it.url) window.open(it.url,'_blank'); else setc('mine'); }
     return;
   }
+  if(act==='hide'){
+    // Убираем только ярлык. Установка не трогается — это и есть разница с «Удалить установку».
+    var hlist=(it.dups&&it.dups.length)?it.dups:[it];
+    if(!confirm(_clT('Убрать ярлык «'+it.lbl+'» с Рабочего стола?\nСама программа останется установленной — открыть её можно из раздела.',
+                     'Remove the “'+it.lbl+'” shortcut from the Desktop?\nThe program stays installed — you can open it from its section.'))) return;
+    _dtHide(hlist.map(function(d){ return d.id; }));
+    try{ renderGrid(); }catch(_){}
+    return;
+  }
   if(act==='remove'){
     // Ярлык мог быть СКЛЕЕН дедупом из нескольких записей (карточка каталога +
     // файлы реестра устройства с почти одинаковыми именами — «Кадровые документы»
@@ -4439,7 +4456,8 @@ function _dtDo(i, act){
     var agentIds=list.filter(function(d){return d.kind==='agent';}).map(function(d){return d.id;});
     var hasModal=list.some(function(d){return d.kind==='app';});   // у приложений свой модал с подтверждением
     if(!hasModal){
-      var msg='Удалить «'+it.lbl+'» с рабочего стола?';
+      var msg=_clT('Удалить установку «'+it.lbl+'»?\nПрограмма будет удалена с компьютера, ярлык исчезнет. Вернуть — только установкой заново.',
+                   'Uninstall “'+it.lbl+'”?\nThe program will be removed from this computer and the shortcut will disappear. To get it back you install it again.');
       if(agentIds.length) msg+='\nКарточка автоматизации удалится из каталога целиком (эксперты и данные в Extella не трогаются).';
       if(list.length>1) msg+='\nЯрлык собран из '+list.length+' записей — уберу все.';
       if(!confirm(msg)) return;
@@ -4811,6 +4829,8 @@ function renderDesktop(){
     if(sys) _sysHidden.push(ic);   // системный двойник со стола убран, но НЕ потерян: см. _dtSys
     return !sys;
   });
+  var _hid=_dtHidden();
+  if(_hid.length) icons=icons.filter(function(ic){ return _hid.indexOf(ic.id)<0; });   // ярлыки, убранные вручную
   _dtReg=icons;      // реестр для правого клика (открыть/кабинет/удалить); системные сюда не входят
   _dtSys=_sysHidden; // …а системные плитки открываются отсюда — иначе «Визард» считал сам себя неустановленным
 
@@ -4882,7 +4902,9 @@ function _dtIconBtn(ic,i){
       '' /* знак снят: логотип живёт в шапке, на столе он занимал слот метки раздела без роли */ +
       '<div class="dt_grid" style="margin-bottom:24px">'+sysHtml+'</div>'+
       (icons.length
-        ? '<div class="dt_hint">Клик — открыть или запустить. Правый клик — кабинет, настройки, удалить.</div>'+grpHtml
+        ? '<div class="dt_hint">Клик — открыть или запустить. Правый клик — кабинет, настройки, удалить.'+
+            (_dtHidden().length ? ' <a href="#" onclick="_dtUnhideAll();renderGrid();return false" style="color:var(--a)">'+
+              _clT('Вернуть скрытые ярлыки','Restore hidden shortcuts')+' ('+_dtHidden().length+')</a>' : '')+'</div>'+grpHtml
         : '<div class="dt_hint">Пока пусто. Поставь что-нибудь во вкладке «Инструменты» или собери агента в Конструкторе — они появятся здесь ярлыками.</div>')+
       // Отпечаток сборки витрины. Договорённость 29.07: разбор чужого отчёта
       // начинается с «какая у вас версия» — чтобы на это отвечали за секунду,
