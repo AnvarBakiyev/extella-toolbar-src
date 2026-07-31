@@ -9,7 +9,7 @@
   var API = API_BASE + '/api/activity';
   var SERVICES_API = API_BASE + '/api/services';
   var state = {
-    open: false, data: null, bridgeOnline: false, expanded: {},
+    open: false, data: null, bridge: null, bridgeOnline: false, expanded: {},
     activityToken: '', taskBusy: {},
     services: null, servicesToken: '', servicesLoading: false,
     servicesUpdatedAt: 0, serviceBusy: {}, serviceMessage: ''
@@ -85,10 +85,280 @@
   }
 
   function badge(category) {
+    if (category === 'install') return T('Установка','Install');
+    if (category === 'automation') return T('Автоматизация','Automation');
     if (category === 'background') return T('Фоновая','Background');
     if (category === 'system') return T('Системная','System');
     return T('Задача','Task');
   }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  //  КЛИЕНТСКИЕ ДАННЫЕ
+  //  Служба фоновых задач (8799) стоит не на каждом устройстве, и без неё плашка
+  //  молчала даже тогда, когда человек прямо сейчас ставит программу. Поэтому
+  //  главный источник — то, что тулбар знает сам: установки (события витрины и
+  //  её же installingIds) и последние запуски автоматизаций (agent_runs, они же
+  //  снапшот стола в общем с витриной localStorage). Служба, если она есть,
+  //  добавляет свои задачи сверху этого.
+  // ══════════════════════════════════════════════════════════════════════════
+  var SNAP_KEY = 'etb_desk_snap_v1';
+  var INSTALL_GIVEUP = 10 * 60 * 1000;   // столько ждём ответа об установке
+  var INSTALL_KEEP = 6 * 60 * 60 * 1000; // столько держим итог установки в ленте
+  var RUN_STALE = 30 * 60 * 1000;        // «идёт» дольше получаса — уже не идёт
+  var RECENT = 24 * 60 * 60 * 1000;      // лента показывает сутки, не архив
+  var local = { installs: {}, dismissed: {}, snapRaw: '', snap: null, snapAt: 0 };
+
+  function storefrontWindow() {
+    try {
+      var frame = document.getElementById('_etbv2_mkt_frame');
+      var store = frame && frame.contentWindow;
+      return (store && store.document) ? store : null;
+    } catch (e) { return null; }
+  }
+
+  function pluginName(id) {
+    var store = storefrontWindow();
+    try {
+      var curated = store && store.CURATED_PROGRAMS && store.CURATED_PROGRAMS[id];
+      if (curated && curated.name) return curated.name;
+      var builtin = store && store.BUILTIN_PLUGINS_DATA;
+      if (Array.isArray(builtin)) {
+        for (var i = 0; i < builtin.length; i++) {
+          if (builtin[i] && builtin[i].id === id && builtin[i].name) return builtin[i].name;
+        }
+      }
+      if (window.ETB && ETB.registry && typeof ETB.registry.getById === 'function') {
+        var plugin = ETB.registry.getById(id);
+        if (plugin && (plugin.name || plugin.title)) return plugin.name || plugin.title;
+      }
+    } catch (e) {}
+    return id;
+  }
+
+  function noteInstall(id, phase, message, name) {
+    if (!id) return;
+    var item = local.installs[id];
+    if (phase === 'start') {
+      if (item && item.status === 'running') return;
+      delete local.dismissed['install:' + id];   // новая установка ≠ убранная запись
+      local.installs[id] = { id: id, name: name || pluginName(id), status: 'running', startedAt: Date.now(), message: '' };
+      return;
+    }
+    if (!item) item = local.installs[id] = { id: id, name: name || pluginName(id), startedAt: Date.now() };
+    item.status = phase === 'done' ? 'completed' : 'failed';
+    item.finishedAt = Date.now();
+    item.message = message || '';
+  }
+
+  // Витрина знает про установку, пока открыта; закрыли её — установка идёт дальше.
+  // Событие из marketplace.js переживает закрытие, скан installingIds ловит то,
+  // что началось помимо него.
+  function scanInstalls() {
+    var store = storefrontWindow();
+    var live = (store && store.installingIds) || null;
+    if (live) {
+      Object.keys(live).forEach(function (id) { if (live[id]) noteInstall(id, 'start'); });
+    }
+    var now = Date.now();
+    Object.keys(local.installs).forEach(function (id) {
+      var item = local.installs[id];
+      if (item.status === 'running' && now - item.startedAt > INSTALL_GIVEUP) {
+        // Канон: вечного «Ставлю…» не бывает. Не дождались — говорим прямо.
+        item.status = 'failed';
+        item.finishedAt = now;
+        item.message = T('Extella не ответила','Extella did not answer');
+      }
+      if (item.status !== 'running' && now - (item.finishedAt || 0) > INSTALL_KEEP) delete local.installs[id];
+    });
+  }
+
+  function installTasks() {
+    var out = [];
+    Object.keys(local.installs).forEach(function (id) {
+      var item = local.installs[id];
+      var key = 'install:' + id;
+      if (local.dismissed[key]) return;
+      var name = item.name || id;
+      var task = { id: key, local: true, category: 'install', status: item.status, origin: T('Витрина Extella','Extella storefront') };
+      if (item.status === 'running') {
+        task.title = T('Ставлю «' + name + '»', 'Installing “' + name + '”');
+        task.detail = T('Обычно это минута-другая. Ярлык появится на Рабочем столе.','Usually a minute or two. The shortcut will appear on the Desktop.');
+        task.hint = T('Установка идёт в фоне — эту панель можно закрыть.','The install runs in the background — you can close this panel.');
+      } else if (item.status === 'failed') {
+        var why = String(item.message || '').slice(0, 120);
+        task.title = T('«' + name + '» не установилась', '“' + name + '” did not install');
+        task.detail = why
+          ? T(why + '. Попробуй поставить ещё раз.', why + '. Try installing again.')
+          : T('Попробуй поставить ещё раз.','Try installing again.');
+      } else {
+        task.title = T('«' + name + '» установлена', '“' + name + '” installed');
+        task.detail = T('Ярлык на Рабочем столе.','The shortcut is on the Desktop.');
+      }
+      task.ts = item.finishedAt || item.startedAt;
+      out.push(task);
+    });
+    return out;
+  }
+
+  // Снапшот стола витрина пишет сама; парсим редко — он бывает большим.
+  function readSnapshot() {
+    var now = Date.now();
+    if (now - local.snapAt < 8000) return local.snap;
+    local.snapAt = now;
+    try {
+      var raw = localStorage.getItem(SNAP_KEY) || '';
+      if (raw !== local.snapRaw) {
+        local.snapRaw = raw;
+        local.snap = raw ? JSON.parse(raw) : null;
+      }
+    } catch (e) { local.snap = null; }
+    return local.snap;
+  }
+
+  function automationSource() {
+    var store = storefrontWindow();
+    var snap = readSnapshot();
+    var packs = (store && Array.isArray(store._autoReg) && store._autoReg.length)
+      ? store._autoReg
+      : ((snap && Array.isArray(snap.autoReg)) ? snap.autoReg : []);
+    var states = {};
+    if (snap && snap.agState) {
+      Object.keys(snap.agState).forEach(function (key) { states[key] = snap.agState[key]; });
+    }
+    if (store && store._agState) {
+      Object.keys(store._agState).forEach(function (key) { states[key] = store._agState[key]; });  // живое главнее снапшота
+    }
+    return { packs: packs, states: states };
+  }
+
+  // Имя без ведущего эмодзи — как на столе и в кабинете.
+  function cleanName(name, id) {
+    var text = String(name || id || '').trim();
+    if (text && text.charCodeAt(0) >= 0x2600) text = text.replace(/^\S+\s*/, '');
+    return text || String(id || '');
+  }
+
+  function runErrText(note) {
+    var text = String(note || '').toLowerCase();
+    if (/worker hung|hang|stuck/.test(text)) return T('Процесс завис и был остановлен. Открой Конструктор и запусти ещё раз.','The process hung and was stopped. Open the Wizard and run it again.');
+    if (/timeout|timed out/.test(text)) return T('Ответ не пришёл вовремя — работа могла продолжиться в фоне.','No answer in time — the work may still be running.');
+    if (/not found|404/.test(text)) return T('Не нашлось, что запускать: эксперт автоматизации не установлен.','Nothing to run: the automation expert is not installed.');
+    if (/403|denied|forbidden/.test(text)) return T('Нет доступа к этой автоматизации под текущим аккаунтом.','No access to this automation under the current account.');
+    return note ? T('Не получилось: ','Failed: ') + String(note).slice(0, 120) : T('Не получилось выполнить.','It did not run.');
+  }
+
+  // «сегодня в 22:21» вместо «31.07 22:21»: человек читает время, а не отметку.
+  function whenText(ts) {
+    try {
+      var date = new Date(ts);
+      var pad = function (n) { return (n < 10 ? '0' : '') + n; };
+      var clock = pad(date.getHours()) + ':' + pad(date.getMinutes());
+      var day = new Date(); day.setHours(0, 0, 0, 0);
+      var days = Math.floor((day.getTime() - new Date(ts).setHours(0, 0, 0, 0)) / 86400000);
+      if (days <= 0) return T('сегодня в ','today at ') + clock;
+      if (days === 1) return T('вчера в ','yesterday at ') + clock;
+      return pad(date.getDate()) + '.' + pad(date.getMonth() + 1) + T(' в ',' at ') + clock;
+    } catch (e) { return ''; }
+  }
+
+  function capFirst(text) {
+    return text ? text.charAt(0).toUpperCase() + text.slice(1) : text;
+  }
+
+  function scheduleText(pack, agentState) {
+    var schedule = (agentState && agentState.schedule) || pack.schedule || null;
+    if (!schedule) return T('вручную','manual');
+    return schedule.human || schedule.period || T('по расписанию','on a schedule');
+  }
+
+  // Последний запуск каждой автоматизации: идёт, не получилось или получилось.
+  // Вся история — в кабинете; здесь только то, что человеку важно прямо сейчас.
+  function automationTasks() {
+    var source = automationSource();
+    var now = Date.now();
+    var out = [];
+    source.packs.forEach(function (pack) {
+      if (!pack) return;
+      var id = String(pack.id || pack.orchestrator || pack.name || '');
+      if (!id) return;
+      var agentState = source.states[id] || {};
+      if (agentState.hidden) return;
+      var run = (agentState.runs || [])[0];
+      if (!run || !run.ts) return;
+      var key = 'run:' + id + ':' + run.ts;
+      if (local.dismissed[key]) return;
+      var age = now - run.ts;
+      var name = cleanName(agentState.name || pack.name, id);
+      var task = {
+        id: key, local: true, category: 'automation', ts: run.ts,
+        sourceIds: [id], manageTarget: 'automations',
+        manageLabel: T('Открыть автоматизацию','Open the automation'),
+        origin: name, mode: scheduleText(pack, agentState)
+      };
+      if (run.ok === null && age < RUN_STALE) {
+        task.status = 'running';
+        task.title = T('Идёт «' + name + '»', '“' + name + '” is running');
+        task.detail = T('Запущена ','Started ') + whenText(run.ts) + '.';
+        task.hint = T('Результат появится в кабинете автоматизации.','The result will show up in the automation cabinet.');
+      } else if (run.ok === null) {
+        task.status = 'interrupted';
+        task.title = T('«' + name + '» так и не отчиталась', '“' + name + '” never reported back');
+        task.detail = T('Запущена ','Started ') + whenText(run.ts) + T('. Открой автоматизацию и запусти заново.','. Open the automation and run it again.');
+      } else if (run.ok === false) {
+        if (age > RECENT) return;
+        task.status = 'failed';
+        task.title = T('«' + name + '» не выполнилась', '“' + name + '” did not run');
+        task.detail = capFirst(whenText(run.ts)) + ' · ' + runErrText(run.note);
+      } else {
+        if (age > RECENT) return;
+        task.status = 'completed';
+        task.title = T('«' + name + '» выполнилась', '“' + name + '” finished');
+        task.detail = capFirst(whenText(run.ts)) + (run.note ? ' · ' + String(run.note).slice(0, 80) : '');
+      }
+      out.push(task);
+    });
+    return out;
+  }
+
+  function composeData() {
+    scanInstalls();
+    var clientTasks = installTasks().concat(automationTasks());
+    clientTasks.sort(function (a, b) { return (b.ts || 0) - (a.ts || 0); });
+    var active = [], history = [];
+    clientTasks.forEach(function (task) { (task.status === 'running' ? active : history).push(task); });
+
+    var bridge = state.bridge;
+    if (bridge) {
+      // Запасной статус слушателя знает только «занята/свободна» — если своя
+      // картина уже есть, его общая строка была бы вторым именем той же задачи.
+      var skipActive = bridge.__fallback && active.length;
+      if (!skipActive) (bridge.active || []).forEach(function (task) { active.push(task); });
+      (bridge.history || []).forEach(function (task) { history.push(task); });
+    }
+
+    var failed = history.some(function (task) { return task.status === 'failed' || task.status === 'interrupted'; });
+    var health = active.length ? 'busy' : ((failed || (bridge && bridge.health === 'warning')) ? 'warning' : 'ok');
+    var headline;
+    if (active.length === 1) headline = active[0].title;
+    else if (active.length > 1) headline = T('Работаю над ' + active.length + ' задачами', 'Working on ' + active.length + ' tasks');
+    else if (failed) headline = T('Последняя задача не удалась','The last task failed');
+    else headline = T('Сейчас ничего не идёт','Nothing running right now');
+
+    var completed = history.filter(function (task) { return task.status === 'completed'; }).length;
+    return {
+      health: health, headline: headline, active: active, history: history,
+      counts: { active: active.length, completed: completed, failed: history.length - completed },
+      listeners: (bridge && bridge.listeners) || { count: 0, orphaned: 0 }
+    };
+  }
+
+  window.addEventListener('etb:install', function (event) {
+    var detail = event && event.detail;
+    if (!detail || !detail.pluginId) return;
+    noteInstall(detail.pluginId, detail.phase, detail.message, detail.name);
+    state.data = composeData();
+    render();
+  });
 
   function closePanel() {
     state.open = false;
@@ -547,6 +817,16 @@
   }
 
   function dismissTask(task) {
+    if (task.local) {
+      // Клиентская запись живёт в этой же вкладке — убираем её здесь же,
+      // службе она неизвестна и спрашивать нечего.
+      local.dismissed[task.id] = true;
+      if (task.id.indexOf('install:') === 0) delete local.installs[task.id.slice(8)];
+      delete state.expanded[task.id];
+      state.data = composeData();
+      render();
+      return;
+    }
     if (state.taskBusy[task.id]) return;
     state.taskBusy[task.id] = true;
     taskAction('/api/tasks/' + encodeURIComponent(task.id) + '/dismiss')
@@ -558,6 +838,15 @@
   function clearCompletedTasks() {
     if (!state.data || !state.data.history || !state.data.history.length) return;
     if (!window.confirm(T('Убрать все завершённые записи из этой ленты?','Remove all completed entries from this feed?'))) return;
+    var hasBridgeTasks = false;
+    state.data.history.forEach(function (task) {
+      if (!task.local) { hasBridgeTasks = true; return; }
+      local.dismissed[task.id] = true;
+      if (task.id.indexOf('install:') === 0) delete local.installs[task.id.slice(8)];
+    });
+    state.data = composeData();
+    render();
+    if (!hasBridgeTasks) return;
     taskAction('/api/tasks/clear-completed')
       .then(function () { return refresh(); })
       .catch(function () {});
@@ -596,7 +885,8 @@
       details.appendChild(el('div', { className: '_xtlac_hint' }, sourceIdHint(task)));
     }
     if (task.status === 'running') {
-      details.appendChild(el('div', { className: '_xtlac_hint' }, T('Прервать задачу можно красной кнопкой Cancel внизу панели Extella.','To interrupt a task, use the red Cancel button at the bottom of the Extella panel.')));
+      details.appendChild(el('div', { className: '_xtlac_hint' }, task.hint
+        || T('Прервать задачу можно красной кнопкой Cancel внизу панели Extella.','To interrupt a task, use the red Cancel button at the bottom of the Extella panel.')));
     } else {
       var remove = el('button', { className: '_xtlac_remove', type: 'button' }, state.taskBusy[task.id] ? T('Убираю…','Removing…') : T('Убрать запись из ленты','Remove from the feed'));
       remove.disabled = !!state.taskBusy[task.id];
@@ -653,12 +943,7 @@
 
     var warning = document.getElementById('_xtlac_warning');
     var orphaned = data && data.listeners && data.listeners.orphaned || 0;
-    if (!state.bridgeOnline && !state.data) {
-      // Ни детального списка, ни базового статуса. Честно: перезапуск может и
-      // не помочь (движка задач на устройстве может не быть) — не обещаем.
-      warning.textContent = T('Не вижу фоновых задач. Если ты их не запускала — так и должно быть. Если запускала, а список пропал — перезапусти Extella (⌘Q и открой заново).','No background tasks visible. If you have not started any — that is normal. If you did and the list vanished — restart Extella (⌘Q and open again).');
-      warning.classList.add('show');
-    } else if (orphaned) {
+    if (orphaned) {
       // Задание Анвара: не только предупреждать, но и чинить в один клик —
       // POST /x/listener_cleanup закрывает только сирот, ответ показываем тут же.
       warning.replaceChildren(
@@ -681,10 +966,10 @@
       return;
     }
     section(body, T('Сейчас','Now'), data.active);
-    section(body, T('Выполнено','Done'), data.history.slice(0, 15));
+    section(body, T('Что было','Earlier'), data.history.slice(0, 15));
     if (!data.active.length && !data.history.length) {
       var _h3=document.querySelector('#_xtlac_head h3'); if(_h3)_h3.textContent=T('Что делает Extella','What Extella is doing');
-      var _clr=document.getElementById('_xtlac_clear'); if(_clr)_clr.textContent=T('Очистить выполненные','Clear completed');
+      var _clr=document.getElementById('_xtlac_clear'); if(_clr)_clr.textContent=T('Убрать записи','Clear the feed');
       body.appendChild(el('div', { id: '_xtlac_empty' }, T('Пока пусто. Когда Extella что-то делает — ставит программу, запускает процесс, проверяет данные, — здесь видна каждая задача и её статус.','Quiet for now. When Extella is doing something — installing a program, running a process, checking data — every task and its status shows up here.')));
     }
   }
@@ -696,7 +981,7 @@
     style.textContent = css;
     document.head.appendChild(style);
 
-    var root = el('div', { id: '_xtlac_root', 'data-health': 'warning' });
+    var root = el('div', { id: '_xtlac_root', 'data-health': 'ok' });
     var pill = el('button', { id: '_xtlac_pill', type: 'button', 'aria-label': T('Что делает Extella — открыть список','What Extella is doing — open the list') });
     pill.appendChild(el('span', { id: '_xtlac_grip', title: T('Перетащи, чтобы сдвинуть плашку','Drag to move this chip') }, '⠿'));
     pill.appendChild(el('span', { id: '_xtlac_dot' }));
@@ -709,7 +994,7 @@
     var heading = el('div');
     heading.appendChild(el('h3', {}, T('Что делает Extella','What Extella is doing')));
     head.appendChild(heading);
-    head.appendChild(el('button', { id: '_xtlac_clear', type: 'button' }, T('Очистить выполненные','Clear completed')));
+    head.appendChild(el('button', { id: '_xtlac_clear', type: 'button' }, T('Убрать записи','Clear the feed')));
     head.appendChild(el('button', { id: '_xtlac_close', type: 'button', 'aria-label': T('Закрыть','Close') }, '×'));
     panel.appendChild(head);
     panel.appendChild(el('div', { id: '_xtlac_warning' }));
@@ -769,6 +1054,7 @@
     var marketplaceObserver = new MutationObserver(function () { enhanceMarketplace(); });
     marketplaceObserver.observe(document.body, { childList: true, subtree: true });
     enhanceMarketplace();
+    state.data = composeData();   // клиентская картина есть сразу, до ответа службы
     render();
   }
 
@@ -784,7 +1070,8 @@
         }] : [];
         return {
           // Спокойный чип: без деталей журнала он всё равно знает счётчик задач.
-          // Про перезапуск объясняет предупреждение ВНУТРИ панели, чипу ныть не нужно.
+          // Своя, клиентская картина точнее — поэтому помечаем источник запасным.
+          __fallback: true,
           health: active.length ? 'busy' : 'ok',
           headline: active.length ? active[0].title : T('Сейчас ничего не выполняется','Nothing running right now'),
           active: active, history: [],
@@ -815,11 +1102,13 @@
   function refresh() {
     return fetch(API, { cache: 'no-store' })
       .then(function (response) { if (!response.ok) throw new Error('HTTP ' + response.status); return response.json(); })
-      .then(function (data) { state.bridgeOnline = true; state.data = data; state.activityToken = data.controlToken || ''; render(); })
+      .then(function (data) { state.bridgeOnline = true; state.bridge = data; state.activityToken = data.controlToken || ''; })
       .catch(function () {
         state.bridgeOnline = false;
-        fallbackStatus().then(function (data) { if (data) state.data = data; render(); });
-      });
+        state.activityToken = '';
+        return fallbackStatus().then(function (data) { state.bridge = data; });
+      })
+      .then(function () { state.data = composeData(); render(); });
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount, { once: true });

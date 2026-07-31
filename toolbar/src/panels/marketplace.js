@@ -601,7 +601,19 @@ ETB.marketplace = (function () {
           // experts/concepts on the user's account, then report back so the
           // iframe can flip the button state without a reload.
           var plugin = ETB.registry.getById(pluginId);
+          // Плашка активности живёт в родительском окне и не видит витрину, когда
+          // та закрыта, — а установка продолжается. Поэтому о ходе установки
+          // сообщаем событием сюда же, в родительское окно.
+          var _sayInstall = function (phase, message) {
+            try {
+              window.dispatchEvent(new CustomEvent('etb:install', { detail: {
+                pluginId: pluginId, phase: phase, message: message || '',
+                name: (plugin && (plugin.name || plugin.title)) || pluginId
+              } }));
+            } catch (e) {}
+          };
           var _reply = function (ok, message) {
+            _sayInstall(ok ? 'done' : 'failed', message);
             var frame = document.getElementById('_etbv2_mkt_frame');
             if (frame && frame.contentWindow) {
               frame.contentWindow.postMessage({
@@ -613,6 +625,7 @@ ETB.marketplace = (function () {
             }
           };
           if (!plugin) { _reply(false, 'Unknown plugin: ' + pluginId); return; }
+          _sayInstall('start');
           ETB.plugins.provision(plugin, 'install').then(function () {
             ETB.tabs.refresh();
             _reply(true);
