@@ -5019,7 +5019,10 @@ function _autoErrHTML(){
 }
 function _ensureAuto() {
   if (_autoFetched) return; _autoFetched = true;
-  skKvGet('_mkt_automations').then(function(r) {
+  // Без таймаута экран «Автоматизации» висел на «Загружаю…» бесконечно, если облако
+  // молчит: обещание просто не разрешалось. Восемь секунд — и честная строка.
+  var _timeout = new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('_timeout_')); }, 8000); });
+  Promise.race([skKvGet('_mkt_automations'), _timeout]).then(function(r) {
     _autoReg = (r && r.items) ? r.items : [];
     _autoErr = false;
     if (cur === 'automations') renderAutomations();
