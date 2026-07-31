@@ -4622,7 +4622,7 @@ ETB.router = (function () {
     s.textContent = _etbFontFaceCss()
       + ':root{'
       + '--etb-serif:"Source Serif 4",ui-serif,Georgia,serif;'
-      + '--etb-sans:"Inter",-apple-system,system-ui,sans-serif;'
+      + '--etb-sans:"Nunito",-apple-system,system-ui,sans-serif;'
       + '--etb-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace}'
       + '@keyframes _etbv2_spin{to{transform:rotate(360deg)}}';
     document.head.appendChild(s);
