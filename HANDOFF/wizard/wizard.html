@@ -225,6 +225,11 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
 .toast.err{background:var(--bad)}
 .toast.ok{background:var(--ok)}
 @keyframes tin{from{opacity:0;transform:translateY(8px)}to{opacity:1}}
+  /* Группа проекта: выбор, архив и создание — одно дело, поэтому один контрол,
+     а не три отдельные пилюли в ряд (правило дизайн-кода о расположении кнопок). */
+  .topgrp{display:inline-flex;align-items:center;gap:0;border:1px solid var(--wl2,#e6e2da);border-radius:8px;overflow:hidden}
+  .topgrp>*{border:0!important;border-radius:0!important;margin:0!important}
+  .topgrp>*+*{border-left:1px solid var(--wl2,#e6e2da)!important}
 </style>
 </head>
 <body>
@@ -241,11 +246,11 @@ ul.plain li::before{content:"—";position:absolute;left:0;color:var(--gold)}
   <div class="spacer"></div>
   <button class="btn ghost" id="agentBadge" onclick="openAgentManager()" title="Для какого агента строим (концепты, правила, память — в его мозг)">Агент…</button>
   <button class="btn ghost" id="brainBtn" onclick="openBrain()" title="Мозг агента: знания, правила, голос, умения" style="display:none">Мозг</button>
-  <select class="sess-select" id="sessSelect" onchange="loadSession(this.value)"></select>
+  <span class="topgrp"><select class="sess-select" id="sessSelect" onchange="loadSession(this.value)"></select>
   <button class="btn ghost" id="wDelSess" onclick="deleteSession()" title="Убрать выбранный проект в архив" style="padding:6px 9px">В архив</button>
-  <button class="btn ghost" id="wNewSess" onclick="newSession()">+ Новый проект</button>
+  <button class="btn ghost" id="wNewSess" onclick="newSession()">+ Новый проект</button></span>
   <button class="btn ghost" id="wLangBtn" onclick="toggleWLang()" title="Language / Язык">EN</button>
-  <button class="btn gold" id="chatToggle" onclick="toggleChat()">Мастер</button>
+  <button class="btn ghost" id="chatToggle" onclick="toggleChat()" title="Открыть чат с Мастером">Чат с Мастером</button>
 </div>
 
 <div class="stepper" id="stepper"></div>
