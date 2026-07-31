@@ -3482,8 +3482,8 @@ function _mkbLoad(){
     rows.forEach(function(r){ (by[r.state]||(by.missing)).push(r); });
     var action=by.installable.concat(by.not_running).concat(by.broken);  // требуют клика — карточками
     if(!action.length && !by.working.length && !by.missing.length){ slot.innerHTML=''; return; }
-    var head='<div class="sect_hdr"><span class="sect_title">'+(en?'Installed & automations':'Установлено и автоматизации')+'</span><span class="sect_line"></span></div>'+
-      '<div class="sk_lead" style="grid-column:1/-1">'+(en?'What you\'ve installed and whether it\'s wired into automations — connect the rest to automations right here.':'Что установлено и участвует ли в автоматизациях — остальное можно подключить к автоматизациям прямо здесь.')+
+    var head='<div class="sect_hdr"><span class="sect_title">'+(en?'Installed':'Установленное')+'</span><span class="sect_line"></span></div>'+
+      '<div class="sk_lead" style="grid-column:1/-1">'+(en?'Programs on this computer. Connect one so an agent can use it on a schedule.':'Программы на этом компьютере. Подключи любую, чтобы агент мог ей пользоваться по расписанию.')+
       (d.blocks!=null?' <span style="color:var(--tx3)">· '+(en?'connected: ':'подключено: ')+esc(String(d.blocks))+'</span>':'')+'</div>';
     var cards=action.map(function(it,i){ return _mkbCard(it,i,en); }).join('');
     var workLine=by.working.length?'<div class="sk_lead" style="grid-column:1/-1;color:#2E7D5B;font-size:13px">✓ '+
@@ -3518,13 +3518,13 @@ function _mkbCard(it,i,en){
   var kindL=en?({app:'App',mcp:'MCP',cli:'Tool'}[it.kind]||it.kind):({app:'Приложение',mcp:'MCP',cli:'Инструмент'}[it.kind]||it.kind);
   var foot;
   if(it.state==='not_running')
-    foot='<span style="font-size:11px;color:var(--tx3)">'+(en?'start it first':'сначала запусти')+'</span>';
+    foot='<span style="font-size:11px;color:var(--tx3)">'+(en?'Start the program first':'Сначала запусти программу')+'</span>';
   else if(broken)
     // осиротевший кубик: способность под ним исчезла — предложить убрать блок
-    foot='<span style="font-size:11px;color:#B23A2E;margin-right:8px">'+(en?'the program is gone — reinstall':'программа пропала — переустанови')+'</span>'+
+    foot='<span style="font-size:11px;color:#B23A2E;margin-right:8px">'+(en?'The program is gone. Install it again.':'Программа пропала. Установи её заново.')+'</span>'+
       (it.block?'<button class="st_btn" style="background:transparent;color:#B23A2E;border:1px solid rgba(178,58,46,.5)" onclick="_mkbRemoveBlock(this,\''+_dtEsc(it.block)+'\')">'+(en?'Remove block':'Убрать блок')+'</button>':'');
   else  // installable
-    foot='<button class="st_btn" style="--acc:'+acc+'" onclick="_mkbMake(this,\''+_dtEsc(it.kind)+'\',\''+_dtEsc(it.ref)+'\',\''+_dtEsc(it.title||it.ref)+'\')">'+(en?'Add to automations':'Подключить к автоматизациям')+'</button>';
+    foot='<button class="st_btn" style="--acc:'+acc+'" onclick="_mkbMake(this,\''+_dtEsc(it.kind)+'\',\''+_dtEsc(it.ref)+'\',\''+_dtEsc(it.title||it.ref)+'\')">'+(en?'Connect':'Подключить')+'</button>';
   return '<div class="stile" style="--acc:'+acc+';animation-delay:'+Math.min(i*30,240)+'ms">'+
     '<span class="st_chip">'+esc(kindL)+'</span>'+
     '<div class="st_title">'+esc(it.title||it.ref)+'</div>'+
@@ -3559,7 +3559,9 @@ function _mkbMake(btn,kind,ref,purpose){
         ' <button class="st_btn" style="background:transparent;color:var(--tx2);border:1px solid var(--bd2)" onclick="_mkbLoad()">'+(LANG==='en'?'Retry':'Ещё раз')+'</button>';
     }
   }).catch(function(){
-    foot.innerHTML='<span style="font-size:13px;color:var(--tx3)">'+(LANG==='en'?'Builder is busy — try again in a minute':'Сборщик занят — загляни через минуту')+'</span>';
+    foot.innerHTML='<span style="font-size:13px;color:var(--tx2)">'+(LANG==='en'
+        ?'The Wizard is not running. Open the Wizard and press the button again.'
+        :'Конструктор не запущен. Открой Конструктор и нажми кнопку ещё раз.')+'</span>';
   });
 }
 function _renderProgramsCore() {
@@ -5058,6 +5060,15 @@ function _agStatus(p){ var st=_agState[_agId(p)]; return (st && st.status) || p.
 function _agName(p){ var st=_agState[_agId(p)]; return (st && st.name) || p.name || p.id; }
 function _agSchedule(p){ var st=_agState[_agId(p)]; return (st && st.schedule) || p.schedule || null; }
 function _agRuns(p){ var st=_agState[_agId(p)]; return (st && st.runs) || []; }
+// Статус агента и результат последнего запуска — разные факты. Раньше в шапке
+// стоял только статус, и упавший вчера агент выглядел просто «активен».
+function _lastRunBadge(p){
+  var runs=_agRuns(p); if(!runs||!runs.length) return '';
+  var last=runs[0];
+  if(last.ok===false) return '<span style="font:600 11px var(--sans);color:#B23A2E;letter-spacing:.02em">'+_clT('последний запуск не удался','last run failed')+'</span>';
+  if(last.ok===null)  return '<span style="font:600 11px var(--sans);color:var(--tx3);letter-spacing:.02em">'+_clT('последний запуск идёт','last run in progress')+'</span>';
+  return '<span style="font:500 11px var(--sans);color:var(--tx3);letter-spacing:.02em">'+_clT('последний запуск успешен','last run ok')+'</span>';
+}
 function _statusBadge(s){
   var m={active:['● активен','#2E7D5B'],paused:['⏸ на паузе','#C57E33'],frozen:['🔒 заморожен','#2F6B66']};
   var v=m[s]||m.active;
@@ -5239,7 +5250,7 @@ function _cabRender(){
         '<div style="min-width:0;flex:1">'+
           '<div style="font:700 20px/1.25 var(--sans);letter-spacing:-.01em;color:var(--tx)">'+name+'</div>'+
           (tag?'<div style="font-size:13px;color:var(--tx2);margin-top:4px;line-height:1.45">'+tag+'</div>':'')+
-          '<div style="margin-top:8px;display:flex;align-items:center;gap:8px">'+_statusBadge(status)+'<span style="font-size:11px;color:var(--tx3)">· '+esc(p.orchestrator||_agId(p))+'</span></div>'+
+          '<div style="margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+_statusBadge(status)+_lastRunBadge(p)+'<span style="font-size:11px;color:var(--tx3)">· '+esc(p.orchestrator||_agId(p))+'</span></div>'+
         '</div>'+
         '<button onclick="closeAgentCabinet()" style="border:1px solid var(--bd2);background:var(--s1);color:var(--tx);font:600 13px var(--sans);padding:8px 16px;border-radius:var(--r-pill);cursor:pointer;flex-shrink:0">✕ Закрыть</button>'+
       '</div>'+
