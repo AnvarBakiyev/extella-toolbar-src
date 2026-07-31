@@ -156,6 +156,16 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);
 
 
 /* ── "Выбор Extella": the living tile shelf (shelf[]) ───────────────── */
+.atbl{border:1px solid var(--bd);border-radius:var(--r);background:var(--s1);overflow:hidden}
+.atbl_h,.atbl_r{display:grid;grid-template-columns:minmax(220px,2fr) 1fr 1.4fr auto;gap:16px;align-items:center;padding:16px 20px}
+.atbl_h{font:500 11px var(--mono);letter-spacing:.06em;color:var(--petrol);padding-top:12px;padding-bottom:12px;border-bottom:1px solid var(--bd)}
+.atbl_r+.atbl_r{border-top:1px solid var(--bd)}
+.atbl_n{font:700 15px var(--sans);color:var(--tx)}
+.atbl_d{font-size:13px;color:var(--tx2);margin-top:4px}
+.atbl_c{font-size:13px;color:var(--tx)}
+.atbl_a{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.st_btn.ghost{background:transparent;color:var(--tx);border:1px solid var(--bd2)}
+@media(max-width:900px){.atbl_h{display:none}.atbl_r{grid-template-columns:1fr;gap:8px}}
 .mshelf{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(248px,1fr));gap:16px}
 .mshelf_capped .stile:nth-child(n+49){display:none}
 .stile{position:relative;overflow:hidden;border:1px solid var(--bd);border-radius:var(--r);
@@ -5159,6 +5169,45 @@ function _recRun(id, ok, note, ts){
 }
 
 // ── Индивидуальная карточка агента: hero-обложка (личность) + управление ───
+function _autoSchedText(p){
+  var sch=_agSchedule(p);
+  if(!sch) return _clT('вручную','manual');
+  return esc(sch.human||sch.period||_clT('по расписанию','on a schedule'));
+}
+function _autoLastText(p){
+  var runs=_agRuns(p);
+  if(!runs||!runs.length) return '<span style="color:var(--tx3)">'+_clT('ещё не запускалась','never run')+'</span>';
+  var r=runs[0], when=esc(_fmtTs(r.ts));
+  if(r.ok===false) return '<span style="color:#B23A2E">✕ '+when+'</span><div style="font-size:11px;color:var(--tx2);margin-top:2px">'+_runErrText(r.note)+'</div>';
+  if(r.ok===null)  return '<span style="color:var(--tx3)">'+INF(16)+' '+when+' · '+_clT('идёт','running')+'</span>';
+  return '<span style="color:#2E7D5B">✓ '+when+'</span>';
+}
+function autoRowHTML(p){
+  var id=_agId(p), orch=p.orchestrator||'';
+  var run = orch ? '<button class="st_btn" onclick="autoRunRow(\''+esc(orch)+'\',\''+esc(id)+'\',this)">'+_clT('Запустить','Run')+'</button>' : '';
+  return '<div class="atbl_r" id="arow_'+esc(id)+'">'+
+    '<div><div class="atbl_n">'+esc(_agCleanName(p))+'</div>'+
+      '<div class="atbl_d">'+esc(_agTagline(p))+'</div></div>'+
+    '<div class="atbl_c">'+_autoSchedText(p)+'</div>'+
+    '<div class="atbl_c">'+_autoLastText(p)+'</div>'+
+    '<div class="atbl_a">'+run+'<button class="st_btn ghost" onclick="openAgentCabinet(\''+esc(id)+'\')">'+_clT('Открыть','Open')+'</button></div>'+
+  '</div>';
+}
+// Запуск прямо из таблицы: строка сама показывает, что происходит, и обновляется по ответу.
+function autoRunRow(orch, id, btn){
+  var row=document.getElementById('arow_'+id), cell=row?row.children[2]:null;
+  if(btn) btn.disabled=true;
+  if(cell) cell.innerHTML=INF(16)+' '+_clT('запускаю…','starting…');
+  var ts=Date.now();
+  skBridge('etb_run_expert','etb_expert_result',{name:orch,params:{}},180000).then(function(){
+    _recRun(id,true,_clT('запуск вручную','manual run'),ts);
+    _agLoadRuns(id).then(function(){ if(cur==='automations') renderAutomations(); });
+  }).catch(function(e){
+    var m=(e&&e.message)||'error', deferred=/500|timeout|defer/i.test(m);
+    _recRun(id, deferred?null:false, deferred?_clT('в фоне','in background'):m, ts);
+    _agLoadRuns(id).then(function(){ if(cur==='automations') renderAutomations(); });
+  });
+}
 function autoCardHTML(p, i){
   var id=_agId(p), acc=_agAcc(p), name=esc(_agCleanName(p)), tag=esc(_agTagline(p)), em=_agEmoji(p);
   var caps=_agCaps(p), status=_agStatus(p), sch=_agSchedule(p);
@@ -5210,7 +5259,8 @@ function renderAutomations() {
   // Подтягиваем клиентское состояние всех агентов один раз, потом рисуем.
   var need = _autoReg.filter(function(p){ return !(_agId(p) in _agState); });
   if (need.length) {
-    Promise.all(need.map(function(p){ return _agLoadState(_agId(p)); })).then(function(){ renderAutomations(); });
+    // Таблица показывает последний запуск, поэтому история нужна сразу, а не только в кабинете.
+    Promise.all(need.map(function(p){ var id=_agId(p); return Promise.all([_agLoadState(id), _agLoadRuns(id)]); })).then(function(){ renderAutomations(); });
     g.innerHTML = _loadingHTML(_t('autoLoad'));
     rtabs(); return;
   }
@@ -5219,9 +5269,15 @@ function renderAutomations() {
     g.innerHTML = _autoErr ? _autoErrHTML() : _emptyHTML('⚙️', _t('autoEmpty'));
     rtabs(); return;
   }
-  var html = '<div class="sect_hdr" style="grid-column:1/-1"><span class="sect_title">Опубликованные автоматизации</span><span class="sect_line"></span></div>'+
-    '<div class="sk_lead" style="grid-column:1/-1;margin:-2px 0 8px">Каждый агент — управляемый объект: запуск, расписание, история, настройки. Открой «⚙ Кабинет».</div>'+
-    '<div class="mshelf">' + visible.map(function(p, i){ return autoCardHTML(p, i); }).join('') + '</div>';
+  // Таблица вместо плиток (решение Эллы 31.07): в одной строке всё, что нужно знать про
+  // автоматизацию — что делает, когда запускается, чем кончился последний запуск и что
+  // можно сделать. Раньше эти три факта жили на трёх разных экранах.
+  var html = '<div class="sect_hdr" style="grid-column:1/-1"><span class="sect_title">'+_clT('Твои автоматизации','Your automations')+'</span><span class="sect_line"></span></div>'+
+    '<div class="sk_lead" style="grid-column:1/-1">'+_clT('Работают сами по расписанию. Здесь видно, когда запускались и чем закончилось.','They run on a schedule. Here you see when they ran and how it ended.')+'</div>'+
+    '<div class="atbl" style="grid-column:1/-1">'+
+      '<div class="atbl_h"><span>'+_clT('Что делает','What it does')+'</span><span>'+_clT('Расписание','Schedule')+'</span><span>'+_clT('Последний запуск','Last run')+'</span><span></span></div>'+
+      visible.map(function(p){ return autoRowHTML(p); }).join('')+
+    '</div>';
   g.innerHTML = html;
   rtabs();
 }
