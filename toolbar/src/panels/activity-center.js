@@ -342,7 +342,7 @@
     if (active.length === 1) headline = active[0].title;
     else if (active.length > 1) headline = T('Работаю над ' + active.length + ' задачами', 'Working on ' + active.length + ' tasks');
     else if (failed) headline = T('Последняя задача не удалась','The last task failed');
-    else headline = T('Сейчас ничего не идёт','Nothing running right now');
+    else headline = T('Сейчас ничего не происходит','Nothing is happening right now');
 
     var completed = history.filter(function (task) { return task.status === 'completed'; }).length;
     return {
