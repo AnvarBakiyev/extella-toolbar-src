@@ -9,7 +9,7 @@
   var API = API_BASE + '/api/activity';
   var SERVICES_API = API_BASE + '/api/services';
   var state = {
-    open: false, data: null, bridge: null, bridgeOnline: false, expanded: {},
+    open: false, data: null, bridge: null, listener: null, bridgeOnline: false, expanded: {},
     activityToken: '', taskBusy: {},
     services: null, servicesToken: '', servicesLoading: false,
     servicesUpdatedAt: 0, serviceBusy: {}, serviceMessage: ''
@@ -327,12 +327,18 @@
     var active = [], history = [];
     clientTasks.forEach(function (task) { (task.status === 'running' ? active : history).push(task); });
 
+    // Движок занят — говорим об этом всегда, даже если своих задач нет.
+    // Молчание при занятом движке и было главной ложью этой плашки.
+    // Исключение одно: когда мы сами ставим программу — это она его и заняла.
+    var engine = listenerTask();
+    var installing = clientTasks.some(function (task) {
+      return task.status === 'running' && task.category === 'install';
+    });
+    if (engine && !installing) active.push(engine);
+
     var bridge = state.bridge;
     if (bridge) {
-      // Запасной статус слушателя знает только «занята/свободна» — если своя
-      // картина уже есть, его общая строка была бы вторым именем той же задачи.
-      var skipActive = bridge.__fallback && active.length;
-      if (!skipActive) (bridge.active || []).forEach(function (task) { active.push(task); });
+      (bridge.active || []).forEach(function (task) { active.push(task); });
       (bridge.history || []).forEach(function (task) { history.push(task); });
     }
 
@@ -968,9 +974,14 @@
     section(body, T('Сейчас','Now'), data.active);
     section(body, T('Что было','Earlier'), data.history.slice(0, 15));
     if (!data.active.length && !data.history.length) {
-      var _h3=document.querySelector('#_xtlac_head h3'); if(_h3)_h3.textContent=T('Что делает Extella','What Extella is doing');
+      var _h3=document.querySelector('#_xtlac_head h3'); if(_h3)_h3.textContent=T('Что сейчас происходит','What is happening now');
       var _clr=document.getElementById('_xtlac_clear'); if(_clr)_clr.textContent=T('Убрать записи','Clear the feed');
-      body.appendChild(el('div', { id: '_xtlac_empty' }, T('Пока пусто. Когда Extella что-то делает — ставит программу, запускает процесс, проверяет данные, — здесь видна каждая задача и её статус.','Quiet for now. When Extella is doing something — installing a program, running a process, checking data — every task and its status shows up here.')));
+      var _quiet = T('Пока пусто. Когда Extella что-то делает — ставит программу, запускает процесс, проверяет данные, — здесь видна каждая задача и её статус.','Quiet for now. When Extella is doing something — installing a program, running a process, checking data — every task and its status shows up here.');
+      // Не выдаём незнание за спокойствие: если движок не отвечает, так и говорим.
+      if (!state.listener || !state.listener.available) {
+        _quiet += T(' Состояние движка Extella сейчас недоступно — вижу только то, что делает витрина.',' The Extella engine status is unavailable right now — I only see what the storefront does.');
+      }
+      body.appendChild(el('div', { id: '_xtlac_empty' }, _quiet));
     }
   }
 
@@ -982,7 +993,7 @@
     document.head.appendChild(style);
 
     var root = el('div', { id: '_xtlac_root', 'data-health': 'ok' });
-    var pill = el('button', { id: '_xtlac_pill', type: 'button', 'aria-label': T('Что делает Extella — открыть список','What Extella is doing — open the list') });
+    var pill = el('button', { id: '_xtlac_pill', type: 'button', 'aria-label': T('Что сейчас происходит — открыть список','What is happening now — open the list') });
     pill.appendChild(el('span', { id: '_xtlac_grip', title: T('Перетащи, чтобы сдвинуть плашку','Drag to move this chip') }, '⠿'));
     pill.appendChild(el('span', { id: '_xtlac_dot' }));
     pill.appendChild(el('span', { id: '_xtlac_text' }, T('Подключаюсь…','Connecting…')));
@@ -992,7 +1003,7 @@
     var panel = el('div', { id: '_xtlac_panel' });
     var head = el('div', { id: '_xtlac_head' });
     var heading = el('div');
-    heading.appendChild(el('h3', {}, T('Что делает Extella','What Extella is doing')));
+    heading.appendChild(el('h3', {}, T('Что сейчас происходит','What is happening now')));
     head.appendChild(heading);
     head.appendChild(el('button', { id: '_xtlac_clear', type: 'button' }, T('Убрать записи','Clear the feed')));
     head.appendChild(el('button', { id: '_xtlac_close', type: 'button', 'aria-label': T('Закрыть','Close') }, '×'));
@@ -1058,28 +1069,44 @@
     render();
   }
 
-  function fallbackStatus() {
+  // Listener — движок фоновых задач самой Extella. Раньше его спрашивали только
+  // когда молчала служба 8799, и «занята» терялось: на экране «ничего не
+  // происходит», а движок в это время работал. Теперь спрашиваем всегда.
+  function readListener() {
     try {
-      if (!window.extellaDesktop || !window.extellaDesktop.listener) return Promise.resolve(null);
-      return window.extellaDesktop.listener.getStatus().then(function (status) {
-        if (!status) return null;
-        var active = status.isBusy ? [{
-          id: status.currentTaskId || 'unknown', shortId: String(status.currentTaskId || '').slice(0, 8),
-          status: 'running', title: T('Extella выполняет задачу','Extella is working on a task'),
-          detail: T('Что именно — в этом режиме не видно; обычно это установка или фоновая сборка.','What exactly is not visible in this mode; usually an install or a background build.'), category: 'action'
-        }] : [];
-        return {
-          // Спокойный чип: без деталей журнала он всё равно знает счётчик задач.
-          // Своя, клиентская картина точнее — поэтому помечаем источник запасным.
-          __fallback: true,
-          health: active.length ? 'busy' : 'ok',
-          headline: active.length ? active[0].title : T('Сейчас ничего не выполняется','Nothing running right now'),
-          active: active, history: [],
-          counts: { active: active.length, completed: status.tasksCompleted || 0, failed: status.tasksFailed || 0 },
-          listeners: { count: status.running ? 1 : 0, orphaned: 0 }
-        };
-      }).catch(function () { return null; });
-    } catch (e) { return Promise.resolve(null); }
+      if (!window.extellaDesktop || !window.extellaDesktop.listener
+          || typeof window.extellaDesktop.listener.getStatus !== 'function') {
+        state.listener = { available: false };
+        return Promise.resolve(state.listener);
+      }
+      return Promise.resolve(window.extellaDesktop.listener.getStatus()).then(function (status) {
+        state.listener = status
+          ? {
+              available: true, busy: !!status.isBusy, running: !!status.running,
+              taskId: status.currentTaskId || '',
+              completed: status.tasksCompleted || 0, failed: status.tasksFailed || 0
+            }
+          : { available: false };
+        return state.listener;
+      }).catch(function () {
+        state.listener = { available: false };
+        return state.listener;
+      });
+    } catch (e) {
+      state.listener = { available: false };
+      return Promise.resolve(state.listener);
+    }
+  }
+
+  function listenerTask() {
+    var listener = state.listener;
+    if (!listener || !listener.available || !listener.busy) return null;
+    return {
+      id: 'listener:' + (listener.taskId || 'busy'), local: true, status: 'running', category: 'system',
+      title: T('Extella занята делом','Extella is busy with a task'),
+      detail: T('Движок фоновых задач сейчас работает. Что именно — он не рассказывает; обычно это установка или сборка.','The background engine is working. It does not say what exactly; usually an install or a build.'),
+      hint: T('Прервать задачу можно красной кнопкой Cancel внизу панели Extella.','To interrupt a task, use the red Cancel button at the bottom of the Extella panel.')
+    };
   }
 
   function cleanupListeners() {
@@ -1100,14 +1127,16 @@
   }
 
   function refresh() {
+    var engine = readListener();   // движок спрашиваем всегда, а не только когда молчит служба
     return fetch(API, { cache: 'no-store' })
       .then(function (response) { if (!response.ok) throw new Error('HTTP ' + response.status); return response.json(); })
       .then(function (data) { state.bridgeOnline = true; state.bridge = data; state.activityToken = data.controlToken || ''; })
       .catch(function () {
         state.bridgeOnline = false;
         state.activityToken = '';
-        return fallbackStatus().then(function (data) { state.bridge = data; });
+        state.bridge = null;
       })
+      .then(function () { return engine; })
       .then(function () { state.data = composeData(); render(); });
   }
 
