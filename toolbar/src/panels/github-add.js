@@ -398,6 +398,8 @@ ETB.githubAdd = (function () {
           '</div>'),
         '</div>',
         '</div>', // end preview
+        /* Вердикт гейта стандартов: человек видит его ДО того, как нажмёт «Установить» */
+        (s.step === 'preview' ? _passportVerdictHtml(s) : ''),
         /* Status */
         '<div id="_etbv2_gh_status">',
         working ? '<div class="_etbv2_gh_spinner"></div><span>' + _esc(s.statusMsg || 'Working...') + '</span>' : '',
@@ -411,7 +413,11 @@ ETB.githubAdd = (function () {
           : (rd.name && s.step === 'preview'
             ? (already
               ? '<button class="_etbv2_gh_btn_cancel" id="_etbv2_gh_reinstall">Переустановить</button><button class="_etbv2_gh_btn_primary" id="_etbv2_gh_open_existing">Открыть</button>'
-              : '<button class="_etbv2_gh_btn_primary" id="_etbv2_gh_create">Понимаю, установить</button>')
+              : (s.passportChecked === false
+                ? '<button class="_etbv2_gh_btn_primary" disabled>Проверяю паспорт…</button>'
+                : ((Array.isArray(s.passportProblems) && s.passportProblems.length)
+                  ? '<button class="_etbv2_gh_btn_primary" disabled title="Паспорт агента не проходит стандарт">Установить нельзя</button>'
+                  : '<button class="_etbv2_gh_btn_primary" id="_etbv2_gh_create">Понимаю, установить</button>')))
             : '<button class="_etbv2_gh_btn_primary" disabled>Working...</button>'),
         '</div>',
         '</div>'
@@ -435,6 +441,95 @@ ETB.githubAdd = (function () {
   // Промпт для чата Extella: НЕ шаблон, а конкретные факты этой установки. Человеку
   // незачем пересказывать модели то, что мы и так знаем — репозиторий, куда ставили,
   // на чём встало. Пересказ по памяти и есть то место, где разбор теряет минуты.
+
+  // ── ГЕЙТ СТАНДАРТОВ НА ВХОДЕ ──────────────────────────────────────────────
+  // Паспорт агента (agent_passport.yaml в корне) — условие установки, а не просьба.
+  // Без него витрина не знает, что ставит и на какую полку класть, а канон платформы
+  // («клиентские агенты только на платформенной Qwen») держится на честном слове.
+  //
+  // Проверяем ТЕ ЖЕ поля, что и tools/check_agent_repo.py в extella-agent-standards:
+  // одна планка для своих и чужих, иначе смысла в стандарте нет.
+  //
+  // Паспорта нет вовсе — НЕ отказ: по ссылке ставят и обычные программы (excalidraw и
+  // подобные). Тогда это просто не агент, и мы говорим это прямо, а не молчим.
+  function _readPassport(owner, repo) {
+    var branches = ['main', 'master'];
+    function tryBranch(i) {
+      if (i >= branches.length) return Promise.resolve(null);
+      var url = 'https://raw.githubusercontent.com/' + owner + '/' + repo + '/' +
+                branches[i] + '/agent_passport.yaml';
+      return fetch(url).then(function (r) {
+        return r.ok ? r.text() : tryBranch(i + 1);
+      }).catch(function () { return tryBranch(i + 1); });
+    }
+    return tryBranch(0);
+  }
+
+  // Плоский разбор: паспорт — простой YAML, полноценный парсер тянуть незачем.
+  function _passportField(text, path) {
+    var re = new RegExp('^\\s*' + path + '\\s*:\\s*["\']?([^"\'#\\n]*)', 'm');
+    var m = text.match(re);
+    return m ? m[1].trim() : '';
+  }
+
+  function _passportProblems(text) {
+    var out = [];
+    if (!_passportField(text, 'name')) out.push('не указано имя агента');
+    if (!_passportField(text, 'owner')) out.push('не указан владелец — кто отвечает за агента после запуска');
+    if (!_passportField(text, 'business_goal')) out.push('не сказано, какую задачу агент закрывает');
+    if (!_passportField(text, 'platform_agent_id'))
+      out.push('нет platform_agent_id — агент не привязан к платформе (связывать по имени запрещено)');
+    var model = _passportField(text, 'model_profile');
+    if (model && !/qwen/i.test(model))
+      out.push('модель «' + model + '»: клиентские агенты работают только на платформенной Qwen');
+    if (!/^\s*capabilities\s*:/m.test(text)) out.push('не объявлено ни одной способности');
+    else if (!/^\s*-\s*name\s*:/m.test(text)) out.push('в способностях нет ни одной с именем');
+    if (!/^\s+limits\s*:/m.test(text))
+      out.push('не сказано, чего агент НЕ делает — хотя бы одна честная строка обязательна');
+    return out;
+  }
+
+
+  // Что человек видит на предпросмотре. Отказ обязан НАЗЫВАТЬ, чего не хватает: иначе
+  // он пойдёт гадать, а гадать придёт к нам — ровно то, чего гейт и должен избежать.
+  function _passportVerdictHtml(s) {
+    if (s.passportChecked === false) {
+      return '<div style="font-size:12px;color:var(--etb-tx2,#6b6b6b);margin:10px 0;">' +
+             'Читаю паспорт агента…</div>';
+    }
+    if (s.passportProblems === undefined) {
+      return '<div style="font-size:12px;line-height:1.5;color:#8a6a1f;' +
+             'border-left:2px solid #C57E33;padding-left:10px;margin:10px 0;">' +
+             '<b>Паспорт прочитать не удалось: репозиторий приватный.</b> ' +
+             'Это не значит, что паспорта нет — GitHub отвечает одинаково и на закрытый ' +
+             'репозиторий, и на отсутствующий файл. Добавь ключ доступа GitHub, ' +
+             'и проверка пройдёт как обычно.</div>';
+    }
+    if (s.passportProblems === null) {
+      // Паспорта нет — значит это не агент, а программа. Ставим, но говорим прямо.
+      return '<div style="font-size:12px;line-height:1.5;color:var(--etb-tx2,#6b6b6b);' +
+             'border-left:2px solid var(--etb-bd,#d7e0dc);padding-left:10px;margin:10px 0;">' +
+             'Паспорта агента в репозитории нет — поставим как обычную программу. ' +
+             'Если это должен быть агент Extella, добавь в корень <b>agent_passport.yaml</b>.' +
+             '</div>';
+    }
+    if (s.passportProblems.length) {
+      var items = s.passportProblems.map(function (x) {
+        return '<li style="margin:3px 0;">' + _esc(x) + '</li>';
+      }).join('');
+      return '<div style="font-size:12px;line-height:1.5;color:#b4472e;' +
+             'border-left:2px solid #b4472e;padding-left:10px;margin:10px 0;">' +
+             '<b>Паспорт агента не проходит стандарт</b>' +
+             '<ul style="margin:6px 0 0 14px;padding:0;">' + items + '</ul>' +
+             '<div style="margin-top:6px;color:var(--etb-tx2,#6b6b6b);">' +
+             'Поправь паспорт в репозитории и нажми «Fetch Repo» ещё раз. ' +
+             'Шаблон — extella-agent-standards/templates/agent_passport.yaml.</div></div>';
+    }
+    return '<div style="font-size:12px;line-height:1.5;color:#2F6B66;' +
+           'border-left:2px solid #2F6B66;padding-left:10px;margin:10px 0;">' +
+           'Паспорт агента на месте и проходит стандарт.</div>';
+  }
+
   function _chatPrompt() {
     var rd = _state.repoData || {};
     var id = _state.pluginId || '';
@@ -820,6 +915,27 @@ ETB.githubAdd = (function () {
       }
       _state.repoData = data;
       _state.customName = data.name || '';
+      // Читаем паспорт до показа предпросмотра: человек должен увидеть вердикт ДО
+      // того, как нажмёт «Установить», а не после десяти минут установки.
+      _state.passportChecked = false;
+      _state.repoPrivate = Boolean(data.private);
+      _readPassport(data.owner && data.owner.login, data.name).then(function (txt) {
+        _state.passportChecked = true;
+        _state.passportText = txt || '';
+        if (txt) {
+          _state.passportProblems = _passportProblems(txt);
+        } else if (_state.repoPrivate) {
+          // ЛОВУШКА, НА КОТОРОЙ Я САМ СПОТКНУЛСЯ: raw.githubusercontent отдаёт 404 и на
+          // приватный репозиторий, и на отсутствующий файл. Без этой ветки агент со
+          // стандартом, лежащий в приватном репозитории, был бы принят за «программу»
+          // и поставлен вообще без проверки — то есть гейт молча пропускал бы именно то,
+          // ради чего его делали.
+          _state.passportProblems = undefined;   // не знаем: прочитать не смогли
+        } else {
+          _state.passportProblems = null;        // публичный и файла нет → это не агент
+        }
+        _render();
+      });
       // Remember which URL this preview belongs to — Install must never run
       // against a stale repo after the user edits the URL field.
       _state.fetchedUrl = url;
