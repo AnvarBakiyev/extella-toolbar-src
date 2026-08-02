@@ -474,6 +474,26 @@
     return running + T(' из ',' of ') + total + T(' работают',' running');
   }
 
+  // Имена и описания фоновых программ приходят из службы, а не из витрины,
+  // поэтому запрещённые каноном слова возвращаются туда после каждой установки.
+  // Чиним у источника (пункт 4 ТЗ Анвару), но на экране держим канон уже сейчас.
+  var СЛОВАРЬ = [
+    [/псевдоанонимизаци[а-яё]*/gi, T('Скрыть личные данные','Hide personal data')],
+    [/\bПДн\b/g, T('личные данные','personal data')],
+    [/\bворкер[а-яё]*/gi, T('фоновый процесс','background process')],
+    [/\bреестр[а-яё]*\b/gi, T('список','list')],
+    [/\bтокен[а-яё]*/gi, T('ключ доступа','access key')],
+    [/\bлокалхост\b|localhost(:\d+)?/gi, T('на этом компьютере','on this computer')],
+    [/\bPID\b\s*\d*/g, ''],
+    [/\bPORT\b\s*\d*/g, '']
+  ];
+
+  function humanText(text) {
+    var out = String(text || '');
+    СЛОВАРЬ.forEach(function (pair) { out = out.replace(pair[0], pair[1]); });
+    return out.replace(/\s{2,}/g, ' ').replace(/\s+([,.;:])/g, '$1').trim();
+  }
+
   function renderLocalServices(store) {
     if (!store || store.cur !== 'automations' || !store.document) return;
     var doc = store.document;
@@ -490,10 +510,23 @@
       ? serviceCountText(state.services)
       : (state.servicesLoading ? T('проверяю…','checking…') : T('нет данных','no data'));
     head.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_summary', summary));
+
+    // Двадцать одинаковых плиток — служебная картина, а не то, зачем сюда заходят.
+    // По умолчанию свёрнуто: видно итог «21 из 22 работают», подробности — по клику.
+    var opened = false;
+    try { opened = localStorage.getItem('_xtlac_bg_open') === '1'; } catch (e) {}
+    var toggle = storefrontNode(doc, 'button', '_xtlac_srv_btn', opened ? T('Свернуть','Collapse') : T('Показать','Show'));
+    toggle.type = 'button';
+    toggle.addEventListener('click', function () {
+      try { localStorage.setItem('_xtlac_bg_open', opened ? '0' : '1'); } catch (e) {}
+      renderLocalServices(store);
+    });
+    head.appendChild(toggle);
     section.appendChild(head);
 
     var message = storefrontNode(doc, 'div', '_xtlac_srv_message' + (state.serviceMessage ? ' show' : ''), state.serviceMessage);
     section.appendChild(message);
+    if (!opened) return;
     if (!state.services) {
       if (state.servicesLoading) {
         section.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_sub', T('Проверяю, что сейчас запущено…','Checking what is running…')));
@@ -510,8 +543,8 @@
       var card = storefrontNode(doc, 'div', '_xtlac_srv_card ' + service.status);
       card.appendChild(storefrontNode(doc, 'span', '_xtlac_srv_dot'));
       var info = storefrontNode(doc, 'div', '_xtlac_srv_info');
-      info.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_name', service.name));
-      if (service.description) info.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_desc', service.description));
+      info.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_name', humanText(service.name)));
+      if (service.description) info.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_desc', humanText(service.description)));
       var meta = storefrontNode(doc, 'div', '_xtlac_srv_meta');
       meta.appendChild(storefrontNode(doc, 'span', '_xtlac_srv_chip',
         running ? T('работает','running') : T('остановлена','stopped')));
@@ -630,7 +663,10 @@
     if (!section) {
       section = doc.createElement('section');
       section.id = '_xtlac_local_services';
-      grid.insertBefore(section, grid.firstChild);
+      // Служебный список стоял ПЕРВЫМ, и человек, зайдя в «Автоматизации»,
+      // упирался в стену из двадцати плиток вместо своих процессов.
+      // Порядок канона: сначала то, зачем пришли, потом машинное.
+      grid.appendChild(section);
     }
     renderLocalServices(store);
     refreshServices(store, false);

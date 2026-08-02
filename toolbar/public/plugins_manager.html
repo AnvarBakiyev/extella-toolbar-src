@@ -5266,6 +5266,12 @@ function autoCardHTML(p, i){
     '</div></div>';
 }
 
+// «Автоматизации» открываются с Рабочего стола и своей вкладки не имеют,
+// поэтому выход обязан быть на самом экране — иначе человек в тупике.
+function _autoBackHTML(){
+  return '<button class="st_btn ghost" style="grid-column:1/-1;justify-self:start;margin-bottom:12px" '+
+    'onclick="setc(\'desktop\')">← '+_clT('Рабочий стол','Desktop')+'</button>';
+}
 function renderAutomations() {
   var g = document.getElementById('grid'); if (!g) return;
   // Мост: в Конструкторе живут ВСЕ сборки устройства (и неопубликованные) — честно
@@ -5277,11 +5283,11 @@ function renderAutomations() {
   }).catch(function(){});
   if (_autoReg === null) {
     _ensureAuto();
-    g.innerHTML = _loadingHTML(_t('autoLoad'));
+    g.innerHTML = _autoBackHTML() + _loadingHTML(_t('autoLoad'));
     rtabs(); return;
   }
   if (!_autoReg.length) {
-    g.innerHTML = _autoErr ? _autoErrHTML() : _emptyHTML('⚙️', _t('autoEmpty'));
+    g.innerHTML = _autoBackHTML() + (_autoErr ? _autoErrHTML() : _emptyHTML('⚙️', _t('autoEmpty')));
     rtabs(); return;
   }
   // Подтягиваем клиентское состояние всех агентов один раз, потом рисуем.
@@ -5289,19 +5295,19 @@ function renderAutomations() {
   if (need.length) {
     // Таблица показывает последний запуск, поэтому история нужна сразу, а не только в кабинете.
     Promise.all(need.map(function(p){ var id=_agId(p); return Promise.all([_agLoadState(id), _agLoadRuns(id)]); })).then(function(){ renderAutomations(); });
-    g.innerHTML = _loadingHTML(_t('autoLoad'));
+    g.innerHTML = _autoBackHTML() + _loadingHTML(_t('autoLoad'));
     rtabs(); return;
   }
   try{ _deskSnapSave(); }catch(_){}   // здесь состояния свежие: плашка активности читает этот же снапшот
   var visible = _autoReg.filter(function(p){ var st=_agState[_agId(p)]; return !(st && st.hidden); });
   if (!visible.length) {
-    g.innerHTML = _autoErr ? _autoErrHTML() : _emptyHTML('⚙️', _t('autoEmpty'));
+    g.innerHTML = _autoBackHTML() + (_autoErr ? _autoErrHTML() : _emptyHTML('⚙️', _t('autoEmpty')));
     rtabs(); return;
   }
   // Таблица вместо плиток (решение Эллы 31.07): в одной строке всё, что нужно знать про
   // автоматизацию — что делает, когда запускается, чем кончился последний запуск и что
   // можно сделать. Раньше эти три факта жили на трёх разных экранах.
-  var html = '<div class="sect_hdr" style="grid-column:1/-1"><span class="sect_title">'+_clT('Твои автоматизации','Your automations')+'</span><span class="sect_line"></span></div>'+
+  var html = _autoBackHTML() + '<div class="sect_hdr" style="grid-column:1/-1"><span class="sect_title">'+_clT('Твои автоматизации','Your automations')+'</span><span class="sect_line"></span></div>'+
     '<div class="sk_lead" style="grid-column:1/-1">'+_clT('Просто работают по расписанию: расписание держит облако Extella, поэтому запуск не зависит от того, включён ли компьютер. Здесь видно, когда автоматизация запускалась и чем закончилось.','They run on a schedule. Here you see when they ran and how it ended.')+'</div>'+
     '<div class="atbl" style="grid-column:1/-1">'+
       '<div class="atbl_h"><span>'+_clT('Что делает','What it does')+'</span><span>'+_clT('Расписание','Schedule')+'</span><span>'+_clT('Последний запуск','Last run')+'</span><span></span></div>'+
