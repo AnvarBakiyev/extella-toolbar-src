@@ -1237,7 +1237,13 @@ function openPluginWindow(id){
   if(_pwins[id]){_pwRestore(_pwins[id]);_pwFocus(_pwins[id]);return;}
   var p=null;for(var i=0;i<BUILTIN_PLUGINS_DATA.length;i++){if(BUILTIN_PLUGINS_DATA[i].id===id){p=BUILTIN_PLUGINS_DATA[i];break;}}
   var cur=(typeof CURATED_PROGRAMS!=='undefined'&&CURATED_PROGRAMS[id])||{};
-  var name=cur.name||(p&&p.name)||id, icon=cur.icon||'🧩';
+  // Полоса окна — системный элемент, эмодзи в ней запрещены каноном (допустим только
+  // аватар агента, которого выбрал человек). Эмодзи приходили двумя путями: заглушкой
+  // 🧩 и первым символом ИМЕНИ, которое даёт сам плагин — второе не лечится правкой
+  // витрины, потому что имя приходит из данных. Срезаем ведущий символ у имени и
+  // ставим линейную иконку из общего набора (замечание Эллы 02.08, пункт 6).
+  var name=_stripLeadEmoji(cur.name||(p&&p.name)||id);
+  var iconCat=cur.cat||(p&&p.cat)||'';
   var chat=!(p && p.mode==='form_driven');  // форма только для form-плагинов; агенты/серверы/внешние -> чат
   var win=document.createElement('div');win.className='pwin';win._pid=id;
   var n=_pwn++;win.style.left=(84+(n%6)*26)+'px';win.style.top=(66+(n%6)*24)+'px';win.style.zIndex=(++_pwz);
@@ -1246,7 +1252,7 @@ function openPluginWindow(id){
     '<button class="pwin_btn" data-a="max" title="Развернуть / вернуть">&#9744;</button>'+
     '<button class="pwin_btn pwin_x" data-a="close" title="Закрыть">&#10005;</button></div>'+
     '<div class="pwin_body"><iframe class="pwin_if"></iframe></div><div class="pwin_rs"></div>';
-  win.querySelector('.pwin_ic').textContent=icon;
+  win.querySelector('.pwin_ic').innerHTML=_ico(iconCat);
   win.querySelector('.pwin_ttl').textContent=name;
   var _ifr=win.querySelector('.pwin_if');
   var _html=chat?_PLUGIN_CHAT_HTML:_PLUGIN_FORM_HTML;
@@ -1276,7 +1282,9 @@ function _pwMin(w){
   w.style.display='none';var d=document.getElementById('etb_dock');
   if(document.getElementById('dock_'+w._pid))return;
   var chip=document.createElement('button');chip.id='dock_'+w._pid;chip.className='dock_chip';
-  chip.textContent=w.querySelector('.pwin_ic').textContent+' '+w.querySelector('.pwin_ttl').textContent;
+  // Иконка теперь SVG, а не символ: textContent у неё пустой, и чип свёрнутого окна
+  // остался бы без значка. Собираем разметкой, имя по-прежнему экранируем.
+  chip.innerHTML=w.querySelector('.pwin_ic').innerHTML+' '+esc(w.querySelector('.pwin_ttl').textContent);
   chip.onclick=function(){_pwRestore(w);};d.appendChild(chip);
 }
 function _pwRestore(w){w.style.display='';var c=document.getElementById('dock_'+w._pid);if(c)c.remove();_pwFocus(w);}
@@ -2777,6 +2785,13 @@ var BIZ_ACC   = { work:'#C57E33', marketing:'#D4984F', money:'#2F6B66', study:'#
   dev:'#24544F', calc:'#C57E33', textcode:'#A5632A', webapi:'#2F6B66', aiwork:'#C57E33', ailife:'#D4984F' };
 var ICO_SYM = { work:'work', marketing:'marketing', money:'money', study:'study', home:'home', travel:'travel', health:'health', docs:'docs', data:'data', tech:'tech', sales:'marketing', content:'marketing', automation:'tech', life:'home',
   dev:'tech', calc:'money', textcode:'docs', webapi:'tech', aiwork:'work', ailife:'home' };
+// Ведущий эмодзи в имени: плагин может прислать «🧩 Композитор», и в системной полосе
+// он окажется независимо от наших правок. Срезаем только ПЕРВЫЙ символ и только если он
+// из эмодзи-диапазона: имя вроде «Баға» трогать нельзя.
+function _stripLeadEmoji(text){
+  var t=String(text||'').trim();
+  return (t && t.charCodeAt(0) >= 0x2600) ? t.replace(/^\S+\s*/,'') : t;
+}
 function _ico(cat){ return '<svg class="lico"><use href="#ic-'+(ICO_SYM[cat]||'box')+'"/></svg>'; }
 // Категория каталога (рус.) → линейная иконка вместо эмодзи (канон: Iconoir, не эмодзи)
 var CAT_SYM_RU={'Стиль и общение':'chat','Работа и продуктивность':'work','Бизнес':'money','Разработка':'tech',
