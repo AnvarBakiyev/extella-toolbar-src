@@ -5130,13 +5130,42 @@ function _fmtTs(ts){
 
 // ── Запуск агента + запись в историю ──────────────────────────────────────
 // Человеческий текст вместо сырого ответа воркера: правило «ошибка говорит, что делать».
-function _runErrText(m){
+// Код отказа — одно место классификации на весь продукт.
+//
+// Раньше причина узнавалась регуляркой по английскому тексту («worker hung», «timeout»),
+// и в двух местах сразу: здесь и в плашке активности. Стоило источнику поменять
+// формулировку — перевод отваливался МОЛЧА: человек видел сырую английскую строку и
+// считал это поломкой. Замечание Эллы 02.08, пункт 6.
+//
+// Теперь код вычисляется один раз и хранится вместе с записью о запуске. Текст остаётся
+// запасным путём: сообщения приходят и от платформы, и от движка, и от чужих служб —
+// заставить всех отдавать наши коды нельзя, а перестать угадывать у себя можно.
+var RUN_CODES = ['hung','timeout','not_found','forbidden','network','no_space'];
+function _runCode(m, httpStatus){
   var s=String(m||'').toLowerCase();
-  if(/worker hung|hang|stuck/.test(s)) return _clT('Процесс завис и был остановлен. Открой Конструктор и запусти ещё раз.','The process hung and was stopped. Open the Wizard and run it again.');
-  if(/timeout|timed out/.test(s))      return _clT('Ответ не пришёл вовремя — работа могла продолжиться в фоне. Загляни в историю через минуту.','No answer in time — the work may still be running. Check the history in a minute.');
-  if(/not found|404/.test(s))          return _clT('Не нашёл, что запускать: эксперт агента не установлен.','Nothing to run: the agent expert is not installed.');
-  if(/403|denied|forbidden/.test(s))   return _clT('Нет доступа к этому агенту под текущим аккаунтом.','No access to this agent under the current account.');
+  if(httpStatus===404) return 'not_found';
+  if(httpStatus===403||httpStatus===401) return 'forbidden';
+  if(/worker hung|hang|stuck|завис/.test(s))                 return 'hung';
+  if(/timeout|timed out|не дождал|истекло время/.test(s))    return 'timeout';
+  if(/not found|404|нет такого|не найден/.test(s))           return 'not_found';
+  if(/403|401|denied|forbidden|нет доступа/.test(s))         return 'forbidden';
+  if(/network|econn|dns|offline|сеть недоступна/.test(s))    return 'network';
+  if(/no space|enospc|диск полон|нет места/.test(s))         return 'no_space';
+  return '';
+}
+function _runErrTextByCode(code, m){
+  switch(code){
+    case 'hung':      return _clT('Процесс завис и был остановлен. Открой Конструктор и запусти ещё раз.','The process hung and was stopped. Open the Wizard and run it again.');
+    case 'timeout':   return _clT('Ответ не пришёл вовремя — работа могла продолжиться в фоне. Загляни в историю через минуту.','No answer in time — the work may still be running. Check the history in a minute.');
+    case 'not_found': return _clT('Не нашёл, что запускать: эксперт агента не установлен.','Nothing to run: the agent expert is not installed.');
+    case 'forbidden': return _clT('Нет доступа к этому агенту под текущим аккаунтом.','No access to this agent under the current account.');
+    case 'network':   return _clT('Связь пропала — проверь интернет и запусти ещё раз.','The connection dropped — check the internet and run it again.');
+    case 'no_space':  return _clT('На диске не осталось места — освободи место и запусти ещё раз.','The disk is full — free up space and run it again.');
+  }
   return _clT('Не удалось запустить: ','Could not run: ')+esc(m||'');
+}
+function _runErrText(m, code){
+  return _runErrTextByCode(code || _runCode(m), m);
 }
 // Запуск из кабинета: та же механика, но со своей строкой состояния и обновлением истории.
 function cabRunNow(orch, btn){
@@ -5152,8 +5181,9 @@ function cabRunNow(orch, btn){
     _agLoadRuns(id).then(function(){ _cabRender(); });
   }).catch(function(e){
     var m=(e&&e.message)||'error', deferred=/500|timeout|defer/i.test(m);
-    _recRun(id, deferred?null:false, deferred?_clT('в фоне','in background'):m, ts);
-    if(box) box.innerHTML=(deferred?INF(24)+' ':'⚠ ')+_runErrText(m);
+    var code=_runCode(m, e&&e.status);
+    _recRun(id, deferred?null:false, deferred?_clT('в фоне','in background'):m, ts, code);
+    if(box) box.innerHTML=(deferred?INF(24)+' ':'⚠ ')+_runErrText(m, code);
     if(btn) btn.disabled=false;
     _agLoadRuns(id).then(function(){ _cabRender(); });
   });
@@ -5175,7 +5205,7 @@ function autoRun(orch, btn){
     // HTTP 500/timeout ≠ провал (канон): работа могла продолжиться — помечаем как «идёт».
     var deferred = /500|timeout|defer/i.test(m);
     if (el) el.innerHTML = deferred ? INF(28)+' запущено — идёт в фоне' : ('⚠ ' + m);
-    _recRun(id, deferred ? null : false, deferred ? 'в фоне' : m, startedTs);
+    _recRun(id, deferred ? null : false, deferred ? 'в фоне' : m, startedTs, _runCode(m, e && e.status));
   });
 }
 // История запусков — общий серверный KV `agent_runs:<id>` (то же место, куда пишет
@@ -5187,10 +5217,12 @@ function _agLoadRuns(id){
     return runs;
   }).catch(function(){ _agState[id]=_agState[id]||{}; _agState[id].runs=_agState[id].runs||[]; return _agState[id].runs; });
 }
-function _recRun(id, ok, note, ts){
+function _recRun(id, ok, note, ts, code){
   skKvGet('agent_runs:'+id).then(function(o){
     var runs = (o && o.runs) || [];
-    runs = [{ts: ts||Date.now(), ok: ok, note: note||''}].concat(runs).slice(0, 200);
+    // code рядом с note, а не вместо: старые записи без кода читаются по-прежнему,
+    // и история не обнуляется ради нового поля.
+    runs = [{ts: ts||Date.now(), ok: ok, note: note||'', code: code||''}].concat(runs).slice(0, 200);
     _agState[id] = _agState[id] || {}; _agState[id].runs = runs;
     return skKvSet('agent_runs:'+id, {runs: runs});
   }).then(function(){ if(_cabOpenId===id) _cabRender(); }).catch(function(){});
@@ -5206,7 +5238,7 @@ function _autoLastText(p){
   var runs=_agRuns(p);
   if(!runs||!runs.length) return '<span style="color:var(--tx3)">'+_clT('ещё не запускалась','never run')+'</span>';
   var r=runs[0], when=esc(_fmtTs(r.ts));
-  if(r.ok===false) return '<span style="color:#B23A2E">✕ '+when+'</span><div style="font-size:11px;color:var(--tx2);margin-top:2px">'+_runErrText(r.note)+'</div>';
+  if(r.ok===false) return '<span style="color:#B23A2E">✕ '+when+'</span><div style="font-size:11px;color:var(--tx2);margin-top:2px">'+_runErrText(r.note, r.code)+'</div>';
   if(r.ok===null)  return '<span style="color:var(--tx3)">'+INF(16)+' '+when+' · '+_clT('идёт','running')+'</span>';
   return '<span style="color:#2E7D5B">✓ '+when+'</span>';
 }
@@ -5232,7 +5264,7 @@ function autoRunRow(orch, id, btn){
     _agLoadRuns(id).then(function(){ if(cur==='automations') renderAutomations(); });
   }).catch(function(e){
     var m=(e&&e.message)||'error', deferred=/500|timeout|defer/i.test(m);
-    _recRun(id, deferred?null:false, deferred?_clT('в фоне','in background'):m, ts);
+    _recRun(id, deferred?null:false, deferred?_clT('в фоне','in background'):m, ts, _runCode(m, e&&e.status));
     _agLoadRuns(id).then(function(){ if(cur==='automations') renderAutomations(); });
   });
 }
@@ -5378,7 +5410,7 @@ function _cabRuns(p){
     var lbl = r.ok===true?'успешно':(r.ok===false?'ошибка':'в фоне');
     return '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--bd)"><span style="font-size:15px">'+ic+'</span>'+
       '<span style="font-variant-numeric:tabular-nums;font-size:13px;color:var(--tx);min-width:82px">'+_fmtTs(r.ts)+'</span>'+
-      '<span style="font-size:13px;color:var(--tx2)">'+esc(lbl)+(r.note?' · '+(r.ok===false?_runErrText(r.note):esc(r.note)):'')+'</span></div>';
+      '<span style="font-size:13px;color:var(--tx2)">'+esc(lbl)+(r.note?' · '+(r.ok===false?_runErrText(r.note, r.code):esc(r.note)):'')+'</span></div>';
   }).join('') : '<div style="color:var(--tx3);font-size:13px;padding:12px 0">Запусков пока нет. Нажми «Запустить сейчас».</div>';
   return _cabCard('<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px"><div style="font:700 13px var(--sans);color:var(--tx2);letter-spacing:.02em">История запусков</div>'+runBtn+'</div>'+'<div id="cab_run_msg" style="font-size:13px;color:var(--tx2);margin-bottom:8px;min-height:18px"></div>'+list);
 }

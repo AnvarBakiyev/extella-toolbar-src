@@ -238,12 +238,30 @@
     return text || String(id || '');
   }
 
-  function runErrText(note) {
+  // Причина отказа читается КОДОМ, а не угадывается по английскому тексту.
+  //
+  // Раньше здесь стояла регулярка по словам «worker hung», «timeout» и так далее.
+  // Стоило источнику поменять формулировку — перевод отваливался молча, и человек
+  // видел сырую английскую строку, которую читал как поломку продукта (замечание
+  // Эллы 02.08, пункт 6). Код пишется вместе с записью о запуске, в одном месте.
+  //
+  // Разбор текста оставлен запасным путём и убран не будет: записи, сделанные до
+  // введения кодов, кода не имеют, а часть сообщений приходит от платформы и чужих
+  // служб — заставить всех отдавать наши коды нельзя. Можно перестать угадывать у себя.
+  function runErrText(note, code) {
+    switch (code) {
+      case 'hung':      return T('Процесс завис и был остановлен. Открой Конструктор и запусти ещё раз.','The process hung and was stopped. Open the Wizard and run it again.');
+      case 'timeout':   return T('Ответ не пришёл вовремя — работа могла продолжиться в фоне.','No answer in time — the work may still be running.');
+      case 'not_found': return T('Не нашлось, что запускать: эксперт автоматизации не установлен.','Nothing to run: the automation expert is not installed.');
+      case 'forbidden': return T('Нет доступа к этой автоматизации под текущим аккаунтом.','No access to this automation under the current account.');
+      case 'network':   return T('Связь пропала — проверь интернет и запусти ещё раз.','The connection dropped — check the internet and run it again.');
+      case 'no_space':  return T('На диске не осталось места — освободи место и запусти ещё раз.','The disk is full — free up space and run it again.');
+    }
     var text = String(note || '').toLowerCase();
-    if (/worker hung|hang|stuck/.test(text)) return T('Процесс завис и был остановлен. Открой Конструктор и запусти ещё раз.','The process hung and was stopped. Open the Wizard and run it again.');
-    if (/timeout|timed out/.test(text)) return T('Ответ не пришёл вовремя — работа могла продолжиться в фоне.','No answer in time — the work may still be running.');
-    if (/not found|404/.test(text)) return T('Не нашлось, что запускать: эксперт автоматизации не установлен.','Nothing to run: the automation expert is not installed.');
-    if (/403|denied|forbidden/.test(text)) return T('Нет доступа к этой автоматизации под текущим аккаунтом.','No access to this automation under the current account.');
+    if (/worker hung|hang|stuck|завис/.test(text)) return runErrText(null, 'hung');
+    if (/timeout|timed out|истекло время/.test(text)) return runErrText(null, 'timeout');
+    if (/not found|404|не найден/.test(text)) return runErrText(null, 'not_found');
+    if (/403|denied|forbidden|нет доступа/.test(text)) return runErrText(null, 'forbidden');
     return note ? T('Не получилось: ','Failed: ') + String(note).slice(0, 120) : T('Не получилось выполнить.','It did not run.');
   }
 
@@ -308,7 +326,7 @@
         if (age > RECENT) return;
         task.status = 'failed';
         task.title = T('«' + name + '» не выполнилась', '“' + name + '” did not run');
-        task.detail = capFirst(whenText(run.ts)) + ' · ' + runErrText(run.note);
+        task.detail = capFirst(whenText(run.ts)) + ' · ' + runErrText(run.note, run.code);
       } else {
         if (age > RECENT) return;
         task.status = 'completed';
