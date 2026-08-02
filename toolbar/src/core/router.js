@@ -4815,31 +4815,39 @@ ETB.router = (function () {
   // copy is human ("needs a hand"), leads with one clear action (let the agent
   // install what's missing and run it), and tucks the technical bits behind a
   // details toggle instead of greeting the user with "port … / dependencies".
+  // В заголовке экрана человеку нужно имя программы, а не адрес на GitHub:
+  // «pinokiofactory/RMBG-2-Studio» ему ни о чём не говорит.
+  function _shortName(plugin) {
+    var name = String((plugin && (plugin.title || plugin.name)) || '').trim();
+    if (name.indexOf('/') >= 0) name = name.split('/').pop();
+    return name.replace(/\.git$/, '').replace(/[-_]+/g, ' ').trim() || _L('Программа','The program');
+  }
+
   function _renderServerFallback(content, plugin) {
     var ui = plugin.ui || {};
     var pid = plugin.id ? plugin.id.replace(/'/g, '') : '';
     content.innerHTML = [
       '<div style="display:flex;align-items:center;justify-content:center;height:100%;',
-      'padding:32px;font-family:-apple-system,system-ui,sans-serif;">',
+      'padding:32px;font-family:var(--etb-sans,\'Nunito\',-apple-system,system-ui,sans-serif);">',
       '<div style="max-width:380px;text-align:center;">',
       '<div style="margin-bottom:16px;color:#C57E33"><svg class="lico" style="width:34px;height:34px"><use href="#ic-tech"/></svg></div>',
-      '<div style="font-size:16px;font-weight:700;color:var(--etb-tx,#f0f0f0);margin-bottom:8px;">',
-      _esc(plugin.name), _L(': нужно доустановить</div>',': one step left</div>'),
+      '<div style="font-family:var(--etb-serif,\'Source Serif 4\',ui-serif,Georgia,serif);font-size:20px;font-weight:600;color:var(--etb-tx,#f0f0f0);margin-bottom:8px;line-height:1.25;">',
+      _esc(_shortName(plugin)), _L(': нужно доустановить</div>',': one step left</div>'),
       '<div style="font-size:13px;color:var(--etb-tx2,#888);line-height:1.6;margin-bottom:24px;">',
       _L('Программа установлена не до конца — часть файлов ещё не на месте. Нажми «Доустановить и открыть»: ','The program is only half installed — some files are still missing. Press «Finish setup and open»: '),
       _L('обычно это разовый шаг, дальше она открывается сразу.</div>','usually a one-time step, after that it opens right away.</div>'),
       '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">',
       '<button onclick="ETB.router._repairWithAgent(\'' + _esc(pid) + '\')" style="' +
-      'background:#C67E34;border:none;color:#000;font-weight:700;border-radius:8px;' +
-      'padding:12px 24px;cursor:pointer;font-size:13px;">' + _L('Доустановить и открыть','Finish setup and open') + '</button>',
+      'background:#C67E34;border:none;color:#fff;font:600 13px var(--etb-sans,\'Nunito\',system-ui,sans-serif);border-radius:12px;' +
+      'padding:12px 24px;cursor:pointer;">' + _L('Доустановить и открыть','Finish setup and open') + '</button>',
       '<button onclick="ETB.router._retryServer(\'' + _esc(pid) + '\')" style="' +
-      'background:var(--etb-s3,#1a1a1a);border:1px solid var(--etb-bd2,#333);color:var(--etb-tx,#f0f0f0);border-radius:8px;' +
-      'padding:12px 20px;cursor:pointer;font-size:13px;">&#8635; ' + _L('Попробовать ещё раз','Try again') + '</button>',
+      'background:transparent;border:1px solid var(--etb-bd2,rgba(255,255,255,.13));color:var(--etb-tx2,#888);border-radius:12px;' +
+      'font:600 13px var(--etb-sans,\'Nunito\',system-ui,sans-serif);padding:12px 20px;cursor:pointer;">&#8635; ' + _L('Попробовать ещё раз','Try again') + '</button>',
       '</div>',
       // Technical detail, collapsed — for power users, not in the user's face.
       '<details style="margin-top:16px;text-align:left;">',
-      '<summary style="font-size:11px;color:var(--etb-tx3,#666);cursor:pointer;text-align:center;list-style:none;">' + _L('Подробности','Details') + '</summary>',
-      '<div style="font-size:11px;color:var(--etb-tx3,#666);line-height:1.5;margin-top:8px;">',
+      '<summary style="font-size:11px;color:var(--etb-tx2,#888);cursor:pointer;text-align:center;list-style:none;">' + _L('Подробности','Details') + '</summary>',
+      '<div style="font-size:11px;color:var(--etb-tx2,#888);line-height:1.5;margin-top:8px;">',
       _L('Локальный сервер не отвечает на порту ','Local server offline on port '), String(ui.port || '&#8212;'), '.',
       ui.startExpert
         ? ' <a href="#" onclick="ETB.router._startServer(\'' + _esc(pid) + '\');return false;" style="color:#C57E33;">' + _L('Запустить только сервер','Start server only') + '</a>.'

@@ -157,7 +157,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);
 
 /* ── "Выбор Extella": the living tile shelf (shelf[]) ───────────────── */
 .atbl{border:1px solid var(--bd);border-radius:var(--r);background:var(--s1);overflow:hidden}
-.atbl_h,.atbl_r{display:grid;grid-template-columns:minmax(220px,2fr) 1fr 1.4fr auto;gap:16px;align-items:center;padding:16px 20px}
+.atbl_h,.atbl_r{display:grid;grid-template-columns:minmax(220px,2fr) 1fr 1.4fr 220px;gap:16px;align-items:center;padding:16px 20px}  /* последняя колонка фиксированная: у шапки в ней пусто, у строки — кнопки; с auto ширина остатка была разной, и заголовки съезжали относительно ячеек */
 .atbl_h{font:500 11px var(--mono);letter-spacing:.06em;color:var(--petrol);padding-top:12px;padding-bottom:12px;border-bottom:1px solid var(--bd)}
 .atbl_r+.atbl_r{border-top:1px solid var(--bd)}
 .atbl_n{font:700 15px var(--sans);color:var(--tx)}
@@ -1649,8 +1649,8 @@ var I18N_EN = {
   'Выбери программу и нажми «Установить». После установки она появится на рабочем столе.':'Pick a program and press «Install» — it lands on the desktop once it is in.',
   'Технически это мини-приложения со своим окном и MCP-серверы с GitHub.':'Technically these are mini-apps with their own window and MCP servers from GitHub.',
   'Навыки для агента':'Skills for your agent',
-  'Задают дополнительные правила работы: например, отвечать короче, проверять факты или разбирать документы.':'They set extra rules of work: answer shorter, check the facts, take documents apart.',
-  'Выбери навык и укажи агента: он начнёт применять его в новых диалогах.':'Pick a skill and name the agent — it starts applying it in new conversations.',
+  'Навык — это способ работы, которому ты учишь агента: разбирать документы по шагам, проверять факты, отвечать короче.':'They set extra rules of work: answer shorter, check the facts, take documents apart.',
+  'Выбери навык и укажи, какому агенту его выдать. Запускать отдельно нечего: пишешь агенту задачу в чате, и он работает этим способом. Навык действует в новых диалогах.':'Pick a skill and name the agent — it starts applying it in new conversations.',
   'Инструменты для файлов':'Tools for files',
   'Обрабатывают документы, изображения, видео и аудио прямо на твоём компьютере, без загрузки в интернет.':'They handle documents, images, video and audio right on your computer — nothing is uploaded.',
   'Скажи агенту, что сделать с файлами, и он выберет нужный инструмент.':'Tell the agent what to do with the files — it picks the right tool and runs it.',
@@ -5292,6 +5292,7 @@ function renderAutomations() {
     g.innerHTML = _loadingHTML(_t('autoLoad'));
     rtabs(); return;
   }
+  try{ _deskSnapSave(); }catch(_){}   // здесь состояния свежие: плашка активности читает этот же снапшот
   var visible = _autoReg.filter(function(p){ var st=_agState[_agId(p)]; return !(st && st.hidden); });
   if (!visible.length) {
     g.innerHTML = _autoErr ? _autoErrHTML() : _emptyHTML('⚙️', _t('autoEmpty'));
@@ -5301,7 +5302,7 @@ function renderAutomations() {
   // автоматизацию — что делает, когда запускается, чем кончился последний запуск и что
   // можно сделать. Раньше эти три факта жили на трёх разных экранах.
   var html = '<div class="sect_hdr" style="grid-column:1/-1"><span class="sect_title">'+_clT('Твои автоматизации','Your automations')+'</span><span class="sect_line"></span></div>'+
-    '<div class="sk_lead" style="grid-column:1/-1">'+_clT('Работают сами по расписанию. Здесь видно, когда запускались и чем закончилось.','They run on a schedule. Here you see when they ran and how it ended.')+'</div>'+
+    '<div class="sk_lead" style="grid-column:1/-1">'+_clT('Просто работают по расписанию: расписание держит облако Extella, поэтому запуск не зависит от того, включён ли компьютер. Здесь видно, когда автоматизация запускалась и чем закончилось.','They run on a schedule. Here you see when they ran and how it ended.')+'</div>'+
     '<div class="atbl" style="grid-column:1/-1">'+
       '<div class="atbl_h"><span>'+_clT('Что делает','What it does')+'</span><span>'+_clT('Расписание','Schedule')+'</span><span>'+_clT('Последний запуск','Last run')+'</span><span></span></div>'+
       visible.map(function(p){ return autoRowHTML(p); }).join('')+
@@ -5628,8 +5629,8 @@ function _renderSkillsCore(){
   var cats=[]; all.forEach(function(s){if(cats.indexOf(s.cat)<0)cats.push(s.cat);});
   var html='<section class="catalog_intro" aria-labelledby="skills_intro_title">'+
       '<h2 class="catalog_intro_title" id="skills_intro_title">Навыки для агента</h2>'+
-      '<p class="catalog_intro_text">Задают дополнительные правила работы: например, отвечать короче, проверять факты или разбирать документы.</p>'+
-      '<p class="catalog_intro_text">Выбери навык и укажи агента: он начнёт применять его в новых диалогах.</p>'+
+      '<p class="catalog_intro_text">Навык — это способ работы, которому ты учишь агента: разбирать документы по шагам, проверять факты, отвечать короче.</p>'+
+      '<p class="catalog_intro_text">Выбери навык и укажи, какому агенту его выдать. Запускать отдельно нечего: пишешь агенту задачу в чате, и он работает этим способом. Навык действует в новых диалогах.</p>'+
     '</section>'+
     _bentoHTML(TYPE_ED.skills.heroes)+
     _shelfHTML(TYPE_ED.skills.shelf,'Выбор Extella','Выбор Extella')+
