@@ -24,9 +24,9 @@ ETB.hfAdd = (function () {
     '#_etbv2_hf_modal{',
       'background:var(--etb-s1,#fff);border:1px solid var(--etb-bd2,rgba(0,0,0,.14));border-radius:12px;',
       'width:500px;max-width:calc(100vw - 32px);max-height:90vh;overflow-y:auto;',
-      'box-shadow:0 24px 80px rgba(0,0,0,.35);',
+      'box-shadow:none;',
     '}',
-    'html[data-etb-light] #_etbv2_hf_modal{box-shadow:0 16px 48px rgba(0,0,0,.12);}',
+    'html[data-etb-light] #_etbv2_hf_modal{box-shadow:none;}',
     '#_etbv2_hf_hdr{',
       'display:flex;align-items:center;gap:8px;position:sticky;top:0;z-index:1;',
       'padding:16px 24px 16px;border-bottom:1px solid var(--etb-bd,rgba(0,0,0,.07));',
@@ -35,7 +35,7 @@ ETB.hfAdd = (function () {
     '#_etbv2_hf_hdr h3{flex:1;font-size:15px;font-weight:700;color:var(--etb-tx,#111);margin:0;}',
     '#_etbv2_hf_hdr button{',
       'background:none;border:none;color:var(--etb-tx2,#888);cursor:pointer;',
-      'font-size:18px;padding:4px 8px;border-radius:8px;',
+      'font-size:15px;padding:4px 8px;border-radius:8px;',
     '}',
     '#_etbv2_hf_hdr button:hover{background:var(--etb-s3,#f7f7f9);color:var(--etb-tx,#111);}',
     '#_etbv2_hf_body{padding:24px;}',
@@ -61,9 +61,9 @@ ETB.hfAdd = (function () {
     '._etbv2_hf_prev_desc{font-size:13px;color:var(--etb-tx2,#6b6b6b);line-height:1.5;margin-bottom:8px;}',
     '._etbv2_hf_pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;}',
     '._etbv2_hf_pill{background:rgba(198,126,52,.1);color:var(--etb-a,#C67E34);',
-      'border:1px solid rgba(198,126,52,.2);border-radius:8px;font-size:11px;font-weight:600;padding:2px 8px;}',
+      'border:1px solid rgba(198,126,52,.2);border-radius:8px;font-size:11px;font-weight:600;padding:4px 8px;}',
     '._etbv2_hf_hfbadge{background:rgba(255,176,47,.12);color:#d97706;',
-      'border:1px solid rgba(255,176,47,.25);border-radius:8px;font-size:11px;font-weight:700;padding:2px 8px;}',
+      'border:1px solid rgba(255,176,47,.25);border-radius:8px;font-size:11px;font-weight:600;padding:4px 8px;}',
     /* Resources block */
     '._etbv2_hf_res{',
       'background:rgba(198,126,52,.04);border:1px solid rgba(198,126,52,.12);border-radius:12px;',
@@ -297,6 +297,9 @@ ETB.hfAdd = (function () {
       .catch(function () { return ''; });
   }
 
+  // Язык панели = язык витрины (общий localStorage)
+  function _L(ru, en) { try { return localStorage.getItem('etb_lang') === 'en' ? en : ru; } catch (e) { return ru; } }
+
   // ── Render ─────────────────────────────────────────────────────
   function _render() {
     var modal = document.getElementById('_etbv2_hf_modal');
@@ -312,8 +315,8 @@ ETB.hfAdd = (function () {
 
   function _buildModalHTML() {
     var kind = _state.kind;
-    var kindLabel = kind === 'model' ? '🧠 Model' : 'Space';
-    var title = 'HuggingFace · ' + kindLabel;
+    var kindLabel = kind === 'model' ? _L('Модель','Model') : _L('Программа','App');
+    var title = kindLabel + _L(' с'+N+'Hugging Face',' from Hugging Face');
 
     var body = '';
     switch (_state.step) {
@@ -332,7 +335,7 @@ ETB.hfAdd = (function () {
     return [
       '<div id="_etbv2_hf_hdr">',
         '<h3>' + _esc(title) + '</h3>',
-        '<button onclick="ETB.hfAdd.close()" title="Close">✕</button>',
+        '<button onclick="ETB.hfAdd.close()" title="' + _L('Закрыть','Close') + '">✕</button>',
       '</div>',
       '<div id="_etbv2_hf_body">' + body + '</div>'
     ].join('');
@@ -341,7 +344,7 @@ ETB.hfAdd = (function () {
   function _htmlInput() {
     return [
       '<div class="_etbv2_hf_field">',
-        '<label class="_etbv2_hf_label">HuggingFace URL or ID</label>',
+        '<label class="_etbv2_hf_label">' + _L('Ссылка с'+N+'Hugging Face','Hugging Face link or ID') + '</label>',
         '<input class="_etbv2_hf_input" id="_etbv2_hf_url_inp"',
           ' placeholder="e.g. black-forest-labs/FLUX.1-schnell"',
           ' value="' + _esc(_state.prefill) + '"',
@@ -349,13 +352,13 @@ ETB.hfAdd = (function () {
         '>',
       '</div>',
       '<div class="_etbv2_hf_sub" style="margin-bottom:16px">',
-        'Paste a HuggingFace URL, a <code>hf:space:owner/name</code> identifier, ',
-        'or an <code>owner/name</code> slug.',
+        _L('Вставь ссылку со'+N+'страницы Hugging Face или короткий адрес вида <code>owner/name</code>.',
+           'Paste a Hugging Face page link or a short <code>owner/name</code> address.'),
       '</div>',
       '<div id="_etbv2_hf_status"></div>',
       '<div class="_etbv2_hf_actions">',
-        '<button class="_etbv2_hf_btn_cancel" onclick="ETB.hfAdd.close()">Cancel</button>',
-        '<button class="_etbv2_hf_btn_primary" onclick="ETB.hfAdd._onInputSubmit()">Continue →</button>',
+        '<button class="_etbv2_hf_btn_cancel" onclick="ETB.hfAdd.close()"' + _L('Отмена','Cancel') + '</button>',
+        '<button class="_etbv2_hf_btn_primary" onclick="ETB.hfAdd._onInputSubmit()"' + _L('Дальше','Continue') + '</button>',
       '</div>'
     ].join('');
   }
@@ -364,7 +367,7 @@ ETB.hfAdd = (function () {
     return [
       '<div id="_etbv2_hf_status">',
         '<div class="_etbv2_hf_spinner"></div>',
-        '<span>' + _esc(_state.statusMsg || 'Fetching metadata…') + '</span>',
+        '<span>' + _esc(_state.statusMsg || _L('Смотрю, что это…','Fetching details…')) + '</span>',
       '</div>'
     ].join('');
   }
@@ -376,17 +379,17 @@ ETB.hfAdd = (function () {
     if (h.sdk) pills.push('<span class="_etbv2_hf_pill">' + _esc(h.sdk) + '</span>');
     if (h.pipelineTag) pills.push('<span class="_etbv2_hf_pill">' + _esc(h.pipelineTag) + '</span>');
     if (h.libraryName) pills.push('<span class="_etbv2_hf_pill">' + _esc(h.libraryName) + '</span>');
-    var kindBadge = '<span class="_etbv2_hf_hfbadge">' + (h.kind === 'model' ? 'Model' : 'Space') + '</span>';
+    var kindBadge = '<span class="_etbv2_hf_hfbadge">' + (h.kind === 'model' ? _L('модель','model') : _L('программа','app')) + '</span>';
 
     var resHtml = '';
     var resItems = [];
-    if (res.diskBytes) resItems.push('<span class="_etbv2_hf_res_item">💾 Disk: <b>' + _fmtBytes(res.diskBytes) + '</b></span>');
-    if (res.vramEstimate) resItems.push('<span class="_etbv2_hf_res_item">🖥 VRAM: <b>~' + _fmtBytes(res.vramEstimate) + '</b></span>');
-    if (res.hardware) resItems.push('<span class="_etbv2_hf_res_item">⚡ GPU: <b>' + _esc(res.hardware) + '</b></span>');
+    if (res.diskBytes) resItems.push('<span class="_etbv2_hf_res_item">' + _L('Место на'+N+'диске','Disk space') + ': <b>' + _fmtBytes(res.diskBytes) + '</b></span>');
+    if (res.vramEstimate) resItems.push('<span class="_etbv2_hf_res_item">' + _L('Видеопамять','Video memory') + ': <b>~' + _fmtBytes(res.vramEstimate) + '</b></span>');
+    if (res.hardware) resItems.push('<span class="_etbv2_hf_res_item">' + _L('Видеокарта','Graphics card') + ': <b>' + _esc(res.hardware) + '</b></span>');
     if (resItems.length) {
       resHtml = [
         '<div class="_etbv2_hf_res">',
-          '<div class="_etbv2_hf_res_title">Required on your device</div>',
+          '<div class="_etbv2_hf_res_title">' + _L('Что нужно на'+N+'твоём компьютере','What your computer needs') + '</div>',
           '<div class="_etbv2_hf_res_row">' + resItems.join('') + '</div>',
         '</div>'
       ].join('');
@@ -400,8 +403,8 @@ ETB.hfAdd = (function () {
       '</div>',
       resHtml,
       '<div class="_etbv2_hf_actions">',
-        '<button class="_etbv2_hf_btn_cancel" onclick="ETB.hfAdd.close()">Cancel</button>',
-        '<button class="_etbv2_hf_btn_primary" onclick="ETB.hfAdd._goRunMode()">Choose run mode →</button>',
+        '<button class="_etbv2_hf_btn_cancel" onclick="ETB.hfAdd.close()"' + _L('Отмена','Cancel') + '</button>',
+        '<button class="_etbv2_hf_btn_primary" onclick="ETB.hfAdd._goRunMode()"' + _L('Выбрать, где работать','Choose where it runs') + '</button>',
       '</div>'
     ].join('');
   }
@@ -410,48 +413,53 @@ ETB.hfAdd = (function () {
     var h = _state.harvest || {};
     var kind = _state.kind;
     var localDesc = kind === 'space'
-      ? 'Clone and run the Space on your device (Python/Node required).'
-      : 'Download model weights and run local inference.';
+      ? _L('Скачаем и'+N+'запустим у'+N+'тебя. Работает без интернета, занимает место на'+N+'диске.',
+           'We download and run it on your machine. Works offline, takes disk space.')
+      : _L('Скачаем модель к'+N+'тебе. Работает без интернета, занимает место на'+N+'диске.',
+           'We download the model to your machine. Works offline, takes disk space.');
     var remoteDesc = kind === 'space'
-      ? 'Open the live ' + _esc(h.name || '') + ' page hosted on HuggingFace.'
-      : 'Call the HF Inference API (requires a free HF token).';
-    var remoteBadge = kind === 'space' ? '' : '<span class="mode_badge">Free tier available</span>';
+      ? _L('Откроем страницу, которая работает на'+N+'серверах Hugging Face. Ничего не'+N+'ставим.',
+           'We open the page running on Hugging Face servers. Nothing is installed.')
+      : _L('Считать будут серверы Hugging Face. Место на'+N+'диске не'+N+'нужно, но нужен ключ доступа.',
+           'Hugging Face servers do the work. No disk space needed, but an access key is required.');
+    var remoteBadge = kind === 'space' ? '' : '<span class="mode_badge">' + _L('есть бесплатный доступ','free tier available') + '</span>';
 
     return [
-      '<div class="_etbv2_hf_title" style="margin-bottom:12px">Choose how to run this ' + (kind === 'model' ? 'model' : 'space') + '</div>',
+      '<div class="_etbv2_hf_title" style="margin-bottom:12px">' +
+        _L('Где это будет работать','Where it will run') + '</div>',
       '<div class="_etbv2_hf_modes">',
         '<div class="_etbv2_hf_mode_card' + (_state.runMode === 'local' ? ' selected' : '') + '"',
           ' onclick="ETB.hfAdd._selectMode(\'local\')">',
-          '<div class="mode_icon">💻</div>',
-          '<div class="mode_title">Run locally</div>',
+          '<div class="mode_title">' + _L('На'+N+'этом компьютере','On this computer') + '</div>',
           '<div class="mode_desc">' + localDesc + '</div>',
         '</div>',
         '<div class="_etbv2_hf_mode_card' + (_state.runMode === 'remote' ? ' selected' : '') + '"',
           ' onclick="ETB.hfAdd._selectMode(\'remote\')">',
-          '<div class="mode_icon">☁️</div>',
-          '<div class="mode_title">Run on HuggingFace</div>',
+          '<div class="mode_title">' + _L('На'+N+'серверах Hugging Face','On Hugging Face servers') + '</div>',
           '<div class="mode_desc">' + remoteDesc + '</div>',
           remoteBadge,
         '</div>',
       '</div>',
       '<div class="_etbv2_hf_actions">',
-        '<button class="_etbv2_hf_btn_cancel" onclick="ETB.hfAdd._goPreview()">← Back</button>',
-        '<button class="_etbv2_hf_btn_primary" onclick="ETB.hfAdd._onRunModeNext()">Install →</button>',
+        '<button class="_etbv2_hf_btn_cancel" onclick="ETB.hfAdd._goPreview()"' + _L('← Назад','← Back') + '</button>',
+        '<button class="_etbv2_hf_btn_primary" onclick="ETB.hfAdd._onRunModeNext()"' + _L('Установить','Install') + '</button>',
       '</div>'
     ].join('');
   }
 
   function _htmlTokenInput() {
     return [
-      '<div class="_etbv2_hf_title" style="margin-bottom:8px">HuggingFace Token Required</div>',
+      '<div class="_etbv2_hf_title" style="margin-bottom:8px">' +
+        _L('Нужен ключ доступа Hugging Face','A Hugging Face access key is needed') + '</div>',
       '<div class="_etbv2_hf_token_note">',
-        'To use the HF Inference API you need a <b>User Access Token</b>.<br>',
-        'Get one at <a href="https://huggingface.co/settings/tokens" target="_blank">',
-          'huggingface.co/settings/tokens</a> ',
-        '(create with scope <b>Make calls to Inference Providers</b>).',
+        _L('Чтобы считали их серверы, нужен твой ключ. Создай его на',
+           'To use their servers you need your own key. Create one at') +
+        ' <a href="https://huggingface.co/settings/tokens" target="_blank">huggingface.co/settings/tokens</a> ' +
+        _L('с'+N+'правом <b>Make calls to Inference Providers</b> и'+N+'вставь сюда. Ключ хранится на'+N+'этом компьютере.',
+           'with the <b>Make calls to Inference Providers</b> scope and paste it here. The key stays on this computer.'),
       '</div>',
       '<div class="_etbv2_hf_field">',
-        '<label class="_etbv2_hf_label">Token</label>',
+        '<label class="_etbv2_hf_label">' + _L('Ключ доступа','Access key') + '</label>',
         '<input class="_etbv2_hf_input" id="_etbv2_hf_tok_inp" type="password"',
           ' placeholder="hf_..." autocomplete="off"',
           ' onkeydown="if(event.key===\'Enter\')ETB.hfAdd._onTokenSubmit()"',
@@ -459,20 +467,22 @@ ETB.hfAdd = (function () {
       '</div>',
       '<div id="_etbv2_hf_status"></div>',
       '<div class="_etbv2_hf_actions">',
-        '<button class="_etbv2_hf_btn_cancel" onclick="ETB.hfAdd._goRunMode()">← Back</button>',
-        '<button class="_etbv2_hf_btn_primary" onclick="ETB.hfAdd._onTokenSubmit()">Save &amp; Continue →</button>',
+        '<button class="_etbv2_hf_btn_cancel" onclick="ETB.hfAdd._goRunMode()"' + _L('← Назад','← Back') + '</button>',
+        '<button class="_etbv2_hf_btn_primary" onclick="ETB.hfAdd._onTokenSubmit()"' + _L('Сохранить и'+N+'продолжить','Save and continue') + '</button>',
       '</div>'
     ].join('');
   }
 
   function _htmlDeviceId() {
     return [
-      '<div class="_etbv2_hf_title" style="margin-bottom:4px">Device ID required</div>',
+      '<div class="_etbv2_hf_title" style="margin-bottom:4px">' +
+        _L('Нужен номер этого компьютера','This computer\'s ID is needed') + '</div>',
       '<div class="_etbv2_hf_sub" style="margin-bottom:12px">',
-        'Enter the Extella device ID for your local machine to set up the plugin.',
+        _L('По'+N+'нему Extella поймёт, куда ставить. Номер виден в'+N+'нижней строке приложения.',
+           'Extella uses it to know where to install. You can see it in the app status bar.'),
       '</div>',
       '<div class="_etbv2_hf_field">',
-        '<label class="_etbv2_hf_label">Device ID</label>',
+        '<label class="_etbv2_hf_label">' + _L('Номер устройства','Device ID') + '</label>',
         '<input class="_etbv2_hf_input" id="_etbv2_hf_did_inp"',
           ' placeholder="device_..."',
           ' onkeydown="if(event.key===\'Enter\')ETB.hfAdd._onDeviceIdSubmit()"',
@@ -480,8 +490,8 @@ ETB.hfAdd = (function () {
       '</div>',
       '<div id="_etbv2_hf_status"></div>',
       '<div class="_etbv2_hf_actions">',
-        '<button class="_etbv2_hf_btn_cancel" onclick="ETB.hfAdd.close()">Cancel</button>',
-        '<button class="_etbv2_hf_btn_primary" onclick="ETB.hfAdd._onDeviceIdSubmit()">Continue →</button>',
+        '<button class="_etbv2_hf_btn_cancel" onclick="ETB.hfAdd.close()"' + _L('Отмена','Cancel') + '</button>',
+        '<button class="_etbv2_hf_btn_primary" onclick="ETB.hfAdd._onDeviceIdSubmit()"' + _L('Дальше','Continue') + '</button>',
       '</div>'
     ].join('');
   }
@@ -517,8 +527,8 @@ ETB.hfAdd = (function () {
       '<div class="_etbv2_hf_title" style="color:#B23A2E;margin-bottom:8px">Не установилось</div>',
       '<div class="_etbv2_hf_sub" style="margin-bottom:16px">' + _esc(_state.errorMsg) + '</div>',
       '<div class="_etbv2_hf_actions">',
-        '<button class="_etbv2_hf_btn_cancel" onclick="ETB.hfAdd.close()">Close</button>',
-        '<button class="_etbv2_hf_btn_primary" onclick="ETB.hfAdd._retry()">Retry</button>',
+        '<button class="_etbv2_hf_btn_cancel" onclick="ETB.hfAdd.close()"' + _L('Закрыть','Close') + '</button>',
+        '<button class="_etbv2_hf_btn_primary" onclick="ETB.hfAdd._retry()"' + _L('Ещё раз','Try again') + '</button>',
       '</div>'
     ].join('');
   }
@@ -526,12 +536,13 @@ ETB.hfAdd = (function () {
   function _htmlDone() {
     return [
       '<div style="text-align:center;padding:8px 0 16px">',
-        '<div style="font-size:32px;margin-bottom:12px">✅</div>',
-        '<div class="_etbv2_hf_title" style="font-size:15px">Plugin installed!</div>',
-        '<div class="_etbv2_hf_sub" style="margin-top:8px">Open it from the Plugins tab.</div>',
+        '<div class="_etbv2_hf_title" style="font-size:20px">' + _L('Готово','Done') + '</div>',
+        '<div class="_etbv2_hf_sub" style="margin-top:8px">' +
+          _L('Открыть можно прямо сейчас или позже — с'+N+'Рабочего стола.',
+             'Open it now or later from the Desktop.') + '</div>',
       '</div>',
       '<div class="_etbv2_hf_actions" style="justify-content:center">',
-        '<button class="_etbv2_hf_btn_primary" onclick="ETB.hfAdd._openPlugin()">Open Plugin</button>',
+        '<button class="_etbv2_hf_btn_primary" onclick="ETB.hfAdd._openPlugin()"' + _L('Открыть','Open') + '</button>',
       '</div>'
     ].join('');
   }

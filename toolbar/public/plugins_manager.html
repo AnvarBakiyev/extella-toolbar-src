@@ -5308,7 +5308,7 @@ function renderAutomations() {
   // автоматизацию — что делает, когда запускается, чем кончился последний запуск и что
   // можно сделать. Раньше эти три факта жили на трёх разных экранах.
   var html = _autoBackHTML() + '<div class="sect_hdr" style="grid-column:1/-1"><span class="sect_title">'+_clT('Твои автоматизации','Your automations')+'</span><span class="sect_line"></span></div>'+
-    '<div class="sk_lead" style="grid-column:1/-1">'+_clT('Просто работают по расписанию: расписание держит облако Extella, поэтому запуск не зависит от того, включён ли компьютер. Здесь видно, когда автоматизация запускалась и чем закончилось.','They run on a schedule. Here you see when they ran and how it ended.')+'</div>'+
+    '<div class="sk_lead" style="grid-column:1/-1">'+_clT('Работают по расписанию на серверах Extella, поэтому компьютер для этого включать не нужно. Здесь видно, когда каждая запускалась и чем закончился последний запуск.','They run on a schedule on Extella servers, so your computer does not need to be on. Here you can see when each one ran and how the last run ended.')+'</div>'+
     '<div class="atbl" style="grid-column:1/-1">'+
       '<div class="atbl_h"><span>'+_clT('Что делает','What it does')+'</span><span>'+_clT('Расписание','Schedule')+'</span><span>'+_clT('Последний запуск','Last run')+'</span><span></span></div>'+
       visible.map(function(p){ return autoRowHTML(p); }).join('')+
@@ -5929,7 +5929,7 @@ function renderAgents(){
         '<span>'+_clT('Собранные агенты живут на Рабочем столе — оттуда и открываются.',
                       'Assembled agents live on the Desktop — they open from there.')+'</span>'+
         '<button onclick="setc(\'desktop\')" style="border:1px solid var(--bd2);background:transparent;color:var(--tx2);border-radius:var(--r-sm);padding:4px 8px;font-size:13px;cursor:pointer">'+_clT('На Рабочий стол','To the Desktop')+'</button>'+
-        '<button onclick="setc(\'automations\')" style="border:1px solid var(--bd2);background:transparent;color:var(--tx2);border-radius:var(--r-sm);padding:4px 8px;font-size:13px;cursor:pointer">'+_clT('Все агенты','All agents')+'</button>'+
+        '<button onclick="setc(\'automations\')" style="border:1px solid var(--bd2);background:transparent;color:var(--tx2);border-radius:var(--r-sm);padding:4px 8px;font-size:13px;cursor:pointer">'+_clT('Расписания и запуски','Schedules and runs')+'</button>'+
       '</div>'
     : (_autoErr ? '<div class="sk_lead" style="grid-column:1/-1;font-size:13px;color:#A5632A">⚠ Не смог проверить «Мои агенты» — облако не ответило. <a href="#" onclick="autoRefresh();return false" style="color:var(--a)">Проверить ещё раз</a></div>' : '');
   // Разделение (решение Эллы 21.07): СОЗДАНИЕ агента = Конструктор (плитка ведёт
