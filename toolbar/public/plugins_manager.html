@@ -3517,7 +3517,7 @@ function _mkbLoad(){
         '<div class="mshelf">'+list.map(function(it,i){ return _mkbCard(it,i,en); }).join('')+'</div>';
     }
     var cards = grp(en?'Your programs':'Твои программы', mine,
-                    en?'Installed by you from GitHub.':'Ты установила их с GitHub.')+
+                    en?'Installed by you from GitHub.':'Установлены с GitHub.')+
                 grp(en?'Built in':'Встроенное', built,
                     en?'Came with Extella, nothing to install.':'Пришли вместе с Extella, ставить ничего не нужно.');
     var workLine=by.working.length?'<div class="sk_lead" style="grid-column:1/-1;color:#2E7D5B;font-size:13px">✓ '+
