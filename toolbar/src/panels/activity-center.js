@@ -477,21 +477,44 @@
   // Имена и описания фоновых программ приходят из службы, а не из витрины,
   // поэтому запрещённые каноном слова возвращаются туда после каждой установки.
   // Чиним у источника (пункт 4 ТЗ Анвару), но на экране держим канон уже сейчас.
-  var СЛОВАРЬ = [
-    [/псевдоанонимизаци[а-яё]*/gi, T('Скрыть личные данные','Hide personal data')],
-    [/\bПДн\b/g, T('личные данные','personal data')],
-    [/\bворкер[а-яё]*/gi, T('фоновый процесс','background process')],
-    [/\bреестр[а-яё]*\b/gi, T('список','list')],
-    [/\bтокен[а-яё]*/gi, T('ключ доступа','access key')],
-    [/\bлокалхост\b|localhost(:\d+)?/gi, T('на этом компьютере','on this computer')],
-    [/\bPID\b\s*\d*/g, ''],
-    [/\bPORT\b\s*\d*/g, '']
+  // Пословная замена ломает падежи («файлы с личные данные»), поэтому у известных
+  // программ подменяем имя и описание целиком, а словарь оставляем только для того,
+  // что безопасно вырезать в любом контексте.
+  var ПРОГРАММЫ = [
+    { знак: /псевдоанонимиз|anonymiz/i,
+      имя: T('Скрыть личные данные','Hide personal data'),
+      описание: T('Делает безопасную копию файла: имена, телефоны, счета и номера документов заменяются метками. Всё считается на этом компьютере, файлы никуда не отправляются.',
+                  'Makes a safe copy of a file: names, phone numbers, accounts and document numbers are replaced with labels. Everything runs on this computer; files are not sent anywhere.') }
   ];
+  var СЛОВАРЬ = [
+    [/\bПДн\b/g, T('личные данные','personal data')],
+    [/\bPID\b\s*\d*/g, ''],
+    [/\bPORT\b\s*\d*/g, ''],
+    [/localhost(:\d+)?/gi, T('на этом компьютере','on this computer')]
+  ];
+
+  function знакомая(service) {
+    var подпись = String((service && (service.name + ' ' + (service.id || ''))) || '');
+    for (var i = 0; i < ПРОГРАММЫ.length; i++) {
+      if (ПРОГРАММЫ[i].знак.test(подпись)) return ПРОГРАММЫ[i];
+    }
+    return null;
+  }
 
   function humanText(text) {
     var out = String(text || '');
     СЛОВАРЬ.forEach(function (pair) { out = out.replace(pair[0], pair[1]); });
     return out.replace(/\s{2,}/g, ' ').replace(/\s+([,.;:])/g, '$1').trim();
+  }
+
+  function serviceName(service) {
+    var known = знакомая(service);
+    return known ? known.имя : humanText(service.name);
+  }
+
+  function serviceDesc(service) {
+    var known = знакомая(service);
+    return known ? known.описание : humanText(service.description);
   }
 
   function renderLocalServices(store) {
@@ -543,8 +566,9 @@
       var card = storefrontNode(doc, 'div', '_xtlac_srv_card ' + service.status);
       card.appendChild(storefrontNode(doc, 'span', '_xtlac_srv_dot'));
       var info = storefrontNode(doc, 'div', '_xtlac_srv_info');
-      info.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_name', humanText(service.name)));
-      if (service.description) info.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_desc', humanText(service.description)));
+      info.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_name', serviceName(service)));
+      var _desc = serviceDesc(service);
+      if (_desc) info.appendChild(storefrontNode(doc, 'div', '_xtlac_srv_desc', _desc));
       var meta = storefrontNode(doc, 'div', '_xtlac_srv_meta');
       meta.appendChild(storefrontNode(doc, 'span', '_xtlac_srv_chip',
         running ? T('работает','running') : T('остановлена','stopped')));
