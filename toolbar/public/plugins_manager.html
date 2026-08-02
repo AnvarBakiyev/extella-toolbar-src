@@ -33,7 +33,7 @@
 /* Кнопки, поля и списки НЕ наследуют шрифт сами — браузер подставлял Arial.
    Замер 31.07: 82 элемента витрины (кнопки, вкладки, чипы) были набраны Arial
    вместо Source Sans. Одно правило чинит все. */
-button,input,select,textarea{font-family:inherit;font-size:inherit;line-height:inherit}
+button,input,select,textarea{font-family: 'Nunito', system-ui, sans-serif'Nunito', system-ui, sans-serif;font-size:inherit;line-height:inherit}
 html,body{height:100%;overflow:hidden}
 body{font-family:var(--sans);background:var(--bg);color:var(--tx);
   display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
@@ -84,14 +84,14 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);
 .fb_srch{flex:1;min-width:160px;position:relative}
 .fb_sinp{width:100%;background:var(--s3);border:1px solid var(--bd2);border-radius:var(--r-sm);
   color:var(--tx);font-size:13px;padding:8px 32px 8px 12px;outline:none;
-  transition:border-color .15s,box-shadow .15s;font-family:inherit}
+  transition:border-color .15s,box-shadow .15s;font-family: 'Nunito', system-ui, sans-serif'Nunito', system-ui, sans-serif}
 .fb_sinp:focus{border-color:rgba(var(--ar),.4);box-shadow:none}
 .fb_sinp::placeholder{color:var(--tx3)}
 .fb_sico{position:absolute;right:10px;top:50%;transform:translateY(-50%);
   color:var(--tx3);pointer-events:none}
 .fb_sel{background:var(--s3);border:1px solid var(--bd2);border-radius:var(--r-sm);
   color:var(--tx);font-size:11px;padding:8px 8px;outline:none;cursor:pointer;
-  font-family:inherit;transition:border-color .15s}
+  font-family: 'Nunito', system-ui, sans-serif'Nunito', system-ui, sans-serif;transition:border-color .15s}
 .fb_sel:focus{border-color:rgba(var(--ar),.4)}
 
 /* ── Topic chips ─────────────────────────────────────────────────────── */
@@ -261,7 +261,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);
   radial-gradient(2px 2px at 82% 62%,#D4984F 50%,transparent 51%)}
 .hbody{position:relative;margin-top:auto;padding:16px 20px;display:flex;flex-direction:column;gap:8px}
 .hsrc{font:600 11px var(--sans);letter-spacing:.01em;color:var(--tx3);text-transform:none}
-.chero h3{font:600 22px/1.18 var(--serif);color:var(--tx);text-wrap:balance;max-width:26ch;letter-spacing:0}
+.chero h3{font:600 20px/1.18 var(--serif);color:var(--tx);text-wrap:balance;max-width:26ch;letter-spacing:0}
 .chero h3 i{font-style:normal;color:inherit}
 .chero h3 .acc_sub{font:500 15px/1.45 var(--sans);color:var(--tx2);margin-top:8px;letter-spacing:0}
 .cfacts{list-style:none;display:flex;flex-direction:column;gap:4px;margin:0;padding:0}
@@ -276,7 +276,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);
 .cpromo{position:absolute;top:12px;left:12px;font:600 11px var(--sans);letter-spacing:.01em;
   color:#fff;background:var(--a);border-radius:var(--r-sm);padding:3px 8px;text-transform:none;z-index:2}
 .mini_body{padding:12px 16px;display:flex;flex-direction:column;gap:4px;flex:1;min-height:0}
-.mini_h{font:600 17px/1.24 var(--serif);color:var(--tx);letter-spacing:0}
+.mini_h{font:600 15px/1.24 var(--serif);color:var(--tx);letter-spacing:0}
 .mini_h i{font-style:normal;color:inherit}
 .mini_desc{font-size:13px;font-weight:500;color:var(--tx2);line-height:1.4;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
@@ -370,7 +370,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);
 .load_more{grid-column:1/-1;display:flex;justify-content:center;padding:8px 0 4px}
 .load_more_btn{background:var(--s3);border:1px solid var(--bd2);border-radius:var(--r-sm);
   color:var(--tx2);font-size:13px;font-weight:600;padding:8px 28px;cursor:pointer;
-  transition:all .14s;font-family:inherit}
+  transition:all .14s;font-family: 'Nunito', system-ui, sans-serif'Nunito', system-ui, sans-serif}
 .load_more_btn:hover{color:var(--tx);background:var(--s4)}
 
 /* ── Installed plugin cards ──────────────────────────────────────────── */
@@ -444,7 +444,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);
 /* ── Collapsible Other toggle ───────────────────────────────────────── */
 .sect_toggle{background:none;border:none;cursor:pointer;
   color:var(--tx2);font-size:11px;padding:2px 8px;border-radius:var(--r-sm);
-  transition:all .14s;display:flex;align-items:center;gap:4px;font-family:inherit}
+  transition:all .14s;display:flex;align-items:center;gap:4px;font-family: 'Nunito', system-ui, sans-serif'Nunito', system-ui, sans-serif}
 .sect_toggle:hover{color:var(--tx);background:var(--s3)}
 .other_body_wrap{grid-column:1/-1;display:contents}
 .other_filters{grid-column:1/-1}
@@ -452,7 +452,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);
 
 /* ── Empty states ────────────────────────────────────────────────────── */
 .empty{grid-column:1/-1;text-align:center;padding:56px 20px;color:var(--tx2)}
-.eico{font-size:36px;margin-bottom:12px;opacity:.4}
+.eico{font-size:26px;margin-bottom:12px;opacity:.4}
 .eico .lico{width:34px;height:34px;color:var(--tx3)}
 .st_chip .chip_ic{width:11px;height:11px;vertical-align:-2px;margin-right:4px;color:var(--acc,var(--a))}
 /* Загрузка = анимированная бесконечность (единый приём Extella, вместо ⏳/спиннеров). */
@@ -469,7 +469,7 @@ body[data-theme="dark"] .inf .tr,html[data-theme="dark"] .inf .tr{stroke:var(--b
   border-radius:var(--r-sm);padding:2px;flex-shrink:0}
 .hf_kind_btn{background:none;border:none;color:var(--tx2);font-size:11px;font-weight:500;
   padding:4px 12px;border-radius:var(--r-sm);cursor:pointer;transition:all .14s;white-space:nowrap;
-  font-family:inherit}
+  font-family: 'Nunito', system-ui, sans-serif'Nunito', system-ui, sans-serif}
 .hf_kind_btn:hover{color:var(--tx)}
 .hf_kind_btn.on{background:var(--s1);color:var(--tx);font-weight:700;
   box-shadow:none}
@@ -536,7 +536,7 @@ body[data-theme="dark"] .inf .tr,html[data-theme="dark"] .inf .tr{stroke:var(--b
 .ws_gap_w{font-size:13px;color:var(--tx2);margin:3px 0 8px;line-height:1.45}
 .ws_act,.ws_undo{font:600 13px var(--sans);border:1px solid var(--bd2);background:transparent;color:var(--tx3);border-radius:var(--r);padding:4px 8px;cursor:not-allowed;opacity:.7}
 .ws_empty{font-size:13px;color:var(--tx3);padding:8px 0}
-.ws_pack_n{font-family:var(--serif);font-size:18px;color:var(--tx);margin-bottom:8px}
+.ws_pack_n{font-family:var(--serif);font-size:20px;color:var(--tx);margin-bottom:8px}
 .ws_soon{font:600 11px var(--sans);color:#A5632A;background:rgba(184,121,28,.12);border-radius:var(--r);padding:1px 8px;vertical-align:middle}
 .ws_caps{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
 .ws_cap{font:500 13px var(--sans);background:rgba(47,107,102,.1);color:#2F6B66;border-radius:var(--r);padding:3px 8px}
@@ -570,7 +570,7 @@ body[data-theme="dark"] .inf .tr,html[data-theme="dark"] .inf .tr{stroke:var(--b
 .wsc_grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-top:16px}
 .wsc_card{position:relative;background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);padding:16px 16px 16px;overflow:hidden}
 .wsc_bar{position:absolute;left:0;top:0;height:4px;width:100%;background:var(--wa)}
-.wsc_nm{font-family:var(--serif);font-size:17px;font-weight:600;color:var(--tx);margin-top:4px}
+.wsc_nm{font-family:var(--serif);font-size:15px;font-weight:600;color:var(--tx);margin-top:4px}
 .wsc_und{font-size:13px;color:var(--tx2);line-height:1.45;margin:3px 0 8px}
 .wsc_sec{margin-top:12px}
 .wsc_lab{font:600 11px var(--sans);letter-spacing:.02em;color:var(--tx3);display:flex;align-items:center;gap:8px}
@@ -612,7 +612,7 @@ body[data-theme="dark"] .inf .tr,html[data-theme="dark"] .inf .tr{stroke:var(--b
 .wsl_ic{width:40px;height:40px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--wa) 13%,transparent);border:1px solid color-mix(in srgb,var(--wa) 30%,transparent)}
 .wsl_ic .lico{width:21px;height:21px;color:var(--wa);stroke-width:1.7}
 .wsl_ago{font-size:11px;color:var(--tx3)}
-.wsl_nm{font-family:var(--serif);font-size:18px;line-height:1.25;color:var(--tx);margin:12px 0 3px;font-weight:600}
+.wsl_nm{font-family:var(--serif);font-size:20px;line-height:1.25;color:var(--tx);margin:12px 0 3px;font-weight:600}
 .wsl_fold{font:500 11px var(--sans);color:var(--tx3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .wsl_foot{display:flex;align-items:center;justify-content:space-between;margin-top:16px;padding-top:12px;border-top:1px solid var(--bd)}
 .wsl_st{display:inline-flex;align-items:center;gap:8px;font:600 13px var(--sans)}
@@ -623,7 +623,7 @@ body[data-theme="dark"] .inf .tr,html[data-theme="dark"] .inf .tr{stroke:var(--b
 .wsl_new{align-items:flex-start;justify-content:center;border-style:dashed;border-color:var(--bd2);background:transparent;gap:8px}
 .wsl_new:hover{border-color:#2F6B66;transform:translateY(-3px);box-shadow:none}
 .wsl_new_plus{font-size:26px;font-weight:300;color:#2F6B66;line-height:1}
-.wsl_new_t{font-family:var(--serif);font-size:17px;font-weight:600;color:var(--tx);margin-top:8px}
+.wsl_new_t{font-family:var(--serif);font-size:15px;font-weight:600;color:var(--tx);margin-top:8px}
 .wsl_new_s{font-size:13px;color:var(--tx2);line-height:1.5}
 .wsl_new_m{font:500 11px var(--sans);color:var(--tx3);margin-top:8px}
 </style>
@@ -4560,7 +4560,7 @@ function _dtCss(){
     '.dt_ico:hover{background:var(--s2);border-color:var(--bd)}'+
     '.dt_ico.dt_off{opacity:.5}'+  // системный плагин отсутствует / «скоро»
     '.dt_ic_badge{position:relative}'+
-    '.dt_soon{position:absolute;top:-7px;right:-7px;background:#C57E33;color:#fff;font:700 8.5px var(--sans);'+
+    '.dt_soon{position:absolute;top:-7px;right:-7px;background:#C57E33;color:#fff;font:700 11px var(--sans);'+
       'letter-spacing:.04em;text-transform:uppercase;padding:2px 4px;border-radius:var(--r);box-shadow:none}'+
     '.dt_ico:active{transform:scale(.95)}'+
     '.dt_ic_badge{width:56px;height:56px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;'+
@@ -5246,7 +5246,7 @@ function autoCardHTML(p, i){
   return '<div class="stile agcard" style="--acc:'+esc(acc)+';padding:0;overflow:hidden;animation-delay:'+Math.min(i*12,120)+'ms">'+
     // hero-обложка — у каждого агента своя (градиент из его цвета + крупный эмодзи)
     '<div style="'+_agHeroStyle(esc(acc))+';padding:16px 16px 16px;position:relative;cursor:pointer" onclick="openAgentCabinet(\''+esc(id)+'\')">'+
-      '<div style="position:absolute;right:10px;top:6px;font-size:52px;line-height:1;opacity:.22;pointer-events:none">'+em+'</div>'+
+      '<div style="position:absolute;right:10px;top:6px;font-size:26px;line-height:1;opacity:.22;pointer-events:none">'+em+'</div>'+
       '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;position:relative">'+
         '<span style="font-size:26px;line-height:1">'+em+'</span>'+_statusBadge(status)+'</div>'+
       '<div style="font:700 15px/1.28 var(--sans);color:#fff;letter-spacing:-.01em;margin-top:8px;text-shadow:0 1px 4px rgba(0,0,0,.25);position:relative;max-width:88%">'+name+'</div>'+
@@ -5316,7 +5316,30 @@ var _cabOpenId = null, _cabTab = 'overview';
 function _cabAgent(){ return (_autoReg||[]).filter(function(p){ return _agId(p)===_cabOpenId; })[0] || null; }
 function openAgentCabinet(id){
   _cabOpenId = id; _cabTab = 'overview';
-  Promise.all([_agLoadState(id), _agLoadRuns(id)]).then(function(){ _cabRender(); });
+  Promise.all([_agLoadState(id), _agLoadRuns(id)]).then(function(){ _cabRender(); _cabResendSchedule(); });
+}
+
+// Досылка расписания. Раньше её не было вовсе, и две ветки сохранения ВРАЛИ человеку:
+// «Сохранено (намерение)» и «применится, когда он проснётся» писали настройку в состояние
+// панели, а поставить крон было некому — ни при старте Конструктора, ни при открытии
+// кабинета. У Эллы «Поиск забытых подписок» стоял на «каждый час», последний запуск —
+// позавчера, и панель показывала галочку. Обещание без исполнителя хуже честного отказа:
+// человек не следит за тем, что считает работающим.
+//
+// Теперь при каждом открытии кабинета сохранённое, но не поставленное расписание
+// (sch && !sch.live) пробуем поставить заново, если Конструктор отвечает. Ставим ТОЛЬКО
+// то, что человек уже выбрал сам, — это досылка его решения, а не новое действие.
+function _cabResendSchedule(){
+  var p=_cabAgent(); if(!p) return;
+  var sch=_agSchedule(p), sid=p.sessionId||'', id=_agId(p);
+  if(!sch || sch.live || !sid) return;
+  fetch('http://127.0.0.1:8765/x/schedule',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({session_id:sid, period:sch.human||sch.period||'',
+                         interval_min:sch.interval_min||0, deliver:sch.channel||''})})
+    .then(function(r){return r.json();})
+    .then(function(r){
+      if(r&&r.status==='success'){ sch.live=true; _agSaveState(id,{schedule:sch}).then(_cabRender); }
+    }).catch(function(){});   // молча: это фоновая досылка, а не действие человека
 }
 function closeAgentCabinet(){ _cabOpenId=null; var o=document.getElementById('ag_cab'); if(o)o.remove(); }
 function cabTab(t){ _cabTab=t; _cabRender(); }
@@ -5334,7 +5357,7 @@ function _cabRender(){
       // подпись нечитаемой поверх себя.
       ''+
       '<div style="display:flex;align-items:flex-start;gap:16px;position:relative">'+
-        '<div style="font-size:32px;line-height:1;flex-shrink:0;display:flex;align-items:center">'+_agAvatar(p)+'</div>'+
+        '<div style="font-size:26px;line-height:1;flex-shrink:0;display:flex;align-items:center">'+_agAvatar(p)+'</div>'+
         '<div style="min-width:0;flex:1">'+
           '<div style="font:700 20px/1.25 var(--sans);letter-spacing:-.01em;color:var(--tx)">'+name+'</div>'+
           (tag?'<div style="font-size:13px;color:var(--tx2);margin-top:4px;line-height:1.45">'+tag+'</div>':'')+
@@ -5414,7 +5437,7 @@ function cabSaveSchedule(id){
         } else { if(msg)msg.innerHTML='⚠ '+esc((r&&r.message)||'не удалось'); }
       }).catch(function(e){ if(msg)msg.innerHTML='⚠ Конструктор сейчас не отвечает — настройка сохранена и применится, когда он проснётся'; _agSaveState(id,{schedule:sch}).then(_cabRender); });
   } else {
-    _agSaveState(id,{schedule:sch}).then(function(){ if(msg)msg.innerHTML='✓ Сохранено (намерение)'; setTimeout(_cabRender,700); });
+    _agSaveState(id,{schedule:sch}).then(function(){ if(msg)msg.innerHTML='✓ Выбор сохранён. Расписание пока НЕ работает: у пака нет сессии Конструктора — оно включится, когда пак будет запущен через Конструктор'; setTimeout(_cabRender,700); });
   }
 }
 function _cabSettings(p){
@@ -6990,7 +7013,7 @@ function _wsxStyle(){
 '.wsx .wx-top::after{content:"";position:absolute;right:-30px;top:-40px;width:180px;height:180px;border-radius:50%;border:14px solid rgba(255,255,255,.07)}',
 '.wsx .wx-cog{width:40px;height:40px;flex:0 0 auto;opacity:.95}.wsx .wx-cog svg{width:100%;height:100%;fill:#fff;animation:wxspin 22s linear infinite}',
 '@keyframes wxspin{to{transform:rotate(360deg)}}@media (prefers-reduced-motion:reduce){.wsx .wx-cog svg{animation:none}}',
-'.wsx .wx-htxt h1{margin:0;font-family:var(--serif);font-size:21px;font-weight:600;letter-spacing:0;line-height:1.2;color:#fff}',
+'.wsx .wx-htxt h1{margin:0;font-family:var(--serif);font-size:20px;font-weight:600;letter-spacing:0;line-height:1.2;color:#fff}',
 '.wsx .wx-st{display:flex;align-items:center;gap:8px;margin-top:4px;font-size:13px;color:var(--tx2)}',
 '.wsx .wx-st .wx-dot{width:8px;height:8px;border-radius:50%;background:#2F6B66;box-shadow:none}.wsx .wx-st code{font-family:var(--mono);font-size:11px;opacity:.9}',
 '.wsx .wx-close{margin-left:auto;color:var(--tx2);font-size:13px;font-weight:600;background:rgba(255,255,255,.14);border:0;border-radius:var(--r);padding:8px 16px;cursor:pointer}.wsx .wx-close:hover{background:rgba(255,255,255,.22)}',
@@ -7004,11 +7027,11 @@ function _wsxStyle(){
 '.wsx #wt-over:checked~.wx-canvas #wx-over,.wsx #wt-task:checked~.wx-canvas #wx-task,.wsx #wt-mat:checked~.wx-canvas #wx-mat,.wsx #wt-set:checked~.wx-canvas #wx-set{display:block}',
 '.wsx .wx-domain{display:flex;align-items:baseline;gap:16px;margin:0 0 16px;font-size:13px;color:var(--muted)}.wsx .wx-domain a{margin-left:auto;color:var(--orange);font-weight:600;text-decoration:none;white-space:nowrap;cursor:pointer}',
 '.wsx .wx-panel{background:var(--card);border:1px solid var(--wl);border-radius:var(--r);box-shadow:none;padding:24px 24px}',
-'.wsx .wx-panel h2{margin:0 0 8px;font-family:var(--serif);font-size:22px;font-weight:600;letter-spacing:0;line-height:1.25}.wsx .wx-panel .wx-sub{color:var(--muted);font-size:15px;margin:0 0 20px;max-width:64ch}.wsx .wx-panel .wx-sub b{color:var(--ink);font-weight:600}',
+'.wsx .wx-panel h2{margin:0 0 8px;font-family:var(--serif);font-size:20px;font-weight:600;letter-spacing:0;line-height:1.25}.wsx .wx-panel .wx-sub{color:var(--muted);font-size:15px;margin:0 0 20px;max-width:64ch}.wsx .wx-panel .wx-sub b{color:var(--ink);font-weight:600}',
 '.wsx .wx-pills{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px}.wsx .wx-pill{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;padding:8px 16px;border-radius:var(--r);background:var(--tan);color:var(--ink);border:1px solid transparent}.wsx .wx-pill.on{background:var(--orange);color:var(--oink)}',
 '.wsx .wx-step{border:1px solid var(--wl);border-radius:var(--r);padding:16px 16px;margin-bottom:16px;background:var(--card)}.wsx .wx-step:last-child{margin-bottom:0}',
 '.wsx .wx-steph{display:flex;align-items:center;gap:12px;margin-bottom:8px}.wsx .wx-nchip{width:26px;height:26px;flex:0 0 auto;border-radius:50%;background:var(--tan);color:var(--orange);display:grid;place-items:center;font-weight:700;font-size:13px}',
-'.wsx .wx-steph .wx-tt{font-size:15px;font-weight:700;letter-spacing:-.01em}.wsx .wx-pct{margin-left:auto;font-weight:700;font-size:19px;font-variant-numeric:tabular-nums}',
+'.wsx .wx-steph .wx-tt{font-size:15px;font-weight:700;letter-spacing:-.01em}.wsx .wx-pct{margin-left:auto;font-weight:700;font-size:20px;font-variant-numeric:tabular-nums}',
 '.wsx .wx-desc{color:var(--muted);font-size:13px;margin:2px 0 0}.wsx .wx-desc b{color:var(--ink)}',
 '.wsx .wx-badge{font-size:11px;font-weight:600;padding:4px 12px;border-radius:var(--r);background:var(--tan);color:var(--muted)}.wsx .wx-badge.wk{background:var(--osoft);color:var(--orange2)}.wsx .wx-badge.ok{background:color-mix(in srgb,var(--green) 16%,transparent);color:var(--green)}.wsx .wx-badge.you{background:color-mix(in srgb,var(--amber) 16%,transparent);color:var(--amber)}',
 '.wsx .wx-meter{height:8px;border-radius:var(--r);background:var(--inset);overflow:hidden;margin:16px 0 12px}.wsx .wx-meter>i{display:block;height:100%;background:var(--orange);border-radius:var(--r)}',
@@ -7022,7 +7045,7 @@ function _wsxStyle(){
 '.wsx .wx-tk.done .wx-ck{background:var(--green);border-color:var(--green);cursor:default}.wsx .wx-tk.done .wx-ck::after{content:"";position:absolute;left:6px;top:2px;width:5px;height:10px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}.wsx .wx-tk.now .wx-ck{border-color:var(--orange);outline:2px solid var(--osoft);outline-offset:0}',
 '.wsx .wx-tk .wx-tt{font-size:15px}.wsx .wx-tk.done .wx-tt{color:var(--muted)}.wsx .wx-tk .wx-who{margin-left:auto}',
 '.wsx .wx-lane{display:flex;align-items:center;gap:8px;margin:20px 0 8px;font-size:13px;font-weight:700;letter-spacing:.02em;color:var(--faint)}.wsx .wx-lane .wx-line{flex:1;height:1px;background:var(--wl)}',
-'.wsx .wx-row{display:flex;align-items:center;gap:16px;padding:12px 0;border-top:1px solid var(--wl);font-size:15px}.wsx .wx-row:first-child{border-top:0}.wsx .wx-row .wx-em{font-size:17px;width:24px;text-align:center;flex:0 0 auto}.wsx .wx-row .wx-meta{margin-left:auto;font-size:13px;color:var(--muted)}.wsx .wx-row .wx-rr{margin-left:auto;display:flex;gap:8px;align-items:center}',
+'.wsx .wx-row{display:flex;align-items:center;gap:16px;padding:12px 0;border-top:1px solid var(--wl);font-size:15px}.wsx .wx-row:first-child{border-top:0}.wsx .wx-row .wx-em{font-size:15px;width:24px;text-align:center;flex:0 0 auto}.wsx .wx-row .wx-meta{margin-left:auto;font-size:13px;color:var(--muted)}.wsx .wx-row .wx-rr{margin-left:auto;display:flex;gap:8px;align-items:center}',
 '.wsx .wx-fgrp{margin-top:16px}.wsx .wx-fgrp .wx-fl{font-size:13px;font-weight:700;color:var(--orange2);margin-bottom:8px;display:flex;gap:8px;align-items:center}.wsx .wx-fgrp .wx-fl .wx-sc{font-weight:600;font-size:11px;color:var(--muted);background:var(--inset);border:1px solid var(--wl);padding:2px 8px;border-radius:var(--r)}',
 '.wsx .wx-fact{display:inline-flex;align-items:baseline;gap:8px;padding:8px 0;margin-right:28px}.wsx .wx-fact .wx-fk{font-size:13px;color:var(--muted);min-width:96px}.wsx .wx-fact .wx-fv{font-size:15px;font-weight:600}',
 '.wsx .wx-caps{display:flex;flex-wrap:wrap;gap:8px}.wsx .wx-cap{font-size:13px;font-weight:600;padding:8px 12px;border-radius:var(--r);background:var(--inset);border:1px solid var(--wl);color:var(--ink)}',

@@ -18,7 +18,7 @@ ETB.githubAdd = (function () {
       'position:fixed;inset:0;z-index:2147483645;',
       'background:rgba(0,0,0,.72);backdrop-filter:blur(6px);',
       'display:flex;align-items:center;justify-content:center;',
-      'font-family:-apple-system,system-ui,sans-serif;',
+      'font-family: 'Nunito', system-ui, sans-serif;',
       'animation:_etbv2_gh_fade .16s ease;',
     '}',
     'html[data-etb-light] #_etbv2_gh_ov{background:rgba(0,0,0,.35);}',
@@ -36,12 +36,12 @@ ETB.githubAdd = (function () {
     '#_etbv2_gh_hdr h3{flex:1;font-size:15px;font-weight:700;color:var(--etb-tx,#111);margin:0;}',
     '#_etbv2_gh_hdr button{',
       'background:none;border:none;color:var(--etb-tx2,#888);cursor:pointer;',
-      'font-size:18px;padding:4px 8px;border-radius:8px;',
+      'font-size:20px;padding:4px 8px;border-radius:8px;',
     '}',
     '#_etbv2_gh_hdr button:hover{background:var(--etb-s3,#f7f7f9);color:var(--etb-tx,#111);}',
     '#_etbv2_gh_body{padding:24px;}',
     '._etbv2_gh_title{font-size:15px;font-weight:700;color:var(--etb-tx,#111);margin-bottom:4px;}',
-    '._etbv2_gh_title_lg{font-size:16px;font-weight:700;color:var(--etb-tx,#111);margin-bottom:8px;}',
+    '._etbv2_gh_title_lg{font-size:15px;font-weight:700;color:var(--etb-tx,#111);margin-bottom:8px;}',
     '._etbv2_gh_sub{font-size:13px;color:var(--etb-tx2,#6b6b6b);line-height:1.6;}',
     '._etbv2_gh_sub_sm{font-size:11px;color:var(--etb-tx2,#6b6b6b);line-height:1.6;}',
     /* Inputs */
@@ -52,7 +52,7 @@ ETB.githubAdd = (function () {
       'width:100%;background:var(--etb-s2,#fff);border:1px solid var(--etb-bd2,rgba(0,0,0,.14));border-radius:12px;',
       'color:var(--etb-tx,#111);font-size:13px;padding:8px 16px;',
       'box-sizing:border-box;outline:none;transition:border-color .15s;',
-      'font-family:-apple-system,system-ui,sans-serif;',
+      'font-family: 'Nunito', system-ui, sans-serif;',
     '}',
     '._etbv2_gh_input:focus{border-color:rgba(198,126,52,.5);}',
     '._etbv2_gh_input::placeholder{color:var(--etb-tx3,#ccc);}',
@@ -200,7 +200,7 @@ ETB.githubAdd = (function () {
           'Activity',
         '</div>',
         '<div id="_etbv2_gh_log" style="padding:8px 8px;font-size:11px;',
-          'font-family:ui-monospace,monospace;line-height:1.6;',
+          'font-family: 'JetBrains Mono', ui-monospace, monospace;line-height:1.6;',
           'color:var(--etb-tx2,#6b6b6b);max-height:72px;overflow:hidden;">',
           _installLogLines.map(function (l) {
             return '<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + _esc(l) + '</div>';
@@ -312,7 +312,7 @@ ETB.githubAdd = (function () {
     if (s.step === 'done') {
       modalHtml = [
         '<div id="_etbv2_gh_body" style="text-align:center;padding:40px 24px;">',
-        '<div style="font-size:48px;margin-bottom:16px;">&#10003;</div>',
+        '<div style="font-size:26px;margin-bottom:16px;">&#10003;</div>',
         '<div class="_etbv2_gh_title_lg">Plugin added!</div>',
         '<div class="_etbv2_gh_sub" style="margin-bottom:16px;">',
         _esc(s.customName || (s.repoData && s.repoData.name) || ''),
@@ -494,11 +494,11 @@ ETB.githubAdd = (function () {
   // он пойдёт гадать, а гадать придёт к нам — ровно то, чего гейт и должен избежать.
   function _passportVerdictHtml(s) {
     if (s.passportChecked === false) {
-      return '<div style="font-size:12px;color:var(--etb-tx2,#6b6b6b);margin:10px 0;">' +
+      return '<div style="font-size:11px;color:var(--etb-tx2,#6b6b6b);margin:10px 0;">' +
              'Читаю паспорт агента…</div>';
     }
     if (s.passportProblems === undefined) {
-      return '<div style="font-size:12px;line-height:1.5;color:#8a6a1f;' +
+      return '<div style="font-size:11px;line-height:1.5;color:#8a6a1f;' +
              'border-left:2px solid #C57E33;padding-left:10px;margin:10px 0;">' +
              '<b>Паспорт прочитать не удалось: репозиторий приватный.</b> ' +
              'Это не значит, что паспорта нет — GitHub отвечает одинаково и на закрытый ' +
@@ -507,7 +507,7 @@ ETB.githubAdd = (function () {
     }
     if (s.passportProblems === null) {
       // Паспорта нет — значит это не агент, а программа. Ставим, но говорим прямо.
-      return '<div style="font-size:12px;line-height:1.5;color:var(--etb-tx2,#6b6b6b);' +
+      return '<div style="font-size:11px;line-height:1.5;color:var(--etb-tx2,#6b6b6b);' +
              'border-left:2px solid var(--etb-bd,#d7e0dc);padding-left:10px;margin:10px 0;">' +
              'Паспорта агента в репозитории нет — поставим как обычную программу. ' +
              'Если это должен быть агент Extella, добавь в корень <b>agent_passport.yaml</b>.' +
@@ -517,7 +517,7 @@ ETB.githubAdd = (function () {
       var items = s.passportProblems.map(function (x) {
         return '<li style="margin:3px 0;">' + _esc(x) + '</li>';
       }).join('');
-      return '<div style="font-size:12px;line-height:1.5;color:#b4472e;' +
+      return '<div style="font-size:11px;line-height:1.5;color:#b4472e;' +
              'border-left:2px solid #b4472e;padding-left:10px;margin:10px 0;">' +
              '<b>Паспорт агента не проходит стандарт</b>' +
              '<ul style="margin:6px 0 0 14px;padding:0;">' + items + '</ul>' +
@@ -525,7 +525,7 @@ ETB.githubAdd = (function () {
              'Поправь паспорт в репозитории и нажми «Fetch Repo» ещё раз. ' +
              'Шаблон — extella-agent-standards/templates/agent_passport.yaml.</div></div>';
     }
-    return '<div style="font-size:12px;line-height:1.5;color:#2F6B66;' +
+    return '<div style="font-size:11px;line-height:1.5;color:#2F6B66;' +
            'border-left:2px solid #2F6B66;padding-left:10px;margin:10px 0;">' +
            'Паспорт агента на месте и проходит стандарт.</div>';
   }
@@ -618,7 +618,7 @@ ETB.githubAdd = (function () {
         'flex:1;min-width:0;border:1.5px solid ' + (sel ? '#C67E34' : 'var(--etb-bd2,rgba(0,0,0,.14))') + ';' +
         'border-radius:12px;padding:16px;cursor:' + (disabled ? 'not-allowed' : 'pointer') + ';' +
         'background:' + (sel ? 'rgba(198,126,52,.08)' : 'transparent') + ';opacity:' + (disabled ? '.5' : '1') + ';">' +
-        '<div style="font-size:22px;margin-bottom:8px;">' + icon + '</div>' +
+        '<div style="font-size:20px;margin-bottom:8px;">' + icon + '</div>' +
         '<div style="font-weight:700;font-size:15px;margin-bottom:3px;color:var(--etb-tx,#111);">' + title + '</div>' +
         '<div style="font-size:11px;color:var(--etb-tx2,#6b6b6b);line-height:1.4;">' + desc + '</div>' +
       '</div>';

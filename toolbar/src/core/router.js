@@ -4667,7 +4667,7 @@ ETB.router = (function () {
       'padding:8px 16px;box-sizing:border-box;',
       'background:var(--etb-s1,#111);',
       'border-bottom:1px solid var(--etb-bd,rgba(255,255,255,.08));',
-      'font-family:-apple-system,system-ui,sans-serif;',
+      'font-family: 'Nunito', system-ui, sans-serif;',
       'animation:_etbv2_slide_in .18s ease;'
     ].join('');
     bar.innerHTML = [
@@ -4791,10 +4791,10 @@ ETB.router = (function () {
     var url = _serviceUrl(plugin);
     content.innerHTML = [
       '<div style="display:flex;align-items:center;justify-content:center;height:100%;',
-      'padding:32px;font-family:-apple-system,system-ui,sans-serif;">',
+      'padding:32px;font-family: 'Nunito', system-ui, sans-serif;">',
       '<div style="max-width:420px;text-align:center;">',
-      '<div style="font-size:40px;margin-bottom:16px;">&#127759;</div>',
-      '<div style="font-size:16px;font-weight:700;color:var(--etb-tx,#f0f0f0);margin-bottom:8px;">',
+      '<div style="font-size:26px;margin-bottom:16px;">&#127759;</div>',
+      '<div style="font-size:15px;font-weight:700;color:var(--etb-tx,#f0f0f0);margin-bottom:8px;">',
       _esc(plugin.name), _L(' работает</div>',' is running</div>'),
       '<div style="font-size:13px;color:var(--etb-tx2,#888);line-height:1.6;margin-bottom:24px;">',
       _L('Интерфейс этой программы не помещается во встроенную панель. ','This tool runs its own interface that can\'t be shown inside the panel. '),
@@ -4863,13 +4863,13 @@ ETB.router = (function () {
     overlay.style.cssText = [
       'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;',
       'padding:32px;background:var(--etb-bg,#0a0a0a);',
-      'font-family:-apple-system,system-ui,sans-serif;z-index:5;'
+      'font-family: 'Nunito', system-ui, sans-serif;z-index:5;'
     ].join('');
     var pid = plugin.id ? plugin.id.replace(/'/g, '') : '';
     overlay.innerHTML = [
       '<div style="max-width:420px;text-align:center;">',
-      '<div style="font-size:38px;margin-bottom:16px;">&#9888;</div>',
-      '<div style="font-size:16px;font-weight:700;color:var(--etb-tx,#f0f0f0);margin-bottom:8px;">',
+      '<div style="font-size:26px;margin-bottom:16px;">&#9888;</div>',
+      '<div style="font-size:15px;font-weight:700;color:var(--etb-tx,#f0f0f0);margin-bottom:8px;">',
       _esc(plugin.name), _L(': интерфейс не загрузился</div>',' UI failed to load</div>'),
       '<div style="font-size:13px;color:var(--etb-tx2,#888);line-height:1.6;margin-bottom:20px;">',
       _L('Интерфейс не инициализировался. Позволь агенту разобраться и починить,','The interface did not initialize correctly. Let the agent diagnose and fix it,'),
@@ -5028,7 +5028,7 @@ ETB.router = (function () {
   function _renderStarting(content, plugin) {
     content.innerHTML = [
       '<div style="display:flex;align-items:center;justify-content:center;height:100%;',
-      'padding:32px;font-family:-apple-system,system-ui,sans-serif;">',
+      'padding:32px;font-family: 'Nunito', system-ui, sans-serif;">',
       '<div style="max-width:360px;text-align:center;">',
       '<div style="margin-bottom:16px;">', _infHTML(84), '</div>',
       '<div style="font-size:15px;font-weight:700;color:var(--etb-tx,#f0f0f0);margin-bottom:8px;">',
@@ -5097,13 +5097,13 @@ ETB.router = (function () {
         'background:' + (currentMode === 'local' ? 'var(--etb-s4,#242424)' : 'none') + ';',
         'border:none;color:' + (currentMode === 'local' ? 'var(--etb-tx,#f0f0f0)' : 'var(--etb-tx2,#888)') + ';',
         'font-size:11px;font-weight:' + (currentMode === 'local' ? '700' : '500') + ';',
-        'padding:3px 8px;border-radius:8px;cursor:pointer;font-family:inherit;transition:all .14s;">',
+        'padding:3px 8px;border-radius:8px;cursor:pointer;font-family: 'Nunito', system-ui, sans-serif;transition:all .14s;">',
         _L('Локально</button>','Local</button>'),
         '<button onclick="ETB.router._hfSwitchMode(\'' + _esc(safePid) + '\',\'remote\')" style="',
         'background:' + (currentMode === 'remote' ? 'var(--etb-s4,#242424)' : 'none') + ';',
         'border:none;color:' + (currentMode === 'remote' ? 'var(--etb-tx,#f0f0f0)' : 'var(--etb-tx2,#888)') + ';',
         'font-size:11px;font-weight:' + (currentMode === 'remote' ? '700' : '500') + ';',
-        'padding:3px 8px;border-radius:8px;cursor:pointer;font-family:inherit;transition:all .14s;">',
+        'padding:3px 8px;border-radius:8px;cursor:pointer;font-family: 'Nunito', system-ui, sans-serif;transition:all .14s;">',
         '☁️ HF</button>',
         '</div>'
       ].join('');
@@ -5125,7 +5125,7 @@ ETB.router = (function () {
       browserBtn,
       openFileBtn,
       '<button class="_etbv2_panel_close" style="background:none;border:none;',
-      'color:var(--etb-tx2,#888);cursor:pointer;font-size:18px;padding:4px 8px;',
+      'color:var(--etb-tx2,#888);cursor:pointer;font-size:20px;padding:4px 8px;',
       'border-radius:8px;transition:background .1s;" title="Закрыть">&#10005;</button>'
     ].join('');
     panel.appendChild(hdr);
@@ -5878,7 +5878,7 @@ ETB.router = (function () {
     var isPrivateRepo = /github\.com\//.test(src);
     if (plugin.guide) {
       return [
-        '<div style="height:100%;overflow:auto;padding:28px 32px;font-family:-apple-system,system-ui,sans-serif;">',
+        '<div style="height:100%;overflow:auto;padding:28px 32px;font-family: 'Nunito', system-ui, sans-serif;">',
         '<div style="max-width:640px;margin:0 auto;font-size:13px;line-height:1.65;color:var(--etb-tx2,#bbb);">',
         _renderGuideMd(plugin.guide),
         isLink ? [
@@ -5892,10 +5892,10 @@ ETB.router = (function () {
     }
     return [
       '<div style="display:flex;align-items:center;justify-content:center;',
-      'height:100%;padding:32px;font-family:-apple-system,system-ui,sans-serif;">',
+      'height:100%;padding:32px;font-family: 'Nunito', system-ui, sans-serif;">',
       '<div style="max-width:440px;text-align:center;">',
       '<div style="margin-bottom:16px;color:#C67E34"><svg class="lico" style="width:40px;height:40px"><use href="#ic-box"/></svg></div>',
-      '<div style="font-size:18px;font-weight:700;color:var(--etb-tx,#f0f0f0);margin-bottom:8px;">',
+      '<div style="font-size:20px;font-weight:700;color:var(--etb-tx,#f0f0f0);margin-bottom:8px;">',
       _esc(plugin.name), '</div>',
       '<div style="font-size:13px;color:var(--etb-tx2,#888);line-height:1.6;margin-bottom:24px;">',
       _esc(plugin.description || ''), '</div>',
@@ -6173,7 +6173,7 @@ ETB.router = (function () {
       _pick(d.steps).map(function (s, i) { return '<b>' + (i + 1) + '.</b> ' + s; }).join('<br>') + '</div></div>';
     var html = '<div style="max-width:560px;margin:0 auto;background:var(--etb-bg,#0d0d0f);border:1px solid rgba(140,140,140,.4);border-radius:12px;padding:24px 24px 16px;box-shadow:0 20px 60px rgba(0,0,0,.5);">' +
       '<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:16px;">' +
-      '<div style="flex:1;"><div style="font:700 18px system-ui;color:var(--etb-tx,#f0f0f0);">' + _esc(_pick(d.title)) + '</div>' +
+      '<div style="flex:1;"><div style="font:700 20px system-ui;color:var(--etb-tx,#f0f0f0);">' + _esc(_pick(d.title)) + '</div>' +
       '<div style="font-size:13px;color:var(--etb-tx2,#999);margin-top:3px;">' + _esc(_pick(d.sub)) + '</div></div>' +
       '<button onclick="ETB.router.closeHelp()" style="background:none;border:none;color:var(--etb-tx2,#999);font-size:20px;cursor:pointer;padding:0 4px;">&times;</button></div>' +
       steps +
@@ -6207,7 +6207,7 @@ ETB.router = (function () {
       'background:rgba(0,0,0,.45);backdrop-filter:blur(4px);',
       'display:flex;align-items:center;justify-content:center;',
       'animation:_etbv2_gh_fade .14s ease;',
-      'font-family:-apple-system,system-ui,sans-serif;'
+      'font-family: 'Nunito', system-ui, sans-serif;'
     ].join('');
     if (onBackdropClick) bd.addEventListener('click', function (e) {
       if (e.target === bd) onBackdropClick();
@@ -6242,7 +6242,7 @@ ETB.router = (function () {
           ETB.brand.icon(18),
           '<span style="flex:1;font-size:15px;font-weight:700;color:var(--etb-tx,#111);">Repair Plugin</span>',
           '<button id="_etb_rm_close" style="background:none;border:none;color:var(--etb-tx2,#888);',
-            'cursor:pointer;font-size:18px;padding:4px 8px;border-radius:8px;">&#10005;</button>',
+            'cursor:pointer;font-size:20px;padding:4px 8px;border-radius:8px;">&#10005;</button>',
         '</div>',
         '<div style="padding:20px 24px;">',
           '<div style="font-size:13px;color:var(--etb-tx2,#6b6b6b);margin-bottom:8px;">',
@@ -6255,7 +6255,7 @@ ETB.router = (function () {
           '<textarea id="_etb_rm_desc" rows="4" style="width:100%;background:#fff;',
             'border:1px solid var(--etb-bd2,rgba(0,0,0,.14));border-radius:8px;',
             'color:var(--etb-tx,#111);font-size:13px;padding:8px 16px;box-sizing:border-box;',
-            'outline:none;resize:vertical;font-family:-apple-system,system-ui,sans-serif;">',
+            'outline:none;resize:vertical;font-family: 'Nunito', system-ui, sans-serif;">',
             _esc(prefillText || ''),
           '</textarea>',
           '<div style="font-size:11px;color:var(--etb-tx2,#aaa);margin-top:8px;line-height:1.4;">',
@@ -6358,7 +6358,7 @@ ETB.router = (function () {
           '<input type="' + typ + '" data-field-id="' + fid + '"',
             ' style="width:100%;background:#fff;border:1px solid var(--etb-bd2,rgba(0,0,0,.14));',
             'border-radius:8px;color:var(--etb-tx,#111);font-size:13px;padding:8px 16px;',
-            'box-sizing:border-box;outline:none;font-family:-apple-system,system-ui,sans-serif;"',
+            'box-sizing:border-box;outline:none;font-family: 'Nunito', system-ui, sans-serif;"',
             ' autocomplete="off" />',
         '</div>'
       ].join('');
@@ -6372,7 +6372,7 @@ ETB.router = (function () {
           _esc(title || 'Configure Plugin'),
         '</span>',
         '<button id="_etb_cm_close" style="background:none;border:none;color:var(--etb-tx2,#888);',
-          'cursor:pointer;font-size:18px;padding:4px 8px;border-radius:8px;">&#10005;</button>',
+          'cursor:pointer;font-size:20px;padding:4px 8px;border-radius:8px;">&#10005;</button>',
       '</div>',
       '<div style="padding:20px 24px;">',
         fieldsHtml || '<div style="font-size:13px;color:var(--etb-tx2,#6b6b6b);">No fields provided.</div>',
@@ -6430,7 +6430,7 @@ ETB.router = (function () {
       'background:rgba(0,0,0,.45);backdrop-filter:blur(4px);',
       'display:flex;align-items:center;justify-content:center;',
       'animation:_etbv2_gh_fade .14s ease;',
-      'font-family:-apple-system,system-ui,sans-serif;'
+      'font-family: 'Nunito', system-ui, sans-serif;'
     ].join('');
 
     var card = document.createElement('div');
@@ -6469,7 +6469,7 @@ ETB.router = (function () {
             'Activity',
           '</div>',
           '<div id="_etb_rsm_log" style="padding:8px 8px;font-size:11px;',
-            'font-family:ui-monospace,monospace;line-height:1.6;',
+            'font-family: 'JetBrains Mono', ui-monospace, monospace;line-height:1.6;',
             'color:var(--etb-tx2,#6b6b6b);max-height:80px;overflow:hidden;">',
             _logLines.map(function (l) {
               return '<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + _esc(l) + '</div>';
@@ -6505,7 +6505,7 @@ ETB.router = (function () {
         var short = summary.trim().slice(0, 400);
         summaryHtml = [
           '<div style="background:var(--etb-s3,#f7f7f9);border:1px solid var(--etb-bd,rgba(0,0,0,.07));',
-            'border-radius:12px;padding:8px 12px;font-size:11px;font-family:ui-monospace,monospace;',
+            'border-radius:12px;padding:8px 12px;font-size:11px;font-family: 'JetBrains Mono', ui-monospace, monospace;',
             'line-height:1.6;color:var(--etb-tx2,#6b6b6b);max-height:80px;overflow:auto;',
             'margin-bottom:16px;white-space:pre-wrap;word-break:break-word;">',
             _esc(short),
@@ -6613,7 +6613,7 @@ ETB.router = (function () {
         ' title="Починить или перенастроить этот плагин"',
         ' style="background:var(--etb-s1,#fff);border:1px solid var(--etb-bd2,rgba(0,0,0,.14));',
         'color:var(--etb-tx2,#6b6b6b);border-radius:12px;padding:4px 12px;cursor:pointer;',
-        'font-size:11px;font-family:-apple-system,system-ui,sans-serif;',
+        'font-size:11px;font-family: 'Nunito', system-ui, sans-serif;',
         'box-shadow:none;transition:background .12s,color .12s;',
         'display:flex;align-items:center;gap:4px;">',
         _L('Починить','Repair'),
