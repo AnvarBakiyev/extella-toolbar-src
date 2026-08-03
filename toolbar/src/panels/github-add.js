@@ -658,13 +658,15 @@ ETB.githubAdd = (function () {
     return ETB.api.agentsList().then(function (d) {
       var all = (d && (d.agents || (d.content && d.content.agents))) || [];
       var out = [];
-      out.push({ id: 'agent_extella_alibaba_default', name: 'Extella (Qwen)',
+      out.push({ id: ETB.api.platformTrialAgent, name: 'Extella (Qwen)',
                  note: 'Пробный агент Extella — бесплатный, общий для ваших продуктов' });
       all.forEach(function (a) {
-        if (!a || !a.id || a.id === 'agent_extella_default') return;   // платный Claude
+        // Платного Claude отдельно не называем: фильтр ниже пропускает только
+        // платформенную Qwen, и всё остальное — включая его — отсеивается само.
+        if (!a || !a.id) return;
         var qwen = String(a.provider || '') === 'alibaba' &&
                    String(a.model || '').indexOf('qwen') === 0;
-        if (!qwen || a.id === 'agent_extella_alibaba_default') return;
+        if (!qwen || a.id === ETB.api.platformTrialAgent) return;
         out.push({ id: a.id, name: a.name || a.id, note: a.model || '' });
       });
       _state.agentChoices = out;
