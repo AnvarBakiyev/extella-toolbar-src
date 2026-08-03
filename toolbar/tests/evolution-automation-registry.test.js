@@ -484,6 +484,44 @@ test('unrelated device plugins and flat install references never become automati
   );
 });
 
+test('a canonical embedded Automation Passport classifies a new product without an id whitelist', () => {
+  const api = load();
+  const result = plain(api.project(baseInput({
+    deviceRecords: [device('future_customer_automation', {
+      automation: { automation_id: 'future_customer_automation' },
+      category: 'work',
+      type: 'custom',
+      version: '1.2.3',
+      status: 'active',
+    })],
+    localInstalledIds: ['future_customer_automation'],
+  })));
+
+  assert.deepEqual(
+    result.rows.map((row) => row.automation_id),
+    ['future_customer_automation'],
+  );
+  assert.equal(result.rows[0].flags.installed, true);
+  assert.equal(result.rows[0].versions.installed, '1.2.3');
+});
+
+test('snake-case process schema classifies a product without a whitelist', () => {
+  const api = load();
+  const result = plain(api.project(baseInput({
+    deviceRecords: [device('future_snake_schema_automation', {
+      schema_version: 'extella-process-pack-v1',
+      version: '1.0.0',
+      status: 'active',
+    })],
+    localInstalledIds: ['future_snake_schema_automation'],
+  })));
+
+  assert.deepEqual(
+    result.rows.map((row) => row.automation_id),
+    ['future_snake_schema_automation'],
+  );
+});
+
 test('reviewed source migrations keep the three required automations visible', () => {
   const api = load();
   const result = plain(api.project(baseInput({

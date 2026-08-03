@@ -9,7 +9,7 @@
 
 ETB.evolutionAutomationRegistryProvider = (function () {
   var SOURCE_SCHEMA =
-    'extella.evolution.automation-registry-sources.v2';
+    'extella.evolution.automation-registry-sources.v3';
   var BROWSER_INSTALLED_KEY = 'etb_plugins_installed_v1';
   var STRICT_CARD_FILE = /^([a-z0-9][a-z0-9._-]{1,79})\.json$/;
   var AUTOMATION_ID = /^[a-z0-9][a-z0-9._-]{1,79}$/;
@@ -758,18 +758,87 @@ ETB.evolutionAutomationRegistryProvider = (function () {
     (deviceCards || []).forEach(function (card) {
       var manifest = card && card.manifest;
       var id = text(manifest && manifest.id);
-      var business = manifest && (
-        (manifest.category === 'automations' && manifest.type === 'process') ||
-        manifest.schemaVersion === 'extella-process-pack-v1' ||
-        ['extella_1c_agent', 'extella_contract_agent',
-          'extella_travel_agency'].indexOf(id) !== -1
-      );
+      var business = deviceCardClassification(card).kind ===
+        'BUSINESS_AUTOMATION';
       if (business && AUTOMATION_ID.test(id) && !seen[id]) {
         seen[id] = true;
         ids.push(id);
       }
     });
     return ids.sort();
+  }
+
+  function embeddedAutomationId(manifest) {
+    var value = manifest && manifest.automation;
+    var id = text(value && (value.automation_id || value.automationId));
+    return AUTOMATION_ID.test(id) && id === text(manifest && manifest.id) ?
+      id : null;
+  }
+
+  function deviceCardClassification(card) {
+    var manifest = card && card.manifest;
+    var id = text(manifest && manifest.id);
+    if (embeddedAutomationId(manifest)) {
+      return { kind: 'BUSINESS_AUTOMATION', evidence: 'AUTOMATION_PASSPORT' };
+    }
+    if (manifest && (
+      (manifest.category === 'automations' && manifest.type === 'process') ||
+      manifest.schemaVersion === 'extella-process-pack-v1' ||
+      manifest.schema_version === 'extella-process-pack-v1'
+    )) {
+      return { kind: 'BUSINESS_AUTOMATION', evidence: 'PROCESS_MANIFEST' };
+    }
+    // Bounded compatibility only for the three migrations reviewed on
+    // 2026-07-26.  New products must arrive through canonical passport or
+    // process metadata; extending this list is intentionally forbidden.
+    if (['extella_1c_agent', 'extella_contract_agent',
+         'extella_travel_agency'].indexOf(id) !== -1) {
+      return { kind: 'BUSINESS_AUTOMATION', evidence: 'REVIEWED_MIGRATION' };
+    }
+    if (manifest && manifest.system === true) {
+      return { kind: 'SYSTEM_SURFACE', evidence: 'SYSTEM_MARKER' };
+    }
+    return { kind: 'UNCLASSIFIED', evidence: 'CLASSIFICATION_MISSING' };
+  }
+
+  function deviceCardInventory(deviceCards) {
+    var available = Boolean(deviceCards && deviceCards.available === true);
+    var rows = available ? (deviceCards.cards || []).map(function (card) {
+      var manifest = card && card.manifest || {};
+      var classification = deviceCardClassification(card);
+      var name = manifest.name || manifest.title || null;
+      return {
+        id: text(manifest.id),
+        name: clone(name),
+        version: text(manifest.version) || null,
+        kind: classification.kind,
+        evidence: classification.evidence
+      };
+    }) : [];
+    var counts = {
+      discovered: available ? rows.length : null,
+      business_automations: available ? 0 : null,
+      system_surfaces: available ? 0 : null,
+      unclassified: available ? 0 : null
+    };
+    if (available) {
+      rows.forEach(function (row) {
+        if (row.kind === 'BUSINESS_AUTOMATION') {
+          counts.business_automations += 1;
+        } else if (row.kind === 'SYSTEM_SURFACE') {
+          counts.system_surfaces += 1;
+        } else {
+          counts.unclassified += 1;
+        }
+      });
+    }
+    return {
+      schema: 'extella.evolution.device_inventory.v1',
+      available: available,
+      classification_complete: available && counts.unclassified === 0,
+      counts: counts,
+      rows: rows
+    };
   }
 
   function canonicalState(value) {
@@ -1286,6 +1355,7 @@ ETB.evolutionAutomationRegistryProvider = (function () {
             automationRunFacts: clone(automationRuns.facts),
             schedulerIndexSids: clone(schedulerIndex.sids),
             deviceCardRows: clone(deviceCards.cards),
+            deviceInventory: deviceCardInventory(deviceCards),
             complete: [
               catalog,
               composerInstalled,
@@ -1312,6 +1382,7 @@ ETB.evolutionAutomationRegistryProvider = (function () {
     BROWSER_INSTALLED_KEY: BROWSER_INSTALLED_KEY,
     load: load,
     normalizeDeviceScan: normalizeDeviceScan,
+    deviceCardInventory: deviceCardInventory,
     collectScheduleSources: collectScheduleSources,
     schedulerIndexSids: schedulerIndexSids,
     schedulerScopeAgentId: schedulerScopeAgentId
