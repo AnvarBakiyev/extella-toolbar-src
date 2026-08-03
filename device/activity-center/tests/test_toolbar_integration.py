@@ -86,14 +86,26 @@ class ToolbarIntegrationTests(unittest.TestCase):
         self.assertNotIn("api_token.txt", source)
         self.assertNotIn("read -p", source)
 
+    @staticmethod
+    def _has_own_files(path) -> bool:
+        """Каталог считается существующим, только если в нём есть что-то своё.
+
+        Запуск рантайма локально оставляет __pycache__, и тест падал на нём:
+        в git этих файлов нет, репозиторий чист, а проверка кричала о нарушении
+        контракта. Обвинялся при этом чужой код — самая дорогая ошибка теста.
+        """
+        if not path.exists():
+            return False
+        return any(p.name != "__pycache__" for p in path.iterdir())
+
     def test_device_runtime_has_one_canonical_owner(self) -> None:
         # install-prompt.js из этого списка убран: файл живой, входит в сборку
         # (build.js) и правился последним коммитом. Требование его отсутствия было
         # остатком отменённого решения — тест утверждал то, чего мы не делаем.
-        self.assertFalse((ROOT / "device" / "activity-center" / "bridge").exists())
-        self.assertFalse((ROOT / "device" / "activity-center" / "instrumentation").exists())
-        self.assertFalse((ROOT / "device" / "activity-center" / "uninstall.py").exists())
-        self.assertFalse((ROOT / "device" / "boot").exists())
+        self.assertFalse(self._has_own_files(ROOT / "device" / "activity-center" / "bridge"))
+        self.assertFalse(self._has_own_files(ROOT / "device" / "activity-center" / "instrumentation"))
+        self.assertFalse(self._has_own_files(ROOT / "device" / "activity-center" / "uninstall.py"))
+        self.assertFalse(self._has_own_files(ROOT / "device" / "boot"))
 
 
 if __name__ == "__main__":
