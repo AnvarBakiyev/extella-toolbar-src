@@ -787,6 +787,16 @@ ETB.installPrompt = (function () {
       'Start expert: ' + startExpert,
       'Cleanup exp : ' + cleanupExpert,
       'Mode        : ' + pluginMode + '  (repo_ui = cloned repo served statically; generated_ui = agent-created panel; local_server = real running service)',
+      // Агент, которого ВЫБРАЛ человек. Без этой строки установщик создавал нового
+      // через agent/create, а тот выходит Pro и без ключа провайдера не отвечает:
+      // «This Pro custom agent requires a provider API key bound to the agent».
+      // Клиентскому агенту такой ключ по канону не нужен, поэтому создавать нового
+      // здесь запрещено — берём выбранного.
+      ctx.agentId
+        ? ('Agent       : ' + ctx.agentId + '  (ВЫБРАН ПОЛЬЗОВАТЕЛЕМ — используй именно его; '
+           + 'НЕ создавай нового агента через agent/create: созданный так агент требует '
+           + 'ключ провайдера и работать не будет)')
+        : null,
       '',
       description ? ('=== USER NOTE ===\n' + description + '\n') : null,
       analysis

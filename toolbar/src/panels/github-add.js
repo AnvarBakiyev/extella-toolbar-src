@@ -121,7 +121,7 @@ ETB.githubAdd = (function () {
 
   // ── State ──────────────────────────────────────────────────────
   var _state = {
-    step: 'input', // input | preview | creating | runmode | hf_token_input | installing | device_id_input | analysis_error | error | done
+    step: 'input', // input | preview | agent_choice | creating | runmode | hf_token_input | installing | device_id_input | analysis_error | error | done
     repoData: null,
     customName: '',
     heavyModel: null,   // { heavy, score, signals, hf } from repoAnalyzer.inferHeavyModel
@@ -331,6 +331,8 @@ ETB.githubAdd = (function () {
       modalHtml = _renderAnalysisError();
     } else if (s.step === 'device_id_input') {
       modalHtml = _renderDeviceIdInput();
+    } else if (s.step === 'agent_choice') {
+      modalHtml = _renderAgentChoice();
     } else if (s.step === 'runmode') {
       modalHtml = _renderRunMode();
     } else if (s.step === 'hf_token_input') {
@@ -606,6 +608,74 @@ ETB.githubAdd = (function () {
   }
 
   // ── Run-mode picker for heavy AI models: local (NVIDIA) vs hosted (HF) ──
+
+  // ВЫБОР АГЕНТА ПРИ УСТАНОВКЕ ПО ССЫЛКЕ.
+  //
+  // Раньше установщик создавал агента сам — и тот выходил Pro, требующий ключ
+  // провайдера: «This Pro custom agent requires a provider API key bound to the agent».
+  // Коллега упёрлась в это 03.08, ставя своего агента по нашей же инструкции, и была
+  // права — клиентскому агенту такой ключ по канону не нужен вовсе.
+  //
+  // Делаем как в продуктах (решение владельца 30.07): агента ВЫБИРАЕТ человек. Свой
+  // агент у него уже есть или создаётся копией в Extella; мы не пытаемся сотворить
+  // новый и не подставляем чужого молча.
+  function _renderAgentChoice() {
+    var s = _state;
+    var list = s.agentChoices || [];
+    var rows = list.map(function (a) {
+      var picked = s.chosenAgentId === a.id;
+      return '<label style="display:flex;align-items:center;gap:10px;padding:8px 10px;' +
+        'border:1px solid ' + (picked ? '#C57E33' : 'var(--etb-bd,#d7e0dc)') + ';' +
+        'border-radius:8px;margin:6px 0;cursor:pointer;">' +
+        '<input type="radio" name="_etb_agent" value="' + _esc(a.id) + '"' +
+        (picked ? ' checked' : '') + '>' +
+        '<span><b>' + _esc(a.name || a.id) + '</b>' +
+        (a.note ? '<div style="font-size:11px;color:var(--etb-tx2,#6b6b6b)">' + _esc(a.note) + '</div>' : '') +
+        '</span></label>';
+    }).join('');
+    var empty = '<div style="font-size:12px;line-height:1.5;color:var(--etb-tx2,#6b6b6b);margin:10px 0;">' +
+      'Подходящих агентов не нашлось. Откройте Extella, скопируйте своего Qwen-агента ' +
+      'и вернитесь сюда — копия появится в списке.</div>';
+    return [
+      '<div id="_etbv2_gh_body">',
+      '<div class="_etbv2_gh_title">Какой агент будет этим работать?</div>',
+      '<div style="font-size:12px;line-height:1.5;color:var(--etb-tx2,#6b6b6b);margin:6px 0 10px;">',
+      'Агент — это мозг программы. Выберите своего: ключи для этого не нужны, ',
+      'сменить агента можно позже.</div>',
+      (list.length ? rows : empty),
+      '<div class="_etbv2_gh_actions">',
+      '<button class="_etbv2_gh_btn" id="_etb_agent_back">Назад</button>',
+      '<button class="_etbv2_gh_btn _etbv2_gh_primary" id="_etb_agent_go"' +
+        (list.length ? '' : ' disabled') + '>Продолжить установку</button>',
+      '</div></div>'
+    ].join('');
+  }
+
+  // Пригодные агенты: платформенная Qwen, без платного Claude по умолчанию.
+  // Причина отказа показывается человеку, а не прячется: «почему моего агента нет
+  // в списке» — вопрос, на который он должен получить ответ сразу.
+  function _loadAgentChoices() {
+    return ETB.api.agentsList().then(function (d) {
+      var all = (d && (d.agents || (d.content && d.content.agents))) || [];
+      var out = [];
+      out.push({ id: 'agent_extella_alibaba_default', name: 'Extella (Qwen)',
+                 note: 'Пробный агент Extella — бесплатный, общий для ваших продуктов' });
+      all.forEach(function (a) {
+        if (!a || !a.id || a.id === 'agent_extella_default') return;   // платный Claude
+        var qwen = String(a.provider || '') === 'alibaba' &&
+                   String(a.model || '').indexOf('qwen') === 0;
+        if (!qwen || a.id === 'agent_extella_alibaba_default') return;
+        out.push({ id: a.id, name: a.name || a.id, note: a.model || '' });
+      });
+      _state.agentChoices = out;
+      _state.chosenAgentId = _state.chosenAgentId || out[0].id;
+      return out;
+    }).catch(function () {
+      _state.agentChoices = [];
+      return [];
+    });
+  }
+
   function _renderRunMode() {
     var caps = _state.deviceCaps;
     var canLocal = !!(caps && caps.can_run_local_heavy);
@@ -694,9 +764,33 @@ ETB.githubAdd = (function () {
         }
         var name = nameInp ? nameInp.value.trim() : '';
         _state.customName = name || (_state.repoData && _state.repoData.name) || '';
+        // Ставим АГЕНТА (в репозитории есть паспорт) и агент ещё не выбран — сначала
+        // спрашиваем, чьим мозгом он будет работать. Раньше здесь молча создавался
+        // новый агент, который без ключа провайдера не отвечает вовсе.
+        if (_state.passportProblems && _state.passportProblems.length === 0 && !_state.chosenAgentId) {
+          _state.step = 'agent_choice';
+          _render();
+          _loadAgentChoices().then(function () { _render(); });
+          return;
+        }
         _startAnalysis();
       };
     }
+
+    var agentBack = ov.querySelector('#_etb_agent_back');
+    if (agentBack) agentBack.onclick = function () { _state.step = 'preview'; _render(); };
+    var agentGo = ov.querySelector('#_etb_agent_go');
+    if (agentGo) {
+      agentGo.onclick = function () {
+        var picked = ov.querySelector('input[name="_etb_agent"]:checked');
+        if (picked) _state.chosenAgentId = picked.value;
+        if (!_state.chosenAgentId) return;
+        _startAnalysis();
+      };
+    }
+    Array.prototype.forEach.call(ov.querySelectorAll('input[name="_etb_agent"]'), function (r) {
+      r.onchange = function () { _state.chosenAgentId = r.value; };
+    });
 
     var retryBtn = ov.querySelector('#_etbv2_gh_retry');
     if (retryBtn) retryBtn.onclick = function () { _startAnalysis(); };
@@ -1238,6 +1332,10 @@ ETB.githubAdd = (function () {
       hf: _state.heavyModel && _state.heavyModel.hf
     });
     if (_state.customName) ctx.displayName = _state.customName;
+    // Выбор человека доезжает до самой установки. Без этой строки экран выбора был бы
+    // украшением: спросили и не воспользовались — худший вид интерфейса, потому что
+    // человек уверен, что решение учтено.
+    if (_state.chosenAgentId) ctx.agentId = _state.chosenAgentId;
     _state.pluginId = ctx.pluginId;
     _state.deviceId = deviceId;
     // Переустановка после удаления: снять девайсный тумбстоун, иначе джанитор
