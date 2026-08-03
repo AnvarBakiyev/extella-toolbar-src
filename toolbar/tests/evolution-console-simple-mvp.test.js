@@ -150,6 +150,16 @@ test('summary semantic helper partitions installed automations exactly once', ()
   });
 });
 
+test('unknown installation evidence is never rendered as a zero fleet', () => {
+  const source = functionDeclaration('automationInstallationFactsUnknown');
+  assert.match(source, /installed==='UNKNOWN'/);
+  assert.match(consoleHtml, /installationUnknown\?'—':categories\.WORKING/);
+  assert.match(consoleHtml, /installationUnknown\?'\(—\)'/);
+  assert.match(consoleHtml, /installCheckUnavailableTitle/);
+  assert.match(consoleHtml, /data-empty-action="retry"/);
+  assert.match(consoleHtml, /data-empty-action="catalog"/);
+});
+
 test('primary problem selection is deterministic and does not mutate findings', () => {
   const select = evaluateHelper('selectPrimaryAutomationProblem');
   const findings = [

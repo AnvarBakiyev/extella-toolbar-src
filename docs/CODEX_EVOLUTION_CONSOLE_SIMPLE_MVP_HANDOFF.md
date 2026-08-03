@@ -6,7 +6,7 @@
 
 База: `origin/main@6f28176`
 
-Версия карточки: `0.11.0`
+Версия карточки: `0.11.1`
 
 ## Что изменено
 
@@ -34,6 +34,12 @@
 - PRE/POST и число внутренних агентов больше не входят в сводку парка.
   Криптография и masking engine не менялись.
 - Русская и английская копия обновлены синхронно.
+- После проверки в Xtel убрана вторая шапка внутри iframe: название, логотип и
+  навигацию уже показывает shell Extella. Поверхность приведена к актуальному
+  `DESIGN_CODE.md`: Nunito / Source Serif 4, радиусы 12/8/999, без теней.
+- Недоступные карточки текущего устройства больше не превращаются в ложный
+  `0`: счётчики показывают `—`, а пустое состояние предлагает повторить
+  проверку или открыть каталог.
 
 ## Честные границы
 
@@ -45,6 +51,11 @@
   snapshot по всем внутренним агентам автоматизации.
 - Evolution Lab не открывается без `change_id`, `candidate_id`, точного списка
   автоматизаций и совпадающего `registry_snapshot_id`.
+- На проверенном Mac строгий локальный сканер видит 16 карточек, включая
+  `extella_1c_agent`, `extella_contract_agent` и `extella_travel_agency`.
+  Чтобы они появились как установленные в Xtel, интегратор обязан доставить
+  `_etb_evolution_registry_scan_v1` через signed Client upgrade. Одна замена
+  `toolbar.js` Expert не устанавливает.
 
 ## Изменённые файлы
 
@@ -58,8 +69,10 @@
 
 ## Проверки
 
-- Профильные UX/surface/MCP tests: `52/52`.
-- Полный `npm test` в `toolbar`: `295/295`.
+- Профильные UX/surface tests: `54/54`.
+- Полный `npm test` в `toolbar`: `296/296`.
+- `python3 tools/check_panel_canon.py toolbar/plugins/scenarios/evolution-console.html`:
+  канон соблюдён, `0` нарушений.
 - `npm run build -w @extella/toolbar`: PASS; inline scripts и naming gate PASS.
 - `git diff --check`: PASS.
 - В браузере проверены RU/light и EN/dark, закрытые и раскрытая карточки,
