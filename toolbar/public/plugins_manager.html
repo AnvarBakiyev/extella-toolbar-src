@@ -1311,11 +1311,23 @@ window.addEventListener('message',function(e){
 function _pluginExtractDoc(srcWin, b64, name){
   function reply(o){ try{ srcWin.postMessage(Object.assign({type:'etb_doc_text'},o), '*'); }catch(_){} }
   function unwrap(r){ var o=(r&&r.res!==undefined)?r.res:r; if(o&&typeof o==='object'&&(o.result||o.output))o=o.result||o.output; if(typeof o==='string'){try{o=JSON.parse(o);}catch(_){}} return o; }
+  // Код отказа считаем ЗДЕСЬ, один раз: окно плагина не должно угадывать причину
+  // по английским словам воркера — поменяется формулировка, и перевод отвалится молча.
+  function _docCode(m){
+    var t=String(m||'').toLowerCase();
+    if(/worker hung|hang|stuck/.test(t)) return 'hung';
+    if(/timeout|timed out|_timeout_/.test(t)) return 'timeout';
+    if(/too large|size|больше/.test(t)) return 'too_big';
+    if(/not found|404/.test(t)) return 'not_found';
+    if(/403|denied|forbidden/.test(t)) return 'forbidden';
+    if(/unsupported|format|распозна/.test(t)) return 'unreadable';
+    return 'unknown';
+  }
   skBridge('etb_run_expert','etb_expert_result',{name:'wz_extract_doc_b64',params:{b64:b64||'',name:name||'doc'}},180000).then(function(r){
     var x=unwrap(r);
     if(x&&x.status==='success') reply({text:x.text||'', name:x.name||name||''});
-    else reply({error:(x&&x.message)||'не удалось прочитать документ'});
-  }).catch(function(err){ reply({error:String((err&&err.message)||err)}); });
+    else { var m=(x&&x.message)||'не удалось прочитать документ'; reply({error:m, code:_docCode(m)}); }
+  }).catch(function(err){ var m=String((err&&err.message)||err); reply({error:m, code:_docCode(m)}); });
 }
 function notify(action, pluginId, url) {
   if(action==='open'&&pluginId){

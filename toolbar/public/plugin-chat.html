@@ -1677,24 +1677,53 @@ if (typeof BUILTIN_PLUGINS_DATA === 'undefined') { var BUILTIN_PLUGINS_DATA = []
       attachBtn.addEventListener('click', function () { if (!attachBtn._busy) attachInp.click(); });
       attachInp.addEventListener('change', function () {
         var f = attachInp.files && attachInp.files[0]; if (!f) return;
-        if (f.size > 12 * 1024 * 1024) { alert('Файл больше 12 МБ — приложите часть или сожмите PDF.'); attachInp.value = ''; return; }
-        attachBtn._busy = true; attachBtn._old = attachBtn.textContent; attachBtn.textContent = '⏳';
+        if (f.size > 12 * 1024 * 1024) { _say('Файл больше 12'+'\u00a0'+'МБ. Приложи часть или сожми PDF.'); attachInp.value = ''; return; }
+        attachBtn._busy = true; attachBtn._old = attachBtn.textContent; attachBtn.textContent = '…';
         var reader = new FileReader();
         reader.onload = function () {
           try { window.parent.postMessage({ type: 'etb_extract_b64', b64: String(reader.result || ''), name: f.name }, '*'); }
           catch (e) { _attachReset(); }
           attachInp.value = '';
         };
-        reader.onerror = function () { _attachReset(); alert('Не удалось прочитать файл.'); attachInp.value = ''; };
+        reader.onerror = function () { _attachReset(); _say('Не'+'\u00a0'+'получилось прочитать файл. Попробуй другой.'); attachInp.value = ''; };
         reader.readAsDataURL(f);
       });
+    }
+    // Системный alert невозможно причесать: он приходит серой кнопкой ОК из ОС
+    // и выглядит чужим в нашем окне. Плюс он показывал сырое «Worker hung».
+    function _say(text){
+      var box=document.getElementById('chat_say');
+      if(!box){
+        box=document.createElement('div'); box.id='chat_say';
+        box.style.cssText='position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:50;'+
+          'max-width:min(420px,calc(100vw - 32px));padding:12px 16px;border:1px solid var(--bd2,#B7CEC9);'+
+          'border-radius:12px;background:var(--s1,#fff);color:var(--tx,#0A0A0A);'+
+          'font:500 13px/1.5 var(--sans,"Nunito",system-ui,sans-serif);box-shadow:none';
+        document.body.appendChild(box);
+      }
+      box.textContent=text; box.style.display='block';
+      clearTimeout(box._t); box._t=setTimeout(function(){ box.style.display='none'; }, 7000);
+    }
+    // Причина отказа приходит кодом; текст разбираем только для старых ответов без кода.
+    function _docErrText(code, raw){
+      switch(code){
+        case 'hung':       return 'Обработка застряла и\u00a0была остановлена. Попробуй ещё раз — обычно со\u00a0второго раза проходит.';
+        case 'timeout':    return 'Документ читается дольше обычного. Попробуй файл поменьше или загляни через минуту.';
+        case 'too_big':    return 'Файл слишком большой. Приложи часть или сожми PDF.';
+        case 'not_found':  return 'Не\u00a0нашлось, чем прочитать этот файл.';
+        case 'forbidden':  return 'Нет доступа к\u00a0этому файлу под текущим аккаунтом.';
+        case 'unreadable': return 'Такой формат прочитать не\u00a0получится. Подойдут txt, md, csv, docx и\u00a0pdf.';
+      }
+      var t=String(raw||'').toLowerCase();
+      if(/worker hung|hang|stuck/.test(t)) return 'Обработка застряла и\u00a0была остановлена. Попробуй ещё раз.';
+      return 'Не\u00a0получилось прочитать документ. Попробуй другой файл или формат.';
     }
     function _attachReset() { var b = document.getElementById('attach_btn'); if (b) { b._busy = false; b.innerHTML = b._old || ATTACH_ICON; } }
     window.addEventListener('message', function (e) {
       var d = e.data; if (!d || d.type !== 'etb_doc_text') return;
       _attachReset();
-      if (d.error) { alert('Не удалось приложить документ: ' + d.error); return; }
-      if (!d.text) { alert('Документ пустой или не распознан.'); return; }
+      if (d.error) { _say(_docErrText(d.code, d.error)); return; }
+      if (!d.text) { _say('В'+'\u00a0'+'документе нет текста, который можно прочитать.'); return; }
       var el = document.getElementById('inp');
       var head = '--- ' + (d.name || 'документ') + ' ---\n';
       el.value = (el.value ? el.value + '\n\n' : '') + head + d.text;
