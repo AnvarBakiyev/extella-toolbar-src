@@ -47,6 +47,11 @@ test('read-only device scanner admits only exact top-level cards and counts 102 
     JSON.stringify({
       id: 'extella_1c_agent',
       version: '0.3.0-dev.6',
+      system: false,
+      automation: {
+        automation_id: 'extella_1c_agent',
+        owner: 'must not leave the device',
+      },
       synthAgent: { id: 'agent_expected', token: 'secret-agent-token' },
       experts: [{
         name: 'wz_1c',
@@ -119,6 +124,8 @@ test('read-only device scanner admits only exact top-level cards and counts 102 
   assert.deepEqual(result.entries[0].manifest, {
     id: 'extella_1c_agent',
     version: '0.3.0-dev.6',
+    system: false,
+    automation: { automation_id: 'extella_1c_agent' },
     synthAgent: { id: 'agent_expected' },
     experts: [{ name: 'wz_1c' }],
     optionalExperts: ['one_c'],

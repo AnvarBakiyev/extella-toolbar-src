@@ -160,6 +160,52 @@ test('unknown installation evidence is never rendered as a zero fleet', () => {
   assert.match(consoleHtml, /data-empty-action="catalog"/);
 });
 
+test('device reconciliation keeps every discovered card visible without promoting unknown products', () => {
+  const validate = evaluateHelper('validDeviceInventory');
+  const inventory = {
+    schema: 'extella.evolution.device_inventory.v1',
+    available: true,
+    classification_complete: false,
+    counts: {
+      discovered: 16,
+      business_automations: 3,
+      system_surfaces: 4,
+      unclassified: 9,
+    },
+    rows: Array.from({ length: 16 }, (_, index) => ({
+      id: `inventory_card_${String(index).padStart(2, '0')}`,
+      kind: index < 3
+        ? 'BUSINESS_AUTOMATION'
+        : (index < 7 ? 'SYSTEM_SURFACE' : 'UNCLASSIFIED'),
+      evidence: index < 3
+        ? 'REVIEWED_MIGRATION'
+        : (index < 7 ? 'SYSTEM_MARKER' : 'CLASSIFICATION_MISSING'),
+    })),
+  };
+
+  assert.equal(validate(inventory), true);
+  assert.equal(validate({
+    ...inventory,
+    classification_complete: true,
+  }), false);
+  assert.match(consoleHtml, /id="deviceInventoryNotice"/);
+  assert.match(consoleHtml, /id="deviceInventoryRows"/);
+  assert.match(
+    functionDeclaration('renderDeviceInventory'),
+    /counts\.discovered[\s\S]*counts\.business_automations[\s\S]*counts\.system_surfaces[\s\S]*counts\.unclassified/,
+  );
+  assert.match(functionDeclaration('renderDeviceInventory'), /inventory\.rows/);
+  const ru = languageBlock('ru', 'en');
+  const en = languageBlock('en');
+  ['cardsFound', 'confirmedAutomations', 'systemComponents',
+    'classificationRequired', 'classificationBoundary',
+    'inventoryKindAutomation', 'inventoryKindSystem',
+    'inventoryKindUnknown'].forEach((key) => {
+    assert.ok(copyValue(ru, key));
+    assert.ok(copyValue(en, key));
+  });
+});
+
 test('primary problem selection is deterministic and does not mutate findings', () => {
   const select = evaluateHelper('selectPrimaryAutomationProblem');
   const findings = [

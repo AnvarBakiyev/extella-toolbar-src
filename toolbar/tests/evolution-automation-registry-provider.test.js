@@ -161,7 +161,7 @@ test('provider reads every source with exact scopes and performs no writes', asy
 
   assert.equal(
     snapshot.schemaVersion,
-    'extella.evolution.automation-registry-sources.v2',
+    'extella.evolution.automation-registry-sources.v3',
   );
   assert.equal(snapshot.collectedAt, '2026-07-26T20:00:00.000Z');
   assert.equal(snapshot.complete, true);
@@ -208,6 +208,13 @@ test('provider reads every source with exact scopes and performs no writes', asy
     plain(snapshot.deviceCardRows.map((row) => row.filename)),
     ['extella_1c_agent.json'],
   );
+  assert.deepEqual(plain(snapshot.deviceInventory.counts), {
+    discovered: 1,
+    business_automations: 1,
+    system_surfaces: 0,
+    unclassified: 0,
+  });
+  assert.equal(snapshot.deviceInventory.classification_complete, true);
 
   const catalogRead = calls.find(
     (call) => call.method === 'kvGet' &&
@@ -265,6 +272,63 @@ test('provider reads every source with exact scopes and performs no writes', asy
     {
       agentId: 'agent_scheduler_exact',
     },
+  );
+});
+
+test('device inventory classifies canonical evidence and never grows the reviewed migration list', () => {
+  const provider = loadProvider();
+  const inventory = plain(provider.deviceCardInventory({
+    available: true,
+    cards: [{
+      manifest: {
+        id: 'new_passported_product',
+        name: 'New passported product',
+        automation: { automation_id: 'new_passported_product' },
+      },
+    }, {
+      manifest: {
+        id: 'new_process_product',
+        category: 'automations',
+        type: 'process',
+      },
+    }, {
+      manifest: {
+        id: 'new_snake_schema_product',
+        schema_version: 'extella-process-pack-v1',
+      },
+    }, {
+      manifest: { id: 'extella_anon', system: true },
+    }, {
+      manifest: {
+        id: 'extella_recruiter',
+        category: 'work',
+        type: 'custom',
+      },
+    }, {
+      manifest: {
+        id: 'mismatched_passport',
+        automation: { automation_id: 'another_product' },
+      },
+    }],
+  }));
+
+  assert.deepEqual(inventory.counts, {
+    discovered: 6,
+    business_automations: 3,
+    system_surfaces: 1,
+    unclassified: 2,
+  });
+  assert.equal(inventory.classification_complete, false);
+  assert.deepEqual(
+    inventory.rows.map((row) => [row.id, row.kind, row.evidence]),
+    [
+      ['new_passported_product', 'BUSINESS_AUTOMATION', 'AUTOMATION_PASSPORT'],
+      ['new_process_product', 'BUSINESS_AUTOMATION', 'PROCESS_MANIFEST'],
+      ['new_snake_schema_product', 'BUSINESS_AUTOMATION', 'PROCESS_MANIFEST'],
+      ['extella_anon', 'SYSTEM_SURFACE', 'SYSTEM_MARKER'],
+      ['extella_recruiter', 'UNCLASSIFIED', 'CLASSIFICATION_MISSING'],
+      ['mismatched_passport', 'UNCLASSIFIED', 'CLASSIFICATION_MISSING'],
+    ],
   );
 });
 

@@ -54,7 +54,7 @@ test('Evolution Console manifest keeps exact product naming and a read-only surf
     evolutionManifest.description,
     'Evolution Console разделяет работающие, остановленные, требующие помощи и непроверенные автоматизации. Каталог отделён от установленных, а детали для специалиста не мешают ежедневному управлению.',
   );
-  assert.equal(evolutionManifest.version, '0.11.1');
+  assert.equal(evolutionManifest.version, '0.12.0');
   assert.deepEqual(evolutionManifest.pills, [
     'Автоматизации',
     'Состояние',
@@ -116,7 +116,7 @@ test('Evolution Console manifest keeps exact product naming and a read-only surf
     evolutionManifest.capabilities.find(
       (capability) => capability.id === 'automation_registry',
     ).version,
-    'EVOLUTION_AUTOMATION_REGISTRY_V2',
+    'EVOLUTION_AUTOMATION_REGISTRY_V3',
   );
   assert.equal(
     evolutionManifest.capabilities.find(

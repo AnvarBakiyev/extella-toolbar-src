@@ -456,10 +456,19 @@ ETB.evolutionAutomationRegistry = (function () {
   }
 
   function businessAutomation(manifest) {
+    var embedded = manifest && manifest.automation;
+    var embeddedId = canonicalId(embedded && (
+      embedded.automation_id || embedded.automationId
+    ));
+    var manifestId = canonicalId(manifest && (
+      manifest.id || manifest.automation_id || manifest.automationId
+    ));
     return Boolean(
       manifest &&
       ((manifest.category === 'automations' && manifest.type === 'process') ||
-       manifest.schemaVersion === 'extella-process-pack-v1')
+       manifest.schemaVersion === 'extella-process-pack-v1' ||
+       manifest.schema_version === 'extella-process-pack-v1' ||
+       (embeddedId && manifestId && embeddedId === manifestId))
     );
   }
 
@@ -469,6 +478,11 @@ ETB.evolutionAutomationRegistry = (function () {
       category: manifest && manifest.category,
       type: manifest && manifest.type,
       schemaVersion: manifest && manifest.schemaVersion,
+      schema_version: manifest && manifest.schema_version,
+      id: manifest && (
+        manifest.id || manifest.automation_id || manifest.automationId
+      ),
+      automation: manifest && manifest.automation,
       status: releaseStatus(manifest && manifest.status),
       migrations: []
     };

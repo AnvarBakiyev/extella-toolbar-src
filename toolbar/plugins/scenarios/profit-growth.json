@@ -7,7 +7,7 @@
   "description": "Evolution Console разделяет работающие, остановленные, требующие помощи и непроверенные автоматизации. Каталог отделён от установленных, а детали для специалиста не мешают ежедневному управлению.",
   "category": "business",
   "type": "application",
-  "version": "0.11.1",
+  "version": "0.12.0",
   "eye": "Extella Evolution",
   "pills": [
     "Автоматизации",
@@ -35,7 +35,7 @@
       "name": "Реестр автоматизаций",
       "description": "Read-only проекция каталога, установок, фактического состояния, версий, состава и вычисляемых рисков автоматизаций пользователя.",
       "expert_name": "_etb_evolution_registry_scan_v1",
-      "version": "EVOLUTION_AUTOMATION_REGISTRY_V2",
+      "version": "EVOLUTION_AUTOMATION_REGISTRY_V3",
       "external_writes": false
     },
     {
@@ -93,7 +93,7 @@
       "global": true,
       "kwargs": {},
       "codeFile": "evolution-registry-scanner.py",
-      "sourceSha256": "8105169ded773e00e3ab383159d6b01d8b274a0f9a8a96e0c394379f25082d1d"
+      "sourceSha256": "49508b3512ef29cc80afadd29c24a320790232dbfd8eb7373adc3333967e72ed"
     }
   ],
   "conceptTexts": [],

@@ -45,9 +45,21 @@ function plain(value) {
 test('router maps the provider snapshot into the exact pure projection input', () => {
   const mapProjection = loadMapper();
   const result = plain(mapProjection({
-    schemaVersion: 'extella.evolution.automation-registry-sources.v2',
+    schemaVersion: 'extella.evolution.automation-registry-sources.v3',
     collectedAt: '2026-07-26T20:00:00.000Z',
     complete: false,
+    deviceInventory: {
+      schema: 'extella.evolution.device_inventory.v1',
+      available: false,
+      classification_complete: false,
+      counts: {
+        discovered: null,
+        business_automations: null,
+        system_surfaces: null,
+        unclassified: null,
+      },
+      rows: [],
+    },
     sources: {
       catalog: { available: false, errors: [{}] },
       composerInstalled: { available: true, errors: [] },
@@ -201,9 +213,21 @@ test('provider contract rejects a contradictory complete source snapshot', () =>
   const mapProjection = loadMapper();
   assert.throws(
     () => mapProjection({
-      schemaVersion: 'extella.evolution.automation-registry-sources.v2',
+      schemaVersion: 'extella.evolution.automation-registry-sources.v3',
       collectedAt: '2026-07-26T20:00:00.000Z',
       complete: true,
+      deviceInventory: {
+        schema: 'extella.evolution.device_inventory.v1',
+        available: true,
+        classification_complete: true,
+        counts: {
+          discovered: 0,
+          business_automations: 0,
+          system_surfaces: 0,
+          unclassified: 0,
+        },
+        rows: [],
+      },
       sources: {
         catalog: { available: false, errors: [] },
         composerInstalled: { available: true, errors: [] },
@@ -253,7 +277,10 @@ test('registry load is account-fenced and does not invoke legacy mutation paths'
     /projector\.project\(\s*_evolutionAutomationProjectionInput\(sources\)\s*\)/,
   );
   assert.doesNotMatch(source, /_evolutionFleetLoad\(context\)/);
-  assert.match(source, /registry:\s*registry,\s*legacy:\s*null/);
+  assert.match(
+    source,
+    /registry:\s*registry,\s*inventory:\s*sources\.deviceInventory,\s*legacy:\s*null/,
+  );
   assert.match(source, /ADVANCED_EVOLUTION_NOT_LOADED/);
   assert.match(
     router,

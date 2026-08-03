@@ -2400,6 +2400,46 @@ ETB.router = (function () {
     );
   }
 
+  function _evolutionDeviceInventoryValid(inventory) {
+    var counts = inventory && inventory.counts;
+    var rows = inventory && inventory.rows;
+    var kinds = {
+      BUSINESS_AUTOMATION: true,
+      SYSTEM_SURFACE: true,
+      UNCLASSIFIED: true
+    };
+    var available = Boolean(inventory && inventory.available === true);
+    if (!inventory ||
+        inventory.schema !== 'extella.evolution.device_inventory.v1' ||
+        typeof inventory.available !== 'boolean' ||
+        typeof inventory.classification_complete !== 'boolean' ||
+        !counts || typeof counts !== 'object' || !Array.isArray(rows)) {
+      return false;
+    }
+    if (!available) {
+      return inventory.classification_complete === false && rows.length === 0 &&
+        counts.discovered === null &&
+        counts.business_automations === null &&
+        counts.system_surfaces === null &&
+        counts.unclassified === null;
+    }
+    if (![counts.discovered, counts.business_automations,
+          counts.system_surfaces, counts.unclassified].every(function (value) {
+      return Number.isInteger(value) && value >= 0;
+    })) return false;
+    if (counts.discovered !== rows.length ||
+        counts.discovered !== counts.business_automations +
+          counts.system_surfaces + counts.unclassified ||
+        inventory.classification_complete !== (counts.unclassified === 0)) {
+      return false;
+    }
+    return rows.every(function (row) {
+      return row && /^[a-z0-9][a-z0-9._-]{1,79}$/.test(String(row.id || '')) &&
+        kinds[row.kind] === true &&
+        typeof row.evidence === 'string' && row.evidence.length > 0;
+    });
+  }
+
   function _evolutionAutomationProjectionInput(sources) {
     var sourceMap;
     var requiredArrays = [
@@ -2430,11 +2470,12 @@ ETB.router = (function () {
     ];
     var valid = sources &&
       sources.schemaVersion ===
-        'extella.evolution.automation-registry-sources.v2' &&
+        'extella.evolution.automation-registry-sources.v3' &&
       typeof sources.complete === 'boolean' &&
       String(sources.collectedAt || '').trim() &&
       sources.sources &&
       typeof sources.sources === 'object' &&
+      _evolutionDeviceInventoryValid(sources.deviceInventory) &&
       requiredArrays.every(function (key) {
         return Array.isArray(sources[key]);
       }) &&
@@ -2562,6 +2603,7 @@ ETB.router = (function () {
       return {
         actorId: context.actorId,
         registry: registry,
+        inventory: sources.deviceInventory,
         legacy: null,
         legacyError: {
           code: 'ADVANCED_EVOLUTION_NOT_LOADED',
