@@ -6207,7 +6207,7 @@ ETB.router = (function () {
       'background:rgba(0,0,0,.45);backdrop-filter:blur(4px);',
       'display:flex;align-items:center;justify-content:center;',
       'animation:_etbv2_gh_fade .14s ease;',
-      'font-family:-apple-system,system-ui,sans-serif;'
+      'font-family:var(--etb-sans,\'Nunito\',-apple-system,system-ui,sans-serif);'
     ].join('');
     if (onBackdropClick) bd.addEventListener('click', function (e) {
       if (e.target === bd) onBackdropClick();
@@ -6419,9 +6419,10 @@ ETB.router = (function () {
   // Returns a controller object: { setPhase, done, error, close }.
   function _showRepairStatusModal(plugin, opts) {
     opts = opts || {};
-    var pluginName = (plugin && plugin.name) || 'Плагин';
+    // Без имени строка «Плагин: Плагин» ничего не сообщает — тогда её просто нет.
+    var pluginName = (plugin && (plugin.title || plugin.name)) ? _shortName(plugin) : '';
     var fullReset  = !!opts.fullReset;
-    var title      = fullReset ? 'Переустанавливаю плагин' : 'Пересобираю интерфейс плагина';
+    var title      = fullReset ? 'Переустанавливаю программу' : 'Пересобираю окно программы';
 
     // No backdrop-close — user must wait or explicitly close/retry.
     var bd = document.createElement('div');
@@ -6487,9 +6488,8 @@ ETB.router = (function () {
           '<div style="text-align:center;margin-bottom:8px;">', _infHTML(72), '</div>',
           '<div id="_etb_rsm_phase" style="font-size:13px;color:var(--etb-tx,#111);',
             'font-weight:500;text-align:center;margin-bottom:16px;">' + _esc(phase || 'Разбираюсь, что сломалось') + '…</div>',
-          '<div style="font-size:13px;color:var(--etb-tx2,#6b6b6b);margin-bottom:4px;">',
-            'Плагин: <b style="color:var(--etb-tx,#111);">' + _esc(pluginName) + '</b>',
-          '</div>',
+          pluginName ? ('<div style="font-size:13px;color:var(--etb-tx2,#6b6b6b);margin-bottom:4px;">' +
+            'Программа: <b style="color:var(--etb-tx,#111);">' + _esc(pluginName) + '</b></div>') : '',
           _logHtml(),
           '<div style="font-size:11px;color:var(--etb-tx2,#aaa);margin-top:12px;">',
             'Обычно это несколько минут. Можно спокойно заниматься другим — окно останется и покажет результат.',
@@ -6543,24 +6543,50 @@ ETB.router = (function () {
     }
 
     // ── Error state ────────────────────────────────────────────────
+    // Причина отказа словами человека. Английская строка движка остаётся ниже,
+    // за «Подробностями» — она нужна нам, а не тому, кто просто хотел открыть программу.
+    function _repairErrText(msg) {
+      var t = String(msg || '').toLowerCase();
+      if (/is not defined|undefined is not|syntaxerror|typeerror/.test(t))
+        return 'Сломалась сама починка, а не программа. Мы уже знаем об этом — напиши нам, если повторится.';
+      if (/worker hung|hang|stuck/.test(t))
+        return 'Починка застряла и была остановлена. Попробуй ещё раз — обычно со второго раза проходит.';
+      if (/timeout|timed out/.test(t))
+        return 'Починка идёт дольше обычного. Загляни через несколько минут: она могла закончиться сама.';
+      if (/network|econn|dns|enotfound|offline/.test(t))
+        return 'Нет связи с интернетом. Проверь подключение и нажми «Ещё раз».';
+      if (/403|denied|forbidden|401/.test(t))
+        return 'Нет доступа под текущим аккаунтом.';
+      if (/404|not found/.test(t))
+        return 'Не нашлось, что чинить: программа уже удалена.';
+      return 'Починить не получилось. Нажми «Ещё раз», а если повторится — напиши нам.';
+    }
+
     function renderError(msg, onRetry) {
       _setCardContent([
         _headerHtml('rgba(180,50,50,.85)', 'Починить не удалось'),
         '<div style="padding:24px 24px;">',
-          '<div style="font-size:13px;color:var(--etb-tx,#111);margin-bottom:8px;">',
-            'Плагин: <b>' + _esc(pluginName) + '</b>',
-          '</div>',
+          pluginName ? ('<div style="font-size:13px;color:var(--etb-tx,#111);margin-bottom:8px;">' +
+            'Программа: <b>' + _esc(pluginName) + '</b></div>') : '',
+          // Человеку — что случилось и что делать. Техническая строка нужна для разбора,
+          // но она не должна встречать его первой: «ctx is not defined» ничего не сообщает.
           '<div style="background:rgba(220,50,50,.06);border:1px solid rgba(220,50,50,.18);',
             'border-radius:8px;padding:8px 16px;font-size:13px;color:rgba(160,40,40,.9);',
-            'line-height:1.5;margin-bottom:20px;">',
-            _esc(String(msg || 'Unknown error').slice(0, 200)),
+            'line-height:1.5;margin-bottom:8px;">',
+            _esc(_repairErrText(msg)),
           '</div>',
+          '<details style="margin-bottom:20px;">',
+            '<summary style="font-size:11px;color:var(--etb-tx2,#8C8C8C);cursor:pointer;list-style:none;">Подробности</summary>',
+            '<div style="font-size:11px;color:var(--etb-tx2,#8C8C8C);line-height:1.5;margin-top:8px;word-break:break-word;">',
+              _esc(String(msg || '').slice(0, 300)),
+            '</div>',
+          '</details>',
           '<div style="display:flex;gap:8px;justify-content:flex-end;">',
             '<button id="_etb_rsm_close2" style="background:var(--etb-s3,#f7f7f9);',
               'border:1px solid var(--etb-bd2,rgba(0,0,0,.14));color:var(--etb-tx2,#6b6b6b);',
               'border-radius:8px;padding:8px 16px;cursor:pointer;font-size:13px;">Закрыть</button>',
             onRetry
-              ? '<button id="_etb_rsm_retry" style="background:#C67E34;border:none;color:#000;font-weight:700;border-radius:8px;padding:8px 20px;cursor:pointer;font-size:13px;">Ещё раз</button>'
+              ? '<button id="_etb_rsm_retry" style="background:#C67E34;border:none;color:#fff;font-weight:600;border-radius:999px;padding:8px 20px;cursor:pointer;font-size:13px;">Ещё раз</button>'
               : '',
           '</div>',
         '</div>'
@@ -6820,7 +6846,7 @@ ETB.router = (function () {
 
       var _lastRebuildText = '';
       ticker = setInterval(function () {
-        status.setPhase(_lastRebuildText || 'Reading logs\u2026');
+        status.setPhase(_lastRebuildText || 'Смотрю, что произошло');
       }, 1000);
 
       var _onRebuildProgress = ETB.api.createAgentProgressTracker({
@@ -6842,7 +6868,7 @@ ETB.router = (function () {
 
         // ── Phase 1: read plugin log files via fython ──────────────────────
         .then(function (deviceId) {
-          _lastRebuildText = 'Reading logs\u2026';
+          _lastRebuildText = 'Смотрю, что произошло';
           var installDir = (plugin.artifacts && plugin.artifacts.rootPath) ||
             (plugin.ui && plugin.ui.rootPath) || ('~/extella-plugins/' + safeId);
           var fnLog = '_etb_logs_' + safeId;
@@ -6893,7 +6919,7 @@ ETB.router = (function () {
           if (!ETB.installPrompt || !ETB.installPrompt.buildRepairAnalysis) {
             return { deviceId: ctx.deviceId, logs: ctx.logs, analysis: null };
           }
-          _lastRebuildText = 'Analyzing error\u2026';
+          _lastRebuildText = 'Разбираюсь в'+'\u00a0'+'ошибке';
           var aPrompt = ETB.installPrompt.buildRepairAnalysis(plugin, description, ctx.logs);
           return ETB.api.runAgentAsync(aPrompt, {
             run_timeout: 180,
@@ -6924,7 +6950,7 @@ ETB.router = (function () {
             onProgress: _onRebuildProgress
           }).then(function (agentResult) {
             stopTicker();
-            status.setPhase('Syncing');
+            status.setPhase('Сохраняю результат');
             if (ctx.deviceId) return ETB.registry.syncFromDevice(ctx.deviceId, safeId)
               .then(function () { return agentResult; });
             return agentResult;

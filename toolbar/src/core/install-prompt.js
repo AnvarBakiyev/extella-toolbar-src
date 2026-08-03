@@ -764,6 +764,10 @@ ETB.installPrompt = (function () {
     var registryFile = artifacts.registryFile || ('~/extella-plugins/_registry/' + _safeIdOf(plugin) + '.json');
     var cleanupExpert = '_etb_cleanup_' + _safeIdOf(plugin);
     var startExpert  = ui.startExpert || service.startExpert || ('_etb_srv_' + _safeIdOf(plugin));
+    // Файл с номером процесса считается здесь же. Раньше строка ссылалась на ctx.pidFile,
+    // а переменной ctx в этой функции нет: сборка промпта падала с «ctx is not defined»,
+    // и починка плагина обрывалась до первого шага. Значение то же, что в context().
+    var pidFile      = '/tmp/etb_srv_' + _safeIdOf(plugin) + '.pid';
     var sourceUrl    = plugin.source || '';
     var pluginName   = plugin.name || plugin.id || 'plugin';
     var safeId       = _safeIdOf(plugin);
@@ -809,7 +813,7 @@ ETB.installPrompt = (function () {
             '          elif os.path.isfile(expanded): os.remove(expanded)',
             '1b. Stop OUR server on port ' + port + ' — by our own pid file, never by port:',
             '      import os, signal',
-            '      pid_file = _tmp_path("' + ctx.pidFile + '")',
+            '      pid_file = _tmp_path("' + pidFile + '")',
             '      if os.path.exists(pid_file):',
             '          try: os.kill(int(open(pid_file).read().strip()), signal.SIGTERM)',
             '          except Exception: pass',
