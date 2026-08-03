@@ -877,7 +877,7 @@ test('scoped API helpers keep credentials in the host and bind reads/writes to a
 test('Evolution Console manifest keeps the stable install identity and no-write contract', () => {
   assert.equal(manifest.id, 'profit-growth-scenario');
   assert.equal(manifest.name, 'Evolution Console');
-  assert.equal(manifest.version, '0.10.0');
+  assert.equal(manifest.version, '0.11.0');
   assert.equal(manifest.ui.htmlFile, 'evolution-console.html');
   assert.equal(manifest.ui.tokenless, true);
   assert.deepEqual(
