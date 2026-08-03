@@ -54,7 +54,7 @@ test('Evolution Console manifest keeps exact product naming and a read-only surf
     evolutionManifest.description,
     'Evolution Console разделяет работающие, остановленные, требующие помощи и непроверенные автоматизации. Каталог отделён от установленных, а детали для специалиста не мешают ежедневному управлению.',
   );
-  assert.equal(evolutionManifest.version, '0.11.0');
+  assert.equal(evolutionManifest.version, '0.11.1');
   assert.deepEqual(evolutionManifest.pills, [
     'Автоматизации',
     'Состояние',
@@ -236,9 +236,11 @@ test('Evolution Console uses only the approved brand palette and never uses Petr
   const approvedColors = new Set([
     'C57E33', 'D4984F', 'A5632A', 'D4944A', 'E0A85E',
     '2F6B66', '3D8078', '24544F', 'B7CEC9', '5FA8A0', '6BB3AA',
-    '0A0A0A', '1A1A1A', '2A2A2A', 'F0F0F0', 'D8D8D8', 'B0B0B0',
-    '8C8C8C', 'AAAAAA', 'FAFAF8', 'F5F3EE', 'EBE8E1', 'D4B896',
-    '0E0E0E', '181818', '222222', '000000',
+    '0A0A0A', '141414', '181818', '1A1A1A', '2A2A2A', 'F0F0F0',
+    'F5F3EE', 'C9C3B8', 'D8D8D8', 'B0B0B0', '8C8C8C', 'AAAAAA',
+    'FAF9F5', 'FFFFFF', 'F5F3EC', 'D7E0DC',
+    'FAFAF8', 'F5F3EE', 'EBE8E1', 'D4B896',
+    '0E0E0E', '222222', '000000',
     '1F7A4D', '57B37E', 'A63A2E', 'E8705F',
   ]);
   const usedColors = [...evolutionHtml.matchAll(/#([0-9a-f]{6})\b/gi)]

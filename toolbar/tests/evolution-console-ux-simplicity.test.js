@@ -128,27 +128,21 @@ test('Evolution Console opens with one-line summary and automation cards only', 
 });
 
 test('Evolution Console is primary while Evolution Lab opens only from a change', () => {
-  const surfaces = openingTags(consoleHtml).filter(
-    (tag) => attribute(tag.source, 'data-primary-surface'),
+  const overview = openingTags(consoleHtml, 'section').find(
+    (tag) => attribute(tag.source, 'data-default-view') === 'true',
   );
-  assert.equal(surfaces.length, 1);
-  assert.deepEqual(
-    surfaces.map((tag) => attribute(tag.source, 'data-primary-surface')),
-    ['console'],
+  assert.ok(overview, 'Evolution Console must remain the default surface');
+  assert.equal(attribute(overview.source, 'data-evolution-view'), 'overview');
+  assert.doesNotMatch(
+    consoleHtml,
+    /<header\b[^>]*class="[^"]*\btop\b/i,
+    'the embedded window must reuse the Extella host header',
   );
-
-  const consoleSurface = surfaces[0];
-  assert.match(consoleSurface.source, /^<button\b/i);
-  assert.equal(attribute(consoleSurface.source, 'data-view'), 'fleet');
-
-  const topNavigationStart = consoleHtml.indexOf('<nav class="tabs"');
-  const topNavigationEnd = consoleHtml.indexOf('</nav>', topNavigationStart);
-  const topNavigation = consoleHtml.slice(
-    topNavigationStart,
-    topNavigationEnd,
+  assert.doesNotMatch(
+    consoleHtml,
+    /<nav\b[^>]*class="[^"]*\btabs\b/i,
+    'the embedded window must not create a second product navigation',
   );
-  assert.doesNotMatch(topNavigation, /data-view="lab"/);
-  assert.doesNotMatch(topNavigation, />\s*Evolution Lab\s*</i);
   assert.match(
     consoleHtml,
     /<section class="view" id="labView" data-evolution-view="lab">/,
