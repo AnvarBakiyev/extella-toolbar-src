@@ -48,13 +48,13 @@ test('Evolution Console manifest keeps exact product naming and a read-only surf
   assert.equal(evolutionManifest.name, 'Evolution Console');
   assert.equal(
     evolutionManifest.tagline,
-    'Что работает, что остановлено и где нужна твоя помощь',
+    'Простое управление автоматизациями Extella',
   );
   assert.equal(
     evolutionManifest.description,
-    'Evolution Console показывает, что работает, что остановлено и где нужна помощь. Каталог отделён от установленных автоматизаций, а неизвестное состояние не подменяется успехом.',
+    'Evolution Console разделяет работающие, остановленные, требующие помощи и непроверенные автоматизации. Каталог отделён от установленных, а детали для специалиста не мешают ежедневному управлению.',
   );
-  assert.equal(evolutionManifest.version, '0.10.0');
+  assert.equal(evolutionManifest.version, '0.11.0');
   assert.deepEqual(evolutionManifest.pills, [
     'Автоматизации',
     'Состояние',
@@ -383,21 +383,22 @@ test('automation registry surface exposes no automation state-changing action', 
   assert.match(router, /action === 'automation_registry_load'/);
 });
 
-test('data protection is a read-only per-agent posture in Console and settings stay in Agent Cabinet', () => {
+test('data protection stays read-only and outside the automation summary', () => {
   assert.equal(
     evolutionManifest.capabilities.find(
       (capability) => capability.id === 'data_protection_posture',
     ).version,
     'EVOLUTION_MASKING_POSTURE_V1',
   );
-  assert.match(evolutionHtml, /id="countProtectedAgents"/);
-  assert.match(
-    evolutionHtml,
-    /protectedAgents:'с подтверждёнными PRE \+ POST'/,
+  const overviewStart = evolutionHtml.indexOf('data-evolution-view="overview"');
+  const overviewEnd = evolutionHtml.indexOf(
+    'data-evolution-view="lab"',
+    overviewStart,
   );
-  assert.match(
-    evolutionHtml,
-    /protectedAgents:'with verified PRE \+ POST'/,
+  const overview = evolutionHtml.slice(overviewStart, overviewEnd);
+  assert.doesNotMatch(
+    overview,
+    /countProtectedAgents|countNotRunning|countAttention|PRE\s*\+\s*POST/,
   );
   assert.match(evolutionHtml, /dataProtection:'Защита данных'/);
   assert.match(evolutionHtml, /dataProtection:'Data protection'/);
@@ -410,23 +411,6 @@ test('data protection is a read-only per-agent posture in Console and settings s
     /maskingSettingsCabinet:'Settings are in Agent Cabinet\.'/,
   );
   assert.match(evolutionHtml, /data-masking-posture=/);
-  assert.match(evolutionHtml, /function maskingAutomationAgentIds\(\)/);
-  assert.match(
-    evolutionHtml,
-    /automationFlags\(row\)\.installed===true/,
-    'the N/M denominator must come from installed business automations',
-  );
-  assert.match(evolutionHtml, /function maskingCoverageText\(\)/);
-  assert.match(
-    evolutionHtml,
-    /String\(snapshot\.availability\|\|''\)\.toUpperCase\(\)!=='AVAILABLE'/,
-    'an unavailable local source must render an unknown N/M numerator',
-  );
-  assert.match(
-    evolutionHtml,
-    /ids\.some\(function\(id\)\{return !rows\.some\(function\(row\)\{return String\(row&&row\.agent_id\|\|''\)===id;\}\);\}\)\)return'—\/'\+total/,
-    'a composed automation agent missing from the posture snapshot must keep N unknown',
-  );
   assert.match(
     evolutionHtml,
     /capturedAt<now-5\*60\*1000\|\|capturedAt>now\+60\*1000/,
@@ -475,43 +459,18 @@ test('data protection is a read-only per-agent posture in Console and settings s
   );
 });
 
-test('Agent change management is an internal read-only Evolution Console view', () => {
+test('agent change-management contract stays internal instead of becoming a task', () => {
   const advancedStart = evolutionHtml.indexOf('id="advancedNav"');
   const advancedEnd = evolutionHtml.indexOf('</details>', advancedStart);
   const advancedNav = evolutionHtml.slice(advancedStart, advancedEnd);
-  const viewStart = evolutionHtml.indexOf('id="agentControlView"');
-  const viewEnd = evolutionHtml.indexOf('</main>', viewStart);
-  const view = evolutionHtml.slice(viewStart, viewEnd);
-  const loaderStart = evolutionHtml.indexOf('    function validAgentControlSurface(');
-  const loaderEnd = evolutionHtml.indexOf('    function clearLegacyFleet(', loaderStart);
-  const loader = evolutionHtml.slice(loaderStart, loaderEnd);
   const routerStart = router.indexOf('  function _evolutionAgentControlLoad(');
   const routerEnd = router.indexOf('  function _evolutionLastReceipt(', routerStart);
   const routerSlice = router.slice(routerStart, routerEnd);
 
-  assert.match(advancedNav, /data-view="agentControl"/);
+  assert.doesNotMatch(advancedNav, /data-view="agentControl"/);
   assert.doesNotMatch(advancedNav, /data-primary-surface/);
-  assert.match(view, /data-evolution-view="agent-control"/);
-  assert.match(view, /id="agentControlRefreshBtn"/);
-  assert.match(view, /id="agentControlOperations"/);
-  assert.match(view, /id="agentControlGates"/);
-  assert.match(view, /id="agentControlLimits"/);
-  assert.doesNotMatch(view, /agent_control_publish|data-agent-control-action/);
+  assert.doesNotMatch(evolutionHtml, /data-agent-control-action/);
   assert.doesNotMatch(evolutionHtml, /etb_agent_control/);
-  assert.match(evolutionHtml, /agentControlBoundary:'Этот раздел только читает канонический контракт/);
-  assert.match(evolutionHtml, /agentControlBoundary:'This section only reads the canonical contract/);
-  assert.match(evolutionHtml, /agentControlRequires:'Зависит от'/);
-  assert.match(evolutionHtml, /agentControlRequires:'Requires'/);
-  assert.match(loader, /request\('agent_control_load'/);
-  assert.match(
-    loader,
-    /status==='STANDARDS_UNAVAILABLE'\|\|status==='UNKNOWN'\)return count===null/,
-  );
-  assert.match(loader, /status==='NO_AGENT_PASSPORTS'\)return count===0/);
-  assert.match(loader, /surface\.mutations_allowed!==false/);
-  assert.match(loader, /var operationNames=\{\};contract\.operations\.forEach/);
-  assert.match(loader, /operationNames\[code\]\|\|code/);
-  assert.doesNotMatch(loader, /status=\+esc\(surface\.status\)|ledger=/);
   assert.match(routerSlice, /session\.standardsBundle\.sources/);
   assert.match(routerSlice, /mutations_allowed: false/);
   assert.doesNotMatch(
@@ -530,11 +489,11 @@ test('B4 automation state is three-valued, factual, localized, and fail-closed',
   }
   for (const copy of [
     "automationWorking:'Работает'",
-    "automationStateUnavailable:'Не удалось проверить состояние'",
-    "automationNotRunning:'Не запущена'",
+    "automationStateUnavailable:'Статус неизвестен'",
+    "automationNotRunning:'Остановлена'",
     "automationWorking:'Working'",
-    "automationStateUnavailable:'Couldn’t check status'",
-    "automationNotRunning:'Not running'",
+    "automationStateUnavailable:'Status unknown'",
+    "automationNotRunning:'Stopped'",
   ]) {
     assert.match(evolutionHtml, new RegExp(regexEscape(copy)));
   }

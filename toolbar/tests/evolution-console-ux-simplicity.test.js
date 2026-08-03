@@ -127,32 +127,36 @@ test('Evolution Console opens with one-line summary and automation cards only', 
   );
 });
 
-test('the product exposes exactly Evolution Console and Evolution Lab as primary surfaces', () => {
+test('Evolution Console is primary while Evolution Lab opens only from a change', () => {
   const surfaces = openingTags(consoleHtml).filter(
     (tag) => attribute(tag.source, 'data-primary-surface'),
   );
-  assert.equal(surfaces.length, 2);
+  assert.equal(surfaces.length, 1);
   assert.deepEqual(
     surfaces.map((tag) => attribute(tag.source, 'data-primary-surface')),
-    ['console', 'lab'],
+    ['console'],
   );
 
   const consoleSurface = surfaces[0];
   assert.match(consoleSurface.source, /^<button\b/i);
   assert.equal(attribute(consoleSurface.source, 'data-view'), 'fleet');
 
-  const labSurface = surfaces[1];
-  assert.match(labSurface.source, /^<button\b/i);
-  assert.equal(attribute(labSurface.source, 'data-view'), 'lab');
+  const topNavigationStart = consoleHtml.indexOf('<nav class="tabs"');
+  const topNavigationEnd = consoleHtml.indexOf('</nav>', topNavigationStart);
+  const topNavigation = consoleHtml.slice(
+    topNavigationStart,
+    topNavigationEnd,
+  );
+  assert.doesNotMatch(topNavigation, /data-view="lab"/);
+  assert.doesNotMatch(topNavigation, />\s*Evolution Lab\s*</i);
   assert.match(
     consoleHtml,
     /<section class="view" id="labView" data-evolution-view="lab">/,
   );
-  const labButtonEnd = consoleHtml.indexOf('</button>', labSurface.index);
-  assert.notEqual(labButtonEnd, -1);
   assert.match(
-    consoleHtml.slice(labSurface.index, labButtonEnd + '</button>'.length),
-    />\s*Evolution Lab\s*<\/button>/i,
+    consoleHtml,
+    /data-action="open-evolution-lab"/,
+    'Evolution Lab must be entered from a concrete change action',
   );
 });
 
@@ -192,11 +196,29 @@ test('tablet navigation receives a full flex row', () => {
   );
 });
 
-test('the one-line summary counts installed automations, not discrepancy categories', () => {
+test('the one-line summary partitions installed automations into four human categories', () => {
   const overview = viewSource('overview');
-  for (const id of ['countWorking', 'countNotRunning', 'countAttention']) {
+  const categories = openingTags(overview).map((tag) => (
+    attribute(tag.source, 'data-summary-category')
+  )).filter(Boolean);
+  assert.deepEqual(categories, [
+    'WORKING',
+    'STOPPED',
+    'UNKNOWN',
+    'NEEDS_HELP',
+  ]);
+  for (const id of [
+    'countWorking',
+    'countStopped',
+    'countUnknown',
+    'countNeedsHelp',
+  ]) {
     assert.match(overview, new RegExp(`\\bid="${id}"`));
   }
+  assert.doesNotMatch(
+    overview,
+    /countProtectedAgents|countNotRunning|countAttention|PRE\s*\+\s*POST/,
+  );
 
   const fleetStart = consoleHtml.indexOf('function renderFleet()');
   const fleetEnd = consoleHtml.indexOf('function statusMark(', fleetStart);
@@ -204,20 +226,13 @@ test('the one-line summary counts installed automations, not discrepancy categor
   const renderFleet = consoleHtml.slice(fleetStart, fleetEnd);
   assert.match(
     renderFleet,
-    /installedRows\.filter\(function\(row\)\{return automationOperationalStatus\(row\)==='WORKING';\}\)\.length/,
-  );
-  assert.match(
-    renderFleet,
-    /installedRows\.filter\(function\(row\)\{return automationOperationalStatus\(row\)==='NOT_RUNNING';\}\)\.length/,
-  );
-  assert.match(
-    renderFleet,
-    /installedRows\.filter\(automationNeedsAttention\)\.length/,
+    /automationSummaryCategory\(/,
+    'the renderer must use the semantic category helper',
   );
   assert.doesNotMatch(
     renderFleet,
-    /attentionCategoryCount\(\)/,
-    'the human count must not count engineering discrepancy categories',
+    /maskingCoverageText|countProtectedAgents|attentionCategoryCount\(\)/,
+    'the human summary must not count agents or engineering categories',
   );
 });
 
@@ -250,6 +265,23 @@ test('native automation cards hide machine enums in their closed summary', () =>
   assert.match(
     consoleHtml,
     /if\(installed==='UNKNOWN'\)return \{status:'UNKNOWN',kind:'warn',mark:'⚠',label:t\('installationUnknown'\)\}/,
+  );
+});
+
+test('a closed automation card exposes one primary problem and one next step', () => {
+  const cardStart = consoleHtml.indexOf('function renderAutomationCard(row)');
+  const cardEnd = consoleHtml.indexOf('function renderFleet()', cardStart);
+  assert.ok(cardStart >= 0 && cardEnd > cardStart);
+  const cardRenderer = consoleHtml.slice(cardStart, cardEnd);
+  const summary = cardRenderer.match(/<summary[\s\S]*?<\/summary>/)?.[0] || '';
+
+  assert.match(cardRenderer, /selectPrimaryAutomationProblem\(/);
+  assert.match(cardRenderer, /data-primary-problem=/);
+  assert.match(cardRenderer, /data-next-step=/);
+  assert.doesNotMatch(
+    summary,
+    /risk-codes|component-items|action-gates/,
+    'all remaining findings and gates belong behind specialist disclosure',
   );
 });
 
@@ -449,22 +481,23 @@ test('the simplified overview has matching human copy in Russian and English', (
   const copyContract = {
     // Правка 29.07: тест закреплял «Ваши» — то есть фиксировал нарушение канона Эллы
     // (§4, обращение на «ты»). Ожидание приведено к канону вместе с самим экраном.
-    overviewTitle: ['Твои автоматизации', 'Your automations'],
+    overviewTitle: ['Центр Управления Агентами', 'Evolution Console'],
     inventory: ['Автоматизации', 'Automations'],
     myAutomations: ['Мои автоматизации', 'My automations'],
     catalog: ['Каталог', 'Catalog'],
     workingCount: ['работают', 'working'],
-    notRunningCount: ['не запущены', 'not running'],
-    attentionCount: ['требуют внимания', 'need attention'],
+    stoppedCount: ['остановлены', 'stopped'],
+    unknownCount: ['статус неизвестен', 'status unknown'],
+    needsHelpCount: ['нужна помощь', 'need help'],
     openAutomation: ['Открыть', 'Open'],
-    reviewAutomation: ['Разобраться', 'Review'],
+    reviewAutomation: ['Посмотреть замечание', 'View issue'],
     openCabinet: ['Открыть Agent Cabinet', 'Open Agent Cabinet'],
     automationWorking: ['Работает', 'Working'],
     automationStateUnavailable: [
-      'Не удалось проверить состояние',
-      'Couldn’t check status',
+      'Статус неизвестен',
+      'Status unknown',
     ],
-    automationNotRunning: ['Не запущена', 'Not running'],
+    automationNotRunning: ['Остановлена', 'Stopped'],
     scheduleNone: ['Расписания нет', 'No schedule'],
     scheduleMissingHuman: [
       'Расписание не найдено.',
