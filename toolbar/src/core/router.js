@@ -5046,21 +5046,35 @@ ETB.router = (function () {
   // в KV, чтобы следующий раз не зависел от моста. Мост — переходный источник:
   // уйдёт вместе с последним локальным сервером.
   var _deviceIdCache = '';
+  // Почему устройство не нашлось — словами, а не молчанием. Панель без устройства
+  // отказывается работать, и человек видел одинаковое «не сообщило устройство»
+  // при трёх разных причинах: приложение не отдаёт, KV пуст, мост недоступен.
+  // Разбирать это по логам нечем — DevTools в проде выключены.
+  var _deviceWhy = '';
+  function _deviceWhyText() { return _deviceWhy; }
   function _resolveDeviceId() {
     if (_deviceIdCache) return Promise.resolve(_deviceIdCache);
+    _deviceWhy = '';
     try {
       if (window.extellaDesktop && typeof window.extellaDesktop.getDeviceID === 'function') {
         var d = String(window.extellaDesktop.getDeviceID() || '');
         if (d) { _deviceIdCache = d; return Promise.resolve(d); }
+        _deviceWhy = 'приложение: getDeviceID пуст';
+      } else {
+        _deviceWhy = 'приложение: getDeviceID нет';
       }
-    } catch (_) {}
+    } catch (e) { _deviceWhy = 'приложение: ' + ((e && e.message) || 'сбой'); }
     // kvGet на ОТСУТСТВУЮЩИЙ ключ платформа отдаёт HTTP 500 — промис реджектится,
     // и внешний catch раньше молча возвращал '' до опроса моста: у панелей
     // «не сообщило устройство» именно на машинах без записанного _device_id
     // (живой экран 04.08). Отказ KV — штатный случай, ловим его отдельно.
-    return ETB.api.kvGet('_device_id').catch(function () { return null; }).then(function (res) {
+    return ETB.api.kvGet('_device_id').catch(function (e) {
+      _deviceWhy += ' · KV: ' + ((e && e.message) || 'отказ');
+      return null;
+    }).then(function (res) {
       var d = (res && res.value) ? String(res.value) : '';
       if (d) { _deviceIdCache = d; return d; }
+      if (res) _deviceWhy += ' · KV: пусто';
       var c = typeof AbortController !== 'undefined' ? new AbortController() : null;
       var t = c ? setTimeout(function () { c.abort(); }, 3000) : null;
       var opts = c ? { signal: c.signal } : {};
@@ -5073,11 +5087,20 @@ ETB.router = (function () {
             _deviceIdCache = dev;
             // запоминаем на аккаунте — следующий запуск не зависит от моста
             ETB.api.kvSet('_device_id', dev, 'Extella device ID').catch(function () {});
+          } else {
+            _deviceWhy += ' · мост: ответил без устройства';
           }
           return dev;
         })
-        .catch(function () { if (t) clearTimeout(t); return ''; });
-    }).catch(function () { return ''; });
+        .catch(function (e) {
+          if (t) clearTimeout(t);
+          _deviceWhy += ' · мост 8765: ' + ((e && e.message) || 'недоступен');
+          return '';
+        });
+    }).catch(function (e) {
+      _deviceWhy += ' · ' + ((e && e.message) || 'сбой цепочки');
+      return '';
+    });
   }
 
   function _buildPanel(plugin) {
@@ -5232,7 +5255,10 @@ ETB.router = (function () {
               // тонкий режим уходит. Приложение знает устройство само, спросим его.
               // Панель без устройства обязана отказываться работать, а не молча слать
               // задачу в общий пул аккаунта: ложный успех — наш самый дорогой класс.
-              device: deviceId
+              device: deviceId,
+              // Причина словами, если устройства нет: панель покажет её человеку
+              // вместо одинакового «не сообщило устройство» на три разных случая.
+              deviceWhy: deviceId ? '' : _deviceWhyText()
             };
             // Bridge-only apps never receive the account credential.
             if (!ui.tokenless) initPayload.token = token;
