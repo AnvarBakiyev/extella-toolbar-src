@@ -130,5 +130,15 @@ export async function removeKv(
   key: string,
   pair?: { profileId?: string; agentId?: string },
 ): Promise<void> {
-  await mbPost<unknown>('/api/kv/remove', { key }, pair);
+  // Платформа отвечает 200 даже когда НИЧЕГО не удалила: факт лежит в поле deleted,
+  // а не в status (канон CORRECTION_DELETE_WORKS, проверено 28.07). У клиентских
+  // агентов половина записей без id — их удалить нечем, и человек видел зелёное
+  // «удалено» при живой записи, а потом находил её в списке снова.
+  const res = await mbPost<{ deleted?: boolean; status?: string }>(
+    '/api/kv/remove', { key }, pair);
+  if (res && res.deleted === false) {
+    throw new Error(
+      `запись «${key}» не удалена: платформа ответила deleted: false. ` +
+      'Так бывает у записей без идентификатора — их нечем адресовать.');
+  }
 }

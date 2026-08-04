@@ -5039,6 +5039,17 @@ ETB.router = (function () {
     ].join('');
   }
 
+  // Устройство этой машины для панелей: приложение отдаёт его напрямую (тот же
+  // источник, что у экрана установки по ссылке). Локальный мост не нужен.
+  function _selfDeviceId() {
+    try {
+      if (window.extellaDesktop && typeof window.extellaDesktop.getDeviceID === 'function') {
+        return String(window.extellaDesktop.getDeviceID() || '');
+      }
+    } catch (_) {}
+    return '';
+  }
+
   function _buildPanel(plugin) {
     var panel = document.createElement('div');
     panel.style.cssText = [
@@ -5183,7 +5194,14 @@ ETB.router = (function () {
               apiBase: 'https://api.extella.ai',
               experts: plugin.experts || [],
               theme: _currentTheme(),
-              lang: _currentLang()
+              lang: _currentLang(),
+              // УСТРОЙСТВО ЭТОЙ МАШИНЫ — сразу в приветствии. Без него тонкая панель
+              // спрашивала его у моста Конструктора по http://127.0.0.1:8765, то есть
+              // ради одной строки тянула за собой локальный сервер — ровно то, от чего
+              // тонкий режим уходит. Приложение знает устройство само, спросим его.
+              // Панель без устройства обязана отказываться работать, а не молча слать
+              // задачу в общий пул аккаунта: ложный успех — наш самый дорогой класс.
+              device: _selfDeviceId()
             };
             // Bridge-only apps never receive the account credential.
             if (!ui.tokenless) initPayload.token = token;

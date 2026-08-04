@@ -137,5 +137,14 @@ export async function deleteRule(
   ruleId: string,
   pair?: { profileId?: string; agentId?: string },
 ): Promise<void> {
-  await mbPost(RULES_ENDPOINTS.remove, { rule_id: ruleId }, pair);
+  // Тот же случай, что у kv/remove: 200 ещё не значит «удалено». Правда — в поле
+  // deleted; у клиентских агентов правила часто лежат парами без идентификатора,
+  // и человек видел зелёный тост, а правило оставалось жить.
+  const res = await mbPost<{ deleted?: boolean }>(
+    RULES_ENDPOINTS.remove, { rule_id: ruleId }, pair);
+  if (res && (res as { deleted?: boolean }).deleted === false) {
+    throw new Error(
+      'правило не удалено: платформа ответила deleted: false. ' +
+      'Так бывает у записей без идентификатора — их нечем адресовать.');
+  }
 }

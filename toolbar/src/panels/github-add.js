@@ -661,13 +661,25 @@ ETB.githubAdd = (function () {
       out.push({ id: ETB.api.platformTrialAgent, name: 'Extella (Qwen)',
                  note: 'Пробный агент Extella — бесплатный, общий для ваших продуктов' });
       all.forEach(function (a) {
-        // Платного Claude отдельно не называем: фильтр ниже пропускает только
-        // платформенную Qwen, и всё остальное — включая его — отсеивается само.
         if (!a || !a.id) return;
+        if (a.id === ETB.api.platformTrialAgent) return;
+        // СВОЙ агент человека на его ключах — пригоден. Слово владельца 03.08:
+        // у коллеги дефолтный агент не используется вовсе, он работает своим, со
+        // своими ключами. Прежний фильтр пропускал только платформенную Qwen и
+        // прятал живого рабочего агента — продукт выглядел сломанным. Канон
+        // «только Qwen» — про агентов, которых раздаём и оплачиваем МЫ; чужие
+        // ключи — расходы человека. Платного Claude за НАШ счёт отсекаем по
+        // ПРИЗНАКУ, а не по спрятанному имени: склейка строк ради обхода гейта —
+        // обман проверки, а не решение задачи (ловил себя на этом 03.08).
+        var paidByUs = String(a.provider || '').toLowerCase() === 'anthropic' &&
+                       !a.byok && !a.has_key;
+        if (paidByUs) return;
         var qwen = String(a.provider || '') === 'alibaba' &&
                    String(a.model || '').indexOf('qwen') === 0;
-        if (!qwen || a.id === ETB.api.platformTrialAgent) return;
-        out.push({ id: a.id, name: a.name || a.id, note: a.model || '' });
+        out.push({ id: a.id, name: a.name || a.id,
+                   note: qwen ? (a.model || '')
+                              : ((a.model || a.provider || 'своя модель') +
+                                 ' — на ваших ключах, расходы по тарифам провайдера') });
       });
       _state.agentChoices = out;
       _state.chosenAgentId = _state.chosenAgentId || out[0].id;
