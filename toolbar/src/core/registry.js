@@ -32,8 +32,30 @@ ETB.registry = (function () {
     catch (e) { return []; }
   }
 
+  // Страницы панелей ТЯЖЁЛЫЕ (у Рекрутёра 338 КБ), а localStorage — маленький
+  // и на переполнении бросает. Прежний молчаливый catch означал: запись не
+  // прошла, кэш навсегда остался старым, и человек открывал вчерашнюю панель,
+  // хотя на диске лежала сегодняшняя. Час отладки 04.08 ушёл в этот мираж.
+  // Поэтому в кэше держим карточку БЕЗ страницы: страница живёт на устройстве
+  // и дочитывается при открытии (router.openById). Кэш — про «какие плитки
+  // показать», а не про содержимое панели.
+  var HTML_MARK = '__etb_html_on_device__';
+  function _slim(p) {
+    if (!p || !p.ui || typeof p.ui.html !== 'string' || p.ui.html.length < 4096) return p;
+    var copy = {}; for (var k in p) if (Object.prototype.hasOwnProperty.call(p, k)) copy[k] = p[k];
+    var ui = {}; for (var u in p.ui) if (Object.prototype.hasOwnProperty.call(p.ui, u)) ui[u] = p.ui[u];
+    ui.html = HTML_MARK;
+    copy.ui = ui;
+    return copy;
+  }
   function _saveCustom(arr) {
-    try { localStorage.setItem(CUSTOM_KEY, JSON.stringify(arr)); } catch (e) {}
+    var slim = (arr || []).map(_slim);
+    try { localStorage.setItem(CUSTOM_KEY, JSON.stringify(slim)); }
+    catch (e) {
+      // Переполнение — не «ничего не случилось»: витрина обязана сказать это
+      // вслух, иначе следующий такой случай снова будет искать сам себя.
+      try { console.warn('[ETB.registry] кэш карточек не сохранён:', (e && e.message) || e); } catch (_) {}
+    }
   }
 
   function _loadRemoved() {
@@ -179,6 +201,8 @@ ETB.registry = (function () {
     },
 
     // Adds a user-created plugin (e.g. from GitHub URL) and installs it
+    HTML_ON_DEVICE: HTML_MARK,
+
     addCustom: function (plugin) {
       _untombstone(plugin.id);   // явная установка снимает надгробие — переустановка снова видна
       var custom = _loadCustom();
@@ -220,6 +244,9 @@ ETB.registry = (function () {
         ));
       }
       return ETB.api.runExpert(fnName, {}, {
+        // targets массивом — рабочее поле платформы; одиночный target остаётся
+        // ради совместимости и молча игнорируется сервером.
+        targets: [exactDeviceId],
         target: exactDeviceId,
         timeout: 20,
         global: true
@@ -344,9 +371,18 @@ ETB.registry = (function () {
         return added;
       }
       function run(useTarget) {
-        var opts = { timeout: 20 };
-        if (useTarget && deviceId) opts.target = deviceId;
-        return ETB.api.runExpert(fnName, { only_id: onlyId || '' }, opts);
+        // runExpertAsync, не runExpert: тяжёлые прогоны платформа откладывает и
+        // отдаёт task_id — синхронный вызов получал конверт БЕЗ результата,
+        // ingest видел пусто, и витрина считала, что на устройстве карточек нет.
+        // Так свежая панель, лежащая на диске, не доезжала до человека (04.08).
+        var opts = { timeout: 60, maxWait: 90000 };
+        // ЗАКРЕПЛЕНИЕ — ТОЛЬКО МАССИВОМ targets. Одиночный target платформа
+        // принимает молча и игнорирует: чтение реестра уходило на дефолтное
+        // устройство аккаунта (у владельца — VPS, где ~/extella-plugins нет),
+        // отвечало пустым списком, и витрина вечно показывала карточку из
+        // своего кэша. Свежая панель ставилась на диск и не открывалась.
+        if (useTarget && deviceId) { opts.targets = [deviceId]; opts.target = deviceId; }
+        return ETB.api.runExpertAsync(fnName, { only_id: onlyId || '' }, opts);
       }
 
       return ETB.api.saveExpert({
@@ -402,7 +438,7 @@ ETB.registry = (function () {
         cspl: 'fython'
       }).then(function () {
         var opts = { timeout: 20 };
-        if (deviceId) opts.target = deviceId;
+        if (deviceId) { opts.targets = [deviceId]; opts.target = deviceId; }
         return ETB.api.runExpert(fnName, { plugin_id: pluginId }, opts).catch(function () {
           if (deviceId) return ETB.api.runExpert(fnName, { plugin_id: pluginId }, { timeout: 20 });
         });

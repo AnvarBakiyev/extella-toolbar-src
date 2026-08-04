@@ -5046,6 +5046,31 @@ ETB.router = (function () {
   // в KV, чтобы следующий раз не зависел от моста. Мост — переходный источник:
   // уйдёт вместе с последним локальным сервером.
   var _deviceIdCache = '';
+  // Страницы панелей, прочитанные с устройства в этой сессии. В localStorage их
+  // держать нельзя (338 КБ у одного Рекрутёра — кэш молча переполнялся и навсегда
+  // застревал на вчерашней версии), а перечитывать на каждый клик — заставлять
+  // человека ждать. Память процесса: живёт до перезапуска, всегда свежая.
+  var _htmlMem = {};
+  function _withHtml(plugin, html) {
+    var ui = {}; var src = plugin.ui || {};
+    for (var k in src) if (Object.prototype.hasOwnProperty.call(src, k)) ui[k] = src[k];
+    ui.type = 'html'; ui.html = html;
+    var copy = {}; for (var p2 in plugin) if (Object.prototype.hasOwnProperty.call(plugin, p2)) copy[p2] = plugin[p2];
+    copy.ui = ui;
+    return copy;
+  }
+  function _panelNote(text) {
+    return '<div style="font:400 14px/1.6 -apple-system,system-ui,sans-serif;'
+      + 'padding:48px;color:#555;">' + text + '</div>';
+  }
+  function _deviceReadingHTML() {
+    return _panelNote(_L('Читаю панель с этого устройства\u2026', 'Reading the panel from this device\u2026'));
+  }
+  function _deviceReadFailedHTML() {
+    return _panelNote(_L(
+      'Не удалось прочитать страницу с этого устройства. Проверь, что Extella видит устройство, и открой панель ещё раз.',
+      'Could not read the page from this device. Check that Extella sees the device and open the panel again.'));
+  }
   // Почему устройство не нашлось — словами, а не молчанием. Панель без устройства
   // отказывается работать, и человек видел одинаковое «не сообщило устройство»
   // при трёх разных причинах: приложение не отдаёт, KV пуст, мост недоступен.
@@ -5055,15 +5080,48 @@ ETB.router = (function () {
   function _resolveDeviceId() {
     if (_deviceIdCache) return Promise.resolve(_deviceIdCache);
     _deviceWhy = '';
+    // getDeviceID у приложения АСИНХРОННЫЙ — отдаёт промис. Прежний код приводил
+    // его к строке сразу: получалось «[object Promise]» — непустая строка, поэтому
+    // цепочка считала устройство найденным и раздавала эту чушь панелям. Панели
+    // закреплялись за несуществующим устройством, а на экране был один и тот же
+    // бессмысленный отказ. Дождаться промиса — единственная разница (04.08).
+    var _direct = null;
     try {
       if (window.extellaDesktop && typeof window.extellaDesktop.getDeviceID === 'function') {
-        var d = String(window.extellaDesktop.getDeviceID() || '');
-        if (d) { _deviceIdCache = d; return Promise.resolve(d); }
-        _deviceWhy = 'приложение: getDeviceID пуст';
+        _direct = window.extellaDesktop.getDeviceID();
       } else {
         _deviceWhy = 'приложение: getDeviceID нет';
       }
     } catch (e) { _deviceWhy = 'приложение: ' + ((e && e.message) || 'сбой'); }
+    if (_direct && typeof _direct.then === 'function') {
+      return _direct.then(function (v) {
+        var s = _asDeviceId(v);
+        if (s) { _deviceIdCache = s; return s; }
+        _deviceWhy = 'приложение: getDeviceID пуст';
+        return _resolveDeviceIdFromAccount();
+      }).catch(function (e) {
+        _deviceWhy = 'приложение: ' + ((e && e.message) || 'сбой');
+        return _resolveDeviceIdFromAccount();
+      });
+    }
+    var d = _asDeviceId(_direct);
+    if (d) { _deviceIdCache = d; return Promise.resolve(d); }
+    if (!_deviceWhy) _deviceWhy = 'приложение: getDeviceID пуст';
+    return _resolveDeviceIdFromAccount();
+  }
+
+  // Устройство — это UUID. Всё остальное (объект, промис, пустышка) — не устройство:
+  // молча принятая «почти строка» стоила дня отладки.
+  function _asDeviceId(v) {
+    if (v == null) return '';
+    if (typeof v === 'object') {
+      v = v.device_id || v.deviceId || v.id || v.target || '';
+    }
+    var s = String(v || '').trim();
+    return /^[0-9a-fA-F-]{16,}$/.test(s) ? s : '';
+  }
+
+  function _resolveDeviceIdFromAccount() {
     // kvGet на ОТСУТСТВУЮЩИЙ ключ платформа отдаёт HTTP 500 — промис реджектится,
     // и внешний catch раньше молча возвращал '' до опроса моста: у панелей
     // «не сообщило устройство» именно на машинах без записанного _device_id
@@ -5072,7 +5130,7 @@ ETB.router = (function () {
       _deviceWhy += ' · KV: ' + ((e && e.message) || 'отказ');
       return null;
     }).then(function (res) {
-      var d = (res && res.value) ? String(res.value) : '';
+      var d = _asDeviceId(res && res.value);
       if (d) { _deviceIdCache = d; return d; }
       if (res) _deviceWhy += ' · KV: пусто';
       var c = typeof AbortController !== 'undefined' ? new AbortController() : null;
@@ -5082,7 +5140,7 @@ ETB.router = (function () {
         .then(function (r) { return r.json(); })
         .then(function (j) {
           if (t) clearTimeout(t);
-          var dev = (j && j.target) ? String(j.target) : '';
+          var dev = _asDeviceId(j && j.target);
           if (dev) {
             _deviceIdCache = dev;
             // запоминаем на аккаунте — следующий запуск не зависит от моста
@@ -5191,6 +5249,10 @@ ETB.router = (function () {
       '<span style="font-size:13px;font-weight:600;color:var(--etb-tx,#f0f0f0);">',
       _esc(plugin.name), '</span>',
       '<span style="font-size:11px;color:var(--etb-tx2,#888);">', _esc(plugin.tagline || ''), '</span>',
+      // Где исполняется работа этой панели — в шапке, а не в догадках. Панели
+      // без устройства молча уходили в общий пул аккаунта, а разобраться было
+      // нечем: DevTools в проде выключены.
+      '<span id="_etb_dev_badge" style="font-size:10px;color:var(--etb-tx3,#666);margin-left:8px;"></span>',
       '<div style="flex:1"></div>',
       // «? Как это работает» (правило §3.20) — если для поверхности есть справка.
       (_helpKey(plugin.id) ? '<button onclick="ETB.router.openHelp(\'' + _esc(plugin.id) + '\')" ' +
@@ -5273,6 +5335,12 @@ ETB.router = (function () {
               // вместо одинакового «не сообщило устройство» на три разных случая.
               deviceWhy: deviceId ? '' : _deviceWhyText()
             };
+            try {
+              var _badge = document.getElementById('_etb_dev_badge');
+              if (_badge) _badge.textContent = deviceId
+                ? ('устройство ' + String(deviceId).slice(0, 8) + '…')
+                : ('устройство не найдено: ' + (_deviceWhyText() || 'причина не записана'));
+            } catch (_) {}
             // Bridge-only apps never receive the account credential.
             if (!ui.tokenless) initPayload.token = token;
             iframe.contentWindow.postMessage(initPayload, '*');
@@ -7111,10 +7179,75 @@ ETB.router = (function () {
       if (ETB.nav) ETB.nav.syncUI();
     },
 
+    // Обновить страницу панели с устройства фоном (не мешая уже открытой).
+    _refreshFromDevice: function (id) {
+      this.deviceId().then(function (dev) {
+        if (!dev) return null;
+        return ETB.registry.syncFromDevice(dev, id);
+      }).then(function (added) {
+        (added || []).forEach(function (m) {
+          if (m && m.id === id && m.ui && typeof m.ui.html === 'string'
+              && m.ui.html !== ETB.registry.HTML_ON_DEVICE) _htmlMem[id] = m.ui.html;
+        });
+      }).catch(function () {});
+    },
+
     openById: function (id, opts) {
       var plugin = ETB.registry.getById(id);
-      if (plugin) this.open(plugin, opts);
+      if (!plugin) return;
+      var self = this;
+      // СТРАНИЦА ПАНЕЛИ ЖИВЁТ НА УСТРОЙСТВЕ, а витрина держит её копию в своём
+      // кэше. Копия устаревает молча: установщик кладёт на диск новую панель,
+      // человек открывает старую и видит поломку, которую час назад починили
+      // (04.08 — половина отладки ушла на этот мираж). Перед открытием карточки
+      // со страницей внутри дочитываем ровно её с устройства; не успели за 6 с
+      // — открываем что есть, лишь бы не держать человека.
+      var ui = plugin.ui || {};
+      if (ui.type !== 'html') { this.open(plugin, opts); return; }
+      var MARK = ETB.registry.HTML_ON_DEVICE;
+      var cached = _htmlMem[id];
+      var hasOwnHtml = plugin.ui && typeof plugin.ui.html === 'string' && plugin.ui.html !== MARK;
+      // Страница уже читалась в этой сессии — открываем мгновенно, а свежесть
+      // догоняем фоном: ждать устройство на каждом клике человек не обязан.
+      if (cached || hasOwnHtml) {
+        this.open(cached ? _withHtml(plugin, cached) : plugin, opts);
+        this._refreshFromDevice(id);
+        return;
+      }
+      var self = this;
+      var settled = false;
+      // Пока читаем страницу с устройства — честная заглушка. Пустое окно
+      // читается как «продукт сломан», а чтение занимает секунды.
+      this.open(_withHtml(plugin, _deviceReadingHTML()), opts);
+      var fail = setTimeout(function () {
+        if (settled) return;
+        settled = true;
+        self.evict(id);
+        self.open(_withHtml(plugin, _deviceReadFailedHTML()), opts);
+      }, 45000);
+      this.deviceId().then(function (dev) {
+        if (!dev) return null;
+        return ETB.registry.syncFromDevice(dev, id);
+      }).then(function (added) {
+        var fresh = null;
+        (added || []).forEach(function (m) { if (m && m.id === id) fresh = m; });
+        var html = fresh && fresh.ui && fresh.ui.html;
+        if (settled) return;
+        if (!html || html === MARK) return;   // не дочитали — оставим таймауту
+        settled = true;
+        clearTimeout(fail);
+        _htmlMem[id] = html;
+        self.evict(id);
+        self.open(_withHtml(fresh, html), opts);
+      }).catch(function () {});
     },
+
+    // Устройство этой машины — ОДНОЙ цепочкой на всю витрину. Копии этой логики
+    // в других экранах расходились по поведению (одна ждала промис приложения,
+    // другая нет; одна переживала отказ KV, другая молча сдавалась) — и панели
+    // получали то устройство, то пустоту в зависимости от того, каким экраном
+    // человек шёл. Один источник, одна причина отказа.
+    deviceId: function () { return _resolveDeviceId(); },
 
     close: function (opts) {
       var returnTo = '';

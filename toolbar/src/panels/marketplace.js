@@ -109,12 +109,12 @@ ETB.marketplace = (function () {
         // а без target global-эксперт уходит на СЛУЧАЙНОЕ устройство контура
         // (например VPS) — там файла нет, ран «успешен», файл здесь жив.
         // Фолбэк на локальный ID устройства — как в syncFromDevice.
-        if (!deviceId) {
-          try {
-            deviceId = (window.extellaDesktop && typeof window.extellaDesktop.getDeviceID === 'function')
-              ? window.extellaDesktop.getDeviceID() : null;
-          } catch (e) { deviceId = null; }
-        }
+        // Фолбэк на устройство машины — единой цепочкой витрины: прежняя строка
+        // брала промис приложения как строку и подставляла «[object Promise]»
+        // в target, то есть чистка уходила в никуда с видом успеха.
+        return (deviceId ? Promise.resolve(deviceId) : ETB.router.deviceId().catch(function () { return null; }))
+          .then(function (_dev) {
+        deviceId = _dev || deviceId || null;
         return ETB.api.saveExpert({
           name: fnName,
           description: 'Cleanup plugin ' + pluginId,
@@ -123,7 +123,9 @@ ETB.marketplace = (function () {
           cspl: 'fython'
         }).then(function () {
           var opts = { timeout: 20 };
-          if (deviceId) opts.target = deviceId;
+          // targets массивом — одиночный target платформа игнорирует, и чистка
+          // уходила на чужую машину с видом успеха.
+          if (deviceId) { opts.targets = [deviceId]; opts.target = deviceId; }
           // Чистка обязана закрепиться: один тихо упавший облачный ран оставлял
           // файл карточки живым, и синк воскрешал её («удаляется и снова
           // появляется»). Ретраим с паузой; removing-метка прячет карточку,
@@ -148,6 +150,7 @@ ETB.marketplace = (function () {
           // Remove the throwaway cleanup expert itself.
           return ETB.api.deleteExpert(fnName).catch(function () {});
         });
+          });
       })
       .catch(function () {});
 
@@ -326,13 +329,12 @@ ETB.marketplace = (function () {
       // alone misses those — refresh on every marketplace open, best-effort,
       // and tell the iframe to re-render if anything new arrived.
       try {
-        ETB.api.kvGet('_device_id').then(function (r) {
-          if (r && r.value) return r.value;
-          try {
-            return (window.extellaDesktop && typeof window.extellaDesktop.getDeviceID === 'function')
-              ? window.extellaDesktop.getDeviceID() : null;
-          } catch (e) { return null; }
-        }).then(function (did) {
+        // Одна цепочка на всю витрину (ETB.router.deviceId). Прежняя копия здесь
+        // не дожидалась промиса приложения и сдавалась на отказе KV — реестр с
+        // устройства не перечитывался, и витрина месяцами показывала карточку
+        // из своего кэша: свежая панель ставилась на диск, а человек открывал
+        // старую (04.08).
+        ETB.router.deviceId().then(function (did) {
           if (!did) return;
           return ETB.registry.syncFromDevice(did).then(function (added) {
             if (added && added.length) {

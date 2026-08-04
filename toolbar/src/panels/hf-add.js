@@ -277,16 +277,10 @@ ETB.hfAdd = (function () {
 
   // ── Device ID helpers ──────────────────────────────────────────
   function _getDeviceId() {
-    return ETB.api.kvGet('_device_id')
-      .then(function (res) { return (res && res.value) || null; })
-      .catch(function () { return null; })
-      .then(function (id) {
-        if (id) return id;
-        try {
-          return (window.extellaDesktop && typeof window.extellaDesktop.getDeviceID === 'function')
-            ? (window.extellaDesktop.getDeviceID() || null) : null;
-        } catch (_) { return null; }
-      })
+    // Единая цепочка витрины: приложение (АСИНХРОННО — там промис) → аккаунт →
+    // мост. Эта копия приводила промис к строке и получала «[object Promise]» —
+    // непустую чушь, которую дальше принимали за устройство (04.08).
+    return ETB.router.deviceId().then(function (id) { return id || null; })
       .catch(function () { return null; });
   }
 
