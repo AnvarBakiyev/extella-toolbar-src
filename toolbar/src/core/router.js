@@ -5054,7 +5054,11 @@ ETB.router = (function () {
         if (d) { _deviceIdCache = d; return Promise.resolve(d); }
       }
     } catch (_) {}
-    return ETB.api.kvGet('_device_id').then(function (res) {
+    // kvGet на ОТСУТСТВУЮЩИЙ ключ платформа отдаёт HTTP 500 — промис реджектится,
+    // и внешний catch раньше молча возвращал '' до опроса моста: у панелей
+    // «не сообщило устройство» именно на машинах без записанного _device_id
+    // (живой экран 04.08). Отказ KV — штатный случай, ловим его отдельно.
+    return ETB.api.kvGet('_device_id').catch(function () { return null; }).then(function (res) {
       var d = (res && res.value) ? String(res.value) : '';
       if (d) { _deviceIdCache = d; return d; }
       var c = typeof AbortController !== 'undefined' ? new AbortController() : null;
