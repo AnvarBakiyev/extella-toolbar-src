@@ -466,7 +466,11 @@ ETB.registry = (function () {
         description: 'Read local Extella plugin registry files',
         code: code,
         kwargs: { only_id: '' },
-        cspl: 'fython'
+        cspl: 'fython',
+        // Сохранение и запуск обязаны быть в одном скоупе. После перевода
+        // запуска на global:true эксперт по-прежнему сохранялся локально и
+        // платформа честно отвечала Expert not found (Баға, 04.08).
+        global: true
       }).catch(function (e) {
         _probe('эксперт не сохранился: ' + ((e && e.message) || 'отказ'));
         throw e;

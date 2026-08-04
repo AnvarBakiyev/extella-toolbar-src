@@ -616,13 +616,17 @@ test('device sync recovers Capability Studio ownership after a cleared local cac
     }],
     ui: { type: 'html', html: '<p>legacy device cache</p>' },
   };
+  let savedDefinition = null;
+  let runOptions = null;
   const context = {
     ETB: {
       api: {
-        saveExpert() {
+        saveExpert(definition) {
+          savedDefinition = definition;
           return Promise.resolve({ status: 'success' });
         },
-        runExpert() {
+        runExpert(_name, _params, options) {
+          runOptions = options;
           return Promise.resolve({
             result: JSON.stringify({ m: [legacyManifest], t: [] }),
           });
@@ -651,6 +655,8 @@ test('device sync recovers Capability Studio ownership after a cleared local cac
   );
 
   await context.ETB.registry.syncFromDevice('', '');
+  assert.equal(savedDefinition.global, true, 'registry reader must be saved globally');
+  assert.equal(runOptions.global, true, 'registry reader must run in the same global scope');
   assert.deepEqual(
     JSON.parse(localStorage.getItem('etb_plugins_installed_v1')).sort(),
     ['capability-studio-scenario', 'profit-growth-scenario'],
