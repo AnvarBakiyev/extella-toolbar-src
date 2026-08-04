@@ -5242,6 +5242,9 @@ ETB.router = (function () {
       '<summary style="font-size:11px;color:var(--etb-tx2,#888);cursor:pointer;text-align:center;list-style:none;">' + _L('Подробности','Details') + '</summary>',
       '<div style="font-size:11px;color:var(--etb-tx2,#888);line-height:1.5;margin-top:8px;">',
       _L('Локальный сервер не отвечает на порту ','Local server offline on port '), String(ui.port || '&#8212;'), '.',
+      // Что принесло чтение реестра с устройства: без этой строки «витрина
+      // показывает вчерашнюю карточку» невозможно разобрать — DevTools в проде нет.
+      (window.__etbRegistryProbe ? '<br>' + _esc(String(window.__etbRegistryProbe)) : ''),
       ui.startExpert
         ? ' <a href="#" onclick="ETB.router._startServer(\'' + _esc(pid) + '\');return false;" style="color:#C57E33;">' + _L('Запустить только сервер','Start server only') + '</a>.'
         : '',
@@ -5916,8 +5919,19 @@ ETB.router = (function () {
           // отложенные и отдаёт task_id. Прежний мост возвращал панели сырой конверт
           // «deferred, use task_id…» — панель Баға висла на «Смотрю, что есть…»
           // (живой экран 04.08). Мост доводит задачу до результата сам.
-          ETB.api.runExpertAsync(expertName, expertParams,
+          // СИНХРОННО, с доводкой отложенного: асинхронный прогон (wait:false)
+          // платформа отбивает мгновенным «Worker hung» — прямая проба 04.08:
+          // синхронно 9,6 с и полный ответ, асинхронно 2,2 с и отказ. Если
+          // платформа всё же отложит задачу и вернёт task_id — доводим сами,
+          // чтобы панель не получала конверт вместо данных.
+          ETB.api.runExpert(expertName, expertParams,
             _tgts ? { global: true, targets: _tgts } : { global: true })
+            .then(function (res) {
+              if (res && res.task_id && (res.result === undefined || res.result === null)) {
+                return ETB.api.pollTask(res.task_id, {});
+              }
+              return res;
+            })
             .then(function (res) { reply({ type: 'etb_expert_result', reqId: reqId, ok: true, res: res }); })
             .catch(function (err) { reply({ type: 'etb_expert_result', reqId: reqId, ok: false, error: (err && err.message) || 'expert failed' }); });
         } catch (err) {
@@ -7603,7 +7617,29 @@ ETB.router = (function () {
       // со страницей внутри дочитываем ровно её с устройства; не успели за 6 с
       // — открываем что есть, лишь бы не держать человека.
       var ui = plugin.ui || {};
-      if (ui.type !== 'html') { this.open(plugin, opts); return; }
+      if (ui.type !== 'html') {
+        // Карточка МОГЛА СМЕНИТЬ ФОРМУ на устройстве: продукт переехал с
+        // локального сервера на тонкую панель, а витрина всё ещё проверяет
+        // порт, которого больше нет, и показывает «нужно доустановить» на
+        // исправном продукте (живой экран 04.08, Predictive Sales). Поэтому
+        // сначала перечитываем карточку с устройства и только потом решаем,
+        // какой она формы.
+        var was = this;
+        var opened = false;
+        var openNow = function () {
+          if (opened) return;
+          opened = true;
+          var fresh = ETB.registry.getById(id) || plugin;
+          if ((fresh.ui || {}).type === 'html') was.openById(id, opts);
+          else was.open(fresh, opts);
+        };
+        setTimeout(openNow, 8000);
+        this.deviceId().then(function (dev) {
+          if (!dev || opened) return null;
+          return ETB.registry.syncFromDevice(dev, id);
+        }).then(openNow).catch(openNow);
+        return;
+      }
       var MARK = ETB.registry.HTML_ON_DEVICE;
       var cached = _htmlMem[id];
       var hasOwnHtml = plugin.ui && typeof plugin.ui.html === 'string' && plugin.ui.html !== MARK;

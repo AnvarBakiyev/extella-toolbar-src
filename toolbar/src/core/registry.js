@@ -428,28 +428,55 @@ ETB.registry = (function () {
         return added;
       }
       function run(useTarget) {
-        // runExpertAsync, не runExpert: тяжёлые прогоны платформа откладывает и
-        // отдаёт task_id — синхронный вызов получал конверт БЕЗ результата,
-        // ingest видел пусто, и витрина считала, что на устройстве карточек нет.
-        // Так свежая панель, лежащая на диске, не доезжала до человека (04.08).
-        var opts = { timeout: 60, maxWait: 90000 };
+        // СИНХРОННО. Асинхронный прогон (wait:false) этого эксперта платформа
+        // отбивает мгновенным «Worker hung» — проверено прямой пробой 04.08:
+        // синхронно 9,6 с и полный ответ, асинхронно 2,2 с и отказ. Я сам
+        // перевёл чтение на async в тот же день, «чтобы доводить отложенные»,
+        // и этим сломал обновление карточек: витрина перестала видеть, что на
+        // устройстве лежит новая панель, и показывала вчерашнюю.
+        // В ТЕЛО ЗАПРОСА кладём только то, что понимает платформа: наши
+        // параметры ожидания (timeout/maxWait) уходили туда же и прогон
+        // возвращался с «Worker hung» — при этом тот же вызов без них
+        // отрабатывал за 13 секунд (проверено вживую 04.08). Ожиданием
+        // управляет клиент, а не сервер.
+        var opts = { global: true };
         // ЗАКРЕПЛЕНИЕ — ТОЛЬКО МАССИВОМ targets. Одиночный target платформа
         // принимает молча и игнорирует: чтение реестра уходило на дефолтное
         // устройство аккаунта (у владельца — VPS, где ~/extella-plugins нет),
         // отвечало пустым списком, и витрина вечно показывала карточку из
         // своего кэша. Свежая панель ставилась на диск и не открывалась.
         if (useTarget && deviceId) { opts.targets = [deviceId]; opts.target = deviceId; }
-        return ETB.api.runExpertAsync(fnName, { only_id: onlyId || '' }, opts);
+        return ETB.api.runExpert(fnName, { only_id: onlyId || '' }, opts);
       }
 
+      // След на аккаунте: что чтение реестра с устройства реально принесло.
+      // DevTools в проде выключены, и «витрина показывает вчерашнюю карточку»
+      // невозможно разобрать иначе — 04.08 это дважды стоило круга вслепую.
+      var _probe = function (what) {
+        // Видно ЧЕЛОВЕКУ, а не только в KV: KV-запись из витрины может не дойти,
+        // а экран отказа человек видит всегда.
+        try { window.__etbRegistryProbe = String(what).slice(0, 300); } catch (_) {}
+        try {
+          ETB.api.kvSet('_registry_probe', String(what).slice(0, 500),
+            'Диагностика чтения реестра с устройства').catch(function () {});
+        } catch (_) {}
+      };
       return ETB.api.saveExpert({
         name: fnName,
         description: 'Read local Extella plugin registry files',
         code: code,
         kwargs: { only_id: '' },
         cspl: 'fython'
+      }).catch(function (e) {
+        _probe('эксперт не сохранился: ' + ((e && e.message) || 'отказ'));
+        throw e;
       }).then(function () {
         return run(true);
+      }).then(function (res) {
+        var raw = (res && (res.result || res.output));
+        _probe('ответ ' + (raw ? String(raw).length + ' симв' : 'пустой')
+          + ' · only_id=' + (onlyId || '—') + ' · dev=' + String(deviceId || '—').slice(0, 8));
+        return res;
       }).then(ingest).then(function (added) {
         // A stale/unavailable target id yields nothing — retry on the CURRENT
         // device (no target). Robust to device re-registration (id changes).
@@ -460,9 +487,13 @@ ETB.registry = (function () {
             .catch(function () { return added; });
         }
         return added;
-      }).catch(function () {
+      }).catch(function (e) {
+        _probe('закреплённый прогон не удался: ' + ((e && e.message) || 'отказ'));
         return run(false).then(function (r) { return ingest(r, true); })
-          .catch(function () { return []; });
+          .catch(function (e2) {
+            _probe('и без закрепления не удался: ' + ((e2 && e2.message) || 'отказ'));
+            return [];
+          });
       });
     },
 

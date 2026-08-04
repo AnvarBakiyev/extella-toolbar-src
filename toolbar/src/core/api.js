@@ -256,8 +256,11 @@ ETB.api = (function () {
         }
 
         var st = String((data && data.status) || '').toLowerCase();
-        // Docs: running = done, busy = still executing
-        if (st === 'running' || st === 'completed' || st === 'success') {
+        // Платформа использует running буквально: задача ещё исполняется.
+        // Возвращать такой ответ как финальный нельзя — у отложенного Expert в
+        // нём ещё нет result. Из-за этого чтение HTML панели с устройства
+        // завершалось пустым ответом и витрина навсегда оставалась на заставке.
+        if (st === 'completed' || st === 'success' || st === 'done') {
           return data;
         }
         if (data && (data.result != null || data.output || data.answer)) {
@@ -268,7 +271,7 @@ ETB.api = (function () {
         }
 
         // Stall detection: track whether agent output is making progress.
-        if (stallTimeout > 0 && st === 'busy') {
+        if (stallTimeout > 0 && (st === 'busy' || st === 'running' || st === 'in_progress' || st === 'queued')) {
           var currentOutput = '';
           try { currentOutput = extractAgentText(data); } catch (_) {}
           if (currentOutput !== _lastSeenOutput) {
