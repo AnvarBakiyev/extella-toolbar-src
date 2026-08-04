@@ -12,6 +12,12 @@ ETB.registry = (function () {
   // try/catch → tombstone НЕ персистился и удалённые плагины воскресали при синке
   var REMOVED_KEY   = 'etb_plugins_removed_v1';
   var REMOVING_KEY  = 'etb_removing_v1';  // tombstone: id помечен на удаление, пока файл реестра на устройстве ещё есть — не возвращаем при syncFromDevice
+  // Один listener не должен одновременно разбирать два чтения реестра. Открытие
+  // Plugins запускает общий sync, а быстрый клик по карточке раньше запускал
+  // второй _etb_registry_read: оба глобальных прогона сталкивались, и адресный
+  // запрос панели уходил в Worker hung/Target unavailable. Держим single-flight
+  // на устройство и, если общий sync уже несёт нужную карточку, используем его.
+  var _deviceSyncInFlight = {};
   var EVOLUTION_STUDIO_OWNERSHIP_MIGRATION_KEY =
     'etb_evolution_studio_ownership_migration_v1';
   function _loadRemoving(){ try { return JSON.parse(localStorage.getItem(REMOVING_KEY) || '[]'); } catch(e){ return []; } }
@@ -332,6 +338,29 @@ ETB.registry = (function () {
 
     syncFromDevice: function (deviceId, onlyId) {
       var self = this;
+      var syncKey = String(deviceId || '__default__');
+      var pending = _deviceSyncInFlight[syncKey];
+      if (pending && pending.promise) {
+        return pending.promise.then(function (added) {
+          var list = Array.isArray(added) ? added : [];
+          var matching = onlyId ? list.filter(function (m) {
+            return m && m.id === onlyId;
+          }) : list;
+          var hasPage = matching.some(function (m) {
+            var html = m && m.ui && m.ui.html;
+            return typeof html === 'string' && html !== HTML_MARK;
+          });
+          // Адресный sync уже прочитал страницу этой карточки — второго прогона
+          // не нужно. Общий sync несёт только HTML_MARK, поэтому после него
+          // последовательно дочитываем страницу одним коротким запросом.
+          if (!onlyId || hasPage || pending.onlyId === onlyId) return matching;
+          // В полёте была другая адресная карточка либо общий sync не принёс
+          // нужную: после его завершения запускаем один последовательный запрос.
+          return self.syncFromDevice(deviceId, onlyId);
+        });
+      }
+      var flight = { onlyId: onlyId || '', promise: null };
+      _deviceSyncInFlight[syncKey] = flight;
       var fnName = '_etb_registry_read';
       // Девайсные тумбстоуны (_registry/_removed/*.json, пишет чистка удаления):
       // зомби-хвост первого оборванного рана установки может дописать манифест
@@ -375,6 +404,15 @@ ETB.registry = (function () {
         '                        try: os.remove(fp)',
         '                        except Exception: pass',
         '                        continue',
+        // Общему списку нужны метаданные плиток, а не сотни килобайт страниц.
+        // HTML читается только адресным запросом при открытии карточки. Раньше
+        // Plugins тащил ~500 КБ, а затем параллельный клик по Баға запускал
+        // второй прогон того же listener и получал таймаут.
+        '                if not only_id and isinstance(ui, dict) and isinstance(ui.get("html"), str):',
+        '                    m = dict(m)',
+        '                    ui = dict(ui)',
+        '                    ui["html"] = "__etb_html_on_device__"',
+        '                    m["ui"] = ui',
         '                out.append(m)',
         '            except Exception:',
         '                pass',
@@ -461,7 +499,7 @@ ETB.registry = (function () {
             'Диагностика чтения реестра с устройства').catch(function () {});
         } catch (_) {}
       };
-      return ETB.api.saveExpert({
+      var work = ETB.api.saveExpert({
         name: fnName,
         description: 'Read local Extella plugin registry files',
         code: code,
@@ -499,6 +537,14 @@ ETB.registry = (function () {
             return [];
           });
       });
+      flight.promise = work.then(function (added) {
+        if (_deviceSyncInFlight[syncKey] === flight) delete _deviceSyncInFlight[syncKey];
+        return added;
+      }, function (error) {
+        if (_deviceSyncInFlight[syncKey] === flight) delete _deviceSyncInFlight[syncKey];
+        throw error;
+      });
+      return flight.promise;
     },
 
     // Снять девайсный тумбстоун перед (пере)установкой: иначе джанитор

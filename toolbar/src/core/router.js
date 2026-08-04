@@ -5460,12 +5460,22 @@ ETB.router = (function () {
       + 'padding:48px;color:#555;">' + text + '</div>';
   }
   function _deviceReadingHTML() {
-    return _panelNote(_L('Читаю панель с этого устройства\u2026', 'Reading the panel from this device\u2026'));
+    return _panelNote(_L('Читаю панель с этого устройства\u2026', 'Reading the panel from this device\u2026')
+      + '<div style="margin-top:8px;font-size:11px;color:#888;">'
+      + _L('загрузчик 04.08-r3', 'loader 04.08-r3') + '</div>');
   }
   function _deviceReadFailedHTML() {
+    var probe = '';
+    try { probe = String(window.__etbRegistryProbe || ''); } catch (_) {}
+    var why = '';
+    try { why = String(_deviceWhyText() || ''); } catch (_) {}
+    var details = probe || why;
     return _panelNote(_L(
       'Не удалось прочитать страницу с этого устройства. Проверь, что Extella видит устройство, и открой панель ещё раз.',
-      'Could not read the page from this device. Check that Extella sees the device and open the panel again.'));
+      'Could not read the page from this device. Check that Extella sees the device and open the panel again.')
+      + '<div style="margin-top:10px;font-size:11px;color:#888;">'
+      + _L('загрузчик 04.08-r3', 'loader 04.08-r3')
+      + (details ? '<br>' + _esc(details) : '') + '</div>');
   }
   // Почему устройство не нашлось — словами, а не молчанием. Панель без устройства
   // отказывается работать, и человек видел одинаковое «не сообщило устройство»

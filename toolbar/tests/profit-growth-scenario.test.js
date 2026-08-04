@@ -662,3 +662,88 @@ test('device sync recovers Capability Studio ownership after a cleared local cac
     ['capability-studio-scenario', 'profit-growth-scenario'],
   );
 });
+
+test('device registry serializes full sync and a panel read without transporting all HTML', async () => {
+  const registrySource = fs.readFileSync(
+    path.join(toolbarRoot, 'src', 'core', 'registry.js'),
+    'utf8',
+  );
+  const values = new Map();
+  const localStorage = {
+    getItem(key) { return values.has(key) ? values.get(key) : null; },
+    setItem(key, value) { values.set(key, String(value)); },
+    removeItem(key) { values.delete(key); },
+  };
+  const markerManifest = {
+    id: 'extella_kz_grocery',
+    ui: { type: 'html', html: '__etb_html_on_device__' },
+  };
+  const pageManifest = {
+    id: 'extella_kz_grocery',
+    ui: { type: 'html', html: '<div>Баға 0.2.1</div>' },
+  };
+  let savedDefinition = null;
+  let releaseFull = null;
+  let activeRuns = 0;
+  let maxActiveRuns = 0;
+  const runParams = [];
+  const context = {
+    ETB: {
+      api: {
+        saveExpert(definition) {
+          savedDefinition = definition;
+          return Promise.resolve({ status: 'success' });
+        },
+        runExpert(_name, params) {
+          runParams.push(params.only_id);
+          activeRuns += 1;
+          maxActiveRuns = Math.max(maxActiveRuns, activeRuns);
+          if (runParams.length === 1) {
+            return new Promise((resolve) => {
+              releaseFull = () => {
+                activeRuns -= 1;
+                resolve({ result: JSON.stringify({ m: [markerManifest], t: [] }) });
+              };
+            });
+          }
+          activeRuns -= 1;
+          return Promise.resolve({
+            result: JSON.stringify({ m: [pageManifest], t: [] }),
+          });
+        },
+      },
+      router: { evict() {} },
+    },
+    BUILTIN_PLUGINS: [],
+    localStorage,
+    console,
+    Promise,
+  };
+  vm.runInNewContext(registrySource, context);
+
+  const full = context.ETB.registry.syncFromDevice('device-1234567890', '');
+  const panel = context.ETB.registry.syncFromDevice(
+    'device-1234567890',
+    'extella_kz_grocery',
+  );
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(typeof releaseFull, 'function');
+  releaseFull();
+
+  const [, panelResult] = await Promise.all([full, panel]);
+  assert.deepEqual(runParams, ['', 'extella_kz_grocery']);
+  assert.equal(maxActiveRuns, 1, 'registry reads for one device must never overlap');
+  assert.equal(panelResult[0].ui.html, '<div>Баға 0.2.1</div>');
+  assert.match(savedDefinition.code, /if not only_id/);
+  assert.match(savedDefinition.code, /__etb_html_on_device__/);
+});
+
+test('device panel loader exposes its build and the registry probe on failure', () => {
+  const routerSource = fs.readFileSync(
+    path.join(toolbarRoot, 'src', 'core', 'router.js'),
+    'utf8',
+  );
+  assert.match(routerSource, /загрузчик 04\.08-r3/);
+  assert.match(routerSource, /window\.__etbRegistryProbe/);
+  assert.match(routerSource, /details \? '<br>' \+ _esc\(details\)/);
+});
