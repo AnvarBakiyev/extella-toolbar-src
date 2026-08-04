@@ -5039,15 +5039,41 @@ ETB.router = (function () {
     ].join('');
   }
 
-  // Устройство этой машины для панелей: приложение отдаёт его напрямую (тот же
-  // источник, что у экрана установки по ссылке). Локальный мост не нужен.
-  function _selfDeviceId() {
+  // Устройство этой машины для панелей. Живая проверка 04.08: на реальной сборке
+  // приложения extellaDesktop.getDeviceID пуст, а KV _device_id не заведён — панель
+  // честно отказывалась работать. Поэтому цепочка источников, как у экрана установки
+  // по ссылке: приложение → KV → мост Конструктора. Найденное кэшируется и пишется
+  // в KV, чтобы следующий раз не зависел от моста. Мост — переходный источник:
+  // уйдёт вместе с последним локальным сервером.
+  var _deviceIdCache = '';
+  function _resolveDeviceId() {
+    if (_deviceIdCache) return Promise.resolve(_deviceIdCache);
     try {
       if (window.extellaDesktop && typeof window.extellaDesktop.getDeviceID === 'function') {
-        return String(window.extellaDesktop.getDeviceID() || '');
+        var d = String(window.extellaDesktop.getDeviceID() || '');
+        if (d) { _deviceIdCache = d; return Promise.resolve(d); }
       }
     } catch (_) {}
-    return '';
+    return ETB.api.kvGet('_device_id').then(function (res) {
+      var d = (res && res.value) ? String(res.value) : '';
+      if (d) { _deviceIdCache = d; return d; }
+      var c = typeof AbortController !== 'undefined' ? new AbortController() : null;
+      var t = c ? setTimeout(function () { c.abort(); }, 3000) : null;
+      var opts = c ? { signal: c.signal } : {};
+      return fetch('http://127.0.0.1:8765/x/health', opts)
+        .then(function (r) { return r.json(); })
+        .then(function (j) {
+          if (t) clearTimeout(t);
+          var dev = (j && j.target) ? String(j.target) : '';
+          if (dev) {
+            _deviceIdCache = dev;
+            // запоминаем на аккаунте — следующий запуск не зависит от моста
+            ETB.api.kvSet('_device_id', dev, 'Extella device ID').catch(function () {});
+          }
+          return dev;
+        })
+        .catch(function () { if (t) clearTimeout(t); return ''; });
+    }).catch(function () { return ''; });
   }
 
   function _buildPanel(plugin) {
@@ -5187,6 +5213,7 @@ ETB.router = (function () {
       iframe.setAttribute('allow', 'clipboard-read;clipboard-write');
       iframe.addEventListener('load', function () {
         _wireIframeToken(iframe, function (token) {
+          _resolveDeviceId().then(function (deviceId) {
           try {
             var initPayload = {
               type: 'etb_init',
@@ -5201,13 +5228,14 @@ ETB.router = (function () {
               // тонкий режим уходит. Приложение знает устройство само, спросим его.
               // Панель без устройства обязана отказываться работать, а не молча слать
               // задачу в общий пул аккаунта: ложный успех — наш самый дорогой класс.
-              device: _selfDeviceId()
+              device: deviceId
             };
             // Bridge-only apps never receive the account credential.
             if (!ui.tokenless) initPayload.token = token;
             iframe.contentWindow.postMessage(initPayload, '*');
             _postThemeToIframe(iframe);
           } catch (e) {}
+          });
         });
       }, { once: true });
       _attachHealthWatchdog(iframe, content, plugin);
@@ -5380,7 +5408,11 @@ ETB.router = (function () {
           var _tgts = Array.isArray(e.data.targets) && e.data.targets.length
             ? e.data.targets.map(String)
             : (e.data.target ? [String(e.data.target)] : null);
-          ETB.api.runExpert(expertName, expertParams,
+          // runExpertAsync, не runExpert: тяжёлые эксперты платформа переводит в
+          // отложенные и отдаёт task_id. Прежний мост возвращал панели сырой конверт
+          // «deferred, use task_id…» — панель Баға висла на «Смотрю, что есть…»
+          // (живой экран 04.08). Мост доводит задачу до результата сам.
+          ETB.api.runExpertAsync(expertName, expertParams,
             _tgts ? { global: true, targets: _tgts } : { global: true })
             .then(function (res) { reply({ type: 'etb_expert_result', reqId: reqId, ok: true, res: res }); })
             .catch(function (err) { reply({ type: 'etb_expert_result', reqId: reqId, ok: false, error: (err && err.message) || 'expert failed' }); });
