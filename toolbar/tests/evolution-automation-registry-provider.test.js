@@ -580,6 +580,40 @@ test('default scanner receives the current desktop target once and never falls b
   assert.deepEqual(scanCalls, ['desktop-device-current']);
 });
 
+test('an explicit failed host device lookup never falls back to a different target', async () => {
+  const calls = [];
+  const scanCalls = [];
+  const provider = loadProvider({
+    registry: {
+      scanDeviceManifests(deviceId) {
+        scanCalls.push(deviceId);
+        return Promise.resolve({ entries: [] });
+      },
+    },
+    window: {
+      extellaDesktop: {
+        getDeviceID() {
+          return 'different-untrusted-device';
+        },
+      },
+    },
+  });
+  const snapshot = await provider.load({
+    api: successfulApi(calls),
+    storage: memoryStorage('[]'),
+    deviceId: '',
+    deviceIdError: 'host could not prove the current device',
+    now: '2026-07-26T20:00:00.000Z',
+  });
+
+  assert.equal(snapshot.sources.deviceCards.available, false);
+  assert.deepEqual(scanCalls, []);
+  assert.ok(snapshot.sources.deviceCards.errors.some(
+    (error) => error.code === 'DEVICE_CARDS_UNAVAILABLE' &&
+      error.detail === 'host could not prove the current device',
+  ));
+});
+
 test('schedule KV is read only with an explicit scope and missing scope stays visible', async () => {
   const calls = [];
   const provider = loadProvider();

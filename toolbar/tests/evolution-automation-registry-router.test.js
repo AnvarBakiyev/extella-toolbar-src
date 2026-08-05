@@ -295,7 +295,10 @@ test('current-device scanner performs no provisioning, deletion, or cache mutati
   const source = registry.slice(start, end);
   assert.match(source, /_etb_evolution_registry_scan_v1/);
   assert.match(source, /ETB\.api\.runExpert\(fnName,\s*\{\},\s*\{/);
+  assert.match(source, /targets:\s*\[exactDeviceId\]/);
   assert.match(source, /target:\s*exactDeviceId/);
+  assert.match(source, /clientTimeoutMs:\s*180000/);
+  assert.doesNotMatch(source, /\btimeout:\s*20/);
   assert.match(source, /global:\s*true/);
   assert.doesNotMatch(
     source,
@@ -306,4 +309,19 @@ test('current-device scanner performs no provisioning, deletion, or cache mutati
     /runExpert\(fnName,[\s\S]*?\.catch\([\s\S]*?runExpert\(fnName/,
     'the exact current-device target must have no untargeted fallback',
   );
+});
+
+test('registry load reuses the host-resolved device instead of resolving it twice', () => {
+  const start = router.indexOf(
+    '  function _evolutionAutomationRegistryLoad(context)',
+  );
+  const end = router.indexOf(
+    '  function _evolutionRequireSession(',
+    start,
+  );
+  assert.ok(start >= 0 && end > start);
+  const source = router.slice(start, end);
+  assert.match(source, /return _resolveDeviceId\(\)\.then\(function \(deviceId\)/);
+  assert.match(source, /deviceId:\s*deviceId/);
+  assert.match(source, /deviceIdError:\s*deviceId \? '' : _deviceWhyText\(\)/);
 });

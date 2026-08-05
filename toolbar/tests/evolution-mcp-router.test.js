@@ -222,7 +222,7 @@ test('generic iframe KV and KV-expert bridges reserve the MCP registry key', () 
     'var expertTargetsReservedMcpRegistry',
   );
   const routerExpertEnd = router.indexOf(
-    'ETB.api.runExpert(expertName, expertParams',
+    'ETB.api.runExpertAsync(expertName, expertParams',
     routerExpertStart,
   );
   assert.ok(routerExpertStart >= 0 && routerExpertEnd > routerExpertStart);

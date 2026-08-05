@@ -54,7 +54,9 @@ test('Evolution Console manifest keeps exact product naming and a read-only surf
     evolutionManifest.description,
     'Evolution Console разделяет работающие, остановленные, требующие помощи и непроверенные автоматизации. Каталог отделён от установленных, а детали для специалиста не мешают ежедневному управлению.',
   );
-  assert.equal(evolutionManifest.version, '0.12.0');
+  assert.equal(evolutionManifest.version, '0.13.0');
+  assert.match(evolutionHtml, /id="consoleVersion"/);
+  assert.match(evolutionHtml, /var CONSOLE_VERSION = '0\.13\.0'/);
   assert.deepEqual(evolutionManifest.pills, [
     'Автоматизации',
     'Состояние',
@@ -717,12 +719,15 @@ test('Evolution Console clears every account-bound UI slice before a new init', 
   assert.match(resetSource, /renderAll\(\)/);
   assert.match(
     evolutionHtml,
-    /if\(d\.type==='etb_init'\)\{resetAccountState\(''\)/,
+    /if\(d\.type==='etb_init'\)\{clearInitDeadline\(\);resetAccountState\(''\);state\.hostInitialized=true/,
   );
   assert.match(
     evolutionHtml,
     /d\.type==='etb_account_reset'\|\|d\.type==='etb_logout'\|\|d\.type==='etb_session_reset'/,
   );
+  assert.match(evolutionHtml, /setTimeout\(function\(\)\{[\s\S]*?\},15000\)/);
+  assert.match(evolutionHtml, /initUnavailable:'Центр Управления Агентами не получил приветствие Extella за 15 секунд/);
+  assert.match(evolutionHtml, /initUnavailable:'Evolution Console did not receive the Extella greeting within 15 seconds/);
 });
 
 test('Evolution Console uses exact API fields and canonical checker facts', () => {

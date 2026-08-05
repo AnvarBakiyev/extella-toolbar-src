@@ -445,10 +445,17 @@ ETB.api = (function () {
   }
 
   function runExpert(name, params, opts) {
+    opts = opts || {};
+    var clientTimeoutMs = Number(opts.clientTimeoutMs || 0);
+    var bodyOptions = Object.assign({}, opts);
+    // clientTimeoutMs belongs to the Desktop transport only. Passing it in the
+    // /api/expert/run JSON body makes it look like a platform run option and
+    // couples the UI deadline to server semantics. Keep the two clocks separate.
+    delete bodyOptions.clientTimeoutMs;
     return _post('/api/expert/run', Object.assign(
       { expert_name: name, params: params || {} },
-      opts || {}
-    ));
+      bodyOptions
+    ), null, clientTimeoutMs > 0 ? { timeoutMs: clientTimeoutMs } : undefined);
   }
 
   function runExpertAsync(name, params, opts) {

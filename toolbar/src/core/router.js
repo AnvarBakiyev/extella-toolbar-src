@@ -2585,12 +2585,17 @@ ETB.router = (function () {
         'the read-only automation registry projection is unavailable'
       ));
     }
-    return provider.load({
-      actorId: context.actorId,
-      epoch: context.epoch,
-      assertContext: function () {
-        _agentControlAssertContext(context);
-      }
+    return _resolveDeviceId().then(function (deviceId) {
+      _agentControlAssertContext(context);
+      return provider.load({
+        actorId: context.actorId,
+        epoch: context.epoch,
+        deviceId: deviceId,
+        deviceIdError: deviceId ? '' : _deviceWhyText(),
+        assertContext: function () {
+          _agentControlAssertContext(context);
+        }
+      });
     }).then(function (sources) {
       _agentControlAssertContext(context);
       var registry = projector.project(

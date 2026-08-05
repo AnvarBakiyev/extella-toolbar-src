@@ -650,8 +650,13 @@ ETB.evolutionAutomationRegistryProvider = (function () {
 
   function currentDeviceId(options) {
     var value;
-    if (text(options && options.deviceId)) {
-      return Promise.resolve(text(options.deviceId));
+    if (options && hasOwn(options, 'deviceId')) {
+      if (text(options.deviceId)) {
+        return Promise.resolve(text(options.deviceId));
+      }
+      return Promise.reject(new Error(
+        text(options.deviceIdError) || 'current desktop device id is unavailable'
+      ));
     }
     try {
       if (typeof window !== 'undefined' && window.extellaDesktop &&
