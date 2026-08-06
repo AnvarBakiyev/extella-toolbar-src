@@ -45,9 +45,23 @@ function plain(value) {
 test('router maps the provider snapshot into the exact pure projection input', () => {
   const mapProjection = loadMapper();
   const result = plain(mapProjection({
-    schemaVersion: 'extella.evolution.automation-registry-sources.v2',
+    schemaVersion: 'extella.evolution.automation-registry-sources.v4',
     collectedAt: '2026-07-26T20:00:00.000Z',
     complete: false,
+    deviceInventory: {
+      schema: 'extella.evolution.device_inventory.v2',
+      available: false,
+      classification_complete: false,
+      counts: {
+        discovered: null,
+        business_automations: null,
+        system_surfaces: null,
+        installed_apps: null,
+        probes: null,
+        unclassified: null,
+      },
+      rows: [],
+    },
     sources: {
       catalog: { available: false, errors: [{}] },
       composerInstalled: { available: true, errors: [] },
@@ -57,6 +71,7 @@ test('router maps the provider snapshot into the exact pure projection input', (
       schedules: { available: true, errors: [] },
       automationStates: { available: true, errors: [] },
       automationRuns: { available: true, errors: [] },
+      stateReaders: { available: true, errors: [] },
       schedulerIndex: { available: true, errors: [] },
       deviceCards: { available: false, errors: [{}] },
     },
@@ -104,6 +119,7 @@ test('router maps the provider snapshot into the exact pure projection input', (
       present: true,
       value: { latest: { ts: 1785100000000, ok: true }, count: 1 },
     }],
+    stateReaderFacts: [],
     schedulerIndexSids: ['wz_20260709_travel'],
     errors: [{
       source: '_mkt_automations',
@@ -176,6 +192,7 @@ test('router maps the provider snapshot into the exact pure projection input', (
     runtime_state: false,
     automation_state: true,
     automation_runs: true,
+    state_readers: true,
     scheduler_index: true,
     local_installed: true,
     composer_installed: true,
@@ -201,9 +218,23 @@ test('provider contract rejects a contradictory complete source snapshot', () =>
   const mapProjection = loadMapper();
   assert.throws(
     () => mapProjection({
-      schemaVersion: 'extella.evolution.automation-registry-sources.v2',
+      schemaVersion: 'extella.evolution.automation-registry-sources.v4',
       collectedAt: '2026-07-26T20:00:00.000Z',
       complete: true,
+      deviceInventory: {
+        schema: 'extella.evolution.device_inventory.v2',
+        available: true,
+        classification_complete: true,
+        counts: {
+          discovered: 0,
+          business_automations: 0,
+          system_surfaces: 0,
+          installed_apps: 0,
+          probes: 0,
+          unclassified: 0,
+        },
+        rows: [],
+      },
       sources: {
         catalog: { available: false, errors: [] },
         composerInstalled: { available: true, errors: [] },
@@ -213,6 +244,7 @@ test('provider contract rejects a contradictory complete source snapshot', () =>
         schedules: { available: true, errors: [] },
         automationStates: { available: true, errors: [] },
         automationRuns: { available: true, errors: [] },
+        stateReaders: { available: true, errors: [] },
         schedulerIndex: { available: true, errors: [] },
         deviceCards: { available: true, errors: [] },
       },
@@ -224,6 +256,7 @@ test('provider contract rejects a contradictory complete source snapshot', () =>
       runtimeStateRows: [],
       automationStateFacts: [],
       automationRunFacts: [],
+      stateReaderFacts: [],
       schedulerIndexSids: [],
       browserInstalledIds: [],
       composerInstalledItems: [],
@@ -253,7 +286,10 @@ test('registry load is account-fenced and does not invoke legacy mutation paths'
     /projector\.project\(\s*_evolutionAutomationProjectionInput\(sources\)\s*\)/,
   );
   assert.doesNotMatch(source, /_evolutionFleetLoad\(context\)/);
-  assert.match(source, /registry:\s*registry,\s*legacy:\s*null/);
+  assert.match(
+    source,
+    /registry:\s*registry,\s*inventory:\s*sources\.deviceInventory,\s*stateReaders:\s*sources\.stateReaderFacts,\s*legacy:\s*null/,
+  );
   assert.match(source, /ADVANCED_EVOLUTION_NOT_LOADED/);
   assert.match(
     router,
@@ -268,7 +304,10 @@ test('current-device scanner performs no provisioning, deletion, or cache mutati
   const source = registry.slice(start, end);
   assert.match(source, /_etb_evolution_registry_scan_v1/);
   assert.match(source, /ETB\.api\.runExpert\(fnName,\s*\{\},\s*\{/);
+  assert.match(source, /targets:\s*\[exactDeviceId\]/);
   assert.match(source, /target:\s*exactDeviceId/);
+  assert.match(source, /clientTimeoutMs:\s*180000/);
+  assert.doesNotMatch(source, /\btimeout:\s*20/);
   assert.match(source, /global:\s*true/);
   assert.doesNotMatch(
     source,
@@ -279,4 +318,19 @@ test('current-device scanner performs no provisioning, deletion, or cache mutati
     /runExpert\(fnName,[\s\S]*?\.catch\([\s\S]*?runExpert\(fnName/,
     'the exact current-device target must have no untargeted fallback',
   );
+});
+
+test('registry load reuses the host-resolved device instead of resolving it twice', () => {
+  const start = router.indexOf(
+    '  function _evolutionAutomationRegistryLoad(context)',
+  );
+  const end = router.indexOf(
+    '  function _evolutionRequireSession(',
+    start,
+  );
+  assert.ok(start >= 0 && end > start);
+  const source = router.slice(start, end);
+  assert.match(source, /return _resolveDeviceId\(\)\.then\(function \(deviceId\)/);
+  assert.match(source, /deviceId:\s*deviceId/);
+  assert.match(source, /deviceIdError:\s*deviceId \? '' : _deviceWhyText\(\)/);
 });

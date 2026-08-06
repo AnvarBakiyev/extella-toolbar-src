@@ -77,6 +77,43 @@ ETB.registry = (function () {
     if (a.indexOf(id) !== -1) _saveRemoved(a.filter(function (x) { return x !== id; }));
   }
 
+  function _evolutionScannerPayload(response) {
+    var current = response;
+    var depth = 0;
+    // The platform can return the scanner directly, inside an expert task
+    // result, or inside the bridge envelope used by tokenless panels. Unwrap a
+    // bounded number of known layers; never search arbitrary nested objects.
+    while (depth < 4) {
+      if (typeof current === 'string') {
+        try { current = JSON.parse(current); }
+        catch (_) {
+          throw new Error('device registry scanner returned invalid JSON');
+        }
+        depth += 1;
+        continue;
+      }
+      if (!current || typeof current !== 'object') break;
+      if (Array.isArray(current.entries)) return current;
+      if (Object.prototype.hasOwnProperty.call(current, 'res')) {
+        current = current.res;
+        depth += 1;
+        continue;
+      }
+      if (Object.prototype.hasOwnProperty.call(current, 'result')) {
+        current = current.result;
+        depth += 1;
+        continue;
+      }
+      if (Object.prototype.hasOwnProperty.call(current, 'output')) {
+        current = current.output;
+        depth += 1;
+        continue;
+      }
+      break;
+    }
+    return current;
+  }
+
   function _isLegacyCapabilityStudioOwner(plugin) {
     var definitions = plugin &&
       (plugin.expert_defs || plugin.expertDefs) || [];
@@ -248,15 +285,10 @@ ETB.registry = (function () {
         // ради совместимости и молча игнорируется сервером.
         targets: [exactDeviceId],
         target: exactDeviceId,
-        timeout: 20,
+        clientTimeoutMs: 180000,
         global: true
       }).then(function (response) {
-        var raw = response && (response.result || response.output);
-        var parsed = raw;
-        if (typeof raw === 'string') {
-          try { parsed = JSON.parse(raw); }
-          catch (_) { throw new Error('device registry scanner returned invalid JSON'); }
-        }
+        var parsed = _evolutionScannerPayload(response);
         if (!parsed || typeof parsed !== 'object' ||
             !Array.isArray(parsed.entries) ||
             !Number.isInteger(Number(parsed.matched_count)) ||

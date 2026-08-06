@@ -627,6 +627,11 @@ test('device sync recovers Capability Studio ownership after a cleared local cac
             result: JSON.stringify({ m: [legacyManifest], t: [] }),
           });
         },
+        runExpertAsync() {
+          return Promise.resolve({
+            result: JSON.stringify({ m: [legacyManifest], t: [] }),
+          });
+        },
       },
       router: { evict() {} },
     },

@@ -113,8 +113,19 @@ for (const { file, name, value } of manifests) {
       : String(value.ui && value.ui.html || '');
     if (!html || !html.includes('etb_ui_health')) fail(`${name}: scenario UI has no toolbar health marker`);
     if (!(value.capabilities || []).length) fail(`${name}: scenario has no declared capabilities`);
-    if ((value.capabilities || []).some((capability) => capability.external_writes !== false)) {
-      fail(`${name}: scenario capability must explicitly disable external writes`);
+    const externalWriteCapabilities = (value.capabilities || []).filter(
+      (capability) => capability.external_writes === true
+    );
+    const exactTrustedPublish = externalWriteCapabilities.length === 1 &&
+      externalWriteCapabilities[0].id === 'trusted_publish_action' &&
+      externalWriteCapabilities[0].version ===
+        'EVOLUTION_TRUSTED_PUBLISH_ACTION_V1' &&
+      value.id === 'profit-growth-scenario';
+    if ((value.capabilities || []).some(
+      (capability) => capability.external_writes !== false &&
+        capability.external_writes !== true
+    ) || (externalWriteCapabilities.length && !exactTrustedPublish)) {
+      fail(`${name}: scenario may expose only the exact host-mediated trusted_publish_action write`);
     }
   }
   const defs = value.expert_defs || [];

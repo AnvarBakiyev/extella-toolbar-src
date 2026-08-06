@@ -269,6 +269,42 @@ async function published(control = loadCore()) {
   return { ...setup, tested: setup.ledger, ledger };
 }
 
+test('trusted publish evidence resolves three exact durable refs and rejects stale refs', async () => {
+  const { control, ledger } = await tested();
+  const draft = ledger.drafts[ledger.currentDraftId];
+  const request = {
+    draft_id: draft.id,
+    agent_id: IDS.oneC,
+    expected_version: draft.baseVersionByAgent[IDS.oneC],
+    ledger_sha256: await control.sha256(ledger),
+    gates: {
+      IMPACT_ANALYZED: `impact:${draft.id}:${draft.draftSha256}`,
+      PLAYGROUND_GREEN: ledger.currentTestRunId,
+      ROLLBACK_AVAILABLE: draft.baseVersionByAgent[IDS.oneC],
+    },
+  };
+  const evidence = plain(await control.resolveTrustedPublishEvidence(
+    ledger,
+    request,
+  ));
+
+  assert.equal(evidence.draftId, draft.id);
+  assert.equal(evidence.agentId, IDS.oneC);
+  assert.equal(evidence.impactId, request.gates.IMPACT_ANALYZED);
+  assert.equal(evidence.runId, request.gates.PLAYGROUND_GREEN);
+  assert.equal(evidence.rollbackRef, request.gates.ROLLBACK_AVAILABLE);
+  assert.equal(evidence.versionBefore, request.expected_version);
+  assert.equal(evidence.candidateVersionId, draft.candidateVersionId);
+
+  await assert.rejects(
+    control.resolveTrustedPublishEvidence(ledger, {
+      ...request,
+      gates: { ...request.gates, IMPACT_ANALYZED: 'impact:stale' },
+    }),
+    (error) => error && error.code === 'TRUSTED_PUBLISH_EVIDENCE_INVALID',
+  );
+});
+
 test('ACC-01: canonical SHA-256 baseline captures two+ real agents and immutable V1 pointers', async () => {
   const { control, ledger } = await baseline();
   const baselineVersion = ledger.versions[ledger.baselineVersionId];
@@ -869,7 +905,7 @@ test('build loads the Codex installer and ES5 Evolution cores after api.js', () 
   const build = fs.readFileSync(buildPath, 'utf8');
   assert.match(
     build,
-    /'api\.js',\s*\n\s*'codex-account-bridge\.js',\s*\n\s*'codex-installer\.js',\s*\n\s*'agent-control\.js',\s*\n\s*'evolution-console\.js',\s*\n\s*'evolution-agent-control-contract\.js',\s*\n\s*'evolution-masking-policy\.js',\s*\n\s*'evolution-automation-registry\.js',\s*\n\s*'evolution-mcp-contract\.js',\s*\n\s*'evolution-standards-provider\.js',\s*\n\s*'install-prompt\.js'[\s\S]*?'registry\.js',\s*\n\s*'evolution-automation-registry-provider\.js',\s*\n\s*'evolution-mcp-registry-provider\.js',\s*\n\s*'evolution-mcp-read-gateway\.js',\s*\n\s*'plugins\.js',\s*\n\s*'router\.js'/,
+    /'api\.js',\s*\n\s*'codex-account-bridge\.js',\s*\n\s*'codex-installer\.js',\s*\n\s*'agent-control\.js',\s*\n\s*'evolution-console\.js',\s*\n\s*'evolution-agent-control-contract\.js',\s*\n\s*'evolution-trusted-publish-contract\.js',\s*\n\s*'evolution-trusted-publish-context-contract\.js',\s*\n\s*'evolution-masking-policy\.js',\s*\n\s*'evolution-automation-contracts\.js',\s*\n\s*'evolution-automation-registry\.js',\s*\n\s*'evolution-mcp-contract\.js',\s*\n\s*'evolution-standards-provider\.js',\s*\n\s*'install-prompt\.js'[\s\S]*?'registry\.js',\s*\n\s*'evolution-automation-registry-provider\.js',\s*\n\s*'evolution-mcp-registry-provider\.js',\s*\n\s*'evolution-mcp-read-gateway\.js',\s*\n\s*'plugins\.js',\s*\n\s*'router\.js'/,
   );
   assert.match(
     build,

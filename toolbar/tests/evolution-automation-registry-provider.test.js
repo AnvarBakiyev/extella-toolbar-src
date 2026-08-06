@@ -14,6 +14,12 @@ const providerPath = path.join(
   'evolution-automation-registry-provider.js',
 );
 const providerSource = fs.readFileSync(providerPath, 'utf8');
+const contractsSource = fs.readFileSync(path.join(
+  toolbarRoot,
+  'src',
+  'core',
+  'evolution-automation-contracts.js',
+), 'utf8');
 
 function plain(value) {
   return JSON.parse(JSON.stringify(value));
@@ -27,6 +33,9 @@ function loadProvider(options = {}) {
     console,
   };
   if (options.window) context.window = options.window;
+  vm.runInNewContext(contractsSource, context, {
+    filename: 'evolution-automation-contracts.js',
+  });
   vm.runInNewContext(providerSource, context, { filename: providerPath });
   return context.ETB.evolutionAutomationRegistryProvider;
 }
@@ -119,6 +128,18 @@ function successfulApi(calls, overrides = {}) {
         }],
       });
     },
+    runExpert(name, params, options) {
+      calls.push({
+        method: 'runExpert',
+        name,
+        params: plain(params),
+        options: plain(options),
+      });
+      return Promise.resolve({
+        status: 'success',
+        result: JSON.stringify({ status: 'ok', checked_at: '2026-08-06T10:00:00Z' }),
+      });
+    },
   };
 }
 
@@ -161,7 +182,7 @@ test('provider reads every source with exact scopes and performs no writes', asy
 
   assert.equal(
     snapshot.schemaVersion,
-    'extella.evolution.automation-registry-sources.v2',
+    'extella.evolution.automation-registry-sources.v4',
   );
   assert.equal(snapshot.collectedAt, '2026-07-26T20:00:00.000Z');
   assert.equal(snapshot.complete, true);
@@ -208,6 +229,15 @@ test('provider reads every source with exact scopes and performs no writes', asy
     plain(snapshot.deviceCardRows.map((row) => row.filename)),
     ['extella_1c_agent.json'],
   );
+  assert.deepEqual(plain(snapshot.deviceInventory.counts), {
+    discovered: 1,
+    business_automations: 1,
+    system_surfaces: 0,
+    installed_apps: 0,
+    probes: 0,
+    unclassified: 0,
+  });
+  assert.equal(snapshot.deviceInventory.classification_complete, true);
 
   const catalogRead = calls.find(
     (call) => call.method === 'kvGet' &&
@@ -266,6 +296,156 @@ test('provider reads every source with exact scopes and performs no writes', asy
       agentId: 'agent_scheduler_exact',
     },
   );
+});
+
+test('expert state reader uses passport params and the exact targets array without promoting product state', async () => {
+  const calls = [];
+  const provider = loadProvider();
+  const snapshot = await provider.load({
+    api: successfulApi(calls),
+    storage: memoryStorage('[]'),
+    deviceId: 'device-current-exact',
+    schedulerScopeAgentId: 'agent_scheduler_exact',
+    scanDeviceCards() {
+      return Promise.resolve({
+        entries: [{
+          filename: 'extella_travel_agency.json',
+          manifest: {
+            id: 'extella_travel_agency',
+            version: '1.0.0',
+          },
+        }],
+      });
+    },
+  });
+  const call = calls.find((item) => item.method === 'runExpert');
+  const fact = plain(snapshot.stateReaderFacts[0]);
+
+  assert.deepEqual(call, {
+    method: 'runExpert',
+    name: 'trv_call',
+    params: { route: '/x/status', body_json: '{}' },
+    options: {
+      targets: ['24f37e45-8c9f-4896-b64f-0dcd0cd8b0e4'],
+      target: '24f37e45-8c9f-4896-b64f-0dcd0cd8b0e4',
+      clientTimeoutMs: 180000,
+      global: true,
+    },
+  });
+  assert.equal(snapshot.sources.stateReaders.available, true);
+  assert.equal(fact.available, true);
+  assert.equal(fact.present, true);
+  assert.equal(fact.automationId, 'extella_travel_agency');
+  assert.equal(fact.schema, 'trv_status.v1');
+  assert.equal(fact.evidence, 'exact_target');
+  assert.equal(fact.canonicalState, null);
+  assert.deepEqual(fact.responseShape, {
+    kind: 'object',
+    keys: ['checked_at', 'status'],
+    truncated: false,
+  });
+  assert.doesNotMatch(JSON.stringify(fact), /2026-08-06T10:00:00Z|"ok"/);
+});
+
+test('state reader unwraps only known response envelopes and keeps product error status as data', async () => {
+  const provider = loadProvider();
+  const contracts = {
+    passportForAutomation() {
+      return {
+        state_reader: {
+          expert: 'sample_state',
+          params: { method: 'read_state' },
+          schema: 'sample_state.v1',
+          execution_device: 'device-exact',
+          data_device: 'device-data',
+          evidence: 'exact_target',
+        },
+      };
+    },
+  };
+  const responses = [
+    { result: { value: 1 } },
+    { status: 'success', res: JSON.stringify({ value: 2 }) },
+    { status: 'success', result: { output: JSON.stringify({ status: 'error' }) } },
+  ];
+
+  for (const response of responses) {
+    const source = await provider.readStateReaders({
+      runExpert() { return Promise.resolve(response); },
+    }, ['sample_automation'], contracts, {});
+    assert.equal(source.available, true);
+    assert.equal(source.facts[0].available, true);
+    assert.equal(source.facts[0].canonicalState, null);
+  }
+});
+
+test('device inventory uses the canonical four-class surface table and supports card-to-automation ids', () => {
+  const provider = loadProvider();
+  const inventory = plain(provider.deviceCardInventory({
+    available: true,
+    cards: [{
+      manifest: {
+        id: 'new_passported_product',
+        name: 'New passported product',
+        automation: { automation_id: 'new_passported_product' },
+      },
+    }, {
+      manifest: {
+        id: 'new_process_product',
+        category: 'automations',
+        type: 'process',
+      },
+    }, {
+      manifest: {
+        id: 'new_snake_schema_product',
+        schema_version: 'extella-process-pack-v1',
+      },
+    }, {
+      manifest: { id: 'extella_anon', system: true },
+    }, {
+      manifest: {
+        id: 'extella_recruiter',
+        category: 'work',
+        type: 'custom',
+      },
+    }, {
+      manifest: {
+        id: 'mismatched_passport',
+        automation: { automation_id: 'another_product' },
+      },
+    }, {
+      manifest: { id: 'baga_thin', version: '0.4.0' },
+    }, {
+      manifest: { id: 'gh_excalidraw_excalidraw', version: '0.18.0' },
+    }, {
+      manifest: { id: 'thindemo', version: '0.1.0' },
+    }],
+  }));
+
+  assert.deepEqual(inventory.counts, {
+    discovered: 9,
+    business_automations: 5,
+    system_surfaces: 1,
+    installed_apps: 1,
+    probes: 1,
+    unclassified: 1,
+  });
+  assert.equal(inventory.classification_complete, false);
+  assert.deepEqual(
+    inventory.rows.map((row) => [row.id, row.kind, row.evidence]),
+    [
+      ['new_passported_product', 'BUSINESS_AUTOMATION', 'AUTOMATION_PASSPORT'],
+      ['new_process_product', 'BUSINESS_AUTOMATION', 'PROCESS_MANIFEST'],
+      ['new_snake_schema_product', 'BUSINESS_AUTOMATION', 'PROCESS_MANIFEST'],
+      ['extella_anon', 'SYSTEM_SURFACE', 'SURFACE_CLASS_STANDARD'],
+      ['extella_recruiter', 'BUSINESS_AUTOMATION', 'SURFACE_CLASS_STANDARD'],
+      ['mismatched_passport', 'UNCLASSIFIED', 'CLASSIFICATION_MISSING'],
+      ['baga_thin', 'BUSINESS_AUTOMATION', 'SURFACE_CLASS_STANDARD'],
+      ['gh_excalidraw_excalidraw', 'INSTALLED_APP', 'SURFACE_CLASS_STANDARD'],
+      ['thindemo', 'PROBE', 'SURFACE_CLASS_STANDARD'],
+    ],
+  );
+  assert.equal(inventory.rows.find((row) => row.id === 'baga_thin').automation_id, 'extella_kz_grocery');
 });
 
 test('malformed run history fails closed instead of selecting an older success', async () => {
@@ -514,6 +694,40 @@ test('default scanner receives the current desktop target once and never falls b
 
   assert.equal(snapshot.sources.deviceCards.available, true);
   assert.deepEqual(scanCalls, ['desktop-device-current']);
+});
+
+test('an explicit failed host device lookup never falls back to a different target', async () => {
+  const calls = [];
+  const scanCalls = [];
+  const provider = loadProvider({
+    registry: {
+      scanDeviceManifests(deviceId) {
+        scanCalls.push(deviceId);
+        return Promise.resolve({ entries: [] });
+      },
+    },
+    window: {
+      extellaDesktop: {
+        getDeviceID() {
+          return 'different-untrusted-device';
+        },
+      },
+    },
+  });
+  const snapshot = await provider.load({
+    api: successfulApi(calls),
+    storage: memoryStorage('[]'),
+    deviceId: '',
+    deviceIdError: 'host could not prove the current device',
+    now: '2026-07-26T20:00:00.000Z',
+  });
+
+  assert.equal(snapshot.sources.deviceCards.available, false);
+  assert.deepEqual(scanCalls, []);
+  assert.ok(snapshot.sources.deviceCards.errors.some(
+    (error) => error.code === 'DEVICE_CARDS_UNAVAILABLE' &&
+      error.detail === 'host could not prove the current device',
+  ));
 });
 
 test('schedule KV is read only with an explicit scope and missing scope stays visible', async () => {

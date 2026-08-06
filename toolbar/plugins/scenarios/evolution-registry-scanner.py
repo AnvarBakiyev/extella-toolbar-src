@@ -8,6 +8,7 @@ def _evolution_registry_safe_manifest(manifest: dict) -> dict:
         "type",
         "schemaVersion",
         "schema_version",
+        "system",
         "platform_agent_id",
         "platformAgentId",
         "orchestrator",
@@ -26,6 +27,18 @@ def _evolution_registry_safe_manifest(manifest: dict) -> dict:
                 for language in ("ru", "en")
                 if isinstance(value.get(language), str)
             }
+
+    # The canonical Automation Passport already uses the top-level
+    # ``automation.automation_id`` field.  Only that stable identifier is
+    # needed to classify a card; owner, business text and other passport data
+    # stay out of the device scan.
+    automation = manifest.get("automation")
+    if isinstance(automation, dict) and isinstance(
+        automation.get("automation_id"), str
+    ):
+        safe["automation"] = {
+            "automation_id": automation["automation_id"][:80]
+        }
 
     nested_keys = {
         "agent": ("platform_agent_id", "platformAgentId"),

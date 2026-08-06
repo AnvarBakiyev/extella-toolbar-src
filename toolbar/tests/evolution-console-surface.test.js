@@ -43,18 +43,20 @@ function inlineScripts(html) {
   )].map((match) => match[1]);
 }
 
-test('Evolution Console manifest keeps exact product naming and a read-only surface contract', () => {
+test('Evolution Console manifest keeps exact product naming and one narrow host-mediated write', () => {
   assert.equal(evolutionManifest.id, 'profit-growth-scenario');
   assert.equal(evolutionManifest.name, 'Evolution Console');
   assert.equal(
     evolutionManifest.tagline,
-    'Что работает, что остановлено и где нужна твоя помощь',
+    'Простое управление автоматизациями Extella',
   );
   assert.equal(
     evolutionManifest.description,
-    'Evolution Console показывает, что работает, что остановлено и где нужна помощь. Каталог отделён от установленных автоматизаций, а неизвестное состояние не подменяется успехом.',
+    'Evolution Console разделяет работающие, остановленные, требующие помощи и непроверенные автоматизации. Каталог отделён от установленных, а детали для специалиста не мешают ежедневному управлению.',
   );
-  assert.equal(evolutionManifest.version, '0.10.0');
+  assert.equal(evolutionManifest.version, '0.16.0');
+  assert.match(evolutionHtml, /id="consoleVersion"/);
+  assert.match(evolutionHtml, /var CONSOLE_VERSION = '0\.16\.0'/);
   assert.deepEqual(evolutionManifest.pills, [
     'Автоматизации',
     'Состояние',
@@ -83,10 +85,11 @@ test('Evolution Console manifest keeps exact product naming and a read-only surf
     evolutionManifest.expert_defs[0].sourceSha256,
     crypto.createHash('sha256').update(evolutionScanner).digest('hex'),
   );
-  assert.ok(
-    evolutionManifest.capabilities.every(
-      (capability) => capability.external_writes === false,
-    ),
+  assert.deepEqual(
+    evolutionManifest.capabilities.filter(
+      (capability) => capability.external_writes === true,
+    ).map((capability) => capability.id),
+    ['trusted_publish_action'],
   );
   assert.deepEqual(
     evolutionManifest.capabilities.map((capability) => capability.id).sort(),
@@ -99,6 +102,7 @@ test('Evolution Console manifest keeps exact product naming and a read-only surf
       'evolution_loop',
       'mcp_read_inventory',
       'shared_genes_map',
+      'trusted_publish_action',
     ],
   );
   assert.equal(
@@ -116,7 +120,7 @@ test('Evolution Console manifest keeps exact product naming and a read-only surf
     evolutionManifest.capabilities.find(
       (capability) => capability.id === 'automation_registry',
     ).version,
-    'EVOLUTION_AUTOMATION_REGISTRY_V2',
+    'EVOLUTION_AUTOMATION_REGISTRY_V3',
   );
   assert.equal(
     evolutionManifest.capabilities.find(
@@ -129,6 +133,12 @@ test('Evolution Console manifest keeps exact product naming and a read-only surf
       (capability) => capability.id === 'agent_change_management',
     ).version,
     'EVOLUTION_AGENT_CONTROL_SURFACE_V1',
+  );
+  assert.equal(
+    evolutionManifest.capabilities.find(
+      (capability) => capability.id === 'trusted_publish_action',
+    ).version,
+    'EVOLUTION_TRUSTED_PUBLISH_ACTION_V1',
   );
 
   const completeSurface = `${JSON.stringify(evolutionManifest)}\n${evolutionHtml}`;
@@ -236,9 +246,11 @@ test('Evolution Console uses only the approved brand palette and never uses Petr
   const approvedColors = new Set([
     'C57E33', 'D4984F', 'A5632A', 'D4944A', 'E0A85E',
     '2F6B66', '3D8078', '24544F', 'B7CEC9', '5FA8A0', '6BB3AA',
-    '0A0A0A', '1A1A1A', '2A2A2A', 'F0F0F0', 'D8D8D8', 'B0B0B0',
-    '8C8C8C', 'AAAAAA', 'FAFAF8', 'F5F3EE', 'EBE8E1', 'D4B896',
-    '0E0E0E', '181818', '222222', '000000',
+    '0A0A0A', '141414', '181818', '1A1A1A', '2A2A2A', 'F0F0F0',
+    'F5F3EE', 'C9C3B8', 'D8D8D8', 'B0B0B0', '8C8C8C', 'AAAAAA',
+    'FAF9F5', 'FFFFFF', 'F5F3EC', 'D7E0DC',
+    'FAFAF8', 'F5F3EE', 'EBE8E1', 'D4B896',
+    '0E0E0E', '222222', '000000',
     '1F7A4D', '57B37E', 'A63A2E', 'E8705F',
   ]);
   const usedColors = [...evolutionHtml.matchAll(/#([0-9a-f]{6})\b/gi)]
@@ -383,21 +395,22 @@ test('automation registry surface exposes no automation state-changing action', 
   assert.match(router, /action === 'automation_registry_load'/);
 });
 
-test('data protection is a read-only per-agent posture in Console and settings stay in Agent Cabinet', () => {
+test('data protection stays read-only and outside the automation summary', () => {
   assert.equal(
     evolutionManifest.capabilities.find(
       (capability) => capability.id === 'data_protection_posture',
     ).version,
     'EVOLUTION_MASKING_POSTURE_V1',
   );
-  assert.match(evolutionHtml, /id="countProtectedAgents"/);
-  assert.match(
-    evolutionHtml,
-    /protectedAgents:'с подтверждёнными PRE \+ POST'/,
+  const overviewStart = evolutionHtml.indexOf('data-evolution-view="overview"');
+  const overviewEnd = evolutionHtml.indexOf(
+    'data-evolution-view="lab"',
+    overviewStart,
   );
-  assert.match(
-    evolutionHtml,
-    /protectedAgents:'with verified PRE \+ POST'/,
+  const overview = evolutionHtml.slice(overviewStart, overviewEnd);
+  assert.doesNotMatch(
+    overview,
+    /countProtectedAgents|countNotRunning|countAttention|PRE\s*\+\s*POST/,
   );
   assert.match(evolutionHtml, /dataProtection:'Защита данных'/);
   assert.match(evolutionHtml, /dataProtection:'Data protection'/);
@@ -410,23 +423,6 @@ test('data protection is a read-only per-agent posture in Console and settings s
     /maskingSettingsCabinet:'Settings are in Agent Cabinet\.'/,
   );
   assert.match(evolutionHtml, /data-masking-posture=/);
-  assert.match(evolutionHtml, /function maskingAutomationAgentIds\(\)/);
-  assert.match(
-    evolutionHtml,
-    /automationFlags\(row\)\.installed===true/,
-    'the N/M denominator must come from installed business automations',
-  );
-  assert.match(evolutionHtml, /function maskingCoverageText\(\)/);
-  assert.match(
-    evolutionHtml,
-    /String\(snapshot\.availability\|\|''\)\.toUpperCase\(\)!=='AVAILABLE'/,
-    'an unavailable local source must render an unknown N/M numerator',
-  );
-  assert.match(
-    evolutionHtml,
-    /ids\.some\(function\(id\)\{return !rows\.some\(function\(row\)\{return String\(row&&row\.agent_id\|\|''\)===id;\}\);\}\)\)return'—\/'\+total/,
-    'a composed automation agent missing from the posture snapshot must keep N unknown',
-  );
   assert.match(
     evolutionHtml,
     /capturedAt<now-5\*60\*1000\|\|capturedAt>now\+60\*1000/,
@@ -450,7 +446,7 @@ test('data protection is a read-only per-agent posture in Console and settings s
     '  function _evolutionMaskingPostureLoad(',
   );
   const postureEnd = router.indexOf(
-    '  function _evolutionLastReceipt(',
+    '  function _evolutionAgentControlLoad(',
     postureStart,
   );
   assert.ok(postureStart >= 0 && postureEnd > postureStart);
@@ -475,31 +471,29 @@ test('data protection is a read-only per-agent posture in Console and settings s
   );
 });
 
-test('Agent change management is an internal read-only Evolution Console view', () => {
+test('agent change-management contract stays internal instead of becoming a task', () => {
   const advancedStart = evolutionHtml.indexOf('id="advancedNav"');
   const advancedEnd = evolutionHtml.indexOf('</details>', advancedStart);
   const advancedNav = evolutionHtml.slice(advancedStart, advancedEnd);
-  const viewStart = evolutionHtml.indexOf('id="agentControlView"');
-  const viewEnd = evolutionHtml.indexOf('</main>', viewStart);
-  const view = evolutionHtml.slice(viewStart, viewEnd);
-  const loaderStart = evolutionHtml.indexOf('    function validAgentControlSurface(');
-  const loaderEnd = evolutionHtml.indexOf('    function clearLegacyFleet(', loaderStart);
-  const loader = evolutionHtml.slice(loaderStart, loaderEnd);
   const routerStart = router.indexOf('  function _evolutionAgentControlLoad(');
   const routerEnd = router.indexOf('  function _evolutionLastReceipt(', routerStart);
   const routerSlice = router.slice(routerStart, routerEnd);
+  const loaderStart = evolutionHtml.indexOf('    function validAgentControlSurface(');
+  const loaderEnd = evolutionHtml.indexOf('    function clearLegacyFleet()', loaderStart);
+  const loader = evolutionHtml.slice(loaderStart, loaderEnd);
 
-  assert.match(advancedNav, /data-view="agentControl"/);
+  assert.doesNotMatch(advancedNav, /data-view="agentControl"/);
   assert.doesNotMatch(advancedNav, /data-primary-surface/);
-  assert.match(view, /data-evolution-view="agent-control"/);
-  assert.match(view, /id="agentControlRefreshBtn"/);
-  assert.match(view, /id="agentControlOperations"/);
-  assert.match(view, /id="agentControlGates"/);
-  assert.match(view, /id="agentControlLimits"/);
-  assert.doesNotMatch(view, /agent_control_publish|data-agent-control-action/);
+  assert.doesNotMatch(evolutionHtml, /data-agent-control-action/);
   assert.doesNotMatch(evolutionHtml, /etb_agent_control/);
   assert.match(evolutionHtml, /agentControlBoundary:'Этот раздел только читает канонический контракт/);
   assert.match(evolutionHtml, /agentControlBoundary:'This section only reads the canonical contract/);
+  assert.match(evolutionHtml, /agentControlPublishGates:'Подтверждения публикации'/);
+  assert.match(evolutionHtml, /agentControlPublishGates:'Publication confirmations'/);
+  assert.match(evolutionHtml, /agentControlGatePreWrite:'До публикации'/);
+  assert.match(evolutionHtml, /agentControlGatePostWrite:'После записи: Extella перечитывает результат'/);
+  assert.match(evolutionHtml, /agentControlGatePreWrite:'Before publication'/);
+  assert.match(evolutionHtml, /agentControlGatePostWrite:'After write: Extella re-reads the result'/);
   assert.match(evolutionHtml, /agentControlRequires:'Зависит от'/);
   assert.match(evolutionHtml, /agentControlRequires:'Requires'/);
   assert.match(loader, /request\('agent_control_load'/);
@@ -511,6 +505,9 @@ test('Agent change management is an internal read-only Evolution Console view', 
   assert.match(loader, /surface\.mutations_allowed!==false/);
   assert.match(loader, /var operationNames=\{\};contract\.operations\.forEach/);
   assert.match(loader, /operationNames\[code\]\|\|code/);
+  assert.match(loader, /row\.code==='READ_BACK_CONFIRMED'\?'post-write':'pre-write'/);
+  assert.match(loader, /data-agent-control-gate-phase=/);
+  assert.match(loader, /agentControlGatePostWrite/);
   assert.doesNotMatch(loader, /status=\+esc\(surface\.status\)|ledger=/);
   assert.match(routerSlice, /session\.standardsBundle\.sources/);
   assert.match(routerSlice, /mutations_allowed: false/);
@@ -530,11 +527,11 @@ test('B4 automation state is three-valued, factual, localized, and fail-closed',
   }
   for (const copy of [
     "automationWorking:'Работает'",
-    "automationStateUnavailable:'Не удалось проверить состояние'",
-    "automationNotRunning:'Не запущена'",
+    "automationStateUnavailable:'Статус неизвестен'",
+    "automationNotRunning:'Остановлена'",
     "automationWorking:'Working'",
-    "automationStateUnavailable:'Couldn’t check status'",
-    "automationNotRunning:'Not running'",
+    "automationStateUnavailable:'Status unknown'",
+    "automationNotRunning:'Stopped'",
   ]) {
     assert.match(evolutionHtml, new RegExp(regexEscape(copy)));
   }
@@ -756,12 +753,15 @@ test('Evolution Console clears every account-bound UI slice before a new init', 
   assert.match(resetSource, /renderAll\(\)/);
   assert.match(
     evolutionHtml,
-    /if\(d\.type==='etb_init'\)\{resetAccountState\(''\)/,
+    /if\(d\.type==='etb_init'\)\{clearInitDeadline\(\);resetAccountState\(''\);state\.hostInitialized=true/,
   );
   assert.match(
     evolutionHtml,
     /d\.type==='etb_account_reset'\|\|d\.type==='etb_logout'\|\|d\.type==='etb_session_reset'/,
   );
+  assert.match(evolutionHtml, /setTimeout\(function\(\)\{[\s\S]*?\},15000\)/);
+  assert.match(evolutionHtml, /initUnavailable:'Центр Управления Агентами не получил приветствие Extella за 15 секунд/);
+  assert.match(evolutionHtml, /initUnavailable:'Evolution Console did not receive the Extella greeting within 15 seconds/);
 });
 
 test('Evolution Console uses exact API fields and canonical checker facts', () => {
@@ -933,6 +933,45 @@ test('Shared Genes and Cabinet build an exact class escalation outside the canon
     evolutionHtml,
     /new CustomEvent\('extella_agent_cabinet_escalation',\{detail:contract\}\)/,
   );
+});
+
+test('Shared Genes has a human task flow backed by exact Console contracts', () => {
+  for (const visibleProductElement of [
+    'Общие правила и знания',
+    'Общие правила',
+    'Общие знания',
+    'Подготовить изменение',
+    'Проверить в Evolution Lab',
+    'Настроить',
+    'Проверить',
+    'Применить',
+  ]) {
+    assert.match(evolutionHtml, new RegExp(visibleProductElement));
+  }
+
+  assert.match(evolutionHtml, /function sharedGeneKind\(gene\)/);
+  assert.match(evolutionHtml, /sharedGeneEscalation\(gene\)/);
+  assert.match(evolutionHtml, /data-shared-kind="rules"/);
+  assert.match(evolutionHtml, /data-shared-kind="knowledge"/);
+  assert.match(evolutionHtml, /id="sharedPrepareBtn"/);
+  assert.match(evolutionHtml, /id="sharedLabBtn"/);
+  assert.match(
+    evolutionHtml,
+    /sharedPrepareBtn'\)\.onclick=function\(\)\{openClassChangeForGene\(gene\.geneId\)/,
+  );
+  assert.match(
+    evolutionHtml,
+    /state\.selectedEscalationId=escalation\.candidateId\|\|escalation\.candidate_id;setView\('lab'\)/,
+  );
+  assert.match(
+    evolutionHtml,
+    /sharedPrepareBtn[^\n]+productionReady\(\)\?'':'disabled'/,
+  );
+  assert.match(
+    evolutionHtml,
+    /sharedLabBtn[^\n]+labReady\?'':'disabled'/,
+  );
+  assert.match(evolutionHtml, /technicalMap:'Техническая карта Shared Genes'/);
 });
 
 test('Bulk preview targets only current visible canonical rows and is adapter-gated', () => {

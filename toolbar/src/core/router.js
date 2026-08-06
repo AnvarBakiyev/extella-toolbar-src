@@ -1160,6 +1160,12 @@ ETB.router = (function () {
       mcpRegistryLocatorAdapter:
         typeof evolutionAdapter.getMcpRegistryLocator === 'function' ?
           'AVAILABLE' : 'PLATFORM_UNAVAILABLE',
+      trustedPublishAdapter:
+        typeof evolutionAdapter.publishTrustedDraft === 'function' ?
+          'AVAILABLE' : 'PLATFORM_UNAVAILABLE',
+      trustedPublishContextAdapter:
+        typeof evolutionAdapter.loadTrustedPublishContext === 'function' ?
+          'AVAILABLE' : 'PLATFORM_UNAVAILABLE',
       evolutionLabAdapter:
         typeof evolutionAdapter.runClassTest === 'function' ?
           'AVAILABLE' : 'PLATFORM_UNAVAILABLE',
@@ -2362,6 +2368,7 @@ ETB.router = (function () {
       SCHEDULE_KV: 'schedules',
       AUTOMATION_STATE: 'automation_state',
       AUTOMATION_RUNS: 'automation_runs',
+      STATE_READER: 'state_reader',
       SCHEDULER_INDEX: 'scheduler_index'
     };
     return names[exact] || 'UNKNOWN';
@@ -2400,6 +2407,52 @@ ETB.router = (function () {
     );
   }
 
+  function _evolutionDeviceInventoryValid(inventory) {
+    var counts = inventory && inventory.counts;
+    var rows = inventory && inventory.rows;
+    var kinds = {
+      BUSINESS_AUTOMATION: true,
+      SYSTEM_SURFACE: true,
+      INSTALLED_APP: true,
+      PROBE: true,
+      UNCLASSIFIED: true
+    };
+    var available = Boolean(inventory && inventory.available === true);
+    if (!inventory ||
+        inventory.schema !== 'extella.evolution.device_inventory.v2' ||
+        typeof inventory.available !== 'boolean' ||
+        typeof inventory.classification_complete !== 'boolean' ||
+        !counts || typeof counts !== 'object' || !Array.isArray(rows)) {
+      return false;
+    }
+    if (!available) {
+      return inventory.classification_complete === false && rows.length === 0 &&
+        counts.discovered === null &&
+        counts.business_automations === null &&
+        counts.system_surfaces === null &&
+        counts.installed_apps === null &&
+        counts.probes === null &&
+        counts.unclassified === null;
+    }
+    if (![counts.discovered, counts.business_automations,
+          counts.system_surfaces, counts.installed_apps, counts.probes,
+          counts.unclassified].every(function (value) {
+      return Number.isInteger(value) && value >= 0;
+    })) return false;
+    if (counts.discovered !== rows.length ||
+        counts.discovered !== counts.business_automations +
+          counts.system_surfaces + counts.installed_apps + counts.probes +
+          counts.unclassified ||
+        inventory.classification_complete !== (counts.unclassified === 0)) {
+      return false;
+    }
+    return rows.every(function (row) {
+      return row && /^[a-z0-9][a-z0-9._-]{1,79}$/.test(String(row.id || '')) &&
+        kinds[row.kind] === true &&
+        typeof row.evidence === 'string' && row.evidence.length > 0;
+    });
+  }
+
   function _evolutionAutomationProjectionInput(sources) {
     var sourceMap;
     var requiredArrays = [
@@ -2411,6 +2464,7 @@ ETB.router = (function () {
       'runtimeStateRows',
       'automationStateFacts',
       'automationRunFacts',
+      'stateReaderFacts',
       'schedulerIndexSids',
       'browserInstalledIds',
       'composerInstalledItems',
@@ -2425,16 +2479,18 @@ ETB.router = (function () {
       'schedules',
       'automationStates',
       'automationRuns',
+      'stateReaders',
       'schedulerIndex',
       'deviceCards'
     ];
     var valid = sources &&
       sources.schemaVersion ===
-        'extella.evolution.automation-registry-sources.v2' &&
+        'extella.evolution.automation-registry-sources.v4' &&
       typeof sources.complete === 'boolean' &&
       String(sources.collectedAt || '').trim() &&
       sources.sources &&
       typeof sources.sources === 'object' &&
+      _evolutionDeviceInventoryValid(sources.deviceInventory) &&
       requiredArrays.every(function (key) {
         return Array.isArray(sources[key]);
       }) &&
@@ -2518,6 +2574,9 @@ ETB.router = (function () {
         automation_runs: _evolutionAutomationSourceComplete(
           sourceMap.automationRuns
         ),
+        state_readers: _evolutionAutomationSourceComplete(
+          sourceMap.stateReaders
+        ),
         scheduler_index: _evolutionAutomationSourceComplete(
           sourceMap.schedulerIndex
         ),
@@ -2544,12 +2603,17 @@ ETB.router = (function () {
         'the read-only automation registry projection is unavailable'
       ));
     }
-    return provider.load({
-      actorId: context.actorId,
-      epoch: context.epoch,
-      assertContext: function () {
-        _agentControlAssertContext(context);
-      }
+    return _resolveDeviceId().then(function (deviceId) {
+      _agentControlAssertContext(context);
+      return provider.load({
+        actorId: context.actorId,
+        epoch: context.epoch,
+        deviceId: deviceId,
+        deviceIdError: deviceId ? '' : _deviceWhyText(),
+        assertContext: function () {
+          _agentControlAssertContext(context);
+        }
+      });
     }).then(function (sources) {
       _agentControlAssertContext(context);
       var registry = projector.project(
@@ -2562,6 +2626,8 @@ ETB.router = (function () {
       return {
         actorId: context.actorId,
         registry: registry,
+        inventory: sources.deviceInventory,
+        stateReaders: sources.stateReaderFacts,
         legacy: null,
         legacyError: {
           code: 'ADVANCED_EVOLUTION_NOT_LOADED',
@@ -2964,10 +3030,13 @@ ETB.router = (function () {
     var sourcePassports = session.standardsBundle &&
       session.standardsBundle.sources &&
       session.standardsBundle.sources.passports;
+    var boundSourcePassportIds = {};
     var passportRows = [];
     var contracts = [];
     var normalized;
     var reference;
+    var boundSourcePassportCount;
+    var sourceIdsValid = true;
     var i;
 
     function reasonCode(value, fallback) {
@@ -3024,7 +3093,53 @@ ETB.router = (function () {
       ));
     }
 
-    Object.keys(session.standardsById || {}).sort().forEach(function (id) {
+    // AVAILABLE means that every declared *bound* source passport is present,
+    // ready and bound to the current live fleet.  An unbound source belongs
+    // to its separate remediation queue, not to this live Cabinet cohort.
+    // Do not project a contract from a ready subset and present the source-list
+    // total as though all bound passports had been verified.
+    sourcePassports.forEach(function (source) {
+      var id = source && source.platform_agent_id;
+      if (id === null) return;
+      if (typeof id !== 'string' || !id || id !== id.trim() ||
+          boundSourcePassportIds[id]) {
+        sourceIdsValid = false;
+        return;
+      }
+      boundSourcePassportIds[id] = true;
+    });
+    boundSourcePassportCount = Object.keys(boundSourcePassportIds).length;
+    if (!sourceIdsValid) {
+      return Promise.resolve(surface(
+        'CONTRACT_UNAVAILABLE',
+        'AGENT_CONTROL_PASSPORT_SOURCE_INVALID',
+        sourcePassports.length,
+        null
+      ));
+    }
+    if (boundSourcePassportCount === 0) {
+      return Promise.resolve(surface(
+        'CONTRACT_UNAVAILABLE',
+        'AGENT_CONTROL_PASSPORT_SET_INCOMPLETE',
+        sourcePassports.length,
+        null
+      ));
+    }
+    if (
+        Object.keys(session.standardsById || {}).length !==
+          boundSourcePassportCount ||
+        Object.keys(session.standardsById || {}).some(function (id) {
+          return !boundSourcePassportIds[id];
+        })) {
+      return Promise.resolve(surface(
+        'CONTRACT_UNAVAILABLE',
+        'AGENT_CONTROL_PASSPORT_SOURCE_INVALID',
+        boundSourcePassportCount,
+        null
+      ));
+    }
+
+    Object.keys(boundSourcePassportIds).sort().forEach(function (id) {
       var standard = session.standardsById[id];
       var platformRow = session.platformById && session.platformById[id];
       var fleetRow = (session.fleet && session.fleet.rows || []).filter(
@@ -3038,11 +3153,11 @@ ETB.router = (function () {
       }
     });
 
-    if (!passportRows.length) {
+    if (passportRows.length !== boundSourcePassportCount) {
       return Promise.resolve(surface(
         'CONTRACT_UNAVAILABLE',
-        'NO_READY_AGENT_PASSPORTS',
-        sourcePassports.length,
+        'AGENT_CONTROL_PASSPORT_SET_INCOMPLETE',
+        boundSourcePassportCount,
         null
       ));
     }
@@ -3051,7 +3166,7 @@ ETB.router = (function () {
       return Promise.resolve(surface(
         'CONTRACT_UNAVAILABLE',
         'AGENT_CONTROL_CONTRACT_RUNTIME_UNAVAILABLE',
-        sourcePassports.length,
+        boundSourcePassportCount,
         null
       ));
     }
@@ -3064,7 +3179,7 @@ ETB.router = (function () {
           return Promise.resolve(surface(
             'CONTRACT_UNAVAILABLE',
             'AGENT_CONTROL_CONTRACT_UNAVAILABLE',
-            sourcePassports.length,
+            boundSourcePassportCount,
             null
           ));
         }
@@ -3079,7 +3194,7 @@ ETB.router = (function () {
         return Promise.resolve(surface(
           'CONTRACT_MISMATCH',
           'AGENT_CONTROL_CONTRACT_MISMATCH',
-          sourcePassports.length,
+          boundSourcePassportCount,
           null
         ));
       }
@@ -3091,13 +3206,285 @@ ETB.router = (function () {
           error && error.code,
           'AGENT_CONTROL_CONTRACT_INVALID'
         ),
-        sourcePassports.length,
+        boundSourcePassportCount,
         null
       ));
     }
 
-    return Promise.resolve(surface('AVAILABLE', null, sourcePassports.length,
+    return Promise.resolve(surface('AVAILABLE', null, boundSourcePassportCount,
       normalized));
+  }
+
+  // The one native-write seam of Evolution Console.  This does not reuse the
+  // managed Evolution Loop ledger: its virtual publish operation is not a
+  // platform agent update and cannot prove account ownership, durable
+  // idempotency or an agent/get read-back.
+  function _evolutionTrustedPublishRequest(data) {
+    var contract = ETB.evolutionTrustedPublishContract;
+    var allowed = [
+      'type',
+      'reqId',
+      'action',
+      'snapshotId'
+    ];
+    if (!contract || typeof contract.normalizeRequest !== 'function') {
+      throw _evolutionError(
+        'TRUSTED_PUBLISH_CONTRACT_UNAVAILABLE',
+        'the trusted publication request contract is unavailable'
+      );
+    }
+    allowed = allowed.concat(contract.REQUEST_KEYS || []);
+    _evolutionRequireClosedKeys(
+      data,
+      allowed,
+      'TRUSTED_PUBLISH_REQUEST_INVALID',
+      'trusted publish bridge request'
+    );
+    if (data.type !== 'etb_evolution_console' ||
+        data.action !== 'etb_evolution_publish') {
+      throw _evolutionError(
+        'TRUSTED_PUBLISH_REQUEST_INVALID',
+        'trusted publish must use the fenced Evolution Console bridge'
+      );
+    }
+    return contract.normalizeRequest({
+      draft_id: data.draft_id,
+      agent_id: data.agent_id,
+      expected_version: data.expected_version,
+      ledger_sha256: data.ledger_sha256,
+      gates: data.gates,
+      idempotency_key: data.idempotency_key
+    });
+  }
+
+  function _evolutionTrustedPublishPublicFailure(publicError) {
+    var error = _evolutionError(
+      publicError.code,
+      publicError.message_en
+    );
+    error.publicError = _evolutionClone(publicError);
+    return error;
+  }
+
+  function _evolutionTrustedPublishAdapterFailure(error, contract) {
+    var code = String(error && error.code || '');
+    var publicError = error && (error.publicError || error.public_error);
+    if (contract && typeof contract.isPublicErrorCode === 'function' &&
+        contract.isPublicErrorCode(code)) {
+      try {
+        return _evolutionTrustedPublishPublicFailure(
+          contract.normalizePublicError(publicError, code)
+        );
+      } catch (_) {
+        // A write may have happened before an adapter returned malformed
+        // error data. Preserve uncertainty rather than turning it into a
+        // fabricated rejection or success.
+      }
+    }
+    return _evolutionTrustedPublishPublicFailure(contract.unknownOutcome());
+  }
+
+  function _evolutionCallTrustedPublishAdapter(request, session, context) {
+    var adapter = ETB.evolutionAdapter || {};
+    var contract = ETB.evolutionTrustedPublishContract;
+    if (!contract || typeof contract.normalizeSuccess !== 'function' ||
+        typeof contract.unknownOutcome !== 'function') {
+      return Promise.reject(_evolutionError(
+        'TRUSTED_PUBLISH_CONTRACT_UNAVAILABLE',
+        'the trusted publication response contract is unavailable'
+      ));
+    }
+    if (typeof adapter.publishTrustedDraft !== 'function') {
+      return Promise.reject(_evolutionError(
+        'TRUSTED_PUBLISH_ADAPTER_UNAVAILABLE',
+        'trusted publication requires the host-owned publish adapter'
+      ));
+    }
+    return Promise.resolve().then(function () {
+      _agentControlAssertContext(context);
+      // `host_context` intentionally carries only a snapshot fence and a
+      // correlation id. The adapter must get the account and token from the
+      // host session itself; neither comes from iframe data.
+      return adapter.publishTrustedDraft({
+        request: contract.clone(request),
+        host_context: {
+          fleet_snapshot_id: session.snapshotId,
+          request_id: context.operationId
+        }
+      });
+    }).then(function (result) {
+      // A timed-out iframe must not turn a completed host action into a
+      // browser-side retry. We still fence an account switch, but allow the
+      // UI deadline to expire because the durable host receipt is authoritative.
+      _agentControlAssertContext(context, true);
+      return contract.normalizeSuccess(result, request);
+    }, function (error) {
+      _agentControlAssertContext(context, true);
+      throw _evolutionTrustedPublishAdapterFailure(error, contract);
+    });
+  }
+
+  function _evolutionTrustedPublish(data, context) {
+    var request;
+    try {
+      request = _evolutionTrustedPublishRequest(data);
+      _evolutionRequireSession(data, context, true);
+    } catch (error) {
+      return Promise.reject(error);
+    }
+    // This queue only prevents duplicate clicks from racing in one toolbar.
+    // The host-owned 24-hour idempotency record remains the durable boundary.
+    return _agentControlSerialize(request.agent_id, context, function () {
+      var before = _evolutionRequireSession(data, context, true);
+      _agentControlAssertContext(context);
+      // Re-read the live account fleet immediately before the host action.
+      // A changed snapshot is a hard stop: the caller must reload evidence
+      // against that exact live state, not publish a stale draft.
+      return _evolutionFleetLoad(context).then(function (fresh) {
+        var projection = fresh && fresh.projection;
+        var session;
+        _agentControlAssertContext(context);
+        if (!projection || projection.complete !== true) {
+          throw _evolutionError(
+            'FLEET_SNAPSHOT_INCOMPLETE',
+            'incomplete reloaded fleet snapshot blocks trusted publication'
+          );
+        }
+        if (projection.snapshotId !== before.snapshotId) {
+          throw _evolutionError(
+            'FLEET_SNAPSHOT_MISMATCH',
+            'live fleet changed; reload the prepared publication before retrying'
+          );
+        }
+        session = _evolutionRequireSession({
+          snapshotId: projection.snapshotId
+        }, context, true);
+        return _evolutionCallTrustedPublishAdapter(request, session, context);
+      });
+    });
+  }
+
+  // This reader is deliberately separate from agent_control_load: the latter
+  // exposes the generated, read-only Cabinet contract, while this one can
+  // disclose one host-selected prepared request and its durable outcome.
+  // It never accepts a draft selector, evidence ref or idempotency key from
+  // the iframe.
+  function _evolutionTrustedPublishContextRequest(data) {
+    _evolutionRequireClosedKeys(
+      data,
+      ['type', 'reqId', 'action', 'snapshotId'],
+      'TRUSTED_PUBLISH_CONTEXT_REQUEST_INVALID',
+      'trusted publish context bridge request'
+    );
+    if (data.type !== 'etb_evolution_console' ||
+        data.action !== 'trusted_publish_context_load') {
+      throw _evolutionError(
+        'TRUSTED_PUBLISH_CONTEXT_REQUEST_INVALID',
+        'trusted publish context must use the fenced Evolution Console bridge'
+      );
+    }
+  }
+
+  function _evolutionTrustedPublishContextUnavailable(
+      contract, session, context, errorCode) {
+    return contract.unavailable({
+      ownerAccountId: context.actorId,
+      fleetSnapshotId: session.snapshotId,
+      now: new Date().toISOString(),
+      errorCode: errorCode
+    });
+  }
+
+  function _evolutionTrustedPublishContextErrorCode(error, contract) {
+    var code = String(error && error.code || '').toUpperCase();
+    if (!/^[A-Z][A-Z0-9_]{0,63}$/.test(code) ||
+        (contract.isPublicErrorCode && contract.isPublicErrorCode(code))) {
+      return 'TRUSTED_PUBLISH_CONTEXT_SOURCE_UNAVAILABLE';
+    }
+    return code;
+  }
+
+  function _evolutionCallTrustedPublishContextAdapter(session, context) {
+    var adapter = ETB.evolutionAdapter || {};
+    var contract = ETB.evolutionTrustedPublishContextContract;
+    if (!contract || typeof contract.normalize !== 'function' ||
+        typeof contract.unavailable !== 'function') {
+      return Promise.reject(_evolutionError(
+        'TRUSTED_PUBLISH_CONTEXT_CONTRACT_UNAVAILABLE',
+        'the trusted publish context contract is unavailable'
+      ));
+    }
+    if (typeof adapter.loadTrustedPublishContext !== 'function') {
+      return Promise.resolve(_evolutionTrustedPublishContextUnavailable(
+        contract,
+        session,
+        context,
+        'TRUSTED_PUBLISH_CONTEXT_ADAPTER_UNAVAILABLE'
+      ));
+    }
+    return Promise.resolve().then(function () {
+      _agentControlAssertContext(context);
+      // account and token remain host-owned. The bridge supplies only the
+      // current snapshot fence and a correlation id, like trusted publish.
+      return adapter.loadTrustedPublishContext({
+        host_context: {
+          fleet_snapshot_id: session.snapshotId,
+          request_id: context.operationId
+        }
+      });
+    }).then(function (snapshot) {
+      _agentControlAssertContext(context);
+      return contract.normalize(snapshot, {
+        ownerAccountId: context.actorId,
+        fleetSnapshotId: session.snapshotId,
+        now: new Date().toISOString()
+      });
+    }).catch(function (error) {
+      // A changed account/session must win over an adapter error or malformed
+      // data. Otherwise read failure is honestly unavailable and cannot
+      // enable a browser-authored publication.
+      _agentControlAssertContext(context);
+      return _evolutionTrustedPublishContextUnavailable(
+        contract,
+        session,
+        context,
+        _evolutionTrustedPublishContextErrorCode(error, contract)
+      );
+    });
+  }
+
+  function _evolutionTrustedPublishContext(data, context) {
+    var before;
+    try {
+      _evolutionTrustedPublishContextRequest(data);
+      before = _evolutionRequireSession(data, context, true);
+    } catch (error) {
+      return Promise.reject(error);
+    }
+    _agentControlAssertContext(context);
+    // A ready context is evidence for one exact fleet, so the same fresh
+    // complete-snapshot fence as the write route applies before disclosure.
+    return _evolutionFleetLoad(context).then(function (fresh) {
+      var projection = fresh && fresh.projection;
+      var session;
+      _agentControlAssertContext(context);
+      if (!projection || projection.complete !== true) {
+        throw _evolutionError(
+          'FLEET_SNAPSHOT_INCOMPLETE',
+          'incomplete reloaded fleet snapshot blocks trusted publish context'
+        );
+      }
+      if (projection.snapshotId !== before.snapshotId) {
+        throw _evolutionError(
+          'FLEET_SNAPSHOT_MISMATCH',
+          'live fleet changed; reload before reading trusted publish context'
+        );
+      }
+      session = _evolutionRequireSession({
+        snapshotId: projection.snapshotId
+      }, context, true);
+      return _evolutionCallTrustedPublishContextAdapter(session, context);
+    });
   }
 
   function _evolutionLastReceipt(ledger) {
@@ -4366,6 +4753,12 @@ ETB.router = (function () {
       } catch (error) {
         return Promise.reject(error);
       }
+    }
+    if (action === 'trusted_publish_context_load') {
+      return _evolutionTrustedPublishContext(data, context);
+    }
+    if (action === 'etb_evolution_publish') {
+      return _evolutionTrustedPublish(data, context);
     }
     if (action === 'passport_draft') {
       try {
@@ -5673,14 +6066,21 @@ ETB.router = (function () {
             result: result
           });
         }).catch(function (error) {
-          reply8({
+          var result8 = {
             type: 'etb_evolution_console_result',
             reqId: reqId8,
             ok: false,
             error: (error && error.message) ||
               'Evolution Console operation failed',
             errorCode: error && error.code || null
-          });
+          };
+          // Only the trusted-publish contract can attach this bounded public
+          // projection. It is deliberately distinct from a raw Error so a
+          // receipt and rollback survive a post-write read-back failure.
+          if (error && error.publicError) {
+            result8.public_error = _evolutionClone(error.publicError);
+          }
+          reply8(result8);
         });
       } else if (e.data.type === 'etb_governance_probe') {
         // Capability Studio's bounded governance lab. It may manage only
