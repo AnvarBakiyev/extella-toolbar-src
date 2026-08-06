@@ -54,9 +54,9 @@ test('Evolution Console manifest keeps exact product naming and one narrow host-
     evolutionManifest.description,
     'Evolution Console разделяет работающие, остановленные, требующие помощи и непроверенные автоматизации. Каталог отделён от установленных, а детали для специалиста не мешают ежедневному управлению.',
   );
-  assert.equal(evolutionManifest.version, '0.16.2');
+  assert.equal(evolutionManifest.version, '0.16.3');
   assert.match(evolutionHtml, /id="consoleVersion"/);
-  assert.match(evolutionHtml, /var CONSOLE_VERSION = '0\.16\.2'/);
+  assert.match(evolutionHtml, /var CONSOLE_VERSION = '0\.16\.3'/);
   assert.match(evolutionHtml, /scannerContractStaleTitle:'Нужно обновить компонент проверки'/);
   assert.match(evolutionHtml, /scannerContractStaleTitle:'The checking component needs an update'/);
   assert.match(evolutionHtml, /error\.code==='DEVICE_SCANNER_CONTRACT_STALE'/);
@@ -419,6 +419,19 @@ test('data protection stays read-only and outside the automation summary', () =>
   assert.match(evolutionHtml, /dataProtection:'Data protection'/);
   assert.match(
     evolutionHtml,
+    /maskingActive:'Защита данных подтверждена на входе и на выходе'/,
+  );
+  assert.match(
+    evolutionHtml,
+    /maskingActive:'Data protection verified on input and output'/,
+  );
+  assert.doesNotMatch(
+    evolutionHtml,
+    /PRE\s*\+\s*POST/,
+    'client-facing copy must describe data protection without hook names',
+  );
+  assert.match(
+    evolutionHtml,
     /maskingSettingsCabinet:'Настройки находятся в Agent Cabinet\.'/,
   );
   assert.match(
@@ -763,8 +776,9 @@ test('Evolution Console clears every account-bound UI slice before a new init', 
     /d\.type==='etb_account_reset'\|\|d\.type==='etb_logout'\|\|d\.type==='etb_session_reset'/,
   );
   assert.match(evolutionHtml, /setTimeout\(function\(\)\{[\s\S]*?\},15000\)/);
-  assert.match(evolutionHtml, /initUnavailable:'Центр Управления Агентами не получил приветствие Extella за 15 секунд/);
+  assert.match(evolutionHtml, /initUnavailable:'Управление агентами не получило приветствие Extella за 15 секунд/);
   assert.match(evolutionHtml, /initUnavailable:'Evolution Console did not receive the Extella greeting within 15 seconds/);
+  assert.doesNotMatch(evolutionHtml, /Центр Управления Агентами/);
 });
 
 test('Evolution Console uses exact API fields and canonical checker facts', () => {
