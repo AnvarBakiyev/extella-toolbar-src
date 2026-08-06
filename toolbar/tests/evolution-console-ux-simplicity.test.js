@@ -182,6 +182,47 @@ test('installed automations are selected by default and Catalog is a peer switch
   );
 });
 
+test('an unavailable device check falls back to useful catalog cards without claiming installation', () => {
+  const overview = viewSource('overview');
+  const technicalSummary = overview.indexOf('<summary data-t="technicalDetails">');
+  const inventoryNotice = overview.indexOf('id="deviceInventoryNotice"');
+  assert.ok(technicalSummary >= 0 && inventoryNotice > technicalSummary,
+    'device-inventory diagnostics must stay inside Technical details');
+
+  const applyStart = consoleHtml.indexOf('function applyAutomationRegistryResult(result)');
+  const applyEnd = consoleHtml.indexOf('function applyFleet(result', applyStart);
+  assert.ok(applyStart >= 0 && applyEnd > applyStart);
+  const applyResult = consoleHtml.slice(applyStart, applyEnd);
+  assert.match(applyResult, /installationUnknown&&!confirmedInstalled&&catalogAvailable/);
+  assert.match(applyResult, /el\('filterSelect'\)\.value='catalog'/);
+  assert.match(applyResult, /state\.automaticCatalogFallback=true/);
+
+  const fleetStart = consoleHtml.indexOf('function renderFleet()');
+  const fleetEnd = consoleHtml.indexOf('function statusMark(', fleetStart);
+  const renderFleet = consoleHtml.slice(fleetStart, fleetEnd);
+  assert.match(renderFleet, /currentFilter==='catalog'\?t\('catalogFallbackText'\)/);
+  assert.match(renderFleet, /class="fleet-unavailable-actions"/);
+  assert.match(
+    consoleHtml,
+    /flags\.installed==='UNKNOWN'\?'installationUnknown':'installedNo'/,
+    'catalog cards must preserve the unknown installation fact',
+  );
+});
+
+test('unavailable fleet metrics collapse to one human sentence instead of four dashes', () => {
+  const overview = viewSource('overview');
+  assert.match(overview, /id="fleetSummary"/);
+  assert.match(overview, /id="fleetSummaryUnavailable"[^>]*data-t="summaryUnavailable"/);
+  assert.match(
+    consoleHtml,
+    /fleetSummary'\)\.classList\.toggle\('is-unavailable',!registryProjection\|\|automationInstallationFactsUnknown/,
+  );
+  assert.match(
+    consoleHtml,
+    /\.fleet-summary\.is-unavailable>button[^}]*display:none/,
+  );
+});
+
 test('tablet navigation receives a full flex row', () => {
   assert.match(
     consoleHtml,
@@ -483,6 +524,14 @@ test('the simplified overview has matching human copy in Russian and English', (
     stoppedCount: ['остановлены', 'stopped'],
     unknownCount: ['статус неизвестен', 'status unknown'],
     needsHelpCount: ['нужна помощь', 'need help'],
+    summaryUnavailable: [
+      'Установленные автоматизации пока не проверены',
+      'Installed automations have not been checked yet',
+    ],
+    catalogFallbackText: [
+      'Не удалось проверить, что установлено на этом компьютере. Поэтому показываем доступные автоматизации из каталога; установка каждой из них пока не подтверждена.',
+      'Extella could not check what is installed on this computer, so it is showing the available catalog. Installation of each automation remains unconfirmed.',
+    ],
     openAutomation: ['Открыть', 'Open'],
     reviewAutomation: ['Посмотреть замечание', 'View issue'],
     openCabinet: ['Открыть Agent Cabinet', 'Open Agent Cabinet'],
