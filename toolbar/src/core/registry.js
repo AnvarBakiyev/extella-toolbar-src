@@ -272,15 +272,18 @@ ETB.registry = (function () {
     // Expert is provisioned by the release/integration layer; opening or
     // refreshing Console never saves an Expert, deletes a file, or mutates the
     // browser registry cache.
-    scanDeviceManifests: function (deviceId) {
+    scanDeviceManifests: function (deviceId, deviceRefs) {
       var exactDeviceId = String(deviceId || '').trim();
+      var exactDeviceRefs = Array.isArray(deviceRefs) ? deviceRefs.slice().sort() : [];
       var fnName = '_etb_evolution_registry_scan_v1';
       if (!exactDeviceId) {
         return Promise.reject(new Error(
           'current device id is required for the read-only registry scan'
         ));
       }
-      return ETB.api.runExpert(fnName, {}, {
+      return ETB.api.runExpert(fnName, {
+        device_refs_json: JSON.stringify(exactDeviceRefs)
+      }, {
         // targets массивом — рабочее поле платформы; одиночный target остаётся
         // ради совместимости и молча игнорируется сервером.
         targets: [exactDeviceId],
@@ -298,6 +301,9 @@ ETB.registry = (function () {
         }
         return {
           entries: parsed.entries,
+          deviceRefs: parsed.device_refs &&
+            typeof parsed.device_refs === 'object' &&
+            !Array.isArray(parsed.device_refs) ? parsed.device_refs : {},
           matchedCount: Number(parsed.matched_count),
           backupFilesIgnored: Number(parsed.ignored_backup_count),
           invalidFilesIgnored: Number(parsed.rejected_count)

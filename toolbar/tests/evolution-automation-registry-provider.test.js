@@ -326,8 +326,8 @@ test('expert state reader uses passport params and the exact targets array witho
     name: 'trv_call',
     params: { route: '/x/status', body_json: '{}' },
     options: {
-      targets: ['24f37e45-8c9f-4896-b64f-0dcd0cd8b0e4'],
-      target: '24f37e45-8c9f-4896-b64f-0dcd0cd8b0e4',
+      targets: ['device-current-exact'],
+      target: 'device-current-exact',
       clientTimeoutMs: 180000,
       global: true,
     },
@@ -356,8 +356,8 @@ test('state reader unwraps only known response envelopes and keeps product error
           expert: 'sample_state',
           params: { method: 'read_state' },
           schema: 'sample_state.v1',
-          execution_device: 'device-exact',
-          data_device: 'device-data',
+          execution_device: 'DEVICE_FROM_HOST',
+          data_device: 'DEVICE_FROM_HOST',
           evidence: 'exact_target',
         },
       };
@@ -372,11 +372,82 @@ test('state reader unwraps only known response envelopes and keeps product error
   for (const response of responses) {
     const source = await provider.readStateReaders({
       runExpert() { return Promise.resolve(response); },
-    }, ['sample_automation'], contracts, {});
+    }, ['sample_automation'], contracts, {}, {
+      deviceId: 'device-exact-host',
+      deviceRefs: {},
+    });
     assert.equal(source.available, true);
     assert.equal(source.facts[0].available, true);
     assert.equal(source.facts[0].canonicalState, null);
   }
+});
+
+test('DEVICE_FROM_REF resolves one exact pinned file value without host fallback', async () => {
+  const calls = [];
+  const provider = loadProvider();
+  const snapshot = await provider.load({
+    api: successfulApi(calls),
+    storage: memoryStorage('[]'),
+    deviceId: 'device-current-host',
+    scanDeviceCards(deviceId, deviceRefs) {
+      assert.equal(deviceId, 'device-current-host');
+      assert.deepEqual(plain(deviceRefs), ['~/extella_baga/panel.json:data_device']);
+      return Promise.resolve({
+        entries: [{
+          filename: 'baga_thin.json',
+          manifest: { id: 'baga_thin', version: '0.4.0' },
+        }],
+        device_refs: {
+          '~/extella_baga/panel.json:data_device': {
+            available: true,
+            value: 'device-baga-vps',
+            error_code: null,
+          },
+        },
+      });
+    },
+  });
+  const call = calls.find((item) => item.method === 'runExpert');
+  assert.deepEqual(call.options.targets, ['device-baga-vps']);
+  assert.equal(snapshot.stateReaderFacts[0].requestedTarget, 'device-baga-vps');
+  assert.equal(snapshot.stateReaderFacts[0].dataDevice, 'device-baga-vps');
+});
+
+test('missing DEVICE_FROM_REF is honest unavailable and never runs on host device', async () => {
+  const calls = [];
+  const provider = loadProvider();
+  const snapshot = await provider.load({
+    api: successfulApi(calls),
+    storage: memoryStorage('[]'),
+    deviceId: 'device-current-host',
+    scanDeviceCards() {
+      return Promise.resolve({
+        entries: [{
+          filename: 'baga_thin.json',
+          manifest: { id: 'baga_thin', version: '0.4.0' },
+        }],
+        device_refs: {
+          '~/extella_baga/panel.json:data_device': {
+            available: false,
+            value: null,
+            error_code: 'DEVICE_REF_FILE_UNAVAILABLE',
+          },
+        },
+      });
+    },
+  });
+  assert.equal(calls.some((item) => item.method === 'runExpert'), false);
+  assert.equal(snapshot.sources.stateReaders.available, false);
+  assert.equal(snapshot.stateReaderFacts[0].available, false);
+  assert.equal(snapshot.stateReaderFacts[0].requestedTarget, null);
+  assert.equal(snapshot.stateReaderFacts[0].dataDevice, null);
+  assert.ok(snapshot.stateReaderFacts[0].errors.some(
+    (error) => error.code === 'STATE_READER_DEVICE_UNAVAILABLE',
+  ));
+  assert.doesNotMatch(
+    JSON.stringify(snapshot.stateReaderFacts[0]),
+    /device-current-host/,
+  );
 });
 
 test('device inventory uses the canonical four-class surface table and supports card-to-automation ids', () => {

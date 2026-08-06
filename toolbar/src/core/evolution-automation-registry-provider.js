@@ -13,6 +13,10 @@ ETB.evolutionAutomationRegistryProvider = (function () {
   var BROWSER_INSTALLED_KEY = 'etb_plugins_installed_v1';
   var STRICT_CARD_FILE = /^([a-z0-9][a-z0-9._-]{1,79})\.json$/;
   var AUTOMATION_ID = /^[a-z0-9][a-z0-9._-]{1,79}$/;
+  var TARGET_ID = /^[A-Za-z0-9][A-Za-z0-9._:-]{7,159}$/;
+  var DEVICE_REF = /^~\/[A-Za-z0-9._/-]{1,220}:[A-Za-z0-9._-]{1,80}$/;
+  var DEVICE_FROM_HOST = 'DEVICE_FROM_HOST';
+  var DEVICE_FROM_REF = 'DEVICE_FROM_REF';
 
   function hasOwn(value, key) {
     return Object.prototype.hasOwnProperty.call(value, key);
@@ -543,6 +547,24 @@ ETB.evolutionAutomationRegistryProvider = (function () {
     };
   }
 
+  function normalizeDeviceRefs(result, requestedRefs) {
+    var raw = result && (result.deviceRefs || result.device_refs);
+    var output = {};
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return output;
+    (requestedRefs || []).forEach(function (ref) {
+      var item = raw[ref];
+      var value = text(item && item.value);
+      if (!item || typeof item !== 'object' || Array.isArray(item)) return;
+      output[ref] = {
+        available: item.available === true && TARGET_ID.test(value),
+        value: item.available === true && TARGET_ID.test(value) ? value : null,
+        errorCode: text(item.error_code || item.errorCode).slice(0, 80) ||
+          (item.available === true && TARGET_ID.test(value) ? null : 'DEVICE_REF_UNAVAILABLE')
+      };
+    });
+    return output;
+  }
+
   function normalizeDeviceScan(result) {
     var cards = [];
     var errors = [];
@@ -682,19 +704,38 @@ ETB.evolutionAutomationRegistryProvider = (function () {
     }
     if (ETB.registry &&
         typeof ETB.registry.scanDeviceManifests === 'function') {
-      return function (deviceId) {
-        return ETB.registry.scanDeviceManifests(deviceId);
+      return function (deviceId, deviceRefs) {
+        return ETB.registry.scanDeviceManifests(deviceId, deviceRefs);
       };
     }
     return null;
   }
 
-  function readDeviceCards(options) {
+  function stateReaderDeviceRefs(contracts) {
+    var seen = {};
+    if (!contracts || typeof contracts.passports !== 'function') return [];
+    return contracts.passports().map(function (passport) {
+      var reader = passport && passport.state_reader;
+      var ref = text(reader && reader.device_ref);
+      if (reader && (reader.execution_device === DEVICE_FROM_REF ||
+          reader.data_device === DEVICE_FROM_REF) && DEVICE_REF.test(ref) &&
+          !seen[ref]) {
+        seen[ref] = true;
+        return ref;
+      }
+      return null;
+    }).filter(Boolean).sort();
+  }
+
+  function readDeviceCards(options, contracts) {
     var scan = deviceScanner(options);
+    var requestedDeviceRefs = stateReaderDeviceRefs(contracts);
+    var resolvedHostDevice = null;
     if (!scan) {
       return Promise.resolve({
         available: false,
         deviceId: null,
+        deviceRefs: {},
         cards: [],
         backupFilesIgnored: 0,
         invalidFilesIgnored: 0,
@@ -707,8 +748,9 @@ ETB.evolutionAutomationRegistryProvider = (function () {
       });
     }
     return currentDeviceId(options).then(function (deviceId) {
+      resolvedHostDevice = deviceId;
       assertContext(options);
-      return Promise.resolve(scan(deviceId)).then(function (result) {
+      return Promise.resolve(scan(deviceId, requestedDeviceRefs)).then(function (result) {
         var normalized;
         assertContext(options);
         normalized = normalizeDeviceScan(result);
@@ -725,6 +767,7 @@ ETB.evolutionAutomationRegistryProvider = (function () {
         return {
           available: true,
           deviceId: deviceId,
+          deviceRefs: normalizeDeviceRefs(result, requestedDeviceRefs),
           cards: normalized.cards,
           backupFilesIgnored: normalized.backupFilesIgnored,
           invalidFilesIgnored: normalized.invalidFilesIgnored,
@@ -735,7 +778,8 @@ ETB.evolutionAutomationRegistryProvider = (function () {
       rethrowContext(error);
       return {
         available: false,
-        deviceId: null,
+        deviceId: resolvedHostDevice,
+        deviceRefs: {},
         cards: [],
         backupFilesIgnored: 0,
         invalidFilesIgnored: 0,
@@ -828,11 +872,20 @@ ETB.evolutionAutomationRegistryProvider = (function () {
       query: true
     };
     var keys;
+    var executionMode;
+    var dataMode;
+    var deviceRef;
     if (!reader) return null;
     keys = params && typeof params === 'object' && !Array.isArray(params) ?
       Object.keys(params) : [];
+    executionMode = text(reader.execution_device);
+    dataMode = text(reader.data_device);
+    deviceRef = text(reader.device_ref);
     if (!text(reader.expert) || !text(reader.schema) ||
-        !text(reader.execution_device) || !text(reader.data_device) ||
+        [DEVICE_FROM_HOST, DEVICE_FROM_REF].indexOf(executionMode) === -1 ||
+        [DEVICE_FROM_HOST, DEVICE_FROM_REF].indexOf(dataMode) === -1 ||
+        ((executionMode === DEVICE_FROM_REF || dataMode === DEVICE_FROM_REF) ?
+          !DEVICE_REF.test(deviceRef) : !!deviceRef) ||
         text(reader.evidence) !== 'exact_target' || !keys.length ||
         keys.some(function (key) {
           var value = params[key];
@@ -846,9 +899,66 @@ ETB.evolutionAutomationRegistryProvider = (function () {
       expert: text(reader.expert),
       params: clone(params),
       schema: text(reader.schema),
-      executionDevice: text(reader.execution_device),
-      dataDevice: text(reader.data_device),
+      executionDeviceMode: executionMode,
+      dataDeviceMode: dataMode,
+      deviceRef: deviceRef || null,
       evidence: 'exact_target'
+    };
+  }
+
+  function resolvedReaderDevice(mode, deviceRef, deviceCards) {
+    var row;
+    if (mode === DEVICE_FROM_HOST) {
+      if (!deviceCards || !TARGET_ID.test(text(deviceCards.deviceId))) {
+        throw new Error('DEVICE_FROM_HOST is unavailable');
+      }
+      return text(deviceCards.deviceId);
+    }
+    if (mode === DEVICE_FROM_REF) {
+      row = deviceCards && deviceCards.deviceRefs &&
+        deviceCards.deviceRefs[deviceRef];
+      if (!row || row.available !== true || !TARGET_ID.test(text(row.value))) {
+        throw new Error('DEVICE_FROM_REF is unavailable: ' + deviceRef);
+      }
+      return text(row.value);
+    }
+    throw new Error('unsupported device resolution mode');
+  }
+
+  function resolveStateReaderDescriptor(descriptor, deviceCards) {
+    var output = clone(descriptor);
+    output.executionDevice = resolvedReaderDevice(
+      descriptor.executionDeviceMode,
+      descriptor.deviceRef,
+      deviceCards
+    );
+    output.dataDevice = resolvedReaderDevice(
+      descriptor.dataDeviceMode,
+      descriptor.deviceRef,
+      deviceCards
+    );
+    return output;
+  }
+
+  function unavailableStateReaderFact(descriptor, error) {
+    return {
+      available: false,
+      present: false,
+      automationId: descriptor.automationId,
+      expert: descriptor.expert,
+      schema: descriptor.schema,
+      requestedTarget: null,
+      dataDevice: null,
+      evidence: descriptor.evidence,
+      canonicalState: null,
+      responseShape: null,
+      errors: [sourceError(
+        'STATE_READER',
+        'STATE_READER_DEVICE_UNAVAILABLE',
+        'Устройство чтения состояния недоступно',
+        'The state reader device is unavailable',
+        descriptor.automationId + ': ' + errorDetail(error)
+      )]
     };
   }
 
@@ -968,7 +1078,7 @@ ETB.evolutionAutomationRegistryProvider = (function () {
     });
   }
 
-  function readStateReaders(api, automationIds, contracts, options) {
+  function readStateReaders(api, automationIds, contracts, options, deviceCards) {
     var descriptors = [];
     var contractErrors = [];
     (automationIds || []).forEach(function (id) {
@@ -986,7 +1096,10 @@ ETB.evolutionAutomationRegistryProvider = (function () {
       }
     });
     return Promise.all(descriptors.map(function (descriptor) {
-      return stateReaderFact(api, descriptor, options);
+      var resolved;
+      try { resolved = resolveStateReaderDescriptor(descriptor, deviceCards); }
+      catch (error) { return unavailableStateReaderFact(descriptor, error); }
+      return stateReaderFact(api, resolved, options);
     })).then(function (facts) {
       var errors = contractErrors.slice();
       facts.forEach(function (fact) {
@@ -1533,7 +1646,7 @@ ETB.evolutionAutomationRegistryProvider = (function () {
       Promise.resolve(readBrowserInstalled(defaultStorage(options), options)),
       readPlatformAgents(api, options),
       readPlatformExperts(api, options),
-      readDeviceCards(options)
+      readDeviceCards(options, contracts)
     ]).then(function (sources) {
       var catalog = sources[0];
       var composerInstalled = sources[1];
@@ -1561,7 +1674,8 @@ ETB.evolutionAutomationRegistryProvider = (function () {
           api,
           installedAutomationIds(deviceCards.cards, contracts),
           contracts,
-          options
+          options,
+          deviceCards
         )
       ]).then(
         function (additional) {

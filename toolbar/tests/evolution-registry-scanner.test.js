@@ -160,6 +160,55 @@ test('scanner source has no filesystem or registry write operation', () => {
   );
 });
 
+test('device ref reader accepts only the pinned Baga file and returns no fallback', (t) => {
+  const temporaryHome = fs.mkdtempSync(
+    path.join(os.tmpdir(), 'evolution-device-ref-'),
+  );
+  t.after(() => fs.rmSync(temporaryHome, { recursive: true, force: true }));
+  const bagaRoot = path.join(temporaryHome, 'extella_baga');
+  fs.mkdirSync(bagaRoot, { recursive: true });
+  fs.writeFileSync(
+    path.join(bagaRoot, 'panel.json'),
+    JSON.stringify({ data_device: 'device-baga-vps', token: 'must-not-leave' }),
+  );
+  const script = [
+    'import importlib.util, json',
+    'spec = importlib.util.spec_from_file_location("scanner", r"' +
+      scannerPath.replaceAll('\\', '\\\\').replaceAll('"', '\\"') + '")',
+    'module = importlib.util.module_from_spec(spec)',
+    'spec.loader.exec_module(module)',
+    'requested = json.dumps(["~/extella_baga/panel.json:data_device", "~/private.json:token"])',
+    'print(json.dumps(module._evolution_registry_device_refs(requested)))',
+  ].join('\n');
+  const available = spawnSync('python3', ['-c', script], {
+    encoding: 'utf8',
+    env: { ...process.env, HOME: temporaryHome },
+  });
+  assert.equal(available.status, 0, available.stderr);
+  assert.deepEqual(JSON.parse(available.stdout), {
+    '~/extella_baga/panel.json:data_device': {
+      available: true,
+      value: 'device-baga-vps',
+      error_code: null,
+    },
+  });
+  assert.doesNotMatch(available.stdout, /must-not-leave|private\.json/);
+
+  fs.rmSync(path.join(bagaRoot, 'panel.json'));
+  const missing = spawnSync('python3', ['-c', script], {
+    encoding: 'utf8',
+    env: { ...process.env, HOME: temporaryHome },
+  });
+  assert.equal(missing.status, 0, missing.stderr);
+  assert.deepEqual(JSON.parse(missing.stdout), {
+    '~/extella_baga/panel.json:data_device': {
+      available: false,
+      value: null,
+      error_code: 'DEVICE_REF_FILE_UNAVAILABLE',
+    },
+  });
+});
+
 test('runtime probe reads bounded localhost health and state without leaking extra fields', () => {
   const script = [
     'import importlib.util, json',
