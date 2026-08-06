@@ -14,6 +14,12 @@ const providerPath = path.join(
   'evolution-automation-registry-provider.js',
 );
 const providerSource = fs.readFileSync(providerPath, 'utf8');
+const contractsSource = fs.readFileSync(path.join(
+  toolbarRoot,
+  'src',
+  'core',
+  'evolution-automation-contracts.js',
+), 'utf8');
 
 function plain(value) {
   return JSON.parse(JSON.stringify(value));
@@ -27,6 +33,9 @@ function loadProvider(options = {}) {
     console,
   };
   if (options.window) context.window = options.window;
+  vm.runInNewContext(contractsSource, context, {
+    filename: 'evolution-automation-contracts.js',
+  });
   vm.runInNewContext(providerSource, context, { filename: providerPath });
   return context.ETB.evolutionAutomationRegistryProvider;
 }
@@ -212,6 +221,8 @@ test('provider reads every source with exact scopes and performs no writes', asy
     discovered: 1,
     business_automations: 1,
     system_surfaces: 0,
+    installed_apps: 0,
+    probes: 0,
     unclassified: 0,
   });
   assert.equal(snapshot.deviceInventory.classification_complete, true);
@@ -275,7 +286,7 @@ test('provider reads every source with exact scopes and performs no writes', asy
   );
 });
 
-test('device inventory classifies canonical evidence and never grows the reviewed migration list', () => {
+test('device inventory uses the canonical four-class surface table and supports card-to-automation ids', () => {
   const provider = loadProvider();
   const inventory = plain(provider.deviceCardInventory({
     available: true,
@@ -309,14 +320,22 @@ test('device inventory classifies canonical evidence and never grows the reviewe
         id: 'mismatched_passport',
         automation: { automation_id: 'another_product' },
       },
+    }, {
+      manifest: { id: 'baga_thin', version: '0.4.0' },
+    }, {
+      manifest: { id: 'gh_excalidraw_excalidraw', version: '0.18.0' },
+    }, {
+      manifest: { id: 'thindemo', version: '0.1.0' },
     }],
   }));
 
   assert.deepEqual(inventory.counts, {
-    discovered: 6,
-    business_automations: 3,
+    discovered: 9,
+    business_automations: 5,
     system_surfaces: 1,
-    unclassified: 2,
+    installed_apps: 1,
+    probes: 1,
+    unclassified: 1,
   });
   assert.equal(inventory.classification_complete, false);
   assert.deepEqual(
@@ -325,11 +344,15 @@ test('device inventory classifies canonical evidence and never grows the reviewe
       ['new_passported_product', 'BUSINESS_AUTOMATION', 'AUTOMATION_PASSPORT'],
       ['new_process_product', 'BUSINESS_AUTOMATION', 'PROCESS_MANIFEST'],
       ['new_snake_schema_product', 'BUSINESS_AUTOMATION', 'PROCESS_MANIFEST'],
-      ['extella_anon', 'SYSTEM_SURFACE', 'SYSTEM_MARKER'],
-      ['extella_recruiter', 'UNCLASSIFIED', 'CLASSIFICATION_MISSING'],
+      ['extella_anon', 'SYSTEM_SURFACE', 'SURFACE_CLASS_STANDARD'],
+      ['extella_recruiter', 'BUSINESS_AUTOMATION', 'SURFACE_CLASS_STANDARD'],
       ['mismatched_passport', 'UNCLASSIFIED', 'CLASSIFICATION_MISSING'],
+      ['baga_thin', 'BUSINESS_AUTOMATION', 'SURFACE_CLASS_STANDARD'],
+      ['gh_excalidraw_excalidraw', 'INSTALLED_APP', 'SURFACE_CLASS_STANDARD'],
+      ['thindemo', 'PROBE', 'SURFACE_CLASS_STANDARD'],
     ],
   );
+  assert.equal(inventory.rows.find((row) => row.id === 'baga_thin').automation_id, 'extella_kz_grocery');
 });
 
 test('malformed run history fails closed instead of selecting an older success', async () => {

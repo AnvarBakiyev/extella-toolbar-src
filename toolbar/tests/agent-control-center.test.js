@@ -869,7 +869,7 @@ test('build loads the Codex installer and ES5 Evolution cores after api.js', () 
   const build = fs.readFileSync(buildPath, 'utf8');
   assert.match(
     build,
-    /'api\.js',\s*\n\s*'codex-account-bridge\.js',\s*\n\s*'codex-installer\.js',\s*\n\s*'agent-control\.js',\s*\n\s*'evolution-console\.js',\s*\n\s*'evolution-agent-control-contract\.js',\s*\n\s*'evolution-trusted-publish-contract\.js',\s*\n\s*'evolution-trusted-publish-context-contract\.js',\s*\n\s*'evolution-masking-policy\.js',\s*\n\s*'evolution-automation-registry\.js',\s*\n\s*'evolution-mcp-contract\.js',\s*\n\s*'evolution-standards-provider\.js',\s*\n\s*'install-prompt\.js'[\s\S]*?'registry\.js',\s*\n\s*'evolution-automation-registry-provider\.js',\s*\n\s*'evolution-mcp-registry-provider\.js',\s*\n\s*'evolution-mcp-read-gateway\.js',\s*\n\s*'plugins\.js',\s*\n\s*'router\.js'/,
+    /'api\.js',\s*\n\s*'codex-account-bridge\.js',\s*\n\s*'codex-installer\.js',\s*\n\s*'agent-control\.js',\s*\n\s*'evolution-console\.js',\s*\n\s*'evolution-agent-control-contract\.js',\s*\n\s*'evolution-trusted-publish-contract\.js',\s*\n\s*'evolution-trusted-publish-context-contract\.js',\s*\n\s*'evolution-masking-policy\.js',\s*\n\s*'evolution-automation-contracts\.js',\s*\n\s*'evolution-automation-registry\.js',\s*\n\s*'evolution-mcp-contract\.js',\s*\n\s*'evolution-standards-provider\.js',\s*\n\s*'install-prompt\.js'[\s\S]*?'registry\.js',\s*\n\s*'evolution-automation-registry-provider\.js',\s*\n\s*'evolution-mcp-registry-provider\.js',\s*\n\s*'evolution-mcp-read-gateway\.js',\s*\n\s*'plugins\.js',\s*\n\s*'router\.js'/,
   );
   assert.match(
     build,

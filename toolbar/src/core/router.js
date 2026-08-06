@@ -2412,11 +2412,13 @@ ETB.router = (function () {
     var kinds = {
       BUSINESS_AUTOMATION: true,
       SYSTEM_SURFACE: true,
+      INSTALLED_APP: true,
+      PROBE: true,
       UNCLASSIFIED: true
     };
     var available = Boolean(inventory && inventory.available === true);
     if (!inventory ||
-        inventory.schema !== 'extella.evolution.device_inventory.v1' ||
+        inventory.schema !== 'extella.evolution.device_inventory.v2' ||
         typeof inventory.available !== 'boolean' ||
         typeof inventory.classification_complete !== 'boolean' ||
         !counts || typeof counts !== 'object' || !Array.isArray(rows)) {
@@ -2427,15 +2429,19 @@ ETB.router = (function () {
         counts.discovered === null &&
         counts.business_automations === null &&
         counts.system_surfaces === null &&
+        counts.installed_apps === null &&
+        counts.probes === null &&
         counts.unclassified === null;
     }
     if (![counts.discovered, counts.business_automations,
-          counts.system_surfaces, counts.unclassified].every(function (value) {
+          counts.system_surfaces, counts.installed_apps, counts.probes,
+          counts.unclassified].every(function (value) {
       return Number.isInteger(value) && value >= 0;
     })) return false;
     if (counts.discovered !== rows.length ||
         counts.discovered !== counts.business_automations +
-          counts.system_surfaces + counts.unclassified ||
+          counts.system_surfaces + counts.installed_apps + counts.probes +
+          counts.unclassified ||
         inventory.classification_complete !== (counts.unclassified === 0)) {
       return false;
     }

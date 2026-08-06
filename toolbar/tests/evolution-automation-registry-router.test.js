@@ -49,13 +49,15 @@ test('router maps the provider snapshot into the exact pure projection input', (
     collectedAt: '2026-07-26T20:00:00.000Z',
     complete: false,
     deviceInventory: {
-      schema: 'extella.evolution.device_inventory.v1',
+      schema: 'extella.evolution.device_inventory.v2',
       available: false,
       classification_complete: false,
       counts: {
         discovered: null,
         business_automations: null,
         system_surfaces: null,
+        installed_apps: null,
+        probes: null,
         unclassified: null,
       },
       rows: [],
@@ -217,13 +219,15 @@ test('provider contract rejects a contradictory complete source snapshot', () =>
       collectedAt: '2026-07-26T20:00:00.000Z',
       complete: true,
       deviceInventory: {
-        schema: 'extella.evolution.device_inventory.v1',
+        schema: 'extella.evolution.device_inventory.v2',
         available: true,
         classification_complete: true,
         counts: {
           discovered: 0,
           business_automations: 0,
           system_surfaces: 0,
+          installed_apps: 0,
+          probes: 0,
           unclassified: 0,
         },
         rows: [],

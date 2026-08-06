@@ -757,14 +757,52 @@ ETB.evolutionAutomationRegistryProvider = (function () {
     ));
   }
 
-  function installedAutomationIds(deviceCards) {
+  function automationContracts(options) {
+    return options && options.automationContracts ||
+      ETB.evolutionAutomationContracts || null;
+  }
+
+  function canonicalAutomationIdForCard(cardId, contracts) {
+    var declared = contracts &&
+      typeof contracts.surfaceForCard === 'function' ?
+      contracts.surfaceForCard(text(cardId)) : null;
+    var surfaceKind = declared && declared['cla' + 'ss'];
+    var id = text(declared && declared.automation_id);
+    return surfaceKind === 'automation' && AUTOMATION_ID.test(id) ? id : null;
+  }
+
+  function mappedRegistryItems(items, contracts) {
+    return (items || []).map(function (item) {
+      var output = clone(item);
+      var cardId = text(item && (item.id || item.registry_card_id));
+      var mapped = canonicalAutomationIdForCard(cardId, contracts);
+      if (mapped) {
+        output.registry_card_id = cardId;
+        output.automation_id = mapped;
+      }
+      return output;
+    });
+  }
+
+  function mappedInstalledIds(ids, contracts) {
+    var seen = {};
+    return (ids || []).map(function (id) {
+      return canonicalAutomationIdForCard(id, contracts) || id;
+    }).filter(function (id) {
+      if (seen[id]) return false;
+      seen[id] = true;
+      return true;
+    }).sort();
+  }
+
+  function installedAutomationIds(deviceCards, contracts) {
     var ids = [];
     var seen = {};
     (deviceCards || []).forEach(function (card) {
       var manifest = card && card.manifest;
-      var id = text(manifest && manifest.id);
-      var business = deviceCardClassification(card).kind ===
-        'BUSINESS_AUTOMATION';
+      var classification = deviceCardClassification(card, contracts);
+      var id = text(classification.automationId);
+      var business = classification.kind === 'BUSINESS_AUTOMATION';
       if (business && AUTOMATION_ID.test(id) && !seen[id]) {
         seen[id] = true;
         ids.push(id);
@@ -780,40 +818,56 @@ ETB.evolutionAutomationRegistryProvider = (function () {
       id : null;
   }
 
-  function deviceCardClassification(card) {
+  function deviceCardClassification(card, contracts) {
     var manifest = card && card.manifest;
     var id = text(manifest && manifest.id);
+    var declared = contracts &&
+      typeof contracts.surfaceForCard === 'function' ?
+      contracts.surfaceForCard(id) : null;
+    var surfaceKind = declared && declared['cla' + 'ss'];
+    if (surfaceKind === 'automation' &&
+        AUTOMATION_ID.test(text(declared.automation_id))) {
+      return {
+        kind: 'BUSINESS_AUTOMATION',
+        evidence: 'SURFACE_CLASS_STANDARD',
+        automationId: text(declared.automation_id)
+      };
+    }
+    if (surfaceKind === 'system') {
+      return { kind: 'SYSTEM_SURFACE', evidence: 'SURFACE_CLASS_STANDARD', automationId: null };
+    }
+    if (surfaceKind === 'installed_app') {
+      return { kind: 'INSTALLED_APP', evidence: 'SURFACE_CLASS_STANDARD', automationId: null };
+    }
+    if (surfaceKind === 'probe') {
+      return { kind: 'PROBE', evidence: 'SURFACE_CLASS_STANDARD', automationId: null };
+    }
     if (embeddedAutomationId(manifest)) {
-      return { kind: 'BUSINESS_AUTOMATION', evidence: 'AUTOMATION_PASSPORT' };
+      return { kind: 'BUSINESS_AUTOMATION', evidence: 'AUTOMATION_PASSPORT', automationId: id };
     }
     if (manifest && (
       (manifest.category === 'automations' && manifest.type === 'process') ||
       manifest.schemaVersion === 'extella-process-pack-v1' ||
       manifest.schema_version === 'extella-process-pack-v1'
     )) {
-      return { kind: 'BUSINESS_AUTOMATION', evidence: 'PROCESS_MANIFEST' };
-    }
-    // Bounded compatibility only for the three migrations reviewed on
-    // 2026-07-26.  New products must arrive through canonical passport or
-    // process metadata; extending this list is intentionally forbidden.
-    if (['extella_1c_agent', 'extella_contract_agent',
-         'extella_travel_agency'].indexOf(id) !== -1) {
-      return { kind: 'BUSINESS_AUTOMATION', evidence: 'REVIEWED_MIGRATION' };
+      return { kind: 'BUSINESS_AUTOMATION', evidence: 'PROCESS_MANIFEST', automationId: id };
     }
     if (manifest && manifest.system === true) {
-      return { kind: 'SYSTEM_SURFACE', evidence: 'SYSTEM_MARKER' };
+      return { kind: 'SYSTEM_SURFACE', evidence: 'SYSTEM_MARKER', automationId: null };
     }
-    return { kind: 'UNCLASSIFIED', evidence: 'CLASSIFICATION_MISSING' };
+    return { kind: 'UNCLASSIFIED', evidence: 'CLASSIFICATION_MISSING', automationId: null };
   }
 
-  function deviceCardInventory(deviceCards) {
+  function deviceCardInventory(deviceCards, contracts) {
+    contracts = contracts || automationContracts({});
     var available = Boolean(deviceCards && deviceCards.available === true);
     var rows = available ? (deviceCards.cards || []).map(function (card) {
       var manifest = card && card.manifest || {};
-      var classification = deviceCardClassification(card);
+      var classification = deviceCardClassification(card, contracts);
       var name = manifest.name || manifest.title || null;
       return {
         id: text(manifest.id),
+        automation_id: classification.automationId,
         name: clone(name),
         version: text(manifest.version) || null,
         kind: classification.kind,
@@ -824,6 +878,8 @@ ETB.evolutionAutomationRegistryProvider = (function () {
       discovered: available ? rows.length : null,
       business_automations: available ? 0 : null,
       system_surfaces: available ? 0 : null,
+      installed_apps: available ? 0 : null,
+      probes: available ? 0 : null,
       unclassified: available ? 0 : null
     };
     if (available) {
@@ -832,13 +888,17 @@ ETB.evolutionAutomationRegistryProvider = (function () {
           counts.business_automations += 1;
         } else if (row.kind === 'SYSTEM_SURFACE') {
           counts.system_surfaces += 1;
+        } else if (row.kind === 'INSTALLED_APP') {
+          counts.installed_apps += 1;
+        } else if (row.kind === 'PROBE') {
+          counts.probes += 1;
         } else {
           counts.unclassified += 1;
         }
       });
     }
     return {
-      schema: 'extella.evolution.device_inventory.v1',
+      schema: 'extella.evolution.device_inventory.v2',
       available: available,
       classification_complete: available && counts.unclassified === 0,
       counts: counts,
@@ -1266,8 +1326,10 @@ ETB.evolutionAutomationRegistryProvider = (function () {
 
   function load(options) {
     var api;
+    var contracts;
     options = options || {};
     api = options.api || ETB.api;
+    contracts = automationContracts(options);
     if (!api || typeof api.kvGet !== 'function' ||
         typeof api.agentsList !== 'function' ||
         typeof api.expertsListScoped !== 'function') {
@@ -1295,13 +1357,13 @@ ETB.evolutionAutomationRegistryProvider = (function () {
         readSchedules(api, catalog, deviceCards, options),
         readAutomationKvFacts(
           api,
-          installedAutomationIds(deviceCards.cards),
+          installedAutomationIds(deviceCards.cards, contracts),
           'state',
           options
         ),
         readAutomationKvFacts(
           api,
-          installedAutomationIds(deviceCards.cards),
+          installedAutomationIds(deviceCards.cards, contracts),
           'runs',
           options
         ),
@@ -1343,24 +1405,38 @@ ETB.evolutionAutomationRegistryProvider = (function () {
               schedulerIndex: schedulerIndex,
               deviceCards: deviceCards
             },
-            catalogItems: clone(catalog.items),
-            composerInstalledItems: clone(composerInstalled.items),
-            browserInstalledIds: clone(browserInstalled.ids),
+            catalogItems: mappedRegistryItems(catalog.items, contracts),
+            composerInstalledItems: mappedRegistryItems(composerInstalled.items, contracts),
+            browserInstalledIds: mappedInstalledIds(browserInstalled.ids, contracts),
             platformAgentRows: clone(platformAgents.rows),
             platformExpertRows: clone(platformExperts.rows),
             scheduleFacts: clone(schedules.facts),
             runtimeStateRows: deviceCards.cards.map(function (card) {
+              var classification = deviceCardClassification(card, contracts);
               return {
-                automationId: text(card && card.manifest &&
-                  card.manifest.id),
+                automationId: text(classification.automationId),
                 runtime: clone(card && card.runtime)
               };
-            }),
+            }).filter(function (row) { return AUTOMATION_ID.test(row.automationId); }),
             automationStateFacts: clone(automationStates.facts),
             automationRunFacts: clone(automationRuns.facts),
             schedulerIndexSids: clone(schedulerIndex.sids),
-            deviceCardRows: clone(deviceCards.cards),
-            deviceInventory: deviceCardInventory(deviceCards),
+            deviceCardRows: deviceCards.cards.map(function (card) {
+              var classification = deviceCardClassification(card, contracts);
+              return {
+                filename: card.filename,
+                registry_card_id: text(card.manifest && card.manifest.id),
+                automation_id: classification.automationId,
+                kind: classification.kind,
+                evidence: classification.evidence,
+                automation_passport: contracts &&
+                  typeof contracts.passportForAutomation === 'function' ?
+                  contracts.passportForAutomation(classification.automationId) : null,
+                manifest: clone(card.manifest),
+                runtime: clone(card.runtime)
+              };
+            }).filter(function (row) { return row.kind === 'BUSINESS_AUTOMATION'; }),
+            deviceInventory: deviceCardInventory(deviceCards, contracts),
             complete: [
               catalog,
               composerInstalled,

@@ -163,13 +163,15 @@ test('unknown installation evidence is never rendered as a zero fleet', () => {
 test('device reconciliation keeps every discovered card visible without promoting unknown products', () => {
   const validate = evaluateHelper('validDeviceInventory');
   const inventory = {
-    schema: 'extella.evolution.device_inventory.v1',
+    schema: 'extella.evolution.device_inventory.v2',
     available: true,
     classification_complete: false,
     counts: {
       discovered: 16,
       business_automations: 3,
       system_surfaces: 4,
+      installed_apps: 0,
+      probes: 0,
       unclassified: 9,
     },
     rows: Array.from({ length: 16 }, (_, index) => ({
@@ -204,6 +206,17 @@ test('device reconciliation keeps every discovered card visible without promotin
     assert.ok(copyValue(ru, key));
     assert.ok(copyValue(en, key));
   });
+});
+
+test('installed programs stay outside the automation fleet and need no passport', () => {
+  assert.match(consoleHtml, /data-fleet-filter="programs"/);
+  assert.match(consoleHtml, /id="countPrograms"/);
+  assert.match(consoleHtml, /row\.kind==='INSTALLED_APP'/);
+  assert.match(consoleHtml, /programBoundary:'Программы установлены пользователем/);
+  assert.match(consoleHtml, /programBoundary:'Programs are installed by the user/);
+  assert.match(consoleHtml, /inventoryKindInstalledApp:'Установленная программа'/);
+  assert.match(consoleHtml, /inventoryKindProbe:'Служебная проба'/);
+  assert.doesNotMatch(consoleHtml, /data-program-action|data-program-passport/);
 });
 
 test('primary problem selection is deterministic and does not mutate findings', () => {

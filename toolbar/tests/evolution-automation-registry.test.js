@@ -113,6 +113,38 @@ test('SemVer 2.0 accepts dev/beta prereleases and compares without guessing', ()
   assert.equal(api.compareSemver('1.0.0+one', '1.0.0+two'), 0);
 });
 
+test('canonical card id mapping proves installation without inventing release state', () => {
+  const api = load();
+  const result = plain(api.project(baseInput({
+    deviceRecords: [{
+      fileName: 'baga_thin.json',
+      registry_card_id: 'baga_thin',
+      automation_id: 'extella_kz_grocery',
+      kind: 'BUSINESS_AUTOMATION',
+      evidence: 'SURFACE_CLASS_STANDARD',
+      manifest: {
+        id: 'baga_thin',
+        name: 'Баға — цены Казахстана',
+        version: '0.4.0',
+        category: 'analytics',
+        type: 'custom',
+      },
+    }],
+  })));
+  const row = result.rows.find(
+    (candidate) => candidate.automation_id === 'extella_kz_grocery',
+  );
+
+  assert.ok(row);
+  assert.equal(row.flags.installed, true);
+  assert.equal(row.versions.installed, '0.4.0');
+  assert.equal(row.statuses.installed, 'UNKNOWN');
+  assert.ok(row.risks.some((risk) => risk.code === 'STATUS_UNKNOWN'));
+  assert.equal(result.rows.some(
+    (candidate) => candidate.automation_id === 'baga_thin',
+  ), false);
+});
+
 test('missing projection input contract fails closed', () => {
   const api = load();
   const result = plain(api.project({}));

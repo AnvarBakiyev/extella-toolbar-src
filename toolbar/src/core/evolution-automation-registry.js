@@ -587,7 +587,14 @@ ETB.evolutionAutomationRegistry = (function () {
 
   function deviceId(record) {
     var manifest = deviceManifest(record);
-    return manifest && manifest.id;
+    return record && (record.automation_id || record.automationId) ||
+      (manifest && manifest.id);
+  }
+
+  function deviceRegistryCardId(record) {
+    var manifest = deviceManifest(record);
+    return record && (record.registry_card_id || record.registryCardId) ||
+      (manifest && manifest.id);
   }
 
   function deviceFileName(record) {
@@ -1308,24 +1315,29 @@ ETB.evolutionAutomationRegistry = (function () {
     return stringValue(value[language]);
   }
 
-  function chooseName(id, device, catalogue, migration) {
+  function chooseName(id, device, catalogue, migration, passport) {
     var deviceName = device && (device.name || device.title);
     var catalogueName = catalogue &&
       (catalogue.name || catalogue.title);
     var migrationName = migration && migration.name;
+    var passportName = passport && passport.name;
     return {
       ru: exactLocalizedName(deviceName, 'ru') ||
         exactLocalizedName(catalogueName, 'ru') ||
+        exactLocalizedName(passportName, 'ru') ||
         exactLocalizedName(migrationName, 'ru') ||
         localizedName(deviceName, 'ru') ||
         localizedName(catalogueName, 'ru') ||
+        localizedName(passportName, 'ru') ||
         localizedName(migrationName, 'ru') ||
         id,
       en: exactLocalizedName(deviceName, 'en') ||
         exactLocalizedName(catalogueName, 'en') ||
+        exactLocalizedName(passportName, 'en') ||
         exactLocalizedName(migrationName, 'en') ||
         localizedName(deviceName, 'en') ||
         localizedName(catalogueName, 'en') ||
+        localizedName(passportName, 'en') ||
         localizedName(migrationName, 'en') ||
         id
     };
@@ -1460,7 +1472,8 @@ ETB.evolutionAutomationRegistry = (function () {
     deviceRecords.forEach(function (record) {
       var id = canonicalId(deviceId(record));
       var manifest = deviceManifest(record);
-      if (id && businessAutomation(migrationView(manifest, id))) collect(id);
+      if (id && (record.kind === 'BUSINESS_AUTOMATION' ||
+          businessAutomation(migrationView(manifest, id)))) collect(id);
     });
     localInstalledIds.forEach(function (id) {
       if (knownAutomationId(id)) collect(id);
@@ -1491,6 +1504,8 @@ ETB.evolutionAutomationRegistry = (function () {
       var catalogueConflict = catalogueShapeConflict(catalogue);
       var envelope = deviceMatches.length === 1 ? deviceMatches[0] : null;
       var device = envelope ? deviceManifest(envelope) : null;
+      var passport = envelope && object(envelope.automation_passport) ?
+        envelope.automation_passport : null;
       var catalogueVersionValue = catalogueVersion(catalogue);
       var catalogueVersionExact =
         parseSemver(catalogueVersionValue) ? catalogueVersionValue : UNKNOWN;
@@ -1513,8 +1528,11 @@ ETB.evolutionAutomationRegistry = (function () {
       var catalogueInstalled = Boolean(
         catalogueInstalledKnown && catalogue.installed
       );
-      var declaredVersion = migration && migration.declaredVersion ?
-        migration.declaredVersion : catalogueVersionExact;
+      var passportVersion = passport && parseSemver(passport.version) ?
+        passport.version : UNKNOWN;
+      var declaredVersion = passportVersion !== UNKNOWN ? passportVersion :
+        (migration && migration.declaredVersion ?
+          migration.declaredVersion : catalogueVersionExact);
       var row;
       var reviewed = reviewedComponents(migration);
       var declaredSchedules;
@@ -1541,12 +1559,13 @@ ETB.evolutionAutomationRegistry = (function () {
       deviceValid = Boolean(
         device &&
         deviceMatches.length === 1 &&
-        strictFileName(deviceFileName(envelope), id) &&
+        strictFileName(deviceFileName(envelope), deviceRegistryCardId(envelope)) &&
         envelope.isSymlink !== true &&
         envelope.isRegularFile !== false &&
-        businessAutomation(deviceView) &&
+        (envelope.kind === 'BUSINESS_AUTOMATION' || businessAutomation(deviceView)) &&
         deviceVersion !== UNKNOWN &&
-        deviceStatus !== UNKNOWN
+        (deviceStatus !== UNKNOWN ||
+          envelope.evidence === 'SURFACE_CLASS_STANDARD')
       );
       catalogFact = catalogAvailable ? cataloguePresent : UNKNOWN;
       installedFact = deviceAvailable ? deviceValid : UNKNOWN;
@@ -1578,7 +1597,14 @@ ETB.evolutionAutomationRegistry = (function () {
       };
       row = {
         automation_id: id,
-        name: chooseName(id, device, catalogue, migration),
+        name: chooseName(id, device, catalogue, migration, passport),
+        automation_passport: passport ? {
+          registry_card_id: stringValue(passport.registry_card_id) || id,
+          hosting_profile: stringValue(passport.hosting_profile) || UNKNOWN,
+          state_reader: cloneJson(passport.state_reader, null),
+          service: cloneJson(passport.service, null),
+          source: cloneJson(passport.source, null)
+        } : null,
         availability: 'catalog',
         flags: {
           catalog: catalogFact,
@@ -1641,6 +1667,7 @@ ETB.evolutionAutomationRegistry = (function () {
             migration && migration.source,
             null
           ),
+          automation_passport: cloneJson(passport && passport.source, null),
           migrations: [],
           checked_at: checkedAt
         },
@@ -1703,6 +1730,10 @@ ETB.evolutionAutomationRegistry = (function () {
         discrepancy(row, 'DEVICE_RECORD_INVALID');
         if (deviceVersion === UNKNOWN) discrepancy(row, 'VERSION_UNKNOWN');
         if (deviceStatus === UNKNOWN) discrepancy(row, 'STATUS_UNKNOWN');
+      } else if (deviceAvailable && deviceValid &&
+          deviceStatus === UNKNOWN) {
+        complete = false;
+        discrepancy(row, 'STATUS_UNKNOWN');
       }
       if (migrationFields.length || catalogueMigration) {
         row.evidence.migrations = migrationFields.slice();
