@@ -298,12 +298,18 @@ test('registry load is account-fenced and does not invoke legacy mutation paths'
 });
 
 test('current-device scanner performs no provisioning, deletion, or cache mutation', () => {
-  const start = registry.indexOf('    scanDeviceManifests: function (deviceId)');
+  const start = registry.indexOf(
+    '    scanDeviceManifests: function (deviceId, deviceRefs)',
+  );
   const end = registry.indexOf('    syncFromDevice: function', start);
   assert.ok(start >= 0 && end > start);
   const source = registry.slice(start, end);
   assert.match(source, /_etb_evolution_registry_scan_v1/);
-  assert.match(source, /ETB\.api\.runExpert\(fnName,\s*\{\},\s*\{/);
+  assert.match(
+    source,
+    /device_refs_json:\s*JSON\.stringify\(exactDeviceRefs\)/,
+  );
+  assert.match(source, /ETB\.api\.runExpert\(fnName,\s*\{/);
   assert.match(source, /targets:\s*\[exactDeviceId\]/);
   assert.match(source, /target:\s*exactDeviceId/);
   assert.match(source, /clientTimeoutMs:\s*180000/);

@@ -374,7 +374,52 @@ def _evolution_registry_probe_runtime(manifest):
     return runtime
 
 
-def _etb_evolution_registry_scan_v1() -> str:
+def _evolution_registry_device_refs(device_refs_json):
+    import json
+    import os
+    import re
+
+    allowed = {"~/extella_baga/panel.json:data_device"}
+    target = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{7,159}$")
+    output = {}
+    try:
+        requested = json.loads(device_refs_json or "[]")
+    except Exception:
+        requested = []
+    if not isinstance(requested, list) or len(requested) > 8:
+        return output
+    for ref in requested:
+        if not isinstance(ref, str) or ref not in allowed:
+            continue
+        result = {"available": False, "value": None, "error_code": None}
+        path_text, key = ref.rsplit(":", 1)
+        path = os.path.abspath(os.path.expanduser(path_text))
+        expected = os.path.abspath(
+            os.path.expanduser("~/extella_baga/panel.json")
+        )
+        if path != expected or os.path.islink(path):
+            result["error_code"] = "DEVICE_REF_PATH_INVALID"
+        elif not os.path.isfile(path):
+            result["error_code"] = "DEVICE_REF_FILE_UNAVAILABLE"
+        elif os.path.getsize(path) > 65536:
+            result["error_code"] = "DEVICE_REF_FILE_TOO_LARGE"
+        else:
+            try:
+                with open(path, "r", encoding="utf-8") as handle:
+                    document = json.load(handle)
+                value = document.get(key) if isinstance(document, dict) else None
+                if not isinstance(value, str) or not target.fullmatch(value):
+                    result["error_code"] = "DEVICE_REF_VALUE_INVALID"
+                else:
+                    result["available"] = True
+                    result["value"] = value
+            except Exception:
+                result["error_code"] = "DEVICE_REF_READ_FAILED"
+        output[ref] = result
+    return output
+
+
+def _etb_evolution_registry_scan_v1(device_refs_json="[]") -> str:
     import concurrent.futures
     import json
     import os
@@ -384,6 +429,7 @@ def _etb_evolution_registry_scan_v1() -> str:
     strict = re.compile(r"^[a-z0-9][a-z0-9._-]{1,79}\.json$")
     output = {
         "entries": [],
+        "device_refs": _evolution_registry_device_refs(device_refs_json),
         "matched_count": 0,
         "ignored_backup_count": 0,
         "rejected_count": 0,

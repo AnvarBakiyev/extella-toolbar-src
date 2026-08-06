@@ -7,7 +7,7 @@
   "description": "Evolution Console разделяет работающие, остановленные, требующие помощи и непроверенные автоматизации. Каталог отделён от установленных, а детали для специалиста не мешают ежедневному управлению.",
   "category": "business",
   "type": "application",
-  "version": "0.16.0",
+  "version": "0.16.1",
   "eye": "Extella Evolution",
   "pills": [
     "Автоматизации",
@@ -95,12 +95,14 @@
   "expert_defs": [
     {
       "name": "_etb_evolution_registry_scan_v1",
-      "description": "Read-only strict scanner for top-level current-device automation cards and bounded localhost state contracts. It ignores backup-shaped files and never mutates the device registry or automation state.",
+      "description": "Read-only strict scanner for top-level current-device automation cards, bounded localhost state contracts and pinned device references. It ignores backup-shaped files and never mutates the device registry or automation state.",
       "cspl": "fython",
       "global": true,
-      "kwargs": {},
+      "kwargs": {
+        "device_refs_json": "[]"
+      },
       "codeFile": "evolution-registry-scanner.py",
-      "sourceSha256": "49508b3512ef29cc80afadd29c24a320790232dbfd8eb7373adc3333967e72ed"
+      "sourceSha256": "1faa0dd1ba7f50b453f401964e4e8ae4c5e3af54a58fbd63824da6efa3093a21"
     }
   ],
   "conceptTexts": [],
