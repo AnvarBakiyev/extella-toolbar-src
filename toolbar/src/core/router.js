@@ -5242,6 +5242,9 @@ ETB.router = (function () {
       '<summary style="font-size:11px;color:var(--etb-tx2,#888);cursor:pointer;text-align:center;list-style:none;">' + _L('Подробности','Details') + '</summary>',
       '<div style="font-size:11px;color:var(--etb-tx2,#888);line-height:1.5;margin-top:8px;">',
       _L('Локальный сервер не отвечает на порту ','Local server offline on port '), String(ui.port || '&#8212;'), '.',
+      // Что принесло чтение реестра с устройства: без этой строки «витрина
+      // показывает вчерашнюю карточку» невозможно разобрать — DevTools в проде нет.
+      (window.__etbRegistryProbe ? '<br>' + _esc(String(window.__etbRegistryProbe)) : ''),
       ui.startExpert
         ? ' <a href="#" onclick="ETB.router._startServer(\'' + _esc(pid) + '\');return false;" style="color:#C57E33;">' + _L('Запустить только сервер','Start server only') + '</a>.'
         : '',
@@ -5443,7 +5446,41 @@ ETB.router = (function () {
   // держать нельзя (338 КБ у одного Рекрутёра — кэш молча переполнялся и навсегда
   // застревал на вчерашней версии), а перечитывать на каждый клик — заставлять
   // человека ждать. Память процесса: живёт до перезапуска, всегда свежая.
+  // Страница панели, уже прочитанная с устройства. Держим ВМЕСТЕ с версией
+  // карточки: иначе после обновления продукта человек открывал бы вчерашнюю
+  // страницу до перезапуска приложения. И держим последнюю рабочую копию в
+  // localStorage — чтобы при сбое чтения показать её, а не пустой экран
+  // (06.08, Агент 1С: чтение зависало, и панель показывала только отказ).
   var _htmlMem = {};
+  var LAST_GOOD_KEY = '_etb_panel_last_good_v1';
+  var LAST_GOOD_MAX = 24576;      // держим только лёгкие оболочки, кэш витрины и так тесен
+  function _cardVersion(plugin) {
+    return String((plugin && (plugin.version || (plugin.ui || {}).version)) || '');
+  }
+  function _loadLastGood() {
+    try { return JSON.parse(localStorage.getItem(LAST_GOOD_KEY) || '{}') || {}; }
+    catch (_) { return {}; }
+  }
+  function _rememberHtml(id, version, html) {
+    _htmlMem[id] = { v: version, html: html };
+    if (!html || html.length > LAST_GOOD_MAX) return;
+    var all = _loadLastGood();
+    all[id] = { v: version, html: html };
+    try { localStorage.setItem(LAST_GOOD_KEY, JSON.stringify(all)); } catch (_) {}
+  }
+  function _recallHtml(id, version) {
+    var mem = _htmlMem[id];
+    if (mem && mem.html && (!version || !mem.v || mem.v === version)) return mem.html;
+    var saved = _loadLastGood()[id];
+    if (saved && saved.html && (!version || !saved.v || saved.v === version)) return saved.html;
+    return null;
+  }
+  function _recallAnyHtml(id) {
+    var mem = _htmlMem[id];
+    if (mem && mem.html) return mem.html;
+    var saved = _loadLastGood()[id];
+    return (saved && saved.html) || null;
+  }
   function _withHtml(plugin, html) {
     var ui = {}; var src = plugin.ui || {};
     for (var k in src) if (Object.prototype.hasOwnProperty.call(src, k)) ui[k] = src[k];
@@ -5457,12 +5494,29 @@ ETB.router = (function () {
       + 'padding:48px;color:#555;">' + text + '</div>';
   }
   function _deviceReadingHTML() {
-    return _panelNote(_L('Читаю панель с этого устройства\u2026', 'Reading the panel from this device\u2026'));
+    return _panelNote(_L('Читаю панель с этого устройства\u2026', 'Reading the panel from this device\u2026')
+      + '<div style="margin-top:8px;font-size:11px;color:#888;">'
+      + _L('загрузчик 04.08-r3', 'loader 04.08-r3') + '</div>');
+  }
+  function _staleNoticeHTML() {
+    return '<div style="font:400 12px/1.5 -apple-system,system-ui,sans-serif;'
+      + 'padding:8px 12px;background:#F6EEE2;border-bottom:1px solid #D4B896;color:#A5632A;">'
+      + _L('Показана последняя рабочая версия панели: свежую прочитать с устройства не удалось.',
+           'Showing the last working panel: the fresh one could not be read from this device.')
+      + '</div>';
   }
   function _deviceReadFailedHTML() {
+    var probe = '';
+    try { probe = String(window.__etbRegistryProbe || ''); } catch (_) {}
+    var why = '';
+    try { why = String(_deviceWhyText() || ''); } catch (_) {}
+    var details = probe || why;
     return _panelNote(_L(
       'Не удалось прочитать страницу с этого устройства. Проверь, что Extella видит устройство, и открой панель ещё раз.',
-      'Could not read the page from this device. Check that Extella sees the device and open the panel again.'));
+      'Could not read the page from this device. Check that Extella sees the device and open the panel again.')
+      + '<div style="margin-top:10px;font-size:11px;color:#888;">'
+      + _L('загрузчик 04.08-r3', 'loader 04.08-r3')
+      + (details ? '<br>' + _esc(details) : '') + '</div>');
   }
   // Почему устройство не нашлось — словами, а не молчанием. Панель без устройства
   // отказывается работать, и человек видел одинаковое «не сообщило устройство»
@@ -5916,8 +5970,19 @@ ETB.router = (function () {
           // отложенные и отдаёт task_id. Прежний мост возвращал панели сырой конверт
           // «deferred, use task_id…» — панель Баға висла на «Смотрю, что есть…»
           // (живой экран 04.08). Мост доводит задачу до результата сам.
-          ETB.api.runExpertAsync(expertName, expertParams,
+          // СИНХРОННО, с доводкой отложенного: асинхронный прогон (wait:false)
+          // платформа отбивает мгновенным «Worker hung» — прямая проба 04.08:
+          // синхронно 9,6 с и полный ответ, асинхронно 2,2 с и отказ. Если
+          // платформа всё же отложит задачу и вернёт task_id — доводим сами,
+          // чтобы панель не получала конверт вместо данных.
+          ETB.api.runExpert(expertName, expertParams,
             _tgts ? { global: true, targets: _tgts } : { global: true })
+            .then(function (res) {
+              if (res && res.task_id && (res.result === undefined || res.result === null)) {
+                return ETB.api.pollTask(res.task_id, {});
+              }
+              return res;
+            })
             .then(function (res) { reply({ type: 'etb_expert_result', reqId: reqId, ok: true, res: res }); })
             .catch(function (err) { reply({ type: 'etb_expert_result', reqId: reqId, ok: false, error: (err && err.message) || 'expert failed' }); });
         } catch (err) {
@@ -7587,7 +7652,7 @@ ETB.router = (function () {
       }).then(function (added) {
         (added || []).forEach(function (m) {
           if (m && m.id === id && m.ui && typeof m.ui.html === 'string'
-              && m.ui.html !== ETB.registry.HTML_ON_DEVICE) _htmlMem[id] = m.ui.html;
+              && m.ui.html !== ETB.registry.HTML_ON_DEVICE) _rememberHtml(id, _cardVersion(m), m.ui.html);
         });
       }).catch(function () {});
     },
@@ -7603,9 +7668,31 @@ ETB.router = (function () {
       // со страницей внутри дочитываем ровно её с устройства; не успели за 6 с
       // — открываем что есть, лишь бы не держать человека.
       var ui = plugin.ui || {};
-      if (ui.type !== 'html') { this.open(plugin, opts); return; }
+      if (ui.type !== 'html') {
+        // Карточка МОГЛА СМЕНИТЬ ФОРМУ на устройстве: продукт переехал с
+        // локального сервера на тонкую панель, а витрина всё ещё проверяет
+        // порт, которого больше нет, и показывает «нужно доустановить» на
+        // исправном продукте (живой экран 04.08, Predictive Sales). Поэтому
+        // сначала перечитываем карточку с устройства и только потом решаем,
+        // какой она формы.
+        var was = this;
+        var opened = false;
+        var openNow = function () {
+          if (opened) return;
+          opened = true;
+          var fresh = ETB.registry.getById(id) || plugin;
+          if ((fresh.ui || {}).type === 'html') was.openById(id, opts);
+          else was.open(fresh, opts);
+        };
+        setTimeout(openNow, 8000);
+        this.deviceId().then(function (dev) {
+          if (!dev || opened) return null;
+          return ETB.registry.syncFromDevice(dev, id);
+        }).then(openNow).catch(openNow);
+        return;
+      }
       var MARK = ETB.registry.HTML_ON_DEVICE;
-      var cached = _htmlMem[id];
+      var cached = _recallHtml(id, _cardVersion(plugin));
       var hasOwnHtml = plugin.ui && typeof plugin.ui.html === 'string' && plugin.ui.html !== MARK;
       // Страница уже читалась в этой сессии — открываем мгновенно, а свежесть
       // догоняем фоном: ждать устройство на каждом клике человек не обязан.
@@ -7623,7 +7710,13 @@ ETB.router = (function () {
         if (settled) return;
         settled = true;
         self.evict(id);
-        self.open(_withHtml(plugin, _deviceReadFailedHTML()), opts);
+        // Пустой экран читается как «продукт сломан». Если рабочая страница уже
+        // была прочитана раньше — показываем её и честно говорим, что она может
+        // быть не последней; отказ без выхода хуже устаревшей, но живой панели.
+        var lastGood = _recallAnyHtml(id);
+        self.open(_withHtml(plugin, lastGood
+          ? (_staleNoticeHTML() + lastGood)
+          : _deviceReadFailedHTML()), opts);
       }, 45000);
       this.deviceId().then(function (dev) {
         if (!dev) return null;
@@ -7636,7 +7729,7 @@ ETB.router = (function () {
         if (!html || html === MARK) return;   // не дочитали — оставим таймауту
         settled = true;
         clearTimeout(fail);
-        _htmlMem[id] = html;
+        _rememberHtml(id, _cardVersion(fresh), html);
         self.evict(id);
         self.open(_withHtml(fresh, html), opts);
       }).catch(function () {});

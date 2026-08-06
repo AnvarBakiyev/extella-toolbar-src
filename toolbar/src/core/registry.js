@@ -12,6 +12,12 @@ ETB.registry = (function () {
   // try/catch → tombstone НЕ персистился и удалённые плагины воскресали при синке
   var REMOVED_KEY   = 'etb_plugins_removed_v1';
   var REMOVING_KEY  = 'etb_removing_v1';  // tombstone: id помечен на удаление, пока файл реестра на устройстве ещё есть — не возвращаем при syncFromDevice
+  // Один listener не должен одновременно разбирать два чтения реестра. Открытие
+  // Plugins запускает общий sync, а быстрый клик по карточке раньше запускал
+  // второй _etb_registry_read: оба глобальных прогона сталкивались, и адресный
+  // запрос панели уходил в Worker hung/Target unavailable. Держим single-flight
+  // на устройство и, если общий sync уже несёт нужную карточку, используем его.
+  var _deviceSyncInFlight = {};
   var EVOLUTION_STUDIO_OWNERSHIP_MIGRATION_KEY =
     'etb_evolution_studio_ownership_migration_v1';
   function _loadRemoving(){ try { return JSON.parse(localStorage.getItem(REMOVING_KEY) || '[]'); } catch(e){ return []; } }
@@ -40,6 +46,31 @@ ETB.registry = (function () {
   // и дочитывается при открытии (router.openById). Кэш — про «какие плитки
   // показать», а не про содержимое панели.
   var HTML_MARK = '__etb_html_on_device__';
+
+  // Какой код ридера уже принят аккаунтом. Ключ переживает перезапуск приложения:
+  // иначе первое открытие после каждого старта снова платило бы за сохранение.
+  var READER_KEY = '_etb_registry_reader_v1';
+  function _codeMark(code) {
+    var h = 5381, i = 0;
+    for (; i < code.length; i++) h = ((h * 33) ^ code.charCodeAt(i)) >>> 0;
+    return String(code.length) + '.' + h.toString(36);
+  }
+  function _readerReady(code) {
+    try { return localStorage.getItem(READER_KEY) === _codeMark(code); } catch (_) { return false; }
+  }
+  function _markReaderReady(code) {
+    try { localStorage.setItem(READER_KEY, _codeMark(code)); } catch (_) {}
+  }
+  function _forgetReader() {
+    try { localStorage.removeItem(READER_KEY); } catch (_) {}
+  }
+  // «Эксперта нет» отличаем от прочих отказов: сеть, таймаут и 5xx повторным
+  // сохранением не лечатся, а маскируют настоящую причину.
+  function _looksMissingExpert(e) {
+    var t = String((e && (e.message || e.error)) || '').toLowerCase();
+    return t.indexOf('not found') !== -1 || t.indexOf('не найден') !== -1
+      || t.indexOf('unknown expert') !== -1 || t.indexOf('404') !== -1;
+  }
   function _slim(p) {
     if (!p || !p.ui || typeof p.ui.html !== 'string' || p.ui.html.length < 4096) return p;
     var copy = {}; for (var k in p) if (Object.prototype.hasOwnProperty.call(p, k)) copy[k] = p[k];
@@ -332,6 +363,29 @@ ETB.registry = (function () {
 
     syncFromDevice: function (deviceId, onlyId) {
       var self = this;
+      var syncKey = String(deviceId || '__default__');
+      var pending = _deviceSyncInFlight[syncKey];
+      if (pending && pending.promise) {
+        return pending.promise.then(function (added) {
+          var list = Array.isArray(added) ? added : [];
+          var matching = onlyId ? list.filter(function (m) {
+            return m && m.id === onlyId;
+          }) : list;
+          var hasPage = matching.some(function (m) {
+            var html = m && m.ui && m.ui.html;
+            return typeof html === 'string' && html !== HTML_MARK;
+          });
+          // Адресный sync уже прочитал страницу этой карточки — второго прогона
+          // не нужно. Общий sync несёт только HTML_MARK, поэтому после него
+          // последовательно дочитываем страницу одним коротким запросом.
+          if (!onlyId || hasPage || pending.onlyId === onlyId) return matching;
+          // В полёте была другая адресная карточка либо общий sync не принёс
+          // нужную: после его завершения запускаем один последовательный запрос.
+          return self.syncFromDevice(deviceId, onlyId);
+        });
+      }
+      var flight = { onlyId: onlyId || '', promise: null };
+      _deviceSyncInFlight[syncKey] = flight;
       var fnName = '_etb_registry_read';
       // Девайсные тумбстоуны (_registry/_removed/*.json, пишет чистка удаления):
       // зомби-хвост первого оборванного рана установки может дописать манифест
@@ -375,6 +429,15 @@ ETB.registry = (function () {
         '                        try: os.remove(fp)',
         '                        except Exception: pass',
         '                        continue',
+        // Общему списку нужны метаданные плиток, а не сотни килобайт страниц.
+        // HTML читается только адресным запросом при открытии карточки. Раньше
+        // Plugins тащил ~500 КБ, а затем параллельный клик по Баға запускал
+        // второй прогон того же listener и получал таймаут.
+        '                if not only_id and isinstance(ui, dict) and isinstance(ui.get("html"), str):',
+        '                    m = dict(m)',
+        '                    ui = dict(ui)',
+        '                    ui["html"] = "__etb_html_on_device__"',
+        '                    m["ui"] = ui',
         '                out.append(m)',
         '            except Exception:',
         '                pass',
@@ -428,28 +491,75 @@ ETB.registry = (function () {
         return added;
       }
       function run(useTarget) {
-        // runExpertAsync, не runExpert: тяжёлые прогоны платформа откладывает и
-        // отдаёт task_id — синхронный вызов получал конверт БЕЗ результата,
-        // ingest видел пусто, и витрина считала, что на устройстве карточек нет.
-        // Так свежая панель, лежащая на диске, не доезжала до человека (04.08).
-        var opts = { timeout: 60, maxWait: 90000 };
+        // СИНХРОННО. Асинхронный прогон (wait:false) этого эксперта платформа
+        // отбивает мгновенным «Worker hung» — проверено прямой пробой 04.08:
+        // синхронно 9,6 с и полный ответ, асинхронно 2,2 с и отказ. Я сам
+        // перевёл чтение на async в тот же день, «чтобы доводить отложенные»,
+        // и этим сломал обновление карточек: витрина перестала видеть, что на
+        // устройстве лежит новая панель, и показывала вчерашнюю.
+        // В ТЕЛО ЗАПРОСА кладём только то, что понимает платформа: наши
+        // параметры ожидания (timeout/maxWait) уходили туда же и прогон
+        // возвращался с «Worker hung» — при этом тот же вызов без них
+        // отрабатывал за 13 секунд (проверено вживую 04.08). Ожиданием
+        // управляет клиент, а не сервер.
+        var opts = { global: true };
         // ЗАКРЕПЛЕНИЕ — ТОЛЬКО МАССИВОМ targets. Одиночный target платформа
         // принимает молча и игнорирует: чтение реестра уходило на дефолтное
         // устройство аккаунта (у владельца — VPS, где ~/extella-plugins нет),
         // отвечало пустым списком, и витрина вечно показывала карточку из
         // своего кэша. Свежая панель ставилась на диск и не открывалась.
         if (useTarget && deviceId) { opts.targets = [deviceId]; opts.target = deviceId; }
-        return ETB.api.runExpertAsync(fnName, { only_id: onlyId || '' }, opts);
+        return ETB.api.runExpert(fnName, { only_id: onlyId || '' }, opts);
       }
 
-      return ETB.api.saveExpert({
+      // След на аккаунте: что чтение реестра с устройства реально принесло.
+      // DevTools в проде выключены, и «витрина показывает вчерашнюю карточку»
+      // невозможно разобрать иначе — 04.08 это дважды стоило круга вслепую.
+      var _probe = function (what) {
+        // Видно ЧЕЛОВЕКУ, а не только в KV: KV-запись из витрины может не дойти,
+        // а экран отказа человек видит всегда.
+        try { window.__etbRegistryProbe = String(what).slice(0, 300); } catch (_) {}
+        try {
+          ETB.api.kvSet('_registry_probe', String(what).slice(0, 500),
+            'Диагностика чтения реестра с устройства').catch(function () {});
+        } catch (_) {}
+      };
+      // Эксперт-ридер пересохранялся ПЕРЕД КАЖДЫМ открытием панели. Это лишний
+      // прогон платформы (~10 с) на каждый клик и лишняя точка отказа: 06.08 на
+      // Агенте 1С сохранение зависало, чтение не начиналось, и витрина вечно
+      // показывала «страницу нужно прочитать с устройства». Сохраняем один раз
+      // на версию кода и повторяем только если аккаунт эксперта не знает.
+      var _saveReader = function () {
+        return ETB.api.saveExpert({
         name: fnName,
         description: 'Read local Extella plugin registry files',
         code: code,
         kwargs: { only_id: '' },
-        cspl: 'fython'
-      }).then(function () {
-        return run(true);
+        cspl: 'fython',
+        // Сохранение и запуск обязаны быть в одном скоупе. После перевода
+        // запуска на global:true эксперт по-прежнему сохранялся локально и
+        // платформа честно отвечала Expert not found (Баға, 04.08).
+        global: true
+        }).then(function (r) { _markReaderReady(code); return r; })
+          .catch(function (e) {
+            _probe('эксперт не сохранился: ' + ((e && e.message) || 'отказ'));
+            throw e;
+          });
+      };
+      var _ensureReader = _readerReady(code) ? Promise.resolve() : _saveReader();
+      var work = _ensureReader.then(function () {
+        return run(true).catch(function (e) {
+          // Аккаунт эксперта не знает (или код разошёлся) — сохраняем ОДИН раз и
+          // повторяем. Молча падать нельзя: карточка останется вчерашней.
+          if (!_looksMissingExpert(e)) throw e;
+          _forgetReader();
+          return _saveReader().then(function () { return run(true); });
+        });
+      }).then(function (res) {
+        var raw = (res && (res.result || res.output));
+        _probe('ответ ' + (raw ? String(raw).length + ' симв' : 'пустой')
+          + ' · only_id=' + (onlyId || '—') + ' · dev=' + String(deviceId || '—').slice(0, 8));
+        return res;
       }).then(ingest).then(function (added) {
         // A stale/unavailable target id yields nothing — retry on the CURRENT
         // device (no target). Robust to device re-registration (id changes).
@@ -460,10 +570,22 @@ ETB.registry = (function () {
             .catch(function () { return added; });
         }
         return added;
-      }).catch(function () {
+      }).catch(function (e) {
+        _probe('закреплённый прогон не удался: ' + ((e && e.message) || 'отказ'));
         return run(false).then(function (r) { return ingest(r, true); })
-          .catch(function () { return []; });
+          .catch(function (e2) {
+            _probe('и без закрепления не удался: ' + ((e2 && e2.message) || 'отказ'));
+            return [];
+          });
       });
+      flight.promise = work.then(function (added) {
+        if (_deviceSyncInFlight[syncKey] === flight) delete _deviceSyncInFlight[syncKey];
+        return added;
+      }, function (error) {
+        if (_deviceSyncInFlight[syncKey] === flight) delete _deviceSyncInFlight[syncKey];
+        throw error;
+      });
+      return flight.promise;
     },
 
     // Снять девайсный тумбстоун перед (пере)установкой: иначе джанитор

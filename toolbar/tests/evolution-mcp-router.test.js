@@ -221,10 +221,18 @@ test('generic iframe KV and KV-expert bridges reserve the MCP registry key', () 
   const routerExpertStart = router.indexOf(
     'var expertTargetsReservedMcpRegistry',
   );
-  const routerExpertEnd = router.indexOf(
+  // Граница участка — сам вызов эксперта. Мост переведён с асинхронного прогона
+  // на синхронный с доводкой отложенной задачи (async отбивался «Worker hung»),
+  // поэтому якорь ищем по обоим написаниям: проверяемое свойство — что
+  // зарезервированный ключ отбит ДО вызова, а не то, каким он был.
+  const routerExpertCall = [
+    'ETB.api.runExpert(expertName, expertParams',
     'ETB.api.runExpertAsync(expertName, expertParams',
-    routerExpertStart,
-  );
+  ]
+    .map((needle) => router.indexOf(needle, routerExpertStart))
+    .filter((at) => at >= 0)
+    .sort((a, b) => a - b)[0];
+  const routerExpertEnd = routerExpertCall === undefined ? -1 : routerExpertCall;
   assert.ok(routerExpertStart >= 0 && routerExpertEnd > routerExpertStart);
   const routerExpertGuard = router.slice(
     routerExpertStart,
