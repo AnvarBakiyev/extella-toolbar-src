@@ -54,9 +54,9 @@ test('Evolution Console manifest keeps exact product naming and one narrow host-
     evolutionManifest.description,
     'Evolution Console разделяет работающие, остановленные, требующие помощи и непроверенные автоматизации. Каталог отделён от установленных, а детали для специалиста не мешают ежедневному управлению.',
   );
-  assert.equal(evolutionManifest.version, '0.15.0');
+  assert.equal(evolutionManifest.version, '0.16.0');
   assert.match(evolutionHtml, /id="consoleVersion"/);
-  assert.match(evolutionHtml, /var CONSOLE_VERSION = '0\.15\.0'/);
+  assert.match(evolutionHtml, /var CONSOLE_VERSION = '0\.16\.0'/);
   assert.deepEqual(evolutionManifest.pills, [
     'Автоматизации',
     'Состояние',
@@ -933,6 +933,45 @@ test('Shared Genes and Cabinet build an exact class escalation outside the canon
     evolutionHtml,
     /new CustomEvent\('extella_agent_cabinet_escalation',\{detail:contract\}\)/,
   );
+});
+
+test('Shared Genes has a human task flow backed by exact Console contracts', () => {
+  for (const visibleProductElement of [
+    'Общие правила и знания',
+    'Общие правила',
+    'Общие знания',
+    'Подготовить изменение',
+    'Проверить в Evolution Lab',
+    'Настроить',
+    'Проверить',
+    'Применить',
+  ]) {
+    assert.match(evolutionHtml, new RegExp(visibleProductElement));
+  }
+
+  assert.match(evolutionHtml, /function sharedGeneKind\(gene\)/);
+  assert.match(evolutionHtml, /sharedGeneEscalation\(gene\)/);
+  assert.match(evolutionHtml, /data-shared-kind="rules"/);
+  assert.match(evolutionHtml, /data-shared-kind="knowledge"/);
+  assert.match(evolutionHtml, /id="sharedPrepareBtn"/);
+  assert.match(evolutionHtml, /id="sharedLabBtn"/);
+  assert.match(
+    evolutionHtml,
+    /sharedPrepareBtn'\)\.onclick=function\(\)\{openClassChangeForGene\(gene\.geneId\)/,
+  );
+  assert.match(
+    evolutionHtml,
+    /state\.selectedEscalationId=escalation\.candidateId\|\|escalation\.candidate_id;setView\('lab'\)/,
+  );
+  assert.match(
+    evolutionHtml,
+    /sharedPrepareBtn[^\n]+productionReady\(\)\?'':'disabled'/,
+  );
+  assert.match(
+    evolutionHtml,
+    /sharedLabBtn[^\n]+labReady\?'':'disabled'/,
+  );
+  assert.match(evolutionHtml, /technicalMap:'Техническая карта Shared Genes'/);
 });
 
 test('Bulk preview targets only current visible canonical rows and is adapter-gated', () => {
