@@ -269,6 +269,42 @@ async function published(control = loadCore()) {
   return { ...setup, tested: setup.ledger, ledger };
 }
 
+test('trusted publish evidence resolves three exact durable refs and rejects stale refs', async () => {
+  const { control, ledger } = await tested();
+  const draft = ledger.drafts[ledger.currentDraftId];
+  const request = {
+    draft_id: draft.id,
+    agent_id: IDS.oneC,
+    expected_version: draft.baseVersionByAgent[IDS.oneC],
+    ledger_sha256: await control.sha256(ledger),
+    gates: {
+      IMPACT_ANALYZED: `impact:${draft.id}:${draft.draftSha256}`,
+      PLAYGROUND_GREEN: ledger.currentTestRunId,
+      ROLLBACK_AVAILABLE: draft.baseVersionByAgent[IDS.oneC],
+    },
+  };
+  const evidence = plain(await control.resolveTrustedPublishEvidence(
+    ledger,
+    request,
+  ));
+
+  assert.equal(evidence.draftId, draft.id);
+  assert.equal(evidence.agentId, IDS.oneC);
+  assert.equal(evidence.impactId, request.gates.IMPACT_ANALYZED);
+  assert.equal(evidence.runId, request.gates.PLAYGROUND_GREEN);
+  assert.equal(evidence.rollbackRef, request.gates.ROLLBACK_AVAILABLE);
+  assert.equal(evidence.versionBefore, request.expected_version);
+  assert.equal(evidence.candidateVersionId, draft.candidateVersionId);
+
+  await assert.rejects(
+    control.resolveTrustedPublishEvidence(ledger, {
+      ...request,
+      gates: { ...request.gates, IMPACT_ANALYZED: 'impact:stale' },
+    }),
+    (error) => error && error.code === 'TRUSTED_PUBLISH_EVIDENCE_INVALID',
+  );
+});
+
 test('ACC-01: canonical SHA-256 baseline captures two+ real agents and immutable V1 pointers', async () => {
   const { control, ledger } = await baseline();
   const baselineVersion = ledger.versions[ledger.baselineVersionId];

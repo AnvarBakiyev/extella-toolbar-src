@@ -9,7 +9,7 @@
 
 ETB.evolutionAutomationRegistryProvider = (function () {
   var SOURCE_SCHEMA =
-    'extella.evolution.automation-registry-sources.v3';
+    'extella.evolution.automation-registry-sources.v4';
   var BROWSER_INSTALLED_KEY = 'etb_plugins_installed_v1';
   var STRICT_CARD_FILE = /^([a-z0-9][a-z0-9._-]{1,79})\.json$/;
   var AUTOMATION_ID = /^[a-z0-9][a-z0-9._-]{1,79}$/;
@@ -811,6 +811,195 @@ ETB.evolutionAutomationRegistryProvider = (function () {
     return ids.sort();
   }
 
+  function stateReaderDescriptor(automationIdValue, contracts) {
+    var passport = contracts &&
+      typeof contracts.passportForAutomation === 'function' ?
+      contracts.passportForAutomation(automationIdValue) : null;
+    var reader = passport && passport.state_reader;
+    var params = reader && reader.params;
+    var allowedParams = {
+      method: true,
+      route: true,
+      args_json: true,
+      kwargs_json: true,
+      body_json: true,
+      params_json: true,
+      path: true,
+      query: true
+    };
+    var keys;
+    if (!reader) return null;
+    keys = params && typeof params === 'object' && !Array.isArray(params) ?
+      Object.keys(params) : [];
+    if (!text(reader.expert) || !text(reader.schema) ||
+        !text(reader.execution_device) || !text(reader.data_device) ||
+        text(reader.evidence) !== 'exact_target' || !keys.length ||
+        keys.some(function (key) {
+          var value = params[key];
+          return !allowedParams[key] || value === null ||
+            ['string', 'number', 'boolean'].indexOf(typeof value) === -1;
+        })) {
+      throw new Error('invalid state_reader contract for ' + automationIdValue);
+    }
+    return {
+      automationId: automationIdValue,
+      expert: text(reader.expert),
+      params: clone(params),
+      schema: text(reader.schema),
+      executionDevice: text(reader.execution_device),
+      dataDevice: text(reader.data_device),
+      evidence: 'exact_target'
+    };
+  }
+
+  function expertPayload(response) {
+    var current = response;
+    var depth = 0;
+    if (apiFailed(response)) throw new Error(apiFailureMessage(response));
+    // The platform can return a direct value, an Expert task result or the
+    // tokenless bridge envelope. Only known layers are unwrapped; arbitrary
+    // nested objects are never searched for a convenient success value.
+    while (depth < 5) {
+      if (typeof current === 'string') {
+        try { current = JSON.parse(current); }
+        catch (_) { throw new Error('state reader returned invalid JSON'); }
+        depth += 1;
+        continue;
+      }
+      if (!current || typeof current !== 'object' || Array.isArray(current)) {
+        break;
+      }
+      if (!hasOwn(current, 'res') && !hasOwn(current, 'result') &&
+          !hasOwn(current, 'output')) break;
+      if (apiFailed(current)) throw new Error(apiFailureMessage(current));
+      if (hasOwn(current, 'res')) current = current.res;
+      else if (hasOwn(current, 'result')) current = current.result;
+      else current = current.output;
+      depth += 1;
+    }
+    if (!current || typeof current !== 'object' || Array.isArray(current)) {
+      throw new Error('state reader must return a JSON object');
+    }
+    return current;
+  }
+
+  function stateReaderFact(api, descriptor, options) {
+    var runOptions = {
+      // `targets` is the effective platform field. `target` remains for old
+      // desktop builds but is never accepted as the sole target proof.
+      targets: [descriptor.executionDevice],
+      target: descriptor.executionDevice,
+      clientTimeoutMs: 180000,
+      global: true
+    };
+    if (!api || typeof api.runExpert !== 'function') {
+      return Promise.resolve({
+        available: false,
+        present: false,
+        automationId: descriptor.automationId,
+        expert: descriptor.expert,
+        schema: descriptor.schema,
+        requestedTarget: descriptor.executionDevice,
+        dataDevice: descriptor.dataDevice,
+        evidence: descriptor.evidence,
+        canonicalState: null,
+        responseShape: null,
+        errors: [sourceError(
+          'STATE_READER',
+          'STATE_READER_TRANSPORT_UNAVAILABLE',
+          'Удалённое чтение состояния недоступно',
+          'Remote state reading is unavailable',
+          descriptor.automationId
+        )]
+      });
+    }
+    assertContext(options);
+    return Promise.resolve().then(function () {
+      return api.runExpert(
+        descriptor.expert,
+        clone(descriptor.params),
+        clone(runOptions)
+      );
+    }).then(function (response) {
+      var payload;
+      assertContext(options);
+      payload = expertPayload(response);
+      return {
+        available: true,
+        present: true,
+        automationId: descriptor.automationId,
+        expert: descriptor.expert,
+        schema: descriptor.schema,
+        requestedTarget: descriptor.executionDevice,
+        dataDevice: descriptor.dataDevice,
+        evidence: descriptor.evidence,
+        // Product-specific schemas are deliberately not promoted into the
+        // canonical operational state. Unknown fields remain absent until the
+        // producers publish extella.automation_state.v1 adapters.
+        canonicalState: null,
+        responseShape: {
+          kind: 'object',
+          keys: Object.keys(payload).sort().slice(0, 80),
+          truncated: Object.keys(payload).length > 80
+        },
+        errors: []
+      };
+    }).catch(function (error) {
+      rethrowContext(error);
+      return {
+        available: false,
+        present: false,
+        automationId: descriptor.automationId,
+        expert: descriptor.expert,
+        schema: descriptor.schema,
+        requestedTarget: descriptor.executionDevice,
+        dataDevice: descriptor.dataDevice,
+        evidence: descriptor.evidence,
+        canonicalState: null,
+        responseShape: null,
+        errors: [sourceError(
+          'STATE_READER',
+          'STATE_READER_UNAVAILABLE',
+          'Не удалось прочитать состояние автоматизации',
+          'The automation state could not be read',
+          descriptor.automationId + ': ' + errorDetail(error)
+        )]
+      };
+    });
+  }
+
+  function readStateReaders(api, automationIds, contracts, options) {
+    var descriptors = [];
+    var contractErrors = [];
+    (automationIds || []).forEach(function (id) {
+      try {
+        var descriptor = stateReaderDescriptor(id, contracts);
+        if (descriptor) descriptors.push(descriptor);
+      } catch (error) {
+        contractErrors.push(sourceError(
+          'STATE_READER',
+          'STATE_READER_CONTRACT_INVALID',
+          'Контракт чтения состояния недействителен',
+          'The state reader contract is invalid',
+          errorDetail(error)
+        ));
+      }
+    });
+    return Promise.all(descriptors.map(function (descriptor) {
+      return stateReaderFact(api, descriptor, options);
+    })).then(function (facts) {
+      var errors = contractErrors.slice();
+      facts.forEach(function (fact) {
+        errors = errors.concat(fact.errors || []);
+      });
+      return {
+        available: errors.length === 0,
+        facts: facts,
+        errors: errors
+      };
+    });
+  }
+
   function embeddedAutomationId(manifest) {
     var value = manifest && manifest.automation;
     var id = text(value && (value.automation_id || value.automationId));
@@ -1367,13 +1556,20 @@ ETB.evolutionAutomationRegistryProvider = (function () {
           'runs',
           options
         ),
-        readSchedulerIndex(api, platformAgents, options)
+        readSchedulerIndex(api, platformAgents, options),
+        readStateReaders(
+          api,
+          installedAutomationIds(deviceCards.cards, contracts),
+          contracts,
+          options
+        )
       ]).then(
         function (additional) {
           var schedules = additional[0];
           var automationStates = additional[1];
           var automationRuns = additional[2];
           var schedulerIndex = additional[3];
+          var stateReaders = additional[4];
           var errors = [];
           [
             catalog,
@@ -1385,7 +1581,8 @@ ETB.evolutionAutomationRegistryProvider = (function () {
             schedules,
             automationStates,
             automationRuns,
-            schedulerIndex
+            schedulerIndex,
+            stateReaders
           ].forEach(function (source) {
             errors = errors.concat(source.errors || []);
           });
@@ -1403,6 +1600,7 @@ ETB.evolutionAutomationRegistryProvider = (function () {
               automationStates: automationStates,
               automationRuns: automationRuns,
               schedulerIndex: schedulerIndex,
+              stateReaders: stateReaders,
               deviceCards: deviceCards
             },
             catalogItems: mappedRegistryItems(catalog.items, contracts),
@@ -1420,6 +1618,7 @@ ETB.evolutionAutomationRegistryProvider = (function () {
             }).filter(function (row) { return AUTOMATION_ID.test(row.automationId); }),
             automationStateFacts: clone(automationStates.facts),
             automationRunFacts: clone(automationRuns.facts),
+            stateReaderFacts: clone(stateReaders.facts),
             schedulerIndexSids: clone(schedulerIndex.sids),
             deviceCardRows: deviceCards.cards.map(function (card) {
               var classification = deviceCardClassification(card, contracts);
@@ -1447,6 +1646,7 @@ ETB.evolutionAutomationRegistryProvider = (function () {
               automationStates,
               automationRuns,
               schedulerIndex,
+              stateReaders,
               deviceCards
             ].every(function (source) {
               return sourceComplete(source);
@@ -1465,6 +1665,7 @@ ETB.evolutionAutomationRegistryProvider = (function () {
     normalizeDeviceScan: normalizeDeviceScan,
     deviceCardInventory: deviceCardInventory,
     collectScheduleSources: collectScheduleSources,
+    readStateReaders: readStateReaders,
     schedulerIndexSids: schedulerIndexSids,
     schedulerScopeAgentId: schedulerScopeAgentId
   };

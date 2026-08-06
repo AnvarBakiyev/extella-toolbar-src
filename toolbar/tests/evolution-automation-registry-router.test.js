@@ -45,7 +45,7 @@ function plain(value) {
 test('router maps the provider snapshot into the exact pure projection input', () => {
   const mapProjection = loadMapper();
   const result = plain(mapProjection({
-    schemaVersion: 'extella.evolution.automation-registry-sources.v3',
+    schemaVersion: 'extella.evolution.automation-registry-sources.v4',
     collectedAt: '2026-07-26T20:00:00.000Z',
     complete: false,
     deviceInventory: {
@@ -71,6 +71,7 @@ test('router maps the provider snapshot into the exact pure projection input', (
       schedules: { available: true, errors: [] },
       automationStates: { available: true, errors: [] },
       automationRuns: { available: true, errors: [] },
+      stateReaders: { available: true, errors: [] },
       schedulerIndex: { available: true, errors: [] },
       deviceCards: { available: false, errors: [{}] },
     },
@@ -118,6 +119,7 @@ test('router maps the provider snapshot into the exact pure projection input', (
       present: true,
       value: { latest: { ts: 1785100000000, ok: true }, count: 1 },
     }],
+    stateReaderFacts: [],
     schedulerIndexSids: ['wz_20260709_travel'],
     errors: [{
       source: '_mkt_automations',
@@ -190,6 +192,7 @@ test('router maps the provider snapshot into the exact pure projection input', (
     runtime_state: false,
     automation_state: true,
     automation_runs: true,
+    state_readers: true,
     scheduler_index: true,
     local_installed: true,
     composer_installed: true,
@@ -215,7 +218,7 @@ test('provider contract rejects a contradictory complete source snapshot', () =>
   const mapProjection = loadMapper();
   assert.throws(
     () => mapProjection({
-      schemaVersion: 'extella.evolution.automation-registry-sources.v3',
+      schemaVersion: 'extella.evolution.automation-registry-sources.v4',
       collectedAt: '2026-07-26T20:00:00.000Z',
       complete: true,
       deviceInventory: {
@@ -241,6 +244,7 @@ test('provider contract rejects a contradictory complete source snapshot', () =>
         schedules: { available: true, errors: [] },
         automationStates: { available: true, errors: [] },
         automationRuns: { available: true, errors: [] },
+        stateReaders: { available: true, errors: [] },
         schedulerIndex: { available: true, errors: [] },
         deviceCards: { available: true, errors: [] },
       },
@@ -252,6 +256,7 @@ test('provider contract rejects a contradictory complete source snapshot', () =>
       runtimeStateRows: [],
       automationStateFacts: [],
       automationRunFacts: [],
+      stateReaderFacts: [],
       schedulerIndexSids: [],
       browserInstalledIds: [],
       composerInstalledItems: [],
@@ -283,7 +288,7 @@ test('registry load is account-fenced and does not invoke legacy mutation paths'
   assert.doesNotMatch(source, /_evolutionFleetLoad\(context\)/);
   assert.match(
     source,
-    /registry:\s*registry,\s*inventory:\s*sources\.deviceInventory,\s*legacy:\s*null/,
+    /registry:\s*registry,\s*inventory:\s*sources\.deviceInventory,\s*stateReaders:\s*sources\.stateReaderFacts,\s*legacy:\s*null/,
   );
   assert.match(source, /ADVANCED_EVOLUTION_NOT_LOADED/);
   assert.match(

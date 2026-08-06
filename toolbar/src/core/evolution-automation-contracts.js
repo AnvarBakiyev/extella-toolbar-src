@@ -34,39 +34,40 @@ ETB.evolutionAutomationContracts = (function () {
       automation_id: 'extella_kz_grocery', registry_card_id: 'baga_thin',
       name: { ru: 'Баға — цены Казахстана', en: 'Baga — Kazakhstan grocery prices' },
       version: '0.4.0', hosting_profile: 'client_server',
-      state_reader: { expert: 'kzg_state', method: '', schema: 'kzg_state.v1', execution_device: '85800354-f7b7-449f-b526-9357cd91f780', data_device: '85800354-f7b7-449f-b526-9357cd91f780', evidence: 'exact_target' },
-      source: { commit: 'a9ef96d1079745f8d8b8ee63b94ed33ad564bf1e', path: 'docs/automation_passport.yaml', sha256: '43e5ac6d001a14edefd334323d53f994f4b3caf6ad4bba8b70d69a1fd30c263d' }
+      state_reader: { expert: 'kzg_state', params: { args_json: '[]' }, method: '', schema: 'kzg_state.v1', execution_device: '85800354-f7b7-449f-b526-9357cd91f780', data_device: '85800354-f7b7-449f-b526-9357cd91f780', evidence: 'exact_target' },
+      source: { commit: '740db9c56ad677199d8ae263c11b3b29e57637e0', path: 'docs/automation_passport.yaml', sha256: '1c039bec41dac2c29236fd37c41a425d04fa3edfce0211021c313f4c9cbf3c04' }
     },
     extella_predictive_sales: {
       automation_id: 'extella_predictive_sales', registry_card_id: 'extella_predictive_sales',
       name: { ru: 'Predictive Sales', en: 'Predictive Sales' }, version: '0.9.0', hosting_profile: 'local',
-      state_reader: { expert: 'ps_call', method: 'read_state', schema: 'ps_read_state.v1', execution_device: '24f37e45-8c9f-4896-b64f-0dcd0cd8b0e4', data_device: '24f37e45-8c9f-4896-b64f-0dcd0cd8b0e4', evidence: 'exact_target' },
-      source: { commit: '1edb839dd10bc8fc800d4987bed1df7c73b45aeb', path: 'docs/automation_passport.yaml', sha256: 'd12a9862aa394709826020462607984a9cb69e541515c3ec3a07600bfd59813e' }
+      state_reader: { expert: 'ps_call', params: { method: 'read_state', args_json: '[]', kwargs_json: '{}' }, method: 'read_state', schema: 'ps_read_state.v1', execution_device: '24f37e45-8c9f-4896-b64f-0dcd0cd8b0e4', data_device: '24f37e45-8c9f-4896-b64f-0dcd0cd8b0e4', evidence: 'exact_target' },
+      source: { commit: '545d9bb05a258cf57aefe03a2b4a1a3736c9cccc', path: 'docs/automation_passport.yaml', sha256: '1c27d95a98eddf83e84187aa3177cea1e96c9bafef068ff3594836956d1db7a8' }
     },
     extella_recruiter: {
       automation_id: 'extella_recruiter', registry_card_id: 'extella_recruiter',
       name: { ru: 'Агент-рекрутёр', en: 'Recruiting Agent' }, version: '0.1.0', hosting_profile: 'local',
-      state_reader: { expert: 'rec_call', method: 'settings_status', schema: 'rec_settings_status.v1', execution_device: '24f37e45-8c9f-4896-b64f-0dcd0cd8b0e4', data_device: '24f37e45-8c9f-4896-b64f-0dcd0cd8b0e4', evidence: 'exact_target' },
-      source: { commit: '7c94f46a64edda5554d32f66c48b3ff4fc6bc9c7', path: 'docs/automation_passport.yaml', sha256: 'd14e666d25c5b9962cee458724761364b142929bc6133dc673ee7f49e2ff2261' }
+      state_reader: { expert: 'rec_call', params: { method: 'settings_status', args_json: '[]' }, method: 'settings_status', schema: 'rec_settings_status.v1', execution_device: '24f37e45-8c9f-4896-b64f-0dcd0cd8b0e4', data_device: '24f37e45-8c9f-4896-b64f-0dcd0cd8b0e4', evidence: 'exact_target' },
+      source: { commit: 'e9ab25690f94d2e36297b1668a74aacf2abef645', path: 'docs/automation_passport.yaml', sha256: '06328c54a50e36b6953d94feb4064f66403beb4462d4265898d04fa851a26f4b' }
     },
     targetologist_team: {
       automation_id: 'targetologist_team', registry_card_id: 'targetologist_team',
       name: { ru: 'Таргетолог AI', en: 'Targetolog AI' }, version: '0.1.0', hosting_profile: 'local',
-      state_reader: { expert: 'tgt_call', method: 'status_snapshot', schema: 'tgt_status_snapshot.v1', execution_device: '24f37e45-8c9f-4896-b64f-0dcd0cd8b0e4', data_device: '24f37e45-8c9f-4896-b64f-0dcd0cd8b0e4', evidence: 'exact_target' },
-      source: { commit: '2b28c56182cabc5367a42a1f8e00f3e46d43d519', path: 'docs/automation_passport.yaml', sha256: 'cc44bacfa93a9afe1c0190ec9efe686c9b55dddc49f36f93dba436d33581e997' }
+      state_reader: { expert: 'tgt_call', params: { method: 'status_snapshot', args_json: '[]', kwargs_json: '{}' }, method: 'status_snapshot', schema: 'tgt_status_snapshot.v1', execution_device: '24f37e45-8c9f-4896-b64f-0dcd0cd8b0e4', data_device: '24f37e45-8c9f-4896-b64f-0dcd0cd8b0e4', evidence: 'exact_target' },
+      source: { commit: '2d76cb58f52488f57fb235015161bc103dfcc9d2', path: 'docs/automation_passport.yaml', sha256: '78cdc0a97051f11dfe22b29adcc4f2d1edf25ca34cd4e6c91c162182b1c56761' }
     },
     extella_contract_agent: {
       automation_id: 'extella_contract_agent', registry_card_id: 'extella_contract_agent',
       name: { ru: 'Агент по договорам', en: 'Contract Agent' }, version: '0.1.0', hosting_profile: 'local',
-      state_reader: { expert: 'law_call', method: '/x/status', schema: 'law_status.v1', execution_device: '24f37e45-8c9f-4896-b64f-0dcd0cd8b0e4', data_device: '24f37e45-8c9f-4896-b64f-0dcd0cd8b0e4', evidence: 'exact_target' },
-      source: { commit: '58ffcbc7e7f5916ac9f92e5c3717d08c1c4b949c', path: 'docs/automation_passport.yaml', sha256: '4ea3f28b91076c2d7afc1bc8108e5040cf91cb91ee980c9dbade2da4761f5944' }
+      state_reader: { expert: 'law_call', params: { route: '/x/status', body_json: '{}' }, method: '/x/status', schema: 'law_status.v1', execution_device: '24f37e45-8c9f-4896-b64f-0dcd0cd8b0e4', data_device: '24f37e45-8c9f-4896-b64f-0dcd0cd8b0e4', evidence: 'exact_target' },
+      source: { commit: 'c0ff3c403a2ef0aec30b97f4850b82f3ccb548e6', path: 'docs/automation_passport.yaml', sha256: '1458ec4c85faef006f06de5f29175af9490a4a5448815544fec3b90326ce5d28' }
     },
     extella_travel_agency: {
       automation_id: 'extella_travel_agency', registry_card_id: 'extella_travel_agency',
       name: { ru: 'Турагентство: лиды и подогрев базы', en: 'Travel agency: leads and base nurture' },
-      version: '1.0.0', hosting_profile: 'local', state_reader: null,
+      version: '1.0.0', hosting_profile: 'local',
+      state_reader: { expert: 'trv_call', params: { route: '/x/status', body_json: '{}' }, method: '/x/status', schema: 'trv_status.v1', execution_device: '24f37e45-8c9f-4896-b64f-0dcd0cd8b0e4', data_device: '24f37e45-8c9f-4896-b64f-0dcd0cd8b0e4', evidence: 'exact_target' },
       service: { port: 8766, health: '/api/health', state: '/api/state' },
-      source: { commit: '672f5c4d4d1120ffaaff3d5d736a39f178360c36', path: 'extella-travel-agency-pack/docs/automation_passport.yaml', sha256: '8bb3cc3088301cc2954aded3d5df3d96d46f8188719da499678aac8a9778ebb8' }
+      source: { commit: 'ddcef133e95b0ee2cc94908869dd230f82ff6c38', path: 'extella-travel-agency-pack/docs/automation_passport.yaml', sha256: 'e1202be73af8b086fe5d2513c3902a965cfac91170d4cb696ee54d817cea3854' }
     }
   };
 

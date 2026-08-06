@@ -2368,6 +2368,7 @@ ETB.router = (function () {
       SCHEDULE_KV: 'schedules',
       AUTOMATION_STATE: 'automation_state',
       AUTOMATION_RUNS: 'automation_runs',
+      STATE_READER: 'state_reader',
       SCHEDULER_INDEX: 'scheduler_index'
     };
     return names[exact] || 'UNKNOWN';
@@ -2463,6 +2464,7 @@ ETB.router = (function () {
       'runtimeStateRows',
       'automationStateFacts',
       'automationRunFacts',
+      'stateReaderFacts',
       'schedulerIndexSids',
       'browserInstalledIds',
       'composerInstalledItems',
@@ -2477,12 +2479,13 @@ ETB.router = (function () {
       'schedules',
       'automationStates',
       'automationRuns',
+      'stateReaders',
       'schedulerIndex',
       'deviceCards'
     ];
     var valid = sources &&
       sources.schemaVersion ===
-        'extella.evolution.automation-registry-sources.v3' &&
+        'extella.evolution.automation-registry-sources.v4' &&
       typeof sources.complete === 'boolean' &&
       String(sources.collectedAt || '').trim() &&
       sources.sources &&
@@ -2571,6 +2574,9 @@ ETB.router = (function () {
         automation_runs: _evolutionAutomationSourceComplete(
           sourceMap.automationRuns
         ),
+        state_readers: _evolutionAutomationSourceComplete(
+          sourceMap.stateReaders
+        ),
         scheduler_index: _evolutionAutomationSourceComplete(
           sourceMap.schedulerIndex
         ),
@@ -2621,6 +2627,7 @@ ETB.router = (function () {
         actorId: context.actorId,
         registry: registry,
         inventory: sources.deviceInventory,
+        stateReaders: sources.stateReaderFacts,
         legacy: null,
         legacyError: {
           code: 'ADVANCED_EVOLUTION_NOT_LOADED',

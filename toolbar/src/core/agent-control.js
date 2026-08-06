@@ -3,7 +3,8 @@
 // The module never calls Extella APIs and never mutates a supplied ledger.
 //
 // Exposes: ETB.agentControl.newLedger(), createDraft(), analyzeImpact(),
-//          runPlayground(), publishDraft(), rollback(), runActive(),
+//          runPlayground(), resolveTrustedPublishEvidence(), publishDraft(),
+//          rollback(), runActive(),
 //          canonical(), sha256(), validateLedger()
 
 ETB.agentControl = (function () {
@@ -1109,6 +1110,91 @@ ETB.agentControl = (function () {
     });
   }
 
+  function resolveTrustedPublishEvidence(ledger, request) {
+    var draft;
+    var testRun;
+    var agentId;
+    var baseVersionId;
+    var baseVersion;
+    var expectedImpactRef;
+    validateLedger(ledger);
+    if (!request || typeof request !== 'object' || !request.gates ||
+        typeof request.gates !== 'object') {
+      return Promise.reject((function () {
+        var error = new Error('Trusted publish request is required');
+        error.code = 'TRUSTED_PUBLISH_EVIDENCE_INVALID';
+        return error;
+      }()));
+    }
+    try {
+      draft = resolveDraft(ledger, request.draft_id);
+      agentId = cleanId(
+        request.agent_id,
+        'TRUSTED_PUBLISH_EVIDENCE_INVALID',
+        'trusted publish agent id'
+      );
+      if (!ledger.agents[agentId] || draft.status !== 'DRAFT') {
+        fail('TRUSTED_PUBLISH_EVIDENCE_INVALID',
+          'Trusted publish draft does not target a live managed agent');
+      }
+      baseVersionId = draft.baseVersionByAgent[agentId];
+      baseVersion = ledger.versions[baseVersionId];
+      if (!baseVersion || baseVersion.immutable !== true ||
+          baseVersion.status !== 'PUBLISHED' ||
+          !baseVersion.bundle || !baseVersion.bundle.agents[agentId] ||
+          ledger.activeVersionByAgent[agentId] !== baseVersionId ||
+          String(request.expected_version || '') !== baseVersionId) {
+        fail('TRUSTED_PUBLISH_EVIDENCE_INVALID',
+          'Trusted publish rollback version is unavailable or stale');
+      }
+      expectedImpactRef = 'impact:' + draft.id + ':' + draft.draftSha256;
+      if (String(request.gates.IMPACT_ANALYZED || '') !== expectedImpactRef ||
+          String(request.gates.ROLLBACK_AVAILABLE || '') !== baseVersionId) {
+        fail('TRUSTED_PUBLISH_EVIDENCE_INVALID',
+          'Trusted publish impact or rollback reference is stale');
+      }
+      testRun = resolveTestRun(
+        ledger,
+        String(request.gates.PLAYGROUND_GREEN || '')
+      );
+      if (testRun.status !== 'PASSED' ||
+          !testRun.assertions || testRun.assertions.allPassed !== true ||
+          testRun.draftId !== draft.id ||
+          testRun.draftSha256 !== draft.draftSha256 ||
+          testRun.candidateVersionId !== draft.candidateVersionId ||
+          testRun.candidateBundleSha256 !== draft.candidateBundleSha256) {
+        fail('TRUSTED_PUBLISH_EVIDENCE_INVALID',
+          'Trusted publish playground evidence is missing or stale');
+      }
+    } catch (error) {
+      return Promise.reject(error);
+    }
+    return Promise.all([
+      sha256(ledger),
+      verifyDraftIntegrity(ledger, draft),
+      sha256(testRunReceiptCore(testRun))
+    ]).then(function (verified) {
+      if (verified[0] !== String(request.ledger_sha256 || '') ||
+          verified[2] !== testRun.receiptSha256 ||
+          ('testrun_' + verified[2].slice(0, 20)) !== testRun.id ||
+          verified[1].agentIds.indexOf(agentId) === -1) {
+        fail('TRUSTED_PUBLISH_EVIDENCE_INVALID',
+          'Trusted publish evidence does not match the exact ledger snapshot');
+      }
+      return deepFreeze({
+        draftId: draft.id,
+        draftSha256: draft.draftSha256,
+        agentId: agentId,
+        impactId: expectedImpactRef,
+        runId: testRun.id,
+        rollbackRef: baseVersionId,
+        versionBefore: baseVersionId,
+        candidateVersionId: draft.candidateVersionId,
+        candidateBundleSha256: draft.candidateBundleSha256
+      });
+    });
+  }
+
   function rollback(ledger, targetVersionId, opts) {
     var targetId = String(targetVersionId || '');
     var target = ledger && ledger.versions && ledger.versions[targetId];
@@ -1258,6 +1344,7 @@ ETB.agentControl = (function () {
     createDraft: createDraft,
     analyzeImpact: analyzeImpact,
     runPlayground: runPlayground,
+    resolveTrustedPublishEvidence: resolveTrustedPublishEvidence,
     publishDraft: publishDraft,
     rollback: rollback,
     runActive: runActive,

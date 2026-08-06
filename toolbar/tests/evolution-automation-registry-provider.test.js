@@ -128,6 +128,18 @@ function successfulApi(calls, overrides = {}) {
         }],
       });
     },
+    runExpert(name, params, options) {
+      calls.push({
+        method: 'runExpert',
+        name,
+        params: plain(params),
+        options: plain(options),
+      });
+      return Promise.resolve({
+        status: 'success',
+        result: JSON.stringify({ status: 'ok', checked_at: '2026-08-06T10:00:00Z' }),
+      });
+    },
   };
 }
 
@@ -170,7 +182,7 @@ test('provider reads every source with exact scopes and performs no writes', asy
 
   assert.equal(
     snapshot.schemaVersion,
-    'extella.evolution.automation-registry-sources.v3',
+    'extella.evolution.automation-registry-sources.v4',
   );
   assert.equal(snapshot.collectedAt, '2026-07-26T20:00:00.000Z');
   assert.equal(snapshot.complete, true);
@@ -284,6 +296,87 @@ test('provider reads every source with exact scopes and performs no writes', asy
       agentId: 'agent_scheduler_exact',
     },
   );
+});
+
+test('expert state reader uses passport params and the exact targets array without promoting product state', async () => {
+  const calls = [];
+  const provider = loadProvider();
+  const snapshot = await provider.load({
+    api: successfulApi(calls),
+    storage: memoryStorage('[]'),
+    deviceId: 'device-current-exact',
+    schedulerScopeAgentId: 'agent_scheduler_exact',
+    scanDeviceCards() {
+      return Promise.resolve({
+        entries: [{
+          filename: 'extella_travel_agency.json',
+          manifest: {
+            id: 'extella_travel_agency',
+            version: '1.0.0',
+          },
+        }],
+      });
+    },
+  });
+  const call = calls.find((item) => item.method === 'runExpert');
+  const fact = plain(snapshot.stateReaderFacts[0]);
+
+  assert.deepEqual(call, {
+    method: 'runExpert',
+    name: 'trv_call',
+    params: { route: '/x/status', body_json: '{}' },
+    options: {
+      targets: ['24f37e45-8c9f-4896-b64f-0dcd0cd8b0e4'],
+      target: '24f37e45-8c9f-4896-b64f-0dcd0cd8b0e4',
+      clientTimeoutMs: 180000,
+      global: true,
+    },
+  });
+  assert.equal(snapshot.sources.stateReaders.available, true);
+  assert.equal(fact.available, true);
+  assert.equal(fact.present, true);
+  assert.equal(fact.automationId, 'extella_travel_agency');
+  assert.equal(fact.schema, 'trv_status.v1');
+  assert.equal(fact.evidence, 'exact_target');
+  assert.equal(fact.canonicalState, null);
+  assert.deepEqual(fact.responseShape, {
+    kind: 'object',
+    keys: ['checked_at', 'status'],
+    truncated: false,
+  });
+  assert.doesNotMatch(JSON.stringify(fact), /2026-08-06T10:00:00Z|"ok"/);
+});
+
+test('state reader unwraps only known response envelopes and keeps product error status as data', async () => {
+  const provider = loadProvider();
+  const contracts = {
+    passportForAutomation() {
+      return {
+        state_reader: {
+          expert: 'sample_state',
+          params: { method: 'read_state' },
+          schema: 'sample_state.v1',
+          execution_device: 'device-exact',
+          data_device: 'device-data',
+          evidence: 'exact_target',
+        },
+      };
+    },
+  };
+  const responses = [
+    { result: { value: 1 } },
+    { status: 'success', res: JSON.stringify({ value: 2 }) },
+    { status: 'success', result: { output: JSON.stringify({ status: 'error' }) } },
+  ];
+
+  for (const response of responses) {
+    const source = await provider.readStateReaders({
+      runExpert() { return Promise.resolve(response); },
+    }, ['sample_automation'], contracts, {});
+    assert.equal(source.available, true);
+    assert.equal(source.facts[0].available, true);
+    assert.equal(source.facts[0].canonicalState, null);
+  }
 });
 
 test('device inventory uses the canonical four-class surface table and supports card-to-automation ids', () => {

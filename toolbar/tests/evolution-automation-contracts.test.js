@@ -64,7 +64,7 @@ test('six ready Automation Passports are release-pinned without inventing 1C', (
   });
 });
 
-test('state reader contract remains read-only and exposes the unresolved call-shape gap', () => {
+test('state reader contracts expose exact scalar params for all six products', () => {
   const contracts = load();
   const lawyer = contracts.passportForAutomation('extella_contract_agent');
   const predictive = contracts.passportForAutomation('extella_predictive_sales');
@@ -74,7 +74,24 @@ test('state reader contract remains read-only and exposes the unresolved call-sh
   assert.equal(lawyer.state_reader.method, '/x/status');
   assert.equal(predictive.state_reader.method, 'read_state');
   assert.equal(lawyer.state_reader.evidence, 'exact_target');
-  assert.equal(travel.state_reader, null);
-  assert.equal(Object.prototype.hasOwnProperty.call(lawyer.state_reader, 'params'), false);
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(lawyer.state_reader.params)),
+    { route: '/x/status', body_json: '{}' },
+  );
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(predictive.state_reader.params)),
+    { method: 'read_state', args_json: '[]', kwargs_json: '{}' },
+  );
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(travel.state_reader.params)),
+    { route: '/x/status', body_json: '{}' },
+  );
+  contracts.passports().forEach((passport) => {
+    assert.ok(passport.state_reader);
+    assert.ok(Object.keys(passport.state_reader.params).length > 0);
+    Object.values(passport.state_reader.params).forEach((value) => {
+      assert.ok(['string', 'number', 'boolean'].includes(typeof value));
+    });
+  });
   assert.doesNotMatch(source, /runExpert|kvSet|fetch\s*\(/);
 });
