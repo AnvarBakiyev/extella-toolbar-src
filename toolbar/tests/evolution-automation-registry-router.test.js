@@ -309,6 +309,10 @@ test('current-device scanner performs no provisioning, deletion, or cache mutati
     source,
     /device_refs_json:\s*JSON\.stringify\(exactDeviceRefs\)/,
   );
+  assert.match(source, /_evolutionScannerContract\(/);
+  assert.match(registry, /extella\.evolution\.registry_scan\.v2/);
+  assert.match(registry, /capabilities\.indexOf\('device_refs_v1'\) === -1/);
+  assert.match(registry, /DEVICE_SCANNER_CONTRACT_STALE/);
   assert.match(source, /ETB\.api\.runExpert\(fnName,\s*\{/);
   assert.match(source, /targets:\s*\[exactDeviceId\]/);
   assert.match(source, /target:\s*exactDeviceId/);

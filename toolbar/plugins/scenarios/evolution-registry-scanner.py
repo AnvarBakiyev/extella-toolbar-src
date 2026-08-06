@@ -428,6 +428,12 @@ def _etb_evolution_registry_scan_v1(device_refs_json="[]") -> str:
     root = os.path.expanduser("~/extella-plugins/_registry")
     strict = re.compile(r"^[a-z0-9][a-z0-9._-]{1,79}\.json$")
     output = {
+        "contract_version": "extella.evolution.registry_scan.v2",
+        "capabilities": [
+            "device_refs_v1",
+            "runtime_probe_v1",
+            "strict_cards_v1",
+        ],
         "entries": [],
         "device_refs": _evolution_registry_device_refs(device_refs_json),
         "matched_count": 0,

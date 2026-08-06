@@ -704,6 +704,33 @@ test('a browser cache cannot make DEVICE_CARDS green when the scanner is unavail
   ));
 });
 
+test('a stale shadowing scanner is distinct from an honest empty registry', async () => {
+  const calls = [];
+  const provider = loadProvider({
+    registry: {
+      scanDeviceManifests() {
+        const error = new Error('scanner contract marker is missing');
+        error.code = 'DEVICE_SCANNER_CONTRACT_STALE';
+        return Promise.reject(error);
+      },
+    },
+  });
+  const snapshot = await provider.load({
+    api: successfulApi(calls),
+    storage: memoryStorage('[]'),
+    deviceId: 'device-current-exact',
+    now: '2026-08-06T12:00:00.000Z',
+  });
+
+  assert.equal(snapshot.complete, false);
+  assert.equal(snapshot.sources.deviceCards.available, false);
+  assert.deepEqual(plain(snapshot.deviceCardRows), []);
+  assert.ok(snapshot.errors.some(
+    (error) => error.code === 'DEVICE_SCANNER_CONTRACT_STALE' &&
+      error.source === 'DEVICE_CARDS',
+  ));
+});
+
 test('scanner rejection count keeps the source snapshot explicitly incomplete', async () => {
   const calls = [];
   const provider = loadProvider();

@@ -742,6 +742,28 @@ test('source errors keep an explicit incomplete CURRENT_DEVICE projection', () =
   assert.doesNotMatch(JSON.stringify(result), /TOKEN=secret/);
 });
 
+test('stale scanner contract stays distinct from an unavailable source', () => {
+  const api = load();
+  const result = plain(api.project(baseInput({
+    catalogRecords: [{
+      id: 'scanner_stale_one',
+      version: '1.0.0',
+      status: 'active',
+    }],
+    sourceErrors: [{
+      source: 'device',
+      code: 'DEVICE_SCANNER_CONTRACT_STALE',
+    }],
+  })));
+
+  assert.equal(result.complete, false);
+  assert.deepEqual(result.source_errors, [{
+    source: 'device',
+    code: 'DEVICE_SCANNER_CONTRACT_STALE',
+  }]);
+  assert.equal(result.rows[0].flags.installed, 'UNKNOWN');
+});
+
 test('canonical catalog shape is accepted and conflicting legacy fields are rejected', () => {
   const api = load();
   const result = plain(api.project(baseInput({

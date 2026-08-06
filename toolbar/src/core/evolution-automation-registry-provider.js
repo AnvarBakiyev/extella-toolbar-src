@@ -775,6 +775,8 @@ ETB.evolutionAutomationRegistryProvider = (function () {
         };
       });
     }).catch(function (error) {
+      var staleContract = error &&
+        error.code === 'DEVICE_SCANNER_CONTRACT_STALE';
       rethrowContext(error);
       return {
         available: false,
@@ -785,9 +787,14 @@ ETB.evolutionAutomationRegistryProvider = (function () {
         invalidFilesIgnored: 0,
         errors: [sourceError(
           'DEVICE_CARDS',
-          'DEVICE_CARDS_UNAVAILABLE',
-          'Карточки текущего устройства недоступны',
-          'Cards for the current device are unavailable',
+          staleContract ? 'DEVICE_SCANNER_CONTRACT_STALE' :
+            'DEVICE_CARDS_UNAVAILABLE',
+          staleContract ?
+            'Сканер автоматизаций на устройстве старее контракта Console' :
+            'Карточки текущего устройства недоступны',
+          staleContract ?
+            'The automation scanner on the device is older than the Console contract' :
+            'Cards for the current device are unavailable',
           errorDetail(error)
         )]
       };

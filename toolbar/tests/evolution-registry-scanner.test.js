@@ -114,6 +114,15 @@ test('read-only device scanner admits only exact top-level cards and counts 102 
   });
   assert.equal(run.status, 0, run.stderr);
   const result = JSON.parse(run.stdout);
+  assert.equal(
+    result.contract_version,
+    'extella.evolution.registry_scan.v2',
+  );
+  assert.deepEqual(result.capabilities, [
+    'device_refs_v1',
+    'runtime_probe_v1',
+    'strict_cards_v1',
+  ]);
   assert.equal(result.matched_count, 1);
   assert.equal(result.ignored_backup_count, 102);
   assert.equal(result.rejected_count, 2);

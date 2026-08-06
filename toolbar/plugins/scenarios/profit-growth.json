@@ -7,7 +7,7 @@
   "description": "Evolution Console разделяет работающие, остановленные, требующие помощи и непроверенные автоматизации. Каталог отделён от установленных, а детали для специалиста не мешают ежедневному управлению.",
   "category": "business",
   "type": "application",
-  "version": "0.16.1",
+  "version": "0.16.2",
   "eye": "Extella Evolution",
   "pills": [
     "Автоматизации",
@@ -102,7 +102,7 @@
         "device_refs_json": "[]"
       },
       "codeFile": "evolution-registry-scanner.py",
-      "sourceSha256": "1faa0dd1ba7f50b453f401964e4e8ae4c5e3af54a58fbd63824da6efa3093a21"
+      "sourceSha256": "43520cb88233a25bf9ed2cbbf48ee2edb7371aaee29564bf5b13b8d64909b7a9"
     }
   ],
   "conceptTexts": [],
