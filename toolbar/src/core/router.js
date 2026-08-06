@@ -5446,7 +5446,41 @@ ETB.router = (function () {
   // держать нельзя (338 КБ у одного Рекрутёра — кэш молча переполнялся и навсегда
   // застревал на вчерашней версии), а перечитывать на каждый клик — заставлять
   // человека ждать. Память процесса: живёт до перезапуска, всегда свежая.
+  // Страница панели, уже прочитанная с устройства. Держим ВМЕСТЕ с версией
+  // карточки: иначе после обновления продукта человек открывал бы вчерашнюю
+  // страницу до перезапуска приложения. И держим последнюю рабочую копию в
+  // localStorage — чтобы при сбое чтения показать её, а не пустой экран
+  // (06.08, Агент 1С: чтение зависало, и панель показывала только отказ).
   var _htmlMem = {};
+  var LAST_GOOD_KEY = '_etb_panel_last_good_v1';
+  var LAST_GOOD_MAX = 24576;      // держим только лёгкие оболочки, кэш витрины и так тесен
+  function _cardVersion(plugin) {
+    return String((plugin && (plugin.version || (plugin.ui || {}).version)) || '');
+  }
+  function _loadLastGood() {
+    try { return JSON.parse(localStorage.getItem(LAST_GOOD_KEY) || '{}') || {}; }
+    catch (_) { return {}; }
+  }
+  function _rememberHtml(id, version, html) {
+    _htmlMem[id] = { v: version, html: html };
+    if (!html || html.length > LAST_GOOD_MAX) return;
+    var all = _loadLastGood();
+    all[id] = { v: version, html: html };
+    try { localStorage.setItem(LAST_GOOD_KEY, JSON.stringify(all)); } catch (_) {}
+  }
+  function _recallHtml(id, version) {
+    var mem = _htmlMem[id];
+    if (mem && mem.html && (!version || !mem.v || mem.v === version)) return mem.html;
+    var saved = _loadLastGood()[id];
+    if (saved && saved.html && (!version || !saved.v || saved.v === version)) return saved.html;
+    return null;
+  }
+  function _recallAnyHtml(id) {
+    var mem = _htmlMem[id];
+    if (mem && mem.html) return mem.html;
+    var saved = _loadLastGood()[id];
+    return (saved && saved.html) || null;
+  }
   function _withHtml(plugin, html) {
     var ui = {}; var src = plugin.ui || {};
     for (var k in src) if (Object.prototype.hasOwnProperty.call(src, k)) ui[k] = src[k];
@@ -5463,6 +5497,13 @@ ETB.router = (function () {
     return _panelNote(_L('Читаю панель с этого устройства\u2026', 'Reading the panel from this device\u2026')
       + '<div style="margin-top:8px;font-size:11px;color:#888;">'
       + _L('загрузчик 04.08-r3', 'loader 04.08-r3') + '</div>');
+  }
+  function _staleNoticeHTML() {
+    return '<div style="font:400 12px/1.5 -apple-system,system-ui,sans-serif;'
+      + 'padding:8px 12px;background:#F6EEE2;border-bottom:1px solid #D4B896;color:#A5632A;">'
+      + _L('Показана последняя рабочая версия панели: свежую прочитать с устройства не удалось.',
+           'Showing the last working panel: the fresh one could not be read from this device.')
+      + '</div>';
   }
   function _deviceReadFailedHTML() {
     var probe = '';
@@ -7611,7 +7652,7 @@ ETB.router = (function () {
       }).then(function (added) {
         (added || []).forEach(function (m) {
           if (m && m.id === id && m.ui && typeof m.ui.html === 'string'
-              && m.ui.html !== ETB.registry.HTML_ON_DEVICE) _htmlMem[id] = m.ui.html;
+              && m.ui.html !== ETB.registry.HTML_ON_DEVICE) _rememberHtml(id, _cardVersion(m), m.ui.html);
         });
       }).catch(function () {});
     },
@@ -7651,7 +7692,7 @@ ETB.router = (function () {
         return;
       }
       var MARK = ETB.registry.HTML_ON_DEVICE;
-      var cached = _htmlMem[id];
+      var cached = _recallHtml(id, _cardVersion(plugin));
       var hasOwnHtml = plugin.ui && typeof plugin.ui.html === 'string' && plugin.ui.html !== MARK;
       // Страница уже читалась в этой сессии — открываем мгновенно, а свежесть
       // догоняем фоном: ждать устройство на каждом клике человек не обязан.
@@ -7669,7 +7710,13 @@ ETB.router = (function () {
         if (settled) return;
         settled = true;
         self.evict(id);
-        self.open(_withHtml(plugin, _deviceReadFailedHTML()), opts);
+        // Пустой экран читается как «продукт сломан». Если рабочая страница уже
+        // была прочитана раньше — показываем её и честно говорим, что она может
+        // быть не последней; отказ без выхода хуже устаревшей, но живой панели.
+        var lastGood = _recallAnyHtml(id);
+        self.open(_withHtml(plugin, lastGood
+          ? (_staleNoticeHTML() + lastGood)
+          : _deviceReadFailedHTML()), opts);
       }, 45000);
       this.deviceId().then(function (dev) {
         if (!dev) return null;
@@ -7682,7 +7729,7 @@ ETB.router = (function () {
         if (!html || html === MARK) return;   // не дочитали — оставим таймауту
         settled = true;
         clearTimeout(fail);
-        _htmlMem[id] = html;
+        _rememberHtml(id, _cardVersion(fresh), html);
         self.evict(id);
         self.open(_withHtml(fresh, html), opts);
       }).catch(function () {});

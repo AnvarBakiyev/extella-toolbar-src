@@ -46,6 +46,31 @@ ETB.registry = (function () {
   // и дочитывается при открытии (router.openById). Кэш — про «какие плитки
   // показать», а не про содержимое панели.
   var HTML_MARK = '__etb_html_on_device__';
+
+  // Какой код ридера уже принят аккаунтом. Ключ переживает перезапуск приложения:
+  // иначе первое открытие после каждого старта снова платило бы за сохранение.
+  var READER_KEY = '_etb_registry_reader_v1';
+  function _codeMark(code) {
+    var h = 5381, i = 0;
+    for (; i < code.length; i++) h = ((h * 33) ^ code.charCodeAt(i)) >>> 0;
+    return String(code.length) + '.' + h.toString(36);
+  }
+  function _readerReady(code) {
+    try { return localStorage.getItem(READER_KEY) === _codeMark(code); } catch (_) { return false; }
+  }
+  function _markReaderReady(code) {
+    try { localStorage.setItem(READER_KEY, _codeMark(code)); } catch (_) {}
+  }
+  function _forgetReader() {
+    try { localStorage.removeItem(READER_KEY); } catch (_) {}
+  }
+  // «Эксперта нет» отличаем от прочих отказов: сеть, таймаут и 5xx повторным
+  // сохранением не лечатся, а маскируют настоящую причину.
+  function _looksMissingExpert(e) {
+    var t = String((e && (e.message || e.error)) || '').toLowerCase();
+    return t.indexOf('not found') !== -1 || t.indexOf('не найден') !== -1
+      || t.indexOf('unknown expert') !== -1 || t.indexOf('404') !== -1;
+  }
   function _slim(p) {
     if (!p || !p.ui || typeof p.ui.html !== 'string' || p.ui.html.length < 4096) return p;
     var copy = {}; for (var k in p) if (Object.prototype.hasOwnProperty.call(p, k)) copy[k] = p[k];
@@ -499,7 +524,13 @@ ETB.registry = (function () {
             'Диагностика чтения реестра с устройства').catch(function () {});
         } catch (_) {}
       };
-      var work = ETB.api.saveExpert({
+      // Эксперт-ридер пересохранялся ПЕРЕД КАЖДЫМ открытием панели. Это лишний
+      // прогон платформы (~10 с) на каждый клик и лишняя точка отказа: 06.08 на
+      // Агенте 1С сохранение зависало, чтение не начиналось, и витрина вечно
+      // показывала «страницу нужно прочитать с устройства». Сохраняем один раз
+      // на версию кода и повторяем только если аккаунт эксперта не знает.
+      var _saveReader = function () {
+        return ETB.api.saveExpert({
         name: fnName,
         description: 'Read local Extella plugin registry files',
         code: code,
@@ -509,11 +540,21 @@ ETB.registry = (function () {
         // запуска на global:true эксперт по-прежнему сохранялся локально и
         // платформа честно отвечала Expert not found (Баға, 04.08).
         global: true
-      }).catch(function (e) {
-        _probe('эксперт не сохранился: ' + ((e && e.message) || 'отказ'));
-        throw e;
-      }).then(function () {
-        return run(true);
+        }).then(function (r) { _markReaderReady(code); return r; })
+          .catch(function (e) {
+            _probe('эксперт не сохранился: ' + ((e && e.message) || 'отказ'));
+            throw e;
+          });
+      };
+      var _ensureReader = _readerReady(code) ? Promise.resolve() : _saveReader();
+      var work = _ensureReader.then(function () {
+        return run(true).catch(function (e) {
+          // Аккаунт эксперта не знает (или код разошёлся) — сохраняем ОДИН раз и
+          // повторяем. Молча падать нельзя: карточка останется вчерашней.
+          if (!_looksMissingExpert(e)) throw e;
+          _forgetReader();
+          return _saveReader().then(function () { return run(true); });
+        });
       }).then(function (res) {
         var raw = (res && (res.result || res.output));
         _probe('ответ ' + (raw ? String(raw).length + ' симв' : 'пустой')
