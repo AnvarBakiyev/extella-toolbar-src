@@ -247,6 +247,11 @@ ETB.evolutionAutomationRegistry = (function () {
       ru: 'Один из источников снимка недоступен.',
       en: 'One of the snapshot sources is unavailable.'
     },
+    DEVICE_SCANNER_CONTRACT_STALE: {
+      severity: 'error',
+      ru: 'Сканер автоматизаций на устройстве старее контракта Evolution Console.',
+      en: 'The automation scanner on the device is older than the Evolution Console contract.'
+    },
     STATE_CONTRACT_INVALID: {
       severity: 'error',
       ru: 'Операционное состояние не подтверждено полным согласованным снимком.',

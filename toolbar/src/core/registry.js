@@ -114,6 +114,39 @@ ETB.registry = (function () {
     return current;
   }
 
+  function _evolutionScannerContract(parsed) {
+    var contractVersion = 'extella.evolution.registry_scan.v2';
+    var capabilities = parsed && parsed.capabilities;
+    var contractError;
+    if (!parsed || parsed.contract_version !== contractVersion ||
+        !Array.isArray(capabilities) ||
+        capabilities.indexOf('device_refs_v1') === -1) {
+      contractError = new Error(
+        'device registry scanner contract is stale: ' +
+        String(parsed && parsed.contract_version || 'missing')
+      );
+      contractError.code = 'DEVICE_SCANNER_CONTRACT_STALE';
+      throw contractError;
+    }
+    if (typeof parsed !== 'object' || !Array.isArray(parsed.entries) ||
+        !Number.isInteger(Number(parsed.matched_count)) ||
+        !Number.isInteger(Number(parsed.ignored_backup_count)) ||
+        !Number.isInteger(Number(parsed.rejected_count))) {
+      throw new Error('device registry scanner returned an invalid contract');
+    }
+    return {
+      contractVersion: parsed.contract_version,
+      capabilities: capabilities.slice().sort(),
+      entries: parsed.entries,
+      deviceRefs: parsed.device_refs &&
+        typeof parsed.device_refs === 'object' &&
+        !Array.isArray(parsed.device_refs) ? parsed.device_refs : {},
+      matchedCount: Number(parsed.matched_count),
+      backupFilesIgnored: Number(parsed.ignored_backup_count),
+      invalidFilesIgnored: Number(parsed.rejected_count)
+    };
+  }
+
   function _isLegacyCapabilityStudioOwner(plugin) {
     var definitions = plugin &&
       (plugin.expert_defs || plugin.expertDefs) || [];
@@ -291,23 +324,9 @@ ETB.registry = (function () {
         clientTimeoutMs: 180000,
         global: true
       }).then(function (response) {
-        var parsed = _evolutionScannerPayload(response);
-        if (!parsed || typeof parsed !== 'object' ||
-            !Array.isArray(parsed.entries) ||
-            !Number.isInteger(Number(parsed.matched_count)) ||
-            !Number.isInteger(Number(parsed.ignored_backup_count)) ||
-            !Number.isInteger(Number(parsed.rejected_count))) {
-          throw new Error('device registry scanner returned an invalid contract');
-        }
-        return {
-          entries: parsed.entries,
-          deviceRefs: parsed.device_refs &&
-            typeof parsed.device_refs === 'object' &&
-            !Array.isArray(parsed.device_refs) ? parsed.device_refs : {},
-          matchedCount: Number(parsed.matched_count),
-          backupFilesIgnored: Number(parsed.ignored_backup_count),
-          invalidFilesIgnored: Number(parsed.rejected_count)
-        };
+        return _evolutionScannerContract(
+          _evolutionScannerPayload(response)
+        );
       });
     },
 

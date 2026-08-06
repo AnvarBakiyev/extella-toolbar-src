@@ -22,14 +22,22 @@ function scannerPayloadParser() {
   assert.ok(start >= 0 && end > start, 'scanner envelope parser must exist');
   const context = { JSON, Error };
   vm.runInNewContext(
-    `${registry.slice(start, end)}\nthis.parse = _evolutionScannerPayload;`,
+    `${registry.slice(start, end)}\n` +
+      'this.parse = _evolutionScannerPayload;\n' +
+      'this.validate = _evolutionScannerContract;',
     context,
   );
-  return context.parse;
+  return { parse: context.parse, validate: context.validate };
 }
 
 function scannerContract() {
   return {
+    contract_version: 'extella.evolution.registry_scan.v2',
+    capabilities: [
+      'device_refs_v1',
+      'runtime_probe_v1',
+      'strict_cards_v1',
+    ],
     entries: [{ filename: 'extella_travel_agency.json', manifest: {
       id: 'extella_travel_agency',
     } }],
@@ -40,7 +48,7 @@ function scannerContract() {
 }
 
 test('scanner unwraps direct, task, and tokenless bridge response envelopes', () => {
-  const parse = scannerPayloadParser();
+  const { parse } = scannerPayloadParser();
   const contract = scannerContract();
 
   assert.deepEqual(parse(contract), contract);
@@ -63,11 +71,37 @@ test('scanner unwraps direct, task, and tokenless bridge response envelopes', ()
 });
 
 test('scanner rejects malformed JSON instead of converting it to an empty fleet', () => {
-  const parse = scannerPayloadParser();
+  const { parse } = scannerPayloadParser();
   assert.throws(
     () => parse({ status: 'completed', result: '{not-json' }),
     /device registry scanner returned invalid JSON/,
   );
+});
+
+test('scanner contract separates a stale shadow from an honest empty registry', () => {
+  const { validate } = scannerPayloadParser();
+  const stale = {
+    entries: [],
+    matched_count: 0,
+    ignored_backup_count: 0,
+    rejected_count: 0,
+  };
+  assert.throws(
+    () => validate(stale),
+    (error) => {
+      assert.equal(error.code, 'DEVICE_SCANNER_CONTRACT_STALE');
+      return true;
+    },
+  );
+
+  const current = validate({
+    ...scannerContract(),
+    entries: [],
+    matched_count: 0,
+  });
+  assert.equal(current.contractVersion, 'extella.evolution.registry_scan.v2');
+  assert.deepEqual(JSON.parse(JSON.stringify(current.entries)), []);
+  assert.equal(current.matchedCount, 0);
 });
 
 test('expert client timeout is transport-only and never enters the API body', () => {
