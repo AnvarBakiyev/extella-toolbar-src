@@ -585,23 +585,11 @@ ETB.api = (function () {
       }, opts.agentId ? { 'X-Agent-Id': opts.agentId } : null);
     },
     // ── ОДНОРАЗОВАЯ ПЕСОЧНИЦА EVOLUTION LAB (host-only) ──────────────────
-    // Только для изолированного полигона: создать агента БЕЗ инструментов, прогнать
-    // проверку, снести. Маршрута из iframe у этих обёрток НЕТ и быть не должно —
-    // создание и удаление агентов из панели это универсальный рычаг, а здесь нужен
-    // один узкий сценарий. Роутер их не публикует; зовёт только host-runner.
-    agentCreateSandbox: function (spec) {
-      spec = spec || {};
-      // tools пустой ЯВНО: пустой список — это и есть гарантия изоляции, а не
-      // умолчание, на которое можно понадеяться.
-      return _post('/api/agent/create', {
-        agent_name: String(spec.name || ''),
-        description: String(spec.description || ''),
-        instructions: String(spec.instructions || ''),
-        provider: 'alibaba',
-        model: String(spec.model || ''),
-        tools: []
-      });
-    },
+    // Агента для полигона готовит ВЛАДЕЛЕЦ руками; создания через API здесь нет
+    // намеренно — платформа всё равно отбивает такой запуск (`pro_key_required`), а
+    // лишний рычаг «создай агента из кода» нам не нужен. Осталось только удаление:
+    // одноразовую среду обязаны сносить мы, а не человек. Маршрута из iframe у этих
+    // обёрток НЕТ; роутер их не публикует, зовёт только host-runner.
     agentDeleteSandbox: function (agentId) {
       return _post('/api/agent/delete', { agent_id: String(agentId || '') });
     },

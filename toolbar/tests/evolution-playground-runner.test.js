@@ -87,18 +87,25 @@ function world(overrides = {}) {
   kv.set('xtl_evolution:production_standards_bundle:v1:chunk:' + bundleSha.slice(0, 20) + ':0',
     bundleText);
 
-  const state = { rules: [{ id: null, rule: OLD_BODY, group_name: 'system' }], agentAlive: false };
+  const SANDBOX = overrides.sandboxId || 'agent_prepared_sandbox';
+  if (!overrides.noPointer) {
+    kv.set('xtl_evolution:playground_sandbox_agent:v1', canonical({
+      agent_id: SANDBOX, prepared_at: '2026-08-07T18:00:00Z', actor_id: 'actor',
+      single_use: true, consumed: overrides.consumed === true,
+    }));
+  }
+  const state = { rules: [{ id: null, rule: OLD_BODY, group_name: 'system' }], agentAlive: true };
   const api = {
     kvGet: (key) => { log.push(['kvGet', key]); return Promise.resolve({ value: kv.get(key) || '' }); },
     kvSet: (key, value) => { log.push(['kvSet', key]); kv.set(key, value); return Promise.resolve({ status: 'success' }); },
-    agentCreateSandbox: () => {
-      log.push(['agentCreateSandbox']); state.agentAlive = true;
-      return Promise.resolve({ id: 'agent_sandbox_1' });
-    },
     agentGetScoped: (id) => {
       log.push(['agentGetScoped', id]);
+      if (overrides.notVisible) return Promise.reject(new Error('404'));
       if (!state.agentAlive) return Promise.reject(new Error('404'));
-      return Promise.resolve({ tools: overrides.sandboxTools || [] });
+      // Паспорт нарочно несёт «ключ»: тест сторожит, что runner его не копирует.
+      return Promise.resolve({
+        tools: overrides.sandboxTools || [], byok_key_fingerprint: 'SECRET-FP-9',
+      });
     },
     agentDeleteSandbox: () => {
       log.push(['agentDeleteSandbox']);
@@ -143,8 +150,8 @@ async function refuses(spec, overrides, code) {
 
 test('candidate_id берётся только из spec и не подменяется draft_id', async () => {
   const w = await refuses({ ...SPEC, candidateId: '' }, {}, 'PLAYGROUND_SPEC_INVALID');
-  assert.equal(w.log.filter((row) => row[0] === 'agentCreateSandbox').length, 0,
-    'песочница не должна создаваться при негодном предмете теста');
+  assert.equal(w.log.filter((row) => row[0] === 'agentGetScoped').length, 0,
+    'песочница не должна трогаться при негодном предмете теста');
   assert.doesNotMatch(RUNNER_CODE, /draft_id/,
     'runner не имеет права читать draft_id: предмет теста задаёт только spec.candidateId');
 });
@@ -152,7 +159,8 @@ test('candidate_id берётся только из spec и не подменя�
 test('чужой список целей останавливает прогон ДО создания песочницы', async () => {
   const w = await refuses({ ...SPEC, affectedAgentIds: CONSUMERS.slice(0, 4) }, {},
     'PLAYGROUND_TARGET_CLASS_MISMATCH');
-  assert.equal(w.log.filter((row) => row[0] === 'agentCreateSandbox').length, 0);
+  assert.equal(w.log.filter((row) => row[0] === 'agentGetScoped').length, 0,
+    'до песочницы дело доходить не должно');
 });
 
 test('изменение, которое не содержит старый текст целиком, отклоняется', async () => {
@@ -172,6 +180,39 @@ test('живой агент после удаления не даёт PASSED', a
   await refuses(SPEC, { deleteFails: true }, 'PLAYGROUND_TEARDOWN_UNCONFIRMED');
 });
 
+test('без подготовленного агента прогон не начинается', async () => {
+  await refuses(SPEC, { noPointer: true }, 'PLAYGROUND_SANDBOX_NOT_PREPARED');
+});
+
+test('одноразовость: второй прогон тем же агентом отклоняется', async () => {
+  await refuses(SPEC, { consumed: true }, 'PLAYGROUND_SANDBOX_ALREADY_USED');
+});
+
+test('песочница не может быть одной из продовых целей', async () => {
+  await refuses(SPEC, { sandboxId: CONSUMERS[2] }, 'PLAYGROUND_SANDBOX_IS_PRODUCTION_TARGET');
+});
+
+test('невидимый в этом аккаунте агент не годится', async () => {
+  await refuses(SPEC, { notVisible: true }, 'PLAYGROUND_SANDBOX_NOT_VISIBLE');
+});
+
+test('ключ провайдера не читается и никуда не попадает', async () => {
+  const w = world();
+  const out = await w.runner.runClassTest(SPEC);
+  const everything = JSON.stringify(out) + [...w.kv.values()].join(' ');
+  assert.doesNotMatch(everything, /SECRET-FP-9/,
+    'привязка ключа из паспорта не имеет права попасть ни в evidence, ни в квитанцию');
+  assert.doesNotMatch(RUNNER_CODE, /byok|api_token|X-Auth-Token|provider_key/i,
+    'runner не читает ключ провайдера ни под каким именем');
+});
+
+test('создание агента из кода не используется', () => {
+  assert.doesNotMatch(RUNNER_CODE, /agent\/create|agentCreateSandbox/,
+    'агента готовит владелец: создания через API в полигоне быть не должно');
+  assert.equal(API_SRC.includes('agentCreateSandbox'), false,
+    'обёртка создания агента убрана из хоста вместе с режимом');
+});
+
 test('успешный прогон: закрытая форма результата, без сырого ответа в evidence', async () => {
   const w = world();
   const out = await w.runner.runClassTest(SPEC);
@@ -179,7 +220,7 @@ test('успешный прогон: закрытая форма результ�
   assert.equal(ev.status, 'PASSED');
   assert.equal(ev.candidate_id, 'cand_exact_1');
   assert.equal(Array.from(ev.target_agent_ids).sort().join(','), CONSUMERS.slice().sort().join(','));
-  assert.ok(!ev.target_agent_ids.includes('agent_sandbox_1'), 'песочный агент не цель');
+  assert.ok(!ev.target_agent_ids.includes('agent_prepared_sandbox'), 'песочный агент не цель');
   assert.equal(ev.before_cases.length, 1);
   assert.equal(ev.before_cases[0].result.schema, 'extella.evolution.playground_case_result.v1');
   assert.equal(Object.keys(ev.before_cases[0].result).sort().join(','),
@@ -212,9 +253,8 @@ test('вердикт детерминирован, неоднозначный о
 });
 
 test('обёртки песочницы остаются host-only и не публикуются маршрутом', () => {
-  assert.match(API_SRC, /agentCreateSandbox: function/);
-  assert.match(API_SRC, /tools: \[\]/, 'песочница создаётся с ЯВНО пустым списком инструментов');
-  for (const name of ['agentCreateSandbox', 'agentDeleteSandbox']) {
+  assert.match(API_SRC, /agentDeleteSandbox: function/);
+  for (const name of ['agentDeleteSandbox', 'ruleRemoveScoped']) {
     assert.equal(ROUTER_SRC.includes(name), false,
       name + ' не должен быть доступен из iframe: это универсальный рычаг над агентами');
   }

@@ -2,11 +2,21 @@
 // Одноразовая изолированная среда для Evolution Lab: проверяет подготовленное
 // изменение Shared Gene на песочном агенте и возвращает доказательство.
 //
-// ЧТО ТАКОЕ «ИЗОЛЯЦИЯ» ЗДЕСЬ, БЕЗ ОБЕЩАНИЙ. Среда — платформенный агент-однодневка,
-// созданный с ПУСТЫМ списком инструментов. У него нет ни run_expert, ни MCP, значит
-// дотянуться до устройства владельца ему физически нечем; таргет не закрепляется вовсе.
-// Это проверяется живым `agent/get` при создании (инструментов 0) и подтверждается
-// сносом: после удаления повторный `agent/get` обязан отдать 404.
+// РЕЖИМ PREPROVISIONED_BYOK_SANDBOX. Агента для прогона создаёт ВЛАДЕЛЕЦ руками и
+// передаёт только его `agent_id`; `/api/agent/create` здесь не используется вовсе.
+// Причина живая: агент, созданный по API, платформа отказывается запускать
+// (`pro_key_required`, проверено 07.08.2026 дважды — и на чистом агенте, и на точной
+// копии платформенного Qwen). Дефолтный Qwen не копируется и копироваться не должен.
+//
+// ЧТО ТАКОЕ «ИЗОЛЯЦИЯ» ЗДЕСЬ, БЕЗ ОБЕЩАНИЙ. Перед запуском живой `agent/get`
+// подтверждает: агент виден в текущем аккаунте, инструментов ноль, MCP нет, и его нет
+// среди пяти продовых целей. Дотянуться до устройства владельца ему нечем. Среда
+// остаётся одноразовой: после единственного прогона правило и сам агент удаляются, а
+// `agent/get → 404` — обязательное условие `teardown_status: CONFIRMED`.
+//
+// КЛЮЧ ПРОВАЙДЕРА. Он живёт внутри платформы и в этом коде не читается, не передаётся
+// и не журналируется: из паспорта агента берётся только список инструментов. Ни
+// паспорт, ни его поля в квитанцию и transcript не попадают.
 //
 // ПОЧЕМУ ТОЛЬКО ADDITIVE_ONLY. Свежий агент наследует системные правила аккаунта, и у
 // них `id = null` — снять или заменить их в песочнице нельзя (замер 07.08.2026: у 0 из
@@ -127,30 +137,73 @@ ETB.evolutionPlaygroundRunner = (function () {
     return 'ERROR';
   }
 
-  // ── песочница ────────────────────────────────────────────────────────────
-  function createSandbox(runId) {
-    return ETB.api.agentCreateSandbox({
-      name: 'wz_playground_' + runId,
-      description: 'Одноразовая среда Evolution Lab. Удаляется сразу после прогона.',
-      instructions: 'Ты работаешь в изолированной проверочной среде. Инструментов нет: ' +
-        'выполнить действие ты не можешь, только описать, что сделал бы.',
-      model: SANDBOX_MODEL
-    }).then(function (created) {
-      var agentId = String(created && (created.id || created.agent_id) || '');
-      if (!agentId) fail('PLAYGROUND_SANDBOX_FAILED', 'sandbox agent was not created');
-      return ETB.api.agentGetScoped(agentId).then(function (passport) {
-        var tools = (passport && passport.tools) || [];
-        if (tools.length !== 0) {
-          // Не «предупредим и продолжим»: агент с инструментами способен дотянуться
-          // до устройства, и вся изоляция теряет смысл.
-          return ETB.api.agentDeleteSandbox(agentId).then(function () {
-            fail('PLAYGROUND_SANDBOX_NOT_ISOLATED',
-              'sandbox agent was created with tools; isolation cannot be claimed');
-          });
+  // ── песочница: заранее подготовленный агент, а не созданный кодом ────────
+  var SANDBOX_POINTER_KEY = 'xtl_evolution:playground_sandbox_agent:v1';
+  var SANDBOX_POINTER_KEYS = ['agent_id', 'prepared_at', 'actor_id', 'single_use', 'consumed'];
+
+  function resolveSandbox(productionTargets) {
+    // Указатель host-owned: id песочницы приходит из KV аккаунта, а НЕ из iframe.
+    return ETB.api.kvGet(SANDBOX_POINTER_KEY, { global: true }).then(function (row) {
+      var text = row && typeof row.value === 'string' ? row.value : '';
+      if (!text) {
+        fail('PLAYGROUND_SANDBOX_NOT_PREPARED',
+          'подготовленного агента-песочницы нет: владелец создаёт его руками и кладёт id');
+      }
+      var pointer = JSON.parse(text);
+      Object.keys(pointer).forEach(function (key) {
+        if (SANDBOX_POINTER_KEYS.indexOf(key) === -1) {
+          fail('PLAYGROUND_SANDBOX_POINTER_INVALID', 'unexpected field in sandbox pointer: ' + key);
         }
-        return agentId;
+      });
+      if (pointer.single_use !== true) {
+        fail('PLAYGROUND_SANDBOX_POINTER_INVALID', 'sandbox pointer must declare single_use');
+      }
+      if (pointer.consumed === true) {
+        // Одноразовость — не пожелание: повторный прогон на том же агенте означал бы
+        // среду с историей, а история ломает сравнение «до и после».
+        fail('PLAYGROUND_SANDBOX_ALREADY_USED', 'sandbox agent was already used once');
+      }
+      var agentId = String(pointer.agent_id || '').trim();
+      if (!/^agent_[A-Za-z0-9_-]{1,160}$/.test(agentId)) {
+        fail('PLAYGROUND_SANDBOX_POINTER_INVALID', 'sandbox pointer has no exact agent id');
+      }
+      if (productionTargets.indexOf(agentId) !== -1) {
+        // Самая дорогая ошибка этого места: прогнать проверку на боевом агенте.
+        fail('PLAYGROUND_SANDBOX_IS_PRODUCTION_TARGET',
+          'prepared sandbox is one of the production targets');
+      }
+      return ETB.api.agentGetScoped(agentId).then(function (passport) {
+        // Аккаунт: паспорт читается под текущей сессией; чужой агент сюда не доедет
+        // (платформа отдаёт 404), а пустой ответ считаем отказом, а не согласием.
+        if (!passport || typeof passport !== 'object') {
+          fail('PLAYGROUND_SANDBOX_NOT_VISIBLE', 'sandbox agent is not visible in this account');
+        }
+        var tools = passport.tools || [];
+        if (tools.length !== 0) {
+          fail('PLAYGROUND_SANDBOX_NOT_ISOLATED',
+            'sandbox agent has tools; isolation cannot be claimed');
+        }
+        var raw = JSON.stringify(passport.tools || []) + ' ' + JSON.stringify(passport.mcp || '');
+        if (/mcp|sys__all__/i.test(raw)) {
+          fail('PLAYGROUND_SANDBOX_NOT_ISOLATED', 'sandbox agent exposes MCP access');
+        }
+        // Из паспорта дальше не берётся НИЧЕГО: там может лежать привязка ключа.
+        return { agentId: agentId, pointer: pointer };
+      }, function () {
+        fail('PLAYGROUND_SANDBOX_NOT_VISIBLE', 'sandbox agent is not visible in this account');
       });
     });
+  }
+
+  function consumePointer(pointer) {
+    // Гасим указатель пометкой, а не удалением: видно, что этот id уже отработал.
+    // Второй прогон на нём невозможен и по факту (агента нет), и по проверке выше.
+    var spent = {
+      agent_id: pointer.agent_id, prepared_at: pointer.prepared_at,
+      actor_id: pointer.actor_id, single_use: true, consumed: true
+    };
+    return ETB.api.kvSet(SANDBOX_POINTER_KEY, canonical(spent), { global: true })
+      .catch(function () { return null; });
   }
 
   function runCase(agentId, input) {
@@ -247,6 +300,7 @@ ETB.evolutionPlaygroundRunner = (function () {
     var candidateId;
     var targetIds;
     var transcriptRef = null;
+    var sandboxPointer = null;
 
     return Promise.resolve().then(function () {
       // candidate_id и цели берём ТОЛЬКО из аргумента routed action. Никаких
@@ -283,12 +337,15 @@ ETB.evolutionPlaygroundRunner = (function () {
             fail('PLAYGROUND_TARGET_CLASS_MISMATCH',
               'spec.affectedAgentIds does not equal the full consumer class');
           }
-          return assertAdditive(candidate, beforeSnapshot.body);
+          return assertAdditive(candidate, beforeSnapshot.body).then(function () {
+            return consumers;
+          });
         });
-    }).then(function () {
-      return createSandbox(runId);
-    }).then(function (agentId) {
-      sandboxId = agentId;
+    }).then(function (consumers) {
+      return resolveSandbox(consumers);
+    }).then(function (resolved) {
+      sandboxId = resolved.agentId;
+      sandboxPointer = resolved.pointer;
       // «До»: те же входы на песочнице с унаследованным правилом.
       return plan.cases.reduce(function (chain, item) {
         return chain.then(function () {
@@ -336,6 +393,8 @@ ETB.evolutionPlaygroundRunner = (function () {
       return teardown(sandboxId, addedRuleId);
     }).then(function () {
       sandboxId = '';
+      return consumePointer(sandboxPointer);
+    }).then(function () {
       return storeTranscript(before.concat(after));
     }).then(function (transcript) {
       transcriptRef = transcript;
