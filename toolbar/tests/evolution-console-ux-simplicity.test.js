@@ -216,6 +216,7 @@ test('one verified prepared Shared Gene shows honest product readiness', () => {
   assert.match(consoleHtml, /data-shared-readiness="BLOCKED_NATIVE_ID_UNAVAILABLE"/);
   assert.match(consoleHtml, /sharedCandidateReady:'Изменение подготовлено'/);
   assert.match(consoleHtml, /sharedPlaygroundWaiting:'Нужен безопасный полигон'/);
+  assert.match(consoleHtml, /sharedPlaygroundReady:'Безопасный полигон готов'/);
   assert.match(consoleHtml, /sharedApplyBlocked:'Применение ждёт поддержки платформы'/);
   assert.match(
     consoleHtml,
@@ -226,7 +227,15 @@ test('one verified prepared Shared Gene shows honest product readiness', () => {
     /var workflow=readiness\?readiness\+'<div class="shared-actions">[\s\S]*?:\s*'<div class="shared-loop">/,
     'a verified prepared change replaces the generic workflow instead of duplicating it',
   );
-  assert.match(consoleHtml, /data-shared-lab-waiting="true" disabled/);
+  assert.match(
+    consoleHtml,
+    /data-playground-state="'\+\(playgroundReady\?'AVAILABLE':'PLATFORM_UNAVAILABLE'\)\+'"/,
+  );
+  assert.match(
+    consoleHtml,
+    /data-shared-lab-state="'\+\(trustedLabReady\?'AVAILABLE':'PLATFORM_UNAVAILABLE'\)\+'"/,
+  );
+  assert.match(consoleHtml, /trustedLabReady=playgroundReady&&labReady/);
   assert.match(consoleHtml, /if\(labButton\)labButton\.onclick=function\(\)\{if\(!labReady\)return/);
   assert.doesNotMatch(
     consoleHtml,

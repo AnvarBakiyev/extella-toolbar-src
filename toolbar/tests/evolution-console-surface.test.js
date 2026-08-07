@@ -54,9 +54,9 @@ test('Evolution Console manifest keeps exact product naming and one narrow host-
     evolutionManifest.description,
     'Evolution Console разделяет работающие, остановленные, требующие помощи и непроверенные автоматизации. Каталог отделён от установленных, а детали для специалиста не мешают ежедневному управлению.',
   );
-  assert.equal(evolutionManifest.version, '0.20.0');
+  assert.equal(evolutionManifest.version, '0.21.0');
   assert.match(evolutionHtml, /id="consoleVersion"/);
-  assert.match(evolutionHtml, /var CONSOLE_VERSION = '0\.20\.0'/);
+  assert.match(evolutionHtml, /var CONSOLE_VERSION = '0\.21\.0'/);
   assert.match(evolutionHtml, /scannerContractStaleTitle:'Нужно обновить компонент проверки'/);
   assert.match(evolutionHtml, /scannerContractStaleTitle:'The checking component needs an update'/);
   assert.match(evolutionHtml, /error\.code==='DEVICE_SCANNER_CONTRACT_STALE'/);
@@ -974,7 +974,7 @@ test('Shared Genes has a human task flow backed by exact Console contracts', () 
   assert.match(evolutionHtml, /id="sharedLabBtn"/);
   assert.match(
     evolutionHtml,
-    /sharedPrepareBtn'\),labButton=el\('sharedLabBtn'\);if\(prepareButton\)prepareButton\.onclick=function\(\)\{openClassChangeForGene\(gene\.geneId\)/,
+    /sharedPrepareBtn'\),labButton=el\('sharedLabBtn'\),trustedLabButton=el\('sharedTrustedLabBtn'\);if\(prepareButton\)prepareButton\.onclick=function\(\)\{openClassChangeForGene\(gene\.geneId\)/,
   );
   assert.match(
     evolutionHtml,
@@ -1037,6 +1037,14 @@ test('Evolution UI never synthesizes native or Evolution Lab success and refresh
   assert.match(evolutionHtml, /bulkRollbackAdapter/);
   assert.match(evolutionHtml, /nativeDurableIntent/);
   assert.match(evolutionHtml, /multiDeviceCompareAndSwap/);
+  assert.match(
+    router,
+    /typeof evolutionAdapter\.runClassTest === 'function' &&\s*evolutionAdapter\.playgroundIsolationContract ===\s*'extella\.evolution\.playground_isolation\.v1'/,
+  );
+  assert.match(
+    router,
+    /method === 'runClassTest' &&\s*adapter\.playgroundIsolationContract !==\s*'extella\.evolution\.playground_isolation\.v1'/,
+  );
   assert.doesNotMatch(
     evolutionHtml,
     /payload\.evidence|evolution_lab_evidence|evolutionLabEvidence/,

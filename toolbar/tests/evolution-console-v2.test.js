@@ -19,6 +19,7 @@ const coreSource = fs.readFileSync(corePath, 'utf8');
 const ACTOR = 'actor_evolution_owner';
 const NOW = '2026-07-26T08:00:00.000Z';
 const HASH_ZERO = '0'.repeat(64);
+const HASH_ONE = '1'.repeat(64);
 
 function loadCore(options = {}) {
   const context = {
@@ -230,6 +231,24 @@ function classTestEvidence(change, overrides = {}) {
     ],
     externalWrites: [],
     writeAttempts: 0,
+    isolation: {
+      schema: 'extella.evolution.playground_isolation.v1',
+      status: 'PASSED',
+      runner_id: 'runner_disposable_1',
+      run_id: 'run_class_001',
+      environment_id: 'sandbox_class_001',
+      environment_class: 'DISPOSABLE_SANDBOX',
+      target_resolution: 'RUNNER_ONLY',
+      owner_device_access: 'DENIED',
+      external_write_policy: 'DENY',
+      teardown_status: 'CONFIRMED',
+      receipt_ref: `xtl_evolution:playground_receipt:${HASH_ONE.slice(0, 32)}`,
+      receipt_sha256: HASH_ONE,
+      candidate_sha256: change.candidateBundleSha256,
+      target_list_sha256: change.targetListSha256,
+      started_at: '2026-07-26T08:04:00.000Z',
+      completed_at: '2026-07-26T08:04:30.000Z',
+    },
     actor_id: ACTOR,
     ...overrides,
   };
@@ -751,6 +770,12 @@ test('Cabinet class escalation completes the gated Evolution Loop in the same le
   assert.ok(published.versions.version_a_v1);
   assert.ok(published.versions.version_b_v1);
   assert.equal(change.status, 'PUBLISHED');
+  assert.equal(change.test.isolationReceiptSha256, HASH_ONE);
+  assert.equal(
+    change.test.isolationReceiptRef,
+    `xtl_evolution:playground_receipt:${HASH_ONE.slice(0, 32)}`,
+  );
+  assert.equal(change.test.playgroundRunnerId, 'runner_disposable_1');
   assert.equal(
     published.activeVersionByAgent.agent_a,
     change.candidateVersionId,
@@ -873,6 +898,88 @@ test('Cabinet escalation rejects wrong scope, targets, hash and unsafe Evolution
       { actorId: ACTOR },
     ),
     'CLASS_TEST_SIDE_EFFECTS',
+  );
+  const isolated = classTestEvidence(acceptedChange);
+  const withoutIsolation = classTestEvidence(acceptedChange);
+  delete withoutIsolation.isolation;
+  await rejectsCode(
+    api.recordClassTest(
+      accepted.ledger,
+      'candidate_class_001',
+      withoutIsolation,
+      { actorId: ACTOR },
+    ),
+    'CLASS_TEST_ISOLATION_REQUIRED',
+  );
+  await rejectsCode(
+    api.recordClassTest(
+      accepted.ledger,
+      'candidate_class_001',
+      classTestEvidence(acceptedChange, {
+        isolation: {
+          ...isolated.isolation,
+          unsupported_field: true,
+        },
+      }),
+      { actorId: ACTOR },
+    ),
+    'CLASS_TEST_ISOLATION_REQUIRED',
+  );
+  await rejectsCode(
+    api.recordClassTest(
+      accepted.ledger,
+      'candidate_class_001',
+      classTestEvidence(acceptedChange, {
+        isolation: {
+          ...isolated.isolation,
+          owner_device_access: 'AVAILABLE',
+        },
+      }),
+      { actorId: ACTOR },
+    ),
+    'CLASS_TEST_NOT_ISOLATED',
+  );
+  await rejectsCode(
+    api.recordClassTest(
+      accepted.ledger,
+      'candidate_class_001',
+      classTestEvidence(acceptedChange, {
+        isolation: {
+          ...isolated.isolation,
+          receipt_ref: `xtl_evolution:playground_receipt:${HASH_ZERO.slice(0, 32)}`,
+        },
+      }),
+      { actorId: ACTOR },
+    ),
+    'CLASS_TEST_ISOLATION_RECEIPT_MISMATCH',
+  );
+  await rejectsCode(
+    api.recordClassTest(
+      accepted.ledger,
+      'candidate_class_001',
+      classTestEvidence(acceptedChange, {
+        isolation: {
+          ...isolated.isolation,
+          candidate_sha256: HASH_ZERO,
+        },
+      }),
+      { actorId: ACTOR },
+    ),
+    'CLASS_TEST_ISOLATION_BINDING_MISMATCH',
+  );
+  await rejectsCode(
+    api.recordClassTest(
+      accepted.ledger,
+      'candidate_class_001',
+      classTestEvidence(acceptedChange, {
+        isolation: {
+          ...isolated.isolation,
+          completed_at: '2026-07-26T08:03:59.000Z',
+        },
+      }),
+      { actorId: ACTOR },
+    ),
+    'CLASS_TEST_ISOLATION_TIME_INVALID',
   );
   const mismatched = classTestEvidence(acceptedChange);
   mismatched.after_cases[0].input.amount = 101;
