@@ -15,6 +15,26 @@ ETB.evolutionConsole = (function () {
   var SHARED_GENE_MAP_SCHEMA = 'extella.shared_genes.map.v1';
   var FLEET_SCHEMA = 'extella.evolution.fleet-projection.v1';
   var CABINET_SCHEMA = 'extella.agent_cabinet.v1.1';
+  var PLAYGROUND_ISOLATION_SCHEMA =
+    'extella.evolution.playground_isolation.v1';
+  var PLAYGROUND_ISOLATION_KEYS = [
+    'schema',
+    'status',
+    'runner_id',
+    'run_id',
+    'environment_id',
+    'environment_class',
+    'target_resolution',
+    'owner_device_access',
+    'external_write_policy',
+    'teardown_status',
+    'receipt_ref',
+    'receipt_sha256',
+    'candidate_sha256',
+    'target_list_sha256',
+    'started_at',
+    'completed_at'
+  ];
   var BULK_TYPES = {
     shared_gene_change: true,
     schedule_pause: true,
@@ -158,6 +178,26 @@ ETB.evolutionConsole = (function () {
     var hash = String(value || '');
     if (!isHash(hash)) fail(code, label + ' must be a lowercase SHA-256 hash');
     return hash;
+  }
+
+  function requireExactKeys(value, keys, code, label) {
+    var actual;
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      fail(code, label + ' must be an object');
+    }
+    actual = Object.keys(value).sort();
+    if (canonical(actual) !== canonical(keys.slice().sort())) {
+      fail(code, label + ' contains unsupported or missing fields');
+    }
+  }
+
+  function requireIsoTime(value, code, label) {
+    var text = requiredString(value, code, label);
+    var milliseconds = Date.parse(text);
+    if (!isFinite(milliseconds) || new Date(milliseconds).toISOString() !== text) {
+      fail(code, label + ' must be an exact UTC timestamp');
+    }
+    return text;
   }
 
   function nowValue(opts) {
@@ -1151,6 +1191,95 @@ ETB.evolutionConsole = (function () {
     });
   }
 
+  function classTestIsolation(evidence, change) {
+    var isolation = evidence && evidence.isolation;
+    var receiptRef;
+    var receiptSha256;
+    var startedAt;
+    var completedAt;
+    requireExactKeys(
+      isolation,
+      PLAYGROUND_ISOLATION_KEYS,
+      'CLASS_TEST_ISOLATION_REQUIRED',
+      'Evolution Lab isolation evidence'
+    );
+    if (isolation.schema !== PLAYGROUND_ISOLATION_SCHEMA ||
+        isolation.status !== 'PASSED' ||
+        isolation.environment_class !== 'DISPOSABLE_SANDBOX' ||
+        isolation.target_resolution !== 'RUNNER_ONLY' ||
+        isolation.owner_device_access !== 'DENIED' ||
+        isolation.external_write_policy !== 'DENY' ||
+        isolation.teardown_status !== 'CONFIRMED') {
+      fail(
+        'CLASS_TEST_NOT_ISOLATED',
+        'Evolution Lab must prove a disposed runner-only sandbox with no owner-device access'
+      );
+    }
+    requiredString(
+      isolation.runner_id,
+      'CLASS_TEST_ISOLATION_INVALID',
+      'playground runner_id'
+    );
+    requiredString(
+      isolation.run_id,
+      'CLASS_TEST_ISOLATION_INVALID',
+      'playground run_id'
+    );
+    requiredString(
+      isolation.environment_id,
+      'CLASS_TEST_ISOLATION_INVALID',
+      'playground environment_id'
+    );
+    receiptRef = requiredString(
+      isolation.receipt_ref,
+      'CLASS_TEST_ISOLATION_RECEIPT_REQUIRED',
+      'playground receipt_ref'
+    );
+    receiptSha256 = requireHash(
+      isolation.receipt_sha256,
+      'CLASS_TEST_ISOLATION_RECEIPT_REQUIRED',
+      'playground receipt_sha256'
+    );
+    if (!/^xtl_evolution:playground_receipt:[a-f0-9]{32}$/.test(receiptRef) ||
+        receiptRef.slice(-32) !== receiptSha256.slice(0, 32)) {
+      fail(
+        'CLASS_TEST_ISOLATION_RECEIPT_MISMATCH',
+        'Evolution Lab isolation receipt must be addressed by its content hash'
+      );
+    }
+    if (requireHash(
+      isolation.candidate_sha256,
+      'CLASS_TEST_ISOLATION_BINDING_REQUIRED',
+      'playground candidate_sha256'
+    ) !== change.candidateBundleSha256 || requireHash(
+      isolation.target_list_sha256,
+      'CLASS_TEST_ISOLATION_BINDING_REQUIRED',
+      'playground target_list_sha256'
+    ) !== change.targetListSha256) {
+      fail(
+        'CLASS_TEST_ISOLATION_BINDING_MISMATCH',
+        'Evolution Lab isolation receipt must bind the exact candidate and target list'
+      );
+    }
+    startedAt = requireIsoTime(
+      isolation.started_at,
+      'CLASS_TEST_ISOLATION_TIME_INVALID',
+      'playground started_at'
+    );
+    completedAt = requireIsoTime(
+      isolation.completed_at,
+      'CLASS_TEST_ISOLATION_TIME_INVALID',
+      'playground completed_at'
+    );
+    if (Date.parse(completedAt) < Date.parse(startedAt)) {
+      fail(
+        'CLASS_TEST_ISOLATION_TIME_INVALID',
+        'Evolution Lab isolation completion cannot precede its start'
+      );
+    }
+    return clone(isolation);
+  }
+
   function recordClassTest(ledger, candidateId, evidence, opts) {
     var next;
     var extension;
@@ -1158,6 +1287,7 @@ ETB.evolutionConsole = (function () {
     var before;
     var after;
     var targets;
+    var isolation;
     var evidenceCandidateId;
     var actor;
     var at = nowValue(opts);
@@ -1179,6 +1309,7 @@ ETB.evolutionConsole = (function () {
         fail('CLASS_TEST_SIDE_EFFECTS',
           'Evolution Lab class test must prove zero external writes');
       }
+      isolation = classTestIsolation(evidence, change);
       evidenceCandidateId = requiredString(
         evidence.candidate_id,
         'CLASS_TEST_CANDIDATE_BINDING_REQUIRED',
@@ -1249,6 +1380,7 @@ ETB.evolutionConsole = (function () {
         afterCases: after,
         externalWrites: [],
         writeAttempts: 0,
+        isolation: isolation,
         actorId: actor,
         at: at
       }).then(function (receipt) {
@@ -1257,6 +1389,10 @@ ETB.evolutionConsole = (function () {
           receiptSha256: receipt.sha256,
           caseSetSha256: hashes[0],
           evidenceSha256: hashes[1],
+          isolationReceiptRef: isolation.receipt_ref,
+          isolationReceiptSha256: isolation.receipt_sha256,
+          playgroundRunnerId: isolation.runner_id,
+          playgroundRunId: isolation.run_id,
           candidateBundleSha256: change.candidateBundleSha256,
           targetListSha256: change.targetListSha256,
           status: 'PASSED'

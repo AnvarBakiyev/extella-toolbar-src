@@ -52,12 +52,19 @@ function request() {
 
 function readyContext(overrides = {}) {
   return {
-    schema: 'extella.evolution.trusted_publish_context.v1',
+    schema: 'extella.evolution.trusted_publish_context.v1.1',
     owner_account_id: OWNER,
     fleet_snapshot_id: SNAPSHOT,
     captured_at: CAPTURED,
     status: 'READY',
     error_code: null,
+    subject: {
+      gene_id: 'rule.filesystem_self_protection',
+      kind: 'rule',
+      from_version: '1.0.0',
+      version: '1.1.0',
+      test_case_count: 3,
+    },
     request: request(),
     result: null,
     public_error: null,

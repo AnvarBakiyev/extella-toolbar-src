@@ -141,6 +141,14 @@ test('host adapter verifies all three refs and exposes only a bounded blocked st
 
   assert.equal(result.status, 'UNAVAILABLE');
   assert.equal(result.error_code, 'BLOCKED_NATIVE_ID_UNAVAILABLE');
+  assert.equal(result.schema, 'extella.evolution.trusted_publish_context.v1.1');
+  assert.deepEqual(result.subject, {
+    gene_id: 'rule.filesystem_self_protection',
+    kind: 'rule',
+    from_version: '1.0.0',
+    version: '1.1.0',
+    test_case_count: 3,
+  });
   assert.equal(result.owner_account_id, ACTOR);
   assert.equal(result.request, null);
   assert.equal(result.result, null);
@@ -182,6 +190,7 @@ test('missing selection is NO_DRAFT and never guesses an agent', async () => {
   ));
   assert.equal(result.status, 'NO_DRAFT');
   assert.equal(result.error_code, null);
+  assert.equal(result.subject, null);
   assert.equal(runtime.calls.length, 1);
 });
 
