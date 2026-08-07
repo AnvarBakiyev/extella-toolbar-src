@@ -162,12 +162,19 @@ test('the product overview puts automations beside shared rules and knowledge', 
   assert.match(overview, /data-overview-shared="knowledge"/);
   assert.match(overview, /id="productSharedRulesCount"/);
   assert.match(overview, /id="productSharedKnowledgeCount"/);
+  assert.match(overview, /id="productSharedRulesStatus"/);
+  assert.match(overview, /id="productSharedKnowledgeStatus"/);
   assert.match(overview, /data-ux="contextual-evolution-lab"/);
   assert.match(overview, /id="overviewLabBtn"[^>]*disabled/);
   assert.match(
     consoleHtml,
-    /function sharedConsumerCount\(kind\)[\s\S]*consumerAgentIds[\s\S]*Object\.keys\(ids\)\.length/,
-    'overview counts must come from the canonical Shared Genes projection',
+    /function sharedOverviewStats\(kind\)[\s\S]*genes\.length[\s\S]*Object\.keys\(ids\)\.length/,
+    'overview status must distinguish canonical Shared Gene items and consumers',
+  );
+  assert.match(
+    consoleHtml,
+    /if\(stats===null\)[\s\S]*sharedUnavailable[\s\S]*if\(stats\.items===0\)[\s\S]*sharedConfigured[\s\S]*sharedAdd/,
+    'unavailable Shared Genes and a confirmed empty set must not look the same',
   );
   assert.match(
     consoleHtml,
@@ -178,6 +185,22 @@ test('the product overview puts automations beside shared rules and knowledge', 
     consoleHtml,
     /state\.sharedKind=button\.dataset\.overviewShared[\s\S]*setView\('genes'\)/,
     'shared shortcuts must open the existing Shared Genes surface',
+  );
+});
+
+test('a confirmed empty Shared Genes map explains the real creation path', () => {
+  assert.match(consoleHtml, /data-shared-zero-state=/);
+  assert.match(consoleHtml, /sharedZeroRulesVerified/);
+  assert.match(consoleHtml, /sharedZeroKnowledgeVerified/);
+  assert.match(consoleHtml, /sharedZeroDeclare/);
+  assert.match(consoleHtml, /sharedZeroPrepare/);
+  assert.match(consoleHtml, /sharedZeroTest/);
+  assert.match(consoleHtml, /sharedZeroBoundary/);
+  assert.match(consoleHtml, /id="sharedZeroBackBtn"/);
+  assert.doesNotMatch(
+    consoleHtml,
+    /sharedZero(?:Create|Publish|Apply)|data-shared-zero-action="(?:create|publish|apply)"/,
+    'the empty state must not invent a write action before a Shared Gene exists in Agent Passports',
   );
 });
 
