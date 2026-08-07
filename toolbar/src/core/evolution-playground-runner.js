@@ -273,11 +273,18 @@ ETB.evolutionPlaygroundRunner = (function () {
         if (!passport || typeof passport !== 'object') {
           fail('PLAYGROUND_SANDBOX_NOT_VISIBLE', 'sandbox agent is not visible in this account');
         }
-        var tools = passport.tools || [];
-        if (tools.length !== 0) {
+        // Явный пустой массив, а не «пусто по умолчанию»: отсутствие поля означает,
+        // что платформа не сказала про инструменты ничего, и считать это изоляцией —
+        // выдумывать за неё.
+        if (!Array.isArray(passport.tools)) {
+          fail('PLAYGROUND_SANDBOX_NOT_ISOLATED',
+            'passport does not declare tools as an array; isolation cannot be claimed');
+        }
+        if (passport.tools.length !== 0) {
           fail('PLAYGROUND_SANDBOX_NOT_ISOLATED',
             'sandbox agent has tools; isolation cannot be claimed');
         }
+        var tools = passport.tools;
         var raw = JSON.stringify(passport.tools || []) + ' ' + JSON.stringify(passport.mcp || '');
         if (/mcp|sys__all__/i.test(raw)) {
           fail('PLAYGROUND_SANDBOX_NOT_ISOLATED', 'sandbox agent exposes MCP access');
@@ -292,13 +299,26 @@ ETB.evolutionPlaygroundRunner = (function () {
 
   function consumePointer(pointer) {
     // Гасим указатель пометкой, а не удалением: видно, что этот id уже отработал.
-    // Второй прогон на нём невозможен и по факту (агента нет), и по проверке выше.
-    var spent = {
+    // Запись ПОДТВЕРЖДАЕМ перечиткой и сверкой каноничного содержимого: молча
+    // проглоченная ошибка здесь означала бы, что одноразовый агент можно взять второй
+    // раз, а вся одноразовость держится на этой записи.
+    var spent = canonical({
       agent_id: pointer.agent_id, prepared_at: pointer.prepared_at,
       actor_id: pointer.actor_id, single_use: true, consumed: true
-    };
-    return ETB.api.kvSet(SANDBOX_POINTER_KEY, canonical(spent), { global: true })
-      .catch(function () { return null; });
+    });
+    return ETB.api.kvSet(SANDBOX_POINTER_KEY, spent, { global: true }).then(function () {
+      return ETB.api.kvGet(SANDBOX_POINTER_KEY, { global: true });
+    }).then(function (row) {
+      var stored = row && typeof row.value === 'string' ? row.value : '';
+      if (stored !== spent) {
+        fail('PLAYGROUND_POINTER_NOT_CONSUMED',
+          'пометка consumed не подтверждена перечиткой — среда осталась бы переиспользуемой');
+      }
+      return true;
+    }, function (error) {
+      fail('PLAYGROUND_POINTER_NOT_CONSUMED',
+        'не удалось погасить указатель: ' + String((error && error.message) || error).slice(0, 120));
+    });
   }
 
   function runCase(agentId, input) {
@@ -374,6 +394,42 @@ ETB.evolutionPlaygroundRunner = (function () {
     });
   }
 
+  // Кандидат, прочитанный из KV, обязан описывать РОВНО тот bundle, который прислала
+  // Console. Иначе получилось бы так: доказательство про один текст, а ledger ссылается
+  // на другой. Хеш bundle пересчитываем сами — верить присланному нельзя.
+  function bindCandidateToBundle(spec, candidate, targetIds) {
+    var bundle = spec && spec.candidateBundle;
+    var declared = String((spec && spec.candidateBundleSha256) || '');
+    if (!bundle || typeof bundle !== 'object' || Array.isArray(bundle)) {
+      fail('PLAYGROUND_CANDIDATE_BUNDLE_INVALID', 'spec.candidateBundle must be an object');
+    }
+    if (!HASH.test(declared)) {
+      fail('PLAYGROUND_CANDIDATE_BUNDLE_INVALID',
+        'spec.candidateBundleSha256 must be 64 lowercase hex');
+    }
+    return sha256(canonical(bundle)).then(function (actual) {
+      if (actual !== declared) {
+        fail('PLAYGROUND_CANDIDATE_BUNDLE_MISMATCH',
+          'candidate bundle does not match its declared sha256');
+      }
+      var gene = bundle.sharedGene || bundle.shared_gene || {};
+      if (String(gene.id || gene.geneId || '') !== String(candidate.gene_id || '')) {
+        fail('PLAYGROUND_CANDIDATE_BUNDLE_MISMATCH',
+          'candidate bundle describes another gene');
+      }
+      if (String(gene.version || '') !== String(candidate.version || '')) {
+        fail('PLAYGROUND_CANDIDATE_BUNDLE_MISMATCH',
+          'candidate bundle version differs from the host candidate');
+      }
+      var bundleAgents = Object.keys(bundle.agents || {});
+      if (!sameSet(bundleAgents, targetIds)) {
+        fail('PLAYGROUND_CANDIDATE_BUNDLE_MISMATCH',
+          'candidate bundle agents differ from spec.affectedAgentIds');
+      }
+      return declared;
+    });
+  }
+
   // Ожидания плана — закрытые множества, а не свободный текст. Проверяются ДО того,
   // как потрачена одноразовая среда: негодный план обязан падать раньше прогона.
   var CANON_VERDICTS = ['ALLOW', 'STOP_AND_CONFIRM', 'RULE_COVERAGE_CONFIRMED', 'ERROR'];
@@ -436,6 +492,7 @@ ETB.evolutionPlaygroundRunner = (function () {
     var targetIds;
     var transcriptRef = null;
     var sandboxPointer = null;
+    var candidateBundleSha = '';
 
     return Promise.resolve().then(function () {
       // candidate_id и цели берём ТОЛЬКО из аргумента routed action. Никаких
@@ -473,7 +530,10 @@ ETB.evolutionPlaygroundRunner = (function () {
             fail('PLAYGROUND_TARGET_CLASS_MISMATCH',
               'spec.affectedAgentIds does not equal the full consumer class');
           }
-          return assertAdditive(candidate, beforeSnapshot.body).then(function () {
+          return bindCandidateToBundle(spec, candidate, targetIds).then(function (bundleSha) {
+            candidateBundleSha = bundleSha;
+            return assertAdditive(candidate, beforeSnapshot.body);
+          }).then(function () {
             return consumers;
           });
         });
@@ -551,6 +611,7 @@ ETB.evolutionPlaygroundRunner = (function () {
         candidate: candidate,
         targetIds: targetIds,
         targetListSha256: String((spec && spec.targetListSha256) || ''),
+        candidateBundleSha256: candidateBundleSha,
         actorId: String((spec && spec.actorId) || ''),
         startedAt: startedAt,
         status: decideStatus(plan, before, after),
@@ -576,6 +637,24 @@ ETB.evolutionPlaygroundRunner = (function () {
     });
   }
 
+  // 404 распознаём по статусу, если платформа его отдала, и по тексту — если нет.
+  // Никаких «похоже на отсутствие»: 401/403/500/таймаут отсутствием не считаются.
+  function isExactNotFound(error) {
+    var status = error && (error.status || error.statusCode || error.httpStatus);
+    if (status != null) return Number(status) === 404;
+    var text = String((error && error.message) || error || '').toLowerCase();
+    if (/\b(401|403|429|5\d\d)\b/.test(text)) return false;
+    if (/timeout|timed out|abort|network|socket|econn/.test(text)) return false;
+    return /\b404\b/.test(text) || text.indexOf('not found') !== -1 ||
+      text.indexOf('не найден') !== -1;
+  }
+
+  function teardownErrorLabel(error) {
+    var status = error && (error.status || error.statusCode || error.httpStatus);
+    if (status != null) return 'status ' + status;
+    return String((error && error.message) || error || 'unknown').slice(0, 120);
+  }
+
   function teardown(agentId, ruleId) {
     return Promise.resolve().then(function () {
       if (!ruleId) return null;
@@ -596,10 +675,19 @@ ETB.evolutionPlaygroundRunner = (function () {
     }).then(function () {
       return ETB.api.agentDeleteSandbox(agentId);
     }).then(function () {
-      // Снос агента подтверждается чтением: 404 — единственное доказательство.
+      // Снос подтверждается ТОЛЬКО точным 404. Таймаут, 401, 500 и незнакомая ошибка
+      // означают «мы не знаем, жив ли агент» — а это не подтверждение. Прежняя версия
+      // считала доказательством любой отказ чтения: сеть мигнула — и снос «подтверждён».
       return ETB.api.agentGetScoped(agentId).then(function () {
         fail('PLAYGROUND_TEARDOWN_UNCONFIRMED', 'sandbox agent still exists after delete');
-      }, function () { return true; });
+      }, function (error) {
+        if (!isExactNotFound(error)) {
+          fail('PLAYGROUND_TEARDOWN_UNCONFIRMED',
+            'снос не подтверждён: чтение агента ответило не 404 (' +
+            teardownErrorLabel(error) + ')');
+        }
+        return true;
+      });
     });
   }
 
@@ -638,7 +726,7 @@ ETB.evolutionPlaygroundRunner = (function () {
     var evidence = {
       status: ctx.status,
       candidate_id: ctx.candidateId,
-      candidate_sha256: ctx.candidate.body_sha256,
+      candidate_sha256: ctx.candidateBundleSha256,
       target_agent_ids: ctx.targetIds,
       target_list_sha256: ctx.targetListSha256,
       before_cases: cleanCases(ctx.before),
@@ -658,7 +746,7 @@ ETB.evolutionPlaygroundRunner = (function () {
       owner_device_access: 'DENIED',
       external_write_policy: 'DENY',
       teardown_status: 'CONFIRMED',
-      candidate_sha256: ctx.candidate.body_sha256,
+      candidate_sha256: ctx.candidateBundleSha256,
       target_list_sha256: ctx.targetListSha256,
       started_at: ctx.startedAt,
       completed_at: completedAt
@@ -670,7 +758,10 @@ ETB.evolutionPlaygroundRunner = (function () {
       isolation: isolationBody,
       evidence: evidence,
       transcript_ref: (ctx.transcript && ctx.transcript.ref) || '',
-      transcript_sha256: (ctx.transcript && ctx.transcript.sha256) || ''
+      transcript_sha256: (ctx.transcript && ctx.transcript.sha256) || '',
+      // Хеш ТЕЛА правила остаётся для разбора, но Console получает хеш bundle:
+      // именно им ledger адресует кандидата.
+      candidate_body_sha256: ctx.candidate.body_sha256
     });
     return sha256(receiptText).then(function (receiptSha) {
       var key = RECEIPT_PREFIX + receiptSha.slice(0, 32);

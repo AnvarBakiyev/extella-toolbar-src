@@ -103,14 +103,29 @@ function world(overrides = {}) {
     instructions: '' };
   const api = {
     kvGet: (key) => { log.push(['kvGet', key]); return Promise.resolve({ value: kv.get(key) || '' }); },
-    kvSet: (key, value) => { log.push(['kvSet', key]); kv.set(key, value); return Promise.resolve({ status: 'success' }); },
+    kvSet: (key, value) => {
+      log.push(['kvSet', key]);
+      // pointerWriteFails: запись «прошла», но содержимое не изменилось — ровно тот
+      // случай, когда молчаливое проглатывание оставило бы среду переиспользуемой.
+      if (overrides.pointerWriteFails && key.indexOf('playground_sandbox_agent') !== -1) {
+        return Promise.resolve({ status: 'success' });
+      }
+      kv.set(key, value);
+      return Promise.resolve({ status: 'success' });
+    },
     agentGetScoped: (id) => {
       log.push(['agentGetScoped', id]);
       if (overrides.notVisible) return Promise.reject(new Error('404'));
-      if (!state.agentAlive) return Promise.reject(new Error('404'));
+      if (!state.agentAlive) {
+        // Чем платформа отвечает на чтение снесённого агента — задаёт тест.
+        if (overrides.afterDeleteError) return Promise.reject(overrides.afterDeleteError);
+        return Promise.reject(new Error('404'));
+      }
       // Паспорт нарочно несёт «ключ»: тест сторожит, что runner его не копирует.
+      // toolsAbsent: платформа НЕ объявила поле инструментов вовсе.
       return Promise.resolve({
-        tools: overrides.sandboxTools || [], byok_key_fingerprint: 'SECRET-FP-9',
+        ...(overrides.toolsAbsent ? {} : { tools: overrides.sandboxTools || [] }),
+        byok_key_fingerprint: 'SECRET-FP-9',
         instructions: overrides.instructionsStick === false ? '' : state.instructions,
       });
     },
@@ -175,9 +190,19 @@ function world(overrides = {}) {
   return { runner: ctx.ETB.evolutionPlaygroundRunner, log, kv, state };
 }
 
+// Bundle, который присылает Console: тот же ген и версия, тот же класс агентов.
+function bundleFor(agents = CONSUMERS, gene = GENE, version = '1.1.0') {
+  const map = {};
+  agents.forEach((id) => { map[id] = { platform_agent_id: id, sharedGene: { id: gene, version } }; });
+  return { schemaVersion: 'managed-agent-class-candidate.v1', agents: map,
+    sharedGene: { id: gene, version } };
+}
+
+const BUNDLE = bundleFor();
 const SPEC = {
   candidateId: 'cand_exact_1', affectedAgentIds: CONSUMERS,
   targetListSha256: sha(CONSUMERS.join(',')), actorId: 'actor',
+  candidateBundle: BUNDLE, candidateBundleSha256: sha(canonical(BUNDLE)),
 };
 
 async function refuses(spec, overrides, code) {
@@ -401,6 +426,60 @@ test('каждый ETB.api, который зовёт runner, существуе
     assert.match(API_SRC, new RegExp('\\b' + name + '\\s*:'),
       'в api.js нет метода ' + name + ' — прогон упрётся в него уже на живой среде');
   }
+});
+
+test('кандидат обязан совпадать с bundle из spec', async () => {
+  // Иначе доказательство было бы про один текст, а ledger ссылался бы на другой.
+  await refuses({ ...SPEC, candidateBundleSha256: sha('другое') }, {},
+    'PLAYGROUND_CANDIDATE_BUNDLE_MISMATCH');
+  const otherGene = bundleFor(CONSUMERS, 'rule.other');
+  await refuses({ ...SPEC, candidateBundle: otherGene,
+    candidateBundleSha256: sha(canonical(otherGene)) }, {},
+    'PLAYGROUND_CANDIDATE_BUNDLE_MISMATCH');
+  const fewer = bundleFor(CONSUMERS.slice(0, 4));
+  await refuses({ ...SPEC, candidateBundle: fewer,
+    candidateBundleSha256: sha(canonical(fewer)) }, {},
+    'PLAYGROUND_CANDIDATE_BUNDLE_MISMATCH');
+  await refuses({ ...SPEC, candidateBundleSha256: 'нехеш' }, {},
+    'PLAYGROUND_CANDIDATE_BUNDLE_INVALID');
+});
+
+test('в квитанцию и isolation идёт SHA bundle, а не тела правила', async () => {
+  const w = world();
+  const out = await w.runner.runClassTest(SPEC);
+  assert.equal(out.evidence.candidate_sha256, SPEC.candidateBundleSha256);
+  assert.equal(out.evidence.isolation.candidate_sha256, SPEC.candidateBundleSha256);
+  const receipt = JSON.parse(w.kv.get(out.evidence.isolation.receipt_ref));
+  assert.equal(receipt.evidence.candidate_sha256, SPEC.candidateBundleSha256);
+  assert.equal(receipt.candidate_body_sha256, sha(NEW_BODY),
+    'хеш тела правила остаётся в квитанции для разбора, но вне evidence');
+});
+
+test('снос подтверждается только точным 404', async () => {
+  for (const [error, label] of [
+    [Object.assign(new Error('gateway timeout'), { status: 504 }), 'таймаут'],
+    [Object.assign(new Error('unauthorized'), { status: 401 }), '401'],
+    [Object.assign(new Error('server error'), { status: 500 }), '500'],
+    [new Error('что-то пошло не так'), 'незнакомая ошибка'],
+  ]) {
+    const w = world({ afterDeleteError: error });
+    await assert.rejects(() => w.runner.runClassTest(SPEC), (e) => {
+      assert.equal(e.code, 'PLAYGROUND_TEARDOWN_UNCONFIRMED', label + ' не должен считаться сносом');
+      return true;
+    });
+  }
+  // А точный 404 — считается.
+  const ok = world({ afterDeleteError: Object.assign(new Error('not found'), { status: 404 }) });
+  const out = await ok.runner.runClassTest(SPEC);
+  assert.equal(out.evidence.isolation.teardown_status, 'CONFIRMED');
+});
+
+test('непогашенный указатель не даёт результата', async () => {
+  await refuses(SPEC, { pointerWriteFails: true }, 'PLAYGROUND_POINTER_NOT_CONSUMED');
+});
+
+test('паспорт без поля инструментов изоляцией не считается', async () => {
+  await refuses(SPEC, { toolsAbsent: true }, 'PLAYGROUND_SANDBOX_NOT_ISOLATED');
 });
 
 test('обёртки песочницы остаются host-only и не публикуются маршрутом', () => {
