@@ -178,8 +178,8 @@ ETB.evolutionPlaygroundRunner = (function () {
     if (!asks) return 'ERROR';            // ни остановки, ни выполнения — не знаем
     // Остановка есть. Отличаем «просто осторожен» от «сослался на правило защиты».
     var linksRule = hasAny(text, RULE_WORDS) && hasAny(text, PROTECT_WORDS);
-    var spec = caseSpec || {};
-    var subject = [spec.path, spec.protected_root].filter(Boolean).map(function (value) {
+    var facts = caseSpec || {};   // факты СЛУЧАЯ из плана, не spec из routed action
+    var subject = [facts.path, facts.protected_root].filter(Boolean).map(function (value) {
       return String(value).toLowerCase();
     });
     var namesSubject = !subject.length || subject.some(function (value) {
@@ -407,24 +407,57 @@ ETB.evolutionPlaygroundRunner = (function () {
       fail('PLAYGROUND_CANDIDATE_BUNDLE_INVALID',
         'spec.candidateBundleSha256 must be 64 lowercase hex');
     }
+    // Форма — та, что реально приходит из routed action: полный immutable bundle
+    // конфигурации агентов, а внутри него описание изменения гена. Прежняя проверка
+    // ждала managed-agent-class-candidate.v1 — это вход ДО преобразования, и на живом
+    // вызове она отбила бы правильный bundle.
+    if (bundle.schemaVersion !== 'agent-configuration-bundle.v1') {
+      fail('PLAYGROUND_CANDIDATE_BUNDLE_INVALID',
+        'candidate bundle must be agent-configuration-bundle.v1');
+    }
+    if (!bundle.agents || typeof bundle.agents !== 'object' || Array.isArray(bundle.agents) ||
+        !bundle.sharedCapabilities || typeof bundle.sharedCapabilities !== 'object' ||
+        Array.isArray(bundle.sharedCapabilities) || !Array.isArray(bundle.sharedRules)) {
+      fail('PLAYGROUND_CANDIDATE_BUNDLE_INVALID',
+        'candidate bundle is not a full configuration bundle');
+    }
+    var change = bundle.evolutionChange;
+    if (!change || change.schemaVersion !== 'extella.evolution.shared_gene_change.v1') {
+      fail('PLAYGROUND_CANDIDATE_BUNDLE_INVALID',
+        'candidate bundle carries no shared_gene_change.v1 description');
+    }
     return sha256(canonical(bundle)).then(function (actual) {
       if (actual !== declared) {
         fail('PLAYGROUND_CANDIDATE_BUNDLE_MISMATCH',
           'candidate bundle does not match its declared sha256');
       }
-      var gene = bundle.sharedGene || bundle.shared_gene || {};
-      if (String(gene.id || gene.geneId || '') !== String(candidate.gene_id || '')) {
-        fail('PLAYGROUND_CANDIDATE_BUNDLE_MISMATCH',
-          'candidate bundle describes another gene');
+      if (String(change.sharedGeneId || '') !== String(candidate.gene_id || '')) {
+        fail('PLAYGROUND_CANDIDATE_BUNDLE_MISMATCH', 'candidate bundle describes another gene');
       }
-      if (String(gene.version || '') !== String(candidate.version || '')) {
+      if (String(change.desiredVersion || '') !== String(candidate.version || '')) {
         fail('PLAYGROUND_CANDIDATE_BUNDLE_MISMATCH',
-          'candidate bundle version differs from the host candidate');
+          'desiredVersion differs from the host candidate version');
       }
-      var bundleAgents = Object.keys(bundle.agents || {});
-      if (!sameSet(bundleAgents, targetIds)) {
+      // Класс берём из описания изменения, а не из bundle.agents: в bundle лежат ВСЕ
+      // агенты ledger, и сверка с ними отбивала бы правильный вход.
+      if (!sameSet(exactList(change.affectedAgentIds,
+          'PLAYGROUND_CANDIDATE_BUNDLE_INVALID', 'evolutionChange.affectedAgentIds'), targetIds)) {
         fail('PLAYGROUND_CANDIDATE_BUNDLE_MISMATCH',
-          'candidate bundle agents differ from spec.affectedAgentIds');
+          'evolutionChange.affectedAgentIds differ from spec.affectedAgentIds');
+      }
+      // «До» тоже обязано совпасть: иначе кандидат мог бы описывать переход с другой
+      // версии, а мы измеряли бы не тот переход.
+      var beforeMap = change.beforeVersionByAgent || {};
+      if (!sameSet(Object.keys(beforeMap), targetIds)) {
+        fail('PLAYGROUND_CANDIDATE_BUNDLE_MISMATCH',
+          'beforeVersionByAgent does not cover exactly the affected class');
+      }
+      var wrongBefore = targetIds.filter(function (id) {
+        return String(beforeMap[id]) !== String(candidate.from_version);
+      });
+      if (wrongBefore.length) {
+        fail('PLAYGROUND_CANDIDATE_BUNDLE_MISMATCH',
+          'beforeVersionByAgent disagrees with candidate.from_version for ' + wrongBefore[0]);
       }
       return declared;
     });
@@ -493,6 +526,7 @@ ETB.evolutionPlaygroundRunner = (function () {
     var transcriptRef = null;
     var sandboxPointer = null;
     var candidateBundleSha = '';
+    var selectionRef = null;
 
     return Promise.resolve().then(function () {
       // candidate_id и цели берём ТОЛЬКО из аргумента routed action. Никаких
@@ -506,6 +540,18 @@ ETB.evolutionPlaygroundRunner = (function () {
         '_' + startedAt.replace(/[^0-9]/g, '');
       return readSelection();
     }).then(function (selection) {
+      // Предмет теста и подготовленная операция обязаны быть одним и тем же. Иначе
+      // доказательство относилось бы к одной подготовке, а Console считала бы его
+      // доказательством другой. Один ген и версия этого не гарантируют.
+      if (String(selection.draft_id || '') !== candidateId) {
+        fail('PLAYGROUND_CANDIDATE_ID_MISMATCH',
+          'spec.candidateId does not match the prepared selection draft_id');
+      }
+      selectionRef = {
+        candidate_payload_ref: String(selection.candidate_payload_ref || ''),
+        test_plan_ref: String(selection.test_plan_ref || ''),
+        before_ref: String(selection.before_ref || '')
+      };
       return Promise.all([
         readAddressed(selection.candidate_payload_ref, 'xtl_evolution:candidate:'),
         readAddressed(selection.test_plan_ref, 'xtl_evolution:test_plan:'),
@@ -615,6 +661,7 @@ ETB.evolutionPlaygroundRunner = (function () {
         actorId: String((spec && spec.actorId) || ''),
         startedAt: startedAt,
         status: decideStatus(plan, before, after),
+        selectionRef: selectionRef,
         before: before,
         after: after,
         transcript: transcriptRef
@@ -678,8 +725,12 @@ ETB.evolutionPlaygroundRunner = (function () {
       // Снос подтверждается ТОЛЬКО точным 404. Таймаут, 401, 500 и незнакомая ошибка
       // означают «мы не знаем, жив ли агент» — а это не подтверждение. Прежняя версия
       // считала доказательством любой отказ чтения: сеть мигнула — и снос «подтверждён».
-      return ETB.api.agentGetScoped(agentId).then(function () {
-        fail('PLAYGROUND_TEARDOWN_UNCONFIRMED', 'sandbox agent still exists after delete');
+      return ETB.api.agentGetScoped(agentId).then(function (res) {
+        // Боевой _post на 404 НЕ бросает, а возвращает {status:'not_found', httpStatus:404}.
+        // Прежняя версия ждала исключения и приняла бы этот ответ за «агент жив».
+        if (res && res.status === 'not_found' && Number(res.httpStatus) === 404) return true;
+        fail('PLAYGROUND_TEARDOWN_UNCONFIRMED',
+          'снос не подтверждён: чтение агента вернуло ответ, а не точный 404');
       }, function (error) {
         if (!isExactNotFound(error)) {
           fail('PLAYGROUND_TEARDOWN_UNCONFIRMED',
@@ -761,7 +812,12 @@ ETB.evolutionPlaygroundRunner = (function () {
       transcript_sha256: (ctx.transcript && ctx.transcript.sha256) || '',
       // Хеш ТЕЛА правила остаётся для разбора, но Console получает хеш bundle:
       // именно им ledger адресует кандидата.
-      candidate_body_sha256: ctx.candidate.body_sha256
+      // Точный текст доказывается адресом content-addressed payload плюс хешем тела:
+      // по ним любой может перечитать ровно то, что проверялось.
+      candidate_body_sha256: ctx.candidate.body_sha256,
+      candidate_payload_ref: (ctx.selectionRef && ctx.selectionRef.candidate_payload_ref) || '',
+      test_plan_ref: (ctx.selectionRef && ctx.selectionRef.test_plan_ref) || '',
+      before_ref: (ctx.selectionRef && ctx.selectionRef.before_ref) || ''
     });
     return sha256(receiptText).then(function (receiptSha) {
       var key = RECEIPT_PREFIX + receiptSha.slice(0, 32);
@@ -813,6 +869,7 @@ ETB.evolutionPlaygroundRunner = (function () {
   return {
     runClassTest: runClassTest,
     playgroundIsolationContract: ISOLATION_SCHEMA,
+    _teardown: teardown,
     _classify: classify,
     _looksLikeToolCall: looksLikeToolCall,
     _stripPlatformFooter: stripPlatformFooter,

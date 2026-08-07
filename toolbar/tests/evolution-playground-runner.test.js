@@ -118,6 +118,7 @@ function world(overrides = {}) {
       if (overrides.notVisible) return Promise.reject(new Error('404'));
       if (!state.agentAlive) {
         // Чем платформа отвечает на чтение снесённого агента — задаёт тест.
+        if (overrides.afterDeleteResponse) return Promise.resolve(overrides.afterDeleteResponse);
         if (overrides.afterDeleteError) return Promise.reject(overrides.afterDeleteError);
         return Promise.reject(new Error('404'));
       }
@@ -190,18 +191,34 @@ function world(overrides = {}) {
   return { runner: ctx.ETB.evolutionPlaygroundRunner, log, kv, state };
 }
 
-// Bundle, который присылает Console: тот же ген и версия, тот же класс агентов.
-function bundleFor(agents = CONSUMERS, gene = GENE, version = '1.1.0') {
-  const map = {};
-  agents.forEach((id) => { map[id] = { platform_agent_id: id, sharedGene: { id: gene, version } }; });
-  return { schemaVersion: 'managed-agent-class-candidate.v1', agents: map,
-    sharedGene: { id: gene, version } };
+// Bundle РОВНО той формы, что routed action передаёт в runClassTest: полный immutable
+// bundle конфигурации + описание изменения гена. `agents` содержит всех агентов ledger
+// (шире класса) — специально, чтобы тест ловил сверку не с тем множеством.
+const LEDGER_EXTRA = 'agent_not_in_class';
+function bundleFor(affected = CONSUMERS, gene = GENE, version = '1.1.0', before = '1.0.0') {
+  const agents = {};
+  affected.concat([LEDGER_EXTRA]).forEach((id) => {
+    agents[id] = { agentId: id, agent: { id, model: 'qwen', tools: [] } };
+  });
+  const beforeVersionByAgent = {};
+  affected.forEach((id) => { beforeVersionByAgent[id] = before; });
+  return {
+    schemaVersion: 'agent-configuration-bundle.v1',
+    agents, sharedCapabilities: {}, sharedRules: [],
+    evolutionChange: {
+      schemaVersion: 'extella.evolution.shared_gene_change.v1',
+      sharedGeneId: gene, desiredVersion: version,
+      sharedGeneMapSha256: sha('map'), beforeVersionByAgent,
+      affectedAgentIds: affected.slice(),
+    },
+  };
 }
 
 const BUNDLE = bundleFor();
 const SPEC = {
-  candidateId: 'cand_exact_1', affectedAgentIds: CONSUMERS,
+  candidateId: 'draft_x', affectedAgentIds: CONSUMERS,   // draft_id указателя
   targetListSha256: sha(CONSUMERS.join(',')), actorId: 'actor',
+  baselineVersionByAgent: CONSUMERS.reduce((acc, id) => ({ ...acc, [id]: '1.0.0' }), {}),
   candidateBundle: BUNDLE, candidateBundleSha256: sha(canonical(BUNDLE)),
 };
 
@@ -216,10 +233,20 @@ async function refuses(spec, overrides, code) {
 
 test('candidate_id берётся только из spec и не подменяется draft_id', async () => {
   const w = await refuses({ ...SPEC, candidateId: '' }, {}, 'PLAYGROUND_SPEC_INVALID');
+  // И наоборот: чужой candidateId не проходит — предмет теста обязан совпасть с
+  // подготовленной операцией.
+  await refuses({ ...SPEC, candidateId: 'draft_чужой' }, {}, 'PLAYGROUND_CANDIDATE_ID_MISMATCH');
   assert.equal(w.log.filter((row) => row[0] === 'agentGetScoped').length, 0,
     'песочница не должна трогаться при негодном предмете теста');
-  assert.doesNotMatch(RUNNER_CODE, /draft_id/,
-    'runner не имеет права читать draft_id: предмет теста задаёт только spec.candidateId');
+  // Раньше здесь стоял запрет на само слово draft_id. Круг 18 требует обратного:
+  // draft_id читается, но ТОЛЬКО для сверки с spec.candidateId — подстановка запрещена.
+  // Поэтому проверяем поведение и наличие сверки, а не отсутствие строки.
+  assert.match(RUNNER_CODE, /PLAYGROUND_CANDIDATE_ID_MISMATCH/,
+    'draft_id обязан сверяться с spec.candidateId, а не подставляться');
+  const ok = world();
+  const out = await ok.runner.runClassTest(SPEC);
+  assert.equal(out.evidence.candidate_id, SPEC.candidateId,
+    'candidate_id в evidence — ровно тот, что пришёл в spec');
 });
 
 test('чужой список целей останавливает прогон ДО создания песочницы', async () => {
@@ -310,7 +337,7 @@ test('успешный прогон: закрытая форма результ�
   assert.equal(ev.status, 'PASSED', 'таблица совпала точно — только тогда PASSED');
   assert.equal(ev.before_cases[0].result.verdict, 'STOP_AND_CONFIRM');
   assert.equal(ev.after_cases[0].result.verdict, 'RULE_COVERAGE_CONFIRMED');
-  assert.equal(ev.candidate_id, 'cand_exact_1');
+  assert.equal(ev.candidate_id, 'draft_x');
   assert.equal(Array.from(ev.target_agent_ids).sort().join(','), CONSUMERS.slice().sort().join(','));
   assert.ok(!ev.target_agent_ids.includes('agent_prepared_sandbox'), 'песочный агент не цель');
   assert.equal(ev.before_cases.length, 1);
@@ -432,6 +459,14 @@ test('кандидат обязан совпадать с bundle из spec', asy
   // Иначе доказательство было бы про один текст, а ledger ссылался бы на другой.
   await refuses({ ...SPEC, candidateBundleSha256: sha('другое') }, {},
     'PLAYGROUND_CANDIDATE_BUNDLE_MISMATCH');
+  const wrongSchema = { ...BUNDLE, schemaVersion: 'managed-agent-class-candidate.v1' };
+  await refuses({ ...SPEC, candidateBundle: wrongSchema,
+    candidateBundleSha256: sha(canonical(wrongSchema)) }, {},
+    'PLAYGROUND_CANDIDATE_BUNDLE_INVALID');
+  const wrongBefore = bundleFor(CONSUMERS, GENE, '1.1.0', '0.9.0');
+  await refuses({ ...SPEC, candidateBundle: wrongBefore,
+    candidateBundleSha256: sha(canonical(wrongBefore)) }, {},
+    'PLAYGROUND_CANDIDATE_BUNDLE_MISMATCH');
   const otherGene = bundleFor(CONSUMERS, 'rule.other');
   await refuses({ ...SPEC, candidateBundle: otherGene,
     candidateBundleSha256: sha(canonical(otherGene)) }, {},
@@ -451,8 +486,22 @@ test('в квитанцию и isolation идёт SHA bundle, а не тела �
   assert.equal(out.evidence.isolation.candidate_sha256, SPEC.candidateBundleSha256);
   const receipt = JSON.parse(w.kv.get(out.evidence.isolation.receipt_ref));
   assert.equal(receipt.evidence.candidate_sha256, SPEC.candidateBundleSha256);
+  assert.match(receipt.candidate_payload_ref, /^xtl_evolution:candidate:/,
+    'точный текст доказывается адресом payload, а не только id и версией гена');
   assert.equal(receipt.candidate_body_sha256, sha(NEW_BODY),
     'хеш тела правила остаётся в квитанции для разбора, но вне evidence');
+});
+
+test('снос принимает точный fulfilled not_found боевого _post', async () => {
+  // Боевой api.js на 404 НЕ бросает, а возвращает {status:'not_found', httpStatus:404}.
+  const w = world({ afterDeleteResponse: { status: 'not_found', httpStatus: 404 } });
+  const out = await w.runner.runClassTest(SPEC);
+  assert.equal(out.evidence.isolation.teardown_status, 'CONFIRMED');
+  // А любой другой fulfilled-ответ — не подтверждение.
+  await refuses(SPEC, { afterDeleteResponse: { status: 'ok', tools: [] } },
+    'PLAYGROUND_TEARDOWN_UNCONFIRMED');
+  await refuses(SPEC, { afterDeleteResponse: { status: 'not_found', httpStatus: 500 } },
+    'PLAYGROUND_TEARDOWN_UNCONFIRMED');
 });
 
 test('снос подтверждается только точным 404', async () => {
