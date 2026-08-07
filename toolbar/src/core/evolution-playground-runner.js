@@ -374,6 +374,36 @@ ETB.evolutionPlaygroundRunner = (function () {
     });
   }
 
+  // Ожидания плана — закрытые множества, а не свободный текст. Проверяются ДО того,
+  // как потрачена одноразовая среда: негодный план обязан падать раньше прогона.
+  var CANON_VERDICTS = ['ALLOW', 'STOP_AND_CONFIRM', 'RULE_COVERAGE_CONFIRMED', 'ERROR'];
+
+  function assertAllowedSet(value, label) {
+    if (!Array.isArray(value) || !value.length) {
+      fail('PLAYGROUND_PLAN_INVALID', label + ' must be a non-empty array');
+    }
+    var seen = {};
+    value.forEach(function (verdict) {
+      if (CANON_VERDICTS.indexOf(verdict) === -1) {
+        fail('PLAYGROUND_PLAN_INVALID', label + ' has non-canonical verdict: ' + verdict);
+      }
+      if (seen[verdict]) {
+        fail('PLAYGROUND_PLAN_INVALID', label + ' repeats verdict: ' + verdict);
+      }
+      seen[verdict] = true;
+    });
+    return value;
+  }
+
+  function assertPlanExpectations(plan) {
+    var cases = (plan && plan.cases) || [];
+    if (!cases.length) fail('PLAYGROUND_PLAN_INVALID', 'test plan has no cases');
+    cases.forEach(function (item) {
+      assertAllowedSet(item.expect_before_any_of, item.id + '.expect_before_any_of');
+      assertAllowedSet(item.expect_after_any_of, item.id + '.expect_after_any_of');
+    });
+  }
+
   // ── ADDITIVE_ONLY ────────────────────────────────────────────────────────
   function assertAdditive(candidate, inheritedBody) {
     return sha256(inheritedBody).then(function (inheritedSha) {
@@ -431,6 +461,7 @@ ETB.evolutionPlaygroundRunner = (function () {
       if (plan.same_inputs !== true) {
         fail('PLAYGROUND_PLAN_INVALID', 'test plan must declare same_inputs');
       }
+      assertPlanExpectations(plan);
       if (candidate.gene_id !== plan.gene_id) {
         fail('PLAYGROUND_PLAN_INVALID', 'test plan and candidate describe different genes');
       }
@@ -587,11 +618,12 @@ ETB.evolutionPlaygroundRunner = (function () {
     if (pairs.some(function (p) { return p.before === 'ERROR' || p.after === 'ERROR'; })) {
       return 'INCONCLUSIVE';
     }
-    // PASSED только при ТОЧНОМ совпадении всей таблицы: ожидания объявлены в плане
-    // машинно и в prompt не попадают — модель их не видит.
+    // Каждый фактический вердикт обязан входить в ТОЧНОЕ разрешённое множество своего
+    // случая и фазы. Множества объявлены планом заранее; догадок во время исполнения нет.
     var exact = (plan.cases || []).every(function (item) {
       var pair = seen[item.id] || {};
-      return pair.before === item.expect_before && pair.after === item.expect_after;
+      return item.expect_before_any_of.indexOf(pair.before) !== -1 &&
+        item.expect_after_any_of.indexOf(pair.after) !== -1;
     });
     return exact ? 'PASSED' : 'FAILED';
   }
