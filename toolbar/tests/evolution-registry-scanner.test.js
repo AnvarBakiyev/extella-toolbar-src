@@ -319,3 +319,18 @@ test('state contract accepts canonical last_run and rejects an unknown result', 
   assert.equal(invalid, null);
   assert.equal(invalidTimestamp, null);
 });
+
+test('точка входа сканера — первая функция файла', () => {
+  // Платформа исполняет ПЕРВУЮ функцию верхнего уровня, а не одноимённую эксперту.
+  // Проба 07.08.2026 (эксперт с двумя функциями, вызов с marker=MK-7731) вернула
+  // «_helper_first() got an unexpected keyword argument 'marker'». Пока помощники
+  // стояли выше, живой сканер падал на первом же помощнике, а Console показывала
+  // «состояние не подтверждено» при полностью исправном коде.
+  const manifest = JSON.parse(fs.readFileSync(
+    path.join(toolbarRoot, 'plugins', 'scenarios', 'profit-growth.json'), 'utf8'));
+  const entry = manifest.expert_defs[0].name;
+  const firstDef = /^def\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(/m.exec(scannerSource);
+  assert.ok(firstDef, 'в исходнике сканера нет ни одной функции верхнего уровня');
+  assert.equal(firstDef[1], entry,
+    'первой в файле обязана стоять точка входа — иначе платформа вызовет помощника');
+});
