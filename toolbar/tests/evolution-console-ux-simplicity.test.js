@@ -212,6 +212,29 @@ test('a confirmed empty Shared Genes map explains the real creation path', () =>
   );
 });
 
+test('one verified prepared Shared Gene shows honest product readiness', () => {
+  assert.match(consoleHtml, /data-shared-readiness="BLOCKED_NATIVE_ID_UNAVAILABLE"/);
+  assert.match(consoleHtml, /sharedCandidateReady:'Изменение подготовлено'/);
+  assert.match(consoleHtml, /sharedPlaygroundWaiting:'Нужен безопасный полигон'/);
+  assert.match(consoleHtml, /sharedApplyBlocked:'Применение ждёт поддержки платформы'/);
+  assert.match(
+    consoleHtml,
+    /genes\.length!==1\|\|!context\|\|context\.status!=='UNAVAILABLE'\|\|context\.error_code!=='BLOCKED_NATIVE_ID_UNAVAILABLE'/,
+  );
+  assert.match(
+    consoleHtml,
+    /var workflow=readiness\?readiness\+'<div class="shared-actions">[\s\S]*?:\s*'<div class="shared-loop">/,
+    'a verified prepared change replaces the generic workflow instead of duplicating it',
+  );
+  assert.match(consoleHtml, /data-shared-lab-waiting="true" disabled/);
+  assert.match(consoleHtml, /if\(labButton\)labButton\.onclick=function\(\)\{if\(!labReady\)return/);
+  assert.doesNotMatch(
+    consoleHtml,
+    /sharedApplyBlockedNote:'[^']*(?:native_id|rule_id|KV|endpoint|адаптер)/i,
+    'the customer-facing blocked state must explain the boundary without implementation jargon',
+  );
+});
+
 test('preview uses the same current-device inventory contract as production', () => {
   assert.match(
     consoleHtml,
