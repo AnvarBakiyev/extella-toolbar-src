@@ -46,6 +46,7 @@ const CORE_ORDER = [
   'evolution-agent-control-contract.js',
   'evolution-trusted-publish-contract.js',
   'evolution-trusted-publish-context-contract.js',
+  'evolution-host-adapter.js',
   'evolution-masking-policy.js',
   'evolution-automation-contracts.js',
   'evolution-automation-registry.js',
