@@ -556,7 +556,7 @@ ETB.evolutionConsole = (function () {
               ),
               descriptor: descriptor,
               displayName: gene.display_name || gene.displayName ||
-                gene.capability || descriptor.objectId,
+                gene.name || gene.capability || descriptor.objectId,
               activeVersion: gene.active_version != null ?
                 gene.active_version : (gene.activeVersion != null ?
                 gene.activeVersion : (gene.version != null ? gene.version :
@@ -576,7 +576,7 @@ ETB.evolutionConsole = (function () {
             platformAgentId: fleetRow.platformAgentId ||
               fleetRow.platform_agent_id,
             descriptor: descriptor,
-            displayName: gene.display_name || gene.displayName ||
+            displayName: gene.display_name || gene.displayName || gene.name ||
               (descriptor.kind === 'capability' ||
               descriptor.kind === 'declared' ?
               gene.capability : descriptor.objectId) ||

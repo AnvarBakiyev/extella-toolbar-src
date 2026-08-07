@@ -697,7 +697,7 @@ test('Shared Genes map is exact, bidirectional, stable and Cabinet uses the same
           gene_id: 'shared_gene_exact_from_adapter',
           gene_kind: 'handler',
           object_id: 'canonical_handler',
-          display_name: 'Canonical handler',
+          name: 'Canonical handler',
           active_version: '3.0.0',
         }],
         cabinet: cabinet({ name: 'Canonical A', genome: [] }),
@@ -708,7 +708,7 @@ test('Shared Genes map is exact, bidirectional, stable and Cabinet uses the same
           gene_id: 'shared_gene_exact_from_adapter',
           gene_kind: 'handler',
           object_id: 'canonical_handler',
-          display_name: 'Canonical handler',
+          name: 'Canonical handler',
           active_version: '3.0.0',
         }],
         cabinet: cabinet({ name: 'Canonical B', genome: [] }),
@@ -724,6 +724,11 @@ test('Shared Genes map is exact, bidirectional, stable and Cabinet uses the same
   assert.equal(
     canonical.byGeneId.shared_gene_exact_from_adapter.consumerCount,
     3,
+  );
+  assert.equal(
+    canonical.byGeneId.shared_gene_exact_from_adapter.displayName,
+    'Canonical handler',
+    'the canonical Agent Passport name must reach the Shared Gene UI projection',
   );
   assert.equal(
     api.cabinetSharedGeneCount(

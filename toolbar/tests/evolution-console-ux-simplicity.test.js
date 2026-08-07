@@ -202,6 +202,14 @@ test('a confirmed empty Shared Genes map explains the real creation path', () =>
     /sharedZero(?:Create|Publish|Apply)|data-shared-zero-action="(?:create|publish|apply)"/,
     'the empty state must not invent a write action before a Shared Gene exists in Agent Passports',
   );
+  assert.match(consoleHtml, /\.shared-zero-state\{[^}]*padding:24px 12px/);
+  assert.match(consoleHtml, /\.shared-zero-step span\{[^}]*width:24px;height:24px/);
+  assert.match(consoleHtml, /\.shared-zero-boundary\{font-size:13px!important\}/);
+  assert.doesNotMatch(
+    consoleHtml,
+    /\.shared-zero-(?:state|step|boundary)[^{]*\{[^}]*(?:28px|font-size:12px)/,
+    'Shared Genes zero state must stay on the Extella size scale',
+  );
 });
 
 test('preview uses the same current-device inventory contract as production', () => {
