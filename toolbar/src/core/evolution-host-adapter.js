@@ -147,13 +147,13 @@ ETB.evolutionHostAdapter = (function () {
     });
   }
 
-  function context(hostContext, status, errorCode) {
+  function context(hostContext, status, errorCode, subject) {
     var actorId = '';
     try { actorId = String(ETB.auth.getUserId() || ''); } catch (_) {}
     exactId(actorId, 'TRUSTED_PUBLISH_SELECTION_ACCOUNT_MISMATCH',
       'authenticated account');
     return {
-      schema: 'extella.evolution.trusted_publish_context.v1',
+      schema: 'extella.evolution.trusted_publish_context.v1.1',
       owner_account_id: actorId,
       fleet_snapshot_id: exactId(
         hostContext.fleet_snapshot_id,
@@ -163,6 +163,7 @@ ETB.evolutionHostAdapter = (function () {
       captured_at: new Date().toISOString(),
       status: status,
       error_code: errorCode,
+      subject: subject || null,
       request: null,
       result: null,
       public_error: null
@@ -184,7 +185,7 @@ ETB.evolutionHostAdapter = (function () {
       var candidateSuffix;
       var testPlanSuffix;
       var beforeSuffix;
-      if (!selection) return context(hostContext, 'NO_DRAFT', null);
+      if (!selection) return context(hostContext, 'NO_DRAFT', null, null);
       exactKeys(selection, SELECTION_KEYS,
         'TRUSTED_PUBLISH_SELECTION_INVALID', 'trusted publication selection');
       exactId(selection.draft_id, 'TRUSTED_PUBLISH_SELECTION_INVALID', 'draft id');
@@ -243,23 +244,51 @@ ETB.evolutionHostAdapter = (function () {
           verifyBody(candidate, 'candidate'),
           verifyBody(before, 'before snapshot')
         ]).then(function () {
+          var subject;
           if (candidate.from_body_sha256 !== before.body_sha256 ||
-              testPlan.same_inputs !== true) {
+              testPlan.same_inputs !== true ||
+              !Array.isArray(testPlan.cases) ||
+              testPlan.cases.length < 1 || testPlan.cases.length > 50) {
             fail('TRUSTED_PUBLISH_SELECTION_INVALID',
               'candidate, baseline and test plan are not the same prepared change');
           }
+          subject = {
+            gene_id: exactId(
+              candidate.gene_id,
+              'TRUSTED_PUBLISH_SELECTION_INVALID',
+              'candidate Shared Gene id'
+            ),
+            kind: exactId(
+              candidate.kind,
+              'TRUSTED_PUBLISH_SELECTION_INVALID',
+              'candidate kind'
+            ),
+            from_version: exactId(
+              candidate.from_version,
+              'TRUSTED_PUBLISH_SELECTION_INVALID',
+              'candidate from version'
+            ),
+            version: exactId(
+              candidate.version,
+              'TRUSTED_PUBLISH_SELECTION_INVALID',
+              'candidate version'
+            ),
+            test_case_count: testPlan.cases.length
+          };
           if (selection.publish_state === 'BLOCKED_NATIVE_ID_UNAVAILABLE' &&
               selection.native_id === null && before.addressable === false) {
             return context(
               hostContext,
               'UNAVAILABLE',
-              'BLOCKED_NATIVE_ID_UNAVAILABLE'
+              'BLOCKED_NATIVE_ID_UNAVAILABLE',
+              subject
             );
           }
           return context(
             hostContext,
             'UNAVAILABLE',
-            'TRUSTED_PUBLISH_EXECUTION_UNAVAILABLE'
+            'TRUSTED_PUBLISH_EXECUTION_UNAVAILABLE',
+            subject
           );
         });
       });

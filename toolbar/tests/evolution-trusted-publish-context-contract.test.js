@@ -102,12 +102,19 @@ function publicError(code, overrides = {}) {
 
 function snapshot(overrides = {}) {
   return {
-    schema: 'extella.evolution.trusted_publish_context.v1',
+    schema: 'extella.evolution.trusted_publish_context.v1.1',
     owner_account_id: OWNER,
     fleet_snapshot_id: SNAPSHOT,
     captured_at: CAPTURED,
     status: 'READY',
     error_code: null,
+    subject: {
+      gene_id: 'rule.filesystem_self_protection',
+      kind: 'rule',
+      from_version: '1.0.0',
+      version: '1.1.0',
+      test_case_count: 3,
+    },
     request: request(),
     result: null,
     public_error: null,
@@ -137,6 +144,8 @@ test('trusted publish context accepts one exact ready host-selected request', ()
 
   assert.equal(normalized.status, 'READY');
   assert.equal(normalized.request.agent_id, 'agent_publish_alpha');
+  assert.equal(normalized.subject.gene_id, 'rule.filesystem_self_protection');
+  assert.equal(normalized.subject.test_case_count, 3);
   assert.equal(normalized.result, null);
   assert.equal(normalized.public_error, null);
   assert.equal(Object.isFrozen(normalized), true);
@@ -224,6 +233,7 @@ test('no draft and unavailable context never carry a stale request or outcome', 
   const contract = loadContract();
   const noDraft = contract.normalize(snapshot({
     status: 'NO_DRAFT',
+    subject: null,
     request: null,
   }), options());
   const unavailable = contract.unavailable({
@@ -234,6 +244,7 @@ test('no draft and unavailable context never carry a stale request or outcome', 
   });
 
   assert.equal(noDraft.request, null);
+  assert.equal(noDraft.subject, null);
   assert.equal(unavailable.status, 'UNAVAILABLE');
   assert.equal(unavailable.error_code, 'TRUSTED_PUBLISH_CONTEXT_ADAPTER_UNAVAILABLE');
   assert.equal(unavailable.request, null);
@@ -252,6 +263,18 @@ test('no draft and unavailable context never carry a stale request or outcome', 
       now: NOW,
       errorCode: 'PUBLISH_OUTCOME_UNKNOWN',
     }),
+    'TRUSTED_PUBLISH_CONTEXT_INVALID',
+  );
+  rejectsCode(
+    () => contract.normalize(snapshot({
+      subject: { ...snapshot().subject, extra: true },
+    }), options()),
+    'TRUSTED_PUBLISH_CONTEXT_INVALID',
+  );
+  rejectsCode(
+    () => contract.normalize(snapshot({
+      subject: { ...snapshot().subject, test_case_count: 0 },
+    }), options()),
     'TRUSTED_PUBLISH_CONTEXT_INVALID',
   );
 });

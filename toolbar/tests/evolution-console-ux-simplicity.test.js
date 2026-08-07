@@ -220,8 +220,14 @@ test('one verified prepared Shared Gene shows honest product readiness', () => {
   assert.match(consoleHtml, /sharedApplyBlocked:'Применение ждёт поддержки платформы'/);
   assert.match(
     consoleHtml,
-    /genes\.length!==1\|\|!context\|\|context\.status!=='UNAVAILABLE'\|\|context\.error_code!=='BLOCKED_NATIVE_ID_UNAVAILABLE'/,
+    /!gene\|\|!context\|\|!subject\|\|subject\.gene_id!==gene\.geneId\|\|context\.status!=='UNAVAILABLE'\|\|context\.error_code!=='BLOCKED_NATIVE_ID_UNAVAILABLE'/,
   );
+  assert.doesNotMatch(
+    consoleHtml,
+    /genes\.length\s*!==?\s*1/,
+    'prepared-change readiness must not disappear when a second Shared Gene is declared',
+  );
+  assert.match(consoleHtml, /sharedReadinessMeta:'Версия \{from\} → \{to\} · проверок: \{count\}'/);
   assert.match(
     consoleHtml,
     /var workflow=readiness\?readiness\+'<div class="shared-actions">[\s\S]*?:\s*'<div class="shared-loop">/,
@@ -241,6 +247,34 @@ test('one verified prepared Shared Gene shows honest product readiness', () => {
     consoleHtml,
     /sharedApplyBlockedNote:'[^']*(?:native_id|rule_id|KV|endpoint|адаптер)/i,
     'the customer-facing blocked state must explain the boundary without implementation jargon',
+  );
+});
+
+test('Evolution Lab explains the change, coverage, safety, and result without internal IDs', () => {
+  const lab = viewSource('lab');
+  assert.match(lab, /data-ux="evolution-lab-product-state"/);
+  assert.match(lab, /id="labGeneName"/);
+  assert.match(lab, /id="labTargetCount"/);
+  assert.match(lab, /id="labCaseCount"/);
+  assert.match(lab, /id="labProof"/);
+  assert.match(lab, /id="labRunBtn"[^>]*disabled/);
+  assert.match(consoleHtml, /function classTestReceipt\(e\)/);
+  assert.match(consoleHtml, /receipt\.type==='CLASS_TEST_COMPLETED'/);
+  assert.match(consoleHtml, /e\.status\)==='TESTED'&&receipt&&receipt\.status==='PASSED'/);
+  assert.match(consoleHtml, /labIsolationConfirmed:'Одноразовая изолированная среда подтверждена\.'/);
+  assert.match(consoleHtml, /labNoExternalWrites:'Рабочие автоматизации и файлы не затронуты\.'/);
+  assert.match(consoleHtml, /labReceiptSaved:'Квитанция проверки сохранена\.'/);
+  assert.match(consoleHtml, /button\.disabled=!productionReady\(\)\|\|state\.labRunning/);
+  assert.match(consoleHtml, /runEscAction\('escalation_test'\)/);
+  assert.doesNotMatch(
+    consoleHtml,
+    /String\(context\.change_id\)\+' · '\+String\(context\.candidate_id\)/,
+    'the customer-facing Lab must not print ledger identifiers',
+  );
+  assert.doesNotMatch(
+    lab,
+    /candidate|snapshot|target_automation|receipt_ref/i,
+    'the product Lab markup must stay free of internal contract vocabulary',
   );
 });
 

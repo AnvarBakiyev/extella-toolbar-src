@@ -6,7 +6,7 @@
 ETB.evolutionTrustedPublishContextContract = (function () {
   'use strict';
 
-  var SCHEMA = 'extella.evolution.trusted_publish_context.v1';
+  var SCHEMA = 'extella.evolution.trusted_publish_context.v1.1';
   var ROOT_KEYS = [
     'schema',
     'owner_account_id',
@@ -14,6 +14,7 @@ ETB.evolutionTrustedPublishContextContract = (function () {
     'captured_at',
     'status',
     'error_code',
+    'subject',
     'request',
     'result',
     'public_error'
@@ -32,6 +33,19 @@ ETB.evolutionTrustedPublishContextContract = (function () {
   var ERROR_CODE = /^[A-Z][A-Z0-9_]{0,63}$/;
   var ISO_UTC =
     /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?Z$/;
+  var SUBJECT_KEYS = [
+    'gene_id',
+    'kind',
+    'from_version',
+    'version',
+    'test_case_count'
+  ];
+  var SUBJECT_KIND = {
+    rule: true,
+    knowledge: true,
+    expert: true,
+    handler: true
+  };
 
   function fail(code, message) {
     var error = new Error(message || code);
@@ -141,6 +155,48 @@ ETB.evolutionTrustedPublishContextContract = (function () {
     return publish.normalizeRequest(value);
   }
 
+  function normalizeSubject(value, nullable) {
+    var kind;
+    var count;
+    if (nullable && value === null) return null;
+    exactKeys(
+      value,
+      SUBJECT_KEYS,
+      'TRUSTED_PUBLISH_CONTEXT_INVALID',
+      'trusted publish subject'
+    );
+    kind = String(value.kind || '');
+    if (!Object.prototype.hasOwnProperty.call(SUBJECT_KIND, kind)) {
+      fail('TRUSTED_PUBLISH_CONTEXT_INVALID', 'subject kind is unsupported');
+    }
+    count = Number(value.test_case_count);
+    if (!isFinite(count) || Math.floor(count) !== count || count < 1 || count > 50) {
+      fail(
+        'TRUSTED_PUBLISH_CONTEXT_INVALID',
+        'subject test_case_count must be an integer from 1 to 50'
+      );
+    }
+    return {
+      gene_id: exactId(
+        value.gene_id,
+        'TRUSTED_PUBLISH_CONTEXT_INVALID',
+        'subject gene_id'
+      ),
+      kind: kind,
+      from_version: exactId(
+        value.from_version,
+        'TRUSTED_PUBLISH_CONTEXT_INVALID',
+        'subject from_version'
+      ),
+      version: exactId(
+        value.version,
+        'TRUSTED_PUBLISH_CONTEXT_INVALID',
+        'subject version'
+      ),
+      test_case_count: count
+    };
+  }
+
   function normalize(value, rawOptions) {
     var opts = options(rawOptions);
     var publish = runtime();
@@ -151,6 +207,7 @@ ETB.evolutionTrustedPublishContextContract = (function () {
     var request;
     var result;
     var publicError;
+    var subject;
 
     exactKeys(
       value,
@@ -204,6 +261,8 @@ ETB.evolutionTrustedPublishContextContract = (function () {
       'error_code',
       true
     );
+    subject = normalizeSubject(value.subject, status === 'NO_DRAFT' ||
+      status === 'UNAVAILABLE');
 
     if (status === 'READY') {
       request = requireRequest(value.request, publish,
@@ -215,6 +274,7 @@ ETB.evolutionTrustedPublishContextContract = (function () {
       result = null;
       publicError = null;
     } else if (status === 'NO_DRAFT') {
+      requireNull(subject, 'TRUSTED_PUBLISH_CONTEXT_INVALID', 'subject');
       requireNull(value.request, 'TRUSTED_PUBLISH_CONTEXT_INVALID', 'request');
       requireNull(value.result, 'TRUSTED_PUBLISH_CONTEXT_INVALID', 'result');
       requireNull(value.public_error, 'TRUSTED_PUBLISH_CONTEXT_INVALID',
@@ -282,6 +342,7 @@ ETB.evolutionTrustedPublishContextContract = (function () {
       captured_at: capturedAt,
       status: status,
       error_code: errorCode,
+      subject: subject,
       request: request,
       result: result,
       public_error: publicError
@@ -307,6 +368,7 @@ ETB.evolutionTrustedPublishContextContract = (function () {
       captured_at: raw.now,
       status: 'UNAVAILABLE',
       error_code: code,
+      subject: null,
       request: null,
       result: null,
       public_error: null
