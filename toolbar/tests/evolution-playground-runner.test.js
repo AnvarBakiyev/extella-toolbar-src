@@ -396,7 +396,9 @@ test('каждый ETB.api, который зовёт runner, существуе
   const used = [...new Set([...RUNNER_CODE.matchAll(/ETB\.api\.([a-zA-Z]+)/g)].map((m) => m[1]))];
   assert.ok(used.length >= 8, 'ожидали список вызовов ETB.api');
   for (const name of used) {
-    assert.match(API_SRC, new RegExp('\\b' + name + ': function'),
+    // Часть методов экспортируется ссылкой (`extractAgentText: extractAgentText`),
+    // а не литералом функции — проверяем наличие ключа, а не его формы.
+    assert.match(API_SRC, new RegExp('\\b' + name + '\\s*:'),
       'в api.js нет метода ' + name + ' — прогон упрётся в него уже на живой среде');
   }
 });
