@@ -154,6 +154,45 @@ test('Evolution Console is primary while Evolution Lab opens only from a change'
   );
 });
 
+test('the product overview puts automations beside shared rules and knowledge', () => {
+  const overview = viewSource('overview');
+  assert.match(overview, /class="product-dashboard"/);
+  assert.match(overview, /class="product-sidebar"/);
+  assert.match(overview, /data-overview-shared="rules"/);
+  assert.match(overview, /data-overview-shared="knowledge"/);
+  assert.match(overview, /id="productSharedRulesCount"/);
+  assert.match(overview, /id="productSharedKnowledgeCount"/);
+  assert.match(overview, /data-ux="contextual-evolution-lab"/);
+  assert.match(overview, /id="overviewLabBtn"[^>]*disabled/);
+  assert.match(
+    consoleHtml,
+    /function sharedConsumerCount\(kind\)[\s\S]*consumerAgentIds[\s\S]*Object\.keys\(ids\)\.length/,
+    'overview counts must come from the canonical Shared Genes projection',
+  );
+  assert.match(
+    consoleHtml,
+    /button\.disabled=!labReady/,
+    'Evolution Lab must remain closed without a current prepared change',
+  );
+  assert.match(
+    consoleHtml,
+    /state\.sharedKind=button\.dataset\.overviewShared[\s\S]*setView\('genes'\)/,
+    'shared shortcuts must open the existing Shared Genes surface',
+  );
+});
+
+test('preview uses the same current-device inventory contract as production', () => {
+  assert.match(
+    consoleHtml,
+    /function demoDeviceInventory\(\)[\s\S]*schema:'extella\.evolution\.device_inventory\.v2'/,
+  );
+  assert.match(
+    consoleHtml,
+    /demoDeviceInventory\(\)[\s\S]*installed_apps:0,probes:0/,
+    'a preview that fails the v2 validator cannot visually exercise the product screen',
+  );
+});
+
 test('installed automations are selected by default and Catalog is a peer switch', () => {
   const overview = viewSource('overview');
   const installed = openingTags(overview, 'button').find(
@@ -291,6 +330,9 @@ test('native automation cards hide machine enums in their closed summary', () =>
     'automation cards must be collapsed by default',
   );
   assert.match(cardRenderer, /data-automation-state-summary=/);
+  assert.match(cardRenderer, /class="automation-avatar"/);
+  assert.match(cardRenderer, /class="automation-card-heading"/);
+  assert.match(cardRenderer, /class="automation-card-next"/);
   assert.match(cardRenderer, /automationCardLine\(row\)/);
   assert.match(
     cardRenderer,
@@ -433,8 +475,10 @@ test('automation cards remain cards on mobile', () => {
   const mobileCss = normalized(mobileBreakpoint[1]);
   assert.match(
     mobileCss,
-    /\.automation-card>summary\s*\{\s*grid-template-columns\s*:\s*1fr auto\s*\}/,
+    /\.automation-card>summary\s*\{\s*grid-template-columns\s*:\s*42px 1fr\s*\}/,
   );
+  assert.match(mobileCss, /\.automation-card-title\s*\{\s*grid-column\s*:\s*2\s*\}/);
+  assert.match(mobileCss, /\.automation-card-next\s*\{\s*grid-column\s*:\s*2\s*\}/);
   assert.match(
     mobileCss,
     /\.technical-grid\s*\{\s*grid-template-columns\s*:\s*1fr\s*\}/,
@@ -517,6 +561,10 @@ test('the simplified overview has matching human copy in Russian and English', (
     // Правка 29.07: тест закреплял «Ваши» — то есть фиксировал нарушение канона Эллы
     // (§4, обращение на «ты»). Ожидание приведено к канону вместе с самим экраном.
     overviewTitle: ['Управление агентами', 'Evolution Console'],
+    overviewLead: [
+      'Все автоматизации компании — в одном месте.',
+      'All company automations in one place.',
+    ],
     inventory: ['Автоматизации', 'Automations'],
     myAutomations: ['Мои автоматизации', 'My automations'],
     catalog: ['Каталог', 'Catalog'],
@@ -531,6 +579,19 @@ test('the simplified overview has matching human copy in Russian and English', (
     catalogFallbackText: [
       'Не удалось проверить, что установлено на этом компьютере. Поэтому показываем доступные автоматизации из каталога; установка каждой из них пока не подтверждена.',
       'Extella could not check what is installed on this computer, so it is showing the available catalog. Installation of each automation remains unconfirmed.',
+    ],
+    sharedOverviewTitle: [
+      'Общее для всех агентов',
+      'Shared across agents',
+    ],
+    sharedOverviewLead: [
+      'Настройте один раз — примените ко всем нужным агентам.',
+      'Configure once and apply to every relevant agent.',
+    ],
+    configure: ['Настроить', 'Configure'],
+    safeChangeTitle: [
+      'Безопасно проверить изменение',
+      'Test a change safely',
     ],
     openAutomation: ['Открыть', 'Open'],
     reviewAutomation: ['Посмотреть замечание', 'View issue'],
