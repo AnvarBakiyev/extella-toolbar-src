@@ -590,6 +590,14 @@ ETB.api = (function () {
     // лишний рычаг «создай агента из кода» нам не нужен. Осталось только удаление:
     // одноразовую среду обязаны сносить мы, а не человек. Маршрута из iframe у этих
     // обёрток НЕТ; роутер их не публикует, зовёт только host-runner.
+    // Инструкции одноразовой среды задаёт host: агент без инструментов иначе отвечает
+    // текстом вызовов, и измерять нечего. Значение фиксированное, из iframe не приходит.
+    agentInstructionsUpdateScoped: function (agentId, instructions) {
+      return _post('/api/agent/update', {
+        agent_id: String(agentId || ''),
+        instructions: String(instructions || '')
+      }, agentId ? { 'X-Agent-Id': String(agentId) } : null);
+    },
     agentDeleteSandbox: function (agentId) {
       return _post('/api/agent/delete', { agent_id: String(agentId || '') });
     },

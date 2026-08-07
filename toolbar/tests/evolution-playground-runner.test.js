@@ -94,7 +94,8 @@ function world(overrides = {}) {
       single_use: true, consumed: overrides.consumed === true,
     }));
   }
-  const state = { rules: [{ id: null, rule: OLD_BODY, group_name: 'system' }], agentAlive: true };
+  const state = { rules: [{ id: null, rule: OLD_BODY, group_name: 'system' }], agentAlive: true,
+    instructions: '' };
   const api = {
     kvGet: (key) => { log.push(['kvGet', key]); return Promise.resolve({ value: kv.get(key) || '' }); },
     kvSet: (key, value) => { log.push(['kvSet', key]); kv.set(key, value); return Promise.resolve({ status: 'success' }); },
@@ -105,12 +106,17 @@ function world(overrides = {}) {
       // Паспорт нарочно несёт «ключ»: тест сторожит, что runner его не копирует.
       return Promise.resolve({
         tools: overrides.sandboxTools || [], byok_key_fingerprint: 'SECRET-FP-9',
+        instructions: overrides.instructionsStick === false ? '' : state.instructions,
       });
     },
     agentDeleteSandbox: () => {
       log.push(['agentDeleteSandbox']);
       if (!overrides.deleteFails) state.agentAlive = false;
       return Promise.resolve({ message: 'Agent deleted' });
+    },
+    agentInstructionsUpdateScoped: (id, text) => {
+      log.push(['agentInstructionsUpdateScoped']); state.instructions = text;
+      return Promise.resolve({ id });
     },
     ruleAddScoped: (rule) => {
       log.push(['ruleAddScoped']); state.rules.push({ id: 77, rule: rule, group_name: null });
@@ -124,7 +130,10 @@ function world(overrides = {}) {
       return Promise.resolve({ status: 'success', deleted: true });
     },
     // Платформа отдаёт Responses-форму: текст внутри output[].content[].
-    runAgent: () => Promise.resolve(overrides.rawResponse || {
+    runAgent: (message) => Promise.resolve(
+      (overrides.muteCasesOnly && !/готов/i.test(String(message)))
+        ? { output: [{ type: 'message', content: [] }] }
+        : overrides.rawResponse || {
       output: [
         { type: 'reasoning', content: [{ type: 'reasoning_text', text: 'думаю' }] },
         { type: 'message', content: [{ type: 'output_text',
@@ -138,7 +147,9 @@ function world(overrides = {}) {
           if (c.type === 'output_text' && c.text) parts.push(c.text);
         });
       });
-      if (!parts.length) throw new Error('Empty agent reply');
+      // Снисходительный распаковщик (overrides.lenientExtractor) возвращает пустую
+      // строку молча: так ведёт себя запасная ветка, и именно от неё стоит сетка.
+      if (!parts.length && !overrides.lenientExtractor) throw new Error('Empty agent reply');
       return parts.join('\n');
     },
   };
@@ -216,6 +227,30 @@ test('невидимый в этом аккаунте агент не годит
   await refuses(SPEC, { notVisible: true }, 'PLAYGROUND_SANDBOX_NOT_VISIBLE');
 });
 
+test('среда объявляет отсутствие инструментов до прогона', async () => {
+  const w = world();
+  await w.runner.runClassTest(SPEC);
+  assert.equal(w.log.filter((r) => r[0] === 'agentInstructionsUpdateScoped').length, 1,
+    'инструкции песочницы задаёт host, и ровно один раз');
+  assert.equal(w.state.instructions.includes('Инструментов и доступа к файлам у тебя НЕТ'), true);
+});
+
+test('непринятые инструкции останавливают прогон', async () => {
+  await refuses(SPEC, { instructionsStick: false }, 'PLAYGROUND_SANDBOX_NOT_PREPARED');
+});
+
+test('дымовая проба ловит неработающий ключ до трёх случаев', async () => {
+  // Две одноразовые среды сгорели впустую именно потому, что три случая запускались
+  // раньше, чем кто-то убедился, что ответ вообще приходит.
+  const w = world({ rawResponse: { output: [] }, noExtractor: true });
+  await assert.rejects(() => w.runner.runClassTest(SPEC), (e) => {
+    assert.equal(e.code, 'PLAYGROUND_SANDBOX_KEY_UNUSABLE');
+    return true;
+  });
+  assert.equal(w.log.filter((r) => r[0] === 'ruleAddScoped').length, 0,
+    'кандидат не должен записываться, если среда молчит');
+});
+
 test('ключ провайдера не читается и никуда не попадает', async () => {
   const w = world();
   const out = await w.runner.runClassTest(SPEC);
@@ -265,7 +300,7 @@ test('успешный прогон: закрытая форма результ�
 test('молчащий прогон объявляется дефектом обвязки, а не INCONCLUSIVE', async () => {
   // Живой урок 07.08: своя распаковка ответа вернула шесть пустых строк, статус вышел
   // INCONCLUSIVE, и одноразовая песочница сгорела впустую. Теперь это отдельный код.
-  await refuses(SPEC, { rawResponse: { output: [] }, noExtractor: true },
+  await refuses(SPEC, { muteCasesOnly: true, lenientExtractor: true },
     'PLAYGROUND_NO_MEASURABLE_OUTPUT');
 });
 
