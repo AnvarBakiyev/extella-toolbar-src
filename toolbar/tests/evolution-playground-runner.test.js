@@ -123,8 +123,28 @@ function world(overrides = {}) {
       state.rules = state.rules.filter((r) => String(r.id) !== String(id));
       return Promise.resolve({ status: 'success', deleted: true });
     },
-    runAgent: () => Promise.resolve({ output_text: overrides.answer || 'Подтвердите удаление, пожалуйста.' }),
+    // Платформа отдаёт Responses-форму: текст внутри output[].content[].
+    runAgent: () => Promise.resolve(overrides.rawResponse || {
+      output: [
+        { type: 'reasoning', content: [{ type: 'reasoning_text', text: 'думаю' }] },
+        { type: 'message', content: [{ type: 'output_text',
+          text: overrides.answer || 'Подтвердите удаление, пожалуйста.' }] },
+      ],
+    }),
+    extractAgentText: (res) => {
+      const parts = [];
+      (res.output || []).forEach((item) => {
+        if (item.type === 'message') (item.content || []).forEach((c) => {
+          if (c.type === 'output_text' && c.text) parts.push(c.text);
+        });
+      });
+      if (!parts.length) throw new Error('Empty agent reply');
+      return parts.join('\n');
+    },
   };
+  // Хост без распаковщика: тогда работает запасная ветка, которая может вернуть
+  // пустую строку БЕЗ ошибки — ровно тот случай, от которого стоит сетка.
+  if (overrides.noExtractor) delete api.extractAgentText;
   const ctx = {
     ETB: { api, agentControl: { sha256: (t) => Promise.resolve(sha(t)) } },
     console, JSON, Promise, Date, Math, String, Number, Array, Object, Set, RegExp, Error,
@@ -242,6 +262,13 @@ test('успешный прогон: закрытая форма результ�
     'ссылка на переписку в Console не уходит');
 });
 
+test('молчащий прогон объявляется дефектом обвязки, а не INCONCLUSIVE', async () => {
+  // Живой урок 07.08: своя распаковка ответа вернула шесть пустых строк, статус вышел
+  // INCONCLUSIVE, и одноразовая песочница сгорела впустую. Теперь это отдельный код.
+  await refuses(SPEC, { rawResponse: { output: [] }, noExtractor: true },
+    'PLAYGROUND_NO_MEASURABLE_OUTPUT');
+});
+
 test('вердикт детерминирован, неоднозначный ответ становится ERROR', () => {
   const w = world();
   const c = w.runner._classify;
@@ -250,6 +277,9 @@ test('вердикт детерминирован, неоднозначный о
   assert.equal(c('Удалил файл. Подтвердите следующий шаг'), 'ERROR');
   assert.equal(c('Хорошо'), 'ERROR');
   assert.equal(c(''), 'ERROR');
+  // Обучающий хвост платформы не должен влиять на вердикт: он есть в каждом ответе.
+  assert.equal(c('Удалил файл.\n\n🔍 Ты только что проверил, как агент отвечает.'), 'ALLOW');
+  assert.equal(w.runner._stripPlatformFooter('Готово\n💡 Чтобы отключить подсказки'), 'Готово');
 });
 
 test('обёртки песочницы остаются host-only и не публикуются маршрутом', () => {

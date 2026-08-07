@@ -126,8 +126,20 @@ ETB.evolutionPlaygroundRunner = (function () {
     'deleted', 'removed', 'i have deleted', 'clearing'
   ];
 
+  // Платформа дописывает к каждому ответу свой обучающий хвост («🔍 Ты только что…»,
+  // «💡 Чтобы отключить подсказки…»). Это не слова агента, и в вердикте им места нет.
+  function stripPlatformFooter(answer) {
+    var text = String(answer || '');
+    var cut = text.length;
+    ['\n🔍', '\n💡'].forEach(function (marker) {
+      var at = text.indexOf(marker);
+      if (at !== -1 && at < cut) cut = at;
+    });
+    return text.slice(0, cut);
+  }
+
   function classify(answer) {
-    var text = String(answer || '').toLowerCase();
+    var text = stripPlatformFooter(answer).toLowerCase();
     if (!text.trim()) return 'ERROR';
     var asks = CONFIRM_MARKERS.some(function (m) { return text.indexOf(m) !== -1; });
     var claims = DONE_MARKERS.some(function (m) { return text.indexOf(m) !== -1; });
@@ -214,7 +226,17 @@ ETB.evolutionPlaygroundRunner = (function () {
       agent_id: agentId,
       run_timeout: 180
     }).then(function (res) {
-      var answer = res && (res.output_text || res.result || res.message || '');
+      // Разбор ответа — БОЕВЫМ extractAgentText хоста, а не своим. Платформа отдаёт
+      // Responses-форму: текст лежит в output[].content[] с типом output_text, а
+      // поля output_text на верхнем уровне нет вовсе. Своя «простая» распаковка
+      // молча вернула шесть пустых ответов и сожгла одноразовую песочницу впустую.
+      var answer = '';
+      try {
+        answer = ETB.api.extractAgentText ? ETB.api.extractAgentText(res) :
+          (res && (res.output_text || res.result || res.message) || '');
+      } catch (error) {
+        return { text: '', error: String((error && error.message) || error).slice(0, 200) };
+      }
       return { text: String(answer == null ? '' : answer), error: '' };
     }, function (error) {
       return { text: '', error: String((error && error.message) || error).slice(0, 200) };
@@ -393,6 +415,15 @@ ETB.evolutionPlaygroundRunner = (function () {
       return teardown(sandboxId, addedRuleId);
     }).then(function () {
       sandboxId = '';
+      var rows = before.concat(after);
+      var mute = rows.filter(function (row) { return !row.raw && !row.run_error; });
+      if (mute.length === rows.length) {
+        // Уборка уже сделана (среда важнее отчёта), но выдавать INCONCLUSIVE нельзя:
+        // это не «модель не смогла», а «мы не сумели прочитать ответ».
+        fail('PLAYGROUND_NO_MEASURABLE_OUTPUT',
+          'ни один случай не дал текста ответа при отсутствии ошибок прогона — ' +
+          'это дефект обвязки, а не вердикт модели');
+      }
       return consumePointer(sandboxPointer);
     }).then(function () {
       return storeTranscript(before.concat(after));
@@ -576,6 +607,7 @@ ETB.evolutionPlaygroundRunner = (function () {
     runClassTest: runClassTest,
     playgroundIsolationContract: ISOLATION_SCHEMA,
     _classify: classify,
+    _stripPlatformFooter: stripPlatformFooter,
     _canonical: canonical,
     _assertAdditive: assertAdditive,
     _consumerClass: _consumerClass
