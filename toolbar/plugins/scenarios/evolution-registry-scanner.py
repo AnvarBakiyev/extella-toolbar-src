@@ -1,3 +1,101 @@
+# ТОЧКА ВХОДА ИДЁТ ПЕРВОЙ И ЭТО НЕ СТИЛЬ.
+#
+# Платформа исполняет ПЕРВУЮ функцию верхнего уровня, а не ту, что названа именем
+# эксперта. Проверено одноразовой пробой 07.08.2026: в эксперте с двумя функциями
+# вызов с параметром marker=MK-7731 вернул «_helper_first() got an unexpected keyword
+# argument 'marker'». Пока помощники стояли выше, живой прогон сканера падал на
+# `_evolution_registry_safe_manifest() missing 1 required positional argument`, и
+# парк в Console не загружался НИ В ОДНОМ скоупе — при формально верном коде.
+#
+# Помощники ниже: в Python имена разрешаются в момент вызова, порядок не мешает.
+
+def _etb_evolution_registry_scan_v1(device_refs_json="[]") -> str:
+    import concurrent.futures
+    import json
+    import os
+    import re
+
+    root = os.path.expanduser("~/extella-plugins/_registry")
+    strict = re.compile(r"^[a-z0-9][a-z0-9._-]{1,79}\.json$")
+    output = {
+        "contract_version": "extella.evolution.registry_scan.v2",
+        "capabilities": [
+            "device_refs_v1",
+            "runtime_probe_v1",
+            "strict_cards_v1",
+        ],
+        "entries": [],
+        "device_refs": _evolution_registry_device_refs(device_refs_json),
+        "matched_count": 0,
+        "ignored_backup_count": 0,
+        "rejected_count": 0,
+    }
+    if not os.path.isdir(root):
+        return json.dumps(output, ensure_ascii=False)
+
+    candidates = []
+    for name in sorted(os.listdir(root)):
+        path = os.path.join(root, name)
+        if not os.path.isfile(path):
+            continue
+        if ".bak_" in name:
+            output["ignored_backup_count"] += 1
+            continue
+        if os.path.islink(path) or not strict.fullmatch(name):
+            output["rejected_count"] += 1
+            continue
+        manifest_id = name[:-5]
+        try:
+            with open(path, "r", encoding="utf-8") as handle:
+                manifest = json.load(handle)
+        except Exception:
+            output["rejected_count"] += 1
+            continue
+        if (
+            not isinstance(manifest, dict)
+            or str(manifest.get("id") or "") != manifest_id
+        ):
+            output["rejected_count"] += 1
+            continue
+        entry = {
+            "filename": name,
+            "manifest": _evolution_registry_safe_manifest(manifest),
+        }
+        output["entries"].append(entry)
+        if (
+            (
+                manifest.get("category") == "automations"
+                and manifest.get("type") == "process"
+            )
+            or manifest.get("schemaVersion") == "extella-process-pack-v1"
+            or manifest.get("id") in (
+                "extella_1c_agent",
+                "extella_contract_agent",
+                "extella_travel_agency",
+            )
+        ):
+            candidates.append((entry, manifest))
+        output["matched_count"] += 1
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+        pending = [
+            (entry, executor.submit(_evolution_registry_probe_runtime, manifest))
+            for entry, manifest in candidates
+        ]
+        for entry, future in pending:
+            try:
+                entry["runtime"] = future.result()
+            except Exception:
+                entry["runtime"] = {
+                    "configured": False,
+                    "port": None,
+                    "health": None,
+                    "state": None,
+                }
+
+    return json.dumps(output, ensure_ascii=False)
+
+
 def _evolution_registry_safe_manifest(manifest: dict) -> dict:
     safe = {}
     for key in (
@@ -417,90 +515,3 @@ def _evolution_registry_device_refs(device_refs_json):
                 result["error_code"] = "DEVICE_REF_READ_FAILED"
         output[ref] = result
     return output
-
-
-def _etb_evolution_registry_scan_v1(device_refs_json="[]") -> str:
-    import concurrent.futures
-    import json
-    import os
-    import re
-
-    root = os.path.expanduser("~/extella-plugins/_registry")
-    strict = re.compile(r"^[a-z0-9][a-z0-9._-]{1,79}\.json$")
-    output = {
-        "contract_version": "extella.evolution.registry_scan.v2",
-        "capabilities": [
-            "device_refs_v1",
-            "runtime_probe_v1",
-            "strict_cards_v1",
-        ],
-        "entries": [],
-        "device_refs": _evolution_registry_device_refs(device_refs_json),
-        "matched_count": 0,
-        "ignored_backup_count": 0,
-        "rejected_count": 0,
-    }
-    if not os.path.isdir(root):
-        return json.dumps(output, ensure_ascii=False)
-
-    candidates = []
-    for name in sorted(os.listdir(root)):
-        path = os.path.join(root, name)
-        if not os.path.isfile(path):
-            continue
-        if ".bak_" in name:
-            output["ignored_backup_count"] += 1
-            continue
-        if os.path.islink(path) or not strict.fullmatch(name):
-            output["rejected_count"] += 1
-            continue
-        manifest_id = name[:-5]
-        try:
-            with open(path, "r", encoding="utf-8") as handle:
-                manifest = json.load(handle)
-        except Exception:
-            output["rejected_count"] += 1
-            continue
-        if (
-            not isinstance(manifest, dict)
-            or str(manifest.get("id") or "") != manifest_id
-        ):
-            output["rejected_count"] += 1
-            continue
-        entry = {
-            "filename": name,
-            "manifest": _evolution_registry_safe_manifest(manifest),
-        }
-        output["entries"].append(entry)
-        if (
-            (
-                manifest.get("category") == "automations"
-                and manifest.get("type") == "process"
-            )
-            or manifest.get("schemaVersion") == "extella-process-pack-v1"
-            or manifest.get("id") in (
-                "extella_1c_agent",
-                "extella_contract_agent",
-                "extella_travel_agency",
-            )
-        ):
-            candidates.append((entry, manifest))
-        output["matched_count"] += 1
-
-    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
-        pending = [
-            (entry, executor.submit(_evolution_registry_probe_runtime, manifest))
-            for entry, manifest in candidates
-        ]
-        for entry, future in pending:
-            try:
-                entry["runtime"] = future.result()
-            except Exception:
-                entry["runtime"] = {
-                    "configured": False,
-                    "port": None,
-                    "health": None,
-                    "state": None,
-                }
-
-    return json.dumps(output, ensure_ascii=False)
