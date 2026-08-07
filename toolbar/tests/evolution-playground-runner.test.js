@@ -390,6 +390,17 @@ test('негодные множества ожиданий останавлив�
   }
 });
 
+test('каждый ETB.api, который зовёт runner, существует в хосте', () => {
+  // Одноразовый агент №1 (08.08) сгорел на отсутствующем agentInstructionsUpdateScoped:
+  // код звал метод, которого в api.js ещё не было. Статическая сверка стоит секунду.
+  const used = [...new Set([...RUNNER_CODE.matchAll(/ETB\.api\.([a-zA-Z]+)/g)].map((m) => m[1]))];
+  assert.ok(used.length >= 8, 'ожидали список вызовов ETB.api');
+  for (const name of used) {
+    assert.match(API_SRC, new RegExp('\\b' + name + ': function'),
+      'в api.js нет метода ' + name + ' — прогон упрётся в него уже на живой среде');
+  }
+});
+
 test('обёртки песочницы остаются host-only и не публикуются маршрутом', () => {
   assert.match(API_SRC, /agentDeleteSandbox: function/);
   for (const name of ['agentDeleteSandbox', 'ruleRemoveScoped']) {
