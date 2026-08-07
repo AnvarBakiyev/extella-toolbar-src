@@ -55,7 +55,7 @@
     .advanced-menu{position:absolute;top:calc(100% + 7px);right:0;min-width:220px;display:grid;gap:4px;padding:8px;
       background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:none}
     .advanced-menu .tab{text-align:left;width:100%}.advanced-menu .tab.on{color:var(--petrol)}
-    main{max-width:1180px;margin:0 auto;padding:24px 24px 48px}.view{display:none}.view.on{display:block}
+    main{max-width:1320px;margin:0 auto;padding:24px 24px 48px}.view{display:none}.view.on{display:block}
     .hero{display:flex;justify-content:space-between;gap:24px;align-items:flex-end;margin-bottom:24px}
     .eyebrow{color:var(--petrol);font:500 11px/1.2 var(--mono);letter-spacing:.06em;word-spacing:-.14em}
     h1{font-family:var(--serif);font-weight:600;font-size:26px;line-height:1.22;margin:8px 0 8px;letter-spacing:0}h2{font-family:var(--serif);font-weight:600;font-size:20px;line-height:1.25;letter-spacing:0;margin:0}h1,h2{color:var(--ink)}
@@ -128,10 +128,22 @@
     .fleet-summary{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px;padding:12px 16px;
       border:1px solid var(--line);border-radius:12px;background:var(--panel);box-shadow:none}
     .fleet-summary span,.fleet-summary button{display:inline-flex;align-items:baseline;gap:4px;color:var(--muted)}
-    .fleet-summary strong{color:var(--ink);font-size:20px}.fleet-summary button{border:0;background:transparent;padding:0;cursor:pointer}
+    .fleet-summary strong{color:var(--ink);font-size:20px}.fleet-summary button{border:0;background:transparent;padding:4px 6px;cursor:pointer}
+    .fleet-summary button::before{display:grid;place-items:center;width:24px;height:24px;border-radius:999px;background:var(--panel2);color:var(--muted);font-weight:800;content:'?'}
+    .fleet-summary button[data-summary-category="WORKING"]::before{content:'✓';background:color-mix(in srgb,var(--good) 14%,var(--panel));color:var(--good)}
+    .fleet-summary button[data-summary-category="STOPPED"]::before{content:'■';font-size:9px}
+    .fleet-summary button[data-summary-category="NEEDS_HELP"]::before{content:'!';background:color-mix(in srgb,var(--warn) 14%,var(--panel));color:var(--warn)}
     .fleet-summary-unavailable{display:none;color:var(--muted)}
     .fleet-summary.is-unavailable>button,.fleet-summary.is-unavailable>span[aria-hidden="true"]{display:none}
     .fleet-summary.is-unavailable>.fleet-summary-unavailable{display:block}
+    .product-dashboard{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(300px,.72fr);gap:16px;align-items:start}
+    .product-sidebar{display:grid;gap:16px;position:sticky;top:20px}.product-sidebar .card{padding:20px}
+    .product-sidebar h2{margin:0;font:600 22px/1.2 var(--serif)}.product-sidebar-lead{margin:6px 0 16px;color:var(--muted);font-size:13px}
+    .shared-overview-list{display:grid;gap:8px}.shared-overview-card{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:12px;align-items:center;width:100%;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--panel2);color:var(--body);text-align:left;cursor:pointer}
+    .shared-overview-card:hover{border-color:var(--petrol-border);background:var(--panel)}.shared-overview-icon{display:grid;place-items:center;width:44px;height:44px;border:1px solid var(--line);border-radius:12px;color:var(--petrol);background:var(--panel)}
+    .shared-overview-icon svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.8}.shared-overview-copy b{display:block;color:var(--ink)}.shared-overview-copy small{display:block;margin-top:3px;color:var(--muted)}
+    .shared-overview-action{color:var(--gold);font-weight:700}.lab-overview-card{background:linear-gradient(145deg,var(--panel),var(--panel2));border-color:color-mix(in srgb,var(--gold) 38%,var(--line))}
+    .lab-overview-card p{margin:8px 0 14px;color:var(--muted)}.lab-overview-card .primary{width:100%}.lab-overview-note{display:block;margin-top:8px;color:var(--muted);font-size:12px}
     .scope-switch{display:inline-flex;gap:4px;padding:4px;border:1px solid var(--line);border-radius:8px;background:var(--panel2)}
     .scope-switch .filter-chip{border:0;border-radius:8px}.scope-switch .filter-chip.on{background:var(--panel);color:var(--ink)}
     .console-tools{margin-top:12px}.console-tools>summary,.technical-details>summary,.composition>summary{
@@ -140,14 +152,15 @@
       border:1px solid var(--line);border-radius:12px;background:var(--panel2)}
     .console-advanced-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.console-advanced-actions .tab{
       border-color:var(--line);color:var(--ink)}.lab-empty{max-width:680px}.lab-empty p{margin:8px 0 16px;color:var(--muted)}
-    .automation-list{display:grid;gap:8px}.automation-card{border:1px solid var(--line);border-radius:12px;background:var(--panel2);overflow:hidden}
+    .automation-list{display:grid;gap:10px}.automation-card{border:1px solid var(--line);border-radius:12px;background:var(--panel2);overflow:hidden}
     .automation-card[open]{border-color:var(--petrol-border)}.automation-card>summary{display:grid;
-      grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:16px;padding:16px;cursor:pointer;list-style:none}
+      grid-template-columns:48px minmax(0,1fr) auto;align-items:center;gap:14px;padding:16px;cursor:pointer;list-style:none}
     .automation-card>summary::-webkit-details-marker{display:none}.automation-card>summary:hover{background:var(--panel)}
-    .automation-card-title{display:grid;gap:4px;min-width:0}.automation-card-title b{color:var(--ink);font-size:15px}
+    .automation-avatar{display:grid;place-items:center;width:48px;height:48px;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--petrol);font:700 18px var(--serif)}
+    .automation-card-title{display:grid;gap:4px;min-width:0}.automation-card-heading{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.automation-card-title b{color:var(--ink);font-size:17px}
     .automation-card-title small{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .automation-card-problem{display:flex;align-items:center;gap:4px;margin-top:4px;color:var(--warn);font-size:13px;font-weight:700}
-    .automation-card-next{color:var(--gold);font-weight:600;white-space:nowrap}.automation-card[open] .automation-card-next{display:none}
+    .automation-card-next{padding:9px 14px;border:1px solid var(--gold);border-radius:10px;color:var(--gold);font-weight:700;white-space:nowrap}.automation-card[open] .automation-card-next{display:none}
     .automation-card-body{display:grid;gap:12px;padding:0 16px 16px;border-top:1px solid var(--line)}
     .automation-card-section{padding-top:12px}.automation-card-section h3{margin:0 0 8px;color:var(--ink);font-size:13px}
     .automation-card-section p{margin:4px 0;color:var(--muted)}.automation-card-section .automation-state{margin-top:0}
@@ -203,10 +216,10 @@
     .sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;
       overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
     @media(max-width:1000px){.top{flex-wrap:wrap}.brand{min-width:0}.tabs{order:3;width:100%;flex:1 0 100%;overflow:auto}.advanced-menu{position:fixed;left:16px;right:16px;top:auto}
-      .metrics{grid-template-columns:1fr 1fr 1fr}.split,.agent-control-grid,.shared-workspace{grid-template-columns:1fr}.flow{grid-template-columns:1fr 1fr 1fr}.attention-list{grid-template-columns:1fr}}
+      .metrics{grid-template-columns:1fr 1fr 1fr}.split,.agent-control-grid,.shared-workspace,.product-dashboard{grid-template-columns:1fr}.product-sidebar{position:static}.flow{grid-template-columns:1fr 1fr 1fr}.attention-list{grid-template-columns:1fr}}
     @media(max-width:700px){main{padding:16px 16px 32px}.top{padding:12px}.metrics{grid-template-columns:1fr}.hero{display:block}.top-actions{margin-left:auto}
       .tabs{flex-wrap:wrap;overflow:visible}.inventory-tools{display:block}.quick-filters{margin:8px 0}.search-wrap{min-width:0}.tools>*{max-width:100%}.flow{grid-template-columns:1fr 1fr}
-      .automation-card>summary{grid-template-columns:1fr auto}.automation-card-title{grid-column:1}.automation-card>summary>.state{grid-column:1}.automation-card-next{grid-column:2;grid-row:1/3}.technical-grid{grid-template-columns:1fr}.automation-quick-facts{grid-template-columns:1fr}
+      .automation-card>summary{grid-template-columns:42px 1fr}.automation-avatar{width:42px;height:42px}.automation-card-title{grid-column:2}.automation-card-next{grid-column:2}.technical-grid{grid-template-columns:1fr}.automation-quick-facts{grid-template-columns:1fr}
       .attention-item{grid-template-columns:auto 1fr}.attention-next{grid-column:2}.advanced-nav summary{white-space:nowrap}.shared-loop{grid-template-columns:1fr}
       .table-wrap{overflow:visible;border:0}.table-wrap table{display:block;min-width:0}.table-wrap thead{display:none}.table-wrap tbody{display:grid;gap:8px}
       .table-wrap tr[data-registry-row]{display:grid;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel2)}
@@ -236,6 +249,7 @@
           <div class="fleet-summary-unavailable" id="fleetSummaryUnavailable" data-t="summaryUnavailable"></div>
         </div>
 
+        <div class="product-dashboard">
         <section class="card" id="fleetRegistry" data-ux="fleet-registry" data-overview-region="registry" aria-busy="true">
           <div class="card-head">
             <div><h2 data-t="inventory"></h2><p id="snapshotNote"></p></div>
@@ -253,7 +267,6 @@
             <summary data-t="advancedConsole"></summary>
             <div class="console-advanced-actions">
               <button class="tab" type="button" data-view="risks" data-advanced-task="problems" data-t="advancedTaskProblems"></button>
-              <button class="tab" type="button" data-view="genes" data-advanced-task="dependencies" data-t="advancedTaskDependencies"></button>
               <button class="tab" type="button" data-view="bulk" data-advanced-task="multi-change" data-t="advancedTaskMultiple"></button>
               <button class="tab" type="button" data-view="receipts" data-advanced-task="history" data-t="advancedTaskHistory"></button>
             </div>
@@ -282,6 +295,31 @@
             </div>
           </details>
         </section>
+        <aside class="product-sidebar" data-aria="productSidebarLabel">
+          <section class="card" data-ux="shared-controls-overview">
+            <h2 data-t="sharedOverviewTitle"></h2>
+            <p class="product-sidebar-lead" data-t="sharedOverviewLead"></p>
+            <div class="shared-overview-list">
+              <button class="shared-overview-card" type="button" data-overview-shared="rules">
+                <span class="shared-overview-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 20 6v5c0 5-3.2 8.2-8 10-4.8-1.8-8-5-8-10V6l8-3Z"/><path d="m8.5 12 2.2 2.2 4.8-5"/></svg></span>
+                <span class="shared-overview-copy"><b data-t="sharedRules"></b><small><strong id="productSharedRulesCount">—</strong> <span data-t="sharedAgentsUse"></span></small></span>
+                <span class="shared-overview-action" data-t="configure"></span>
+              </button>
+              <button class="shared-overview-card" type="button" data-overview-shared="knowledge">
+                <span class="shared-overview-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5.5c3.2-.8 5.8-.2 8 1.7v12c-2.2-1.9-4.8-2.5-8-1.7v-12Z"/><path d="M20 5.5c-3.2-.8-5.8-.2-8 1.7v12c2.2-1.9 4.8-2.5 8-1.7v-12Z"/></svg></span>
+                <span class="shared-overview-copy"><b data-t="sharedKnowledge"></b><small><strong id="productSharedKnowledgeCount">—</strong> <span data-t="sharedAgentsUse"></span></small></span>
+                <span class="shared-overview-action" data-t="configure"></span>
+              </button>
+            </div>
+          </section>
+          <section class="card lab-overview-card" data-ux="contextual-evolution-lab">
+            <h2 data-t="safeChangeTitle"></h2>
+            <p data-t="safeChangeLead"></p>
+            <button class="primary" type="button" id="overviewLabBtn" data-action="open-evolution-lab" data-t="openEvolutionLab" disabled></button>
+            <small class="lab-overview-note" id="overviewLabNote" data-t="labWaitingForChange"></small>
+          </section>
+        </aside>
+        </div>
       </section>
 
       <section class="view" id="labView" data-evolution-view="lab">
@@ -395,12 +433,12 @@
   (function(){
     'use strict';
     var PREVIEW = new URLSearchParams(location.search).get('preview') === '1';
-    var CONSOLE_VERSION = '0.16.4';
+    var CONSOLE_VERSION = '0.17.0';
     var I18N = {
       ru:{
         consoleSub:'Evolution Console',fleet:'Парк',overview:'Обзор',automationsNav:'Автоматизации',advanced:'Дополнительно',risks:'Риски',riskDetails:'Причины рисков',escalations:'Эскалации',bulk:'Массовые операции',
         how:'Как это работает?',demo:'DEMO: данные и Evolution Receipts существуют только в памяти страницы; платформа не читается и не изменяется.',
-        consoleEyebrow:'Evolution Console · управление автоматизациями Extella',overviewTitle:'Управление агентами',overviewLead:'Здесь ты видишь установленные автоматизации, проверяешь их работу и разбираешь замечания. В каталоге собраны автоматизации, которые можно установить.',interfaceVersion:'Версия интерфейса',initUnavailable:'Управление агентами не получило приветствие Extella за 15 секунд. Закрой и открой экран снова; при повторе обнови приложение.',
+        consoleEyebrow:'Evolution Console · управление автоматизациями Extella',overviewTitle:'Управление агентами',overviewLead:'Все автоматизации компании — в одном месте.',interfaceVersion:'Версия интерфейса',initUnavailable:'Управление агентами не получило приветствие Extella за 15 секунд. Закрой и открой экран снова; при повторе обнови приложение.',
         myAutomations:'Мои автоматизации',catalog:'Каталог',programs:'Программы',automationScope:'Установленные автоматизации, каталог или программы',workingCount:'работают',stoppedCount:'остановлены',unknownCount:'статус неизвестен',needsHelpCount:'нужна помощь',notRunningCount:'не запущены',attentionCount:'требуют внимания',
         dataProtection:'Защита данных',maskingActive:'Защита данных подтверждена на входе и на выходе',maskingOff:'Выключено',maskingPartial:'Подтверждено частично',maskingUnknown:'Состояние защиты неизвестно',maskingSettingsCabinet:'Настройки находятся в Agent Cabinet.',maskingLocalSource:'Статус получен только с текущего устройства.',
         agentControl:'Управление изменениями',agentControlTitle:'Управление изменениями агентов',agentControlLead:'Evolution Console показывает канонический путь изменения из Agent Passport. Пока паспортов или контракта нет, действия закрыты.',agentControlContract:'Канонический контракт',agentControlSteps:'Путь изменения',agentControlPublishGates:'Подтверждения публикации',agentControlGatePreWrite:'До публикации',agentControlGatePostWrite:'После записи: Extella перечитывает результат',agentControlLimits:'Границы',agentControlRequires:'Зависит от',agentControlLoading:'Проверяем Agent Passports и канонический контракт…',agentControlStandardsUnavailable:'Production bundle Agent Passports пока недоступен.',agentControlNoPassports:'Agent Passports ещё не заполнены. Когда появится подтверждённый паспорт, здесь будет показан канонический путь изменения.',agentControlContractUnavailable:'Канонический контракт управления пока недоступен. Действия закрыты.',agentControlContractMismatch:'Контракты Agent Passports расходятся. Действия закрыты до устранения расхождения.',agentControlUnknown:'Состояние управления изменениями неизвестно. Действия закрыты.',agentControlReadOnly:'Сейчас доступно только чтение канонического контракта. Публикация появится только через trusted action с теми же гейтами.',agentControlBoundary:'Этот раздел только читает канонический контракт: он не создаёт агентов, не меняет настройки Agent Cabinet или защиты данных, не ведёт отдельный журнал и не публикует изменения.',
@@ -447,7 +485,7 @@
         exactLiveAgent:'Точный live agentId',selectStableAgent:'Выбери точный live agentId',sourcePassport:'Source Passport',sourcePath:'Путь источника',
         genesTitle:'Общие правила и знания',
         genesLead:'Настройте один раз — используйте во всех нужных агентах. Перед применением Console покажет точный охват и отправит изменение на проверку в Evolution Lab.',
-        sharedLibraryTitle:'Что настраиваем',sharedLibraryLead:'Выберите общий элемент Agent Genome.',sharedKindsLabel:'Типы общих элементов',sharedRules:'Общие правила',sharedKnowledge:'Общие знания',
+        sharedLibraryTitle:'Что настраиваем',sharedLibraryLead:'Выберите общий элемент Agent Genome.',sharedKindsLabel:'Типы общих элементов',sharedRules:'Общие правила',sharedKnowledge:'Общие знания',sharedOverviewTitle:'Общее для всех агентов',sharedOverviewLead:'Настройте один раз — примените ко всем нужным агентам.',sharedAgentsUse:'агентов используют',configure:'Настроить',safeChangeTitle:'Безопасно проверить изменение',safeChangeLead:'Evolution Lab сравнит поведение до и после, не затрагивая работающие автоматизации.',openEvolutionLab:'Открыть Evolution Lab',labWaitingForChange:'Появится, когда подготовлено изменение.',labChangeReady:'Подготовленное изменение готово к проверке.',productSidebarLabel:'Общие настройки и проверка изменений',
         sharedCurrentVersion:'Текущая версия',sharedAppliesTo:'Применяется к агентам',sharedImpactPrefix:'Изменение затронет',sharedAgentsWord:'агентов',sharedPrepare:'Подготовить изменение',sharedOpenLab:'Проверить в Evolution Lab',
         sharedPrepareStep:'Настроить',sharedTestStep:'Проверить',sharedApplyStep:'Применить',sharedPrepareHint:'Сначала задайте новую версию в Agent Cabinet. Console сама зафиксирует точный список затронутых агентов.',sharedLabHint:'Подготовленное изменение можно проверить в Evolution Lab.',
         sharedNoRules:'Общих правил пока нет',sharedNoKnowledge:'Общих знаний пока нет',sharedNoSelection:'Выберите общий элемент слева.',sharedKindRule:'Правило',sharedKindKnowledge:'Знание',technicalMap:'Техническая карта Shared Genes',
@@ -478,7 +516,7 @@
       en:{
         consoleSub:'Evolution Console',fleet:'Fleet',overview:'Overview',automationsNav:'Automations',advanced:'More',risks:'Risks',riskDetails:'Risk details',escalations:'Escalations',bulk:'Bulk operations',
         how:'How does it work?',demo:'DEMO: data and Evolution Receipts exist only in this page memory; the platform is neither read nor changed.',
-        consoleEyebrow:'Evolution Console · manage Extella automations',overviewTitle:'Evolution Console',overviewLead:'See installed automations, check how they are working, and review issues. The catalog contains automations you can install.',interfaceVersion:'Interface version',initUnavailable:'Evolution Console did not receive the Extella greeting within 15 seconds. Close and reopen the screen; update the app if the issue continues.',
+        consoleEyebrow:'Evolution Console · manage Extella automations',overviewTitle:'Evolution Console',overviewLead:'All company automations in one place.',interfaceVersion:'Interface version',initUnavailable:'Evolution Console did not receive the Extella greeting within 15 seconds. Close and reopen the screen; update the app if the issue continues.',
         myAutomations:'My automations',catalog:'Catalog',programs:'Programs',automationScope:'Installed automations, catalog, or programs',workingCount:'working',stoppedCount:'stopped',unknownCount:'status unknown',needsHelpCount:'need help',notRunningCount:'not running',attentionCount:'need attention',
         dataProtection:'Data protection',maskingActive:'Data protection verified on input and output',maskingOff:'Off',maskingPartial:'Partially verified',maskingUnknown:'Protection status unknown',maskingSettingsCabinet:'Settings are in Agent Cabinet.',maskingLocalSource:'Status comes from this device only.',
         agentControl:'Change management',agentControlTitle:'Agent change management',agentControlLead:'Evolution Console shows the canonical change path from Agent Passport. Until passports or the contract are available, actions are closed.',agentControlContract:'Canonical contract',agentControlSteps:'Change path',agentControlPublishGates:'Publication confirmations',agentControlGatePreWrite:'Before publication',agentControlGatePostWrite:'After write: Extella re-reads the result',agentControlLimits:'Limits',agentControlRequires:'Requires',agentControlLoading:'Checking Agent Passports and the canonical contract…',agentControlStandardsUnavailable:'The production Agent Passport bundle is not available yet.',agentControlNoPassports:'Agent Passports have not been filled in yet. The canonical change path will appear here once a verified passport exists.',agentControlContractUnavailable:'The canonical change-management contract is not available yet. Actions are closed.',agentControlContractMismatch:'Agent Passport contracts disagree. Actions are closed until the mismatch is resolved.',agentControlUnknown:'Change-management status is unknown. Actions are closed.',agentControlReadOnly:'Only canonical-contract reading is available now. Publication will appear only through a trusted action with the same gates.',agentControlBoundary:'This section only reads the canonical contract: it does not create agents, change Agent Cabinet settings or data protection, keep a separate ledger, or publish changes.',
@@ -525,7 +563,7 @@
         exactLiveAgent:'Exact live agentId',selectStableAgent:'Select an exact live agentId',sourcePassport:'Source Passport',sourcePath:'Source path',
         genesTitle:'Shared rules and knowledge',
         genesLead:'Configure once and use across the agents that need it. Before applying, Console shows the exact impact and sends the change to Evolution Lab for testing.',
-        sharedLibraryTitle:'What to configure',sharedLibraryLead:'Choose a shared Agent Genome element.',sharedKindsLabel:'Shared element types',sharedRules:'Shared rules',sharedKnowledge:'Shared knowledge',
+        sharedLibraryTitle:'What to configure',sharedLibraryLead:'Choose a shared Agent Genome element.',sharedKindsLabel:'Shared element types',sharedRules:'Shared rules',sharedKnowledge:'Shared knowledge',sharedOverviewTitle:'Shared across agents',sharedOverviewLead:'Configure once and apply to every relevant agent.',sharedAgentsUse:'agents use these',configure:'Configure',safeChangeTitle:'Test a change safely',safeChangeLead:'Evolution Lab compares behavior before and after without affecting working automations.',openEvolutionLab:'Open Evolution Lab',labWaitingForChange:'Available after a change has been prepared.',labChangeReady:'A prepared change is ready to test.',productSidebarLabel:'Shared settings and change testing',
         sharedCurrentVersion:'Current version',sharedAppliesTo:'Applied to agents',sharedImpactPrefix:'This change will affect',sharedAgentsWord:'agents',sharedPrepare:'Prepare change',sharedOpenLab:'Test in Evolution Lab',
         sharedPrepareStep:'Configure',sharedTestStep:'Test',sharedApplyStep:'Apply',sharedPrepareHint:'First set the new version in Agent Cabinet. Console will bind the exact affected agent list.',sharedLabHint:'The prepared change can now be tested in Evolution Lab.',
         sharedNoRules:'No shared rules yet',sharedNoKnowledge:'No shared knowledge yet',sharedNoSelection:'Choose a shared element on the left.',sharedKindRule:'Rule',sharedKindKnowledge:'Knowledge',technicalMap:'Technical Shared Genes map',
@@ -702,7 +740,7 @@
         ],counters:{total:3,catalog:3,installed:3,installed_stale:2,dead_reference:2,with_risks:3,orphans:0},source_errors:[]};
     }
     function demoDeviceInventory(){
-      return {schema:'extella.evolution.device_inventory.v1',available:true,classification_complete:false,counts:{discovered:16,business_automations:3,system_surfaces:4,unclassified:9},rows:[
+      return {schema:'extella.evolution.device_inventory.v2',available:true,classification_complete:false,counts:{discovered:16,business_automations:3,system_surfaces:4,installed_apps:0,probes:0,unclassified:9},rows:[
         {id:'extella_1c_agent',name:'Агент 1С',version:'0.5.0-dev',kind:'BUSINESS_AUTOMATION',evidence:'REVIEWED_MIGRATION'},
         {id:'extella_contract_agent',name:'Kazakh Lawyer',version:'0.1.0',kind:'BUSINESS_AUTOMATION',evidence:'REVIEWED_MIGRATION'},
         {id:'extella_travel_agency',name:'Агент турагентства',version:'0.1.0',kind:'BUSINESS_AUTOMATION',evidence:'REVIEWED_MIGRATION'},
@@ -1284,6 +1322,9 @@
     function automationCardLine(row){
       return automationDescription(row);
     }
+    function automationMonogram(row){
+      var name=automationName(row).trim();return (name.charAt(0)||'A').toUpperCase();
+    }
     function automationCardPresentation(row){
       var installed=automationFlags(row).installed;
       if(installed==='UNKNOWN')return {status:'UNKNOWN',kind:'warn',mark:'⚠',label:t('installationUnknown')};
@@ -1318,7 +1359,7 @@
       var id=String(row&&row.automation_id||''),flags=automationFlags(row),view=automationCardPresentation(row),primaryProblem=selectPrimaryAutomationProblem(automationProblemCandidates(row)),nextStep=automationNextStep(row,primaryProblem);
       var problemMarkup='<span class="'+(primaryProblem?'automation-card-problem':'sr-only')+'" data-primary-problem="'+esc(primaryProblem?primaryProblem.kind:'NONE')+'">'+(primaryProblem?'<span aria-hidden="true">⚠</span> '+esc(primaryProblem.label):esc(t('noMainProblem')))+'</span>';
       var stateContent=flags.installed===true?renderAutomationState(row):'<p>'+esc(t(flags.installed==='UNKNOWN'?'installationUnknown':'installedNo'))+'</p>';
-      return '<details class="automation-card" data-registry-row="'+esc(id)+'" role="listitem"><summary data-automation-card-summary="'+esc(id)+'"><span class="automation-card-title"><b>'+esc(automationName(row))+'</b><small>'+esc(automationCardLine(row))+'</small>'+problemMarkup+'</span><span class="state '+esc(view.kind)+'" data-automation-state-summary="'+esc(view.status)+'"><span aria-hidden="true">'+esc(view.mark)+'</span> '+esc(view.label)+'</span><span class="automation-card-next" data-next-step="'+esc(nextStep)+'">'+esc(nextStep)+' →</span></summary>'+
+      return '<details class="automation-card" data-registry-row="'+esc(id)+'" role="listitem"><summary data-automation-card-summary="'+esc(id)+'"><span class="automation-avatar" aria-hidden="true">'+esc(automationMonogram(row))+'</span><span class="automation-card-title"><span class="automation-card-heading"><b>'+esc(automationName(row))+'</b><span class="state '+esc(view.kind)+'" data-automation-state-summary="'+esc(view.status)+'"><span aria-hidden="true">'+esc(view.mark)+'</span> '+esc(view.label)+'</span></span><small>'+esc(automationCardLine(row))+'</small>'+problemMarkup+'</span><span class="automation-card-next" data-next-step="'+esc(nextStep)+'">'+esc(nextStep)+'</span></summary>'+
         '<div class="automation-card-body">'+
           '<section class="automation-card-section"><h3>'+esc(t('whatItDoes'))+'</h3><p>'+esc(automationDescription(row))+'</p></section>'+
           '<section class="automation-card-section"><h3>'+esc(t('stateAndRuns'))+'</h3>'+renderAutomationQuickState(row,primaryProblem)+'</section>'+
@@ -1416,6 +1457,16 @@
       return gene&&gene.version&&gene.version!=='MIXED'?gene.version:null;
     }
     function sharedGeneKind(gene){var kind=String(gene&&gene.kind||'').toLowerCase();if(kind==='rule'||kind==='policy')return'rules';if(kind==='concept'||kind==='knowledge')return'knowledge';return null;}
+    function sharedConsumerCount(kind){
+      var shared=state.shared,ids={};if(!shared||shared.complete!==true)return null;
+      (shared.genes||[]).filter(function(gene){return sharedGeneKind(gene)===kind;}).forEach(function(gene){(gene.consumerAgentIds||[]).forEach(function(id){if(id)ids[String(id)]=true;});});
+      return Object.keys(ids).length;
+    }
+    function renderProductOverview(){
+      var rules=sharedConsumerCount('rules'),knowledge=sharedConsumerCount('knowledge'),context=currentEvolutionLabContext(),labReady=evolutionLabContextUsable(context,currentRegistrySnapshotId()),button=el('overviewLabBtn');
+      el('productSharedRulesCount').textContent=rules===null?'—':rules;el('productSharedKnowledgeCount').textContent=knowledge===null?'—':knowledge;
+      button.disabled=!labReady;el('overviewLabNote').textContent=t(labReady?'labChangeReady':'labWaitingForChange');
+    }
     function sharedGeneEscalation(gene){if(!gene)return null;return state.escalations.find(function(item){var bundle=item.candidateBundle||item.candidate_bundle||{},shared=bundle.sharedGene||bundle.shared_gene||{};return String(shared.id||shared.geneId||shared.gene_id||'')===gene.geneId;})||null;}
     function evolutionLabContextFor(e){if(!e)return null;var targets=e.targetAutomationIds||e.target_automation_ids||e.affectedAutomationIds||e.affected_automation_ids||[];return {change_id:String(e.changeId||e.change_id||''),candidate_id:String(e.candidateId||e.candidate_id||''),target_automation_ids:Array.isArray(targets)?targets.slice():[],registry_snapshot_id:String(e.registrySnapshotId||e.registry_snapshot_id||'')};}
     function renderSharedWorkspace(){
@@ -1478,7 +1529,7 @@
       el('bulkActions').innerHTML=stateBlocked?'<span class="state-gate-explanation" data-bulk-state-gate="STATE_REQUIRED">'+esc(t('scheduleStateRequired'))+'</span>':actions.map(function(a){return '<span><button class="'+(a[0]==='bulk_rollback'?'danger':'primary')+'" data-bulk-action="'+a[0]+'" '+(a[2]?'':'disabled')+'>'+esc(a[1])+'</button><small class="mono">'+esc(a[3])+'='+(a[2]?'AVAILABLE':'PLATFORM_UNAVAILABLE')+'</small></span>';}).join('');el('bulkActions').querySelectorAll('[data-bulk-action]').forEach(function(b){b.onclick=function(){runBulkAction(b.dataset.bulkAction);};});
     }
     function renderReceipts(){el('receiptList').innerHTML=state.receipts.length?state.receipts.slice().reverse().map(function(r){return '<article class="receipt"><b>'+esc(r.type||'Evolution Receipt')+'</b><p>'+esc(fmtTime(r.at))+' · '+esc(r.status||'RECORDED')+'</p><code>'+esc(r.sha256||'—')+'</code></article>';}).join(''):'<div class="empty">'+esc(t('noData'))+'</div>';}
-    function renderAll(){renderFleet();renderRisks();renderStableIdRequired();renderGenes();renderEscalations();renderBulk();renderReceipts();renderAgentControl();renderBoundary();el('escalationEvidence').textContent=state.lastEscalationEvidence?JSON.stringify(state.lastEscalationEvidence,null,2):'—';}
+    function renderAll(){renderFleet();renderRisks();renderStableIdRequired();renderGenes();renderProductOverview();renderEscalations();renderBulk();renderReceipts();renderAgentControl();renderBoundary();el('escalationEvidence').textContent=state.lastEscalationEvidence?JSON.stringify(state.lastEscalationEvidence,null,2):'—';}
     async function loadMaskingPostures(){
       var projection=state.projection;
       if(!projection||!projection.snapshotId)return;
@@ -1601,6 +1652,8 @@
     document.querySelectorAll('[data-summary-view]').forEach(function(b){b.onclick=function(){setView(b.dataset.summaryView);};});
     document.querySelectorAll('[data-summary-attention]').forEach(function(b){b.onclick=function(){applyFleetFilter('attention',true);};});
     document.querySelectorAll('[data-fleet-filter]').forEach(function(b){b.onclick=function(){applyFleetFilter(b.dataset.fleetFilter,false);};});
+    document.querySelectorAll('[data-overview-shared]').forEach(function(button){button.onclick=function(){state.sharedKind=button.dataset.overviewShared;state.selectedSharedGeneId=null;renderGenes();setView('genes');};});
+    el('overviewLabBtn').onclick=function(){if(!el('overviewLabBtn').disabled)setView('lab');};
     // обработчик кнопки языка удалён вместе с кнопкой (см. выше)
     el('refreshBtn').onclick=loadFleet;
     el('agentControlRefreshBtn').onclick=function(){clearAgentControl();loadAgentControl();};
