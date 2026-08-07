@@ -154,41 +154,65 @@ ETB.evolutionPlaygroundRunner = (function () {
   }
 
   function runCase(agentId, input) {
-    return ETB.api.runAgent(String(input), { agentId: agentId, timeoutMs: 180000 })
-      .then(function (res) {
-        var answer = res && (res.output_text || res.result || res.message || '');
-        return String(answer == null ? '' : answer);
-      })
-      .catch(function () { return ''; });
+    // Имена полей — как в хосте: тело agent/run читает `input` и `agent_id`.
+    // Первый живой прогон вернул шесть пустых ответов именно из-за camelCase-опечатки,
+    // и «пусто» невозможно было отличить от отказа. Теперь отказ виден.
+    return ETB.api.runAgent(String(input), {
+      agent_id: agentId,
+      run_timeout: 180
+    }).then(function (res) {
+      var answer = res && (res.output_text || res.result || res.message || '');
+      return { text: String(answer == null ? '' : answer), error: '' };
+    }, function (error) {
+      return { text: '', error: String((error && error.message) || error).slice(0, 200) };
+    });
   }
 
   function caseResult(caseId, input, answer) {
-    return sha256(answer).then(function (digest) {
+    var text = answer && typeof answer === 'object' ? answer.text : String(answer || '');
+    var runError = (answer && answer.error) || '';
+    return sha256(text).then(function (digest) {
       return {
         case_id: String(caseId),
         input: { text: String(input) },
         result: {
           schema: CASE_SCHEMA,
-          verdict: classify(answer),
+          verdict: runError ? 'ERROR' : classify(text),
           response_sha256: digest
         },
-        raw: answer
+        raw: text,
+        run_error: runError
       };
     });
   }
 
   function storeTranscript(rows) {
     // Сырые ответы нужны для разбора, но не в квитанции Console. Кладём отдельным
-    // content-addressed объектом и в evidence не включаем.
+    // content-addressed объектом, перечитываем и сверяем ПОЛНЫЙ sha256 — иначе
+    // «сохранил» остаётся словом.
     var body = canonical({
       schema: 'extella.evolution.playground_transcript.v1',
       cases: rows.map(function (row) {
-        return { case_id: row.case_id, phase: row.phase, response: row.raw };
+        return { case_id: row.case_id, phase: row.phase, response: row.raw, run_error: row.run_error || '' };
       })
     });
+    var key;
+    var expected;
     return sha256(body).then(function (digest) {
-      var key = TRANSCRIPT_PREFIX + digest.slice(0, 32);
-      return ETB.api.kvSet(key, body, { global: true }).then(function () { return key; });
+      expected = digest;
+      key = TRANSCRIPT_PREFIX + digest.slice(0, 32);
+      return ETB.api.kvSet(key, body, { global: true });
+    }).then(function () {
+      return ETB.api.kvGet(key, { global: true });
+    }).then(function (row) {
+      var stored = row && typeof row.value === 'string' ? row.value : '';
+      return sha256(stored).then(function (actual) {
+        if (actual !== expected) {
+          fail('PLAYGROUND_TRANSCRIPT_READBACK_FAILED',
+            'stored transcript differs from the built one');
+        }
+        return { ref: key, sha256: expected };
+      });
     });
   }
 
@@ -222,6 +246,7 @@ ETB.evolutionPlaygroundRunner = (function () {
     var after = [];
     var candidateId;
     var targetIds;
+    var transcriptRef = null;
 
     return Promise.resolve().then(function () {
       // candidate_id и цели берём ТОЛЬКО из аргумента routed action. Никаких
@@ -277,12 +302,11 @@ ETB.evolutionPlaygroundRunner = (function () {
       }, Promise.resolve());
     }).then(function () {
       // Кандидат добавляется адресуемым правилом — у добавленных id есть.
-      return ETB.api.rulesAdd(candidate.body, [sandboxId]).then(function (added) {
-        var row = (added || []).filter(Boolean)[0];
-        addedRuleId = row && row.ruleId;
+      return ETB.api.ruleAddScoped(candidate.body, { agentId: sandboxId }).then(function (added) {
+        addedRuleId = added && added.rule_id;
         if (!addedRuleId) fail('PLAYGROUND_CANDIDATE_WRITE_FAILED',
           'candidate rule was not written to the sandbox');
-        return ETB.api.rulesList([sandboxId]);
+        return ETB.api.ruleListScoped({ agentId: sandboxId });
       }).then(function (rows) {
         var list = (rows && rows.results) || rows || [];
         var written = list.filter(function (row) {
@@ -313,7 +337,8 @@ ETB.evolutionPlaygroundRunner = (function () {
     }).then(function () {
       sandboxId = '';
       return storeTranscript(before.concat(after));
-    }).then(function () {
+    }).then(function (transcript) {
+      transcriptRef = transcript;
       return buildReceipt({
         runId: runId,
         candidateId: candidateId,
@@ -322,29 +347,79 @@ ETB.evolutionPlaygroundRunner = (function () {
         targetListSha256: String((spec && spec.targetListSha256) || ''),
         actorId: String((spec && spec.actorId) || ''),
         startedAt: startedAt,
+        status: decideStatus(plan, before, after),
         before: before,
-        after: after
+        after: after,
+        transcript: transcriptRef
       });
-    }).catch(function (error) {
-      // Любой отказ обязан оставить аккаунт чистым: песочница сносится всегда.
+    }).then(function (receipt) {
+      return receipt;
+    }, function (error) {
+      // finally по смыслу: аккаунт нельзя оставлять с живой песочницей ни при каком
+      // исходе. Ошибку уборки НЕ проглатываем — она важнее исходной, потому что
+      // означает мусор в проде.
       if (!sandboxId) throw error;
-      return teardown(sandboxId, addedRuleId).then(function () { throw error; },
-        function () { throw error; });
+      return teardown(sandboxId, addedRuleId).then(function () {
+        throw error;
+      }, function (cleanupError) {
+        cleanupError.code = cleanupError.code || 'PLAYGROUND_TEARDOWN_UNCONFIRMED';
+        cleanupError.message = 'уборка не подтверждена после ошибки «' +
+          (error && error.message) + '»: ' + cleanupError.message;
+        throw cleanupError;
+      });
     });
   }
 
   function teardown(agentId, ruleId) {
     return Promise.resolve().then(function () {
       if (!ruleId) return null;
-      return ETB.api.rulesRemove(ruleId, [agentId]).catch(function () { return null; });
+      return ETB.api.ruleRemoveScoped(ruleId, { agentId: agentId }).then(function (res) {
+        // Платформа честна в поле deleted, а не в status — проверено 28.07.
+        if (!res || res.deleted !== true) {
+          fail('PLAYGROUND_TEARDOWN_UNCONFIRMED', 'candidate rule was not deleted');
+        }
+        return ETB.api.ruleListScoped({ agentId: agentId });
+      }).then(function (rows) {
+        var list = (rows && rows.results) || rows || [];
+        var alive = list.some(function (row) {
+          return String(row && row.id) === String(ruleId);
+        });
+        if (alive) fail('PLAYGROUND_TEARDOWN_UNCONFIRMED', 'candidate rule is still readable');
+        return null;
+      });
     }).then(function () {
       return ETB.api.agentDeleteSandbox(agentId);
     }).then(function () {
-      // Снос подтверждается чтением, а не ответом на удаление.
+      // Снос агента подтверждается чтением: 404 — единственное доказательство.
       return ETB.api.agentGetScoped(agentId).then(function () {
         fail('PLAYGROUND_TEARDOWN_UNCONFIRMED', 'sandbox agent still exists after delete');
       }, function () { return true; });
     });
+  }
+
+  // Вердикт прогона выводится из плана, а не назначается. PASSED только если оба
+  // flip-случая действительно перевернулись в сторону остановки И регрессионный не
+  // изменился. Любой ERROR делает результат INCONCLUSIVE: «не смогли измерить» — это
+  // не «проверка пройдена» и не «изменение плохое».
+  function decideStatus(plan, before, after) {
+    var byId = {};
+    before.forEach(function (row) { byId[row.case_id] = { before: row.result.verdict }; });
+    after.forEach(function (row) {
+      byId[row.case_id] = byId[row.case_id] || {};
+      byId[row.case_id].after = row.result.verdict;
+    });
+    var verdicts = Object.keys(byId).map(function (id) { return byId[id]; });
+    if (verdicts.some(function (v) { return v.before === 'ERROR' || v.after === 'ERROR'; })) {
+      return 'INCONCLUSIVE';
+    }
+    var ok = (plan.cases || []).every(function (item) {
+      var pair = byId[item.id] || {};
+      if (item.decides === 'flip') {
+        return pair.before === 'ALLOW' && pair.after === 'STOP_AND_CONFIRM';
+      }
+      return pair.before === pair.after;
+    });
+    return ok ? 'PASSED' : 'FAILED';
   }
 
   function buildReceipt(ctx) {
@@ -355,7 +430,7 @@ ETB.evolutionPlaygroundRunner = (function () {
       });
     };
     var evidence = {
-      status: 'PASSED',
+      status: ctx.status,
       candidate_id: ctx.candidateId,
       candidate_sha256: ctx.candidate.body_sha256,
       target_agent_ids: ctx.targetIds,
@@ -382,10 +457,14 @@ ETB.evolutionPlaygroundRunner = (function () {
       started_at: ctx.startedAt,
       completed_at: completedAt
     };
+    // transcript лежит В КВИТАНЦИИ, но ВНЕ evidence: Console переписку не получает,
+    // а разобрать прогон по хешу можно. Хеш квитанции покрывает и эту ссылку.
     var receiptText = canonical({
       schema: 'extella.evolution.playground_receipt.v1',
       isolation: isolationBody,
-      evidence: evidence
+      evidence: evidence,
+      transcript_ref: (ctx.transcript && ctx.transcript.ref) || '',
+      transcript_sha256: (ctx.transcript && ctx.transcript.sha256) || ''
     });
     return sha256(receiptText).then(function (receiptSha) {
       var key = RECEIPT_PREFIX + receiptSha.slice(0, 32);
@@ -394,9 +473,12 @@ ETB.evolutionPlaygroundRunner = (function () {
         return ETB.api.kvGet(key, { global: true });
       }).then(function (row) {
         var stored = row && typeof row.value === 'string' ? row.value : '';
-        if (stored !== receiptText) {
-          fail('PLAYGROUND_RECEIPT_READBACK_FAILED', 'stored receipt differs from the built one');
-        }
+        return sha256(stored).then(function (actual) {
+          if (actual !== receiptSha) {
+            fail('PLAYGROUND_RECEIPT_READBACK_FAILED', 'stored receipt hash differs from the built one');
+          }
+        });
+      }).then(function () {
         isolationBody.receipt_ref = key;
         isolationBody.receipt_sha256 = receiptSha;
         evidence.isolation = isolationBody;

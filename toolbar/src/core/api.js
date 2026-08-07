@@ -584,6 +584,36 @@ ETB.api = (function () {
         rule_id: String(ruleId)
       }, opts.agentId ? { 'X-Agent-Id': opts.agentId } : null);
     },
+    // ── ОДНОРАЗОВАЯ ПЕСОЧНИЦА EVOLUTION LAB (host-only) ──────────────────
+    // Только для изолированного полигона: создать агента БЕЗ инструментов, прогнать
+    // проверку, снести. Маршрута из iframe у этих обёрток НЕТ и быть не должно —
+    // создание и удаление агентов из панели это универсальный рычаг, а здесь нужен
+    // один узкий сценарий. Роутер их не публикует; зовёт только host-runner.
+    agentCreateSandbox: function (spec) {
+      spec = spec || {};
+      // tools пустой ЯВНО: пустой список — это и есть гарантия изоляции, а не
+      // умолчание, на которое можно понадеяться.
+      return _post('/api/agent/create', {
+        agent_name: String(spec.name || ''),
+        description: String(spec.description || ''),
+        instructions: String(spec.instructions || ''),
+        provider: 'alibaba',
+        model: String(spec.model || ''),
+        tools: []
+      });
+    },
+    agentDeleteSandbox: function (agentId) {
+      return _post('/api/agent/delete', { agent_id: String(agentId || '') });
+    },
+    // Удаление правила в точном скоупе. Отдельно от rulesRemove: тот глотает ошибки
+    // (для чата это терпимо), а полигону нужен честный ответ — неподтверждённая
+    // уборка не имеет права стать PASSED.
+    ruleRemoveScoped: function (ruleId, opts) {
+      opts = opts || {};
+      return _post('/api/rules/remove', {
+        rule_id: ruleId
+      }, opts.agentId ? { 'X-Agent-Id': opts.agentId } : null);
+    },
     agentGetScoped: function (agentId) {
       return _post('/api/agent/get', {
         agent_id: String(agentId || '')
