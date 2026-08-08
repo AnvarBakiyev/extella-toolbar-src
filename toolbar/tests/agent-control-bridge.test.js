@@ -885,7 +885,7 @@ test('scoped API helpers keep credentials in the host and bind reads/writes to a
 test('Evolution Console manifest keeps the stable install identity and narrow trusted publish declaration', () => {
   assert.equal(manifest.id, 'profit-growth-scenario');
   assert.equal(manifest.name, 'Evolution Console');
-  assert.equal(manifest.version, '0.26.0');
+  assert.equal(manifest.version, '0.26.1');
   assert.equal(manifest.ui.htmlFile, 'evolution-console.html');
   assert.equal(manifest.ui.tokenless, true);
   assert.deepEqual(
@@ -918,11 +918,11 @@ test('Evolution Console manifest keeps the stable install identity and narrow tr
     ).version,
     'EVOLUTION_TRUSTED_PUBLISH_ACTION_V1',
   );
-  assert.deepEqual(manifest.experts, ['_etb_evolution_registry_scan_v1']);
+  assert.deepEqual(manifest.experts, ['_etb_evolution_registry_scan_v2']);
   assert.equal(manifest.expert_defs.length, 1);
   assert.equal(
     manifest.expert_defs[0].name,
-    '_etb_evolution_registry_scan_v1',
+    '_etb_evolution_registry_scan_v2',
   );
   assert.equal(manifest.owned_experts, true);
 });

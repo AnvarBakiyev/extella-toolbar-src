@@ -7,7 +7,7 @@
   "description": "Evolution Console разделяет работающие, остановленные, требующие помощи и непроверенные автоматизации. Каталог отделён от установленных, а детали для специалиста не мешают ежедневному управлению.",
   "category": "business",
   "type": "application",
-  "version": "0.26.0",
+  "version": "0.26.1",
   "eye": "Extella Evolution",
   "pills": [
     "Автоматизации",
@@ -19,7 +19,7 @@
   "source": "",
   "owned_experts": true,
   "experts": [
-    "_etb_evolution_registry_scan_v1"
+    "_etb_evolution_registry_scan_v2"
   ],
   "concepts": [],
   "requirements": [],
@@ -34,7 +34,7 @@
       "id": "automation_registry",
       "name": "Реестр автоматизаций",
       "description": "Read-only проекция каталога, установок, фактического состояния, версий, состава и вычисляемых рисков автоматизаций пользователя.",
-      "expert_name": "_etb_evolution_registry_scan_v1",
+      "expert_name": "_etb_evolution_registry_scan_v2",
       "version": "EVOLUTION_AUTOMATION_REGISTRY_V3",
       "external_writes": false
     },
@@ -94,7 +94,7 @@
   ],
   "expert_defs": [
     {
-      "name": "_etb_evolution_registry_scan_v1",
+      "name": "_etb_evolution_registry_scan_v2",
       "description": "Read-only strict scanner for top-level current-device automation cards, bounded localhost state contracts and pinned device references. It ignores backup-shaped files and never mutates the device registry or automation state.",
       "cspl": "fython",
       "global": true,
@@ -102,7 +102,7 @@
         "device_refs_json": "[]"
       },
       "codeFile": "evolution-registry-scanner.py",
-      "sourceSha256": "ee11371aacc426410149662459c3f2a642aac06f540b1e50c8b90e5acbbfdbd8"
+      "sourceSha256": "65b70e00755249ea642d5c8fdf8ed1bade0b500ef0da384732682a842edee1bd"
     }
   ],
   "conceptTexts": [],

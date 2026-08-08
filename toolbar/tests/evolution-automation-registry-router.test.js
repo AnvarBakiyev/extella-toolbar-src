@@ -304,7 +304,8 @@ test('current-device scanner performs no provisioning, deletion, or cache mutati
   const end = registry.indexOf('    syncFromDevice: function', start);
   assert.ok(start >= 0 && end > start);
   const source = registry.slice(start, end);
-  assert.match(source, /_etb_evolution_registry_scan_v1/);
+  assert.match(source, /_etb_evolution_registry_scan_v2/);
+  assert.doesNotMatch(source, /_etb_evolution_registry_scan_v1/);
   assert.match(
     source,
     /device_refs_json:\s*JSON\.stringify\(exactDeviceRefs\)/,
