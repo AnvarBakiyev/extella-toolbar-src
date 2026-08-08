@@ -95,6 +95,7 @@
     .maintenance-summary{margin-top:10px;border-top:1px solid var(--line);padding-top:10px}.maintenance-summary>summary{cursor:pointer;color:var(--petrol);font-weight:700}
     .maintenance-list{display:grid;gap:8px;margin-top:10px}.maintenance-item{display:grid;grid-template-columns:auto 1fr;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--panel2)}
     .maintenance-item b{display:block;color:var(--ink)}.maintenance-item small{display:block;margin-top:2px;color:var(--muted)}.problem-owner{display:inline-flex;align-items:center;margin-right:6px;color:var(--petrol);font-size:12px;font-weight:700}
+    .maintenance-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px}.maintenance-actions small{color:var(--muted)}
     .context-link{border:0;background:transparent;color:var(--petrol);padding:4px 0;font-weight:700;cursor:pointer}
     .inventory-tools{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:12px}
     .inventory-reconciliation{margin:0 0 12px;padding:8px 12px;border:1px solid var(--line);border-radius:12px;
@@ -283,7 +284,7 @@
         <section class="card attention-card" id="attentionSection" data-overview-region="attention">
           <div class="home-section-head"><div><h2 data-t="homeAttentionTitle"></h2><p data-t="homeAttentionLead"></p></div></div>
           <div class="attention-list" id="attentionList" data-attention-list aria-live="polite"></div>
-          <details class="maintenance-summary" id="maintenanceSummary"><summary id="maintenanceSummaryLabel"></summary><div class="maintenance-list" id="maintenanceList"></div></details>
+          <details class="maintenance-summary" id="maintenanceSummary"><summary id="maintenanceSummaryLabel"></summary><div class="maintenance-list" id="maintenanceList"></div><div class="maintenance-actions" id="maintenanceActions" hidden><button class="ghost" type="button" id="maintenanceCopyBtn" data-t="copyMaintenanceSnapshot"></button><small id="maintenanceCopyStatus" role="status" aria-live="polite"></small></div></details>
         </section>
 
         <div class="product-dashboard">
@@ -510,7 +511,7 @@
   (function(){
     'use strict';
     var PREVIEW = new URLSearchParams(location.search).get('preview') === '1';
-    var CONSOLE_VERSION = '0.25.0';
+    var CONSOLE_VERSION = '0.26.0';
     var I18N = {
       ru:{
         consoleSub:'Evolution Console',fleet:'Парк',overview:'Обзор',automationsNav:'Автоматизации',advanced:'Дополнительно',risks:'Риски',riskDetails:'Причины рисков',escalations:'Эскалации',bulk:'Массовые операции',
@@ -530,7 +531,7 @@
         declaredVersion:'Заявленная',installedVersion:'Установленная',versionBehind:'Версия отстала',deadReference:'Мёртвая ссылка',orphaned:'Сирота',catalogOnly:'Только в каталоге',installedOnly:'Только установлена',
         availableYes:'Доступна',availableNo:'Не в каталоге',catalogUnknown:'Каталог недоступен',catalogRecordInvalid:'запись отклонена',installedYes:'Установлена',installedNo:'Не установлена',installationUnknown:'Установка не подтверждена',stateUnknown:'Состояние автоматизации',sourceMismatch:'Расхождение источников',noSourceErrors:'Ошибок источников нет',
         platform_agents:'Внутренние агенты',experts:'Experts',services:'Службы',schedules:'Расписания',integrations:'Интеграции',knowledge:'Знания',rules:'Правила',optional:'необязательный',
-        attentionStale:'Есть отставшие версии',attentionStaleText:'Установленная версия ниже заявленной в манифесте источника.',attentionDeadAutomation:'Есть мёртвые ссылки',attentionDeadAutomationText:'Объявленный агент, Expert, служба или расписание не найдены.',attentionOrphan:'Есть записи-сироты',attentionOrphanText:'Источник сохранил запись, которую нельзя подтвердить другими источниками.',userActionRequired:'Нужно ваше решение',userActionRequiredText:'Extella не может продолжить без выбора, входа или подтверждения с вашей стороны.',nothingYouNeedToDo:'Сейчас от вас ничего не требуется',nothingYouNeedToDoText:'Extella продолжит проверять технические замечания отдельно.',maintenanceTitle:'Extella разбирается с техническими замечаниями',maintenanceCount:'технических замечаний',maintenanceOwner:'Extella разбирается',userOwner:'Нужно ваше решение',informationOwner:'Для информации',
+        attentionStale:'Есть отставшие версии',attentionStaleText:'Установленная версия ниже заявленной в манифесте источника.',attentionDeadAutomation:'Есть мёртвые ссылки',attentionDeadAutomationText:'Объявленный агент, Expert, служба или расписание не найдены.',attentionOrphan:'Есть записи-сироты',attentionOrphanText:'Источник сохранил запись, которую нельзя подтвердить другими источниками.',userActionRequired:'Нужно ваше решение',userActionRequiredText:'Extella не может продолжить без выбора, входа или подтверждения с вашей стороны.',nothingYouNeedToDo:'Сейчас от вас ничего не требуется',nothingYouNeedToDoText:'Extella продолжит проверять технические замечания отдельно.',maintenanceTitle:'Extella разбирается с техническими замечаниями',maintenanceCount:'технических замечаний',maintenanceOwner:'Extella разбирается',userOwner:'Нужно ваше решение',informationOwner:'Для информации',copyMaintenanceSnapshot:'Копировать снимок для специалиста',maintenanceSnapshotCopied:'Снимок скопирован. В нём нет токенов и данных устройств.',maintenanceSnapshotCopyFailed:'Не удалось скопировать снимок. Повтори после обновления данных.',
         noAutomationRisks:'Вычисляемых расхождений не найдено.',registryIncomplete:'Часть данных пока недоступна',registryIncompleteText:'Не всё удалось проверить. Неизвестные сведения не считаются исправными.',registryDeviceUnavailable:'Не удалось прочитать карточки этого компьютера.',registryCatalogUnavailable:'Каталог автоматизаций временно недоступен.',registryStateUnavailable:'Не удалось проверить состояние части автоматизаций.',registryScheduleUnavailable:'Не удалось проверить часть расписаний.',registryPlatformUnavailable:'Не удалось подтвердить часть агентов и компонентов.',registryInstalledUnavailable:'Не удалось подтвердить, что установлено на этом компьютере.',
         fleetTitle:'Весь парк — одним снимком',fleetLead:'Платформа показывает фактический парк, Agent Passport заявляет владельца и границы, единый журнал даёт активную версию. Неизвестное остаётся неизвестным.',
         allAgents:'всего агентов',passedChecks:'прошли проверку',attentionItems:'типов расхождений',needsAttention:'требуют внимания',pendingEscalations:'эскалации ожидают решения',
@@ -614,7 +615,7 @@
         declaredVersion:'Declared',installedVersion:'Installed',versionBehind:'Version behind',deadReference:'Dead reference',orphaned:'Orphan',catalogOnly:'Catalog only',installedOnly:'Installed only',
         availableYes:'Available',availableNo:'Not in catalog',catalogUnknown:'Catalog unavailable',catalogRecordInvalid:'record rejected',installedYes:'Installed',installedNo:'Not installed',installationUnknown:'Installation not confirmed',stateUnknown:'Automation state',sourceMismatch:'Source discrepancy',noSourceErrors:'No source errors',
         platform_agents:'Internal agents',experts:'Experts',services:'Services',schedules:'Schedules',integrations:'Integrations',knowledge:'Knowledge',rules:'Rules',optional:'optional',
-        attentionStale:'Versions are behind',attentionStaleText:'The installed version is lower than the version declared by the source manifest.',attentionDeadAutomation:'Dead references found',attentionDeadAutomationText:'A declared agent, Expert, service, or schedule was not found.',attentionOrphan:'Orphan records found',attentionOrphanText:'A source retained a record that no other source confirms.',userActionRequired:'Your decision is needed',userActionRequiredText:'Extella cannot continue without a choice, sign-in, or confirmation from you.',nothingYouNeedToDo:'Nothing is required from you now',nothingYouNeedToDoText:'Extella will continue checking technical findings separately.',maintenanceTitle:'Extella is handling technical findings',maintenanceCount:'technical findings',maintenanceOwner:'Extella is handling this',userOwner:'Your decision is needed',informationOwner:'For information',
+        attentionStale:'Versions are behind',attentionStaleText:'The installed version is lower than the version declared by the source manifest.',attentionDeadAutomation:'Dead references found',attentionDeadAutomationText:'A declared agent, Expert, service, or schedule was not found.',attentionOrphan:'Orphan records found',attentionOrphanText:'A source retained a record that no other source confirms.',userActionRequired:'Your decision is needed',userActionRequiredText:'Extella cannot continue without a choice, sign-in, or confirmation from you.',nothingYouNeedToDo:'Nothing is required from you now',nothingYouNeedToDoText:'Extella will continue checking technical findings separately.',maintenanceTitle:'Extella is handling technical findings',maintenanceCount:'technical findings',maintenanceOwner:'Extella is handling this',userOwner:'Your decision is needed',informationOwner:'For information',copyMaintenanceSnapshot:'Copy snapshot for support',maintenanceSnapshotCopied:'Snapshot copied. It contains no tokens or device data.',maintenanceSnapshotCopyFailed:'The snapshot could not be copied. Refresh the data and try again.',
         noAutomationRisks:'No computed discrepancies were found.',registryIncomplete:'Some data is unavailable',registryIncompleteText:'Some checks did not complete. Unknown facts are not treated as healthy.',registryDeviceUnavailable:'This computer’s cards could not be read.',registryCatalogUnavailable:'The automation catalog is temporarily unavailable.',registryStateUnavailable:'The status of some automations could not be checked.',registryScheduleUnavailable:'Some schedules could not be checked.',registryPlatformUnavailable:'Some agents and components could not be confirmed.',registryInstalledUnavailable:'What is installed on this computer could not be confirmed.',
         fleetTitle:'The whole fleet in one snapshot',fleetLead:'The platform shows the actual fleet, Agent Passport declares ownership and limits, and the single ledger provides the active version. Unknown stays unknown.',
         allAgents:'total agents',passedChecks:'passed checks',attentionItems:'discrepancy types',needsAttention:'need attention',pendingEscalations:'escalations need a decision',
@@ -1143,8 +1144,32 @@
         '<span class="attention-count">'+esc(count)+'</span><span class="attention-copy"><b>'+esc(title)+'</b><small>'+esc(text)+'</small></span><span class="attention-next">'+esc(actionLabel)+' →</span></button>';
     }
     function maintenanceItem(mark,title,text){return '<div class="maintenance-item"><span class="problem-owner"><span aria-hidden="true">'+esc(mark)+'</span></span><span><b>'+esc(title)+'</b><small>'+esc(text)+'</small></span></div>';}
+    function buildMaintenanceSnapshot(registry){
+      function safeCode(value){var normalized=String(value&&typeof value==='object'?value.code||'':value||'').toUpperCase();return /^[A-Z][A-Z0-9_]{0,63}$/.test(normalized)?normalized:'';}
+      function safeSource(value){var normalized=String(value||'').toLowerCase();return /^[a-z][a-z0-9._-]{0,63}$/.test(normalized)?normalized:'';}
+      function safeAutomationId(value){var normalized=String(value||'');return /^[a-z0-9][a-z0-9._-]{1,79}$/.test(normalized)?normalized:'';}
+      function exactFlag(value){return value===true||value===false?value:'UNKNOWN';}
+      function codes(values){var seen={};return (Array.isArray(values)?values:[]).map(safeCode).filter(function(code){if(!code||seen[code])return false;seen[code]=true;return true;}).sort();}
+      var sourceErrorSeen={},sourceErrors=(registry&&Array.isArray(registry.source_errors)?registry.source_errors:[]).map(function(error){return {source:safeSource(error&&error.source),code:safeCode(error&&error.code)};}).filter(function(error){var key=error.source+':'+error.code;if(!error.source||!error.code||sourceErrorSeen[key])return false;sourceErrorSeen[key]=true;return true;}).sort(function(left,right){return (left.source+':'+left.code).localeCompare(right.source+':'+right.code);});
+      var automations=(registry&&Array.isArray(registry.rows)?registry.rows:[]).filter(function(row){var flags=row&&row.flags&&typeof row.flags==='object'?row.flags:(row&&row.availability_flags&&typeof row.availability_flags==='object'?row.availability_flags:{});return flags.installed===true;}).map(function(row){
+        var flags=row&&row.flags&&typeof row.flags==='object'?row.flags:(row&&row.availability_flags&&typeof row.availability_flags==='object'?row.availability_flags:{}),automationId=safeAutomationId(row&&row.automation_id),stateObject=row&&row.state&&typeof row.state==='object'?row.state:{},status=String(stateObject.operational_status||stateObject.operationalStatus||'UNKNOWN').toUpperCase();
+        if(['WORKING','STATE_UNAVAILABLE','NOT_RUNNING'].indexOf(status)===-1)status='UNKNOWN';
+        return {automation_id:automationId,operational_status:status,installed_stale:exactFlag(flags.installed_stale),dead_reference:exactFlag(flags.dead_reference),risks:codes(row&&row.risks),discrepancies:codes(row&&row.discrepancies)};
+      }).filter(function(row){return !!row.automation_id;}).sort(function(left,right){return left.automation_id.localeCompare(right.automation_id);});
+      return {schema:'extella.evolution.support_snapshot.v1',source_errors:sourceErrors,automations:automations};
+    }
+    async function copyPlainText(value){
+      if(navigator.clipboard&&typeof navigator.clipboard.writeText==='function'){try{await navigator.clipboard.writeText(value);return;}catch(_){}}
+      var node=document.createElement('textarea'),copied=false;node.value=value;node.setAttribute('readonly','');node.style.position='fixed';node.style.opacity='0';document.body.appendChild(node);node.select();try{copied=document.execCommand('copy')===true;}finally{node.remove();}if(!copied)throw new Error('CLIPBOARD_UNAVAILABLE');
+    }
+    async function copyMaintenanceSnapshot(){
+      var button=el('maintenanceCopyBtn'),status=el('maintenanceCopyStatus'),snapshot=buildMaintenanceSnapshot(state.automationRegistry);button.disabled=true;status.textContent='';
+      try{await copyPlainText(JSON.stringify(snapshot,null,2));status.textContent=t('maintenanceSnapshotCopied');}
+      catch(_){status.textContent=t('maintenanceSnapshotCopyFailed');showError(t('maintenanceSnapshotCopyFailed'));}
+      finally{button.disabled=!state.automationRegistry;}
+    }
     function renderAttention(){
-      var p=state.automationRegistry,host=el('attentionList'),maintenance=el('maintenanceSummary'),maintenanceHost=el('maintenanceList'),facts=attentionFacts(),maintenanceRows=[];
+      var p=state.automationRegistry,host=el('attentionList'),maintenance=el('maintenanceSummary'),maintenanceHost=el('maintenanceList'),maintenanceActions=el('maintenanceActions'),copyButton=el('maintenanceCopyBtn'),facts=attentionFacts(),maintenanceRows=[];
       host.innerHTML=facts.user?attentionButton('user-action',facts.user,t('userActionRequired'),t('userActionRequiredText'),'filter:help',t('viewAgents')):'<div class="attention-ok"><b>✓ '+esc(t('nothingYouNeedToDo'))+'</b><div>'+esc(t('nothingYouNeedToDoText'))+'</div></div>';
       if(!p)maintenanceRows.push(maintenanceItem('…',t('registryIncomplete'),state.automationRegistryError||t('summaryUnavailable')));
       if(facts.stale)maintenanceRows.push(maintenanceItem('↻',t('attentionStale'),t('attentionStaleText')));
@@ -1152,7 +1177,7 @@
       if(facts.orphan)maintenanceRows.push(maintenanceItem('↻',t('attentionOrphan'),t('attentionOrphanText')));
       if(facts.discrepancy)maintenanceRows.push(maintenanceItem('↻',t('sourceMismatch'),t('registryIncompleteText')));
       if(facts.incomplete)maintenanceRows.push(maintenanceItem('↻',t('registryIncomplete'),registryUserMessage(p)||t('registryIncompleteText')));
-      maintenance.hidden=!maintenanceRows.length;el('maintenanceSummaryLabel').textContent=t('maintenanceTitle')+(maintenanceRows.length?' · '+maintenanceRows.length:'');maintenanceHost.innerHTML=maintenanceRows.join('');
+      var snapshotReady=!!p&&maintenanceRows.length>0;maintenance.hidden=!maintenanceRows.length;maintenanceActions.hidden=!snapshotReady;copyButton.disabled=!snapshotReady;el('maintenanceCopyStatus').textContent='';el('maintenanceSummaryLabel').textContent=t('maintenanceTitle')+(maintenanceRows.length?' · '+maintenanceRows.length:'');maintenanceHost.innerHTML=maintenanceRows.join('');
       host.querySelectorAll('[data-attention-filter]').forEach(function(button){button.onclick=function(){applyFleetFilter(button.dataset.attentionFilter,true);};});
       host.querySelectorAll('[data-attention-view]').forEach(function(button){button.onclick=function(){setView(button.dataset.attentionView);};});
     }
@@ -1956,6 +1981,7 @@
     el('labEnvironmentPrepareBtn').onclick=prepareLabEnvironment;
     // обработчик кнопки языка удалён вместе с кнопкой (см. выше)
     el('refreshBtn').onclick=loadFleet;
+    el('maintenanceCopyBtn').onclick=copyMaintenanceSnapshot;
     el('sharedRetryBtn').onclick=loadFleet;
     el('agentControlRefreshBtn').onclick=function(){clearAgentControl();loadAgentControl();};
     el('searchInput').oninput=function(){renderFleet();renderBulk();};el('filterSelect').onchange=function(){syncFilterControls();renderFleet();renderBulk();};el('jsonBtn').onclick=function(){exportRows('json');};el('csvBtn').onclick=function(){exportRows('csv');};
