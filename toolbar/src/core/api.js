@@ -461,21 +461,6 @@ ETB.api = (function () {
     ), null, clientTimeoutMs > 0 ? { timeoutMs: clientTimeoutMs } : undefined);
   }
 
-  function runExpertScoped(name, params, opts, agentId, requestOpts) {
-    opts = opts || {};
-    var bodyOptions = Object.assign({}, opts);
-    delete bodyOptions.clientTimeoutMs;
-    return _post(
-      '/api/expert/run',
-      Object.assign(
-        { expert_name: name, params: params || {} },
-        bodyOptions
-      ),
-      agentId ? { 'X-Agent-Id': String(agentId) } : null,
-      requestOpts || null
-    );
-  }
-
   function runExpertAsync(name, params, opts) {
     opts = opts || {};
     return runExpert(name, params, Object.assign({ wait: false }, opts)).then(function (res) {
@@ -488,31 +473,9 @@ ETB.api = (function () {
     });
   }
 
-  function runExpertAsyncScoped(name, params, opts, agentId) {
-    opts = opts || {};
-    return runExpertScoped(
-      name,
-      params,
-      Object.assign({ wait: false }, opts),
-      agentId
-    ).then(function (res) {
-      if (res.status === 'error') throw new Error(res.message || 'Expert run failed');
-      if (!res.task_id) {
-        if (res.result != null) return res;
-        throw new Error('No task_id in async expert response');
-      }
-      return pollTask(res.task_id, opts).catch(function (error) {
-        if (error && typeof error === 'object') error.taskId = res.task_id;
-        throw error;
-      });
-    });
-  }
-
   return {
     runExpert: runExpert,
     runExpertAsync: runExpertAsync,
-    runExpertScoped: runExpertScoped,
-    runExpertAsyncScoped: runExpertAsyncScoped,
     runAgent: runAgent,
     runAgentAsync: runAgentAsync,
     getInstallAgent: _getInstallAgent,

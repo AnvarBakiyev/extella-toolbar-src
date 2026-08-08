@@ -466,47 +466,7 @@ ETB.marketplace = (function () {
               reqId: _crid,
               ok: false,
               code: (error && error.code) || 'installer_failed',
-              error: (error && error.message) || 'Не удалось подключить Codex.',
-              stage: (error && error.installStage) || '',
-              taskId: (error && error.taskId) || ''
-            });
-          });
-          return;
-        }
-
-        if (e.data.type === 'etb_codex_status') {
-          var _csf = document.getElementById('_etbv2_mkt_frame');
-          var _csrid = String(e.data.reqId || '');
-          if (!_csf || e.source !== _csf.contentWindow || !_csrid) return;
-          var _csback = function (msg) {
-            if (_csf && _csf.contentWindow) {
-              try { _csf.contentWindow.postMessage(msg, '*'); } catch (_) {}
-            }
-          };
-          if (!ETB.codexInstaller ||
-              typeof ETB.codexInstaller.connectionStatus !== 'function') {
-            _csback({
-              type: 'etb_codex_status_result',
-              reqId: _csrid,
-              ok: false,
-              error: 'Статус подключения Codex недоступен.'
-            });
-            return;
-          }
-          ETB.codexInstaller.connectionStatus().then(function (status) {
-            _csback({
-              type: 'etb_codex_status_result',
-              reqId: _csrid,
-              ok: true,
-              status: status
-            });
-          }).catch(function (error) {
-            _csback({
-              type: 'etb_codex_status_result',
-              reqId: _csrid,
-              ok: false,
-              error: (error && error.message) ||
-                'Не удалось проверить статус подключения Codex.'
+              error: (error && error.message) || 'Не удалось подключить Codex.'
             });
           });
           return;
