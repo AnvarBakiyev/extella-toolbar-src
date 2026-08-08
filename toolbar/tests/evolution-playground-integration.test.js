@@ -196,6 +196,19 @@ test('маркер и метод подключаются только паро�
     'полуприсвоение запрещено: маркер без метода делает кнопку живой и нерабочей');
 });
 
+test('модуль полигона входит в список сборки артефакта', () => {
+  // Урок выпуска 08.08: код был слит, тесты зелёные, а в toolbar.js модуля не оказалось —
+  // список файлов сборки о нём не знал. Кнопка Evolution Lab была бы мертва у всех.
+  const build = fs.readFileSync(path.join(CORE, '..', '..', 'build.js'), 'utf8');
+  assert.match(build, /'evolution-playground-runner\.js'/,
+    'без записи в build.js модуль не попадёт в артефакт, и адаптер не присвоится');
+  const order = build.indexOf("'evolution-playground-runner.js'");
+  const api = build.indexOf("'api.js'");
+  const router = build.indexOf("'router.js'");
+  assert.ok(api > 0 && order > api, 'полигон должен идти после api.js');
+  assert.ok(router > order, 'и до router.js — роутер читает адаптер уже собранным');
+});
+
 test('форма candidateBundle в runner — та же, что проверяет evolution-console.js', () => {
   const consoleSrc = fs.readFileSync(path.join(CORE, 'evolution-console.js'), 'utf8');
   for (const marker of ['agent-configuration-bundle.v1',
