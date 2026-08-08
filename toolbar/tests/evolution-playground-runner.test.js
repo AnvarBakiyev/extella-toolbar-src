@@ -236,6 +236,40 @@ async function refuses(spec, overrides, code) {
   return w;
 }
 
+test('readiness подтверждает свежую изолированную среду без запуска и записей', async () => {
+  const w = world();
+  const result = await w.runner.loadPlaygroundReadiness({ affectedAgentIds: CONSUMERS });
+  assert.deepEqual(JSON.parse(JSON.stringify(result)), {
+    schema: 'extella.evolution.playground_readiness.v1',
+    status: 'READY', reason_code: null, checked_at: result.checked_at,
+    environment_class: 'DISPOSABLE_SANDBOX', target_resolution: 'RUNNER_ONLY',
+    owner_device_access: 'DENIED', single_use: true,
+  });
+  assert.ok(Number.isFinite(Date.parse(result.checked_at)), 'время проверки измеримо');
+  assert.equal(JSON.stringify(result).includes('agent_prepared_sandbox'), false,
+    'id одноразового агента не раскрывается в iframe');
+  assert.deepEqual(w.log.map((row) => row[0]), ['kvGet', 'agentGetScoped'],
+    'readiness только читает указатель и паспорт');
+});
+
+test('readiness различает отсутствие, использованную и неизолированную среду', async () => {
+  const cases = [
+    [{ noPointer: true }, 'NO_PREPARED_ENVIRONMENT'],
+    [{ consumed: true }, 'ENVIRONMENT_ALREADY_USED'],
+    [{ sandboxTools: ['run_expert'] }, 'ENVIRONMENT_NOT_ISOLATED'],
+    [{ toolsAbsent: true }, 'ENVIRONMENT_NOT_ISOLATED'],
+    [{ notVisible: true }, 'ENVIRONMENT_UNAVAILABLE'],
+  ];
+  for (const [overrides, reason] of cases) {
+    const w = world(overrides);
+    const result = await w.runner.loadPlaygroundReadiness({ affectedAgentIds: CONSUMERS });
+    assert.equal(result.status, 'NOT_READY');
+    assert.equal(result.reason_code, reason);
+    assert.equal(w.log.some((row) => ['kvSet', 'runAgent', 'agentInstructionsUpdateScoped']
+      .includes(row[0])), false, 'отказ readiness не пишет и не запускает модель');
+  }
+});
+
 test('candidate_id берётся только из spec и не подменяется draft_id', async () => {
   const w = await refuses({ ...SPEC, candidateId: '' }, {}, 'PLAYGROUND_SPEC_INVALID');
   // И наоборот: чужой candidateId не проходит — предмет теста обязан совпасть с

@@ -53,6 +53,7 @@ ETB.evolutionPlaygroundRunner = (function () {
   var ISOLATION_SCHEMA = 'extella.evolution.playground_isolation.v1.1';
   var CAPABILITY_CONTRACT = 'extella.evolution.playground_isolation.v1.1';
   var CASE_SCHEMA = 'extella.evolution.playground_case_result.v1';
+  var READINESS_SCHEMA = 'extella.evolution.playground_readiness.v1';
   var RECEIPT_PREFIX = 'xtl_evolution:playground_receipt:';
   var TRANSCRIPT_PREFIX = 'xtl_evolution:playground_transcript:';
   var SELECTION_KEY = 'xtl_evolution:trusted_publish_selection:v1';
@@ -331,6 +332,48 @@ ETB.evolutionPlaygroundRunner = (function () {
       }, function () {
         fail('PLAYGROUND_SANDBOX_NOT_VISIBLE', 'sandbox agent is not visible in this account');
       });
+    });
+  }
+
+  // Read-only preflight for the product surface. It proves only that a fresh
+  // single-use sandbox is present, visible and tool-free right now. It does
+  // not update instructions, run the model, consume the pointer or disclose
+  // the sandbox agent id to the iframe.
+  function loadPlaygroundReadiness(spec) {
+    var targetIds = exactList(spec && spec.affectedAgentIds,
+      'PLAYGROUND_READINESS_SPEC_INVALID', 'spec.affectedAgentIds');
+    return resolveSandbox(targetIds).then(function () {
+      return {
+        schema: READINESS_SCHEMA,
+        status: 'READY',
+        reason_code: null,
+        checked_at: nowIso(),
+        environment_class: 'DISPOSABLE_SANDBOX',
+        target_resolution: 'RUNNER_ONLY',
+        owner_device_access: 'DENIED',
+        single_use: true
+      };
+    }).catch(function (error) {
+      var code = String(error && error.code || '');
+      var reasons = {
+        PLAYGROUND_SANDBOX_NOT_PREPARED: 'NO_PREPARED_ENVIRONMENT',
+        PLAYGROUND_SANDBOX_ALREADY_USED: 'ENVIRONMENT_ALREADY_USED',
+        PLAYGROUND_SANDBOX_POINTER_INVALID: 'ENVIRONMENT_CONFIGURATION_INVALID',
+        PLAYGROUND_SANDBOX_IS_PRODUCTION_TARGET: 'ENVIRONMENT_TARGET_CONFLICT',
+        PLAYGROUND_SANDBOX_NOT_VISIBLE: 'ENVIRONMENT_UNAVAILABLE',
+        PLAYGROUND_SANDBOX_NOT_ISOLATED: 'ENVIRONMENT_NOT_ISOLATED'
+      };
+      if (!reasons[code]) throw error;
+      return {
+        schema: READINESS_SCHEMA,
+        status: 'NOT_READY',
+        reason_code: reasons[code],
+        checked_at: nowIso(),
+        environment_class: 'DISPOSABLE_SANDBOX',
+        target_resolution: 'RUNNER_ONLY',
+        owner_device_access: 'DENIED',
+        single_use: true
+      };
     });
   }
 
@@ -915,6 +958,7 @@ ETB.evolutionPlaygroundRunner = (function () {
 
   return {
     runClassTest: runClassTest,
+    loadPlaygroundReadiness: loadPlaygroundReadiness,
     playgroundIsolationContract: CAPABILITY_CONTRACT,
     _teardown: teardown,
     _classify: classify,
@@ -927,10 +971,9 @@ ETB.evolutionPlaygroundRunner = (function () {
 }());
 
 // ── ПОДКЛЮЧЕНИЕ АДАПТЕРА ────────────────────────────────────────────────────
-// Маркер и метод присваиваются ТОЛЬКО ПАРОЙ. Порознь они опасны в обе стороны:
-// маркер без метода — Console считает Lab доступной и падает на вызове; метод без
-// маркера — гейт роутера отбивает вызов, кнопка выглядит живой и не работает.
-// Поэтому при любом сбое присвоения откатываем оба.
+// Маркер и оба метода присваиваются ТОЛЬКО ОДНИМ НАБОРОМ. Частичный набор опасен:
+// Console либо покажет готовность без запуска, либо запуск без честного preflight.
+// Поэтому при любом сбое присвоения откатываем весь набор.
 //
 // Основание для включения: живой PASSED 08.08.2026 на объединённом HEAD — таблица
 // совпала с планом v3 точно, квитанция a635dd9c… и transcript 729bf7a3… перечитаны,
@@ -944,23 +987,28 @@ ETB.evolutionPlaygroundRunner = (function () {
   var adapter = ETB.evolutionAdapter = ETB.evolutionAdapter || {};
   var runner = ETB.evolutionPlaygroundRunner;
   if (adapter.runClassTest === runner.runClassTest &&
+      adapter.loadPlaygroundReadiness === runner.loadPlaygroundReadiness &&
       adapter.playgroundIsolationContract === runner.playgroundIsolationContract) {
-    return;   // уже подключена именно текущая полная пара
+    return;   // уже подключён именно текущий полный набор
   }
   try {
     // Повторная инъекция toolbar не должна сохранять старый или частичный адаптер.
-    // Сначала очищаем оба свойства, затем ставим точную пару текущего runner.
+    // Сначала очищаем все свойства, затем ставим точный набор текущего runner.
     try { delete adapter.runClassTest; } catch (_) {}
+    try { delete adapter.loadPlaygroundReadiness; } catch (_) {}
     try { delete adapter.playgroundIsolationContract; } catch (_) {}
     adapter.playgroundIsolationContract = runner.playgroundIsolationContract;
     adapter.runClassTest = runner.runClassTest;
+    adapter.loadPlaygroundReadiness = runner.loadPlaygroundReadiness;
     if (adapter.runClassTest !== runner.runClassTest ||
+        adapter.loadPlaygroundReadiness !== runner.loadPlaygroundReadiness ||
         adapter.playgroundIsolationContract !== runner.playgroundIsolationContract) {
-      throw new Error('adapter pair was not accepted');
+      throw new Error('adapter capability set was not accepted');
     }
   } catch (error) {
-    // Ни одного полуприсвоения: убираем оба и оставляем Lab закрытой честно.
+    // Ни одного полуприсвоения: убираем весь набор и оставляем Lab закрытой честно.
     try { delete adapter.runClassTest; } catch (_) {}
+    try { delete adapter.loadPlaygroundReadiness; } catch (_) {}
     try { delete adapter.playgroundIsolationContract; } catch (_) {}
   }
 }());

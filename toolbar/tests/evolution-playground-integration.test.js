@@ -147,10 +147,9 @@ test('рукопожатие с router.js совпадает, а формат д
     'наружу отдаётся именно рукопожатие, а не формат');
 });
 
-test('маркер и метод подключаются только парой', () => {
-  // Порознь они опасны в обе стороны: маркер без метода — Console считает Lab
-  // доступной и падает на вызове; метод без маркера — гейт роутера отбивает вызов, а
-  // кнопка выглядит живой. Проверяем оба исхода на живом модуле.
+test('маркер и оба метода подключаются только полным набором', () => {
+  // Частичный набор либо показывает готовность без запуска, либо запуск без честного
+  // preflight. Проверяем атомарность на живом модуле.
   const load = (adapterSeed) => {
     const ctx = {
       ETB: { api: {}, agentControl: { sha256: () => Promise.resolve('0'.repeat(64)) },
@@ -169,12 +168,15 @@ test('маркер и метод подключаются только паро�
   assert.equal(typeof fresh.runClassTest, 'function', 'метод присвоен');
   assert.equal(fresh.runClassTest, freshLoad.runner.runClassTest,
     'присвоен точный метод текущего runner');
+  assert.equal(fresh.loadPlaygroundReadiness, freshLoad.runner.loadPlaygroundReadiness,
+    'присвоен точный read-only preflight текущего runner');
   assert.equal(fresh.playgroundIsolationContract,
     'extella.evolution.playground_isolation.v1.1', 'маркер присвоен');
 
   const staleMethod = function staleRunClassTest() {};
   const staleLoad = load({
     runClassTest: staleMethod,
+    loadPlaygroundReadiness: function staleReadiness() {},
     playgroundIsolationContract: 'extella.evolution.playground_isolation.v1',
   });
   assert.equal(staleLoad.adapter.runClassTest, staleLoad.runner.runClassTest,
@@ -182,6 +184,9 @@ test('маркер и метод подключаются только паро�
   assert.equal(staleLoad.adapter.playgroundIsolationContract,
     'extella.evolution.playground_isolation.v1.1',
     'повторная инъекция заменяет старый маркер синхронно с методом');
+  assert.equal(staleLoad.adapter.loadPlaygroundReadiness,
+    staleLoad.runner.loadPlaygroundReadiness,
+    'повторная инъекция заменяет старый preflight текущим');
 
   // Присвоение метода невозможно (объект запрещает запись) — маркер обязан не остаться.
   const hostile = Object.defineProperty({}, 'runClassTest', {
@@ -192,6 +197,8 @@ test('маркер и метод подключаются только паро�
   const after = load(hostile).adapter;
   assert.notEqual(typeof after.runClassTest, 'function',
     'метод не присвоился — значит и маркера остаться не должно');
+  assert.notEqual(typeof after.loadPlaygroundReadiness, 'function',
+    'частичный набор не должен оставлять readiness');
   assert.equal(after.playgroundIsolationContract, undefined,
     'полуприсвоение запрещено: маркер без метода делает кнопку живой и нерабочей');
 });

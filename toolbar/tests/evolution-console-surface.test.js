@@ -54,9 +54,9 @@ test('Evolution Console manifest keeps exact product naming and one narrow host-
     evolutionManifest.description,
     'Evolution Console разделяет работающие, остановленные, требующие помощи и непроверенные автоматизации. Каталог отделён от установленных, а детали для специалиста не мешают ежедневному управлению.',
   );
-  assert.equal(evolutionManifest.version, '0.21.0');
+  assert.equal(evolutionManifest.version, '0.22.0');
   assert.match(evolutionHtml, /id="consoleVersion"/);
-  assert.match(evolutionHtml, /var CONSOLE_VERSION = '0\.21\.0'/);
+  assert.match(evolutionHtml, /var CONSOLE_VERSION = '0\.22\.0'/);
   assert.match(evolutionHtml, /scannerContractStaleTitle:'Нужно обновить компонент проверки'/);
   assert.match(evolutionHtml, /scannerContractStaleTitle:'The checking component needs an update'/);
   assert.match(evolutionHtml, /error\.code==='DEVICE_SCANNER_CONTRACT_STALE'/);
@@ -792,8 +792,8 @@ test('Evolution Console uses exact API fields and canonical checker facts', () =
   assert.match(evolutionHtml, /dead_reference · /);
   assert.match(evolutionHtml, /e\.candidateBundleSha256\|\|e\.candidate_sha256/);
   assert.doesNotMatch(evolutionHtml, /draftSha256|draft_sha256/);
-  assert.match(evolutionHtml, /r\.type\|\|'Evolution Receipt'/);
-  assert.match(evolutionHtml, /r\.sha256\|\|'—'/);
+  assert.match(evolutionHtml, /receiptProductTitle\(type\)/);
+  assert.match(evolutionHtml, /short\(r&&r\.sha256\|\|''\)/);
   assert.doesNotMatch(evolutionHtml, /receiptSha256|\br\.kind\|\||\br\.action\|\|/);
 
   assert.match(evolutionHtml, /i\.severity\|\|'unknown'/);
@@ -1039,12 +1039,14 @@ test('Evolution UI never synthesizes native or Evolution Lab success and refresh
   assert.match(evolutionHtml, /multiDeviceCompareAndSwap/);
   assert.match(
     router,
-    /typeof evolutionAdapter\.runClassTest === 'function' &&\s*evolutionAdapter\.playgroundIsolationContract ===\s*'extella\.evolution\.playground_isolation\.v1\.1'/,
+    /typeof evolutionAdapter\.runClassTest === 'function' &&\s*typeof evolutionAdapter\.loadPlaygroundReadiness === 'function' &&\s*evolutionAdapter\.playgroundIsolationContract ===\s*'extella\.evolution\.playground_isolation\.v1\.1'/,
   );
   assert.match(
     router,
-    /method === 'runClassTest' &&\s*adapter\.playgroundIsolationContract !==\s*'extella\.evolution\.playground_isolation\.v1\.1'/,
+    /\(method === 'runClassTest' \|\| method === 'loadPlaygroundReadiness'\) &&\s*adapter\.playgroundIsolationContract !==\s*'extella\.evolution\.playground_isolation\.v1\.1'/,
   );
+  assert.match(evolutionHtml, /evolution_lab_readiness_load/);
+  assert.match(evolutionHtml, /evolutionLabEnvironmentReady\(e\)/);
   assert.match(evolutionHtml, /Проверить в симуляции/);
   assert.match(evolutionHtml, /Применение правила механизмом Extella не проверено/);
   assert.match(evolutionHtml, /RULE_AS_INSTRUCTIONS_SIMULATION/);
