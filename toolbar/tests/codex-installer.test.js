@@ -270,8 +270,8 @@ test('host bridge pins the installer and account scope instead of accepting comm
   assert.match(apiSource, /agentToolsUpdateScoped/);
 });
 
-test('installer uses Extella default target and stores setup in the Qwen scope', async () => {
-  const currentDeviceScope = 'agent_extella_alibaba_default';
+test('installer stores setup in the concrete scope resolved for the current account', async () => {
+  const currentAccountScope = 'agent_customer_current_12345678';
   let installerCode = '';
   let healthCode = '';
   let pluginInstallCode = '';
@@ -325,6 +325,7 @@ test('installer uses Extella default target and stores setup in the Qwen scope',
     };
   };
   const api = {
+    resolveAccountScope: async () => currentAccountScope,
     runExpertScoped: async (name, params, opts, agentId) => recordRun(name, params, opts, agentId),
     runExpertAsyncScoped: async (name, params, opts, agentId) => recordRun(name, params, opts, agentId),
     agentsList: async () => ({ agents: [{ id: 'agent_async_device_12345678' }] }),
@@ -417,10 +418,10 @@ test('installer uses Extella default target and stores setup in the Qwen scope',
   const result = await installer.install();
 
   assert.equal(result.status, 'success');
-  // The default Mac is resolved by Extella itself. The client only pins the
-  // private setup Expert to the stock Qwen scope.
-  assert.deepEqual(targetScopes, Array(5).fill(currentDeviceScope));
-  assert.deepEqual(installerScopes, Array(6).fill(currentDeviceScope));
+  // The default Mac is resolved by Extella itself. Private setup Experts stay
+  // inside a concrete scope returned from the current account's agent list.
+  assert.deepEqual(targetScopes, Array(5).fill(currentAccountScope));
+  assert.deepEqual(installerScopes, Array(6).fill(currentAccountScope));
 });
 
 test('fleet reconciliation preserves tools and installs Codex for every agent', async () => {

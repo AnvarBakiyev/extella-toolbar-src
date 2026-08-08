@@ -38,9 +38,6 @@ ETB.codexInstaller = (function () {
     'run_agent, never start another Extella agent, and do not call get_expert or ' +
     'search_experts first. Do not call Codex unless the user explicitly asks or Codex mode ' +
     'is already active in this chat.';
-  // Setup is stored in the stock Qwen scope. Device choice belongs to Extella's
-  // default-target resolver at run time, not to expert storage.
-  var QWEN_SETUP_SCOPE = 'agent_extella_alibaba_default';
   var _running = false;
   var _fleetRunning = false;
 
@@ -557,10 +554,10 @@ ETB.codexInstaller = (function () {
   }
 
   function _resolveTargetScope() {
-    // `save` scopes the Expert to an agent only. The normal `run` contract
-    // resolves the account's default Extella Desktop target itself, so the
-    // optional targets registry must not become a setup prerequisite.
-    return Promise.resolve(QWEN_SETUP_SCOPE);
+    // `save` scopes private setup Experts to a concrete agent. Resolve that
+    // agent from the current account and never substitute a platform id that
+    // is not present in the account's own /api/agent/list response.
+    return ETB.api.resolveAccountScope();
   }
 
   function _agentDetail(response) {
