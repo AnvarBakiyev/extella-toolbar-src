@@ -109,6 +109,21 @@ test('spec из router.js совпадает с тем, что читает runn
   }
 });
 
+test('рукопожатие с router.js совпадает, а формат доказательства — v1.1', () => {
+  // Формат доказательства и рукопожатие с роутером — разные строки. Если сравнивать
+  // роутерный гейт с форматом, присвоение маркера однажды оставит Lab закрытой при
+  // зелёных тестах: именно это тест и обязан ловить.
+  const evidenceSchema = /ISOLATION_SCHEMA\s*=\s*'([^']+)'/.exec(RUNNER_SRC)[1];
+  const handshake = /CAPABILITY_CONTRACT\s*=\s*'([^']+)'/.exec(RUNNER_SRC)[1];
+  const gate = /playgroundIsolationContract\s*!==\s*\n?\s*'([^']+)'/.exec(ROUTER_SRC);
+  assert.ok(gate, 'в router.js не найден гейт playgroundIsolationContract');
+  assert.equal(handshake, gate[1],
+    'маркер адаптера обязан совпадать с гейтом router.js, иначе Lab останется закрытой');
+  assert.equal(evidenceSchema, 'extella.evolution.playground_isolation.v1.1');
+  assert.match(RUNNER_SRC, /playgroundIsolationContract:\s*CAPABILITY_CONTRACT/,
+    'наружу отдаётся именно рукопожатие, а не формат');
+});
+
 test('форма candidateBundle в runner — та же, что проверяет evolution-console.js', () => {
   const consoleSrc = fs.readFileSync(path.join(CORE, 'evolution-console.js'), 'utf8');
   for (const marker of ['agent-configuration-bundle.v1',

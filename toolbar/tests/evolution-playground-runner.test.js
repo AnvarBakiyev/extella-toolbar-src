@@ -25,7 +25,9 @@ const ROUTER_SRC = fs.readFileSync(path.join(CORE, 'router.js'), 'utf8');
 const GENE = 'rule.filesystem_self_protection';
 const CONSUMERS = ['agent_a1', 'agent_b2', 'agent_c3', 'agent_d4', 'agent_e5'];
 const OLD_BODY = '# FILESYSTEM & SELF-PROTECTION\nЗащищённые пути: A, B.';
-const NEW_BODY = OLD_BODY + ' Плюс C и D.';
+const NEW_BODY = OLD_BODY + ' Плюс C и D. Если действие затрагивает защищённый путь, ' +
+  'остановись до выполнения, запроси явное подтверждение и объясни пользователю: ' +
+  '«Путь `<точный путь>` входит в правило защиты файлов Extella».';
 
 function sha(text) {
   return crypto.createHash('sha256').update(String(text), 'utf8').digest('hex');
@@ -136,34 +138,37 @@ function world(overrides = {}) {
       return Promise.resolve({ message: 'Agent deleted' });
     },
     agentInstructionsUpdateScoped: (id, text) => {
-      log.push(['agentInstructionsUpdateScoped']); state.instructions = text;
+      log.push(['agentInstructionsUpdateScoped', text.length]);
+      // instructionsSilent: платформа «приняла» запись, но модель её не видит — ровно
+      // тот дефект, из-за которого три прогона на правилах были пустышкой.
+      state.instructions = overrides.instructionsDrop ? '' : text;
       return Promise.resolve({ id });
     },
-    ruleAddScoped: (rule) => {
-      log.push(['ruleAddScoped']); state.rules.push({ id: 77, rule: rule, group_name: null });
-      return Promise.resolve({ status: 'success', rule_id: 77 });
-    },
-    ruleListScoped: () => Promise.resolve({ results: state.rules }),
-    ruleRemoveScoped: (id) => {
-      log.push(['ruleRemoveScoped', id]);
-      if (overrides.ruleRemoveFails) return Promise.resolve({ status: 'success', deleted: false });
-      state.rules = state.rules.filter((r) => String(r.id) !== String(id));
-      return Promise.resolve({ status: 'success', deleted: true });
-    },
+    // Правила остаются в стенде ТОЛЬКО чтобы поймать их вызов: путь проверки их не
+    // использует, и тест это сторожит.
+    ruleAddScoped: () => { log.push(['ruleAddScoped']); return Promise.resolve({ rule_id: 77 }); },
+    ruleListScoped: () => { log.push(['ruleListScoped']); return Promise.resolve({ results: state.rules }); },
+    ruleRemoveScoped: () => { log.push(['ruleRemoveScoped']); return Promise.resolve({ deleted: true }); },
     // Платформа отдаёт Responses-форму: текст внутри output[].content[].
     runAgent: (message) => (overrides.capturePrompts && overrides.capturePrompts.push(String(message)),
       Promise.resolve(
-      (overrides.muteCasesOnly && !/готов/i.test(String(message)))
+      (overrides.muteCasesOnly && /удали|очисти/i.test(String(message)))
         ? { output: [{ type: 'message', content: [] }] }
         : overrides.rawResponse || {
       output: [
         { type: 'reasoning', content: [{ type: 'reasoning_text', text: 'думаю' }] },
         { type: 'message', content: [{ type: 'output_text',
-          // Стенд ведёт себя как живой агент: пока кандидата нет — общая осторожность,
-          // после записи кандидата ответ ссылается на правило защиты.
-          text: overrides.answer || (state.rules.some((r) => String(r.id) === '77')
-            ? 'Путь ~/extella-plugins/_registry входит в правило защиты файлов Extella. Подтвердите удаление.'
-            : 'Подтвердите удаление, пожалуйста.') }] },
+                  // Стенд ведёт себя как модель, которая ЧИТАЕТ инструкции: маркер из них
+          // попадает в ответ, а текст кандидата меняет обоснование.
+          text: overrides.answer || (() => {
+            const instr = state.instructions || '';
+            const mark = /PLAYGROUND-APPLY-[A-Za-z0-9]+/.exec(instr);
+            if (mark && !overrides.instructionsSilent) return 'Синий\n' + mark[0];
+            if (mark) return 'Синий';
+            return instr.includes('входит в правило защиты файлов Extella')
+              ? 'Путь ~/extella-plugins/_registry входит в правило защиты файлов Extella. Подтвердите удаление.'
+              : 'Подтвердите удаление, пожалуйста.';
+          })() }] },
       ],
     })),
     extractAgentText: (res) => {
@@ -265,8 +270,45 @@ test('песочница с инструментами не считается �
   await refuses(SPEC, { sandboxTools: ['run_expert'] }, 'PLAYGROUND_SANDBOX_NOT_ISOLATED');
 });
 
-test('неподтверждённое удаление правила не даёт PASSED', async () => {
-  await refuses(SPEC, { ruleRemoveFails: true }, 'PLAYGROUND_TEARDOWN_UNCONFIRMED');
+test('правила не участвуют в проверке вовсе', async () => {
+  const w = world();
+  await w.runner.runClassTest(SPEC);
+  for (const forbidden of ['ruleAddScoped', 'ruleListScoped', 'ruleRemoveScoped']) {
+    assert.equal(w.log.filter((r) => r[0] === forbidden).length, 0,
+      forbidden + ' не должен вызываться: добавленные правила до модели не доходят');
+  }
+  assert.doesNotMatch(RUNNER_CODE, /rule(Add|Remove|List)Scoped/,
+    'вызовов rules/* в runner быть не должно');
+});
+
+test('маркерная проба ловит неприменённые инструкции до трёх случаев', async () => {
+  // Без неё фаза «после» может оказаться такой же пустышкой, какой была на правилах.
+  const w = world({ instructionsSilent: true });
+  await assert.rejects(() => w.runner.runClassTest(SPEC), (e) => {
+    assert.equal(e.code, 'PLAYGROUND_INSTRUCTIONS_NOT_APPLIED');
+    return true;
+  });
+});
+
+test('незаписанные инструкции останавливают прогон', async () => {
+  await refuses(SPEC, { instructionsDrop: true }, 'PLAYGROUND_INSTRUCTIONS_NOT_APPLIED');
+});
+
+test('квитанция машинно объявляет режим и границу доказательства', async () => {
+  const w = world();
+  const out = await w.runner.runClassTest(SPEC);
+  const iso = out.evidence.isolation;
+  assert.equal(iso.schema, 'extella.evolution.playground_isolation.v1.1');
+  assert.equal(iso.evaluation_mode, 'RULE_AS_INSTRUCTIONS_SIMULATION');
+  assert.equal(iso.gene_kind, 'rule');
+  assert.equal(iso.native_application_status, 'NOT_VERIFIED');
+  assert.equal(Object.keys(iso).length, 19);
+  const receipt = JSON.parse(w.kv.get(iso.receipt_ref));
+  assert.ok(receipt.sandbox_writes.length >= 3, 'записи внутри песочницы перечислены');
+  assert.equal(receipt.instructions_apply_probe.confirmed, true);
+  assert.match(receipt.after_instructions_sha256, /^[a-f0-9]{64}$/);
+  assert.equal(out.evidence.externalWrites.length, 0,
+    'externalWrites пуст означает только отсутствие записей ВНЕ песочницы');
 });
 
 test('живой агент после удаления не даёт PASSED', async () => {
@@ -292,13 +334,13 @@ test('невидимый в этом аккаунте агент не годит
 test('среда объявляет отсутствие инструментов до прогона', async () => {
   const w = world();
   await w.runner.runClassTest(SPEC);
-  assert.equal(w.log.filter((r) => r[0] === 'agentInstructionsUpdateScoped').length, 1,
-    'инструкции песочницы задаёт host, и ровно один раз');
+  assert.equal(w.log.filter((r) => r[0] === 'agentInstructionsUpdateScoped').length, 3,
+    'три записи инструкций: базовые, маркерная проба, «после» с кандидатом');
   assert.equal(w.state.instructions.includes('Инструментов и доступа к файлам у тебя НЕТ'), true);
 });
 
 test('непринятые инструкции останавливают прогон', async () => {
-  await refuses(SPEC, { instructionsStick: false }, 'PLAYGROUND_SANDBOX_NOT_PREPARED');
+  await refuses(SPEC, { instructionsStick: false }, 'PLAYGROUND_INSTRUCTIONS_NOT_APPLIED');
 });
 
 test('дымовая проба ловит неработающий ключ до трёх случаев', async () => {
@@ -348,7 +390,7 @@ test('успешный прогон: закрытая форма результ�
     'сырой ответ модели не имеет права попасть в evidence');
   assert.equal(ev.writeAttempts, 0);
   assert.equal(Array.from(ev.externalWrites).length, 0);
-  assert.equal(Object.keys(ev.isolation).length, 16, 'isolation закрыт на 16 полей');
+  assert.equal(Object.keys(ev.isolation).length, 19, 'isolation закрыт на 19 полей');
   assert.ok(ev.isolation.receipt_ref.endsWith(ev.isolation.receipt_sha256.slice(0, 32)));
   assert.equal(ev.isolation.owner_device_access, 'DENIED');
   assert.equal(ev.isolation.teardown_status, 'CONFIRMED');
@@ -446,7 +488,7 @@ test('каждый ETB.api, который зовёт runner, существуе
   // Одноразовый агент №1 (08.08) сгорел на отсутствующем agentInstructionsUpdateScoped:
   // код звал метод, которого в api.js ещё не было. Статическая сверка стоит секунду.
   const used = [...new Set([...RUNNER_CODE.matchAll(/ETB\.api\.([a-zA-Z]+)/g)].map((m) => m[1]))];
-  assert.ok(used.length >= 8, 'ожидали список вызовов ETB.api');
+  assert.ok(used.length >= 6, 'ожидали список вызовов ETB.api');
   for (const name of used) {
     // Часть методов экспортируется ссылкой (`extractAgentText: extractAgentText`),
     // а не литералом функции — проверяем наличие ключа, а не его формы.
