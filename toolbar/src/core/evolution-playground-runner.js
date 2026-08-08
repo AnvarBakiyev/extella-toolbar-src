@@ -943,11 +943,18 @@ ETB.evolutionPlaygroundRunner = (function () {
 (function attachPlaygroundAdapter() {
   var adapter = ETB.evolutionAdapter = ETB.evolutionAdapter || {};
   var runner = ETB.evolutionPlaygroundRunner;
-  if (typeof adapter.runClassTest === 'function') return;   // уже подключён
+  if (adapter.runClassTest === runner.runClassTest &&
+      adapter.playgroundIsolationContract === runner.playgroundIsolationContract) {
+    return;   // уже подключена именно текущая полная пара
+  }
   try {
+    // Повторная инъекция toolbar не должна сохранять старый или частичный адаптер.
+    // Сначала очищаем оба свойства, затем ставим точную пару текущего runner.
+    try { delete adapter.runClassTest; } catch (_) {}
+    try { delete adapter.playgroundIsolationContract; } catch (_) {}
     adapter.playgroundIsolationContract = runner.playgroundIsolationContract;
     adapter.runClassTest = runner.runClassTest;
-    if (typeof adapter.runClassTest !== 'function' ||
+    if (adapter.runClassTest !== runner.runClassTest ||
         adapter.playgroundIsolationContract !== runner.playgroundIsolationContract) {
       throw new Error('adapter pair was not accepted');
     }

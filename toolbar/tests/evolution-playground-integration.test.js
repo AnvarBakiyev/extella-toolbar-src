@@ -159,20 +159,37 @@ test('маркер и метод подключаются только паро�
     };
     ctx.globalThis = ctx;
     vm.runInNewContext(RUNNER_SRC, ctx, { filename: 'evolution-playground-runner.js' });
-    return ctx.ETB.evolutionAdapter;
+    return {
+      adapter: ctx.ETB.evolutionAdapter,
+      runner: ctx.ETB.evolutionPlaygroundRunner,
+    };
   };
-  const fresh = load(undefined);
+  const freshLoad = load(undefined);
+  const fresh = freshLoad.adapter;
   assert.equal(typeof fresh.runClassTest, 'function', 'метод присвоен');
+  assert.equal(fresh.runClassTest, freshLoad.runner.runClassTest,
+    'присвоен точный метод текущего runner');
   assert.equal(fresh.playgroundIsolationContract,
     'extella.evolution.playground_isolation.v1.1', 'маркер присвоен');
 
+  const staleMethod = function staleRunClassTest() {};
+  const staleLoad = load({
+    runClassTest: staleMethod,
+    playgroundIsolationContract: 'extella.evolution.playground_isolation.v1',
+  });
+  assert.equal(staleLoad.adapter.runClassTest, staleLoad.runner.runClassTest,
+    'повторная инъекция заменяет старый метод точным текущим runner');
+  assert.equal(staleLoad.adapter.playgroundIsolationContract,
+    'extella.evolution.playground_isolation.v1.1',
+    'повторная инъекция заменяет старый маркер синхронно с методом');
+
   // Присвоение метода невозможно (объект запрещает запись) — маркер обязан не остаться.
   const hostile = Object.defineProperty({}, 'runClassTest', {
-    configurable: true, enumerable: true,
+    configurable: false, enumerable: true,
     get() { return undefined; },
     set() { throw new Error('frozen adapter'); },
   });
-  const after = load(hostile);
+  const after = load(hostile).adapter;
   assert.notEqual(typeof after.runClassTest, 'function',
     'метод не присвоился — значит и маркера остаться не должно');
   assert.equal(after.playgroundIsolationContract, undefined,
