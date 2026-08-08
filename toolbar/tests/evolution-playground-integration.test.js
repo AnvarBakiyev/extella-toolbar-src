@@ -70,6 +70,29 @@ test('боевой api.js на 404 отдаёт ОТВЕТ, а не исключ
   assert.equal(res.httpStatus, 404);
 });
 
+test('runner передаёт global KV в четвёртом аргументе боевого api.js', async () => {
+  const { api, calls } = loadRealApi(() => ({
+    status: 200,
+    body: { status: 'success' },
+  }));
+  await api.kvSet('xtl_evolution:probe', 'value', '', { global: true });
+  assert.deepEqual(calls.at(-1).body, {
+    key: 'xtl_evolution:probe',
+    value: 'value',
+    description: '',
+    global: true,
+  });
+
+  const globalWrites = [...RUNNER_CODE.matchAll(
+    /ETB\.api\.kvSet\(\s*[^,]+,\s*[^,]+,\s*'',\s*\{\s*global:\s*true\s*\}\s*\)/g,
+  )];
+  assert.equal(globalWrites.length, 3,
+    'все три KV-записи runner обязаны передавать opts четвёртым аргументом');
+  assert.doesNotMatch(RUNNER_CODE,
+    /ETB\.api\.kvSet\(\s*[^,]+,\s*[^,]+,\s*\{\s*global:\s*true\s*\}\s*\)/,
+    'объект global в третьем аргументе становится description и теряет скоуп');
+});
+
 test('runner принимает этот ответ как подтверждённый снос', async () => {
   // Собираем ровно ту связку, что бывает в бою: runner + живой api.js.
   const { api } = loadRealApi((url) => {

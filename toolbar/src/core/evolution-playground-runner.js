@@ -343,7 +343,7 @@ ETB.evolutionPlaygroundRunner = (function () {
       agent_id: pointer.agent_id, prepared_at: pointer.prepared_at,
       actor_id: pointer.actor_id, single_use: true, consumed: true
     });
-    return ETB.api.kvSet(SANDBOX_POINTER_KEY, spent, { global: true }).then(function () {
+    return ETB.api.kvSet(SANDBOX_POINTER_KEY, spent, '', { global: true }).then(function () {
       return ETB.api.kvGet(SANDBOX_POINTER_KEY, { global: true });
     }).then(function (row) {
       var stored = row && typeof row.value === 'string' ? row.value : '';
@@ -416,7 +416,7 @@ ETB.evolutionPlaygroundRunner = (function () {
     return sha256(body).then(function (digest) {
       expected = digest;
       key = TRANSCRIPT_PREFIX + digest.slice(0, 32);
-      return ETB.api.kvSet(key, body, { global: true });
+      return ETB.api.kvSet(key, body, '', { global: true });
     }).then(function () {
       return ETB.api.kvGet(key, { global: true });
     }).then(function (row) {
@@ -868,7 +868,7 @@ ETB.evolutionPlaygroundRunner = (function () {
     });
     return sha256(receiptText).then(function (receiptSha) {
       var key = RECEIPT_PREFIX + receiptSha.slice(0, 32);
-      return ETB.api.kvSet(key, receiptText, { global: true }).then(function () {
+      return ETB.api.kvSet(key, receiptText, '', { global: true }).then(function () {
         // Перечитка ДО ответа: строка PASSED без подтверждённой квитанции не считается.
         return ETB.api.kvGet(key, { global: true });
       }).then(function (row) {
