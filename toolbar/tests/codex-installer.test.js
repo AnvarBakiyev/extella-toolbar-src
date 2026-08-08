@@ -618,3 +618,23 @@ test('storefront exposes a sibling Codex button and explicit consent states', ()
     new RegExp(loadInstaller().metadata().expertSha256),
   );
 });
+
+test('Codex modal uses the canonical panel typography and spacing scales', () => {
+  const start = storefrontSource.indexOf('function _cxStepIndex');
+  const end = storefrontSource.indexOf('function codexStartInstall');
+  assert.ok(start >= 0 && end > start, 'Codex modal source must be present');
+  const modalSource = storefrontSource.slice(start, end);
+  const fontScale = new Set([11, 13, 15, 20, 26]);
+  const spacingScale = new Set([4, 8, 12, 16, 24, 32, 48]);
+
+  for (const match of modalSource.matchAll(/(?:font-size|font):([^;"']+)/g)) {
+    for (const value of match[1].matchAll(/(\d+(?:\.\d+)?)px/g)) {
+      assert.ok(fontScale.has(Number(value[1])), `non-canonical Codex font: ${value[1]}px`);
+    }
+  }
+  for (const match of modalSource.matchAll(/(?:margin(?:-(?:top|right|bottom|left))?|padding(?:-(?:top|right|bottom|left))?|gap):([^;"']+)/g)) {
+    for (const value of match[1].matchAll(/(\d+(?:\.\d+)?)px/g)) {
+      assert.ok(spacingScale.has(Number(value[1])), `non-canonical Codex spacing: ${value[1]}px`);
+    }
+  }
+});
