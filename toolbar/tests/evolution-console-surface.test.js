@@ -54,9 +54,9 @@ test('Evolution Console manifest keeps exact product naming and one narrow host-
     evolutionManifest.description,
     'Evolution Console разделяет работающие, остановленные, требующие помощи и непроверенные автоматизации. Каталог отделён от установленных, а детали для специалиста не мешают ежедневному управлению.',
   );
-  assert.equal(evolutionManifest.version, '0.26.0');
+  assert.equal(evolutionManifest.version, '0.26.1');
   assert.match(evolutionHtml, /id="consoleVersion"/);
-  assert.match(evolutionHtml, /var CONSOLE_VERSION = '0\.26\.0'/);
+  assert.match(evolutionHtml, /var CONSOLE_VERSION = '0\.26\.1'/);
   assert.match(evolutionHtml, /scannerContractStaleTitle:'Extella обновляет компонент проверки'/);
   assert.match(evolutionHtml, /scannerContractStaleTitle:'Extella is updating the checking component'/);
   assert.match(evolutionHtml, /error\.code==='DEVICE_SCANNER_CONTRACT_STALE'/);
@@ -72,12 +72,12 @@ test('Evolution Console manifest keeps exact product naming and one narrow host-
   assert.equal(evolutionManifest.ui.expectsHealth, true);
   assert.equal(evolutionManifest.owned_experts, true);
   assert.deepEqual(evolutionManifest.experts, [
-    '_etb_evolution_registry_scan_v1',
+    '_etb_evolution_registry_scan_v2',
   ]);
   assert.equal(evolutionManifest.expert_defs.length, 1);
   assert.equal(
     evolutionManifest.expert_defs[0].name,
-    '_etb_evolution_registry_scan_v1',
+    '_etb_evolution_registry_scan_v2',
   );
   assert.equal(
     evolutionManifest.expert_defs[0].codeFile,
@@ -112,7 +112,7 @@ test('Evolution Console manifest keeps exact product naming and one narrow host-
     evolutionManifest.capabilities.find(
       (capability) => capability.id === 'automation_registry',
     ).expert_name,
-    '_etb_evolution_registry_scan_v1',
+    '_etb_evolution_registry_scan_v2',
   );
   assert.match(evolutionScanner, /<id>\.json|strict|fullmatch/);
   assert.doesNotMatch(

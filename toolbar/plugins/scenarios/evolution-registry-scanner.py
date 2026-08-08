@@ -9,7 +9,7 @@
 #
 # Помощники ниже: в Python имена разрешаются в момент вызова, порядок не мешает.
 
-def _etb_evolution_registry_scan_v1(device_refs_json="[]") -> str:
+def _etb_evolution_registry_scan_v2(device_refs_json="[]") -> str:
     import concurrent.futures
     import json
     import os

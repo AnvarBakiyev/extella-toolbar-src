@@ -339,7 +339,10 @@ ETB.registry = (function () {
     scanDeviceManifests: function (deviceId, deviceRefs) {
       var exactDeviceId = String(deviceId || '').trim();
       var exactDeviceRefs = Array.isArray(deviceRefs) ? deviceRefs.slice().sort() : [];
-      var fnName = '_etb_evolution_registry_scan_v1';
+      // The expert name is versioned with the transport generation. Old v1
+      // copies can remain in agent scopes and shadow the account-wide expert;
+      // reusing that name would keep executing stale code after an update.
+      var fnName = '_etb_evolution_registry_scan_v2';
       if (!exactDeviceId) {
         return Promise.reject(new Error(
           'current device id is required for the read-only registry scan'

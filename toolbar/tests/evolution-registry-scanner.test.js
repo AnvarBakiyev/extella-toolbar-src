@@ -106,7 +106,7 @@ test('read-only device scanner admits only exact top-level cards and counts 102 
       scannerPath.replaceAll('\\', '\\\\').replaceAll('"', '\\"') + '")',
     'module = importlib.util.module_from_spec(spec)',
     'spec.loader.exec_module(module)',
-    'print(module._etb_evolution_registry_scan_v1())',
+    'print(module._etb_evolution_registry_scan_v2())',
   ].join('\n');
   const run = spawnSync('python3', ['-c', script], {
     encoding: 'utf8',

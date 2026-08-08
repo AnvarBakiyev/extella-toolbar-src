@@ -320,5 +320,5 @@ test('manifest declares the read-only MCP inventory without adding an Expert', (
   assert.ok(capability);
   assert.equal(capability.version, 'EVOLUTION_MCP_READ_CONTRACT_V1_1');
   assert.equal(capability.external_writes, false);
-  assert.deepEqual(manifest.experts, ['_etb_evolution_registry_scan_v1']);
+  assert.deepEqual(manifest.experts, ['_etb_evolution_registry_scan_v2']);
 });
