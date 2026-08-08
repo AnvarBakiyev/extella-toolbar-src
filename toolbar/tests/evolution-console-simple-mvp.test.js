@@ -239,6 +239,49 @@ test('primary problem selection is deterministic and does not mutate findings', 
   assert.deepEqual(findings, original);
 });
 
+test('problem ownership fails safe to Extella maintenance', () => {
+  const responsibility = evaluateHelper('automationProblemResponsibility');
+
+  for (const code of [
+    'USER_ACTION_REQUIRED',
+    'OWNER_CONFIRMATION_REQUIRED',
+    'AUTHENTICATION_REQUIRED',
+    'LOGIN_REQUIRED',
+    'REAUTH_REQUIRED',
+    'CREDENTIALS_REQUIRED',
+    'CREDENTIAL_EXPIRED',
+    'PERMISSION_REQUIRED',
+    'USER_SELECTION_REQUIRED',
+    'SUBSCRIPTION_REQUIRED',
+  ]) {
+    assert.equal(responsibility(code, 'error'), 'USER', code);
+  }
+
+  for (const code of [
+    'DEVICE_SCANNER_CONTRACT_STALE',
+    'PLATFORM_AGENT_MISSING',
+    'EXPERT_MISSING',
+    'SCHEDULE_REFERENCE_MISSING',
+    'SOURCE_UNAVAILABLE',
+    'CATALOG_ORPHAN',
+    '',
+  ]) {
+    assert.equal(responsibility(code, 'error'), 'EXTELLA', code);
+  }
+  assert.equal(responsibility('ANY_CODE', 'info'), 'INFO');
+});
+
+test('a real user decision outranks technical maintenance on the card', () => {
+  const select = evaluateHelper('selectPrimaryAutomationProblem');
+  const selected = select([
+    { kind: 'DEAD_REFERENCE', responsibility: 'EXTELLA' },
+    { kind: 'RISK', responsibility: 'INFO' },
+    { kind: 'LAST_ERROR', responsibility: 'USER' },
+  ]);
+  assert.equal(selected.kind, 'LAST_ERROR');
+  assert.equal(selected.responsibility, 'USER');
+});
+
 test('Evolution Lab accepts only an exact current change context', () => {
   const usable = evaluateHelper('evolutionLabContextUsable');
   const valid = {

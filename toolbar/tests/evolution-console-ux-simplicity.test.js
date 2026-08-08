@@ -470,6 +470,31 @@ test('loading, failure, and empty search are complete product states with recove
   );
 });
 
+test('the overview separates owner decisions from Extella maintenance', () => {
+  const overview = viewSource('overview');
+  assert.match(overview, /id="attentionList"/);
+  assert.match(overview, /id="maintenanceSummary"/);
+  assert.match(overview, /id="maintenanceList"/);
+  assert.match(consoleHtml, /homeAttentionTitle:'Где нужно ваше решение'/);
+  assert.match(consoleHtml, /nothingYouNeedToDo:'Сейчас от вас ничего не требуется'/);
+  assert.match(consoleHtml, /maintenanceTitle:'Extella разбирается с техническими замечаниями'/);
+  assert.match(consoleHtml, /userActionRequired:'Нужно ваше решение'/);
+  assert.match(consoleHtml, /maintenanceSnapshotText:'Extella получила не все технические данные и продолжит проверку\. От вас ничего не требуется\.'/);
+  assert.match(
+    consoleHtml,
+    /function renderAttention\(\)[\s\S]{0,1800}facts\.user\?attentionButton\('user-action'[\s\S]{0,800}nothingYouNeedToDo[\s\S]{0,1800}maintenanceRows/,
+  );
+  assert.match(
+    consoleHtml,
+    /function automationUiCategory\(row\)[^}]*automationUserActionProblem\(row\)/,
+  );
+  assert.match(
+    consoleHtml,
+    /function automationPrimaryAction\(row,problem\)[\s\S]{0,900}responsibility==='EXTELLA'[\s\S]{0,180}viewMaintenance/,
+  );
+  assert.match(consoleHtml, /data-problem-owner=/);
+});
+
 test('tablet navigation receives a full flex row', () => {
   assert.match(
     consoleHtml,
@@ -855,7 +880,7 @@ test('the simplified overview has matching human copy in Russian and English', (
       'Manage the automations built for your company: see what they are doing, what needs attention, and the next step.',
     ],
     homeStatusTitle: ['Что происходит сейчас', 'What is happening now'],
-    homeAttentionTitle: ['Что нужно сделать сейчас', 'What to do now'],
+    homeAttentionTitle: ['Где нужно ваше решение', 'Where your decision is needed'],
     homeAutomationsTitle: ['Ваши автоматизации', 'Your automations'],
     inventory: ['Автоматизации', 'Automations'],
     myAutomations: ['Мои автоматизации', 'My automations'],
@@ -863,14 +888,14 @@ test('the simplified overview has matching human copy in Russian and English', (
     workingCount: ['работают', 'working'],
     stoppedCount: ['остановлены', 'stopped'],
     unknownCount: ['статус неизвестен', 'status unknown'],
-    needsHelpCount: ['нужна помощь', 'need help'],
+    needsHelpCount: ['нужно ваше решение', 'need your decision'],
     summaryUnavailable: [
       'Установленные автоматизации пока не проверены',
       'Installed automations have not been checked yet',
     ],
     catalogFallbackText: [
-      'Не удалось проверить, что установлено на этом компьютере. Поэтому показываем доступные автоматизации из каталога; установка каждой из них пока не подтверждена.',
-      'Extella could not check what is installed on this computer, so it is showing the available catalog. Installation of each automation remains unconfirmed.',
+      'Extella пока не подтвердила, что установлено на этом компьютере, поэтому показывает каталог. От вас не требуется ничего чинить; можно обновить данные позже.',
+      'Extella has not yet confirmed what is installed on this computer, so it is showing the catalog. You do not need to repair anything; data can be refreshed later.',
     ],
     sharedOverviewTitle: [
       'Общее для всех агентов',

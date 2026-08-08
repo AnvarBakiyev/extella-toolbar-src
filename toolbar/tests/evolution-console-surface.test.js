@@ -54,11 +54,11 @@ test('Evolution Console manifest keeps exact product naming and one narrow host-
     evolutionManifest.description,
     'Evolution Console разделяет работающие, остановленные, требующие помощи и непроверенные автоматизации. Каталог отделён от установленных, а детали для специалиста не мешают ежедневному управлению.',
   );
-  assert.equal(evolutionManifest.version, '0.24.0');
+  assert.equal(evolutionManifest.version, '0.25.0');
   assert.match(evolutionHtml, /id="consoleVersion"/);
-  assert.match(evolutionHtml, /var CONSOLE_VERSION = '0\.24\.0'/);
-  assert.match(evolutionHtml, /scannerContractStaleTitle:'Нужно обновить компонент проверки'/);
-  assert.match(evolutionHtml, /scannerContractStaleTitle:'The checking component needs an update'/);
+  assert.match(evolutionHtml, /var CONSOLE_VERSION = '0\.25\.0'/);
+  assert.match(evolutionHtml, /scannerContractStaleTitle:'Extella обновляет компонент проверки'/);
+  assert.match(evolutionHtml, /scannerContractStaleTitle:'Extella is updating the checking component'/);
   assert.match(evolutionHtml, /error\.code==='DEVICE_SCANNER_CONTRACT_STALE'/);
   assert.deepEqual(evolutionManifest.pills, [
     'Автоматизации',
