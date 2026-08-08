@@ -6617,7 +6617,7 @@ function _cxIdleHTML(){
     (needsUpdate?
       _cxT('Обновить Codex','Update Codex'):
       _cxT('Подключить Codex','Connect Codex'));
-  return '<div style="margin-top:15px;padding:13px 14px;border:1px solid var(--bd);border-radius:6px;'+
+  return '<div style="margin-top:15px;padding:13px 14px;border:1px solid var(--bd);border-radius:8px;'+
       'background:var(--bg);font-size:13px;line-height:1.65;color:var(--tx2)">'+
     '<div style="color:var(--tx);font-weight:600;margin-bottom:5px">'+
       (connected?
@@ -6676,8 +6676,8 @@ function _cxRunningHTML(){
       _cxT('Expert работает на этом компьютере. Окно можно закрыть — установка продолжится.',
            'The Expert is running on this computer. You may close this window; installation will continue.')+
     '</div>'+_cxStepsHTML()+
-    '<div style="height:5px;margin-top:17px;background:var(--bd);border-radius:5px;overflow:hidden">'+
-      '<div style="height:100%;width:38%;background:var(--acc,#C57E33);border-radius:5px;animation:cxmove 1.25s ease-in-out infinite"></div>'+
+    '<div style="height:5px;margin-top:17px;background:var(--bd);border-radius:999px;overflow:hidden">'+
+      '<div style="height:100%;width:38%;background:var(--acc,#C57E33);border-radius:999px;animation:cxmove 1.25s ease-in-out infinite"></div>'+
     '</div>'+
     '<div style="margin-top:16px"><button onclick="_cxClose()" style="'+_KPBTN+'">'+_cxT('Свернуть','Hide')+'</button></div>';
 }
@@ -6685,7 +6685,7 @@ function _cxSuccessHTML(){
   var phrase=_cxT('Вызови Codex. Не используй run_agent, get_expert и search_experts. Если доступен tool extella_codex_account_bridge_v2 — вызови его напрямую. Иначе сразу вызови run_expert с name="extella_codex_account_bridge_v2", global=true и params.prompt="Ответь одной фразой: сообщение получено через мост Extella → Codex".',
                   'Call Codex. Do not use run_agent, get_expert, or search_experts. If the extella_codex_account_bridge_v2 tool is available, call it directly. Otherwise immediately call run_expert with name="extella_codex_account_bridge_v2", global=true, and params.prompt="Reply in one sentence: the message was received through the Extella to Codex bridge."');
   return _cxStepsHTML()+
-    '<div style="margin-top:16px;padding:13px 14px;border:1px solid #2E7D5B;border-radius:6px;'+
+    '<div style="margin-top:16px;padding:13px 14px;border:1px solid #2E7D5B;border-radius:8px;'+
       'background:rgba(46,125,91,.07);color:var(--tx);font-size:13px;line-height:1.6">'+
       '<strong>'+_cxT('Готово. Codex доступен всем агентам Extella.','Done. Codex is available to every Extella agent.')+'</strong><br>'+
       _cxT('Перезапуск не нужен. Новые агенты будут подключаться автоматически.',
@@ -6694,7 +6694,7 @@ function _cxSuccessHTML(){
     '<div style="margin-top:14px;color:var(--tx2);font-size:12.5px;line-height:1.55">'+
       _cxT('Для первого реального платного теста открой любого агента и напиши:',
            'For the first real paid test, open any agent and send:')+'</div>'+
-    '<div style="margin-top:7px;background:var(--bg);border:1px solid var(--bd2);border-radius:5px;padding:10px 11px;'+
+    '<div style="margin-top:7px;background:var(--bg);border:1px solid var(--bd2);border-radius:8px;padding:10px 11px;'+
       'font-size:12.5px;line-height:1.55;user-select:all">'+esc(phrase)+'</div>'+
     '<div style="margin-top:10px;display:flex;gap:8px">'+
       '<button style="'+_KPBTN+'" onclick="_claudeCopyText('+JSON.stringify(phrase)+',this,'+
@@ -6709,7 +6709,7 @@ function _cxErrorHTML(){
       (_cxState.stage&&_cxState.taskId?' · ':'')+
       (_cxState.taskId?'Task ID: '+esc(_cxState.taskId):'')+
     '</div>':'';
-  return '<div style="margin-top:15px;padding:13px 14px;border:1px solid #B23A2E;border-radius:6px;'+
+  return '<div style="margin-top:15px;padding:13px 14px;border:1px solid #B23A2E;border-radius:8px;'+
       'background:rgba(178,58,46,.06);font-size:13px;line-height:1.6;color:var(--tx)">'+
       '<strong>'+_cxT('Не удалось завершить установку.','Installation did not finish.')+'</strong><br>'+
       esc(_cxState.error||_cxT('Неизвестная ошибка.','Unknown error.'))+diagnostic+
