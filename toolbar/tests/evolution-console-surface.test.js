@@ -988,7 +988,7 @@ test('Shared Genes has a human task flow backed by exact Console contracts', () 
     evolutionHtml,
     /sharedLabBtn[^\n]+labReady\?'':'disabled'/,
   );
-  assert.match(evolutionHtml, /technicalMap:'Техническая карта Shared Genes'/);
+  assert.match(evolutionHtml, /technicalMap:'Для специалиста: карта Shared Genes'/);
 });
 
 test('Bulk preview targets only current visible canonical rows and is adapter-gated', () => {
@@ -1051,8 +1051,8 @@ test('Evolution UI never synthesizes native or Evolution Lab success and refresh
   );
   assert.match(evolutionHtml, /evolution_lab_readiness_load/);
   assert.match(evolutionHtml, /evolutionLabEnvironmentReady\(e\)/);
-  assert.match(evolutionHtml, /Проверить в симуляции/);
-  assert.match(evolutionHtml, /Применение правила механизмом Extella не проверено/);
+  assert.match(evolutionHtml, /Проверить в безопасной среде/);
+  assert.match(evolutionHtml, /Изменение ещё не применено к работающим агентам/);
   assert.match(evolutionHtml, /RULE_AS_INSTRUCTIONS_SIMULATION/);
   assert.match(evolutionHtml, /native_application_status==='NOT_VERIFIED'/);
   assert.doesNotMatch(
