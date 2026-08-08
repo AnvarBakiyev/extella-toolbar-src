@@ -177,7 +177,7 @@
     .automation-primary-problem.warn{border-color:var(--warn)}.automation-primary-problem b{color:var(--ink)}.automation-primary-problem small{color:var(--muted)}
     .automation-quick-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.automation-quick-fact{padding:8px;border-left:2px solid var(--line);background:var(--panel2)}
     .automation-quick-fact small{display:block;color:var(--muted)}.automation-quick-fact b{display:block;margin-top:2px;color:var(--ink);word-break:break-word}
-    .automation-actions{display:flex;gap:8px;flex-wrap:wrap}.specialist-details{margin-top:2px;padding-top:8px;border-top:1px solid var(--line)}
+    .automation-actions{display:flex;gap:8px;flex-wrap:wrap}.automation-card-section:focus,.technical-details:focus{outline:2px solid var(--gold);outline-offset:4px}.specialist-details{margin-top:2px;padding-top:8px;border-top:1px solid var(--line)}
     .specialist-details>summary{width:max-content;color:var(--petrol);cursor:pointer;font-weight:700}.specialist-details-body{display:grid;gap:12px;margin-top:8px}
     .automation-state-summary{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.automation-state-summary small{color:var(--muted)}
     .technical-details{margin-top:2px;padding-top:8px;border-top:1px solid var(--line)}
@@ -501,13 +501,13 @@
   (function(){
     'use strict';
     var PREVIEW = new URLSearchParams(location.search).get('preview') === '1';
-    var CONSOLE_VERSION = '0.23.0';
+    var CONSOLE_VERSION = '0.24.0';
     var I18N = {
       ru:{
         consoleSub:'Evolution Console',fleet:'Парк',overview:'Обзор',automationsNav:'Автоматизации',advanced:'Дополнительно',risks:'Риски',riskDetails:'Причины рисков',escalations:'Эскалации',bulk:'Массовые операции',
         how:'Как это работает?',demo:'DEMO: данные и Evolution Receipts существуют только в памяти страницы; платформа не читается и не изменяется.',
         consoleEyebrow:'Evolution Console · управление автоматизациями Extella',overviewTitle:'Управление агентами',overviewLead:'Здесь вы управляете автоматизациями, созданными для вашей компании: видите их работу, замечания и следующий шаг.',interfaceVersion:'Версия интерфейса',initUnavailable:'Управление агентами не получило приветствие Extella за 15 секунд. Закрой и открой экран снова; при повторе обнови приложение.',
-        homeStepCheck:'Проверьте состояние',homeStepCheckText:'Extella соберёт актуальные данные.',homeStepOpen:'Откройте автоматизацию',homeStepOpenText:'Увидите, что происходит и почему.',homeStepAct:'Выполните следующий шаг',homeStepActText:'Console предложит безопасное действие.',homeStatusTitle:'Что происходит сейчас',homeStatusLead:'Только подтверждённые сведения об установленных автоматизациях.',homeAttentionTitle:'Что нужно сделать сейчас',homeAttentionLead:'Сначала разберите эти пункты — они влияют на работу автоматизаций.',homeAutomationsTitle:'Ваши автоматизации',homeAutomationsLead:'Откройте нужную автоматизацию, чтобы увидеть её состояние и следующий шаг.',
+        homeStepCheck:'Проверь состояние',homeStepCheckText:'Extella соберёт актуальные данные.',homeStepOpen:'Открой автоматизацию',homeStepOpenText:'Увидишь, что происходит и почему.',homeStepAct:'Выполни следующий шаг',homeStepActText:'Console предложит безопасное действие.',homeStatusTitle:'Что происходит сейчас',homeStatusLead:'Только подтверждённые сведения об установленных автоматизациях.',homeAttentionTitle:'Что нужно сделать сейчас',homeAttentionLead:'Сначала разбери эти пункты — они влияют на работу автоматизаций.',homeAutomationsTitle:'Ваши автоматизации',homeAutomationsLead:'Открой нужную автоматизацию, чтобы увидеть её состояние и следующий шаг.',
         myAutomations:'Мои автоматизации',catalog:'Каталог',programs:'Программы',automationScope:'Установленные автоматизации, каталог или программы',workingCount:'работают',stoppedCount:'остановлены',unknownCount:'статус неизвестен',needsHelpCount:'нужна помощь',notRunningCount:'не запущены',attentionCount:'требуют внимания',
         dataProtection:'Защита данных',maskingActive:'Защита данных подтверждена на входе и на выходе',maskingOff:'Выключено',maskingPartial:'Подтверждено частично',maskingUnknown:'Состояние защиты неизвестно',maskingSettingsCabinet:'Настройки находятся в Agent Cabinet.',maskingLocalSource:'Статус получен только с текущего устройства.',
         agentControl:'Управление изменениями',agentControlTitle:'Управление изменениями агентов',agentControlLead:'Evolution Console показывает канонический путь изменения из Agent Passport. Пока паспортов или контракта нет, действия закрыты.',agentControlContract:'Канонический контракт',agentControlSteps:'Путь изменения',agentControlPublishGates:'Подтверждения публикации',agentControlGatePreWrite:'До публикации',agentControlGatePostWrite:'После записи: Extella перечитывает результат',agentControlLimits:'Границы',agentControlRequires:'Зависит от',agentControlLoading:'Проверяем Agent Passports и канонический контракт…',agentControlStandardsUnavailable:'Production bundle Agent Passports пока недоступен.',agentControlNoPassports:'Agent Passports ещё не заполнены. Когда появится подтверждённый паспорт, здесь будет показан канонический путь изменения.',agentControlContractUnavailable:'Канонический контракт управления пока недоступен. Действия закрыты.',agentControlContractMismatch:'Контракты Agent Passports расходятся. Действия закрыты до устранения расхождения.',agentControlUnknown:'Состояние управления изменениями неизвестно. Действия закрыты.',agentControlReadOnly:'Сейчас доступно только чтение канонического контракта. Публикация появится только через trusted action с теми же гейтами.',agentControlBoundary:'Этот раздел только читает канонический контракт: он не создаёт агентов, не меняет настройки Agent Cabinet или защиты данных, не ведёт отдельный журнал и не публикует изменения.',
@@ -521,7 +521,7 @@
         availableYes:'Доступна',availableNo:'Не в каталоге',catalogUnknown:'Каталог недоступен',catalogRecordInvalid:'запись отклонена',installedYes:'Установлена',installedNo:'Не установлена',installationUnknown:'Установка не подтверждена',stateUnknown:'Состояние автоматизации',sourceMismatch:'Расхождение источников',noSourceErrors:'Ошибок источников нет',
         platform_agents:'Внутренние агенты',experts:'Experts',services:'Службы',schedules:'Расписания',integrations:'Интеграции',knowledge:'Знания',rules:'Правила',optional:'необязательный',
         attentionStale:'Есть отставшие версии',attentionStaleText:'Установленная версия ниже заявленной в манифесте источника.',attentionDeadAutomation:'Есть мёртвые ссылки',attentionDeadAutomationText:'Объявленный агент, Expert, служба или расписание не найдены.',attentionOrphan:'Есть записи-сироты',attentionOrphanText:'Источник сохранил запись, которую нельзя подтвердить другими источниками.',
-        noAutomationRisks:'Вычисляемых расхождений не найдено.',registryIncomplete:'Часть источников недоступна',registryIncompleteText:'Неизвестные факты остаются неизвестными; реестр не подставляет успех.',
+        noAutomationRisks:'Вычисляемых расхождений не найдено.',registryIncomplete:'Часть данных пока недоступна',registryIncompleteText:'Не всё удалось проверить. Неизвестные сведения не считаются исправными.',registryDeviceUnavailable:'Не удалось прочитать карточки этого компьютера.',registryCatalogUnavailable:'Каталог автоматизаций временно недоступен.',registryStateUnavailable:'Не удалось проверить состояние части автоматизаций.',registryScheduleUnavailable:'Не удалось проверить часть расписаний.',registryPlatformUnavailable:'Не удалось подтвердить часть агентов и компонентов.',registryInstalledUnavailable:'Не удалось подтвердить, что установлено на этом компьютере.',
         fleetTitle:'Весь парк — одним снимком',fleetLead:'Платформа показывает фактический парк, Agent Passport заявляет владельца и границы, единый журнал даёт активную версию. Неизвестное остаётся неизвестным.',
         allAgents:'всего агентов',passedChecks:'прошли проверку',attentionItems:'типов расхождений',needsAttention:'требуют внимания',pendingEscalations:'эскалации ожидают решения',
         failedStandard:'не проходят стандарт',ownerless:'без владельца',withShared:'с Shared Genes',inventory:'Автоматизации',
@@ -603,7 +603,7 @@
         availableYes:'Available',availableNo:'Not in catalog',catalogUnknown:'Catalog unavailable',catalogRecordInvalid:'record rejected',installedYes:'Installed',installedNo:'Not installed',installationUnknown:'Installation not confirmed',stateUnknown:'Automation state',sourceMismatch:'Source discrepancy',noSourceErrors:'No source errors',
         platform_agents:'Internal agents',experts:'Experts',services:'Services',schedules:'Schedules',integrations:'Integrations',knowledge:'Knowledge',rules:'Rules',optional:'optional',
         attentionStale:'Versions are behind',attentionStaleText:'The installed version is lower than the version declared by the source manifest.',attentionDeadAutomation:'Dead references found',attentionDeadAutomationText:'A declared agent, Expert, service, or schedule was not found.',attentionOrphan:'Orphan records found',attentionOrphanText:'A source retained a record that no other source confirms.',
-        noAutomationRisks:'No computed discrepancies were found.',registryIncomplete:'Some sources are unavailable',registryIncompleteText:'Unknown facts stay unknown; the registry does not substitute success.',
+        noAutomationRisks:'No computed discrepancies were found.',registryIncomplete:'Some data is unavailable',registryIncompleteText:'Some checks did not complete. Unknown facts are not treated as healthy.',registryDeviceUnavailable:'This computer’s cards could not be read.',registryCatalogUnavailable:'The automation catalog is temporarily unavailable.',registryStateUnavailable:'The status of some automations could not be checked.',registryScheduleUnavailable:'Some schedules could not be checked.',registryPlatformUnavailable:'Some agents and components could not be confirmed.',registryInstalledUnavailable:'What is installed on this computer could not be confirmed.',
         fleetTitle:'The whole fleet in one snapshot',fleetLead:'The platform shows the actual fleet, Agent Passport declares ownership and limits, and the single ledger provides the active version. Unknown stays unknown.',
         allAgents:'total agents',passedChecks:'passed checks',attentionItems:'discrepancy types',needsAttention:'need attention',pendingEscalations:'escalations need a decision',
         failedStandard:'fail the standard',ownerless:'without an owner',withShared:'with Shared Genes',inventory:'Automations',
@@ -1040,14 +1040,19 @@
     function automationPrimaryProblem(row){return selectPrimaryAutomationProblem(automationProblemCandidates(row));}
     function automationUiCategory(row){var flags=automationFlags(row),problem=automationPrimaryProblem(row);return automationSummaryCategory(flags.installed,automationOperationalStatus(row),!!(problem&&problem.requires_help));}
     function automationNeedsAttention(row){return automationUiCategory(row)==='NEEDS_HELP';}
+    function automationPrimaryAction(row,problem){
+      var flags=automationFlags(row),status=automationOperationalStatus(row),kind=problem&&problem.kind;
+      if(flags.installed==='UNKNOWN')return {kind:'REFRESH',target:null,label:t('checkStatus')};
+      if(flags.installed!==true)return {kind:'OVERVIEW',target:'overview',label:t('catalogDetails')};
+      if(kind==='DEAD_REFERENCE'&&automationHasMissingSchedule(row))return {kind:'SCHEDULES',target:'schedules',label:t('viewSchedule')};
+      if(kind==='LAST_ERROR')return {kind:'STATE',target:'state',label:t('viewError')};
+      if(problem)return {kind:'TECHNICAL',target:'technical',label:problem.next_step||t('reviewAutomation')};
+      if(status==='STATE_UNAVAILABLE'||status==='UNKNOWN')return {kind:'REFRESH',target:null,label:t('checkStatus')};
+      if(status==='NOT_RUNNING')return {kind:'SCHEDULES',target:'schedules',label:t('viewSchedule')};
+      return {kind:'COMPOSITION',target:'composition',label:t('composition')};
+    }
     function automationNextStep(row,problem){
-      var flags=automationFlags(row),status=automationOperationalStatus(row);
-      if(flags.installed==='UNKNOWN')return t('checkStatus');
-      if(flags.installed!==true)return t('catalogDetails');
-      if(problem)return problem.next_step||t('reviewAutomation');
-      if(status==='STATE_UNAVAILABLE'||status==='UNKNOWN')return t('checkStatus');
-      if(status==='NOT_RUNNING')return t('viewSchedule');
-      return t('openAutomation');
+      return automationPrimaryAction(row,problem).label;
     }
     function visibleRows(){var p=state.automationRegistry;if(!p)return[];var q=el('searchInput').value.trim().toLowerCase(),f=el('filterSelect').value;return p.rows.filter(function(r){
       var flags=automationFlags(r),risks=automationRisks(r),haystack=[r.automation_id,automationName(r),r.name&&r.name.ru,r.name&&r.name.en].join(' ').toLowerCase();
@@ -1095,6 +1100,21 @@
     function attentionCategoryCount(){
       var facts=attentionFacts();return Object.keys(facts).filter(function(key){return facts[key]>0;}).length;
     }
+    function registrySourceUserIssue(error){
+      var source=String(error&&error.source||'').toLowerCase(),code=String(error&&error.code||'');
+      if(code==='DEVICE_SCANNER_CONTRACT_STALE')return t('scannerContractStaleText');
+      if(source==='device'||source==='runtime_state')return t('registryDeviceUnavailable');
+      if(source==='catalog')return t('registryCatalogUnavailable');
+      if(['automation_state','automation_runs','state_readers'].indexOf(source)!==-1)return t('registryStateUnavailable');
+      if(['schedules','scheduler_index'].indexOf(source)!==-1)return t('registryScheduleUnavailable');
+      if(['platform_agents','experts'].indexOf(source)!==-1)return t('registryPlatformUnavailable');
+      if(['local_installed','composer_installed'].indexOf(source)!==-1)return t('registryInstalledUnavailable');
+      return t('registryIncompleteText');
+    }
+    function registryUserMessage(registry){
+      var errors=registry&&Array.isArray(registry.source_errors)?registry.source_errors:[],seen={};
+      return errors.map(registrySourceUserIssue).filter(function(message){if(!message||seen[message])return false;seen[message]=true;return true;}).join(' ');
+    }
     function attentionButton(kind,count,title,text,action,actionLabel){
       var attribute=action.indexOf('filter:')===0?' data-attention-filter="'+esc(action.slice(7))+'"':action.indexOf('view:')===0?' data-attention-view="'+esc(action.slice(5))+'"':'';
       return '<button class="attention-item" type="button" data-attention-card="'+esc(kind)+'" data-attention-action="'+esc(action)+'"'+attribute+'>'+
@@ -1107,7 +1127,7 @@
       if(facts.dead)cards.push(attentionButton('dead-reference',facts.dead,t('attentionDeadAutomation'),t('attentionDeadAutomationText'),'filter:dead',t('viewAgents')));
       if(facts.orphan)cards.push(attentionButton('orphan',facts.orphan,t('attentionOrphan'),t('attentionOrphanText'),'filter:orphan',t('viewAgents')));
       if(facts.discrepancy)cards.push(attentionButton('discrepancy',facts.discrepancy,t('sourceMismatch'),t('registryIncompleteText'),'filter:attention',t('viewAgents')));
-      if(facts.incomplete)cards.push(attentionButton('incomplete','⚠',t('registryIncomplete'),t('registryIncompleteText'),'refresh',t('refresh')));
+      if(facts.incomplete)cards.push(attentionButton('incomplete','⚠',t('registryIncomplete'),registryUserMessage(p)||t('registryIncompleteText'),'refresh',t('refresh')));
       host.innerHTML=cards.length?cards.join(''):'<div class="attention-ok"><b>✓ '+esc(t('nothingNeedsAttention'))+'</b><div>'+esc(t('noAutomationRisks'))+'</div></div>';
       host.querySelectorAll('[data-attention-filter]').forEach(function(button){button.onclick=function(){applyFleetFilter(button.dataset.attentionFilter,true);};});
       host.querySelectorAll('[data-attention-view]').forEach(function(button){button.onclick=function(){setView(button.dataset.attentionView);};});
@@ -1422,21 +1442,21 @@
     function renderAutomationTechnical(row){
       var flags=automationFlags(row),versions=row&&row.versions&&typeof row.versions==='object'?row.versions:{},discrepancies=Array.isArray(row&&row.discrepancies)?row.discrepancies:[],catalogLabel=flags.catalog==='UNKNOWN'?t('catalogUnknown'):(flags.catalog===true?t('availableYes'):t('availableNo')),installedLabel=flags.installed==='UNKNOWN'?t('installationUnknown'):(flags.installed===true?t('installedYes'):t('installedNo'));
       var passport=row&&row.automation_passport,reader=passport&&passport.state_reader,readerFact=state.stateReaders.find(function(fact){return String(fact&&fact.automationId||'')===String(row&&row.automation_id||'');}),readerStatus=readerFact?(readerFact.available===true?t('stateReaderVerified'):t('stateReaderFailed')):t('stateReaderNotRun'),readerMarkup=reader?'<div class="component-group"><b>'+esc(t('stateReader'))+'</b><ul class="component-items"><li><code>'+esc(reader.expert)+'</code> · <code>'+esc(reader.method||'—')+'</code> · <code>'+esc(reader.schema)+'</code></li><li>'+esc(t('exactTarget'))+': <code>'+esc(reader.execution_device)+'</code></li><li>'+esc(readerStatus)+'</li><li>'+esc(t('stateReaderCanonicalPending'))+'</li></ul></div>':(passport&&passport.service?'<div class="component-group"><b>'+esc(t('stateReader'))+'</b><p>'+esc(t('stateReaderNotRun'))+'</p></div>':'');
-      return '<details class="technical-details" data-technical-details="collapsed"><summary>'+esc(t('technicalEvidence'))+'</summary><div class="technical-details-body">'+
+      return '<details class="technical-details" data-technical-details="collapsed" data-automation-section="technical" tabindex="-1"><summary>'+esc(t('technicalEvidence'))+'</summary><div class="technical-details-body">'+
         '<div class="technical-grid"><div><small>ID</small><b class="mono">'+esc(row&&row.automation_id||t('unknown'))+'</b></div><div><small>'+esc(t('availability'))+'</small><b>'+esc(catalogLabel)+' · '+esc(installedLabel)+'</b></div><div><small>'+esc(t('declaredVersion'))+'</small><b class="mono">'+esc(versions.declared||row&&row.version_declared||t('unknown'))+'</b></div><div><small>'+esc(t('installedVersion'))+'</small><b class="mono">'+esc(versions.installed||row&&row.version_installed||t('unknown'))+'</b></div></div>'+
         renderAutomationRisks(row)+readerMarkup+
         '<div class="component-group"><b>'+esc(t('sourceMismatch'))+' · '+esc(discrepancies.length)+'</b><ul class="component-items">'+(discrepancies.length?discrepancies.map(function(item){return '<li>'+esc(automationRiskText(item))+'</li>';}).join(''):'<li>'+esc(t('noData'))+'</li>')+'</ul></div>'+
         renderAutomationActionGates(row)+'</div></details>';
     }
     function renderAutomationQuickState(row,problem){
-      var source=automationStateObject(row),version=automationVersionSummary(row),nextRun=automationNextRun(row),masking=automationMaskingSummary(row),lastRun=source.last_run!=null?source.last_run:source.lastRun,nextStep=automationNextStep(row,problem);
+      var source=automationStateObject(row),version=automationVersionSummary(row),nextRun=automationNextRun(row),masking=automationMaskingSummary(row),lastRun=source.last_run!=null?source.last_run:source.lastRun,action=automationPrimaryAction(row,problem),nextStep=action.label;
       var issue=problem?'<div class="automation-primary-problem warn"><b>'+esc(t('mainProblem'))+': '+esc(problem.label)+'</b><small>'+esc(t('nextStep'))+': '+esc(nextStep)+'</small></div>':'<div class="automation-primary-problem"><b>✓ '+esc(t('noMainProblem'))+'</b><small>'+esc(t('nextStep'))+': '+esc(nextStep)+'</small></div>';
       return '<div class="automation-now">'+issue+'<div class="automation-quick-facts">'+
         '<div class="automation-quick-fact"><small>'+esc(version.label)+'</small><b class="mono">'+esc(version.value)+'</b></div>'+
         '<div class="automation-quick-fact"><small>'+esc(t('lastRun'))+'</small><b>'+esc(fmtTime(lastRun))+'</b></div>'+
         '<div class="automation-quick-fact"><small>'+esc(t('nextRun'))+'</small><b>'+esc(fmtTime(nextRun))+'</b></div>'+
         '<div class="automation-quick-fact"><small>'+esc(t('dataProtection'))+'</small><b><span class="state '+esc(masking.kind)+'"><span aria-hidden="true">'+esc(masking.mark)+'</span> '+esc(masking.label)+'</span></b></div>'+
-        '</div><div class="automation-actions"><button class="ghost" type="button" data-refresh-automation>'+esc(t('refreshAutomation'))+'</button></div></div>';
+        '</div><div class="automation-actions"><button class="primary" type="button" data-automation-primary-action="'+esc(action.kind)+'" data-automation-target="'+esc(action.target||'')+'">'+esc(action.label)+'</button>'+(action.kind==='REFRESH'?'':'<button class="ghost" type="button" data-refresh-automation>'+esc(t('refreshAutomation'))+'</button>')+'</div></div>';
     }
     function renderAutomationCard(row){
       var id=String(row&&row.automation_id||''),flags=automationFlags(row),view=automationCardPresentation(row),primaryProblem=selectPrimaryAutomationProblem(automationProblemCandidates(row)),nextStep=automationNextStep(row,primaryProblem);
@@ -1444,12 +1464,12 @@
       var stateContent=flags.installed===true?renderAutomationState(row):'<p>'+esc(t(flags.installed==='UNKNOWN'?'installationUnknown':'installedNo'))+'</p>';
       return '<details class="automation-card" data-registry-row="'+esc(id)+'" role="listitem"><summary data-automation-card-summary="'+esc(id)+'"><span class="automation-avatar" aria-hidden="true">'+esc(automationMonogram(row))+'</span><span class="automation-card-title"><span class="automation-card-heading"><b>'+esc(automationName(row))+'</b><span class="state '+esc(view.kind)+'" data-automation-state-summary="'+esc(view.status)+'"><span aria-hidden="true">'+esc(view.mark)+'</span> '+esc(view.label)+'</span></span><small>'+esc(automationCardLine(row))+'</small>'+problemMarkup+'</span><span class="automation-card-next" data-next-step="'+esc(nextStep)+'">'+esc(nextStep)+'</span></summary>'+
         '<div class="automation-card-body">'+
-          '<section class="automation-card-section"><h3>'+esc(t('whatItDoes'))+'</h3><p>'+esc(automationDescription(row))+'</p></section>'+
-          '<section class="automation-card-section"><h3>'+esc(t('stateAndRuns'))+'</h3>'+renderAutomationQuickState(row,primaryProblem)+'</section>'+
+          '<section class="automation-card-section" data-automation-section="overview" tabindex="-1"><h3>'+esc(t('whatItDoes'))+'</h3><p>'+esc(automationDescription(row))+'</p></section>'+
+          '<section class="automation-card-section" data-automation-section="state" tabindex="-1"><h3>'+esc(t('stateAndRuns'))+'</h3>'+renderAutomationQuickState(row,primaryProblem)+'</section>'+
           '<details class="specialist-details" data-specialist-details="collapsed"><summary>'+esc(t('specialistDetails'))+'</summary><div class="specialist-details-body">'+
             '<section class="automation-card-section">'+stateContent+'</section>'+
-            '<section class="automation-card-section"><h3>'+esc(t('schedules'))+'</h3>'+renderAutomationSchedules(row)+'</section>'+
-            '<section class="automation-card-section">'+renderAutomationComposition(row)+'</section>'+
+            '<section class="automation-card-section" data-automation-section="schedules" tabindex="-1"><h3>'+esc(t('schedules'))+'</h3>'+renderAutomationSchedules(row)+'</section>'+
+            '<section class="automation-card-section" data-automation-section="composition" tabindex="-1">'+renderAutomationComposition(row)+'</section>'+
             renderAutomationTechnical(row)+
           '</div></details>'+
         '</div></details>';
@@ -1467,6 +1487,21 @@
       notice.textContent=t('cardsFound')+': '+counts.discovered+' · '+t('confirmedAutomations')+': '+counts.business_automations+' · '+t('systemComponents')+': '+counts.system_surfaces+' · '+t('installedApps')+': '+counts.installed_apps+' · '+t('probeCards')+': '+counts.probes+' · '+t('classificationRequired')+': '+counts.unclassified+'. '+t('classificationBoundary');
       notice.classList.toggle('warn',needs>0);
       rowsHost.innerHTML=inventory.rows.slice().sort(function(left,right){return String(left.kind).localeCompare(String(right.kind))||deviceInventoryName(left).localeCompare(deviceInventoryName(right));}).map(function(row){return '<li><b>'+esc(deviceInventoryName(row))+'</b> · <code>'+esc(row.id)+'</code> · '+esc(deviceInventoryKind(row.kind))+' · <code>'+esc(row.evidence)+'</code></li>';}).join('')||'<li>'+esc(t('noData'))+'</li>';
+    }
+    function runAutomationPrimaryAction(button){
+      var card=button&&button.closest&&button.closest('.automation-card'),action=String(button&&button.dataset.automationPrimaryAction||''),targetName=String(button&&button.dataset.automationTarget||'');
+      if(action==='REFRESH'){loadFleet();return;}
+      if(!card||!targetName)return;
+      card.open=true;
+      var specialist=card.querySelector('[data-specialist-details]'),target=card.querySelector('[data-automation-section="'+targetName+'"]');
+      if(target&&specialist&&specialist.contains(target))specialist.open=true;
+      if(targetName==='technical')target=card.querySelector('[data-technical-details]');
+      if(targetName==='composition'){
+        var composition=card.querySelector('[data-automation-composition]');
+        if(composition)composition.open=true;
+      }
+      if(target&&target.tagName==='DETAILS')target.open=true;
+      if(target)setTimeout(function(){target.scrollIntoView({behavior:'smooth',block:'center'});target.focus({preventScroll:true});},0);
     }
     function renderFleet(){
       var registryProjection=state.automationRegistry,registry=el('fleetRegistry');
@@ -1493,8 +1528,8 @@
       el('countInstalled').textContent=installationUnknown?'(—)':'('+registryCounter('installed',installedCount)+')';el('countCatalog').textContent='('+registryCounter('catalog',catalogCount)+')';
       el('registryScopeBadge').textContent=String(registryProjection.scope||'CURRENT_DEVICE');el('registryScopeBadge').className='badge '+(registryProjection.complete===true?'good':'warn');
       el('registryCheckedBadge').textContent=t('lastChecked')+' · '+fmtTime(registryProjection.checked_at||registryProjection.checkedAt);el('registryCheckedBadge').className='badge';
-      var sourceErrors=Array.isArray(registryProjection.source_errors)?registryProjection.source_errors:[],scannerContractStale=sourceErrors.some(function(error){return error&&error.code==='DEVICE_SCANNER_CONTRACT_STALE';});el('registrySourceErrors').innerHTML=sourceErrors.length?sourceErrors.map(function(error){return '<li><code>'+esc(error&&error.source||'UNKNOWN')+'</code> · <code>'+esc(error&&error.code||'SOURCE_UNAVAILABLE')+'</code></li>';}).join(''):'<li>✓ '+esc(t('noSourceErrors'))+'</li>';
-      var rows=visibleRows(),currentFilter=el('filterSelect').value;el('snapshotNote').textContent=scannerContractStale?t('scannerContractStaleText'):(installationUnknown?(currentFilter==='catalog'?t('catalogFallbackText'):''):t('chooseAutomation'));
+      var sourceErrors=Array.isArray(registryProjection.source_errors)?registryProjection.source_errors:[],scannerContractStale=sourceErrors.some(function(error){return error&&error.code==='DEVICE_SCANNER_CONTRACT_STALE';}),sourceMessage=registryUserMessage(registryProjection);el('registrySourceErrors').innerHTML=sourceErrors.length?sourceErrors.map(function(error){return '<li><code>'+esc(error&&error.source||'UNKNOWN')+'</code> · <code>'+esc(error&&error.code||'SOURCE_UNAVAILABLE')+'</code></li>';}).join(''):'<li>✓ '+esc(t('noSourceErrors'))+'</li>';
+      var rows=visibleRows(),currentFilter=el('filterSelect').value,snapshotMessage=scannerContractStale?t('scannerContractStaleText'):(installationUnknown?(currentFilter==='catalog'?t('catalogFallbackText'):t('installCheckUnavailableText')):(sourceMessage||t('chooseAutomation')));el('snapshotNote').textContent=snapshotMessage;el('snapshotNote').classList.toggle('warn',!!sourceErrors.length);el('snapshotNote').dataset.snapshotQuality=registryProjection.complete===true?'COMPLETE':'PARTIAL';
       var categoryOrder={NEEDS_HELP:0,UNKNOWN:1,STOPPED:2,WORKING:3};rows=rows.slice().sort(function(left,right){var category=(categoryOrder[automationUiCategory(left)]===undefined?4:categoryOrder[automationUiCategory(left)])-(categoryOrder[automationUiCategory(right)]===undefined?4:categoryOrder[automationUiCategory(right)]);return category||automationName(left).localeCompare(automationName(right));});
       var emptyHtml='<div class="empty">'+esc(t(allRows.length?'noMatches':'noData'))+'</div>';
       if(!rows.length&&el('filterSelect').value==='installed'&&!el('searchInput').value.trim()){
@@ -1502,6 +1537,7 @@
       }
       el('fleetRows').innerHTML=rows.length?rows.map(renderAutomationCard).join(''):emptyHtml;
       el('fleetRows').querySelectorAll('[data-empty-action]').forEach(function(button){button.onclick=function(){if(button.dataset.emptyAction==='retry')loadFleet();else applyFleetFilter('catalog',false);};});
+      el('fleetRows').querySelectorAll('[data-automation-primary-action]').forEach(function(button){button.onclick=function(event){event.preventDefault();runAutomationPrimaryAction(button);};});
       el('fleetRows').querySelectorAll('[data-refresh-automation]').forEach(function(button){button.onclick=function(event){event.preventDefault();loadFleet();};});
       el('fleetRows').querySelectorAll('[data-cab]').forEach(function(button){button.onclick=function(){state.cabinetTrigger=button;openCabinet(button.dataset.cab);};});
       el('fleetRows').querySelectorAll('[data-automation-composition]').forEach(function(details){details.ontoggle=function(){if(details.open)loadMcpComposition(details.dataset.automationComposition);};});
@@ -1770,7 +1806,7 @@
       state.maskingLoading=false;renderFleet();
     }
     async function loadFleet(){
-      showError('');state.automationRegistryError=null;state.mcpEpoch++;state.mcpByAutomation=Object.create(null);clearMaskingPostures();clearAgentControl();clearTrustedPublishContext();clearLabReadiness();clearLabRunError();clearLabCandidates();el('fleetRegistry').setAttribute('aria-busy','true');el('fleetRows').innerHTML='<tr><td colspan="5" class="empty">'+esc(t('loading'))+'</td></tr>';
+      showError('');state.automationRegistryError=null;state.mcpEpoch++;state.mcpByAutomation=Object.create(null);clearMaskingPostures();clearAgentControl();clearTrustedPublishContext();clearLabReadiness();clearLabRunError();clearLabCandidates();el('fleetRegistry').setAttribute('aria-busy','true');el('fleetRows').innerHTML='<div class="empty">'+esc(t('loading'))+'</div>';
       try{var result=await request('automation_registry_load',{});if(!applyAutomationRegistryResult(result))throw new Error(t('registryIncomplete'));ensureLegacyFleet();return true;}
       catch(e){state.automationRegistry=null;state.automationRegistryError=e&&e.message||t('registryIncomplete');state.deviceInventory=null;clearLegacyFleet();renderAll();el('fleetRegistry').setAttribute('aria-busy','false');showError(state.automationRegistryError);return false;}
     }

@@ -54,9 +54,9 @@ test('Evolution Console manifest keeps exact product naming and one narrow host-
     evolutionManifest.description,
     'Evolution Console разделяет работающие, остановленные, требующие помощи и непроверенные автоматизации. Каталог отделён от установленных, а детали для специалиста не мешают ежедневному управлению.',
   );
-  assert.equal(evolutionManifest.version, '0.23.0');
+  assert.equal(evolutionManifest.version, '0.24.0');
   assert.match(evolutionHtml, /id="consoleVersion"/);
-  assert.match(evolutionHtml, /var CONSOLE_VERSION = '0\.23\.0'/);
+  assert.match(evolutionHtml, /var CONSOLE_VERSION = '0\.24\.0'/);
   assert.match(evolutionHtml, /scannerContractStaleTitle:'Нужно обновить компонент проверки'/);
   assert.match(evolutionHtml, /scannerContractStaleTitle:'The checking component needs an update'/);
   assert.match(evolutionHtml, /error\.code==='DEVICE_SCANNER_CONTRACT_STALE'/);
@@ -662,7 +662,7 @@ test('B4 keeps an unknown dead-reference fact unknown in UI and exports', () => 
   );
   assert.match(
     evolutionHtml,
-    /<details class="technical-details" data-technical-details="collapsed">/,
+    /<details class="technical-details" data-technical-details="collapsed"[^>]*>/,
     'unknown integrity evidence must remain available without leaking into the closed card summary',
   );
 });

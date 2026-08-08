@@ -398,6 +398,60 @@ test('unavailable fleet metrics collapse to one human sentence instead of four d
   );
 });
 
+test('every automation card turns its promised next step into a working read-only action', () => {
+  const actionStart = consoleHtml.indexOf('function automationPrimaryAction(row,problem)');
+  const actionEnd = consoleHtml.indexOf('function automationNextStep(', actionStart);
+  assert.ok(actionStart >= 0 && actionEnd > actionStart);
+  const action = consoleHtml.slice(actionStart, actionEnd);
+  assert.match(action, /kind:'REFRESH'/);
+  assert.match(action, /kind:'SCHEDULES'/);
+  assert.match(action, /kind:'STATE'/);
+  assert.match(action, /kind:'TECHNICAL'/);
+  assert.match(action, /kind:'COMPOSITION'/);
+  assert.doesNotMatch(
+    action,
+    /request\(|enable|disable|publish|update|rollback/i,
+    'the product shortcut must navigate verified read-only facts, not invent a mutation',
+  );
+
+  assert.match(consoleHtml, /data-automation-primary-action=/);
+  assert.match(consoleHtml, /data-automation-section="overview"/);
+  assert.match(consoleHtml, /data-automation-section="state"/);
+  assert.match(consoleHtml, /data-automation-section="schedules"/);
+  assert.match(consoleHtml, /data-automation-section="composition"/);
+  assert.match(consoleHtml, /data-automation-section="technical"/);
+  assert.match(
+    consoleHtml,
+    /function runAutomationPrimaryAction\(button\)[\s\S]*action==='REFRESH'\)\{loadFleet\(\);return;\}[\s\S]*specialist\.open=true[\s\S]*composition\.open=true/,
+  );
+  assert.match(
+    consoleHtml,
+    /querySelectorAll\('\[data-automation-primary-action\]'\)[\s\S]*runAutomationPrimaryAction\(button\)/,
+  );
+});
+
+test('partial live data is explained in product language while source codes stay technical', () => {
+  const mapperStart = consoleHtml.indexOf('function registrySourceUserIssue(error)');
+  const mapperEnd = consoleHtml.indexOf('function registryUserMessage(', mapperStart);
+  assert.ok(mapperStart >= 0 && mapperEnd > mapperStart);
+  const mapper = consoleHtml.slice(mapperStart, mapperEnd);
+  for (const key of [
+    'registryDeviceUnavailable',
+    'registryCatalogUnavailable',
+    'registryStateUnavailable',
+    'registryScheduleUnavailable',
+    'registryPlatformUnavailable',
+    'registryInstalledUnavailable',
+  ]) assert.match(mapper, new RegExp(`t\\('${key}'\\)`));
+  assert.match(consoleHtml, /dataset\.snapshotQuality=registryProjection\.complete===true\?'COMPLETE':'PARTIAL'/);
+  assert.match(consoleHtml, /registryUserMessage\(p\)\|\|t\('registryIncompleteText'\)/);
+  assert.match(
+    consoleHtml,
+    /id="registrySourceErrors"/,
+    'raw source codes remain available only under Technical details',
+  );
+});
+
 test('tablet navigation receives a full flex row', () => {
   assert.match(
     consoleHtml,
@@ -549,7 +603,7 @@ test('opening a card reveals all four B4 facts and then collapsed technical evid
   const technicalRenderer = consoleHtml.slice(technicalStart, technicalEnd);
   assert.match(
     technicalRenderer,
-    /<details class="technical-details" data-technical-details="collapsed">/,
+    /<details class="technical-details" data-technical-details="collapsed"[^>]*>/,
   );
   assert.doesNotMatch(
     technicalRenderer,
