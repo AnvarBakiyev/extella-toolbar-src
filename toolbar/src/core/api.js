@@ -584,6 +584,32 @@ ETB.api = (function () {
         rule_id: String(ruleId)
       }, opts.agentId ? { 'X-Agent-Id': opts.agentId } : null);
     },
+    // ── ОДНОРАЗОВАЯ ПЕСОЧНИЦА EVOLUTION LAB (host-only) ──────────────────
+    // Агента для полигона готовит ВЛАДЕЛЕЦ руками; создания через API здесь нет
+    // намеренно — платформа всё равно отбивает такой запуск (`pro_key_required`), а
+    // лишний рычаг «создай агента из кода» нам не нужен. Осталось только удаление:
+    // одноразовую среду обязаны сносить мы, а не человек. Маршрута из iframe у этих
+    // обёрток НЕТ; роутер их не публикует, зовёт только host-runner.
+    // Инструкции одноразовой среды задаёт host: агент без инструментов иначе отвечает
+    // текстом вызовов, и измерять нечего. Значение фиксированное, из iframe не приходит.
+    agentInstructionsUpdateScoped: function (agentId, instructions) {
+      return _post('/api/agent/update', {
+        agent_id: String(agentId || ''),
+        instructions: String(instructions || '')
+      }, agentId ? { 'X-Agent-Id': String(agentId) } : null);
+    },
+    agentDeleteSandbox: function (agentId) {
+      return _post('/api/agent/delete', { agent_id: String(agentId || '') });
+    },
+    // Удаление правила в точном скоупе. Отдельно от rulesRemove: тот глотает ошибки
+    // (для чата это терпимо), а полигону нужен честный ответ — неподтверждённая
+    // уборка не имеет права стать PASSED.
+    ruleRemoveScoped: function (ruleId, opts) {
+      opts = opts || {};
+      return _post('/api/rules/remove', {
+        rule_id: ruleId
+      }, opts.agentId ? { 'X-Agent-Id': opts.agentId } : null);
+    },
     agentGetScoped: function (agentId) {
       return _post('/api/agent/get', {
         agent_id: String(agentId || '')

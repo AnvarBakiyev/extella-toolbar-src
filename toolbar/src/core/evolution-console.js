@@ -16,7 +16,7 @@ ETB.evolutionConsole = (function () {
   var FLEET_SCHEMA = 'extella.evolution.fleet-projection.v1';
   var CABINET_SCHEMA = 'extella.agent_cabinet.v1.1';
   var PLAYGROUND_ISOLATION_SCHEMA =
-    'extella.evolution.playground_isolation.v1';
+    'extella.evolution.playground_isolation.v1.1';
   var PLAYGROUND_ISOLATION_KEYS = [
     'schema',
     'status',
@@ -28,6 +28,9 @@ ETB.evolutionConsole = (function () {
     'owner_device_access',
     'external_write_policy',
     'teardown_status',
+    'evaluation_mode',
+    'gene_kind',
+    'native_application_status',
     'receipt_ref',
     'receipt_sha256',
     'candidate_sha256',
@@ -1209,10 +1212,13 @@ ETB.evolutionConsole = (function () {
         isolation.target_resolution !== 'RUNNER_ONLY' ||
         isolation.owner_device_access !== 'DENIED' ||
         isolation.external_write_policy !== 'DENY' ||
-        isolation.teardown_status !== 'CONFIRMED') {
+        isolation.teardown_status !== 'CONFIRMED' ||
+        isolation.evaluation_mode !== 'RULE_AS_INSTRUCTIONS_SIMULATION' ||
+        isolation.gene_kind !== 'rule' ||
+        isolation.native_application_status !== 'NOT_VERIFIED') {
       fail(
         'CLASS_TEST_NOT_ISOLATED',
-        'Evolution Lab must prove a disposed runner-only sandbox with no owner-device access'
+        'Evolution Lab must prove a disposed rule-as-instructions simulation with no owner-device access and no claim of native application'
       );
     }
     requiredString(
@@ -1393,6 +1399,8 @@ ETB.evolutionConsole = (function () {
           isolationReceiptSha256: isolation.receipt_sha256,
           playgroundRunnerId: isolation.runner_id,
           playgroundRunId: isolation.run_id,
+          evaluationMode: isolation.evaluation_mode,
+          nativeApplicationStatus: isolation.native_application_status,
           candidateBundleSha256: change.candidateBundleSha256,
           targetListSha256: change.targetListSha256,
           status: 'PASSED'

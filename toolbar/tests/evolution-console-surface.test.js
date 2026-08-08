@@ -1039,12 +1039,16 @@ test('Evolution UI never synthesizes native or Evolution Lab success and refresh
   assert.match(evolutionHtml, /multiDeviceCompareAndSwap/);
   assert.match(
     router,
-    /typeof evolutionAdapter\.runClassTest === 'function' &&\s*evolutionAdapter\.playgroundIsolationContract ===\s*'extella\.evolution\.playground_isolation\.v1'/,
+    /typeof evolutionAdapter\.runClassTest === 'function' &&\s*evolutionAdapter\.playgroundIsolationContract ===\s*'extella\.evolution\.playground_isolation\.v1\.1'/,
   );
   assert.match(
     router,
-    /method === 'runClassTest' &&\s*adapter\.playgroundIsolationContract !==\s*'extella\.evolution\.playground_isolation\.v1'/,
+    /method === 'runClassTest' &&\s*adapter\.playgroundIsolationContract !==\s*'extella\.evolution\.playground_isolation\.v1\.1'/,
   );
+  assert.match(evolutionHtml, /Проверить в симуляции/);
+  assert.match(evolutionHtml, /Применение правила механизмом Extella не проверено/);
+  assert.match(evolutionHtml, /RULE_AS_INSTRUCTIONS_SIMULATION/);
+  assert.match(evolutionHtml, /native_application_status==='NOT_VERIFIED'/);
   assert.doesNotMatch(
     evolutionHtml,
     /payload\.evidence|evolution_lab_evidence|evolutionLabEvidence/,
