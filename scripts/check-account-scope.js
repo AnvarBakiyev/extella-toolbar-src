@@ -70,4 +70,17 @@ if (!api.includes("_post('/api/agent/list', {})") || !api.includes("var BOOTSTRA
   process.stderr.write('account-scope portability failed: dynamic current-account resolution contract is missing\n');
   process.exit(1);
 }
+if (!api.includes("_post('/api/agent/list', {}, { 'X-Agent-Id': BOOTSTRAP_AGENT_SCOPE })") ||
+    !api.includes('resolveAccountScope: _resolveAccountScope')) {
+  process.stderr.write('account-scope portability failed: concrete current-account storage resolver is missing\n');
+  process.exit(1);
+}
+const codexInstaller = fs.readFileSync(
+  path.join(root, 'toolbar', 'src', 'core', 'codex-installer.js'),
+  'utf8'
+);
+if (!codexInstaller.includes('return ETB.api.resolveAccountScope();')) {
+  process.stderr.write('account-scope portability failed: Codex installer bypasses current-account storage resolution\n');
+  process.exit(1);
+}
 process.stdout.write('account-scope portability: passed\n');

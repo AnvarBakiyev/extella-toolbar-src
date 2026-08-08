@@ -49,6 +49,36 @@ ETB.api = (function () {
       return window.__etbAgentId;
     }).catch(function () { return FALLBACK_AGENT; });
   }
+
+  // Resolve a concrete storage scope that belongs to the current account.
+  // Unlike _resolveAgent(), this must never return the platform fallback when
+  // that id is absent from /api/agent/list: Experts saved under a foreign scope
+  // are invisible to the customer even though the save request may succeed.
+  function _resolveAccountScope() {
+    return _post('/api/agent/list', {}, { 'X-Agent-Id': BOOTSTRAP_AGENT_SCOPE })
+      .then(function (response) {
+        var value = response && response.content ? response.content : response;
+        var rows = (value && Array.isArray(value.agents)) ? value.agents : [];
+        var ids = rows.map(function (agent) {
+          return agent && (agent.id || agent.agent_id);
+        }).filter(Boolean);
+        var ranked = _rankAgents(rows);
+        var scope = '';
+        for (var i = 0; i < ranked.length; i++) {
+          if (ids.indexOf(ranked[i]) !== -1) {
+            scope = ranked[i];
+            break;
+          }
+        }
+        if (!scope) scope = ids[0] || '';
+        if (!scope) {
+          var error = new Error('Не найден доступный скоуп текущего аккаунта Extella.');
+          error.code = 'account_scope_unavailable';
+          throw error;
+        }
+        return scope;
+      });
+  }
   function _agent() { return window.__etbAgentId || FALLBACK_AGENT; }
   // Переключить на следующего кандидата (зовётся при ошибке ключа текущего).
   function _advanceAgent() {
@@ -461,6 +491,21 @@ ETB.api = (function () {
     ), null, clientTimeoutMs > 0 ? { timeoutMs: clientTimeoutMs } : undefined);
   }
 
+  function runExpertScoped(name, params, opts, agentId, requestOpts) {
+    opts = opts || {};
+    var bodyOptions = Object.assign({}, opts);
+    delete bodyOptions.clientTimeoutMs;
+    return _post(
+      '/api/expert/run',
+      Object.assign(
+        { expert_name: name, params: params || {} },
+        bodyOptions
+      ),
+      agentId ? { 'X-Agent-Id': String(agentId) } : null,
+      requestOpts || null
+    );
+  }
+
   function runExpertAsync(name, params, opts) {
     opts = opts || {};
     return runExpert(name, params, Object.assign({ wait: false }, opts)).then(function (res) {
@@ -473,9 +518,31 @@ ETB.api = (function () {
     });
   }
 
+  function runExpertAsyncScoped(name, params, opts, agentId) {
+    opts = opts || {};
+    return runExpertScoped(
+      name,
+      params,
+      Object.assign({ wait: false }, opts),
+      agentId
+    ).then(function (res) {
+      if (res.status === 'error') throw new Error(res.message || 'Expert run failed');
+      if (!res.task_id) {
+        if (res.result != null) return res;
+        throw new Error('No task_id in async expert response');
+      }
+      return pollTask(res.task_id, opts).catch(function (error) {
+        if (error && typeof error === 'object') error.taskId = res.task_id;
+        throw error;
+      });
+    });
+  }
+
   return {
     runExpert: runExpert,
     runExpertAsync: runExpertAsync,
+    runExpertScoped: runExpertScoped,
+    runExpertAsyncScoped: runExpertAsyncScoped,
     runAgent: runAgent,
     runAgentAsync: runAgentAsync,
     getInstallAgent: _getInstallAgent,
@@ -651,6 +718,7 @@ ETB.api = (function () {
     // определение. currentAgent() до резолва отдаёт платформенный фолбэк.
     currentAgent: _agent,
     resolveAgent: _resolveAgent,
+    resolveAccountScope: _resolveAccountScope,
     advanceAgent: _advanceAgent,
 
     // Add a rule. `agents` (array of ids) targets specific agents; omit to fall

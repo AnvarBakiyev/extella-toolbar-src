@@ -50,6 +50,37 @@ function loadApi(taskReplies) {
   return { api: context.ETB.api, checks: () => checks };
 }
 
+function loadScopeApi(agents) {
+  const requests = [];
+  const context = {
+    AbortController,
+    Promise,
+    clearTimeout,
+    console,
+    setTimeout,
+    window: {},
+    fetch: async (url, options) => {
+      requests.push({ url, options });
+      if (!url.endsWith('/api/agent/list')) {
+        throw new Error(`unexpected request: ${url}`);
+      }
+      return response({ agents });
+    },
+    ETB: {
+      auth: {
+        getToken: () => 'test-token',
+        onToken: () => null,
+        onSessionChange: () => null,
+        refreshSession: async () => null,
+      },
+    },
+  };
+  context.window.parent = context.window;
+  vm.createContext(context);
+  vm.runInContext(apiSource, context, { filename: 'api.js' });
+  return { api: context.ETB.api, requests };
+}
+
 test('pollTask waits through running until the deferred Expert has a result', async () => {
   const completed = { status: 'completed', result: '{"status":"success"}' };
   const { api, checks } = loadApi([
@@ -80,4 +111,25 @@ test('pollTask still accepts legacy done as a terminal status', async () => {
 
   assert.equal(checks(), 1);
   assert.equal(result.result, 'ready');
+});
+
+test('resolveAccountScope returns an agent that is present in the current account', async () => {
+  const { api, requests } = loadScopeApi([
+    { id: 'agent_customer_minimax_12345678', provider: 'minimax' },
+  ]);
+
+  const scope = await api.resolveAccountScope();
+
+  assert.equal(scope, 'agent_customer_minimax_12345678');
+  assert.equal(requests.length, 1);
+  assert.equal(requests[0].options.headers['X-Agent-Id'], 'agent_XXXXXXXX');
+});
+
+test('resolveAccountScope fails closed when the current account has no concrete agent', async () => {
+  const { api } = loadScopeApi([]);
+
+  await assert.rejects(
+    api.resolveAccountScope(),
+    (error) => error && error.code === 'account_scope_unavailable',
+  );
 });
