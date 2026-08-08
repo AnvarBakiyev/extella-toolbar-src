@@ -925,3 +925,35 @@ ETB.evolutionPlaygroundRunner = (function () {
     _consumerClass: _consumerClass
   };
 }());
+
+// ── ПОДКЛЮЧЕНИЕ АДАПТЕРА ────────────────────────────────────────────────────
+// Маркер и метод присваиваются ТОЛЬКО ПАРОЙ. Порознь они опасны в обе стороны:
+// маркер без метода — Console считает Lab доступной и падает на вызове; метод без
+// маркера — гейт роутера отбивает вызов, кнопка выглядит живой и не работает.
+// Поэтому при любом сбое присвоения откатываем оба.
+//
+// Основание для включения: живой PASSED 08.08.2026 на объединённом HEAD — таблица
+// совпала с планом v3 точно, квитанция a635dd9c… и transcript 729bf7a3… перечитаны,
+// снос подтверждён 404, внешних записей ноль.
+//
+// ГРАНИЦА, которая остаётся в силе: это симуляция. Текст правила меняет поведение —
+// доказано; что механизм правил Extella применит его в бою — НЕ доказано, в квитанции
+// стоит native_application_status: NOT_VERIFIED. Публикацию симуляция не открывает:
+// nativeWritesReady = false и BLOCKED_NATIVE_ID_UNAVAILABLE не тронуты.
+(function attachPlaygroundAdapter() {
+  var adapter = ETB.evolutionAdapter = ETB.evolutionAdapter || {};
+  var runner = ETB.evolutionPlaygroundRunner;
+  if (typeof adapter.runClassTest === 'function') return;   // уже подключён
+  try {
+    adapter.playgroundIsolationContract = runner.playgroundIsolationContract;
+    adapter.runClassTest = runner.runClassTest;
+    if (typeof adapter.runClassTest !== 'function' ||
+        adapter.playgroundIsolationContract !== runner.playgroundIsolationContract) {
+      throw new Error('adapter pair was not accepted');
+    }
+  } catch (error) {
+    // Ни одного полуприсвоения: убираем оба и оставляем Lab закрытой честно.
+    try { delete adapter.runClassTest; } catch (_) {}
+    try { delete adapter.playgroundIsolationContract; } catch (_) {}
+  }
+}());

@@ -147,6 +147,38 @@ test('рукопожатие с router.js совпадает, а формат д
     'наружу отдаётся именно рукопожатие, а не формат');
 });
 
+test('маркер и метод подключаются только парой', () => {
+  // Порознь они опасны в обе стороны: маркер без метода — Console считает Lab
+  // доступной и падает на вызове; метод без маркера — гейт роутера отбивает вызов, а
+  // кнопка выглядит живой. Проверяем оба исхода на живом модуле.
+  const load = (adapterSeed) => {
+    const ctx = {
+      ETB: { api: {}, agentControl: { sha256: () => Promise.resolve('0'.repeat(64)) },
+        evolutionAdapter: adapterSeed },
+      console, JSON, Promise, Date, Math, String, Number, Array, Object, Set, RegExp, Error,
+    };
+    ctx.globalThis = ctx;
+    vm.runInNewContext(RUNNER_SRC, ctx, { filename: 'evolution-playground-runner.js' });
+    return ctx.ETB.evolutionAdapter;
+  };
+  const fresh = load(undefined);
+  assert.equal(typeof fresh.runClassTest, 'function', 'метод присвоен');
+  assert.equal(fresh.playgroundIsolationContract,
+    'extella.evolution.playground_isolation.v1.1', 'маркер присвоен');
+
+  // Присвоение метода невозможно (объект запрещает запись) — маркер обязан не остаться.
+  const hostile = Object.defineProperty({}, 'runClassTest', {
+    configurable: true, enumerable: true,
+    get() { return undefined; },
+    set() { throw new Error('frozen adapter'); },
+  });
+  const after = load(hostile);
+  assert.notEqual(typeof after.runClassTest, 'function',
+    'метод не присвоился — значит и маркера остаться не должно');
+  assert.equal(after.playgroundIsolationContract, undefined,
+    'полуприсвоение запрещено: маркер без метода делает кнопку живой и нерабочей');
+});
+
 test('форма candidateBundle в runner — та же, что проверяет evolution-console.js', () => {
   const consoleSrc = fs.readFileSync(path.join(CORE, 'evolution-console.js'), 'utf8');
   for (const marker of ['agent-configuration-bundle.v1',
