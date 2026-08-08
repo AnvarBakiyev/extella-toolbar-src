@@ -54,9 +54,9 @@ test('Evolution Console manifest keeps exact product naming and one narrow host-
     evolutionManifest.description,
     'Evolution Console разделяет работающие, остановленные, требующие помощи и непроверенные автоматизации. Каталог отделён от установленных, а детали для специалиста не мешают ежедневному управлению.',
   );
-  assert.equal(evolutionManifest.version, '0.23.0');
+  assert.equal(evolutionManifest.version, '0.24.0');
   assert.match(evolutionHtml, /id="consoleVersion"/);
-  assert.match(evolutionHtml, /var CONSOLE_VERSION = '0\.23\.0'/);
+  assert.match(evolutionHtml, /var CONSOLE_VERSION = '0\.24\.0'/);
   assert.match(evolutionHtml, /scannerContractStaleTitle:'Нужно обновить компонент проверки'/);
   assert.match(evolutionHtml, /scannerContractStaleTitle:'The checking component needs an update'/);
   assert.match(evolutionHtml, /error\.code==='DEVICE_SCANNER_CONTRACT_STALE'/);
@@ -662,7 +662,7 @@ test('B4 keeps an unknown dead-reference fact unknown in UI and exports', () => 
   );
   assert.match(
     evolutionHtml,
-    /<details class="technical-details" data-technical-details="collapsed">/,
+    /<details class="technical-details" data-technical-details="collapsed"[^>]*>/,
     'unknown integrity evidence must remain available without leaking into the closed card summary',
   );
 });
@@ -988,7 +988,7 @@ test('Shared Genes has a human task flow backed by exact Console contracts', () 
     evolutionHtml,
     /sharedLabBtn[^\n]+labReady\?'':'disabled'/,
   );
-  assert.match(evolutionHtml, /technicalMap:'Техническая карта Shared Genes'/);
+  assert.match(evolutionHtml, /technicalMap:'Для специалиста: карта Shared Genes'/);
 });
 
 test('Bulk preview targets only current visible canonical rows and is adapter-gated', () => {
@@ -1051,8 +1051,8 @@ test('Evolution UI never synthesizes native or Evolution Lab success and refresh
   );
   assert.match(evolutionHtml, /evolution_lab_readiness_load/);
   assert.match(evolutionHtml, /evolutionLabEnvironmentReady\(e\)/);
-  assert.match(evolutionHtml, /Проверить в симуляции/);
-  assert.match(evolutionHtml, /Применение правила механизмом Extella не проверено/);
+  assert.match(evolutionHtml, /Проверить в безопасной среде/);
+  assert.match(evolutionHtml, /Изменение ещё не применено к работающим агентам/);
   assert.match(evolutionHtml, /RULE_AS_INSTRUCTIONS_SIMULATION/);
   assert.match(evolutionHtml, /native_application_status==='NOT_VERIFIED'/);
   assert.doesNotMatch(

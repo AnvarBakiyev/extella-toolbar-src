@@ -265,7 +265,7 @@ test('Evolution Lab explains the change, coverage, safety, and result without in
   assert.match(lab, /id="labEnvironmentSetup"/);
   assert.match(lab, /id="labEnvironmentSelect"/);
   assert.match(lab, /id="labEnvironmentPrepareBtn"[^>]*disabled/);
-  assert.match(consoleHtml, /labSetupTitle:'Подготовка среды'/);
+  assert.match(consoleHtml, /labSetupTitle:'Подготовить тестовую среду'/);
   assert.match(consoleHtml, /labSetupWindowBoundary:'Среда принадлежит только этому окну Extella\./);
   assert.match(consoleHtml, /evolution_lab_environment_candidates_load/);
   assert.match(consoleHtml, /evolution_lab_environment_prepare/);
@@ -283,9 +283,9 @@ test('Evolution Lab explains the change, coverage, safety, and result without in
   assert.match(consoleHtml, /function classTestReceipt\(e\)/);
   assert.match(consoleHtml, /receipt\.type==='CLASS_TEST_COMPLETED'/);
   assert.match(consoleHtml, /e\.status\)==='TESTED'&&receipt&&receipt\.status==='PASSED'/);
-  assert.match(consoleHtml, /labIsolationConfirmed:'Одноразовая изолированная среда подтверждена и готова к одному запуску\.'/);
+  assert.match(consoleHtml, /labIsolationConfirmed:'Одноразовая тестовая среда подтверждена и готова к одному запуску\.'/);
   assert.match(consoleHtml, /labNoExternalWrites:'Рабочие автоматизации и файлы не затронуты\.'/);
-  assert.match(consoleHtml, /labReceiptSaved:'Квитанция симуляции сохранена\.'/);
+  assert.match(consoleHtml, /labReceiptSaved:'Результат проверки сохранён\.'/);
   assert.match(consoleHtml, /button\.disabled=!productionReady\(\)\|\|state\.labRunning/);
   assert.match(consoleHtml, /runEscAction\('escalation_test'\)/);
   assert.match(consoleHtml, /receipt&&receipt\.status==='FAILED'&&simulationConfirmed/);
@@ -395,6 +395,78 @@ test('unavailable fleet metrics collapse to one human sentence instead of four d
   assert.match(
     consoleHtml,
     /\.fleet-summary\.is-unavailable>button[^}]*display:none/,
+  );
+});
+
+test('every automation card turns its promised next step into a working read-only action', () => {
+  const actionStart = consoleHtml.indexOf('function automationPrimaryAction(row,problem)');
+  const actionEnd = consoleHtml.indexOf('function automationNextStep(', actionStart);
+  assert.ok(actionStart >= 0 && actionEnd > actionStart);
+  const action = consoleHtml.slice(actionStart, actionEnd);
+  assert.match(action, /kind:'REFRESH'/);
+  assert.match(action, /kind:'SCHEDULES'/);
+  assert.match(action, /kind:'STATE'/);
+  assert.match(action, /kind:'TECHNICAL'/);
+  assert.match(action, /kind:'COMPOSITION'/);
+  assert.doesNotMatch(
+    action,
+    /request\(|enable|disable|publish|update|rollback/i,
+    'the product shortcut must navigate verified read-only facts, not invent a mutation',
+  );
+
+  assert.match(consoleHtml, /data-automation-primary-action=/);
+  assert.match(consoleHtml, /data-automation-section="overview"/);
+  assert.match(consoleHtml, /data-automation-section="state"/);
+  assert.match(consoleHtml, /data-automation-section="schedules"/);
+  assert.match(consoleHtml, /data-automation-section="composition"/);
+  assert.match(consoleHtml, /data-automation-section="technical"/);
+  assert.match(
+    consoleHtml,
+    /function runAutomationPrimaryAction\(button\)[\s\S]*action==='REFRESH'\)\{loadFleet\(\);return;\}[\s\S]*specialist\.open=true[\s\S]*composition\.open=true/,
+  );
+  assert.match(
+    consoleHtml,
+    /querySelectorAll\('\[data-automation-primary-action\]'\)[\s\S]*runAutomationPrimaryAction\(button\)/,
+  );
+});
+
+test('partial live data is explained in product language while source codes stay technical', () => {
+  const mapperStart = consoleHtml.indexOf('function registrySourceUserIssue(error)');
+  const mapperEnd = consoleHtml.indexOf('function registryUserMessage(', mapperStart);
+  assert.ok(mapperStart >= 0 && mapperEnd > mapperStart);
+  const mapper = consoleHtml.slice(mapperStart, mapperEnd);
+  for (const key of [
+    'registryDeviceUnavailable',
+    'registryCatalogUnavailable',
+    'registryStateUnavailable',
+    'registryScheduleUnavailable',
+    'registryPlatformUnavailable',
+    'registryInstalledUnavailable',
+  ]) assert.match(mapper, new RegExp(`t\\('${key}'\\)`));
+  assert.match(consoleHtml, /dataset\.snapshotQuality=registryProjection\.complete===true\?'COMPLETE':'PARTIAL'/);
+  assert.match(consoleHtml, /registryUserMessage\(p\)\|\|t\('registryIncompleteText'\)/);
+  assert.match(
+    consoleHtml,
+    /id="registrySourceErrors"/,
+    'raw source codes remain available only under Technical details',
+  );
+});
+
+test('loading, failure, and empty search are complete product states with recovery', () => {
+  assert.match(consoleHtml, /function productStateMarkup\(kind,title,text,actions\)/);
+  assert.match(consoleHtml, /data-product-state=/);
+  assert.match(consoleHtml, /fleetLoadingTitle:'Собираем автоматизации'/);
+  assert.match(consoleHtml, /fleetLoadFailedTitle:'Не удалось получить автоматизации'/);
+  assert.match(consoleHtml, /noMatchesTitle:'Ничего не найдено'/);
+  assert.match(consoleHtml, /data-empty-action=/);
+  assert.match(
+    consoleHtml,
+    /function bindFleetEmptyActions\(\)[\s\S]*action==='retry'[\s\S]*action==='catalog'[\s\S]*applyFleetFilter\(button\.dataset\.emptyScope\|\|'installed'/,
+  );
+  assert.match(
+    consoleHtml,
+    /state\.automationRegistryError\?productStateMarkup\('error'[\s\S]*productStateMarkup\('loading'/,
+    'loading and failure must remain visibly different states',
   );
 });
 
@@ -549,7 +621,7 @@ test('opening a card reveals all four B4 facts and then collapsed technical evid
   const technicalRenderer = consoleHtml.slice(technicalStart, technicalEnd);
   assert.match(
     technicalRenderer,
-    /<details class="technical-details" data-technical-details="collapsed">/,
+    /<details class="technical-details" data-technical-details="collapsed"[^>]*>/,
   );
   assert.doesNotMatch(
     technicalRenderer,
@@ -706,6 +778,7 @@ test('every secondary Evolution view has a clear route back to automations', () 
       /<nav class="view-nav"[^>]*>[\s\S]*?<button class="view-back tab"[^>]*data-view="fleet"/,
       `${viewName} must offer a visible way back to automations`,
     );
+    assert.match(source, /class="view-nav-hint"[^>]*data-t="escapeBack"/);
   }
 
   const start = consoleHtml.indexOf('function setView(view)');
@@ -715,6 +788,26 @@ test('every secondary Evolution view has a clear route back to automations', () 
   assert.match(handler, /window\.scrollTo\(0,0\)/);
   assert.match(handler, /querySelector\('#'\+view\+'View \.view-back'\)/);
   assert.match(handler, /back\.focus\(\{preventScroll:true\}\)/);
+  assert.match(handler, /state\.viewReturnFocus=document\.activeElement/);
+  assert.match(handler, /returnFocus&&returnFocus\.isConnected/);
+  assert.match(
+    consoleHtml,
+    /event\.key!=='Escape'[\s\S]*active\.dataset\.evolutionView==='overview'[\s\S]*setView\('fleet'\)/,
+    'Escape must return from a secondary view without closing the whole Extella window',
+  );
+});
+
+test('shared settings and Evolution Lab explain the task before technical concepts', () => {
+  const shared = viewSource('shared-genes');
+  const lab = viewSource('lab');
+  assert.match(shared, /data-t="sharedSectionEyebrow"/);
+  assert.doesNotMatch(shared, />Agent Genome · Shared Genes</);
+  assert.match(consoleHtml, /sharedLibraryLead:'Выбери правило или знание для нескольких агентов\.'/);
+  assert.match(consoleHtml, /sharedZeroRulesVerified:'Проверено: ни одно общее правило пока не настроено\.'/);
+  assert.match(consoleHtml, /sharedZeroBoundary:'Console показывает только реально подготовленные общие правила и знания\.'/);
+  assert.match(lab, /data-t="labBoundary"/);
+  assert.match(consoleHtml, /labBoundary:'Эта проверка показывает, как текст правила меняет ответы в безопасной среде\./);
+  assert.match(consoleHtml, /labNativeNotVerified:'Изменение ещё не применено к работающим агентам\.'/);
 });
 
 test('an incomplete Shared Genes snapshot becomes one honest product state', () => {
