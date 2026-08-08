@@ -95,15 +95,13 @@ function world(overrides = {}) {
     bundleText);
 
   const SANDBOX = overrides.sandboxId || 'agent_prepared_sandbox';
-  if (!overrides.noPointer) {
-    kv.set('xtl_evolution:playground_sandbox_agent:v1', canonical({
-      agent_id: SANDBOX, prepared_at: '2026-08-07T18:00:00Z', actor_id: 'actor',
-      single_use: true, consumed: overrides.consumed === true,
-    }));
-  }
   const state = { rules: [{ id: null, rule: OLD_BODY, group_name: 'system' }], agentAlive: true,
     instructions: '' };
   const api = {
+    agentsList: () => {
+      log.push(['agentsList']);
+      return Promise.resolve({ agents: [{ id: SANDBOX, name: 'Одноразовая среда' }] });
+    },
     kvGet: (key) => { log.push(['kvGet', key]); return Promise.resolve({ value: kv.get(key) || '' }); },
     kvSet: (key, value) => {
       log.push(['kvSet', key]);
@@ -128,6 +126,8 @@ function world(overrides = {}) {
       // toolsAbsent: платформа НЕ объявила поле инструментов вовсе.
       return Promise.resolve({
         ...(overrides.toolsAbsent ? {} : { tools: overrides.sandboxTools || [] }),
+        id,
+        name: 'Одноразовая среда',
         byok_key_fingerprint: 'SECRET-FP-9',
         instructions: overrides.instructionsStick === false ? '' : state.instructions,
       });
@@ -189,11 +189,26 @@ function world(overrides = {}) {
   if (overrides.noExtractor) delete api.extractAgentText;
   const ctx = {
     ETB: { api, agentControl: { sha256: (t) => Promise.resolve(sha(t)) } },
+    crypto: crypto.webcrypto,
+    Uint8Array,
     console, JSON, Promise, Date, Math, String, Number, Array, Object, Set, RegExp, Error,
   };
   ctx.globalThis = ctx;
   vm.runInNewContext(RUNNER_SRC, ctx, { filename: 'evolution-playground-runner.js' });
   return { runner: ctx.ETB.evolutionPlaygroundRunner, log, kv, state };
+}
+
+async function prepareWorld(w, targets = CONSUMERS, requestId = 'prepare_request_0001') {
+  const listed = await w.runner.listEligibleSandboxes({ affectedAgentIds: targets });
+  assert.equal(listed.concurrency_scope, 'SINGLE_HOST_SESSION_ONLY');
+  assert.equal(listed.candidates.length, 1, 'стенд должен дать одну подходящую среду');
+  assert.doesNotMatch(JSON.stringify(listed), /agent_prepared_sandbox/,
+    'agent id не должен выходить из host-session runner');
+  return w.runner.prepareSandbox({
+    selectionRef: listed.candidates[0].selection_ref,
+    requestId,
+    affectedAgentIds: targets,
+  });
 }
 
 // Bundle РОВНО той формы, что routed action передаёт в runClassTest: полный immutable
@@ -229,7 +244,16 @@ const SPEC = {
 
 async function refuses(spec, overrides, code) {
   const w = world(overrides);
-  await assert.rejects(() => w.runner.runClassTest(spec), (error) => {
+  const beforeEnvironment = [
+    'PLAYGROUND_SPEC_INVALID', 'PLAYGROUND_CANDIDATE_ID_MISMATCH',
+    'PLAYGROUND_TARGET_CLASS_MISMATCH', 'PLAYGROUND_CHANGE_MODE_UNSUPPORTED',
+    'PLAYGROUND_PLAN_INVALID', 'PLAYGROUND_CANDIDATE_BUNDLE_MISMATCH',
+    'PLAYGROUND_CANDIDATE_BUNDLE_INVALID',
+  ].includes(code);
+  await assert.rejects(async () => {
+    if (!beforeEnvironment && !overrides.noPointer) await prepareWorld(w);
+    return w.runner.runClassTest(spec);
+  }, (error) => {
     assert.equal(error.code, code, 'ожидался код ' + code + ', получен ' + error.code);
     return true;
   });
@@ -238,36 +262,33 @@ async function refuses(spec, overrides, code) {
 
 test('readiness подтверждает свежую изолированную среду без запуска и записей', async () => {
   const w = world();
+  await prepareWorld(w);
+  const before = w.log.length;
   const result = await w.runner.loadPlaygroundReadiness({ affectedAgentIds: CONSUMERS });
   assert.deepEqual(JSON.parse(JSON.stringify(result)), {
     schema: 'extella.evolution.playground_readiness.v1',
     status: 'READY', reason_code: null, checked_at: result.checked_at,
-    environment_class: 'DISPOSABLE_SANDBOX', target_resolution: 'RUNNER_ONLY',
+    environment_class: 'DISPOSABLE_SANDBOX', concurrency_scope: 'SINGLE_HOST_SESSION_ONLY',
+    target_resolution: 'RUNNER_ONLY',
     owner_device_access: 'DENIED', single_use: true,
   });
   assert.ok(Number.isFinite(Date.parse(result.checked_at)), 'время проверки измеримо');
   assert.equal(JSON.stringify(result).includes('agent_prepared_sandbox'), false,
     'id одноразового агента не раскрывается в iframe');
-  assert.deepEqual(w.log.map((row) => row[0]), ['kvGet', 'agentGetScoped'],
-    'readiness только читает указатель и паспорт');
+  assert.deepEqual(w.log.slice(before).map((row) => row[0]), ['agentGetScoped'],
+    'readiness после подготовки только перечитывает паспорт');
 });
 
-test('readiness различает отсутствие, использованную и неизолированную среду', async () => {
-  const cases = [
-    [{ noPointer: true }, 'NO_PREPARED_ENVIRONMENT'],
-    [{ consumed: true }, 'ENVIRONMENT_ALREADY_USED'],
-    [{ sandboxTools: ['run_expert'] }, 'ENVIRONMENT_NOT_ISOLATED'],
-    [{ toolsAbsent: true }, 'ENVIRONMENT_NOT_ISOLATED'],
-    [{ notVisible: true }, 'ENVIRONMENT_UNAVAILABLE'],
-  ];
-  for (const [overrides, reason] of cases) {
-    const w = world(overrides);
-    const result = await w.runner.loadPlaygroundReadiness({ affectedAgentIds: CONSUMERS });
-    assert.equal(result.status, 'NOT_READY');
-    assert.equal(result.reason_code, reason);
-    assert.equal(w.log.some((row) => ['kvSet', 'runAgent', 'agentInstructionsUpdateScoped']
-      .includes(row[0])), false, 'отказ readiness не пишет и не запускает модель');
-  }
+test('readiness различает отсутствие и использованную среду', async () => {
+  const absent = world({ noPointer: true });
+  const missing = await absent.runner.loadPlaygroundReadiness({ affectedAgentIds: CONSUMERS });
+  assert.equal(missing.reason_code, 'NO_PREPARED_ENVIRONMENT');
+  const used = world();
+  await prepareWorld(used);
+  await used.runner.runClassTest(SPEC);
+  const spent = await used.runner.loadPlaygroundReadiness({ affectedAgentIds: CONSUMERS });
+  assert.equal(spent.status, 'NOT_READY');
+  assert.equal(spent.reason_code, 'ENVIRONMENT_ALREADY_USED');
 });
 
 test('candidate_id берётся только из spec и не подменяется draft_id', async () => {
@@ -283,6 +304,7 @@ test('candidate_id берётся только из spec и не подменя�
   assert.match(RUNNER_CODE, /PLAYGROUND_CANDIDATE_ID_MISMATCH/,
     'draft_id обязан сверяться с spec.candidateId, а не подставляться');
   const ok = world();
+  await prepareWorld(ok);
   const out = await ok.runner.runClassTest(SPEC);
   assert.equal(out.evidence.candidate_id, SPEC.candidateId,
     'candidate_id в evidence — ровно тот, что пришёл в spec');
@@ -300,12 +322,15 @@ test('изменение, которое не содержит старый те
     'PLAYGROUND_CHANGE_MODE_UNSUPPORTED');
 });
 
-test('песочница с инструментами не считается изолированной', async () => {
-  await refuses(SPEC, { sandboxTools: ['run_expert'] }, 'PLAYGROUND_SANDBOX_NOT_ISOLATED');
+test('песочница с инструментами не попадает в список подготовки', async () => {
+  const w = world({ sandboxTools: ['run_expert'] });
+  const listed = await w.runner.listEligibleSandboxes({ affectedAgentIds: CONSUMERS });
+  assert.equal(listed.candidates.length, 0);
 });
 
 test('правила не участвуют в проверке вовсе', async () => {
   const w = world();
+  await prepareWorld(w);
   await w.runner.runClassTest(SPEC);
   for (const forbidden of ['ruleAddScoped', 'ruleListScoped', 'ruleRemoveScoped']) {
     assert.equal(w.log.filter((r) => r[0] === forbidden).length, 0,
@@ -318,6 +343,7 @@ test('правила не участвуют в проверке вовсе', as
 test('маркерная проба ловит неприменённые инструкции до трёх случаев', async () => {
   // Без неё фаза «после» может оказаться такой же пустышкой, какой была на правилах.
   const w = world({ instructionsSilent: true });
+  await prepareWorld(w);
   await assert.rejects(() => w.runner.runClassTest(SPEC), (e) => {
     assert.equal(e.code, 'PLAYGROUND_INSTRUCTIONS_NOT_APPLIED');
     return true;
@@ -330,6 +356,7 @@ test('незаписанные инструкции останавливают �
 
 test('квитанция машинно объявляет режим и границу доказательства', async () => {
   const w = world();
+  await prepareWorld(w);
   const out = await w.runner.runClassTest(SPEC);
   const iso = out.evidence.isolation;
   assert.equal(iso.schema, 'extella.evolution.playground_isolation.v1.1');
@@ -354,22 +381,33 @@ test('без подготовленного агента прогон не на�
 });
 
 test('одноразовость: второй прогон тем же агентом отклоняется', async () => {
-  await refuses(SPEC, { consumed: true }, 'PLAYGROUND_SANDBOX_ALREADY_USED');
+  const w = world();
+  await prepareWorld(w);
+  await w.runner.runClassTest(SPEC);
+  await assert.rejects(() => w.runner.runClassTest(SPEC), function (error) {
+    assert.equal(error.code, 'PLAYGROUND_SANDBOX_ALREADY_USED');
+    return true;
+  });
 });
 
-test('песочница не может быть одной из продовых целей', async () => {
-  await refuses(SPEC, { sandboxId: CONSUMERS[2] }, 'PLAYGROUND_SANDBOX_IS_PRODUCTION_TARGET');
+test('production-агент не попадает в список подготовки', async () => {
+  const w = world({ sandboxId: CONSUMERS[2] });
+  const listed = await w.runner.listEligibleSandboxes({ affectedAgentIds: CONSUMERS });
+  assert.equal(listed.candidates.length, 0);
 });
 
-test('невидимый в этом аккаунте агент не годится', async () => {
-  await refuses(SPEC, { notVisible: true }, 'PLAYGROUND_SANDBOX_NOT_VISIBLE');
+test('невидимый в этом аккаунте агент не попадает в список подготовки', async () => {
+  const w = world({ notVisible: true });
+  const listed = await w.runner.listEligibleSandboxes({ affectedAgentIds: CONSUMERS });
+  assert.equal(listed.candidates.length, 0);
 });
 
 test('среда объявляет отсутствие инструментов до прогона', async () => {
   const w = world();
+  await prepareWorld(w);
   await w.runner.runClassTest(SPEC);
-  assert.equal(w.log.filter((r) => r[0] === 'agentInstructionsUpdateScoped').length, 3,
-    'три записи инструкций: базовые, маркерная проба, «после» с кандидатом');
+  assert.equal(w.log.filter((r) => r[0] === 'agentInstructionsUpdateScoped').length, 4,
+    'подготовка плюс три записи прогона: базовые, маркерная проба, «после»');
   assert.equal(w.state.instructions.includes('Инструментов и доступа к файлам у тебя НЕТ'), true);
 });
 
@@ -381,7 +419,7 @@ test('дымовая проба ловит неработающий ключ д�
   // Две одноразовые среды сгорели впустую именно потому, что три случая запускались
   // раньше, чем кто-то убедился, что ответ вообще приходит.
   const w = world({ rawResponse: { output: [] }, noExtractor: true });
-  await assert.rejects(() => w.runner.runClassTest(SPEC), (e) => {
+  await assert.rejects(() => prepareWorld(w), (e) => {
     assert.equal(e.code, 'PLAYGROUND_SANDBOX_KEY_UNUSABLE');
     return true;
   });
@@ -391,6 +429,7 @@ test('дымовая проба ловит неработающий ключ д�
 
 test('ключ провайдера не читается и никуда не попадает', async () => {
   const w = world();
+  await prepareWorld(w);
   const out = await w.runner.runClassTest(SPEC);
   const everything = JSON.stringify(out) + [...w.kv.values()].join(' ');
   assert.doesNotMatch(everything, /SECRET-FP-9/,
@@ -408,6 +447,7 @@ test('создание агента из кода не используется'
 
 test('успешный прогон: закрытая форма результата, без сырого ответа в evidence', async () => {
   const w = world();
+  await prepareWorld(w);
   const out = await w.runner.runClassTest(SPEC);
   const ev = out.evidence;
   assert.equal(ev.status, 'PASSED', 'таблица совпала точно — только тогда PASSED');
@@ -447,6 +487,7 @@ test('молчащий прогон объявляется дефектом об
 test('ожидаемые вердикты не уходят в prompt', async () => {
   const sent = [];
   const w = world({ capturePrompts: sent });
+  await prepareWorld(w);
   await w.runner.runClassTest(SPEC).catch(() => {});
   const all = sent.join(' | ');
   assert.doesNotMatch(all, /STOP_AND_CONFIRM|RULE_COVERAGE_CONFIRMED|expect_/,
@@ -492,6 +533,7 @@ test('вердикт детерминирован, неоднозначный о
 
 test('вердикт вне разрешённого множества даёт FAILED, а не PASSED', async () => {
   const w = world({ expectAfter: ['ALLOW'] });   // после будет RULE_COVERAGE_CONFIRMED
+  await prepareWorld(w);
   const out = await w.runner.runClassTest(SPEC);
   assert.equal(out.evidence.status, 'FAILED');
 });
@@ -501,6 +543,7 @@ test('оба честных объяснения допустимы, если т
   // кандидата не считается — поэтому множество из двух вердиктов.
   const w = world({ expectBefore: ['STOP_AND_CONFIRM', 'RULE_COVERAGE_CONFIRMED'],
     expectAfter: ['STOP_AND_CONFIRM', 'RULE_COVERAGE_CONFIRMED'] });
+  await prepareWorld(w);
   const out = await w.runner.runClassTest(SPEC);
   assert.equal(out.evidence.status, 'PASSED');
 });
@@ -557,6 +600,7 @@ test('кандидат обязан совпадать с bundle из spec', asy
 
 test('в квитанцию и isolation идёт SHA bundle, а не тела правила', async () => {
   const w = world();
+  await prepareWorld(w);
   const out = await w.runner.runClassTest(SPEC);
   assert.equal(out.evidence.candidate_sha256, SPEC.candidateBundleSha256);
   assert.equal(out.evidence.isolation.candidate_sha256, SPEC.candidateBundleSha256);
@@ -571,6 +615,7 @@ test('в квитанцию и isolation идёт SHA bundle, а не тела �
 test('снос принимает точный fulfilled not_found боевого _post', async () => {
   // Боевой api.js на 404 НЕ бросает, а возвращает {status:'not_found', httpStatus:404}.
   const w = world({ afterDeleteResponse: { status: 'not_found', httpStatus: 404 } });
+  await prepareWorld(w);
   const out = await w.runner.runClassTest(SPEC);
   assert.equal(out.evidence.isolation.teardown_status, 'CONFIRMED');
   // А любой другой fulfilled-ответ — не подтверждение.
@@ -588,6 +633,7 @@ test('снос подтверждается только точным 404', asyn
     [new Error('что-то пошло не так'), 'незнакомая ошибка'],
   ]) {
     const w = world({ afterDeleteError: error });
+    await prepareWorld(w);
     await assert.rejects(() => w.runner.runClassTest(SPEC), (e) => {
       assert.equal(e.code, 'PLAYGROUND_TEARDOWN_UNCONFIRMED', label + ' не должен считаться сносом');
       return true;
@@ -595,16 +641,96 @@ test('снос подтверждается только точным 404', asyn
   }
   // А точный 404 — считается.
   const ok = world({ afterDeleteError: Object.assign(new Error('not found'), { status: 404 }) });
+  await prepareWorld(ok);
   const out = await ok.runner.runClassTest(SPEC);
   assert.equal(out.evidence.isolation.teardown_status, 'CONFIRMED');
 });
 
-test('непогашенный указатель не даёт результата', async () => {
-  await refuses(SPEC, { pointerWriteFails: true }, 'PLAYGROUND_POINTER_NOT_CONSUMED');
+test('одноразовая ссылка выбора не принимается повторно', async () => {
+  const w = world();
+  const listed = await w.runner.listEligibleSandboxes({ affectedAgentIds: CONSUMERS });
+  const payload = { selectionRef: listed.candidates[0].selection_ref,
+    requestId: 'prepare_request_once', affectedAgentIds: CONSUMERS };
+  await w.runner.prepareSandbox(payload);
+  await assert.rejects(() => w.runner.prepareSandbox({ ...payload,
+    requestId: 'prepare_request_twice' }), function (error) {
+    assert.equal(error.code, 'PLAYGROUND_SELECTION_INVALID');
+    return true;
+  });
 });
 
-test('паспорт без поля инструментов изоляцией не считается', async () => {
-  await refuses(SPEC, { toolsAbsent: true }, 'PLAYGROUND_SANDBOX_NOT_ISOLATED');
+test('ссылка выбора принадлежит только тому окну, где была выдана', async () => {
+  const firstWindow = world();
+  const secondWindow = world();
+  const listed = await firstWindow.runner.listEligibleSandboxes({ affectedAgentIds: CONSUMERS });
+  await assert.rejects(() => secondWindow.runner.prepareSandbox({
+    selectionRef: listed.candidates[0].selection_ref,
+    requestId: 'prepare_other_window',
+    affectedAgentIds: CONSUMERS,
+  }), (error) => {
+    assert.equal(error.code, 'PLAYGROUND_SELECTION_INVALID');
+    return true;
+  });
+});
+
+test('подготовка идемпотентна по request_id и не принимает другое тело', async () => {
+  const w = world();
+  const firstList = await w.runner.listEligibleSandboxes({ affectedAgentIds: CONSUMERS });
+  const payload = {
+    selectionRef: firstList.candidates[0].selection_ref,
+    requestId: 'prepare_idempotent_request',
+    affectedAgentIds: CONSUMERS,
+  };
+  const first = await w.runner.prepareSandbox(payload);
+  const repeat = await w.runner.prepareSandbox(payload);
+  assert.deepEqual(JSON.parse(JSON.stringify(repeat)), JSON.parse(JSON.stringify(first)));
+
+  const secondList = await w.runner.listEligibleSandboxes({ affectedAgentIds: CONSUMERS });
+  await assert.rejects(() => w.runner.prepareSandbox({
+    ...payload,
+    selectionRef: secondList.candidates[0].selection_ref,
+  }), (error) => {
+    assert.equal(error.code, 'PLAYGROUND_PREPARATION_IDEMPOTENCY_CONFLICT');
+    return true;
+  });
+});
+
+test('два одновременных запроса не получают одну среду', async () => {
+  const w = world();
+  const listed = await w.runner.listEligibleSandboxes({ affectedAgentIds: CONSUMERS });
+  const selectionRef = listed.candidates[0].selection_ref;
+  const results = await Promise.allSettled([
+    w.runner.prepareSandbox({ selectionRef, requestId: 'prepare_concurrent_a', affectedAgentIds: CONSUMERS }),
+    w.runner.prepareSandbox({ selectionRef, requestId: 'prepare_concurrent_b', affectedAgentIds: CONSUMERS }),
+  ]);
+  assert.equal(results.filter((row) => row.status === 'fulfilled').length, 1);
+  const rejected = results.find((row) => row.status === 'rejected');
+  assert.equal(rejected.reason.code, 'PLAYGROUND_SELECTION_INVALID');
+});
+
+test('окно не подменяет уже подготовленную среду другой', async () => {
+  const w = world();
+  const firstList = await w.runner.listEligibleSandboxes({ affectedAgentIds: CONSUMERS });
+  await w.runner.prepareSandbox({
+    selectionRef: firstList.candidates[0].selection_ref,
+    requestId: 'prepare_first_environment',
+    affectedAgentIds: CONSUMERS,
+  });
+  const secondList = await w.runner.listEligibleSandboxes({ affectedAgentIds: CONSUMERS });
+  await assert.rejects(() => w.runner.prepareSandbox({
+    selectionRef: secondList.candidates[0].selection_ref,
+    requestId: 'prepare_second_environment',
+    affectedAgentIds: CONSUMERS,
+  }), (error) => {
+    assert.equal(error.code, 'PLAYGROUND_ENVIRONMENT_ALREADY_PREPARED');
+    return true;
+  });
+});
+
+test('паспорт без поля инструментов не попадает в список подготовки', async () => {
+  const w = world({ toolsAbsent: true });
+  const listed = await w.runner.listEligibleSandboxes({ affectedAgentIds: CONSUMERS });
+  assert.equal(listed.candidates.length, 0);
 });
 
 test('обёртки песочницы остаются host-only и не публикуются маршрутом', () => {

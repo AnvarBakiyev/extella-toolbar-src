@@ -258,6 +258,24 @@ test('Evolution Lab explains the change, coverage, safety, and result without in
   assert.match(lab, /id="labCaseCount"/);
   assert.match(lab, /id="labProof"/);
   assert.match(lab, /id="labRunBtn"[^>]*disabled/);
+  assert.match(lab, /id="labEnvironmentSetup"/);
+  assert.match(lab, /id="labEnvironmentSelect"/);
+  assert.match(lab, /id="labEnvironmentPrepareBtn"[^>]*disabled/);
+  assert.match(consoleHtml, /labSetupTitle:'Подготовка среды'/);
+  assert.match(consoleHtml, /labSetupWindowBoundary:'Среда принадлежит только этому окну Extella\./);
+  assert.match(consoleHtml, /evolution_lab_environment_candidates_load/);
+  assert.match(consoleHtml, /evolution_lab_environment_prepare/);
+  assert.match(consoleHtml, /SINGLE_HOST_SESSION_ONLY/);
+  assert.doesNotMatch(
+    consoleHtml,
+    /пока администратор не подготовит новую изолированную среду|until an administrator prepares/i,
+    'Evolution Lab must not invent an administrator role that the platform does not have',
+  );
+  assert.doesNotMatch(
+    lab,
+    /agent[_ -]?id|platform_agent_id/i,
+    'the environment picker must not expose internal agent identifiers',
+  );
   assert.match(consoleHtml, /function classTestReceipt\(e\)/);
   assert.match(consoleHtml, /receipt\.type==='CLASS_TEST_COMPLETED'/);
   assert.match(consoleHtml, /e\.status\)==='TESTED'&&receipt&&receipt\.status==='PASSED'/);

@@ -1039,11 +1039,15 @@ test('Evolution UI never synthesizes native or Evolution Lab success and refresh
   assert.match(evolutionHtml, /multiDeviceCompareAndSwap/);
   assert.match(
     router,
-    /typeof evolutionAdapter\.runClassTest === 'function' &&\s*typeof evolutionAdapter\.loadPlaygroundReadiness === 'function' &&\s*evolutionAdapter\.playgroundIsolationContract ===\s*'extella\.evolution\.playground_isolation\.v1\.1'/,
+    /typeof evolutionAdapter\.runClassTest === 'function' &&\s*typeof evolutionAdapter\.loadPlaygroundReadiness === 'function' &&\s*typeof evolutionAdapter\.listEligibleSandboxes === 'function' &&\s*typeof evolutionAdapter\.prepareSandbox === 'function' &&\s*evolutionAdapter\.playgroundIsolationContract ===\s*'extella\.evolution\.playground_isolation\.v1\.1' &&\s*evolutionAdapter\.playgroundPoolContract ===\s*'extella\.evolution\.playground_pool\.single_host_session\.v1'/,
   );
   assert.match(
     router,
     /\(method === 'runClassTest' \|\| method === 'loadPlaygroundReadiness'\) &&\s*adapter\.playgroundIsolationContract !==\s*'extella\.evolution\.playground_isolation\.v1\.1'/,
+  );
+  assert.match(
+    router,
+    /\(method === 'listEligibleSandboxes' \|\| method === 'prepareSandbox'\) &&\s*adapter\.playgroundPoolContract !==\s*'extella\.evolution\.playground_pool\.single_host_session\.v1'/,
   );
   assert.match(evolutionHtml, /evolution_lab_readiness_load/);
   assert.match(evolutionHtml, /evolutionLabEnvironmentReady\(e\)/);

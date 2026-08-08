@@ -123,6 +123,28 @@ function readinessHarness() {
   return context.normalize;
 }
 
+function environmentSurfaceHarness() {
+  const start = router.indexOf('  function _evolutionNormalizeLabCandidates');
+  const end = router.indexOf('  function _evolutionLastReceipt', start);
+  assert.ok(start >= 0 && end > start);
+  const context = { Date, Promise, isFinite };
+  vm.runInNewContext(`
+    function _evolutionError(code, message) {
+      var error = new Error(message || code); error.code = code; return error;
+    }
+    function _evolutionRequireClosedKeys(value, keys, code, label) {
+      if (!value || typeof value !== 'object' || Array.isArray(value) ||
+          JSON.stringify(Object.keys(value).sort()) !== JSON.stringify(keys.slice().sort())) {
+        throw _evolutionError(code, label + ' has an invalid field set');
+      }
+    }
+    ${router.slice(start, end)}
+    this.normalizeCandidates = _evolutionNormalizeLabCandidates;
+    this.normalizePreparation = _evolutionNormalizeLabPreparation;
+  `, context, { filename: 'evolution-environment-surface-harness.js' });
+  return context;
+}
+
 function ledgerDiscoveryHarness(rememberedOwner, readLedgerImpl) {
   const start = router.indexOf('  function _evolutionDiscoverLedger');
   const end = router.indexOf('  function _evolutionIssueRows', start);
@@ -692,14 +714,16 @@ test('Evolution Lab readiness surface is current, closed and does not expose san
   const ready = plain(normalize({
     schema: 'extella.evolution.playground_readiness.v1',
     status: 'READY', reason_code: null, checked_at: new Date().toISOString(),
-    environment_class: 'DISPOSABLE_SANDBOX', target_resolution: 'RUNNER_ONLY',
+    environment_class: 'DISPOSABLE_SANDBOX', concurrency_scope: 'SINGLE_HOST_SESSION_ONLY',
+    target_resolution: 'RUNNER_ONLY',
     owner_device_access: 'DENIED', single_use: true,
   }, session, context));
   assert.deepEqual(ready, {
     schema: 'extella.evolution.playground_readiness_surface.v1',
     owner_account_id: 'account_actor', fleet_snapshot_id: 'snapshot_exact',
     captured_at: ready.captured_at, status: 'READY', reason_code: null,
-    environment_class: 'DISPOSABLE_SANDBOX', target_resolution: 'RUNNER_ONLY',
+    environment_class: 'DISPOSABLE_SANDBOX', concurrency_scope: 'SINGLE_HOST_SESSION_ONLY',
+    target_resolution: 'RUNNER_ONLY',
     owner_device_access: 'DENIED', single_use: true,
   });
   assert.equal(JSON.stringify(ready).includes('agent_'), false,
@@ -707,9 +731,45 @@ test('Evolution Lab readiness surface is current, closed and does not expose san
   assert.throws(() => normalize({
     schema: 'extella.evolution.playground_readiness.v1',
     status: 'READY', reason_code: null, checked_at: new Date().toISOString(),
-    environment_class: 'DISPOSABLE_SANDBOX', target_resolution: 'RUNNER_ONLY',
+    environment_class: 'DISPOSABLE_SANDBOX', concurrency_scope: 'SINGLE_HOST_SESSION_ONLY',
+    target_resolution: 'RUNNER_ONLY',
     owner_device_access: 'DENIED', single_use: true, agent_id: 'agent_secret',
   }, session, context), (error) => error.code === 'EVOLUTION_LAB_READINESS_INVALID');
+});
+
+test('Evolution Lab environment surfaces expose names and session refs, never agent ids', () => {
+  const harness = environmentSurfaceHarness();
+  const session = { snapshotId: 'snapshot_exact' };
+  const context = { actorId: 'account_actor' };
+  const ref = 'playground_selection_' + 'a'.repeat(36);
+  const candidates = plain(harness.normalizeCandidates({
+    schema: 'extella.evolution.playground_candidates.v1',
+    status: 'AVAILABLE', captured_at: new Date().toISOString(),
+    concurrency_scope: 'SINGLE_HOST_SESSION_ONLY',
+    candidates: [{ selection_ref: ref, display_name: 'Тестовая среда' }],
+  }, session, context));
+  assert.deepEqual(candidates, {
+    schema: 'extella.evolution.playground_candidates_surface.v1',
+    owner_account_id: 'account_actor', fleet_snapshot_id: 'snapshot_exact',
+    captured_at: candidates.captured_at,
+    concurrency_scope: 'SINGLE_HOST_SESSION_ONLY',
+    candidates: [{ selection_ref: ref, display_name: 'Тестовая среда' }],
+  });
+  assert.equal(JSON.stringify(candidates).includes('agent_'), false);
+  assert.throws(() => harness.normalizeCandidates({
+    schema: 'extella.evolution.playground_candidates.v1',
+    status: 'AVAILABLE', captured_at: new Date().toISOString(),
+    concurrency_scope: 'SINGLE_HOST_SESSION_ONLY',
+    candidates: [{ selection_ref: ref, display_name: 'agent_secret_id' }],
+  }, session, context), (error) => error.code === 'EVOLUTION_LAB_CANDIDATES_INVALID');
+
+  const preparation = plain(harness.normalizePreparation({
+    schema: 'extella.evolution.playground_preparation.v1', status: 'READY',
+    reason_code: null, prepared_at: new Date().toISOString(),
+    concurrency_scope: 'SINGLE_HOST_SESSION_ONLY', single_use: true,
+  }, session, context));
+  assert.equal(preparation.status, 'READY');
+  assert.equal(JSON.stringify(preparation).includes('agent_'), false);
 });
 
 test('schedule mutation gate accepts only current usable state for every affected installed automation', () => {
