@@ -6604,7 +6604,7 @@ function _cxStepsHTML(){
       var current=i===active&&_cxState.status==='running';
       var color=done?'var(--tx2)':(current?'var(--acc,#C57E33)':'var(--tx3)');
       var dot=done?'✓':(current?'●':'○');
-      return '<div style="display:flex;align-items:center;gap:9px;color:'+color+';font-size:13px;'+
+      return '<div style="display:flex;align-items:center;gap:8px;color:'+color+';font-size:13px;'+
         (current?'font-weight:600':'')+'"><span style="width:15px;text-align:center">'+dot+'</span>'+
         esc(_cxT(s.ru,s.en))+'</div>';
     }).join('')+'</div>';
@@ -6617,9 +6617,9 @@ function _cxIdleHTML(){
     (needsUpdate?
       _cxT('Обновить Codex','Update Codex'):
       _cxT('Подключить Codex','Connect Codex'));
-  return '<div style="margin-top:15px;padding:13px 14px;border:1px solid var(--bd);border-radius:8px;'+
+  return '<div style="margin-top:16px;padding:12px 16px;border:1px solid var(--bd);border-radius:8px;'+
       'background:var(--bg);font-size:13px;line-height:1.65;color:var(--tx2)">'+
-    '<div style="color:var(--tx);font-weight:600;margin-bottom:5px">'+
+    '<div style="color:var(--tx);font-weight:600;margin-bottom:4px">'+
       (connected?
         _cxT('Codex уже подключён','Codex is already connected'):
         (needsUpdate?_cxT('Доступно обновление подключения','A connection update is available'):
@@ -6637,7 +6637,7 @@ function _cxIdleHTML(){
                            'the protected local Codex bridge will start')+'</div>'+
       '<div>✓ '+_cxT('Codex станет доступен всем текущим и будущим агентам',
                            'Codex will become available to every current and future agent')+'</div>')+
-    '<div id="cx_agent_count" style="margin-top:5px;color:var(--tx)">'+
+    '<div id="cx_agent_count" style="margin-top:4px;color:var(--tx)">'+
       (_cxAgentCount===null?
         _cxT('Считаем текущих агентов…','Counting current agents…'):
         _cxT('Сейчас будет подключено агентов: '+_cxAgentCount,
@@ -6646,17 +6646,17 @@ function _cxIdleHTML(){
     '<div>✓ '+_cxT('установка проверится без запуска модели',
                          'installation will be verified without running a model')+'</div>'+
     '</div>'+
-    '<div style="margin-top:12px;font-size:12.5px;line-height:1.6;color:var(--tx2)">'+
+    '<div style="margin-top:12px;font-size:13px;line-height:1.6;color:var(--tx2)">'+
       _cxT('Нужен установленный и авторизованный Codex. Токен текущего аккаунта берётся локально из Extella Desktop и не показывается на экране.',
            'Codex must be installed and signed in. The current account token is read locally from Extella Desktop and is never shown.')+
     '</div>'+
-    '<div style="margin-top:13px;padding-top:12px;border-top:1px solid var(--bd);font-size:12px;line-height:1.55;color:var(--tx3)">'+
+    '<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--bd);font-size:13px;line-height:1.55;color:var(--tx3)">'+
       _cxT('Сама установка бесплатна: агенты и модели не запускаются. После установки обращения агентов к Codex могут расходовать лимит подписки Codex/ChatGPT или API; обычный запуск агента Extella учитывается по вашему тарифу Extella.',
            'Installation itself is free: no agent or model is run. Later agent calls to Codex may consume Codex/ChatGPT plan or API usage; normal Extella agent runs follow your Extella plan.')+
     '</div>'+
-    '<details style="margin-top:9px;color:var(--tx3);font-size:11.5px;line-height:1.55">'+
+    '<details style="margin-top:8px;color:var(--tx3);font-size:11px;line-height:1.55">'+
       '<summary style="cursor:pointer">'+_cxT('Технические детали и откат','Technical details and rollback')+'</summary>'+
-      '<div style="margin-top:7px;word-break:break-all">'+
+      '<div style="margin-top:8px;word-break:break-all">'+
         'Installer Expert: <code>'+CODEX_INSTALLER_EXPERT+'</code><br>SHA-256: <code>'+CODEX_INSTALLER_HASH+'</code><br>'+
         'Bridge Expert SHA-256: <code>'+CODEX_BRIDGE_EXPERT_HASH+'</code><br>'+
         _cxT('Предел одного вызова: 4 000 знаков запроса, до 2 000 выходных токенов, до 120 секунд; одновременно выполняется один запрос, автоматических повторов нет. ',
@@ -6676,7 +6676,7 @@ function _cxRunningHTML(){
       _cxT('Expert работает на этом компьютере. Окно можно закрыть — установка продолжится.',
            'The Expert is running on this computer. You may close this window; installation will continue.')+
     '</div>'+_cxStepsHTML()+
-    '<div style="height:5px;margin-top:17px;background:var(--bd);border-radius:999px;overflow:hidden">'+
+    '<div style="height:5px;margin-top:16px;background:var(--bd);border-radius:999px;overflow:hidden">'+
       '<div style="height:100%;width:38%;background:var(--acc,#C57E33);border-radius:999px;animation:cxmove 1.25s ease-in-out infinite"></div>'+
     '</div>'+
     '<div style="margin-top:16px"><button onclick="_cxClose()" style="'+_KPBTN+'">'+_cxT('Свернуть','Hide')+'</button></div>';
@@ -6685,18 +6685,18 @@ function _cxSuccessHTML(){
   var phrase=_cxT('Вызови Codex. Не используй run_agent, get_expert и search_experts. Если доступен tool extella_codex_account_bridge_v2 — вызови его напрямую. Иначе сразу вызови run_expert с name="extella_codex_account_bridge_v2", global=true и params.prompt="Ответь одной фразой: сообщение получено через мост Extella → Codex".',
                   'Call Codex. Do not use run_agent, get_expert, or search_experts. If the extella_codex_account_bridge_v2 tool is available, call it directly. Otherwise immediately call run_expert with name="extella_codex_account_bridge_v2", global=true, and params.prompt="Reply in one sentence: the message was received through the Extella to Codex bridge."');
   return _cxStepsHTML()+
-    '<div style="margin-top:16px;padding:13px 14px;border:1px solid #2E7D5B;border-radius:8px;'+
+    '<div style="margin-top:16px;padding:12px 16px;border:1px solid #2E7D5B;border-radius:8px;'+
       'background:rgba(46,125,91,.07);color:var(--tx);font-size:13px;line-height:1.6">'+
       '<strong>'+_cxT('Готово. Codex доступен всем агентам Extella.','Done. Codex is available to every Extella agent.')+'</strong><br>'+
       _cxT('Перезапуск не нужен. Новые агенты будут подключаться автоматически.',
            'No restart is required. New agents will be connected automatically.')+
     '</div>'+
-    '<div style="margin-top:14px;color:var(--tx2);font-size:12.5px;line-height:1.55">'+
+    '<div style="margin-top:12px;color:var(--tx2);font-size:13px;line-height:1.55">'+
       _cxT('Для первого реального платного теста открой любого агента и напиши:',
            'For the first real paid test, open any agent and send:')+'</div>'+
-    '<div style="margin-top:7px;background:var(--bg);border:1px solid var(--bd2);border-radius:8px;padding:10px 11px;'+
-      'font-size:12.5px;line-height:1.55;user-select:all">'+esc(phrase)+'</div>'+
-    '<div style="margin-top:10px;display:flex;gap:8px">'+
+    '<div style="margin-top:8px;background:var(--bg);border:1px solid var(--bd2);border-radius:8px;padding:8px 12px;'+
+      'font-size:13px;line-height:1.55;user-select:all">'+esc(phrase)+'</div>'+
+    '<div style="margin-top:12px;display:flex;gap:8px">'+
       '<button style="'+_KPBTN+'" onclick="_claudeCopyText('+JSON.stringify(phrase)+',this,'+
         JSON.stringify(_cxT('Скопировать проверку','Copy check'))+')">'+_cxT('Скопировать проверку','Copy check')+'</button>'+
       '<button onclick="_cxClose()" style="'+_KPBTN+'">'+_cxT('Закрыть','Close')+'</button>'+
@@ -6704,17 +6704,17 @@ function _cxSuccessHTML(){
 }
 function _cxErrorHTML(){
   var diagnostic=(_cxState.stage||_cxState.taskId)?
-    '<div style="margin-top:9px;color:var(--tx3);font:11px/1.55 var(--mono);word-break:break-all">'+
+    '<div style="margin-top:8px;color:var(--tx3);font:11px/1.55 var(--mono);word-break:break-all">'+
       (_cxState.stage?'Stage: '+esc(_cxState.stage):'')+
       (_cxState.stage&&_cxState.taskId?' · ':'')+
       (_cxState.taskId?'Task ID: '+esc(_cxState.taskId):'')+
     '</div>':'';
-  return '<div style="margin-top:15px;padding:13px 14px;border:1px solid #B23A2E;border-radius:8px;'+
+  return '<div style="margin-top:16px;padding:12px 16px;border:1px solid #B23A2E;border-radius:8px;'+
       'background:rgba(178,58,46,.06);font-size:13px;line-height:1.6;color:var(--tx)">'+
       '<strong>'+_cxT('Не удалось завершить установку.','Installation did not finish.')+'</strong><br>'+
       esc(_cxState.error||_cxT('Неизвестная ошибка.','Unknown error.'))+diagnostic+
     '</div>'+
-    '<div style="margin-top:12px;color:var(--tx3);font-size:12px">'+
+    '<div style="margin-top:12px;color:var(--tx3);font-size:13px">'+
       _cxT('Повтор продолжит идемпотентную установку: модели и агенты не запускаются.',
            'Retrying continues the idempotent installation: no models or agents are run.')+'</div>'+
     '<div style="margin-top:16px;display:flex;gap:8px">'+
@@ -6733,12 +6733,12 @@ function codexConnectModal(){
   var ov=document.createElement('div');ov.id='cx_ov';ov.style.cssText=_KPOV;
   ov.innerHTML='<style>@keyframes cxmove{0%{transform:translateX(-110%)}100%{transform:translateX(280%)}}</style>'+
     '<div style="'+_KPMODAL+'">'+
-      '<div style="font-family:var(--serif);font-size:20px;margin-bottom:5px">'+
+      '<div style="font-family:var(--serif);font-size:20px;margin-bottom:4px">'+
         (connected?
           _cxT('Codex подключён к Extella','Codex is connected to Extella'):
           (needsUpdate?_cxT('Обновить подключение Codex','Update the Codex connection'):
             _cxT('Подключить Codex к Extella','Connect Codex to Extella')))+'</div>'+
-      '<div style="color:var(--tx2);font-size:13.5px;line-height:1.6">'+
+      '<div style="color:var(--tx2);font-size:13px;line-height:1.6">'+
         (connected?
           _cxT('Подключение действует для всех текущих и будущих агентов этого аккаунта.',
                'The connection applies to every current and future agent in this account.'):
