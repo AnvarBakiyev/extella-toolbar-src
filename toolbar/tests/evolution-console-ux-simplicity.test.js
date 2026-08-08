@@ -686,6 +686,66 @@ test('successful Cabinet escalation closes accessibly and focuses its result', (
   );
 });
 
+test('every secondary Evolution view has a clear route back to automations', () => {
+  for (const viewName of [
+    'lab',
+    'risks',
+    'shared-genes',
+    'escalations',
+    'bulk',
+    'receipts',
+    'agent-control',
+  ]) {
+    const source = viewSource(viewName);
+    assert.match(
+      source,
+      /<nav class="view-nav"[^>]*>[\s\S]*?<button class="view-back tab"[^>]*data-view="fleet"/,
+      `${viewName} must offer a visible way back to automations`,
+    );
+  }
+
+  const start = consoleHtml.indexOf('function setView(view)');
+  const end = consoleHtml.indexOf('function standardDataMode()', start);
+  assert.ok(start >= 0 && end > start, 'view switching handler is required');
+  const handler = consoleHtml.slice(start, end);
+  assert.match(handler, /window\.scrollTo\(0,0\)/);
+  assert.match(handler, /querySelector\('#'\+view\+'View \.view-back'\)/);
+  assert.match(handler, /back\.focus\(\{preventScroll:true\}\)/);
+});
+
+test('an incomplete Shared Genes snapshot becomes one honest product state', () => {
+  const shared = viewSource('shared-genes');
+  assert.match(consoleHtml, /\[hidden\]\{display:none!important\}/);
+  assert.match(shared, /id="sharedUnavailableState" hidden/);
+  assert.match(shared, /id="sharedRetryBtn"/);
+  assert.match(shared, /id="sharedWorkspace"/);
+  assert.match(shared, /id="sharedTechnicalMap"/);
+
+  const start = consoleHtml.indexOf('function renderSharedWorkspace()');
+  const end = consoleHtml.indexOf('function renderGenes()', start);
+  assert.ok(start >= 0 && end > start, 'Shared Genes renderer is required');
+  const renderer = consoleHtml.slice(start, end);
+  assert.match(renderer, /sharedRulesCount'\)\.textContent=complete\?rules\.length:'—'/);
+  assert.match(renderer, /sharedKnowledgeCount'\)\.textContent=complete\?knowledge\.length:'—'/);
+  assert.match(renderer, /workspace\.hidden=!complete;unavailable\.hidden=complete;technical\.hidden=!complete/);
+  assert.match(renderer, /if\(!complete\)\{technical\.open=false/);
+  assert.doesNotMatch(
+    renderer,
+    /t\('incomplete'\)/,
+    'the same failure must not be repeated in the picker and editor',
+  );
+
+  const renderGenesStart = end;
+  const renderGenesEnd = consoleHtml.indexOf('var FLOW=', renderGenesStart);
+  const genesRenderer = consoleHtml.slice(renderGenesStart, renderGenesEnd);
+  assert.doesNotMatch(
+    genesRenderer,
+    /t\('incomplete'\)/,
+    'the technical map must not repeat the product-level failure',
+  );
+  assert.match(consoleHtml, /el\('sharedRetryBtn'\)\.onclick=loadFleet/);
+});
+
 test('the simplified overview has matching human copy in Russian and English', () => {
   const ru = languageBlock('ru', 'en');
   const en = languageBlock('en');

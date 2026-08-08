@@ -55,7 +55,9 @@
     .advanced-menu{position:absolute;top:calc(100% + 7px);right:0;min-width:220px;display:grid;gap:4px;padding:8px;
       background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:none}
     .advanced-menu .tab{text-align:left;width:100%}.advanced-menu .tab.on{color:var(--petrol)}
-    main{max-width:1320px;margin:0 auto;padding:24px 24px 48px}.view{display:none}.view.on{display:block}
+    [hidden]{display:none!important}main{max-width:1320px;margin:0 auto;padding:24px 24px 48px}.view{display:none}.view.on{display:block}
+    .view-nav{position:sticky;top:0;z-index:20;display:flex;align-items:center;min-height:44px;margin:-24px 0 16px;padding:8px 0;background:var(--bg);border-bottom:1px solid var(--line)}
+    .view-back{padding:8px 10px;color:var(--ink);background:transparent;border:0;border-radius:8px;font-weight:600}.view-back:hover{background:var(--panel2)}
     .hero{display:flex;justify-content:space-between;gap:24px;align-items:flex-end;margin-bottom:24px}
     .eyebrow{color:var(--petrol);font:500 11px/1.2 var(--mono);letter-spacing:.06em;word-spacing:-.14em}
     h1{font-family:var(--serif);font-weight:600;font-size:26px;line-height:1.22;margin:8px 0 8px;letter-spacing:0}h2{font-family:var(--serif);font-weight:600;font-size:20px;line-height:1.25;letter-spacing:0;margin:0}h1,h2{color:var(--ink)}
@@ -184,6 +186,7 @@
       border-radius:12px;background:var(--panel2)}.risk b,.gene b,.receipt b{display:block;margin-bottom:4px}
     .risk p,.gene p,.receipt p{margin:4px 0;color:var(--muted)}.risk code,.gene code,.receipt code{word-break:break-all}
     .shared-workspace{display:grid;grid-template-columns:minmax(260px,.72fr) minmax(0,1.55fr);gap:16px;align-items:start}
+    .shared-purpose{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0 0 16px}.shared-purpose-item{display:grid;grid-template-columns:24px minmax(0,1fr);gap:10px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}.shared-purpose-item>span{display:grid;place-items:center;width:24px;height:24px;border-radius:999px;background:var(--panel2);color:var(--petrol);font:700 11px var(--mono)}.shared-purpose-item b{display:block;color:var(--ink)}.shared-purpose-item small{display:block;margin-top:3px;color:var(--muted)}.shared-unavailable{display:grid;justify-items:start;gap:10px;max-width:760px;padding:24px}.shared-unavailable p{margin:0;color:var(--muted)}
     .shared-library,.shared-editor{min-height:430px}.shared-kind-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
     .shared-kind-tab{display:grid;gap:2px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel2);color:var(--body);text-align:left;cursor:pointer}
     .shared-kind-tab.on{border-color:var(--petrol-border);background:var(--panel);color:var(--petrol)}.shared-kind-tab strong{font-size:18px;color:var(--ink)}
@@ -222,8 +225,8 @@
     .sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;
       overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
     @media(max-width:1000px){.top{flex-wrap:wrap}.brand{min-width:0}.tabs{order:3;width:100%;flex:1 0 100%;overflow:auto}.advanced-menu{position:fixed;left:16px;right:16px;top:auto}
-      .metrics{grid-template-columns:1fr 1fr 1fr}.split,.agent-control-grid,.shared-workspace,.product-dashboard{grid-template-columns:1fr}.product-sidebar{position:static}.flow{grid-template-columns:1fr 1fr 1fr}.attention-list{grid-template-columns:1fr}}
-    @media(max-width:700px){main{padding:16px 16px 32px}.top{padding:12px}.metrics{grid-template-columns:1fr}.hero{display:block}.top-actions{margin-left:auto}
+      .metrics{grid-template-columns:1fr 1fr 1fr}.split,.agent-control-grid,.shared-workspace,.product-dashboard{grid-template-columns:1fr}.shared-purpose{grid-template-columns:1fr}.product-sidebar{position:static}.flow{grid-template-columns:1fr 1fr 1fr}.attention-list{grid-template-columns:1fr}}
+    @media(max-width:700px){main{padding:16px 16px 32px}.view-nav{margin:-16px 0 16px}.top{padding:12px}.metrics{grid-template-columns:1fr}.hero{display:block}.top-actions{margin-left:auto}
       .tabs{flex-wrap:wrap;overflow:visible}.inventory-tools{display:block}.quick-filters{margin:8px 0}.search-wrap{min-width:0}.tools>*{max-width:100%}.flow{grid-template-columns:1fr 1fr}
       .automation-card>summary{grid-template-columns:42px 1fr}.automation-avatar{width:42px;height:42px}.automation-card-title{grid-column:2}.automation-card-next{grid-column:2}.technical-grid{grid-template-columns:1fr}.automation-quick-facts{grid-template-columns:1fr}
       .attention-item{grid-template-columns:auto 1fr}.attention-next{grid-column:2}.advanced-nav summary{white-space:nowrap}.shared-loop,.lab-summary,.lab-setup-controls{grid-template-columns:1fr}
@@ -329,6 +332,7 @@
       </section>
 
       <section class="view" id="labView" data-evolution-view="lab">
+        <nav class="view-nav" data-aria="sectionNavigation"><button class="view-back tab" type="button" data-view="fleet"><span aria-hidden="true">←</span> <span data-t="backAutomations"></span></button></nav>
         <div class="hero"><div><div class="eyebrow">Extella Evolution · Evolution Lab</div><h1 data-t="evolutionLabTitle"></h1><p class="lead" data-t="evolutionLabLead"></p></div></div>
         <section class="card lab-empty" data-ux="evolution-lab-product-state">
           <span class="state" id="labStatusBadge"></span>
@@ -360,6 +364,7 @@
       </section>
 
       <section class="view" id="risksView" data-evolution-view="risks">
+        <nav class="view-nav" data-aria="sectionNavigation"><button class="view-back tab" type="button" data-view="fleet"><span aria-hidden="true">←</span> <span data-t="backAutomations"></span></button></nav>
         <div class="hero"><div><div class="eyebrow">check_agent_passport.py</div><h1 data-t="riskTitle"></h1><p class="lead" data-t="riskLead"></p></div></div>
         <div class="split">
           <section class="card"><div class="card-head"><div><h2 data-t="riskByAgent"></h2><p data-t="riskCanonical"></p></div></div><div class="risk-list" id="riskList"></div></section>
@@ -372,8 +377,18 @@
       </section>
 
       <section class="view" id="genesView" data-evolution-view="shared-genes">
+        <nav class="view-nav" data-aria="sectionNavigation"><button class="view-back tab" type="button" data-view="fleet"><span aria-hidden="true">←</span> <span data-t="backAutomations"></span></button></nav>
         <div class="hero"><div><div class="eyebrow">Agent Genome · Shared Genes</div><h1 data-t="genesTitle"></h1><p class="lead" data-t="genesLead"></p></div></div>
-        <div class="shared-workspace">
+        <div class="shared-purpose" data-aria="sharedPurposeLabel">
+          <div class="shared-purpose-item"><span>1</span><div><b data-t="sharedPurposeChoose"></b><small data-t="sharedPurposeChooseText"></small></div></div>
+          <div class="shared-purpose-item"><span>2</span><div><b data-t="sharedPurposeScope"></b><small data-t="sharedPurposeScopeText"></small></div></div>
+          <div class="shared-purpose-item"><span>3</span><div><b data-t="sharedPurposeTest"></b><small data-t="sharedPurposeTestText"></small></div></div>
+        </div>
+        <section class="card shared-unavailable" id="sharedUnavailableState" hidden>
+          <h2 data-t="sharedUnavailableTitle"></h2><p data-t="sharedUnavailableText"></p>
+          <div class="shared-actions"><button class="primary" type="button" id="sharedRetryBtn" data-t="refresh"></button><button class="ghost tab" type="button" data-view="fleet" data-t="backAutomations"></button></div>
+        </section>
+        <div class="shared-workspace" id="sharedWorkspace">
           <aside class="card shared-library">
             <div class="card-head"><div><h2 data-t="sharedLibraryTitle"></h2><p data-t="sharedLibraryLead"></p></div></div>
             <div class="shared-kind-tabs" role="tablist" data-aria="sharedKindsLabel">
@@ -384,13 +399,14 @@
           </aside>
           <section class="card shared-editor" aria-live="polite"><div id="sharedGeneEditor"></div></section>
         </div>
-        <details class="technical-details shared-technical"><summary data-t="technicalMap"></summary><div class="technical-details-body">
+        <details class="technical-details shared-technical" id="sharedTechnicalMap"><summary data-t="technicalMap"></summary><div class="technical-details-body">
           <div class="tools"><button class="ghost" id="geneObjectBtn" data-t="objectView"></button><button class="ghost" id="geneAgentBtn" data-t="agentView"></button></div>
           <div class="gene-list" id="geneList"></div>
         </div></details>
       </section>
 
       <section class="view" id="escalationsView" tabindex="-1" data-evolution-view="escalations">
+        <nav class="view-nav" data-aria="sectionNavigation"><button class="view-back tab" type="button" data-view="fleet"><span aria-hidden="true">←</span> <span data-t="backAutomations"></span></button></nav>
         <div class="hero"><div><div class="eyebrow">Agent Cabinet → Evolution Console</div><h1 data-t="escTitle"></h1><p class="lead" data-t="escLead"></p></div></div>
         <div class="split">
           <section class="card"><div class="card-head"><div><h2 data-t="pendingClass"></h2><p data-t="contract"></p></div></div><div id="escalationList"></div></section>
@@ -400,6 +416,7 @@
       </section>
 
       <section class="view" id="bulkView" data-evolution-view="bulk">
+        <nav class="view-nav" data-aria="sectionNavigation"><button class="view-back tab" type="button" data-view="fleet"><span aria-hidden="true">←</span> <span data-t="backAutomations"></span></button></nav>
         <div class="hero"><div><div class="eyebrow">Evolution Console · fail-closed</div><h1 data-t="bulkTitle"></h1><p class="lead" data-t="bulkLead"></p></div></div>
         <div class="split">
           <section class="card"><div class="card-head"><div><h2 data-t="operation"></h2><p data-t="noApplyAll"></p></div></div>
@@ -420,11 +437,13 @@
       </section>
 
       <section class="view" id="receiptsView" data-evolution-view="receipts">
+        <nav class="view-nav" data-aria="sectionNavigation"><button class="view-back tab" type="button" data-view="fleet"><span aria-hidden="true">←</span> <span data-t="backAutomations"></span></button></nav>
         <div class="hero"><div><div class="eyebrow">Evolution Loop</div><h1>Evolution Receipts</h1><p class="lead" data-t="receiptsLead"></p></div></div>
         <section class="card"><div class="receipt-list" id="receiptList"></div></section>
       </section>
 
       <section class="view" id="agentControlView" data-evolution-view="agent-control">
+        <nav class="view-nav" data-aria="sectionNavigation"><button class="view-back tab" type="button" data-view="fleet"><span aria-hidden="true">←</span> <span data-t="backAutomations"></span></button></nav>
         <div class="hero"><div><div class="eyebrow">Extella Evolution · Evolution Console</div><h1 data-t="agentControlTitle"></h1><p class="lead" data-t="agentControlLead"></p></div>
           <button class="ghost" type="button" id="agentControlRefreshBtn" data-t="refresh"></button></div>
         <section class="card"><div class="card-head"><div><h2 data-t="agentControlContract"></h2><p id="agentControlStatus" aria-live="polite"></p></div></div>
@@ -465,7 +484,7 @@
   (function(){
     'use strict';
     var PREVIEW = new URLSearchParams(location.search).get('preview') === '1';
-    var CONSOLE_VERSION = '0.22.0';
+    var CONSOLE_VERSION = '0.22.1';
     var I18N = {
       ru:{
         consoleSub:'Evolution Console',fleet:'Парк',overview:'Обзор',automationsNav:'Автоматизации',advanced:'Дополнительно',risks:'Риски',riskDetails:'Причины рисков',escalations:'Эскалации',bulk:'Массовые операции',
@@ -516,7 +535,8 @@
         stableIdRequired:'Нужен стабильный ID',stableIdLead:'Эти Agent Passport не связываются с платформой по имени. Выбери точный live agentId; source Passport и checker issues останутся видимыми.',
         exactLiveAgent:'Точный live agentId',selectStableAgent:'Выбери точный live agentId',sourcePassport:'Source Passport',sourcePath:'Путь источника',
         genesTitle:'Общие правила и знания',
-        genesLead:'Настройте один раз — используйте во всех нужных агентах. Перед применением Console покажет точный охват и отправит изменение на проверку в Evolution Lab.',
+        genesLead:'Здесь можно настроить правило или знание один раз и использовать его в нескольких агентах. Перед изменением Extella покажет, кого оно затронет, и предложит безопасную проверку.',
+        sectionNavigation:'Навигация по разделу',sharedPurposeLabel:'Как работают общие настройки',sharedPurposeChoose:'Выберите общее',sharedPurposeChooseText:'Правило или знание, которое используют несколько агентов.',sharedPurposeScope:'Посмотрите охват',sharedPurposeScopeText:'Extella покажет всех агентов, которых затронет изменение.',sharedPurposeTest:'Проверьте до применения',sharedPurposeTestText:'Evolution Lab сравнит поведение до и после.',sharedUnavailableTitle:'Не удалось загрузить список агентов',sharedUnavailableText:'Часть агентов не ответила. Extella не показывает общие настройки по неполному списку, чтобы случайно не изменить не тех агентов. Нажмите «Проверить состояние».',
         sharedLibraryTitle:'Что настраиваем',sharedLibraryLead:'Выберите общий элемент Agent Genome.',sharedKindsLabel:'Типы общих элементов',sharedRules:'Общие правила',sharedKnowledge:'Общие знания',sharedOverviewTitle:'Общее для всех агентов',sharedOverviewLead:'Настройте один раз — примените ко всем нужным агентам.',sharedAgentsUse:'агентов используют',sharedConfigured:'настроено',sharedUnavailable:'данные недоступны',configure:'Настроить',sharedAdd:'Как добавить',sharedCheck:'Проверить',safeChangeTitle:'Безопасно проверить изменение',safeChangeLead:'Evolution Lab сравнит поведение до и после, не затрагивая работающие автоматизации.',openEvolutionLab:'Открыть Evolution Lab',labWaitingForChange:'Появится, когда подготовлено изменение.',labChangeReady:'Подготовленное изменение готово к проверке.',productSidebarLabel:'Общие настройки и проверка изменений',
         sharedCurrentVersion:'Текущая версия',sharedAppliesTo:'Применяется к агентам',sharedImpactPrefix:'Изменение затронет',sharedAgentsWord:'агентов',sharedPrepare:'Подготовить изменение',sharedOpenLab:'Проверить в Evolution Lab',
         sharedPrepareStep:'Настроить',sharedTestStep:'Проверить',sharedApplyStep:'Применить',sharedPrepareHint:'Сначала задайте новую версию в Agent Cabinet. Console сама зафиксирует точный список затронутых агентов.',sharedLabHint:'Подготовленное изменение можно проверить в Evolution Lab.',
@@ -595,7 +615,8 @@
         stableIdRequired:'Stable ID required',stableIdLead:'These Agent Passports are never joined to the platform by name. Select an exact live agentId; the source Passport and checker issues remain visible.',
         exactLiveAgent:'Exact live agentId',selectStableAgent:'Select an exact live agentId',sourcePassport:'Source Passport',sourcePath:'Source path',
         genesTitle:'Shared rules and knowledge',
-        genesLead:'Configure once and use across the agents that need it. Before applying, Console shows the exact impact and sends the change to Evolution Lab for testing.',
+        genesLead:'Configure a rule or knowledge item once and use it across several agents. Before a change, Extella shows exactly who is affected and offers a safe test.',
+        sectionNavigation:'Section navigation',sharedPurposeLabel:'How shared settings work',sharedPurposeChoose:'Choose a shared item',sharedPurposeChooseText:'A rule or knowledge item used by several agents.',sharedPurposeScope:'Review the impact',sharedPurposeScopeText:'Extella shows every agent affected by the change.',sharedPurposeTest:'Test before applying',sharedPurposeTestText:'Evolution Lab compares behavior before and after.',sharedUnavailableTitle:'The agent list could not be loaded',sharedUnavailableText:'Some agents did not respond. Extella does not show shared settings from an incomplete list, so the wrong agents are never changed. Press “Check status”.',
         sharedLibraryTitle:'What to configure',sharedLibraryLead:'Choose a shared Agent Genome element.',sharedKindsLabel:'Shared element types',sharedRules:'Shared rules',sharedKnowledge:'Shared knowledge',sharedOverviewTitle:'Shared across agents',sharedOverviewLead:'Configure once and apply to every relevant agent.',sharedAgentsUse:'agents use these',sharedConfigured:'configured',sharedUnavailable:'data unavailable',configure:'Configure',sharedAdd:'How to add',sharedCheck:'Check',safeChangeTitle:'Test a change safely',safeChangeLead:'Evolution Lab compares behavior before and after without affecting working automations.',openEvolutionLab:'Open Evolution Lab',labWaitingForChange:'Available after a change has been prepared.',labChangeReady:'A prepared change is ready to test.',productSidebarLabel:'Shared settings and change testing',
         sharedCurrentVersion:'Current version',sharedAppliesTo:'Applied to agents',sharedImpactPrefix:'This change will affect',sharedAgentsWord:'agents',sharedPrepare:'Prepare change',sharedOpenLab:'Test in Evolution Lab',
         sharedPrepareStep:'Configure',sharedTestStep:'Test',sharedApplyStep:'Apply',sharedPrepareHint:'First set the new version in Agent Cabinet. Console will bind the exact affected agent list.',sharedLabHint:'The prepared change can now be tested in Evolution Lab.',
@@ -680,13 +701,15 @@
       },15000);
     }
     function setView(view){
-      var labContext=currentEvolutionLabContext(),snapshotId=currentRegistrySnapshotId();if(view==='lab'&&!evolutionLabContextUsable(labContext,snapshotId))view='fleet';
+      var previous=document.querySelector('.view.on'),labContext=currentEvolutionLabContext(),snapshotId=currentRegistrySnapshotId();if(view==='lab'&&!evolutionLabContextUsable(labContext,snapshotId))view='fleet';
+      var changed=!previous||previous.id!==view+'View';
       var advanced=el('advancedNav'),advancedActive=['genes','escalations','risks','bulk','receipts','agentControl','lab'].indexOf(view)!==-1;
       document.querySelectorAll('.view').forEach(function(n){var active=n.id===view+'View';n.classList.toggle('on',active);n.setAttribute('aria-hidden',active?'false':'true');});
       document.querySelectorAll('.tab').forEach(function(n){var active=n.dataset.view===view||(n.dataset.primarySurface==='console'&&advancedActive);n.classList.toggle('on',active);if(active)n.setAttribute('aria-current','page');else n.removeAttribute('aria-current');});
       advanced.classList.toggle('has-active',advancedActive);advanced.open=false;
       if(view==='lab'){renderEvolutionLabContext(labContext);loadEvolutionLabReadiness();if(el('labEnvironmentSetup').open)loadLabEnvironmentCandidates();}
       if(advancedActive){ensureLegacyFleet();if(view==='agentControl')loadAgentControl();}
+      if(changed){window.scrollTo(0,0);var back=document.querySelector('#'+view+'View .view-back');if(back)back.focus({preventScroll:true});}
     }
     function standardDataMode(){var s=state.standards||{};return String(s.dataMode||s.data_mode||'UNAVAILABLE');}
     function productionReady(){
@@ -1526,10 +1549,11 @@
         '<div class="shared-readiness-row blocked"><span>3</span><div><b>'+esc(t('sharedApplyBlocked'))+'</b><small>'+esc(t('sharedApplyBlockedNote'))+'</small></div></div></div>';
     }
     function renderSharedWorkspace(){
-      var s=state.shared,all=s&&s.complete?s.genes||[]:[],rules=all.filter(function(g){return sharedGeneKind(g)==='rules';}),knowledge=all.filter(function(g){return sharedGeneKind(g)==='knowledge';});
-      el('sharedRulesCount').textContent=rules.length;el('sharedKnowledgeCount').textContent=knowledge.length;
+      var s=state.shared,complete=!!(s&&s.complete===true),all=complete?s.genes||[]:[],rules=all.filter(function(g){return sharedGeneKind(g)==='rules';}),knowledge=all.filter(function(g){return sharedGeneKind(g)==='knowledge';}),workspace=el('sharedWorkspace'),unavailable=el('sharedUnavailableState'),technical=el('sharedTechnicalMap');
+      el('sharedRulesCount').textContent=complete?rules.length:'—';el('sharedKnowledgeCount').textContent=complete?knowledge.length:'—';
       document.querySelectorAll('[data-shared-kind]').forEach(function(button){var on=button.dataset.sharedKind===state.sharedKind;button.classList.toggle('on',on);button.setAttribute('aria-selected',on?'true':'false');});
-      if(!s||!s.complete){el('sharedGenePicker').innerHTML='<div class="empty">'+esc(t('incomplete'))+'</div>';el('sharedGeneEditor').innerHTML='<div class="empty">'+esc(t('incomplete'))+'</div>';return;}
+      workspace.hidden=!complete;unavailable.hidden=complete;technical.hidden=!complete;
+      if(!complete){technical.open=false;el('sharedGenePicker').innerHTML='';el('sharedGeneEditor').innerHTML='';el('geneList').innerHTML='';return;}
       var current=state.sharedKind==='knowledge'?knowledge:rules;
       if(!current.some(function(g){return g.geneId===state.selectedSharedGeneId;}))state.selectedSharedGeneId=current[0]&&current[0].geneId||null;
       el('sharedGenePicker').innerHTML=current.map(function(g){return '<button type="button" class="shared-gene-choice '+(g.geneId===state.selectedSharedGeneId?'on':'')+'" data-shared-gene="'+esc(g.geneId)+'"><b>'+esc(g.name||g.geneId)+'</b><small>v'+esc(g.version||t('unknown'))+' · '+esc((g.consumerAgentIds||[]).length)+' '+esc(t('sharedAgentsWord'))+'</small></button>';}).join('')||'<div class="empty">'+esc(t(state.sharedKind==='knowledge'?'sharedNoKnowledge':'sharedNoRules'))+'</div>';
@@ -1553,7 +1577,7 @@
         workflow;
       var prepareButton=el('sharedPrepareBtn'),labButton=el('sharedLabBtn'),trustedLabButton=el('sharedTrustedLabBtn');if(prepareButton)prepareButton.onclick=function(){openClassChangeForGene(gene.geneId);};if(labButton)labButton.onclick=function(){if(!labReady)return;state.selectedEscalationId=escalation.candidateId||escalation.candidate_id;setView('lab');};if(trustedLabButton)trustedLabButton.onclick=function(){if(!trustedLabReady)return;state.selectedEscalationId=escalation.candidateId||escalation.candidate_id;setView('lab');};
     }
-    function renderGenes(){var s=state.shared,projectionRows=state.projection&&state.projection.rows||[];renderSharedWorkspace();if(!s||!s.complete){el('geneList').innerHTML='<div class="empty">'+esc(t('incomplete'))+'</div>';return;}
+    function renderGenes(){var s=state.shared,projectionRows=state.projection&&state.projection.rows||[];renderSharedWorkspace();if(!s||!s.complete){el('geneList').innerHTML='';return;}
       if(state.geneView==='object'){el('geneList').innerHTML=(s.genes||[]).map(function(g){var ids=g.consumerAgentIds||[];return '<article class="gene"><b>'+esc(g.name||g.geneId)+' <span class="mono">'+esc(g.geneId)+'</span></b><p>'+esc(g.kind)+' · v'+esc(g.version||t('unknown'))+' · '+esc(fmtTime(g.lastChanged))+'</p><p><strong>'+ids.length+'</strong> '+esc(t('consumers'))+'</p>'+ids.map(function(id){var r=projectionRows.find(function(x){return x.agentId===id;}),version=geneConsumerVersion(g,id);return '<span class="consumer">'+esc(r?r.name:id)+' · '+esc(t('activeGeneVersion'))+' '+esc(version||t('versionUnknown'))+'</span>';}).join('')+'<p><button class="primary" data-class-gene="'+esc(g.geneId)+'" '+(productionReady()?'':'disabled')+'>'+esc(t('changeAsClass'))+'</button></p></article>';}).join('')||'<div class="empty">'+esc(t('noData'))+'</div>';}
       else{el('geneList').innerHTML=Object.keys(s.byAgent||{}).map(function(id){var r=projectionRows.find(function(x){return x.agentId===id;});return '<article class="gene"><b>'+esc(r?r.name:id)+'</b>'+(s.byAgent[id]||[]).map(function(geneRef){var geneId=typeof geneRef==='string'?geneRef:geneRef.geneId,g=geneById(geneId),version=g?geneConsumerVersion(g,id):(geneRef&&geneRef.activeVersion);return '<span class="consumer">'+esc(geneId)+' · '+esc(t('activeGeneVersion'))+' '+esc(version||t('versionUnknown'))+'</span>';}).join('')+'</article>';}).join('')||'<div class="empty">'+esc(t('noData'))+'</div>';}
       el('geneList').querySelectorAll('[data-class-gene]').forEach(function(b){b.onclick=function(){openClassChangeForGene(b.dataset.classGene);};});
@@ -1840,6 +1864,7 @@
     el('labEnvironmentPrepareBtn').onclick=prepareLabEnvironment;
     // обработчик кнопки языка удалён вместе с кнопкой (см. выше)
     el('refreshBtn').onclick=loadFleet;
+    el('sharedRetryBtn').onclick=loadFleet;
     el('agentControlRefreshBtn').onclick=function(){clearAgentControl();loadAgentControl();};
     el('searchInput').oninput=function(){renderFleet();renderBulk();};el('filterSelect').onchange=function(){syncFilterControls();renderFleet();renderBulk();};el('jsonBtn').onclick=function(){exportRows('json');};el('csvBtn').onclick=function(){exportRows('csv');};
     document.querySelectorAll('[data-shared-kind]').forEach(function(button){button.onclick=function(){state.sharedKind=button.dataset.sharedKind;state.selectedSharedGeneId=null;renderGenes();};});
