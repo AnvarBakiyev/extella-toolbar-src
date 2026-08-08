@@ -1049,6 +1049,30 @@ test('Cabinet escalation rejects wrong scope, targets, hash and unsafe Evolution
   );
 });
 
+test('FAILED and INCONCLUSIVE simulations are saved as receipts but never open approval', async () => {
+  for (const status of ['FAILED', 'INCONCLUSIVE']) {
+    const setup = await acceptedClass();
+    const before = setup.ledger.evolution.escalations.candidate_class_001;
+    const ledger = await setup.api.recordClassTest(
+      setup.ledger,
+      before.candidateId,
+      classTestEvidence(before, { status }),
+      { actorId: ACTOR, now: '2026-07-26T08:05:00.000Z' },
+    );
+    const change = ledger.evolution.escalations.candidate_class_001;
+    assert.equal(change.status, 'PENDING_CLASS_DECISION');
+    assert.equal(change.test, null, status + ' не становится проходным гейтом');
+    assert.equal(change.lastTestAttempt.status, status);
+    const receipt = ledger.evolution.receipts[change.lastTestAttempt.receiptId];
+    assert.equal(receipt.type, 'CLASS_TEST_COMPLETED');
+    assert.equal(receipt.status, status);
+    await rejectsCode(
+      setup.api.approveClassChange(ledger, change.candidateId, {}, { actorId: ACTOR }),
+      'CLASS_APPROVAL_REQUIRES_TEST',
+    );
+  }
+});
+
 test('class observation requires exact target, candidate and current-version read-back', async () => {
   const setup = await publishedClass();
   const valid = classObservationEvidence(setup.ledger);

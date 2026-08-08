@@ -1130,6 +1130,7 @@ ETB.evolutionConsole = (function () {
         status: 'PENDING_CLASS_DECISION',
         acceptedAt: acceptedAt,
         test: null,
+        lastTestAttempt: null,
         approval: null,
         activation: null,
         publication: null,
@@ -1307,8 +1308,9 @@ ETB.evolutionConsole = (function () {
         fail('CLASS_TEST_NOT_ALLOWED', 'Class test is not allowed in the current status');
       }
       evidence = evidence || {};
-      if (evidence.status !== 'PASSED') {
-        fail('CLASS_TEST_NOT_PASSED', 'Evolution Lab evidence must be PASSED');
+      if (['PASSED', 'FAILED', 'INCONCLUSIVE'].indexOf(evidence.status) === -1) {
+        fail('CLASS_TEST_RESULT_INVALID',
+          'Evolution Lab evidence must declare PASSED, FAILED or INCONCLUSIVE');
       }
       if ((evidence.externalWrites || []).length ||
           Number(evidence.writeAttempts || 0) !== 0) {
@@ -1375,7 +1377,7 @@ ETB.evolutionConsole = (function () {
     }).then(function (hashes) {
       return putReceipt(extension, {
         type: 'CLASS_TEST_COMPLETED',
-        status: 'PASSED',
+        status: evidence.status,
         candidateId: change.candidateId,
         candidateBundleSha256: change.candidateBundleSha256,
         targetListSha256: change.targetListSha256,
@@ -1390,7 +1392,7 @@ ETB.evolutionConsole = (function () {
         actorId: actor,
         at: at
       }).then(function (receipt) {
-        change.test = {
+        var attempt = {
           receiptId: receipt.id,
           receiptSha256: receipt.sha256,
           caseSetSha256: hashes[0],
@@ -1403,11 +1405,21 @@ ETB.evolutionConsole = (function () {
           nativeApplicationStatus: isolation.native_application_status,
           candidateBundleSha256: change.candidateBundleSha256,
           targetListSha256: change.targetListSha256,
-          status: 'PASSED'
+          status: evidence.status
         };
+        change.lastTestAttempt = attempt;
         change.approval = null;
         change.activation = null;
-        change.status = 'TESTED';
+        if (evidence.status === 'PASSED') {
+          change.test = attempt;
+          change.status = 'TESTED';
+        } else {
+          // A measured failure or an inconclusive run is a durable product
+          // outcome, but never a gate. Keep the candidate pending so the user
+          // can prepare a revised candidate or a new disposable environment.
+          change.test = null;
+          change.status = 'PENDING_CLASS_DECISION';
+        }
         return deepFreeze(next);
       });
     });

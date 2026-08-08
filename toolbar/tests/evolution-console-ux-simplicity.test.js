@@ -239,9 +239,9 @@ test('one verified prepared Shared Gene shows honest product readiness', () => {
   );
   assert.match(
     consoleHtml,
-    /data-shared-lab-state="'\+\(trustedLabReady\?'AVAILABLE':'PLATFORM_UNAVAILABLE'\)\+'"/,
+    /data-shared-lab-state="'\+\(playgroundReady\?'READY':'NOT_READY'\)\+'"/,
   );
-  assert.match(consoleHtml, /trustedLabReady=playgroundReady&&labReady/);
+  assert.match(consoleHtml, /trustedLabReady=adapterAvailable\('evolutionLabAdapter'\)&&labReady/);
   assert.match(consoleHtml, /if\(labButton\)labButton\.onclick=function\(\)\{if\(!labReady\)return/);
   assert.doesNotMatch(
     consoleHtml,
@@ -258,14 +258,37 @@ test('Evolution Lab explains the change, coverage, safety, and result without in
   assert.match(lab, /id="labCaseCount"/);
   assert.match(lab, /id="labProof"/);
   assert.match(lab, /id="labRunBtn"[^>]*disabled/);
+  assert.match(lab, /id="labEnvironmentSetup"/);
+  assert.match(lab, /id="labEnvironmentSelect"/);
+  assert.match(lab, /id="labEnvironmentPrepareBtn"[^>]*disabled/);
+  assert.match(consoleHtml, /labSetupTitle:'Подготовка среды'/);
+  assert.match(consoleHtml, /labSetupWindowBoundary:'Среда принадлежит только этому окну Extella\./);
+  assert.match(consoleHtml, /evolution_lab_environment_candidates_load/);
+  assert.match(consoleHtml, /evolution_lab_environment_prepare/);
+  assert.match(consoleHtml, /SINGLE_HOST_SESSION_ONLY/);
+  assert.doesNotMatch(
+    consoleHtml,
+    /пока администратор не подготовит новую изолированную среду|until an administrator prepares/i,
+    'Evolution Lab must not invent an administrator role that the platform does not have',
+  );
+  assert.doesNotMatch(
+    lab,
+    /agent[_ -]?id|platform_agent_id/i,
+    'the environment picker must not expose internal agent identifiers',
+  );
   assert.match(consoleHtml, /function classTestReceipt\(e\)/);
   assert.match(consoleHtml, /receipt\.type==='CLASS_TEST_COMPLETED'/);
   assert.match(consoleHtml, /e\.status\)==='TESTED'&&receipt&&receipt\.status==='PASSED'/);
-  assert.match(consoleHtml, /labIsolationConfirmed:'Одноразовая изолированная среда подтверждена\.'/);
+  assert.match(consoleHtml, /labIsolationConfirmed:'Одноразовая изолированная среда подтверждена и готова к одному запуску\.'/);
   assert.match(consoleHtml, /labNoExternalWrites:'Рабочие автоматизации и файлы не затронуты\.'/);
   assert.match(consoleHtml, /labReceiptSaved:'Квитанция симуляции сохранена\.'/);
   assert.match(consoleHtml, /button\.disabled=!productionReady\(\)\|\|state\.labRunning/);
   assert.match(consoleHtml, /runEscAction\('escalation_test'\)/);
+  assert.match(consoleHtml, /receipt&&receipt\.status==='FAILED'&&simulationConfirmed/);
+  assert.match(consoleHtml, /receipt&&receipt\.status==='INCONCLUSIVE'&&simulationConfirmed/);
+  assert.match(consoleHtml, /labFailedTitle:'Изменение не прошло проверку'/);
+  assert.match(consoleHtml, /labInconclusiveTitle:'Нужна повторная проверка'/);
+  assert.match(consoleHtml, /labErrorTitle:'Проверка не завершена'/);
   assert.doesNotMatch(
     consoleHtml,
     /String\(context\.change_id\)\+' · '\+String\(context\.candidate_id\)/,
@@ -276,6 +299,18 @@ test('Evolution Lab explains the change, coverage, safety, and result without in
     /candidate|snapshot|target_automation|receipt_ref/i,
     'the product Lab markup must stay free of internal contract vocabulary',
   );
+});
+
+test('Evolution Receipts history uses product language and keeps evidence details bounded', () => {
+  assert.match(consoleHtml, /receiptProductTitle\(type\)/);
+  assert.match(consoleHtml, /receiptTest:'Проверка изменения в Evolution Lab'/);
+  assert.match(consoleHtml, /receiptFailed:'Нужно доработать'/);
+  assert.match(consoleHtml, /receiptInconclusive:'Нужна повторная проверка'/);
+  assert.match(consoleHtml, /receiptSimulationNote:'Это результат изолированной симуляции/);
+  assert.match(consoleHtml, /data-receipt-kind=/);
+  assert.doesNotMatch(consoleHtml, /renderReceipts\(\)[^{]*\{[^}]*JSON\.stringify/);
+  assert.doesNotMatch(consoleHtml, /transcript_ref|transcript_sha256/,
+    'iframe history must never receive or print private simulation transcripts');
 });
 
 test('preview uses the same current-device inventory contract as production', () => {

@@ -2,11 +2,12 @@
 // Одноразовая изолированная среда для Evolution Lab: проверяет подготовленное
 // изменение Shared Gene на песочном агенте и возвращает доказательство.
 //
-// РЕЖИМ PREPROVISIONED_BYOK_SANDBOX. Агента для прогона создаёт ВЛАДЕЛЕЦ руками и
-// передаёт только его `agent_id`; `/api/agent/create` здесь не используется вовсе.
-// Причина живая: агент, созданный по API, платформа отказывается запускать
-// (`pro_key_required`, проверено 07.08.2026 дважды — и на чистом агенте, и на точной
-// копии платформенного Qwen). Дефолтный Qwen не копируется и копироваться не должен.
+// РЕЖИМ PREPROVISIONED_BYOK_SANDBOX. Пользователь заранее создаёт отдельного агента
+// с рабочим ключом провайдера. Evolution Lab находит подходящие среды в текущем
+// аккаунте, показывает только дружелюбные названия и принимает одноразовую непрозрачную
+// ссылку текущего окна; `agent_id` не пересекает контракт iframe/router.
+// `/api/agent/create` здесь не используется: агент, созданный по API, платформа
+// отказывается запускать (`pro_key_required`, проверено 07.08.2026 дважды).
 //
 // ЧТО ТАКОЕ «ИЗОЛЯЦИЯ» ЗДЕСЬ, БЕЗ ОБЕЩАНИЙ. Перед запуском живой `agent/get`
 // подтверждает: агент виден в текущем аккаунте, инструментов ноль, MCP нет, и его нет
@@ -53,17 +54,26 @@ ETB.evolutionPlaygroundRunner = (function () {
   var ISOLATION_SCHEMA = 'extella.evolution.playground_isolation.v1.1';
   var CAPABILITY_CONTRACT = 'extella.evolution.playground_isolation.v1.1';
   var CASE_SCHEMA = 'extella.evolution.playground_case_result.v1';
+  var READINESS_SCHEMA = 'extella.evolution.playground_readiness.v1';
+  var CANDIDATES_SCHEMA = 'extella.evolution.playground_candidates.v1';
+  var PREPARATION_SCHEMA = 'extella.evolution.playground_preparation.v1';
+  var POOL_CONTRACT = 'extella.evolution.playground_pool.single_host_session.v1';
   var RECEIPT_PREFIX = 'xtl_evolution:playground_receipt:';
   var TRANSCRIPT_PREFIX = 'xtl_evolution:playground_transcript:';
   var SELECTION_KEY = 'xtl_evolution:trusted_publish_selection:v1';
   var RUNNER_ID = 'extella-integrator-playground-v1';
-  var SANDBOX_MODEL = 'qwen3.7-max-2026-06-08';
   var HASH = /^[a-f0-9]{64}$/;
 
   function fail(code, message) {
     var error = new Error(message || code);
     error.code = code;
     throw error;
+  }
+
+  function failure(code, message) {
+    var error = new Error(message || code);
+    error.code = code;
+    return error;
   }
 
   function canonical(value) {
@@ -206,9 +216,222 @@ ETB.evolutionPlaygroundRunner = (function () {
     return (linksRule && namesSubject) ? 'RULE_COVERAGE_CONFIRMED' : 'STOP_AND_CONFIRM';
   }
 
-  // ── песочница: заранее подготовленный агент, а не созданный кодом ────────
-  var SANDBOX_POINTER_KEY = 'xtl_evolution:playground_sandbox_agent:v1';
-  var SANDBOX_POINTER_KEYS = ['agent_id', 'prepared_at', 'actor_id', 'single_use', 'consumed'];
+  // ── песочница: очередь РОВНО ОДНОЙ host-сессии ───────────────────────────
+  // Account-global CAS/lock/lease у платформы нет (проверено 08.08.2026). Поэтому
+  // право на среду нельзя хранить в KV: два окна успеют прочитать PREPARED до записи.
+  // Очередь ниже существует только в памяти текущего окна toolbar. Другое окно,
+  // включая окно на том же устройстве, получает свою пустую очередь по построению.
+  var SELECTION_TTL_MS = 10 * 60 * 1000;
+  var _sessionSelections = Object.create(null);
+  var _sessionEnvironment = null;
+  var _sessionPreparationResults = Object.create(null);
+  var _sessionOperationTail = Promise.resolve();
+
+  function sessionSerialize(task) {
+    var operation = _sessionOperationTail.catch(function () {}).then(task);
+    _sessionOperationTail = operation.catch(function () {});
+    return operation;
+  }
+
+  function randomSelectionRef() {
+    var webCrypto = typeof globalThis !== 'undefined' && globalThis.crypto;
+    if (!webCrypto || typeof webCrypto.getRandomValues !== 'function') {
+      fail('PLAYGROUND_SESSION_RANDOM_UNAVAILABLE',
+        'WebCrypto is required for host-session selection references');
+    }
+    var bytes = new Uint8Array(18);
+    webCrypto.getRandomValues(bytes);
+    return 'playground_selection_' + Array.prototype.map.call(bytes, function (value) {
+      return ('0' + value.toString(16)).slice(-2);
+    }).join('');
+  }
+
+  function agentRows(response) {
+    if (Array.isArray(response)) return response;
+    if (response && Array.isArray(response.agents)) return response.agents;
+    if (response && Array.isArray(response.items)) return response.items;
+    return [];
+  }
+
+  function exactAgentId(row) {
+    return String(row && (row.id || row.agent_id || row.agentId) || '').trim();
+  }
+
+  function agentPassport(response) {
+    return response && response.agent && typeof response.agent === 'object' ?
+      response.agent : response;
+  }
+
+  function assertIsolatedPassport(agentId, response, productionTargets) {
+    var passport = agentPassport(response);
+    if (!passport || typeof passport !== 'object') {
+      fail('PLAYGROUND_SANDBOX_NOT_VISIBLE', 'sandbox agent is not visible in this account');
+    }
+    var returnedId = exactAgentId(passport);
+    if (returnedId && returnedId !== agentId) {
+      fail('PLAYGROUND_SANDBOX_NOT_VISIBLE', 'agent/get returned another agent');
+    }
+    if (productionTargets.indexOf(agentId) !== -1) {
+      fail('PLAYGROUND_SANDBOX_IS_PRODUCTION_TARGET',
+        'prepared sandbox is one of the production targets');
+    }
+    if (!Array.isArray(passport.tools)) {
+      fail('PLAYGROUND_SANDBOX_NOT_ISOLATED',
+        'passport does not declare tools as an array; isolation cannot be claimed');
+    }
+    if (passport.tools.length !== 0) {
+      fail('PLAYGROUND_SANDBOX_NOT_ISOLATED',
+        'sandbox agent has tools; isolation cannot be claimed');
+    }
+    var raw = JSON.stringify(passport.tools) + ' ' + JSON.stringify(passport.mcp || '');
+    if (/mcp|sys__all__/i.test(raw)) {
+      fail('PLAYGROUND_SANDBOX_NOT_ISOLATED', 'sandbox agent exposes MCP access');
+    }
+    var deviceTarget = passport.device_id || passport.deviceId ||
+      passport.device_target || passport.deviceTarget ||
+      passport.target_device_id || passport.targetDeviceId || '';
+    if (String(deviceTarget || '').trim()) {
+      fail('PLAYGROUND_SANDBOX_NOT_ISOLATED', 'sandbox agent has a device target');
+    }
+    return passport;
+  }
+
+  function validateSandboxAgent(agentId, productionTargets) {
+    return ETB.api.agentGetScoped(agentId).then(function (response) {
+      return assertIsolatedPassport(agentId, response, productionTargets);
+    }, function () {
+      fail('PLAYGROUND_SANDBOX_NOT_VISIBLE', 'sandbox agent is not visible in this account');
+    });
+  }
+
+  // Console получает только дружелюбное имя и случайную одноразовую ссылку. ID
+  // агента остаётся в этой closure и никогда не пересекает router/iframe контракт.
+  function listEligibleSandboxes(spec) {
+    var targets = exactList(spec && spec.affectedAgentIds,
+      'PLAYGROUND_CANDIDATES_SPEC_INVALID', 'spec.affectedAgentIds');
+    var targetKey = canonical(targets.slice().sort());
+    return ETB.api.agentsList().then(function (response) {
+      var rows = agentRows(response).filter(function (row) {
+        var id = exactAgentId(row);
+        return /^agent_[A-Za-z0-9_-]{1,160}$/.test(id) && targets.indexOf(id) === -1;
+      });
+      return rows.reduce(function (chain, row) {
+        return chain.then(function (candidates) {
+          var agentId = exactAgentId(row);
+          return validateSandboxAgent(agentId, targets).then(function (passport) {
+            var ref = randomSelectionRef();
+            var name = String(passport.name || passport.agent_name || row.name ||
+              row.agent_name || 'Тестовый агент').trim() || 'Тестовый агент';
+            if (/agent_[A-Za-z0-9_-]{4,}/.test(name)) name = 'Тестовый агент';
+            _sessionSelections[ref] = {
+              agentId: agentId,
+              displayName: name.slice(0, 120),
+              targetKey: targetKey,
+              expiresAt: Date.now() + SELECTION_TTL_MS,
+              used: false
+            };
+            candidates.push({ selection_ref: ref, display_name: name.slice(0, 120) });
+            return candidates;
+          }, function () {
+            // Неподходящий или недоступный агент не становится кандидатом. Конкретная
+            // причина остаётся host-side: Console не получает паспорт или ID.
+            return candidates;
+          });
+        });
+      }, Promise.resolve([]));
+    }).then(function (candidates) {
+      return {
+        schema: CANDIDATES_SCHEMA,
+        status: 'AVAILABLE',
+        captured_at: nowIso(),
+        concurrency_scope: 'SINGLE_HOST_SESSION_ONLY',
+        candidates: candidates
+      };
+    });
+  }
+
+  function restoreInstructions(agentId, text) {
+    return ETB.api.agentInstructionsUpdateScoped(agentId, text).then(function () {
+      return ETB.api.agentGetScoped(agentId);
+    }).then(function (response) {
+      var passport = agentPassport(response);
+      if (String(passport && passport.instructions || '') !== text) {
+        fail('PLAYGROUND_PREPARATION_ROLLBACK_UNCONFIRMED',
+          'sandbox instructions were not restored after a failed smoke test');
+      }
+    });
+  }
+
+  function prepareSandbox(spec) {
+    return sessionSerialize(function () {
+      var targets = exactList(spec && spec.affectedAgentIds,
+        'PLAYGROUND_PREPARATION_SPEC_INVALID', 'spec.affectedAgentIds');
+      var ref = String(spec && spec.selectionRef || '');
+      var requestId = String(spec && spec.requestId || '');
+      var targetKey = canonical(targets.slice().sort());
+      var signature = canonical({ selectionRef: ref, targetKey: targetKey });
+      if (!/^playground_selection_[a-f0-9]{36}$/.test(ref) || !requestId) {
+        fail('PLAYGROUND_PREPARATION_SPEC_INVALID',
+          'preparation requires an exact session selection and request id');
+      }
+      if (_sessionPreparationResults[requestId]) {
+        if (_sessionPreparationResults[requestId].signature !== signature) {
+          fail('PLAYGROUND_PREPARATION_IDEMPOTENCY_CONFLICT',
+            'request id was already used for another environment');
+        }
+        return _sessionPreparationResults[requestId].result;
+      }
+      var selected = _sessionSelections[ref];
+      if (!selected || selected.used || selected.expiresAt < Date.now() ||
+          selected.targetKey !== targetKey) {
+        fail('PLAYGROUND_SELECTION_INVALID',
+          'selection does not belong to this host session, target class or time window');
+      }
+      if (_sessionEnvironment &&
+          (_sessionEnvironment.state === 'PREPARED' ||
+            _sessionEnvironment.state === 'LEASED')) {
+        fail('PLAYGROUND_ENVIRONMENT_ALREADY_PREPARED',
+          'this Extella window already owns a prepared environment');
+      }
+      selected.used = true; // синхронно, до первого await: двойной клик не выдаст дважды
+      var previousInstructions = '';
+      var instructionsMayHaveChanged = false;
+      var journal = [];
+      return validateSandboxAgent(selected.agentId, targets).then(function (passport) {
+        previousInstructions = String(passport.instructions || '');
+        instructionsMayHaveChanged = true;
+        return prepareSandboxBehaviour(selected.agentId, journal);
+      }).then(function () {
+        _sessionEnvironment = {
+          agentId: selected.agentId,
+          displayName: selected.displayName,
+          targetKey: targetKey,
+          preparedAt: nowIso(),
+          state: 'PREPARED',
+          requestId: requestId
+        };
+        var result = {
+          schema: PREPARATION_SCHEMA,
+          status: 'READY',
+          reason_code: null,
+          prepared_at: _sessionEnvironment.preparedAt,
+          concurrency_scope: 'SINGLE_HOST_SESSION_ONLY',
+          single_use: true
+        };
+        _sessionPreparationResults[requestId] = { signature: signature, result: result };
+        return result;
+      }, function (error) {
+        if (!instructionsMayHaveChanged) throw error;
+        return restoreInstructions(selected.agentId, previousInstructions).then(function () {
+          throw error;
+        }, function (rollbackError) {
+          rollbackError.code = rollbackError.code ||
+            'PLAYGROUND_PREPARATION_ROLLBACK_UNCONFIRMED';
+          throw rollbackError;
+        });
+      });
+    });
+  }
 
   // Живой урок 08.08: у агента с ПУСТЫМ списком инструментов модель всё равно пытается
   // звать rules_list/concept_search, и текст ответа превращается в «extella:rules_list
@@ -273,89 +496,98 @@ ETB.evolutionPlaygroundRunner = (function () {
       });
   }
 
-  function resolveSandbox(productionTargets) {
-    // Указатель host-owned: id песочницы приходит из KV аккаунта, а НЕ из iframe.
-    return ETB.api.kvGet(SANDBOX_POINTER_KEY, { global: true }).then(function (row) {
-      var text = row && typeof row.value === 'string' ? row.value : '';
-      if (!text) {
-        fail('PLAYGROUND_SANDBOX_NOT_PREPARED',
-          'подготовленного агента-песочницы нет: владелец создаёт его руками и кладёт id');
-      }
-      var pointer = JSON.parse(text);
-      Object.keys(pointer).forEach(function (key) {
-        if (SANDBOX_POINTER_KEYS.indexOf(key) === -1) {
-          fail('PLAYGROUND_SANDBOX_POINTER_INVALID', 'unexpected field in sandbox pointer: ' + key);
-        }
-      });
-      if (pointer.single_use !== true) {
-        fail('PLAYGROUND_SANDBOX_POINTER_INVALID', 'sandbox pointer must declare single_use');
-      }
-      if (pointer.consumed === true) {
-        // Одноразовость — не пожелание: повторный прогон на том же агенте означал бы
-        // среду с историей, а история ломает сравнение «до и после».
-        fail('PLAYGROUND_SANDBOX_ALREADY_USED', 'sandbox agent was already used once');
-      }
-      var agentId = String(pointer.agent_id || '').trim();
-      if (!/^agent_[A-Za-z0-9_-]{1,160}$/.test(agentId)) {
-        fail('PLAYGROUND_SANDBOX_POINTER_INVALID', 'sandbox pointer has no exact agent id');
-      }
-      if (productionTargets.indexOf(agentId) !== -1) {
-        // Самая дорогая ошибка этого места: прогнать проверку на боевом агенте.
-        fail('PLAYGROUND_SANDBOX_IS_PRODUCTION_TARGET',
-          'prepared sandbox is one of the production targets');
-      }
-      return ETB.api.agentGetScoped(agentId).then(function (passport) {
-        // Аккаунт: паспорт читается под текущей сессией; чужой агент сюда не доедет
-        // (платформа отдаёт 404), а пустой ответ считаем отказом, а не согласием.
-        if (!passport || typeof passport !== 'object') {
-          fail('PLAYGROUND_SANDBOX_NOT_VISIBLE', 'sandbox agent is not visible in this account');
-        }
-        // Явный пустой массив, а не «пусто по умолчанию»: отсутствие поля означает,
-        // что платформа не сказала про инструменты ничего, и считать это изоляцией —
-        // выдумывать за неё.
-        if (!Array.isArray(passport.tools)) {
-          fail('PLAYGROUND_SANDBOX_NOT_ISOLATED',
-            'passport does not declare tools as an array; isolation cannot be claimed');
-        }
-        if (passport.tools.length !== 0) {
-          fail('PLAYGROUND_SANDBOX_NOT_ISOLATED',
-            'sandbox agent has tools; isolation cannot be claimed');
-        }
-        var tools = passport.tools;
-        var raw = JSON.stringify(passport.tools || []) + ' ' + JSON.stringify(passport.mcp || '');
-        if (/mcp|sys__all__/i.test(raw)) {
-          fail('PLAYGROUND_SANDBOX_NOT_ISOLATED', 'sandbox agent exposes MCP access');
-        }
-        // Из паспорта дальше не берётся НИЧЕГО: там может лежать привязка ключа.
-        return { agentId: agentId, pointer: pointer };
-      }, function () {
-        fail('PLAYGROUND_SANDBOX_NOT_VISIBLE', 'sandbox agent is not visible in this account');
-      });
+  function resolveSandbox(productionTargets, lease) {
+    var environment = _sessionEnvironment;
+    var targetKey = canonical(productionTargets.slice().sort());
+    if (!environment) {
+      return Promise.reject(failure('PLAYGROUND_SANDBOX_NOT_PREPARED',
+        'no environment was prepared in this Extella window'));
+    }
+    if (environment.targetKey !== targetKey) {
+      return Promise.reject(failure('PLAYGROUND_SANDBOX_TARGET_CLASS_MISMATCH',
+        'prepared environment belongs to another target class'));
+    }
+    if (environment.state === 'CONSUMED' || environment.state === 'REJECTED') {
+      return Promise.reject(failure('PLAYGROUND_SANDBOX_ALREADY_USED',
+        'sandbox environment is no longer reusable'));
+    }
+    if (environment.state === 'LEASED') {
+      return Promise.reject(failure('PLAYGROUND_SANDBOX_LEASED',
+        'sandbox environment is already running in this host session'));
+    }
+    if (environment.state !== 'PREPARED') {
+      return Promise.reject(failure('PLAYGROUND_SANDBOX_NOT_PREPARED',
+        'sandbox environment is not prepared'));
+    }
+    if (lease === true) {
+      // Синхронный переход до agent/get: даже прямой двойной вызов adapter минует
+      // второй прогон. Router дополнительно сериализует мутации текущей страницы.
+      environment.state = 'LEASED';
+    }
+    return validateSandboxAgent(environment.agentId, productionTargets).then(function () {
+      return { agentId: environment.agentId, pointer: environment };
+    }, function (error) {
+      if (lease === true) environment.state = 'REJECTED';
+      throw error;
+    });
+  }
+
+  // Read-only preflight for the product surface. It proves only that a fresh
+  // single-use sandbox is present, visible and tool-free right now. It does
+  // not update instructions, run the model, consume the pointer or disclose
+  // the sandbox agent id to the iframe.
+  function loadPlaygroundReadiness(spec) {
+    var targetIds = exactList(spec && spec.affectedAgentIds,
+      'PLAYGROUND_READINESS_SPEC_INVALID', 'spec.affectedAgentIds');
+    return resolveSandbox(targetIds, false).then(function () {
+      return {
+        schema: READINESS_SCHEMA,
+        status: 'READY',
+        reason_code: null,
+        checked_at: nowIso(),
+        environment_class: 'DISPOSABLE_SANDBOX',
+        concurrency_scope: 'SINGLE_HOST_SESSION_ONLY',
+        target_resolution: 'RUNNER_ONLY',
+        owner_device_access: 'DENIED',
+        single_use: true
+      };
+    }).catch(function (error) {
+      var code = String(error && error.code || '');
+      var reasons = {
+        PLAYGROUND_SANDBOX_NOT_PREPARED: 'NO_PREPARED_ENVIRONMENT',
+        PLAYGROUND_SANDBOX_ALREADY_USED: 'ENVIRONMENT_ALREADY_USED',
+        PLAYGROUND_SANDBOX_TARGET_CLASS_MISMATCH: 'ENVIRONMENT_TARGET_CONFLICT',
+        PLAYGROUND_SANDBOX_IS_PRODUCTION_TARGET: 'ENVIRONMENT_TARGET_CONFLICT',
+        PLAYGROUND_SANDBOX_NOT_VISIBLE: 'ENVIRONMENT_UNAVAILABLE',
+        PLAYGROUND_SANDBOX_NOT_ISOLATED: 'ENVIRONMENT_NOT_ISOLATED',
+        PLAYGROUND_SANDBOX_LEASED: 'ENVIRONMENT_IN_USE'
+      };
+      if (!reasons[code]) throw error;
+      return {
+        schema: READINESS_SCHEMA,
+        status: 'NOT_READY',
+        reason_code: reasons[code],
+        checked_at: nowIso(),
+        environment_class: 'DISPOSABLE_SANDBOX',
+        concurrency_scope: 'SINGLE_HOST_SESSION_ONLY',
+        target_resolution: 'RUNNER_ONLY',
+        owner_device_access: 'DENIED',
+        single_use: true
+      };
     });
   }
 
   function consumePointer(pointer) {
-    // Гасим указатель пометкой, а не удалением: видно, что этот id уже отработал.
-    // Запись ПОДТВЕРЖДАЕМ перечиткой и сверкой каноничного содержимого: молча
-    // проглоченная ошибка здесь означала бы, что одноразовый агент можно взять второй
-    // раз, а вся одноразовость держится на этой записи.
-    var spent = canonical({
-      agent_id: pointer.agent_id, prepared_at: pointer.prepared_at,
-      actor_id: pointer.actor_id, single_use: true, consumed: true
-    });
-    return ETB.api.kvSet(SANDBOX_POINTER_KEY, spent, '', { global: true }).then(function () {
-      return ETB.api.kvGet(SANDBOX_POINTER_KEY, { global: true });
-    }).then(function (row) {
-      var stored = row && typeof row.value === 'string' ? row.value : '';
-      if (stored !== spent) {
-        fail('PLAYGROUND_POINTER_NOT_CONSUMED',
-          'пометка consumed не подтверждена перечиткой — среда осталась бы переиспользуемой');
-      }
-      return true;
-    }, function (error) {
-      fail('PLAYGROUND_POINTER_NOT_CONSUMED',
-        'не удалось погасить указатель: ' + String((error && error.message) || error).slice(0, 120));
-    });
+    if (!pointer || pointer !== _sessionEnvironment || pointer.state !== 'LEASED') {
+      return Promise.reject(failure('PLAYGROUND_POINTER_NOT_CONSUMED',
+        'host-session environment lease is no longer exact'));
+    }
+    pointer.state = 'CONSUMED';
+    if (_sessionEnvironment.state !== 'CONSUMED') {
+      return Promise.reject(failure('PLAYGROUND_POINTER_NOT_CONSUMED',
+        'host-session environment was not consumed'));
+    }
+    return Promise.resolve(true);
   }
 
   function runCase(agentId, input) {
@@ -624,7 +856,7 @@ ETB.evolutionPlaygroundRunner = (function () {
           });
         });
     }).then(function (consumers) {
-      return resolveSandbox(consumers);
+      return resolveSandbox(consumers, true);
     }).then(function (resolved) {
       sandboxId = resolved.agentId;
       sandboxPointer = resolved.pointer;
@@ -723,10 +955,21 @@ ETB.evolutionPlaygroundRunner = (function () {
       // finally по смыслу: аккаунт нельзя оставлять с живой песочницей ни при каком
       // исходе. Ошибку уборки НЕ проглатываем — она важнее исходной, потому что
       // означает мусор в проде.
-      if (!sandboxId) throw error;
+      if (!sandboxId) {
+        if (_sessionEnvironment && _sessionEnvironment.state === 'LEASED') {
+          _sessionEnvironment.state = 'REJECTED';
+        }
+        throw error;
+      }
       return teardown(sandboxId).then(function () {
+        if (_sessionEnvironment && _sessionEnvironment.state === 'LEASED') {
+          _sessionEnvironment.state = 'REJECTED';
+        }
         throw error;
       }, function (cleanupError) {
+        if (_sessionEnvironment && _sessionEnvironment.state === 'LEASED') {
+          _sessionEnvironment.state = 'REJECTED';
+        }
         cleanupError.code = cleanupError.code || 'PLAYGROUND_TEARDOWN_UNCONFIRMED';
         cleanupError.message = 'уборка не подтверждена после ошибки «' +
           (error && error.message) + '»: ' + cleanupError.message;
@@ -915,7 +1158,11 @@ ETB.evolutionPlaygroundRunner = (function () {
 
   return {
     runClassTest: runClassTest,
+    loadPlaygroundReadiness: loadPlaygroundReadiness,
+    listEligibleSandboxes: listEligibleSandboxes,
+    prepareSandbox: prepareSandbox,
     playgroundIsolationContract: CAPABILITY_CONTRACT,
+    playgroundPoolContract: POOL_CONTRACT,
     _teardown: teardown,
     _classify: classify,
     _looksLikeToolCall: looksLikeToolCall,
@@ -927,10 +1174,9 @@ ETB.evolutionPlaygroundRunner = (function () {
 }());
 
 // ── ПОДКЛЮЧЕНИЕ АДАПТЕРА ────────────────────────────────────────────────────
-// Маркер и метод присваиваются ТОЛЬКО ПАРОЙ. Порознь они опасны в обе стороны:
-// маркер без метода — Console считает Lab доступной и падает на вызове; метод без
-// маркера — гейт роутера отбивает вызов, кнопка выглядит живой и не работает.
-// Поэтому при любом сбое присвоения откатываем оба.
+// Маркеры и четыре метода присваиваются ТОЛЬКО ОДНИМ НАБОРОМ. Частичный набор опасен:
+// Console либо покажет готовность без запуска, либо запуск без честного preflight.
+// Поэтому при любом сбое присвоения откатываем весь набор.
 //
 // Основание для включения: живой PASSED 08.08.2026 на объединённом HEAD — таблица
 // совпала с планом v3 точно, квитанция a635dd9c… и transcript 729bf7a3… перечитаны,
@@ -944,23 +1190,43 @@ ETB.evolutionPlaygroundRunner = (function () {
   var adapter = ETB.evolutionAdapter = ETB.evolutionAdapter || {};
   var runner = ETB.evolutionPlaygroundRunner;
   if (adapter.runClassTest === runner.runClassTest &&
-      adapter.playgroundIsolationContract === runner.playgroundIsolationContract) {
-    return;   // уже подключена именно текущая полная пара
+      adapter.loadPlaygroundReadiness === runner.loadPlaygroundReadiness &&
+      adapter.listEligibleSandboxes === runner.listEligibleSandboxes &&
+      adapter.prepareSandbox === runner.prepareSandbox &&
+      adapter.playgroundIsolationContract === runner.playgroundIsolationContract &&
+      adapter.playgroundPoolContract === runner.playgroundPoolContract) {
+    return;   // уже подключён именно текущий полный набор
   }
   try {
     // Повторная инъекция toolbar не должна сохранять старый или частичный адаптер.
-    // Сначала очищаем оба свойства, затем ставим точную пару текущего runner.
+    // Сначала очищаем все свойства, затем ставим точный набор текущего runner.
     try { delete adapter.runClassTest; } catch (_) {}
+    try { delete adapter.loadPlaygroundReadiness; } catch (_) {}
+    try { delete adapter.listEligibleSandboxes; } catch (_) {}
+    try { delete adapter.prepareSandbox; } catch (_) {}
     try { delete adapter.playgroundIsolationContract; } catch (_) {}
+    try { delete adapter.playgroundPoolContract; } catch (_) {}
     adapter.playgroundIsolationContract = runner.playgroundIsolationContract;
+    adapter.playgroundPoolContract = runner.playgroundPoolContract;
     adapter.runClassTest = runner.runClassTest;
+    adapter.loadPlaygroundReadiness = runner.loadPlaygroundReadiness;
+    adapter.listEligibleSandboxes = runner.listEligibleSandboxes;
+    adapter.prepareSandbox = runner.prepareSandbox;
     if (adapter.runClassTest !== runner.runClassTest ||
-        adapter.playgroundIsolationContract !== runner.playgroundIsolationContract) {
-      throw new Error('adapter pair was not accepted');
+        adapter.loadPlaygroundReadiness !== runner.loadPlaygroundReadiness ||
+        adapter.listEligibleSandboxes !== runner.listEligibleSandboxes ||
+        adapter.prepareSandbox !== runner.prepareSandbox ||
+        adapter.playgroundIsolationContract !== runner.playgroundIsolationContract ||
+        adapter.playgroundPoolContract !== runner.playgroundPoolContract) {
+      throw new Error('adapter capability set was not accepted');
     }
   } catch (error) {
-    // Ни одного полуприсвоения: убираем оба и оставляем Lab закрытой честно.
+    // Ни одного полуприсвоения: убираем весь набор и оставляем Lab закрытой честно.
     try { delete adapter.runClassTest; } catch (_) {}
+    try { delete adapter.loadPlaygroundReadiness; } catch (_) {}
+    try { delete adapter.listEligibleSandboxes; } catch (_) {}
+    try { delete adapter.prepareSandbox; } catch (_) {}
     try { delete adapter.playgroundIsolationContract; } catch (_) {}
+    try { delete adapter.playgroundPoolContract; } catch (_) {}
   }
 }());

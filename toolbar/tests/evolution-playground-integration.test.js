@@ -86,8 +86,10 @@ test('runner передаёт global KV в четвёртом аргументе
   const globalWrites = [...RUNNER_CODE.matchAll(
     /ETB\.api\.kvSet\(\s*[^,]+,\s*[^,]+,\s*'',\s*\{\s*global:\s*true\s*\}\s*\)/g,
   )];
-  assert.equal(globalWrites.length, 3,
-    'все три KV-записи runner обязаны передавать opts четвёртым аргументом');
+  assert.equal(globalWrites.length, 2,
+    'обе content-addressed KV-записи runner обязаны передавать opts четвёртым аргументом; аренды в KV больше нет');
+  assert.doesNotMatch(RUNNER_CODE, /playground_sandbox_agent/,
+    'SINGLE_HOST_SESSION_ONLY не должен возвращать account-global указатель среды');
   assert.doesNotMatch(RUNNER_CODE,
     /ETB\.api\.kvSet\(\s*[^,]+,\s*[^,]+,\s*\{\s*global:\s*true\s*\}\s*\)/,
     'объект global в третьем аргументе становится description и теряет скоуп');
@@ -125,7 +127,10 @@ test('spec из router.js совпадает с тем, что читает runn
     'candidateBundle', 'candidateBundleSha256', 'candidateId', 'targetListSha256',
   ], 'состав payload изменился — сверьте runner и тесты');
   // Каждое поле, которое runner читает из spec, обязано быть в этом составе.
-  const used = [...new Set([...RUNNER_CODE.matchAll(/spec\.([A-Za-z0-9_]+)/g)].map((m) => m[1]))];
+  const runStart = RUNNER_CODE.indexOf('function runClassTest(spec)');
+  const runEnd = RUNNER_CODE.indexOf('function isExactNotFound', runStart);
+  const runCode = RUNNER_CODE.slice(runStart, runEnd);
+  const used = [...new Set([...runCode.matchAll(/spec\.([A-Za-z0-9_]+)/g)].map((m) => m[1]))];
   for (const name of used) {
     assert.ok(routerKeys.includes(name),
       'runner читает spec.' + name + ', которого router не передаёт');
@@ -147,10 +152,9 @@ test('рукопожатие с router.js совпадает, а формат д
     'наружу отдаётся именно рукопожатие, а не формат');
 });
 
-test('маркер и метод подключаются только парой', () => {
-  // Порознь они опасны в обе стороны: маркер без метода — Console считает Lab
-  // доступной и падает на вызове; метод без маркера — гейт роутера отбивает вызов, а
-  // кнопка выглядит живой. Проверяем оба исхода на живом модуле.
+test('маркеры и четыре метода подключаются только полным набором', () => {
+  // Частичный набор либо показывает готовность без запуска, либо запуск без честного
+  // preflight. Проверяем атомарность на живом модуле.
   const load = (adapterSeed) => {
     const ctx = {
       ETB: { api: {}, agentControl: { sha256: () => Promise.resolve('0'.repeat(64)) },
@@ -169,19 +173,40 @@ test('маркер и метод подключаются только паро�
   assert.equal(typeof fresh.runClassTest, 'function', 'метод присвоен');
   assert.equal(fresh.runClassTest, freshLoad.runner.runClassTest,
     'присвоен точный метод текущего runner');
+  assert.equal(fresh.loadPlaygroundReadiness, freshLoad.runner.loadPlaygroundReadiness,
+    'присвоен точный read-only preflight текущего runner');
+  assert.equal(fresh.listEligibleSandboxes, freshLoad.runner.listEligibleSandboxes,
+    'присвоен точный host-session список сред');
+  assert.equal(fresh.prepareSandbox, freshLoad.runner.prepareSandbox,
+    'присвоена точная подготовка среды');
   assert.equal(fresh.playgroundIsolationContract,
     'extella.evolution.playground_isolation.v1.1', 'маркер присвоен');
+  assert.equal(fresh.playgroundPoolContract,
+    'extella.evolution.playground_pool.single_host_session.v1', 'маркер пула присвоен');
 
   const staleMethod = function staleRunClassTest() {};
   const staleLoad = load({
     runClassTest: staleMethod,
+    loadPlaygroundReadiness: function staleReadiness() {},
+    listEligibleSandboxes: function staleList() {},
+    prepareSandbox: function stalePrepare() {},
     playgroundIsolationContract: 'extella.evolution.playground_isolation.v1',
+    playgroundPoolContract: 'extella.evolution.playground_pool.v0',
   });
   assert.equal(staleLoad.adapter.runClassTest, staleLoad.runner.runClassTest,
     'повторная инъекция заменяет старый метод точным текущим runner');
   assert.equal(staleLoad.adapter.playgroundIsolationContract,
     'extella.evolution.playground_isolation.v1.1',
     'повторная инъекция заменяет старый маркер синхронно с методом');
+  assert.equal(staleLoad.adapter.loadPlaygroundReadiness,
+    staleLoad.runner.loadPlaygroundReadiness,
+    'повторная инъекция заменяет старый preflight текущим');
+  assert.equal(staleLoad.adapter.listEligibleSandboxes,
+    staleLoad.runner.listEligibleSandboxes,
+    'повторная инъекция заменяет старый список текущим');
+  assert.equal(staleLoad.adapter.prepareSandbox,
+    staleLoad.runner.prepareSandbox,
+    'повторная инъекция заменяет старую подготовку текущей');
 
   // Присвоение метода невозможно (объект запрещает запись) — маркер обязан не остаться.
   const hostile = Object.defineProperty({}, 'runClassTest', {
@@ -192,8 +217,16 @@ test('маркер и метод подключаются только паро�
   const after = load(hostile).adapter;
   assert.notEqual(typeof after.runClassTest, 'function',
     'метод не присвоился — значит и маркера остаться не должно');
+  assert.notEqual(typeof after.loadPlaygroundReadiness, 'function',
+    'частичный набор не должен оставлять readiness');
+  assert.notEqual(typeof after.listEligibleSandboxes, 'function',
+    'частичный набор не должен оставлять список');
+  assert.notEqual(typeof after.prepareSandbox, 'function',
+    'частичный набор не должен оставлять подготовку');
   assert.equal(after.playgroundIsolationContract, undefined,
     'полуприсвоение запрещено: маркер без метода делает кнопку живой и нерабочей');
+  assert.equal(after.playgroundPoolContract, undefined,
+    'маркер пула тоже снимается при частичном присвоении');
 });
 
 test('модуль полигона входит в список сборки артефакта', () => {

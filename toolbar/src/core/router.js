@@ -1153,8 +1153,13 @@ ETB.router = (function () {
     var evolutionAdapter = ETB.evolutionAdapter || {};
     var isolatedEvolutionLab =
       typeof evolutionAdapter.runClassTest === 'function' &&
+      typeof evolutionAdapter.loadPlaygroundReadiness === 'function' &&
+      typeof evolutionAdapter.listEligibleSandboxes === 'function' &&
+      typeof evolutionAdapter.prepareSandbox === 'function' &&
       evolutionAdapter.playgroundIsolationContract ===
-        'extella.evolution.playground_isolation.v1.1';
+        'extella.evolution.playground_isolation.v1.1' &&
+      evolutionAdapter.playgroundPoolContract ===
+        'extella.evolution.playground_pool.single_host_session.v1';
     // Native writes stay fail-closed until the platform exposes a durable
     // intent log and a compare-and-swap commit for the shared Evolution
     // ledger. Method presence alone is not a transaction boundary.
@@ -3491,6 +3496,290 @@ ETB.router = (function () {
     });
   }
 
+  function _evolutionNormalizeLabReadiness(raw, session, context) {
+    var keys = [
+      'schema', 'status', 'reason_code', 'checked_at', 'environment_class',
+      'concurrency_scope', 'target_resolution', 'owner_device_access', 'single_use'
+    ];
+    var status = String(raw && raw.status || '');
+    var reason = raw && raw.reason_code;
+    var checkedAt = Date.parse(String(raw && raw.checked_at || ''));
+    var now = Date.now();
+    _evolutionRequireClosedKeys(
+      raw,
+      keys,
+      'EVOLUTION_LAB_READINESS_INVALID',
+      'Evolution Lab readiness'
+    );
+    if (raw.schema !== 'extella.evolution.playground_readiness.v1' ||
+        ['READY', 'NOT_READY'].indexOf(status) === -1 ||
+        raw.environment_class !== 'DISPOSABLE_SANDBOX' ||
+        raw.concurrency_scope !== 'SINGLE_HOST_SESSION_ONLY' ||
+        raw.target_resolution !== 'RUNNER_ONLY' ||
+        raw.owner_device_access !== 'DENIED' ||
+        raw.single_use !== true ||
+        !isFinite(checkedAt) || checkedAt < now - 2 * 60 * 1000 ||
+        checkedAt > now + 60 * 1000 ||
+        (status === 'READY' && reason !== null) ||
+        (status === 'NOT_READY' &&
+          !/^[A-Z][A-Z0-9_]{0,63}$/.test(String(reason || '')))) {
+      throw _evolutionError(
+        'EVOLUTION_LAB_READINESS_INVALID',
+        'Evolution Lab readiness must be current, closed and fail-closed'
+      );
+    }
+    return {
+      schema: 'extella.evolution.playground_readiness_surface.v1',
+      owner_account_id: context.actorId,
+      fleet_snapshot_id: session.snapshotId,
+      captured_at: new Date(checkedAt).toISOString(),
+      status: status,
+      reason_code: reason,
+      environment_class: raw.environment_class,
+      concurrency_scope: raw.concurrency_scope,
+      target_resolution: raw.target_resolution,
+      owner_device_access: raw.owner_device_access,
+      single_use: true
+    };
+  }
+
+  // Read-only readiness is deliberately separate from escalation_test. The
+  // browser selects only an existing managed candidate; the host derives its
+  // exact production target class from the current ledger and never exposes
+  // the sandbox agent id. No instruction update, model run or pointer write
+  // is allowed on this route.
+  function _evolutionLabReadiness(data, context) {
+    var before;
+    var candidateId = String(data && data.candidateId || '');
+    try {
+      _evolutionRequireClosedKeys(
+        data,
+        ['type', 'reqId', 'action', 'snapshotId', 'candidateId'],
+        'EVOLUTION_LAB_READINESS_REQUEST_INVALID',
+        'Evolution Lab readiness request'
+      );
+      if (data.type !== 'etb_evolution_console' ||
+          data.action !== 'evolution_lab_readiness_load' ||
+          !/^[A-Za-z0-9._-]{1,240}$/.test(candidateId)) {
+        throw _evolutionError(
+          'EVOLUTION_LAB_READINESS_REQUEST_INVALID',
+          'readiness requires one exact managed candidate'
+        );
+      }
+      before = _evolutionRequireSession(data, context, true);
+    } catch (error) {
+      return Promise.reject(error);
+    }
+    return _evolutionFleetLoad(context).then(function (fresh) {
+      var projection = fresh && fresh.projection;
+      var ledger = fresh && fresh.ledger;
+      var session;
+      var change;
+      _agentControlAssertContext(context);
+      if (!projection || projection.complete !== true ||
+          projection.snapshotId !== before.snapshotId) {
+        throw _evolutionError(
+          'FLEET_SNAPSHOT_MISMATCH',
+          'live fleet changed; reload before checking Evolution Lab readiness'
+        );
+      }
+      session = _evolutionRequireSession({ snapshotId: projection.snapshotId }, context, true);
+      change = ledger && ledger.evolution && ledger.evolution.escalations &&
+        ledger.evolution.escalations[candidateId];
+      if (!change || change.status !== 'PENDING_CLASS_DECISION') {
+        throw _evolutionError(
+          'EVOLUTION_LAB_CANDIDATE_NOT_PENDING',
+          'Evolution Lab readiness is available only for a pending class change'
+        );
+      }
+      return _evolutionCallAdapter(
+        'loadPlaygroundReadiness',
+        { affectedAgentIds: change.affectedAgentIds },
+        'EVOLUTION_LAB_READINESS_ADAPTER_UNAVAILABLE',
+        'Evolution Lab readiness requires the exact host playground adapter'
+      ).then(function (raw) {
+        _agentControlAssertContext(context);
+        return _evolutionNormalizeLabReadiness(raw, session, context);
+      });
+    });
+  }
+
+  function _evolutionLabPendingChange(data, context, action) {
+    var before;
+    var candidateId = String(data && data.candidateId || '');
+    var commonKeys = ['type', 'reqId', 'action', 'snapshotId', 'candidateId'];
+    var keys = action === 'evolution_lab_environment_prepare' ?
+      commonKeys.concat(['selectionRef', 'preparationRequestId']) : commonKeys;
+    _evolutionRequireClosedKeys(
+      data,
+      keys,
+      'EVOLUTION_LAB_ENVIRONMENT_REQUEST_INVALID',
+      'Evolution Lab environment request'
+    );
+    if (data.type !== 'etb_evolution_console' || data.action !== action ||
+        !/^[A-Za-z0-9._-]{1,240}$/.test(candidateId)) {
+      throw _evolutionError(
+        'EVOLUTION_LAB_ENVIRONMENT_REQUEST_INVALID',
+        'environment action requires one exact managed candidate'
+      );
+    }
+    if (action === 'evolution_lab_environment_prepare' &&
+        (!/^playground_selection_[a-f0-9]{36}$/.test(String(data.selectionRef || '')) ||
+          !/^[A-Za-z0-9._:-]{8,180}$/.test(String(data.preparationRequestId || '')))) {
+      throw _evolutionError(
+        'EVOLUTION_LAB_ENVIRONMENT_REQUEST_INVALID',
+        'environment preparation requires one exact session selection'
+      );
+    }
+    before = _evolutionRequireSession(data, context, true);
+    return _evolutionFleetLoad(context).then(function (fresh) {
+      var projection = fresh && fresh.projection;
+      var ledger = fresh && fresh.ledger;
+      var session;
+      var change;
+      _agentControlAssertContext(context);
+      if (!projection || projection.complete !== true ||
+          projection.snapshotId !== before.snapshotId) {
+        throw _evolutionError(
+          'FLEET_SNAPSHOT_MISMATCH',
+          'live fleet changed; reload before preparing Evolution Lab'
+        );
+      }
+      session = _evolutionRequireSession({ snapshotId: projection.snapshotId }, context, true);
+      change = ledger && ledger.evolution && ledger.evolution.escalations &&
+        ledger.evolution.escalations[candidateId];
+      if (!change || change.status !== 'PENDING_CLASS_DECISION') {
+        throw _evolutionError(
+          'EVOLUTION_LAB_CANDIDATE_NOT_PENDING',
+          'environment preparation is available only for a pending class change'
+        );
+      }
+      return { session: session, change: change };
+    });
+  }
+
+  function _evolutionNormalizeLabCandidates(raw, session, context) {
+    _evolutionRequireClosedKeys(
+      raw,
+      ['schema', 'status', 'captured_at', 'concurrency_scope', 'candidates'],
+      'EVOLUTION_LAB_CANDIDATES_INVALID',
+      'Evolution Lab environment candidates'
+    );
+    var capturedAt = Date.parse(String(raw.captured_at || ''));
+    var now = Date.now();
+    var candidates = Array.isArray(raw.candidates) ? raw.candidates : [];
+    var refs = {};
+    if (raw.schema !== 'extella.evolution.playground_candidates.v1' ||
+        raw.status !== 'AVAILABLE' ||
+        raw.concurrency_scope !== 'SINGLE_HOST_SESSION_ONLY' ||
+        candidates.length > 32 || !isFinite(capturedAt) ||
+        capturedAt < now - 2 * 60 * 1000 || capturedAt > now + 60 * 1000) {
+      throw _evolutionError(
+        'EVOLUTION_LAB_CANDIDATES_INVALID',
+        'Evolution Lab candidates must be current, bounded and session-only'
+      );
+    }
+    candidates = candidates.map(function (row) {
+      _evolutionRequireClosedKeys(
+        row,
+        ['selection_ref', 'display_name'],
+        'EVOLUTION_LAB_CANDIDATES_INVALID',
+        'Evolution Lab environment candidate'
+      );
+      var ref = String(row.selection_ref || '');
+      var name = String(row.display_name || '').trim();
+      if (!/^playground_selection_[a-f0-9]{36}$/.test(ref) || refs[ref] ||
+          !name || name.length > 120 || /agent_[A-Za-z0-9_-]{4,}/.test(name)) {
+        throw _evolutionError(
+          'EVOLUTION_LAB_CANDIDATES_INVALID',
+          'environment candidate contains an invalid or exposed identifier'
+        );
+      }
+      refs[ref] = true;
+      return { selection_ref: ref, display_name: name };
+    });
+    return {
+      schema: 'extella.evolution.playground_candidates_surface.v1',
+      owner_account_id: context.actorId,
+      fleet_snapshot_id: session.snapshotId,
+      captured_at: new Date(capturedAt).toISOString(),
+      concurrency_scope: 'SINGLE_HOST_SESSION_ONLY',
+      candidates: candidates
+    };
+  }
+
+  function _evolutionLabEnvironmentCandidates(data, context) {
+    return _evolutionLabPendingChange(
+      data,
+      context,
+      'evolution_lab_environment_candidates_load'
+    ).then(function (subject) {
+      return _evolutionCallAdapter(
+        'listEligibleSandboxes',
+        { affectedAgentIds: subject.change.affectedAgentIds },
+        'EVOLUTION_LAB_POOL_UNAVAILABLE',
+        'Evolution Lab environment preparation requires the exact session pool'
+      ).then(function (raw) {
+        _agentControlAssertContext(context);
+        return _evolutionNormalizeLabCandidates(raw, subject.session, context);
+      });
+    });
+  }
+
+  function _evolutionNormalizeLabPreparation(raw, session, context) {
+    _evolutionRequireClosedKeys(
+      raw,
+      ['schema', 'status', 'reason_code', 'prepared_at', 'concurrency_scope', 'single_use'],
+      'EVOLUTION_LAB_PREPARATION_INVALID',
+      'Evolution Lab environment preparation'
+    );
+    var preparedAt = Date.parse(String(raw.prepared_at || ''));
+    var now = Date.now();
+    if (raw.schema !== 'extella.evolution.playground_preparation.v1' ||
+        raw.status !== 'READY' || raw.reason_code !== null ||
+        raw.concurrency_scope !== 'SINGLE_HOST_SESSION_ONLY' ||
+        raw.single_use !== true || !isFinite(preparedAt) ||
+        preparedAt < now - 2 * 60 * 1000 || preparedAt > now + 60 * 1000) {
+      throw _evolutionError(
+        'EVOLUTION_LAB_PREPARATION_INVALID',
+        'Evolution Lab preparation must be current, exact and session-only'
+      );
+    }
+    return {
+      schema: 'extella.evolution.playground_preparation_surface.v1',
+      owner_account_id: context.actorId,
+      fleet_snapshot_id: session.snapshotId,
+      prepared_at: new Date(preparedAt).toISOString(),
+      status: 'READY',
+      concurrency_scope: 'SINGLE_HOST_SESSION_ONLY',
+      single_use: true
+    };
+  }
+
+  function _evolutionLabEnvironmentPrepare(data, context) {
+    return _agentControlSerialize('evolution_playground_session', context, function () {
+      return _evolutionLabPendingChange(
+        data,
+        context,
+        'evolution_lab_environment_prepare'
+      ).then(function (subject) {
+        return _evolutionCallAdapter(
+          'prepareSandbox',
+          {
+            selectionRef: String(data.selectionRef),
+            requestId: String(data.preparationRequestId),
+            affectedAgentIds: subject.change.affectedAgentIds
+          },
+          'EVOLUTION_LAB_POOL_UNAVAILABLE',
+          'Evolution Lab environment preparation requires the exact session pool'
+        ).then(function (raw) {
+          _agentControlAssertContext(context);
+          return _evolutionNormalizeLabPreparation(raw, subject.session, context);
+        });
+      });
+    });
+  }
+
   function _evolutionLastReceipt(ledger) {
     var rows = _evolutionReceiptRows(ledger);
     return rows.length ? rows[rows.length - 1] : null;
@@ -3738,12 +4027,20 @@ ETB.router = (function () {
     if (!adapter || typeof adapter[method] !== 'function') {
       return Promise.reject(_evolutionError(code, message));
     }
-    if (method === 'runClassTest' &&
+    if ((method === 'runClassTest' || method === 'loadPlaygroundReadiness') &&
         adapter.playgroundIsolationContract !==
           'extella.evolution.playground_isolation.v1.1') {
       return Promise.reject(_evolutionError(
         code,
         message + '; isolated playground contract is unavailable'
+      ));
+    }
+    if ((method === 'listEligibleSandboxes' || method === 'prepareSandbox') &&
+        adapter.playgroundPoolContract !==
+          'extella.evolution.playground_pool.single_host_session.v1') {
+      return Promise.reject(_evolutionError(
+        code,
+        message + '; single-host-session playground pool is unavailable'
       ));
     }
     return Promise.resolve().then(function () {
@@ -4768,6 +5065,23 @@ ETB.router = (function () {
     }
     if (action === 'trusted_publish_context_load') {
       return _evolutionTrustedPublishContext(data, context);
+    }
+    if (action === 'evolution_lab_readiness_load') {
+      return _evolutionLabReadiness(data, context);
+    }
+    if (action === 'evolution_lab_environment_candidates_load') {
+      try {
+        return _evolutionLabEnvironmentCandidates(data, context);
+      } catch (error) {
+        return Promise.reject(error);
+      }
+    }
+    if (action === 'evolution_lab_environment_prepare') {
+      try {
+        return _evolutionLabEnvironmentPrepare(data, context);
+      } catch (error) {
+        return Promise.reject(error);
+      }
     }
     if (action === 'etb_evolution_publish') {
       return _evolutionTrustedPublish(data, context);
