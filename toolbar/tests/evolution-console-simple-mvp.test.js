@@ -282,30 +282,21 @@ test('simple MVP exposes four summary categories and no PRE or POST metric', () 
   );
 });
 
-test('advanced navigation leaves shared settings on the product overview', () => {
+test('specialist navigation exposes history only and leaves operational work on the product overview', () => {
   const advancedStart = consoleHtml.indexOf('id="advancedNav"');
   const advancedEnd = consoleHtml.indexOf('</details>', advancedStart);
   assert.ok(advancedStart >= 0 && advancedEnd > advancedStart);
   const advanced = consoleHtml.slice(advancedStart, advancedEnd);
   const buttons = openingTags(advanced, 'button');
-  assert.equal(buttons.length, 3);
+  assert.equal(buttons.length, 1);
   const tasks = buttons
     .map((tag) => attribute(tag, 'data-advanced-task'))
     .filter(Boolean);
-  assert.deepEqual(tasks, [
-    'problems',
-    'multi-change',
-    'history',
-  ]);
+  assert.deepEqual(tasks, ['history']);
 
   const ru = languageBlock('ru', 'en');
   const en = languageBlock('en');
   const copy = {
-    advancedTaskProblems: ['Проверить проблемы', 'Review problems'],
-    advancedTaskMultiple: [
-      'Изменить несколько автоматизаций',
-      'Change several automations',
-    ],
     advancedTaskHistory: [
       'Посмотреть историю изменений',
       'View change history',

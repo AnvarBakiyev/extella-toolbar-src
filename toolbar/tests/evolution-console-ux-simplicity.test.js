@@ -88,7 +88,7 @@ function copyValue(block, key) {
   return normalized(match[2]);
 }
 
-test('Evolution Console opens with one-line summary and automation cards only', () => {
+test('Evolution Console opens with a product path, current state, priorities, and automation cards', () => {
   const views = viewTags();
   assert.ok(views.length >= 2, 'overview must remain separate from deeper views');
 
@@ -115,11 +115,15 @@ test('Evolution Console opens with one-line summary and automation cards only', 
     .filter((region) => region.name);
   assert.deepEqual(
     regions.map((region) => region.name),
-    ['summary', 'registry'],
-    'the first view must answer only: what is running and which automations exist',
+    ['summary', 'attention', 'registry'],
+    'the first view must answer: what is happening, what to do, and which automations exist',
   );
-  assert.doesNotMatch(overview, /\bid\s*=\s*(['"])attentionSection\1/i);
-  assert.doesNotMatch(overview, /\bdata-attention-list\b/i);
+  assert.match(overview, /\bid\s*=\s*(['"])attentionSection\1/i);
+  assert.match(overview, /\bdata-attention-list\b/i);
+  assert.match(overview, /data-ux="home-guide"/);
+  assert.match(overview, /homeStepCheck/);
+  assert.match(overview, /homeStepOpen/);
+  assert.match(overview, /homeStepAct/);
   assert.doesNotMatch(overview, /<table\b/i);
   assert.match(
     overview,
@@ -752,11 +756,14 @@ test('the simplified overview has matching human copy in Russian and English', (
   const copyContract = {
     // Правка 29.07: тест закреплял «Ваши» — то есть фиксировал нарушение канона Эллы
     // (§4, обращение на «ты»). Ожидание приведено к канону вместе с самим экраном.
-    overviewTitle: ['Управление агентами', 'Evolution Console'],
+    overviewTitle: ['Управление агентами', 'Agent management'],
     overviewLead: [
-      'Все автоматизации компании — в одном месте.',
-      'All company automations in one place.',
+      'Здесь вы управляете автоматизациями, созданными для вашей компании: видите их работу, замечания и следующий шаг.',
+      'Manage the automations built for your company: see what they are doing, what needs attention, and the next step.',
     ],
+    homeStatusTitle: ['Что происходит сейчас', 'What is happening now'],
+    homeAttentionTitle: ['Что нужно сделать сейчас', 'What to do now'],
+    homeAutomationsTitle: ['Ваши автоматизации', 'Your automations'],
     inventory: ['Автоматизации', 'Automations'],
     myAutomations: ['Мои автоматизации', 'My automations'],
     catalog: ['Каталог', 'Catalog'],

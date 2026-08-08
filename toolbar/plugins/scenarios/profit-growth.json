@@ -7,12 +7,12 @@
   "description": "Evolution Console разделяет работающие, остановленные, требующие помощи и непроверенные автоматизации. Каталог отделён от установленных, а детали для специалиста не мешают ежедневному управлению.",
   "category": "business",
   "type": "application",
-  "version": "0.22.1",
+  "version": "0.23.0",
   "eye": "Extella Evolution",
   "pills": [
     "Автоматизации",
-    "Состояние",
-    "Evolution Lab"
+    "Общие настройки",
+    "Безопасная проверка"
   ],
   "stars": "5.0",
   "installs": 0,
@@ -75,7 +75,7 @@
     },
     {
       "id": "shared_genes_map",
-      "name": "Карта Shared Genes",
+      "name": "Общие правила и знания",
       "version": "SHARED_GENES_MAP_V1",
       "external_writes": false
     },
@@ -87,7 +87,7 @@
     },
     {
       "id": "evolution_loop",
-      "name": "Evolution Loop",
+      "name": "Безопасный цикл изменений",
       "version": "EVOLUTION_LOOP_V1",
       "external_writes": false
     }
