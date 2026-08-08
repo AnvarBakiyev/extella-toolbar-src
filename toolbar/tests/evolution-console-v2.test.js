@@ -232,7 +232,7 @@ function classTestEvidence(change, overrides = {}) {
     externalWrites: [],
     writeAttempts: 0,
     isolation: {
-      schema: 'extella.evolution.playground_isolation.v1',
+      schema: 'extella.evolution.playground_isolation.v1.1',
       status: 'PASSED',
       runner_id: 'runner_disposable_1',
       run_id: 'run_class_001',
@@ -242,6 +242,9 @@ function classTestEvidence(change, overrides = {}) {
       owner_device_access: 'DENIED',
       external_write_policy: 'DENY',
       teardown_status: 'CONFIRMED',
+      evaluation_mode: 'RULE_AS_INSTRUCTIONS_SIMULATION',
+      gene_kind: 'rule',
+      native_application_status: 'NOT_VERIFIED',
       receipt_ref: `xtl_evolution:playground_receipt:${HASH_ONE.slice(0, 32)}`,
       receipt_sha256: HASH_ONE,
       candidate_sha256: change.candidateBundleSha256,
@@ -776,6 +779,8 @@ test('Cabinet class escalation completes the gated Evolution Loop in the same le
     `xtl_evolution:playground_receipt:${HASH_ONE.slice(0, 32)}`,
   );
   assert.equal(change.test.playgroundRunnerId, 'runner_disposable_1');
+  assert.equal(change.test.evaluationMode, 'RULE_AS_INSTRUCTIONS_SIMULATION');
+  assert.equal(change.test.nativeApplicationStatus, 'NOT_VERIFIED');
   assert.equal(
     published.activeVersionByAgent.agent_a,
     change.candidateVersionId,
@@ -939,6 +944,23 @@ test('Cabinet escalation rejects wrong scope, targets, hash and unsafe Evolution
     ),
     'CLASS_TEST_NOT_ISOLATED',
   );
+  for (const isolationPatch of [
+    { evaluation_mode: 'NATIVE_RULE' },
+    { gene_kind: 'knowledge' },
+    { native_application_status: 'VERIFIED' },
+  ]) {
+    await rejectsCode(
+      api.recordClassTest(
+        accepted.ledger,
+        'candidate_class_001',
+        classTestEvidence(acceptedChange, {
+          isolation: { ...isolated.isolation, ...isolationPatch },
+        }),
+        { actorId: ACTOR },
+      ),
+      'CLASS_TEST_NOT_ISOLATED',
+    );
+  }
   await rejectsCode(
     api.recordClassTest(
       accepted.ledger,

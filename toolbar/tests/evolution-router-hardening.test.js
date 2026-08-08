@@ -632,6 +632,22 @@ test('schedule preview requires an adapter and native writes remain transaction-
     playgroundIsolationContract:
       'extella.evolution.playground_isolation.v1',
     runClassTest() {
+      return { evidence: { source: 'legacy-isolation-contract' } };
+    },
+  });
+  await rejectsCode(
+    () => helpers.callAdapter(
+      'runClassTest',
+      { candidateId: 'candidate_exact' },
+      'EVOLUTION_LAB_ADAPTER_UNAVAILABLE',
+      'Evolution Lab evidence requires an adapter',
+    ),
+    'EVOLUTION_LAB_ADAPTER_UNAVAILABLE',
+  );
+  helpers.setAdapter({
+    playgroundIsolationContract:
+      'extella.evolution.playground_isolation.v1.1',
+    runClassTest() {
       return { evidence: { source: 'exact-read-only-adapter' } };
     },
   });

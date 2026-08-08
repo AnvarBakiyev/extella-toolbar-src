@@ -263,7 +263,7 @@ test('Evolution Lab explains the change, coverage, safety, and result without in
   assert.match(consoleHtml, /e\.status\)==='TESTED'&&receipt&&receipt\.status==='PASSED'/);
   assert.match(consoleHtml, /labIsolationConfirmed:'Одноразовая изолированная среда подтверждена\.'/);
   assert.match(consoleHtml, /labNoExternalWrites:'Рабочие автоматизации и файлы не затронуты\.'/);
-  assert.match(consoleHtml, /labReceiptSaved:'Квитанция проверки сохранена\.'/);
+  assert.match(consoleHtml, /labReceiptSaved:'Квитанция симуляции сохранена\.'/);
   assert.match(consoleHtml, /button\.disabled=!productionReady\(\)\|\|state\.labRunning/);
   assert.match(consoleHtml, /runEscAction\('escalation_test'\)/);
   assert.doesNotMatch(

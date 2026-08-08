@@ -11,7 +11,7 @@
 // ЧТО ТАКОЕ «ИЗОЛЯЦИЯ» ЗДЕСЬ, БЕЗ ОБЕЩАНИЙ. Перед запуском живой `agent/get`
 // подтверждает: агент виден в текущем аккаунте, инструментов ноль, MCP нет, и его нет
 // среди пяти продовых целей. Дотянуться до устройства владельца ему нечем. Среда
-// остаётся одноразовой: после единственного прогона правило и сам агент удаляются, а
+// остаётся одноразовой: после единственного прогона сам агент удаляется, а
 // `agent/get → 404` — обязательное условие `teardown_status: CONFIRMED`.
 //
 // КЛЮЧ ПРОВАЙДЕРА. Он живёт внутри платформы и в этом коде не читается, не передаётся
@@ -48,12 +48,10 @@ ETB.evolutionPlaygroundRunner = (function () {
   // ДВЕ РАЗНЫЕ ВЕЩИ, и путать их нельзя.
   // ISOLATION_SCHEMA — формат доказательства, он поднят до v1.1 (в него добавились
   // evaluation_mode, gene_kind и native_application_status).
-  // CAPABILITY_CONTRACT — рукопожатие с роутером: он сравнивает маркер адаптера со своей
-  // константой, и сегодня в router.js это v1. Если поднять здесь, гейт перестанет
-  // совпадать и присвоение маркера оставит Evolution Lab закрытой при зелёных тестах.
-  // Поднимать рукопожатие имеет смысл ОДНОВРЕМЕННО с правкой гейта в router.js.
+  // CAPABILITY_CONTRACT — рукопожатие с роутером. Оно поднято синхронно с гейтом:
+  // старый адаптер v1 не может выдать доказательство с честной границей симуляции.
   var ISOLATION_SCHEMA = 'extella.evolution.playground_isolation.v1.1';
-  var CAPABILITY_CONTRACT = 'extella.evolution.playground_isolation.v1';
+  var CAPABILITY_CONTRACT = 'extella.evolution.playground_isolation.v1.1';
   var CASE_SCHEMA = 'extella.evolution.playground_case_result.v1';
   var RECEIPT_PREFIX = 'xtl_evolution:playground_receipt:';
   var TRANSCRIPT_PREFIX = 'xtl_evolution:playground_transcript:';

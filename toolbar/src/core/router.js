@@ -1154,7 +1154,7 @@ ETB.router = (function () {
     var isolatedEvolutionLab =
       typeof evolutionAdapter.runClassTest === 'function' &&
       evolutionAdapter.playgroundIsolationContract ===
-        'extella.evolution.playground_isolation.v1';
+        'extella.evolution.playground_isolation.v1.1';
     // Native writes stay fail-closed until the platform exposes a durable
     // intent log and a compare-and-swap commit for the shared Evolution
     // ledger. Method presence alone is not a transaction boundary.
@@ -3740,7 +3740,7 @@ ETB.router = (function () {
     }
     if (method === 'runClassTest' &&
         adapter.playgroundIsolationContract !==
-          'extella.evolution.playground_isolation.v1') {
+          'extella.evolution.playground_isolation.v1.1') {
       return Promise.reject(_evolutionError(
         code,
         message + '; isolated playground contract is unavailable'
